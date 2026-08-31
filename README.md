@@ -1,8 +1,10 @@
-# Koverta — nová domovská stránka (náhľad)
+# Koverta — verejný náhľad
 
-Statický náhľad pripravovanej homepage. Obsah aj fotografie sú tie, ktoré
-idú do Shopify témy `koverta-theme-next`; odkazy do e-shopu vedú na
-koverta.sk, konfigurátor na jeho vlastnú adresu.
+| Adresa | Čo je to |
+| --- | --- |
+| `/` | domovská stránka |
+| `/konfigurator/` | 3D konfigurátor (bioklimatické pergoly, prístrešky Soltec, prístrešky pre autá) |
 
-Zdroj: `design-preview/home.html` v pracovnom priečinku. Túto zložku
-negeneruj ručne — prestav ju skriptom, nech náhľad a téma neujdú od seba.
+Zdroj: `design-preview/*.html` a `github-pages-soltec/` v pracovnom priečinku.
+Túto zložku negeneruj ručne — prestav ju skriptom, nech náhľad a téma neujdú
+od seba.

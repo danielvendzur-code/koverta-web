@@ -818,21 +818,23 @@
     scope.querySelectorAll('[data-k-root]').forEach((root) => {
       if (root.dataset.kReady === 'true') return;
       root.dataset.kReady = 'true';
-      initReveal(root);
-      initRail(root);
-      initFilters(root);
-      initFaq(root);
-      initAnchors(root);
-      initProcess(root);
-      initHeadline(root);
-      initShots(root);
-      initMatTabs(root);
-      initSelect(root);
+      /* Každá sekcia sa spúšťa samostatne. Keď na stránke nejaká chýba —
+         a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
+         predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
+      [initReveal, initRail, initFilters, initFaq, initAnchors,
+       initProcess, initHeadline, initShots, initMatTabs, initSelect]
+        .forEach((fn) => {
+          try { fn(root); }
+          catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
+        });
     });
-    scope.querySelectorAll('[data-k-header]').forEach(initHeader);
+    scope.querySelectorAll('[data-k-header]').forEach((h) => {
+      try { initHeader(h); } catch (e) { if (window.console) console.warn("koverta: initHeader — " + e.message); }
+    });
     // Vyhľadávanie je v hlavičke, teda mimo [data-k-root] — inicializuje sa
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.
-    initSearch(scope === document ? document : scope);
+    try { initSearch(scope === document ? document : scope); }
+    catch (e) { if (window.console) console.warn("koverta: initSearch — " + e.message); }
   }
 
   const boot = () => init(document);
