@@ -1,0 +1,3965 @@
+/* ==========================================================================
+   KOVERTA 2026 — dizajnový systém
+   --------------------------------------------------------------------------
+   Východisko je architektonické: stránka stojí na viditeľnej nosnej mriežke,
+   tak ako prístrešok stojí na stĺpoch a prievlaku. Tvarovo je ale mäkká —
+   ostré hrany pôsobili nedokončene, takže plochy majú polomer a jemné
+   vyvýšenie, a jantár ostáva len ako akcent, nikdy ako podklad textu.
+
+   Motívy, ktoré sa opakujú:
+     1. nosná mriežka  .k-rules      zvislé vlasové linky pod obsahom
+     2. rám (L-kút)    .k-bracket    jantárový roh — použitý striedmo
+     3. lamela         .k-slats      lamely sa pri hoveri otvoria nad fotkou
+     4. mäkké plochy                 polomer 14 px, tieň namiesto tvrdej čiary
+     5. jantár = akcent              #FFCC00 má na bielej kontrast 1,5:1
+
+   Scopované triedou .k, aby to nezasahovalo do zvyšku Dawn témy.
+   Hlavička (.kv-head*) je mimo .k, lebo žije v layoute nad sekciami.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1 · TOKENY
+   -------------------------------------------------------------------------- */
+
+.k,
+.kv-header {
+  /* farby ---------------------------------------------------------------- */
+  --k-amber: #FFCC00;
+  --k-amber-deep: #8a6600;
+  --k-amber-soft: #fff8dd;
+  /* Neutrálna sivá a uhlíková. Predtým tu bola modrošedá #455a64 z loga —
+     na ploche pôsobila modro, čo do palety Koverty nepatrí. Logo si svoju
+     vlastnú farbu ponecháva, rozhranie ide cez čiernu, sivú a jantár. */
+  --k-grey: #5c5c5c;
+  --k-grey-soft: #767676;
+  --k-charcoal: #262626;
+  --k-ink: #12171a;
+  --k-bone: #f6f5f2;
+  --k-bone-deep: #efeeea;
+  --k-white: #fff;
+
+  --k-hair: rgba(18, 23, 26, 0.11);
+  --k-hair-soft: rgba(18, 23, 26, 0.055);
+  --k-hair-invert: rgba(255, 255, 255, 0.16);
+  --k-hair-invert-soft: rgba(255, 255, 255, 0.075);
+
+  --k-muted: rgba(18, 23, 26, 0.62);
+  --k-muted-invert: rgba(255, 255, 255, 0.68);
+
+  /* vyvýšenie — veľmi jemné, aby plochy pôsobili hotovo, nie „nalepene" -- */
+  --k-shadow-xs: 0 1px 2px rgba(18, 23, 26, 0.04);
+  --k-shadow-sm: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  --k-shadow: 0 2px 4px rgba(18, 23, 26, 0.04), 0 14px 36px rgba(18, 23, 26, 0.08);
+  --k-shadow-lg: 0 4px 8px rgba(18, 23, 26, 0.05), 0 28px 72px rgba(18, 23, 26, 0.14);
+
+  /* polomery ------------------------------------------------------------- */
+  /* Mäkšie plochy. Ostré 6–8 px pôsobilo tvrdo a technicky; toto je späť
+     bližšie k tvarom, ktoré na stránke fungovali. */
+  --k-r-xs: 8px;
+  --k-r-sm: 12px;
+  --k-r: 18px;
+  --k-r-lg: 26px;
+  --k-r-pill: 999px;
+
+  /* rozmery -------------------------------------------------------------- */
+  --k-max: 1440px;
+  --k-gut: clamp(20px, 4vw, 60px);
+
+  /* zvislý rytmus -------------------------------------------------------- */
+  --k-band: clamp(76px, 8.4vw, 148px);
+  --k-band-tight: clamp(52px, 5.6vw, 96px);
+
+  /* typografia ----------------------------------------------------------- */
+  --k-head: var(--font-heading-family, "Archivo", "Helvetica Neue", Arial, sans-serif);
+  --k-body: var(--font-body-family, "Archivo", "Helvetica Neue", Arial, sans-serif);
+
+  /* pohyb ---------------------------------------------------------------- */
+  --k-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --k-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2 · ZÁKLAD
+   -------------------------------------------------------------------------- */
+
+.k {
+  position: relative;
+  overflow-x: clip;
+  background: var(--k-white);
+  color: var(--k-ink);
+  font-family: var(--k-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.k *,
+.k *::before,
+.k *::after,
+.kv-header *,
+.kv-header *::before,
+.kv-header *::after { box-sizing: border-box; }
+
+.k img { display: block; width: 100%; height: auto; }
+.k a { color: inherit; text-decoration: none; }
+.k h1, .k h2, .k h3, .k h4, .k p, .k ul, .k ol, .k figure, .k blockquote { margin: 0; }
+.k ul, .k ol { padding: 0; list-style: none; }
+.k button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+.k :focus-visible,
+.kv-header :focus-visible {
+  outline: 2px solid var(--k-ink);
+  outline-offset: 3px;
+  border-radius: var(--k-r-xs);
+}
+.k-invert :focus-visible,
+.kh-hero :focus-visible { outline-color: var(--k-amber); }
+
+.k-wrap {
+  position: relative;
+  width: min(100%, var(--k-max));
+  margin-inline: auto;
+  padding-inline: var(--k-gut);
+}
+
+/* plochy ------------------------------------------------------------------ */
+.k-band { position: relative; padding-block: var(--k-band); }
+.k-band--tight { padding-block: var(--k-band-tight); }
+.k-bone { background: var(--k-bone); }
+.k-invert { background: var(--k-ink); color: var(--k-white); }
+.k-invert--slate { background: var(--k-charcoal); }
+
+.k-sr {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   3 · NOSNÁ MRIEŽKA
+   -------------------------------------------------------------------------- */
+
+/* Dekoratívne zvislé linky na pozadí sekcií sú odstránené — pôsobili ako
+   grafický šum, nie ako motív. Trieda ostáva bez štýlu, aby staršie šablóny
+   nespadli. */
+.k-rules { display: none; }
+
+.k-band > .k-wrap { z-index: 1; }
+
+/* --------------------------------------------------------------------------
+   4 · RÁM (L-KÚT) — striedmo, len na hlavných fotkách
+   -------------------------------------------------------------------------- */
+
+.k-bracket { position: relative; }
+.k-bracket::before {
+  content: "";
+  position: absolute;
+  top: clamp(16px, 1.6vw, 26px);
+  left: clamp(16px, 1.6vw, 26px);
+  width: clamp(30px, 3.4vw, 54px);
+  height: clamp(30px, 3.4vw, 54px);
+  border: 2px solid var(--k-amber);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: var(--k-r-sm);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Lamelový závoj nad fotkou je odstránený — pri hoveri vytváral pruhy, ktoré
+   vyzerali ako chyba vykreslenia. Hover je teraz čistý: jemné priblíženie. */
+.k-slats { display: none; }
+
+/* --------------------------------------------------------------------------
+   6 · TYPOGRAFIA
+   -------------------------------------------------------------------------- */
+
+/* Veľké nadpisy sú ľahké, nie tučné. Ťažká váha vo veľkosti nad 40 px pôsobí
+   ako výpredajový banner; prémiové značky v tomto segmente sadzia display
+   v 300–400 a nechávajú pracovať veľkosť a tesné prestrkanie. */
+.k-display {
+  font-family: var(--k-head);
+  font-size: clamp(38px, 5vw, 76px);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+
+.k-h2 {
+  font-family: var(--k-head);
+  font-size: clamp(29px, 3.3vw, 50px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.k-h3 {
+  font-family: var(--k-head);
+  font-size: clamp(19px, 1.6vw, 25px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+.k-h4 {
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.15vw, 19px);
+  font-weight: 600;
+  line-height: 1.26;
+  letter-spacing: -0.012em;
+}
+
+/* Jednoduchý redakčný štítok bez bodky, pilulky a dekoratívneho pozadia. */
+.k-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--k-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  color: var(--k-grey);
+  text-transform: uppercase;
+}
+.k-invert .k-eyebrow { background: transparent; color: rgba(255, 255, 255, 0.72); }
+.kh-hero__eyebrow {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.84);
+  backdrop-filter: none;
+  font-size: 11.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.k-lead {
+  font-size: clamp(16px, 1.1vw, 18px);
+  line-height: 1.64;
+  color: var(--k-muted);
+  max-width: 56ch;
+}
+.k-invert .k-lead { color: var(--k-muted-invert); }
+
+.k-copy { font-size: 15.5px; line-height: 1.68; color: var(--k-muted); }
+.k-invert .k-copy { color: var(--k-muted-invert); }
+
+/* Jemná redakčná linka: zvýrazní slovo, ale neprekrýva jeho spodnú časť. */
+.k-mark { position: relative; white-space: nowrap; }
+.k-mark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 78%;
+  bottom: -0.055em;
+  height: 3px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--k-amber) 0 88%, rgba(255, 204, 0, 0) 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 760ms var(--k-ease-out) 260ms;
+}
+.is-in .k-mark::after,
+.k-mark--static::after { transform: scaleX(1); }
+
+/* --------------------------------------------------------------------------
+   7 · TLAČIDLÁ A ODKAZY
+   -------------------------------------------------------------------------- */
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 26px;
+  border: 1.5px solid transparent;
+  border-radius: var(--k-r-pill);
+  font-family: var(--k-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 220ms var(--k-ease), border-color 220ms var(--k-ease),
+    color 220ms var(--k-ease), box-shadow 220ms var(--k-ease), transform 220ms var(--k-ease);
+}
+.k-btn svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; transition: transform 300ms var(--k-ease-out); }
+.k-btn:hover svg { transform: translateX(3px); }
+
+.k-btn--primary { background: var(--k-amber); color: var(--k-ink); box-shadow: 0 5px 16px rgba(18, 23, 26, 0.16); }
+.k-btn--primary:hover { background: var(--k-amber-deep); box-shadow: 0 9px 22px rgba(18, 23, 26, 0.22); transform: translateY(-1px); }
+/* Reset `.k button` má vyššiu špecificitu než samotná modifikačná trieda. */
+.k button.k-btn--primary { background: var(--k-amber); border: 1.5px solid transparent; }
+.k button.k-btn--primary:hover { background: var(--k-amber-deep); }
+
+.k-btn--ink { background: var(--k-ink); color: var(--k-white); }
+.k-btn--ink:hover { background: #000; transform: translateY(-1px); }
+
+.k-btn--line { border-color: var(--k-hair); color: var(--k-ink); background: var(--k-white); }
+.k-btn--line:hover { border-color: var(--k-ink); box-shadow: var(--k-shadow-sm); }
+
+/* na fotke — priehľadné s rozmazaným podkladom, aby text ostal čitateľný */
+.k-btn--glass {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(18, 23, 26, 0.26);
+  color: var(--k-white);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+.k-btn--glass:hover { border-color: #fff; background: rgba(18, 23, 26, 0.42); }
+
+.k-invert .k-btn--line { border-color: var(--k-hair-invert); background: transparent; color: var(--k-white); }
+.k-invert .k-btn--line:hover { border-color: var(--k-white); background: rgba(255, 255, 255, 0.06); }
+
+.k-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--k-ink);
+  transition: color 200ms var(--k-ease), gap 220ms var(--k-ease);
+}
+.k-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; transition: transform 260ms var(--k-ease-out); }
+.k-link:hover { gap: 13px; color: var(--k-grey); }
+.k-invert .k-link { color: var(--k-white); }
+.k-invert .k-link:hover { color: var(--k-amber); }
+
+/* --------------------------------------------------------------------------
+   8 · HODNOTENIE (Google)
+   -------------------------------------------------------------------------- */
+
+.k-stars { display: inline-flex; gap: 2px; color: var(--k-amber); }
+.k-stars svg { width: 15px; height: 15px; fill: currentColor; }
+.k-stars--lg svg { width: 21px; height: 21px; }
+
+.k-google { width: 18px; height: 18px; flex: 0 0 auto; }
+.k-google--lg { width: 26px; height: 26px; }
+
+.k-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-pill);
+  background: var(--k-white);
+  transition: border-color 220ms var(--k-ease), box-shadow 220ms var(--k-ease);
+}
+a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shadow-sm); }
+.k-score__num { font-family: var(--k-head); font-size: 19px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.k-score__meta { display: flex; flex-direction: column; gap: 5px; }
+.k-score__meta small { font-size: 12px; line-height: 1; color: var(--k-muted); white-space: nowrap; }
+.k-score__rule { width: 1px; align-self: stretch; background: var(--k-hair); }
+
+.k-invert .k-score,
+.kh-hero .k-score { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.24); color: var(--k-white); backdrop-filter: blur(10px); }
+.k-invert .k-score__meta small,
+.kh-hero .k-score__meta small { color: rgba(255, 255, 255, 0.76); }
+.k-invert .k-score__rule,
+.kh-hero .k-score__rule { background: rgba(255, 255, 255, 0.22); }
+.k-invert a.k-score:hover,
+.kh-hero a.k-score:hover { border-color: rgba(255, 255, 255, 0.5); }
+
+/* --------------------------------------------------------------------------
+   9 · HLAVIČKA SEKCIE
+   -------------------------------------------------------------------------- */
+
+.k-head {
+  display: grid;
+  gap: 22px 48px;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: clamp(38px, 4.2vw, 68px);
+}
+@media (min-width: 900px) {
+  .k-head--split { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); }
+    /* Zarovnanie doľava: text na pravej strane sa čítal ako pätka, nie ako
+     úvod sekcie. Blok drží pravý stĺpec, ale riadky začínajú na jednej osi. */
+  .k-head--split > :last-child { justify-self: end; text-align: left; max-width: 38ch; }
+}
+.k-head__title { display: flex; flex-direction: column; gap: 18px; }
+
+/* --------------------------------------------------------------------------
+   10 · ODHAĽOVANIE PRI SCROLLOVANÍ
+   -------------------------------------------------------------------------- */
+
+.k-rise { opacity: 0; transform: translateY(16px); transition: opacity 720ms var(--k-ease-out), transform 720ms var(--k-ease-out); }
+.k-rise.is-in { opacity: 1; transform: none; }
+
+/* Maska je na fotke vnútri, nie na ráme — orezaný rám by mal nulovú plochu
+   a IntersectionObserver by odhalenie nikdy nespustil. */
+.k-reveal img { clip-path: inset(0 0 100% 0); transition: clip-path 1000ms var(--k-ease-out); }
+.k-reveal.is-in img { clip-path: inset(0 0 0 0); }
+
+.k [data-k-delay="1"] { transition-delay: 80ms; }
+.k [data-k-delay="2"] { transition-delay: 160ms; }
+.k [data-k-delay="3"] { transition-delay: 240ms; }
+.k [data-k-delay="4"] { transition-delay: 320ms; }
+.k [data-k-delay="5"] { transition-delay: 400ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k *, .k *::before, .k *::after,
+  .kv-header *, .kv-header *::before, .kv-header *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  .k-rise { opacity: 1; transform: none; }
+  .k-reveal img { clip-path: none; }
+  .k-mark::after { transform: scaleX(1); }
+}
+
+/* ==========================================================================
+   HLAVIČKA WEBU
+   ========================================================================== */
+
+.kv-header { position: relative; z-index: 30; font-family: var(--k-body); color: var(--k-ink); }
+/* Hlavička žije mimo .k, takže si reset odkazov musí spraviť sama — inak
+   prehliadač vykreslí odkazy modré a podčiarknuté. */
+.kv-header a { color: inherit; text-decoration: none; }
+
+/* horný servisný pás */
+.kv-topbar { background: var(--k-ink); color: rgba(255, 255, 255, 0.82); font-size: 13px; }
+.kv-topbar__in { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 40px; }
+.kv-topbar__usps { display: flex; gap: 26px; }
+.kv-topbar__usps li { display: flex; align-items: center; gap: 8px; }
+.kv-topbar__usps svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: var(--k-amber); stroke-width: 2.2; }
+.kv-topbar__side { display: flex; align-items: center; gap: 22px; }
+.kv-topbar__side a { display: inline-flex; align-items: center; gap: 8px; color: #fff; transition: color 200ms var(--k-ease); }
+.kv-topbar__side a:hover { color: var(--k-amber); }
+.kv-topbar__side svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+@media (max-width: 989px) { .kv-topbar__usps { display: none; } .kv-topbar__in { justify-content: center; } }
+@media (max-width: 480px) { .kv-topbar__side { gap: 14px; font-size: 12px; } }
+
+/* hlavný riadok */
+.kv-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid var(--k-hair);
+  transition: box-shadow 260ms var(--k-ease), background-color 260ms var(--k-ease);
+}
+.kv-bar.is-stuck { box-shadow: var(--k-shadow-sm); background: rgba(255, 255, 255, 0.97); }
+.kv-bar__in { position: relative; display: flex; align-items: center; gap: 20px; min-height: 76px; }
+.kv-bar.is-stuck .kv-bar__in { min-height: 64px; transition: min-height 260ms var(--k-ease); }
+
+.kv-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.k-logo { display: block; width: auto; height: clamp(24px, 2.1vw, 30px); }
+/* Jednofarebná verzia mení len písmená. Jantárová zátvorka ostáva vždy
+   jantárová — logo Koverty sa nikde nezobrazuje ako jednofarebná silueta. */
+.k-logo--mono .k-logo__letter path { fill: currentColor; }
+
+/* Kreslenie loga v hlavičke.
+   Písmeno sa odkrýva zľava doprava a zároveň dosadá zdola — jeden pohyb,
+   objaví sa rovno vyplnené. Zátvorka ide posledná a vyjde z ľavej hrany.
+   Celý beh trvá ~1 s; pôvodných 1,7 s pôsobilo pomaly a mechanicky.
+
+   Základný stav je ODKRYTÉ. Animácia s fill-mode: backwards drží zakrytie len
+   počas oneskorenia a po dobehnutí sa vracia k základu. Keby animácia
+   z akéhokoľvek dôvodu nenabehla, logo je vidieť.
+   -------------------------------------------------------------------------- */
+
+.k-logo__letter,
+.k-logo__bracket { clip-path: inset(0 0 0 0); transform-box: fill-box; transform-origin: left center; }
+.k-logo--animate .k-logo__letter {
+  animation: kLogoWrite 380ms cubic-bezier(0.2, 0.9, 0.25, 1) var(--k-logo-delay, 0ms) backwards;
+}
+.k-logo--animate .k-logo__bracket {
+  animation: kLogoBracket 460ms cubic-bezier(0.2, 0.9, 0.25, 1) var(--k-logo-delay, 0ms) backwards;
+}
+@keyframes kLogoWrite {
+  from { clip-path: inset(0 100% 0 0); transform: translateY(9%); }
+  to   { clip-path: inset(0 0 0 0); transform: translateY(0); }
+}
+@keyframes kLogoBracket {
+  from { clip-path: inset(0 100% 0 0); transform: scaleX(0.82); }
+  to   { clip-path: inset(0 0 0 0); transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-logo--animate .k-logo__letter,
+  .k-logo--animate .k-logo__bracket { animation: none; }
+}
+
+/* navigácia */
+.kv-nav { display: flex; align-items: center; gap: 1px; margin-left: 12px; }
+.kv-nav__item { position: static; }
+/* Bez rámu a bez podkladu. Interakcia je stlmenie textu; otvorená položka
+   dostane jantárovú bodku pod sebou — nie podčiarknutie. */
+.kv-nav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--k-ink);
+  background: none;
+  border: 0;
+  transition: color 200ms var(--k-ease);
+}
+.kv-nav__link svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.2; opacity: 0.5; transition: transform 260ms var(--k-ease), opacity 200ms var(--k-ease); }
+.kv-nav__link:hover { color: var(--k-grey); }
+.kv-nav__link:hover svg { opacity: 0.85; }
+.kv-nav__link::after { display: none; }
+.kv-nav__item.is-open > .kv-nav__link,
+.kv-nav__link[aria-current="page"] { color: #a77a00; }
+.kv-nav__item.is-open > .kv-nav__link svg { transform: rotate(180deg); opacity: 1; }
+
+.kv-bar__side { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.kv-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px; height: 44px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-pill);
+  color: var(--k-ink);
+  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease);
+}
+.kv-icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.kv-icon-btn:hover { border-color: var(--k-ink); background: var(--k-bone); }
+.kv-bar__cta { min-height: 46px; padding: 0 22px; font-size: 14.5px; }
+
+/* mega menu */
+/* Panel visí na celej navigácii, nie na jednej položke — pri prvej položke
+   by vycentrovaný panel prečnieval mimo obrazovky. */
+.kv-mega {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  width: min(1080px, 100%);
+  padding: 22px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  box-shadow: var(--k-shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 220ms var(--k-ease), transform 260ms var(--k-ease-out), visibility 0s linear 220ms;
+}
+.kv-nav__item.is-open .kv-mega {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.kv-mega__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--k-hair);
+  font-size: 13.5px; color: var(--k-muted);
+}
+
+/* mobilná navigácia */
+.kv-burger { display: none; }
+.kv-drawer { display: none; }
+@media (max-width: 1180px) {
+  .kv-nav { display: none; }
+  .kv-burger { display: inline-grid; }
+  /* CTA ostáva až do telefónu — na tablete by inak v hlavičke zostala diera. */
+  .kv-drawer {
+    display: block;
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 60;
+    width: min(92vw, 400px);
+    padding: 24px;
+    background: var(--k-white);
+    box-shadow: var(--k-shadow-lg);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 320ms var(--k-ease-out);
+  }
+  .kv-drawer.is-open { transform: none; }
+  .kv-scrim {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(18, 23, 26, 0.45);
+    opacity: 0; visibility: hidden;
+    transition: opacity 260ms var(--k-ease), visibility 0s linear 260ms;
+  }
+  .kv-scrim.is-open { opacity: 1; visibility: visible; transition-delay: 0s; }
+}
+.kv-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.kv-drawer__group + .kv-drawer__group { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--k-hair); }
+.kv-drawer__group > p { margin: 0 0 12px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--k-grey); }
+.kv-drawer__group a { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--k-hair-soft); }
+.kv-drawer__group a svg { width: 16px; height: 16px; fill: none; stroke: var(--k-hair); stroke-width: 2; }
+.kv-drawer__cta { display: grid; gap: 10px; margin-top: 26px; }
+
+/* ==========================================================================
+   HOMEPAGE
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   HERO — jedna veľká fotografia cez celú šírku, obsah dole vľavo,
+   pod ním plávajúca karta s faktami a hodnotením.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   HERO
+   Obsah je v normálnom toku a fotka je podložená absolútne. Predtým bol obsah
+   ukotvený zdola cez position:absolute — keď narástol nad výšku fotky, vysunul
+   sa hore pod prilepenú hlavičku a nadpis sa stratil. Takto hero vždy rastie
+   s obsahom a nadpis je viditeľný na každej šírke.
+   -------------------------------------------------------------------------- */
+
+.kh-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: min(78vh, 720px);
+  padding-top: 0;
+  background: var(--k-ink);
+  isolation: isolate;
+}
+
+.kh-hero__bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+.kh-hero__bg img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* Zdroj je 4:3, hero je oveľa širšie. Bez posunu ohniska by na úzkych
+     obrazovkách ostala v zábere len obloha. */
+  object-position: 50% 64%;
+}
+@media (max-width: 719px) { .kh-hero__bg img { object-position: 42% 58%; } }
+
+.kh-hero__scrim {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, rgba(9, 12, 14, 0.76) 0%, rgba(9, 12, 14, 0.42) 32%, rgba(9, 12, 14, 0.03) 70%),
+    linear-gradient(to right, rgba(9, 12, 14, 0.5) 0%, rgba(9, 12, 14, 0.1) 52%, rgba(9, 12, 14, 0) 80%);
+}
+@media (max-width: 1059px) {
+  .kh-hero__scrim {
+    background: linear-gradient(to top, rgba(9, 12, 14, 0.82) 0%, rgba(9, 12, 14, 0.58) 40%, rgba(9, 12, 14, 0.14) 74%, rgba(9, 12, 14, 0) 94%);
+  }
+}
+
+.kh-hero__inner { width: 100%; padding-block: clamp(30px, 4.5vh, 54px); color: var(--k-white); }
+.kh-hero__box { display: flex; flex-direction: column; gap: clamp(13px, 1.25vw, 18px); max-width: 720px; }
+.kh-hero__eyebrow { color: rgba(255, 255, 255, 0.84); }
+.kh-hero h1 { max-width: 10.6ch; color: var(--k-white); text-shadow: 0 2px 30px rgba(0, 0, 0, 0.32); }
+.kh-hero__lead { color: rgba(255, 255, 255, 0.94); max-width: 49ch; text-shadow: 0 1px 16px rgba(0, 0, 0, 0.22); }
+.kh-hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+.kh-hero__actions .k-btn { border-radius: var(--k-r-sm); }
+.kh-hero__actions .k-btn--primary { box-shadow: 0 8px 26px rgba(9, 12, 14, 0.18); }
+.kh-hero__actions .k-btn--primary:hover { box-shadow: 0 12px 30px rgba(9, 12, 14, 0.24); }
+.kh-hero__actions .k-btn--glass { background: rgba(9, 12, 14, 0.18); backdrop-filter: none; }
+
+.kh-hero__trust { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; }
+.kh-hero__rating,
+.kh-hero__chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 36px; padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--k-r-xs);
+  background: rgba(9, 12, 14, 0.25);
+  color: var(--k-white);
+  backdrop-filter: blur(8px);
+  font-size: 11.5px; font-weight: 650; line-height: 1;
+}
+.kh-hero__rating { transition: background-color 240ms var(--k-ease), border-color 240ms var(--k-ease); }
+.kh-hero__rating:hover { background: rgba(9, 12, 14, 0.44); border-color: rgba(255, 255, 255, 0.58); }
+.kh-hero__rating .k-google { width: 15px; height: 15px; }
+.kh-hero__rating strong { font-size: 13px; }
+.kh-hero__rating .k-stars { gap: 1px; }
+.kh-hero__rating .k-stars svg { width: 11px; height: 11px; }
+.kh-hero__rating > span:last-child { color: rgba(255,255,255,.68); font-weight: 500; }
+.kh-hero__chip svg { width: 14px; height: 14px; fill: none; stroke: var(--k-amber); stroke-width: 1.9; }
+
+/* --------------------------------------------------------------------------
+   Pás pod hero — hodnotenie ide prvé, hneď za ním dva tvrdé fakty.
+   Zvyšné argumenty (zameranie, doprava, montáž) sú už v servisnom páse
+   hlavičky, takže sa tu neopakujú.
+   -------------------------------------------------------------------------- */
+
+.kh-hero__bar { position: relative; z-index: 2; padding-bottom: clamp(20px, 3vh, 36px); }
+.kh-hero__barin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  border-radius: var(--k-r-lg);
+  background: var(--k-hair);
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+}
+@media (min-width: 720px) { .kh-hero__barin { grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 1fr)); } }
+
+.kh-fact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(20px, 2vw, 28px);
+  background: var(--k-white);
+}
+.kh-fact__ico {
+  display: grid; place-items: center;
+  width: 46px; height: 46px; flex: 0 0 auto;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+}
+.kh-fact__ico svg { width: 21px; height: 21px; fill: none; stroke: var(--k-ink); stroke-width: 1.7; }
+.kh-fact strong { display: block; font-family: var(--k-head); font-size: clamp(15.5px, 1.2vw, 17.5px); font-weight: 700; letter-spacing: -0.018em; line-height: 1.22; }
+.kh-fact span > span { display: block; margin-top: 5px; font-size: 13.5px; line-height: 1.45; color: var(--k-muted); }
+
+/* hodnotenie — najsilnejšia bunka pásu */
+.kh-score {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: clamp(20px, 2vw, 28px);
+  background: var(--k-ink); color: var(--k-white);
+}
+.kh-score__top { display: flex; align-items: center; gap: 12px; }
+.kh-score__top b { font-family: var(--k-head); font-size: clamp(28px, 2.6vw, 34px); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.kh-score .k-stars svg { width: 18px; height: 18px; }
+.kh-score__meta { font-size: 13px; color: rgba(255, 255, 255, 0.76); }
+.kh-score__meta b { font-weight: 700; color: #fff; }
+.kh-score__link {
+  display: inline-flex; align-items: center; gap: 8px;
+  align-self: flex-start;
+  font-size: 13px; font-weight: 600; color: var(--k-amber);
+  background: none; border: 0; padding: 0; cursor: pointer;
+  transition: gap 220ms var(--k-ease);
+}
+.kh-score__link:hover { gap: 12px; }
+.kh-score__link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+@media (max-width: 719px) {
+  .kh-hero { min-height: min(76svh, 660px); }
+  .kh-hero__inner { padding-block: 32px; }
+  .kh-hero__box { gap: 13px; }
+  .kh-hero__lead { font-size: 15px; line-height: 1.5; }
+  .kh-hero__actions { gap: 8px; }
+  .kh-hero__actions .k-btn { min-height: 48px; padding-inline: 18px; }
+  .kh-hero__trust { gap: 6px; }
+  .kh-hero__chip { display: none; }
+  .kh-fact { padding: 18px 20px; }
+}
+
+/* --------------------------------------------------------------------------
+   DVE ZNAČKY
+   Panoráma zložená z dvoch fotografií (vlastný prístrešok | prémiová pergola)
+   a pod ňou dvojica panelov: tmavý Koverta, svetlý SOLTEC. Kontrast čiernej
+   a bielej robí vzťah oboch značiek čitateľným na prvý pohľad — lepšie než
+   dve rovnaké karty vedľa seba.
+   -------------------------------------------------------------------------- */
+
+.kh-pick { padding-bottom: 0; }
+.kh-pick__head { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; margin-bottom: clamp(32px, 3.4vw, 52px); }
+.kh-pick__head .k-h2 { max-width: 20ch; }
+.kh-pick__head .k-lead { max-width: 60ch; }
+.kh-pick__rule { width: 56px; height: 3px; border-radius: 3px; background: var(--k-amber); }
+
+/* panoráma */
+.kh-pick__panorama { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+.kh-pick__scene { position: relative; display: block; overflow: hidden; aspect-ratio: 16 / 11; background: var(--k-bone-deep); }
+@media (min-width: 900px) { .kh-pick__scene { aspect-ratio: 16 / 8; } }
+.kh-pick__scene img { width: 100%; height: 100%; object-fit: cover; transition: transform 900ms var(--k-ease-out); }
+.kh-pick__scene:hover img { transform: scale(1.035); }
+.kh-pick__scene::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(9,12,14,0) 55%, rgba(9,12,14,0.35) 100%);
+}
+
+/* dvojica panelov */
+.kh-pick__lanes { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 820px) { .kh-pick__lanes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.kh-pick__lane {
+  display: flex; flex-direction: column; gap: 18px;
+  padding: clamp(30px, 3.4vw, 56px);
+  background: var(--k-bone);
+  color: var(--k-ink);
+  transition: background-color 320ms var(--k-ease);
+}
+.kh-pick__lane.is-premium { background: var(--k-white); }
+.kh-pick__lane:not(.is-premium) { background: var(--k-ink); color: #fff; }
+.kh-pick__lane:not(.is-premium):hover { background: #0b0e10; }
+.kh-pick__lane.is-premium:hover { background: var(--k-bone); }
+
+/* značkový nápis hore v paneli */
+.kh-pick__mark { display: flex; align-items: center; min-height: 34px; }
+.kh-pick__mark .k-logo { height: 30px; width: auto; color: #fff; }
+.kh-pick__wordmark {
+  font-family: var(--k-head);
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  color: var(--k-ink);
+}
+.kh-pick__lane-rule { width: 44px; height: 2px; border-radius: 2px; background: var(--k-amber); }
+.kh-pick__lane p { font-size: 15px; line-height: 1.65; max-width: 44ch; }
+.kh-pick__lane:not(.is-premium) p { color: rgba(255, 255, 255, 0.74); }
+.kh-pick__lane.is-premium p { color: var(--k-muted); }
+.kh-pick__lane-meta { font-size: 12.5px; letter-spacing: 0.02em; }
+.kh-pick__lane:not(.is-premium) .kh-pick__lane-meta { color: rgba(255, 255, 255, 0.56); }
+.kh-pick__lane.is-premium .kh-pick__lane-meta { color: var(--k-grey-soft); }
+.kh-pick__lane-foot { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: auto; padding-top: 8px; }
+.kh-pick__lane .k-link { color: inherit; }
+.kh-pick__lane:not(.is-premium) .k-link svg { stroke: var(--k-amber); }
+.kh-pick__lane.is-premium .k-link svg { stroke: var(--k-amber-deep); }
+
+/* --------------------------------------------------------------------------
+   KONFIGURÁTOR
+   Screenshot rozhrania je preč — ukazoval softvér, nie výsledok, a sekcii
+   uberal na dôveryhodnosti. Namiesto neho stoja tri vstupy s reálnymi
+   fotografiami produktu a značkou, ktorej sa vstup týka.
+   -------------------------------------------------------------------------- */
+
+.kh-cfg { background: var(--k-bone); }
+.kh-cfg__grid { display: grid; gap: clamp(20px, 2.4vw, 44px); grid-template-columns: minmax(0, 1fr); align-items: end; margin-bottom: clamp(28px, 3vw, 44px); }
+@media (min-width: 900px) { .kh-cfg__grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.kh-cfg__copy { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.kh-cfg__intro { display: flex; flex-direction: column; gap: 14px; }
+.kh-cfg__note { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--k-ink); }
+.kh-cfg__note svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: var(--k-amber-deep); stroke-width: 2.4; }
+
+.kh-cfg__list { display: grid; gap: clamp(14px, 1.5vw, 20px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 780px) { .kh-cfg__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.kh-cfg__item {
+  position: relative;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair);
+  transition: border-color 300ms var(--k-ease), box-shadow 300ms var(--k-ease), transform 300ms var(--k-ease);
+}
+.kh-cfg__item:hover { border-color: transparent; box-shadow: var(--k-shadow); transform: translateY(-3px); }
+
+.kh-cfg__thumb { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--k-bone-deep); }
+.kh-cfg__thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--k-ease-out); }
+.kh-cfg__item:hover .kh-cfg__thumb img { transform: scale(1.045); }
+.kh-cfg__badge {
+  position: absolute; top: 12px; left: 12px;
+  padding: 6px 12px;
+  border-radius: var(--k-r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  font-size: 11.5px; font-weight: 700; color: var(--k-ink);
+}
+.kh-cfg__badge--premium { background: rgba(18, 23, 26, 0.86); color: #fff; }
+
+.kh-cfg__body { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; padding: clamp(18px, 1.7vw, 24px); }
+.kh-cfg__body strong { font-family: var(--k-head); font-size: clamp(16px, 1.25vw, 18.5px); font-weight: 700; letter-spacing: -0.018em; }
+.kh-cfg__body p { font-size: 13.5px; line-height: 1.55; color: var(--k-muted); }
+.kh-cfg__go {
+  display: inline-flex; align-items: center; gap: 9px;
+  align-self: flex-start;
+  margin-top: auto; padding-top: 14px;
+  font-size: 13.5px; font-weight: 700; color: var(--k-ink);
+  transition: gap 240ms var(--k-ease);
+}
+.kh-cfg__item:hover .kh-cfg__go { gap: 14px; }
+.kh-cfg__go svg { width: 15px; height: 15px; fill: none; stroke: var(--k-amber-deep); stroke-width: 2.4; }
+
+/* pätka sekcie — kam konfigurácia putuje */
+.kh-cfg__foot {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px;
+  margin-top: clamp(22px, 2.2vw, 32px);
+  padding-top: clamp(20px, 2vw, 28px);
+  border-top: 1px solid var(--k-hair);
+}
+.kh-cfg__foot p { font-size: 14px; color: var(--k-muted); max-width: 56ch; }
+
+/* --------------------------------------------------------------------------
+   KATEGÓRIE
+   -------------------------------------------------------------------------- */
+
+/* Na desktope sa karta rozvinie pomaly v rámci pevnej výšky. Nehýbe ďalšou
+   sekciou a susedné fotografie nezosivnú; mení sa iba priestor aktívnej karty. */
+.kh-cat__grid {
+  display: grid;
+  gap: clamp(14px, 1.4vw, 20px);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 620px) { .kh-cat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) {
+  .kh-cat__grid { display: flex; height: 610px; }
+  .kh-cat__item { min-width: 0; flex: 1 1 0; transition: flex-grow 880ms var(--k-ease-out); }
+  .kh-cat__item:hover,
+  .kh-cat__item:focus-within { flex-grow: 1.48; }
+}
+
+.kh-cat__card {
+  display: flex; flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair);
+  transition: border-color 320ms var(--k-ease), box-shadow 320ms var(--k-ease);
+}
+.kh-cat__card:hover { border-color: rgba(18, 23, 26, 0.24); }
+
+.kh-cat__media { position: relative; overflow: hidden; aspect-ratio: 4 / 5; background: var(--k-bone); }
+.kh-cat__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1000ms var(--k-ease-out); }
+/* Pohyb je pomalý a takmer nebadateľný; spätnú väzbu nesie šípka a rám. */
+.kh-cat__card:hover .kh-cat__media img { transform: scale(1.03); }
+@media (max-width: 619px) { .kh-cat__media { aspect-ratio: 4 / 3; } }
+
+.kh-cat__label {
+  position: absolute; top: 13px; left: 13px; z-index: 3;
+  display: inline-flex; align-items: center;
+  padding: 7px 10px;
+  border-radius: var(--k-r-xs);
+  background: rgba(18, 23, 26, 0.76);
+  backdrop-filter: none;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff;
+}
+
+/* značkový pás na fotke — kto riešenie dodáva */
+.kh-cat__brands {
+  position: absolute; bottom: 13px; left: 13px; right: 13px; z-index: 3;
+  display: inline-flex; width: fit-content; flex-wrap: wrap; gap: 0;
+  padding: 7px 10px;
+  border-radius: var(--k-r-xs);
+  background: rgba(18, 23, 26, 0.76);
+}
+.kh-cat__brands span {
+  padding: 0;
+  border-radius: 0;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+  background: transparent; color: #fff;
+  backdrop-filter: none;
+}
+.kh-cat__brands span + span::before { content: " / "; padding-inline: 5px; color: rgba(255,255,255,.5); }
+.kh-cat__brands span.is-premium { background: transparent; color: var(--k-amber); }
+
+.kh-cat__body { display: flex; flex-direction: column; gap: 10px; flex: 1 1 auto; padding: clamp(18px, 1.6vw, 24px); }
+.kh-cat__specs { display: flex; flex-wrap: wrap; gap: 0; }
+.kh-cat__specs li {
+  font-size: 11.5px; line-height: 1;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--k-grey);
+}
+.kh-cat__specs li + li::before { content: "·"; margin-inline: 8px; color: var(--k-amber-deep); }
+
+/* odkrývaná časť — opis a CTA */
+.kh-cat__more {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.kh-cat__more > div { overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+.kh-cat__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px; }
+.kh-cat__actions .k-link { font-size: 13.5px; }
+.kh-cat__actions .kh-cat__cfg {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 0 3px;
+  border-radius: 0;
+  border-bottom: 2px solid var(--k-amber);
+  background: transparent;
+  color: var(--k-ink);
+  font-size: 12.5px; font-weight: 700;
+}
+.kh-cat__actions .kh-cat__cfg svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+@media (min-width: 1000px) {
+  .kh-cat__card { height: 100%; }
+  .kh-cat__media { flex: 1 1 auto; min-height: 0; aspect-ratio: auto; transition: flex-basis 820ms var(--k-ease-out); }
+  .kh-cat__body { flex: 0 0 132px; overflow: hidden; transition: flex-basis 820ms var(--k-ease-out); }
+  .kh-cat__more {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: grid-template-rows 720ms var(--k-ease-out), opacity 460ms var(--k-ease) 60ms, transform 720ms var(--k-ease-out);
+  }
+  .kh-cat__item:hover .kh-cat__body,
+  .kh-cat__item:focus-within .kh-cat__body { flex-basis: 252px; }
+  .kh-cat__item:hover .kh-cat__more,
+  .kh-cat__item:focus-within .kh-cat__more { grid-template-rows: 1fr; opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   SOLTEC
+   -------------------------------------------------------------------------- */
+
+
+
+/* --------------------------------------------------------------------------
+   REALIZÁCIE — rovnaká mriežka, jednotný orez. Rôzne veľkosti pôsobili
+   neusporiadane, preto sú všetky dlaždice 4:3.
+   -------------------------------------------------------------------------- */
+
+/* Filtre majú vlastný riadok cez celú šírku — v pravom stĺpci hlavičky sa
+   zalamovali do dvoch riadkov. */
+.kh-work__bar {
+  display: grid; align-items: end;
+  gap: 18px 32px;
+  margin-bottom: clamp(24px, 2.6vw, 38px);
+}
+.kh-work__bar .k-copy { max-width: 46ch; }
+.kh-work__filter-set { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px; min-width: 0; }
+.kh-work__filter-block { display: grid; gap: 8px; }
+.kh-work__filter-block--brand { position: relative; }
+.kh-work__filter-label {
+  padding-left: 3px;
+  font-size: 10.5px; font-weight: 700; line-height: 1; letter-spacing: 0.11em;
+  color: var(--k-muted); text-transform: uppercase;
+}
+.kh-work__filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.kh-work__filters button {
+  padding: 11px 18px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-pill);
+  font-size: 13.5px; font-weight: 600; line-height: 1;
+  transition: background-color 220ms var(--k-ease), border-color 220ms var(--k-ease), color 220ms var(--k-ease);
+}
+.kh-work__filters button:hover { border-color: var(--k-ink); }
+.kh-work__filters button[aria-pressed="true"] { background: var(--k-ink); border-color: var(--k-ink); color: var(--k-white); }
+.kh-work__filters--brand button[data-k-filter="soltec"][aria-pressed="true"] { background: var(--k-grey); border-color: var(--k-grey); }
+.kh-work__filters button:disabled { opacity: 0.34; cursor: not-allowed; }
+
+@media (min-width: 1050px) {
+  .kh-work__bar { grid-template-columns: minmax(0, 1fr) minmax(260px, 36ch); }
+  .kh-work__bar .k-copy { justify-self: end; }
+  .kh-work__filter-block--brand { padding-left: 28px; }
+  .kh-work__filter-block--brand::before {
+    content: ""; position: absolute; left: 0; top: 17px; bottom: 1px;
+    width: 1px; background: var(--k-hair);
+  }
+}
+
+@media (max-width: 640px) {
+  .kh-work__filter-set { display: grid; gap: 14px; width: 100%; }
+  .kh-work__filter-block { min-width: 0; }
+  .kh-work__filters {
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain;
+    margin-inline: calc(var(--k-gut) * -1); padding-inline: var(--k-gut); padding-bottom: 3px;
+    scrollbar-width: none;
+  }
+  .kh-work__filters::-webkit-scrollbar { display: none; }
+  .kh-work__filters button { flex: 0 0 auto; }
+}
+
+.kh-work__grid { display: grid; gap: clamp(14px, 1.5vw, 22px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .kh-work__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.kh-work__item { position: relative; overflow: hidden; border-radius: var(--k-r); background: var(--k-bone); }
+.kh-work__item[hidden] { display: none; }
+.kh-work__media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+.kh-work__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 900ms var(--k-ease-out); }
+.kh-work__item:hover .kh-work__media img { transform: scale(1.035); }
+.kh-work__cap {
+  position: absolute; inset: auto 0 0; z-index: 2;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;
+  padding: 44px 18px 16px;
+  background: linear-gradient(to top, rgba(10, 14, 16, 0.8), rgba(10, 14, 16, 0));
+  color: #fff;
+}
+.kh-work__cap strong { font-size: 14.5px; font-weight: 600; }
+.kh-work__cap span {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: var(--k-r-pill);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+}
+
+.kh-work__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin-top: clamp(32px, 3.4vw, 52px); }
+
+/* --------------------------------------------------------------------------
+   PÄTIČKA — vlastná vrstva namiesto generickej Dawn pätičky
+   -------------------------------------------------------------------------- */
+
+.kf {
+  --k-max: 1440px; --k-gut: clamp(20px, 4vw, 60px);
+  background: #12171a; color: #fff;
+}
+.kf a { color: inherit; text-decoration: none; }
+.kf__lead {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 28px;
+  padding-block: clamp(56px, 6vw, 96px) clamp(42px, 4.6vw, 70px);
+  border-bottom: 1px solid var(--k-hair-invert);
+}
+.kf__lead > div { display: grid; gap: 12px; max-width: 760px; }
+.kf__lead .k-eyebrow { color: var(--k-amber); }
+.kf__lead .k-btn { border-radius: var(--k-r-sm); }
+.kf__lead h2 {
+  margin: 0; font-family: var(--k-head); font-size: clamp(30px, 4vw, 60px);
+  font-weight: 650; line-height: 1.04; letter-spacing: -0.045em;
+}
+.kf__grid {
+  display: grid; gap: 38px 28px;
+  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(150px, 1fr));
+  padding-block: clamp(46px, 5.2vw, 78px);
+}
+.kf__brand { display: grid; align-content: start; gap: 18px; max-width: 34ch; padding-right: clamp(16px, 3vw, 48px); }
+.kf__logo { display: inline-flex; width: fit-content; color: #fff; }
+.kf__logo .k-logo { height: 32px; }
+.kf__brand p { margin: 0; color: var(--k-muted-invert); font-size: 14.5px; line-height: 1.65; }
+.kf__brand > span { color: rgba(255,255,255,.45); font-size: 12.5px; line-height: 1.6; }
+.kf__nav,
+.kf__contact { display: flex; flex-direction: column; align-items: flex-start; gap: 11px; }
+.kf__nav strong,
+.kf__contact > strong { margin-bottom: 6px; font-family: var(--k-head); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+.kf__nav a,
+.kf__contact > a { position: relative; color: var(--k-muted-invert); font-size: 14px; transition: color 180ms var(--k-ease), transform 180ms var(--k-ease); }
+.kf__nav a:hover,
+.kf__contact > a:hover { color: #fff; transform: translateX(3px); }
+.kf__social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.kf__social a {
+  padding: 8px 11px; border: 1px solid var(--k-hair-invert); border-radius: var(--k-r-pill);
+  color: rgba(255,255,255,.78); font-size: 11.5px; font-weight: 650;
+}
+.kf__social a:hover { border-color: var(--k-amber); color: var(--k-amber); }
+.kf__bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 22px;
+  padding-block: 22px 28px; border-top: 1px solid var(--k-hair-invert);
+  color: rgba(255,255,255,.43); font-size: 11.5px;
+}
+.kf__bottom nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px 22px; }
+.kf__bottom a:hover { color: #fff; }
+
+@media (max-width: 900px) {
+  .kf__lead { align-items: flex-start; flex-direction: column; }
+  .kf__grid { grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(140px, 1fr)); }
+  .kf__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  .kf__lead .k-btn { width: 100%; }
+  .kf__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kf__brand,
+  .kf__contact { grid-column: 1 / -1; }
+  .kf__bottom { align-items: flex-start; flex-direction: column; }
+  .kf__bottom nav { justify-content: flex-start; }
+}
+
+/* --------------------------------------------------------------------------
+   PROCES
+   Lepivý ľavý stĺpec drží nadpis a zoznam krokov; pravý stĺpec sa scrolluje.
+   Ako panel vstúpi do stredu okna, krok sa v zozname zvýrazní a jantárová
+   os pod ním narastie. Je to jediná väčšia animácia na stránke.
+   -------------------------------------------------------------------------- */
+
+.kh-proc { background: var(--k-bone); }
+.kh-proc__grid { display: grid; gap: clamp(32px, 4vw, 72px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 960px) { .kh-proc__grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+
+.kh-proc__aside { display: flex; flex-direction: column; gap: 26px; }
+@media (min-width: 960px) { .kh-proc__aside { position: sticky; top: 120px; } }
+
+/* zoznam krokov v lepivom stĺpci */
+.kh-proc__list { display: flex; flex-direction: column; }
+.kh-proc__row {
+  position: relative;
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 15px 0 15px 20px;
+  border-top: 1px solid var(--k-hair);
+  color: var(--k-muted);
+  transition: color 340ms var(--k-ease);
+}
+.kh-proc__list .kh-proc__row:last-child { border-bottom: 1px solid var(--k-hair); }
+.kh-proc__row::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--k-amber);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 380ms var(--k-ease-out);
+}
+.kh-proc__row.is-active { color: var(--k-ink); }
+.kh-proc__row.is-active::before { transform: scaleY(1); }
+.kh-proc__row em { font-style: normal; font-family: var(--k-head); font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.55; }
+.kh-proc__row.is-active em { opacity: 1; color: var(--k-amber-deep); }
+.kh-proc__row strong { font-family: var(--k-head); font-size: clamp(16px, 1.3vw, 19px); font-weight: 700; letter-spacing: -0.018em; }
+
+/* panely vpravo */
+.kh-proc__panels { display: flex; flex-direction: column; gap: clamp(18px, 2vw, 30px); }
+/* Kroky procesu nie sú karty — oddeľuje ich jediná vlasová linka a fotka ide
+   až k okraju stĺpca. Orámovaná karta bola to, čo sekcii dávalo šablónový nádych. */
+.kh-proc__panel {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  border-top: 1px solid var(--k-hair);
+  transition: opacity 420ms var(--k-ease);
+  opacity: 0.55;
+}
+.kh-proc__panel.is-active { opacity: 1; }
+.kh-proc__panels > .kh-proc__panel:first-child { border-top: 0; }
+@media (min-width: 700px) { .kh-proc__panel { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr); align-items: stretch; } }
+
+.kh-proc__media { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: var(--k-bone-deep); border-radius: var(--k-r-sm); }
+@media (min-width: 700px) { .kh-proc__media { aspect-ratio: auto; min-height: 210px; } }
+.kh-proc__media img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 900ms var(--k-ease-out); }
+.kh-proc__panel.is-active .kh-proc__media img { transform: scale(1); }
+
+.kh-proc__body { display: flex; flex-direction: column; gap: 10px; padding: clamp(22px, 2.2vw, 32px); }
+/* Veľká, ľahká a odfarbená číslica. Aktívny krok ju rozsvieti jantárovou. */
+.kh-proc__num {
+  font-family: var(--k-head);
+  font-size: clamp(56px, 6vw, 96px);
+  font-weight: 300;
+  line-height: 0.8;
+  letter-spacing: -0.045em;
+  color: var(--k-hair);
+  transition: color 420ms var(--k-ease);
+}
+.kh-proc__panel.is-active .kh-proc__num { color: var(--k-amber); }
+.kh-proc__body p { max-width: 46ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-proc__row { color: var(--k-ink); }
+  .kh-proc__row::before { transform: scaleY(1); }
+  .kh-proc__num { color: var(--k-amber); }
+  .kh-proc__media img { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   RECENZIE
+   -------------------------------------------------------------------------- */
+
+.kh-rev__grid { display: grid; gap: clamp(28px, 3vw, 48px); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1000px) { .kh-rev__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); } }
+
+.kh-rev__score { display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 1000px) { .kh-rev__score { position: sticky; top: 110px; } }
+/* Karta so skóre má niesť jasný odkaz „toto sú Google recenzie" — preto je
+   logo veľké a hore, nie schované vedľa čísla. */
+.kh-rev__big {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: clamp(22px, 2vw, 28px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair);
+  box-shadow: none;
+}
+.kh-rev__brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.kh-rev__brand .k-google { width: 24px; height: 24px; }
+.kh-rev__figures { display: flex; align-items: center; gap: 16px; }
+.kh-rev__big b { font-family: var(--k-head); font-size: clamp(46px, 4.4vw, 60px); font-weight: 700; line-height: 0.85; letter-spacing: -0.04em; }
+.kh-rev__big div { display: flex; flex-direction: column; gap: 8px; }
+.kh-rev__big small { font-size: 13px; color: var(--k-muted); }
+.kh-rev__source { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 11px 14px; border: 1px solid var(--k-hair); border-radius: var(--k-r-xs); font-size: 13.5px; font-weight: 600; transition: border-color 220ms var(--k-ease), box-shadow 220ms var(--k-ease); }
+.kh-rev__source:hover { border-color: var(--k-ink); box-shadow: var(--k-shadow-sm); }
+.kh-rev__source svg:last-child { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.kh-rev__award { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border: 1px solid rgba(234,176,0,.2); border-radius: var(--k-r-xs); background: var(--k-amber-soft); }
+.kh-rev__award svg { width: 22px; height: 22px; flex: 0 0 auto; fill: none; stroke: #a97c00; stroke-width: 1.6; }
+.kh-rev__award strong { display: block; font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+.kh-rev__award span { display: block; margin-top: 3px; font-size: 11.5px; color: #8a6a1a; }
+
+.kh-rev__nav { display: flex; gap: 8px; margin-bottom: 18px; }
+.kh-rev__nav button {
+  display: inline-grid; place-items: center;
+  width: 46px; height: 46px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-xs);
+  transition: background-color 220ms var(--k-ease), border-color 220ms var(--k-ease), color 220ms var(--k-ease), opacity 220ms var(--k-ease);
+}
+.kh-rev__nav button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; }
+.kh-rev__nav button:hover:not(:disabled) { background: var(--k-ink); border-color: var(--k-ink); color: var(--k-white); }
+.kh-rev__nav button:disabled { opacity: 0.3; cursor: default; }
+
+.kh-rev__list { container-type: inline-size; }
+.kh-rev__rail {
+  display: flex;
+  gap: clamp(12px, 1.3vw, 18px);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 6px;
+}
+.kh-rev__rail::-webkit-scrollbar { display: none; }
+
+.kh-rev__card {
+  display: flex; flex-direction: column; gap: 14px;
+  flex: 0 0 auto;
+  width: 82cqi;
+  min-width: 250px;
+  max-width: 430px;
+  padding: clamp(22px, 2vw, 28px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  scroll-snap-align: start;
+  transition: box-shadow 260ms var(--k-ease), border-color 260ms var(--k-ease);
+}
+.kh-rev__card:hover { border-color: transparent; box-shadow: var(--k-shadow-sm); }
+@media (min-width: 700px) { .kh-rev__card { width: calc((100cqi - clamp(12px, 1.3vw, 18px)) / 2); max-width: none; } }
+@media (min-width: 1220px) { .kh-rev__card { width: calc((100cqi - 2 * clamp(12px, 1.3vw, 18px)) / 3); } }
+
+.kh-rev__quote { font-size: 14.5px; line-height: 1.64; color: var(--k-ink); }
+.kh-rev__who { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--k-hair-soft); }
+.kh-rev__avatar {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; flex: 0 0 auto;
+  border-radius: var(--k-r-pill);
+  background: var(--k-grey); color: var(--k-white);
+  font-family: var(--k-head); font-size: 15px; font-weight: 700; line-height: 1;
+  overflow: hidden;
+}
+.kh-rev__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.kh-rev__card:nth-child(3n + 2) .kh-rev__avatar { background: var(--k-ink); }
+.kh-rev__card:nth-child(3n) .kh-rev__avatar { background: var(--k-amber); color: var(--k-ink); }
+.kh-rev__name { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.kh-rev__name strong { font-size: 13.5px; font-weight: 600; }
+.kh-rev__name small { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--k-muted); }
+
+/* --------------------------------------------------------------------------
+   MATERIÁL
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 900px) {
+    }
+.kh-mat__list { display: grid; gap: 10px; }
+.kh-mat__list li { display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; line-height: 1.5; }
+.kh-mat__list li svg { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; fill: none; stroke: var(--k-amber-deep); stroke-width: 2.2; }
+
+/* --------------------------------------------------------------------------
+   FAQ
+   -------------------------------------------------------------------------- */
+
+.kh-faq__grid { display: grid; gap: clamp(26px, 3vw, 52px); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1000px) { .kh-faq__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); } }
+.kh-faq__intro { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+.kh-faq__intro .k-btn { border-radius: var(--k-r-xs); }
+.kh-faq__list { display: grid; gap: 0; border-top: 1px solid var(--k-hair); }
+.kh-faq__item {
+  border: 0;
+  border-bottom: 1px solid var(--k-hair);
+  border-radius: 0;
+  background: transparent;
+  transition: border-color 240ms var(--k-ease);
+}
+.kh-faq__item[open] { border-color: rgba(18,23,26,.24); box-shadow: none; }
+.kh-faq__item summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 22px;
+  padding: clamp(20px, 1.8vw, 27px) 0;
+  cursor: pointer; list-style: none;
+  font-family: var(--k-head);
+  font-size: clamp(15.5px, 1.2vw, 18px);
+  font-weight: 700; letter-spacing: -0.015em; line-height: 1.3;
+}
+.kh-faq__item summary::-webkit-details-marker { display: none; }
+.kh-faq__sign {
+  position: relative; display: grid; place-items: center;
+  width: 24px; height: 24px; flex: 0 0 auto;
+  border-radius: 0; background: transparent;
+  transition: color 240ms var(--k-ease);
+}
+.kh-faq__item[open] .kh-faq__sign { background: transparent; color: #a87c00; }
+.kh-faq__sign::before,
+.kh-faq__sign::after { content: ""; position: absolute; width: 14px; height: 1.5px; border-radius: 1px; background: currentColor; transition: transform 380ms var(--k-ease-out); }
+.kh-faq__sign::after { transform: rotate(90deg); }
+.kh-faq__item[open] .kh-faq__sign::after { transform: rotate(0deg); }
+.kh-faq__item > div { padding: 0 42px clamp(22px, 2vw, 30px) 0; }
+.kh-faq__item > div p { font-size: 15px; line-height: 1.68; color: var(--k-muted); max-width: 70ch; }
+
+/* --------------------------------------------------------------------------
+   KONTAKT — svetlý, karta s formulárom, vedľa nej konkrétne kontakty
+   -------------------------------------------------------------------------- */
+
+.kh-cta { background: var(--k-bone); }
+.kh-cta__grid { display: grid; gap: clamp(24px, 2.6vw, 44px); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1000px) { .kh-cta__grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); } }
+
+.kh-cta__card {
+  padding: clamp(26px, 2.8vw, 46px);
+  border: 1px solid var(--k-hair);
+  border-top: 3px solid var(--k-amber);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  box-shadow: none;
+}
+.kh-cta__head { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+
+.kh-form { display: flex; flex-direction: column; gap: 20px; }
+.kh-form fieldset { padding: 0; margin: 0; border: 0; }
+.kh-form legend { padding: 0; margin-bottom: 11px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--k-grey); }
+.kh-form__choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.kh-form__choices label { position: relative; }
+.kh-form__choices input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.kh-form__choices span {
+  display: block;
+  padding: 11px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-xs);
+  font-size: 13.5px; line-height: 1;
+  transition: background-color 200ms var(--k-ease), border-color 200ms var(--k-ease), color 200ms var(--k-ease);
+}
+.kh-form__choices label:hover span { border-color: var(--k-ink); }
+.kh-form__choices input:checked + span { background: var(--k-ink); border-color: var(--k-ink); color: var(--k-white); font-weight: 600; }
+.kh-form__choices input:focus-visible + span { outline: 2px solid var(--k-ink); outline-offset: 3px; }
+
+.kh-form__grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 600px) { .kh-form__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kh-field { display: flex; flex-direction: column; gap: 7px; }
+.kh-field > span { font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--k-grey); }
+.kh-field input,
+.kh-field textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  color: var(--k-ink);
+  font: inherit; font-size: 15px;
+  transition: border-color 200ms var(--k-ease), box-shadow 200ms var(--k-ease);
+}
+.kh-field textarea { resize: vertical; min-height: 96px; }
+.kh-field input::placeholder,
+.kh-field textarea::placeholder { color: rgba(18, 23, 26, 0.36); }
+.kh-field input:focus,
+.kh-field textarea:focus { outline: none; border-color: var(--k-ink); box-shadow: 0 0 0 3px rgba(18, 23, 26, 0.07); }
+
+.kh-form__submit { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+.kh-form__note { font-size: 12.5px; line-height: 1.5; color: var(--k-muted); max-width: 40ch; }
+.kh-form__note a { text-decoration: underline; text-underline-offset: 2px; }
+.kh-form__success { padding: 15px 18px; border-radius: var(--k-r-sm); background: var(--k-amber-soft); border-left: 3px solid var(--k-amber); font-size: 15px; }
+.kh-form .errors,
+.kh-form .form__message { padding: 14px 16px; border-radius: var(--k-r-sm); background: #fdeceb; border-left: 3px solid #d8453c; font-size: 14px; list-style: none; color: #8f2b25; }
+
+/* pravý stĺpec */
+.kh-cta__aside { display: flex; flex-direction: column; gap: 0; padding: clamp(10px, 1.2vw, 18px) clamp(22px, 2.4vw, 34px); border-radius: var(--k-r-sm); background: var(--k-ink); color: var(--k-white); }
+.kh-cta__row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--k-hair-invert);
+  transition: color 220ms var(--k-ease), padding-left 320ms var(--k-ease-out);
+}
+a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none; transform: none; }
+.kh-cta__ico { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border-radius: 0; background: transparent; }
+.kh-cta__ico svg { width: 20px; height: 20px; fill: none; stroke: var(--k-amber); stroke-width: 1.8; }
+.kh-cta__row small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.kh-cta__row strong { display: block; margin-top: 4px; font-family: var(--k-head); font-size: clamp(16px, 1.3vw, 19px); font-weight: 700; letter-spacing: -0.018em; line-height: 1.3; }
+
+.kh-cta__score { display: flex; flex-direction: column; gap: 14px; padding: 24px 0 22px; border-radius: 0; background: transparent; color: var(--k-white); }
+.kh-cta__score .kh-fact__row { display: flex; align-items: center; gap: 12px; }
+.kh-cta__score b { font-family: var(--k-head); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.kh-cta__score small { font-size: 12.5px; color: rgba(255, 255, 255, 0.72); }
+.kh-cta__score a { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--k-amber); }
+.kh-cta__score a svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* --------------------------------------------------------------------------
+   Drobnosti viazané na Liquid sekciu
+   -------------------------------------------------------------------------- */
+
+.koverta-home-section { position: relative; z-index: 0; }
+.kh-cat__intro { max-width: 34ch; margin-bottom: 16px; }
+.kh-proc__intro { max-width: 32ch; }
+.kh-work__foottext { max-width: 44ch; }
+
+/* Na telefóne CTA v hlavičke ustúpi, aby zostal priestor pre navigáciu. */
+@media (max-width: 699px) {
+  .kv-bar__cta { display: none; }
+  .kv-bar__in { min-height: 64px; }
+}
+
+/* ========================================================================== 
+   2026-08-29 — ART-DIRECTION REFINEMENT
+   Kompozícia vychádza z odsúhlasených návrhov, ale všetky produkčné
+   obrázky zostávajú reálnymi fotografiami Koverta/SOLTEC a logo je
+   autoritatívne firemné SVG.
+   ========================================================================== */
+
+/* Hero: jedna jasná ponuka, jedno hodnotenie, žiadne duplicitné proof chips. */
+.kh-hero { min-height: min(78svh, 720px); }
+.kh-hero__box { max-width: 760px; gap: clamp(14px, 1.35vw, 20px); }
+.kh-hero h1 { max-width: 11.5ch; }
+.kh-hero__accent { display: block; color: #fff; }
+.kh-hero__lead {
+  position: relative;
+  max-width: 52ch;
+  padding-left: 18px;
+  border-left: 3px solid var(--k-amber);
+}
+.kh-hero__trust { margin-top: 8px; }
+.kh-hero__rating {
+  gap: 13px;
+  min-height: 62px;
+  padding: 11px 16px;
+  border-color: rgba(255,255,255,.42);
+  background: rgba(9,12,14,.38);
+}
+.kh-hero__rating .k-google { width: 24px; height: 24px; }
+.kh-hero__rating-copy { display: grid; gap: 4px; text-align: left; }
+.kh-hero__rating-copy strong { font-family: var(--k-head); font-size: 22px; line-height: 1; }
+.kh-hero__rating-copy small { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.7); }
+.kh-hero__rating .k-stars { gap: 2px; }
+.kh-hero__rating .k-stars svg { width: 16px; height: 16px; }
+
+/* Staršie prepisy pre .kh-pick a .kh-cfg boli odstránené — viazali sa na
+   markup s inou štruktúrou (scene-media, lane-copy, brand karty) a prebíjali
+   novú kompozíciu definovanú vyššie v súbore. */
+
+/* Stabilná ponuka: žiadna zmena šírky kariet, iba kultivovaný vnútorný pohyb. */
+@media (min-width:1000px) {
+  .kh-cat__grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); height:610px; gap:clamp(10px,1vw,15px); }
+  .kh-cat__item { min-width:0; transition:none; }
+  .kh-cat__item:hover,.kh-cat__item:focus-within { flex-grow:initial; }
+  .kh-cat__media { flex:1 1 auto; transition:flex-basis 440ms cubic-bezier(.2,.75,.25,1); }
+  .kh-cat__body { flex:0 0 142px; transition:flex-basis 440ms cubic-bezier(.2,.75,.25,1); }
+  .kh-cat__item:hover .kh-cat__body,.kh-cat__item:focus-within .kh-cat__body { flex-basis:238px; }
+  .kh-cat__more { transition:grid-template-rows 380ms cubic-bezier(.2,.75,.25,1),opacity 300ms var(--k-ease),transform 380ms cubic-bezier(.2,.75,.25,1); }
+}
+.kh-cat__card { border-radius: var(--k-r); transition:border-color 320ms var(--k-ease),box-shadow 420ms var(--k-ease),transform 420ms cubic-bezier(.2,.75,.25,1); }
+/* Dlaždica sa nedvíha — hýbe sa len fotka vnútri rámu. Zdvih s tieňom bol
+   to jediné, čo túto sekciu ťahalo dolu. */
+.kh-cat__card:hover { transform:none; box-shadow:none; }
+.kh-cat__media img { transition:transform 520ms cubic-bezier(.2,.75,.25,1); }
+.kh-cat__card:hover .kh-cat__media img { transform:scale(1.032); }
+.kh-cat__item:nth-child(3) .kh-cat__media img { object-position:55% center; }
+.kh-cat__item:nth-child(4) .kh-cat__media img { object-position:72% center; }
+@media (max-width:999px) {
+  .kh-cat__grid { display:flex; grid-template-columns:none; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-inline:contain; padding-bottom:10px; scrollbar-width:none; }
+  .kh-cat__grid::-webkit-scrollbar { display:none; }
+  .kh-cat__item { flex:0 0 min(78vw,380px); scroll-snap-align:start; }
+}
+
+/* SOLTEC: explicitný kontrast a veľká technická trojkroková os. */
+
+/* Realizácie ostávajú fotografické, pohyb je pomalší a presnejší. */
+.kh-work__item { border-radius: var(--k-r); }
+.kh-work__media img { transition:transform 1100ms cubic-bezier(.2,.75,.25,1),filter 500ms var(--k-ease); }
+.kh-work__item:hover .kh-work__media img { transform:scale(1.035); }
+.kh-work__cap span { border-radius: var(--k-r-pill); backdrop-filter: none; }
+
+/* Proces: vynútená čitateľnosť aj pri prepísaní farieb Dawn témou. */
+.kh-proc,.kh-proc .k-h2,.kh-proc .k-h4 { color:var(--k-ink); }
+.kh-proc .k-copy { color:var(--k-muted); }
+
+/* Materiály: veľké reálne detaily a redakčné číslovanie namiesto kariet. */
+.kh-mat { background:#eef0f0; }
+.kh-mat > .k-wrap { counter-reset:k-mat; }
+.kh-mat__list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 22px; padding-top:10px; border-top:1px solid rgba(18,23,26,.12); }
+
+/* FAQ: tmavý kontextový stĺpec + ostrý svetlý accordion. */
+.kh-faq { background:#e9ecec; }
+.kh-faq__grid { gap:0; }
+@media (min-width:1000px) { .kh-faq__grid { grid-template-columns:minmax(0,4fr) minmax(0,8fr); } }
+.kh-faq__intro { align-self:stretch; justify-content:center; padding:clamp(34px,4vw,64px); border-radius:var(--k-r) 0 0 var(--k-r); background:#171d20; color:#fff; }
+.kh-faq__intro .k-eyebrow { color:var(--k-amber); }
+.kh-faq__intro .k-h2 { color:#fff; }
+.kh-faq__intro .k-copy { color:rgba(255,255,255,.68); }
+.kh-faq__intro .k-btn { color:#fff; border-color:rgba(255,255,255,.25); background:transparent; }
+.kh-faq__list { align-content:start; padding:clamp(18px,2.6vw,42px) clamp(26px,4vw,66px); border-top:0; border-radius:0 var(--k-r) var(--k-r) 0; background:#fff; }
+.kh-faq__item { position:relative; padding-left:0; transition:padding-left 360ms var(--k-ease-out),border-color 240ms var(--k-ease); }
+.kh-faq__item[open] { padding-left:18px; border-color:rgba(18,23,26,.3); }
+.kh-faq__item[open]::before { content:""; position:absolute; left:0; top:17px; bottom:17px; width:3px; background:var(--k-amber); }
+
+/* Formulár: riadne labels, veľké polia, segmentový výber a čitateľný servis. */
+.kh-cta { background:#fff; }
+.kh-cta__grid { gap:0; align-items:stretch; }
+.kh-cta__card { padding:clamp(32px,4vw,62px); border:1px solid rgba(18,23,26,.13); border-top:1px solid rgba(18,23,26,.13); border-radius:var(--k-r) 0 0 var(--k-r); }
+.kh-cta__head { margin-bottom:34px; }
+.kh-form { gap:24px; }
+.kh-form__choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.kh-form__choices span { display:grid; place-items:center; min-height:54px; height:100%; padding:10px 12px; border-radius:var(--k-r-sm); text-align:center; line-height:1.25; background:#f5f6f6; }
+.kh-form__choices input:checked + span { background:#171d20; }
+.kh-field { gap:8px; }
+.kh-field > span { color:#4f585c; }
+.kh-field input,.kh-field textarea { min-height:56px; padding:15px 16px; border-radius:var(--k-r-sm); background:#f7f8f8; }
+.kh-field textarea { min-height:122px; }
+.kh-field input:focus,.kh-field textarea:focus { border-color:#a77a00; box-shadow:0 0 0 3px rgba(255, 204, 0,.18); background:#fff; }
+.kh-form__submit { align-items:flex-start; }
+.kh-form__submit .k-btn { min-width:230px; }
+.kh-cta__aside { padding:clamp(32px,4vw,62px); border-radius:0 var(--k-r) var(--k-r) 0; background:#171d20; color:#fff; }
+.kh-cta__aside-head { display:grid; gap:14px; padding-bottom:28px; border-bottom:1px solid rgba(255,255,255,.16); }
+.kh-cta__aside-head .k-eyebrow { color:var(--k-amber); }
+.kh-cta__aside-head h3 { margin:0; font-family:var(--k-head); font-size:clamp(27px,2.7vw,42px); line-height:1.08; letter-spacing:-.035em; color:#fff !important; }
+.kh-cta__aside-head p { margin:0; color:rgba(255,255,255,.68); font-size:14.5px; line-height:1.62; }
+.kh-cta__row,.kh-cta__row strong { color:#fff; }
+.kh-cta__steps { display:grid; gap:0; margin:10px 0 0; padding:0; list-style:none; counter-reset:none; }
+.kh-cta__steps li { display:grid; grid-template-columns:46px minmax(0,1fr); gap:4px 16px; padding:20px 0; border-top:1px solid rgba(255,255,255,.1); }
+.kh-cta__steps li > span { grid-row:1/3; font-family:var(--k-head); font-size:25px; font-weight:450; line-height:1; color:var(--k-amber); }
+.kh-cta__steps strong { color:#fff; font-size:14px; }
+.kh-cta__steps small { color:rgba(255,255,255,.56); font-size:12px; line-height:1.5; }
+
+@media (max-width:899px) {
+  .kh-pick__panorama { min-height:0; }
+  .kh-pick__scene { min-height:360px; }
+  .kh-pick__scene + .kh-pick__scene { border-left:0; border-top:1px solid rgba(255,255,255,.62); }
+  .kh-pick__lane + .kh-pick__lane { border-left:1px solid var(--k-hair); }
+  .kh-cfg__brand { min-height:580px; }
+  .kh-mat__list { grid-template-columns:1fr; }
+  .kh-faq__intro,.kh-faq__list,.kh-cta__card,.kh-cta__aside { border-radius:var(--k-r); }
+  .kh-faq__list { margin-top:12px; }
+  .kh-cta__aside { margin-top:12px; }
+}
+
+/* Realizácie — Soltec dostáva tmavý štítok, Koverta svetlý. Rozdiel musí byť
+   čitateľný na prvý pohľad, ale nesmie prekričať fotku. */
+.kh-work__cap span.is-premium { background: rgba(18, 23, 26, 0.72); color: #fff; }
+
+
+/* ==========================================================================
+   HERO — úpravy po revízii
+   Zrušený nadradený riadok (tvrdenie o Nitre nebolo presné) aj rad čipov
+   pod hodnotením — tie isté argumenty už nesie servisný pás hlavičky.
+   Akcent v nadpise je jantárová farba slova, nie linka medzi riadkami:
+   linka sadala do medzery medzi riadky a pôsobila ako chyba sadzby.
+   ========================================================================== */
+
+.kh-hero__accent { color: var(--k-amber); }
+
+/* Hodnotenie je jediný prvok pod tlačidlami, takže môže byť výraznejšie. */
+.kh-hero__trust { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 6px; }
+
+.kh-hero__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 20px 13px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--k-r-pill);
+  background: rgba(12, 16, 18, 0.42);
+  backdrop-filter: blur(12px) saturate(1.3);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 240ms var(--k-ease), border-color 240ms var(--k-ease), transform 240ms var(--k-ease);
+}
+.kh-hero__rating:hover { background: rgba(12, 16, 18, 0.62); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-1px); }
+.kh-hero__rating .k-google { width: 26px; height: 26px; }
+.kh-hero__rating strong { font-family: var(--k-head); font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.kh-hero__rating .k-stars svg { width: 18px; height: 18px; }
+.kh-hero__rating-meta { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.kh-hero__rating-meta span { font-size: 12.5px; color: rgba(255, 255, 255, 0.82); white-space: nowrap; }
+.kh-hero__divider { width: 1px; height: 30px; background: rgba(255, 255, 255, 0.24); }
+
+@media (max-width: 519px) {
+  .kh-hero__rating { gap: 11px; padding: 11px 16px; }
+  .kh-hero__rating strong { font-size: 22px; }
+  .kh-hero__divider { display: none; }
+}
+
+
+/* ==========================================================================
+   DOLADENIE PO REVÍZII
+   ========================================================================== */
+
+/* --- SOLTEC: horná kompozícia -------------------------------------------
+   Nadpis mal clamp až do 88 px v úzkom stĺpci, takže sa lámal po dvoch
+   slovách a sekcia pôsobila stiesnene. Stĺpce sú vyrovnanejšie a nadpis
+   dostal strop, ktorý sa do nich zmestí. Rad 01–02–03 ostáva bez zmeny. */
+
+/* --- KONTAKTNÝ FORMULÁR --------------------------------------------------
+   Polia boli ploché obdĺžniky s drobným verzálkovým popisom. Teraz majú
+   výraznejší podklad, väčší cieľ na dotyk a jasný stav pri zameraní. */
+.kh-cta__card { border-radius: var(--k-r-lg); }
+.kh-form { gap: 22px; }
+.kh-form legend { font-size: 11.5px; letter-spacing: 0.14em; color: var(--k-grey); }
+
+.kh-field > span {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--k-grey);
+}
+.kh-field input,
+.kh-field textarea {
+  padding: 15px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+  font-size: 15.5px;
+  transition: background-color 200ms var(--k-ease), border-color 200ms var(--k-ease), box-shadow 200ms var(--k-ease);
+}
+.kh-field input:hover,
+.kh-field textarea:hover { background: var(--k-bone-deep); }
+.kh-field input:focus,
+.kh-field textarea:focus {
+  outline: none;
+  background: var(--k-white);
+  border-color: var(--k-ink);
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.28);
+}
+
+/* výber riešenia — chip s jasným zvoleným stavom */
+.kh-form__choices span {
+  padding: 12px 17px;
+  border-radius: var(--k-r-pill);
+  border-color: var(--k-hair);
+  background: var(--k-white);
+  font-size: 13.5px;
+  transition: background-color 200ms var(--k-ease), border-color 200ms var(--k-ease), color 200ms var(--k-ease);
+}
+.kh-form__choices label:hover span { border-color: var(--k-ink); }
+.kh-form__choices input:checked + span {
+  background: var(--k-ink);
+  border-color: var(--k-ink);
+  color: #fff;
+}
+
+/* --- FAQ: viac značkovej farby ------------------------------------------ */
+.kh-faq { background: var(--k-bone); }
+.kh-faq__item { background: var(--k-white); border-color: transparent; }
+.kh-faq__item[open] { box-shadow: none; border-color: var(--k-amber); }
+.kh-faq__sign { background: var(--k-bone); }
+.kh-faq__item[open] .kh-faq__sign { background: var(--k-amber); }
+
+/* ==========================================================================
+   OPRAVY KONTRASTU
+   `.k a { color: inherit }` má špecificitu 0-1-1 a prebíja farbu ktoréhokoľvek
+   komponentu zapísaného jednou triedou (0-1-0). Na tmavých plochách preto
+   tlačidlá dedili bielu — biely text na jantárovej má kontrast 1,64:1.
+   Nasledujúce pravidlá vracajú komponentom ich vlastnú farbu.
+   ========================================================================== */
+
+.k a.k-btn--primary,
+.k button.k-btn--primary,
+.k a.kh-cat__cfg,
+.k a.kh-cfg__go { color: var(--k-ink); }
+
+.k a.k-btn--ink,
+.k button.k-btn--ink { color: var(--k-white); }
+
+/* Tmavá lane v sekcii dvoch značiek nenesie .k-invert, takže sa na ňu
+   nevzťahujú prepisy pre tmavé plochy. Doplnené adresne. */
+.kh-pick__lane:not(.is-premium) .k-copy,
+.kh-pick__lane:not(.is-premium) p { color: rgba(255, 255, 255, 0.74); }
+.kh-pick__lane:not(.is-premium) .k-h3,
+.kh-pick__lane:not(.is-premium) strong { color: #fff; }
+
+/* Pätička: Dawn dáva nadpisom vlastnú farbu priamym pravidlom, ktoré prebíja
+   dedenú bielu z .kf. */
+.kf__lead h2, .kf h2, .kf h3 { color: #fff; }
+
+/* Jantár na svetlom podklade má 1,5:1 a nesmie niesť text ani významovú
+   kresbu. Aktívny krok procesu preto zvýrazňuje prechod duch → čierna,
+   nie prefarbenie na jantár. */
+.kh-proc__panel.is-active .kh-proc__num,
+.kh-proc .kh-proc__panel.is-active .kh-proc__num { color: var(--k-ink); }
+.kh-proc__row.is-active em { color: var(--k-ink); opacity: 1; }
+.kh-proc__row em { opacity: 0.75; }
+
+/* Ikony, ktoré niečo znamenajú, potrebujú tmavší odtieň než značkový jantár. */
+.kh-cfg__note svg, .kh-cfg__go svg, .kh-mat__list li svg { stroke: #8a6500; }
+
+.kh-field input::placeholder,
+.kh-field textarea::placeholder { color: rgba(18, 23, 26, 0.55); }
+
+/* Štítok značky nad fotkou musí podklad stmaviť, nie zosvetliť. */
+.kh-work__cap span { background: rgba(18, 23, 26, 0.72); color: #fff; }
+
+/* Konfigurátor má štyri vstupy — Koverta a tri rady Soltec. */
+@media (min-width: 780px) { .kh-cfg__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1120px) { .kh-cfg__list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* --- KATEGÓRIE: druhý kanál spätnej väzby --------------------------------
+   Fotka sa hýbe takmer nebadateľne, takže reakciu nesie ešte štítok kategórie
+   a jantárová linka pod nadpisom. Bez zdvihu a bez tieňa. */
+.kh-cat__card .k-h3 { position: relative; padding-bottom: 10px; }
+.kh-cat__card .k-h3::after {
+  content: "";
+  position: absolute; left: 0; bottom: 0;
+  width: 100%; height: 2px;
+  border-radius: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 420ms var(--k-ease-out);
+}
+.kh-cat__card:hover .k-h3::after,
+.kh-cat__card:focus-within .k-h3::after { transform: scaleX(1); }
+.kh-cat__label { transition: background-color 300ms var(--k-ease), color 300ms var(--k-ease); }
+.kh-cat__card:hover .kh-cat__label { background: var(--k-amber); }
+
+/* --- DVE ZNAČKY: väčší dych a jasnejšia väzba fotky na panel -------------
+   Panely boli plytké a text v nich drobný, takže sekcia pôsobila ako pätka,
+   nie ako vyhlásenie. Fotografia a panel pod ňou tvoria jeden blok. */
+.kh-pick__scene { aspect-ratio: 16 / 10; }
+@media (min-width: 900px) { .kh-pick__scene { aspect-ratio: 3 / 2; } }
+.kh-pick__panorama { gap: 0; }
+
+.kh-pick__lanes { gap: 0; }
+.kh-pick__lane {
+  gap: 20px;
+  padding: clamp(32px, 4vw, 68px) clamp(26px, 3.4vw, 58px) clamp(36px, 4.4vw, 72px);
+  min-height: clamp(280px, 26vw, 360px);
+}
+.kh-pick__mark { min-height: 44px; }
+.kh-pick__mark .k-logo { height: clamp(30px, 2.8vw, 40px); }
+.kh-pick__wordmark { font-size: clamp(28px, 2.7vw, 38px); letter-spacing: 0.24em; }
+.kh-pick__lane-rule { width: 52px; height: 3px; }
+.kh-pick__lane p { font-size: clamp(15px, 1.15vw, 16.5px); line-height: 1.66; max-width: 40ch; }
+.kh-pick__lane-meta { font-size: 13px; }
+.kh-pick__lane-foot { flex-wrap: wrap; gap: 12px 20px; padding-top: 18px; border-top: 1px solid; }
+.kh-pick__lane:not(.is-premium) .kh-pick__lane-foot { border-top-color: rgba(255, 255, 255, 0.16); }
+.kh-pick__lane.is-premium .kh-pick__lane-foot { border-top-color: var(--k-hair); }
+.kh-pick__lane .k-link { font-size: 14.5px; font-weight: 700; }
+
+/* CTA musí byť vidieť aj na tmavom paneli */
+.kh-pick__lane:not(.is-premium) .k-link { color: var(--k-amber); }
+.kh-pick__lane:not(.is-premium) .k-link:hover { color: #ffd452; }
+.kh-pick__lane.is-premium .k-link { color: var(--k-ink); }
+
+/* --- RECENZIE: svetlý pás, hodnotenie ako hlavný objekt ------------------
+   Tmavý pás sem nesadol — sekcia stála uprostred svetlej stránky ako cudzí
+   blok a hranaté karty pôsobili tvrdo. Späť na teplý podklad, mäkké karty
+   a Google skóre v takej veľkosti, aby ho bolo vidieť na prvý pohľad. */
+.kh-rev { background: var(--k-bone); }
+@media (min-width: 1000px) { .kh-rev__grid { grid-template-columns: minmax(0, 4.2fr) minmax(0, 7.8fr); } }
+
+.kh-rev__big {
+  padding: clamp(24px, 2.6vw, 34px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  box-shadow: var(--k-shadow-sm);
+}
+.kh-rev__brand { font-size: 15px; }
+.kh-rev__brand .k-google { width: 26px; height: 26px; }
+.kh-rev__figures { align-items: center; gap: 20px; margin-top: 18px; }
+.kh-rev__big b { font-size: clamp(66px, 6.6vw, 92px); font-weight: 400; line-height: 0.8; color: var(--k-ink); }
+.kh-rev__big div { gap: 10px; }
+/* Hviezdy majú byť veľké — sú to ony, čo sekciu predáva. */
+.kh-rev__big .k-stars svg { width: 26px; height: 26px; }
+.kh-rev__big small { font-size: 13.5px; color: var(--k-muted); }
+.kh-rev__source { border-radius: var(--k-r-pill); padding: 12px 18px; background: var(--k-white); }
+.kh-rev__award { display: flex; border-radius: var(--k-r-sm); }
+
+.kh-rev__nav { justify-content: flex-end; }
+.kh-rev__nav button { border-radius: 50%; background: var(--k-white); }
+
+.kh-rev__card {
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair-soft);
+  box-shadow: none;
+}
+.kh-rev__card:hover { border-color: var(--k-hair); box-shadow: var(--k-shadow-sm); }
+.kh-rev__card .k-stars svg { width: 16px; height: 16px; }
+.kh-rev__quote { color: var(--k-ink); }
+.kh-rev__avatar { border-radius: 50%; }
+
+/* --- KATEGÓRIE: nič sa neskrýva za hover --------------------------------
+   Predtým sa stĺpec pri prejdení myšou roztiahol a až vtedy odkryl popis —
+   na dotykových zariadeniach sa k nemu nedalo dostať vôbec a na desktope
+   pôsobilo trhanie mriežky nervózne. Teraz je karta celá čitateľná hneď
+   a hover len jemne zvýrazní. */
+@media (min-width: 620px) {
+  .kh-cat__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    height: auto;
+    gap: clamp(14px, 1.5vw, 24px);
+  }
+}
+@media (min-width: 1000px) { .kh-cat__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.kh-cat__item { flex: initial; transition: none; }
+.kh-cat__item:hover,
+.kh-cat__item:focus-within { flex-grow: initial; }
+.kh-cat__card { height: 100%; }
+.kh-cat__media { flex: initial; aspect-ratio: 4 / 3; transition: none; }
+.kh-cat__body { flex: 1 1 auto; gap: 12px; transition: none; padding: clamp(20px, 1.8vw, 26px); }
+.kh-cat__more { display: block; grid-template-rows: none; opacity: 1; transform: none; margin-top: auto; transition: none; }
+.kh-cat__more > div { display: flex; flex-direction: column; gap: 16px; }
+.kh-cat__more .k-copy { font-size: 14.5px; line-height: 1.6; }
+
+/* Akcie ako jasná dvojica: hlavný odkaz a konfigurátor. */
+.kh-cat__actions { gap: 10px 14px; align-items: center; padding-top: 4px; }
+.kh-cat__actions .k-link { font-weight: 700; }
+
+/* --- PRÉMIOVÁ RADA: väčší obraz, čitateľnejšie riadky -------------------
+   Sekcia mala pôsobiť ako prémium, ale fotka bola malá a tmavá a trojica
+   odkazov sa lámala. Obraz teraz nesie sekciu, text má dych a riadky sú
+   plnohodnotné dlaždice pod hlavným blokom. */
+@media (min-width: 1000px) {
+}
+
+
+/* --- MATERIÁL: hlavička sekcie a redakčné riadky ------------------------- */
+.kh-mat .k-head { margin-bottom: clamp(20px, 2.4vw, 34px); }
+.kh-mat__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a6500;
+}
+.kh-mat__title { max-width: 20ch; }
+/* Poradové číslo riadku už nesie hlavička sekcie, nie pseudoprvok. */
+
+/* --- KONTAKT: užší pás, silnejší tmavý panel ----------------------------
+   Formulár sa rozťahoval cez celú šírku stránky a pôsobil ako tabuľka.
+   Sekcia dostáva vlastnú, užšiu mieru a tmavý panel viac priestoru. */
+.kh-cta > .k-wrap { max-width: 1120px; }
+@media (min-width: 1000px) { .kh-cta__grid { grid-template-columns: minmax(0, 6.4fr) minmax(0, 5.6fr); } }
+.kh-cta__card { border-radius: var(--k-r) 0 0 var(--k-r); }
+.kh-cta__aside { border-radius: 0 var(--k-r) var(--k-r) 0; }
+.kh-cta__aside-head { padding-bottom: 26px; }
+.kh-cta__score { margin-top: auto; padding-top: 26px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
+.kh-cta__score .k-google { width: 26px; height: 26px; }
+.kh-cta__score .k-stars svg { width: 17px; height: 17px; }
+@media (max-width: 999px) {
+  .kh-cta__card { border-radius: var(--k-r) var(--k-r) 0 0; }
+  .kh-cta__aside { border-radius: 0 0 var(--k-r) var(--k-r); margin-top: 0; }
+}
+
+/* --- FAQ: značkové farby a viditeľné CTA --------------------------------
+   Sekcia bola bledá a tlačidlo v tmavom paneli splývalo s pozadím. Ľavý
+   panel teraz nesie plné jantárové tlačidlo, otvorená otázka má jantárový
+   prah a zvyšok drží pokojná sivá. */
+.kh-faq { background: var(--k-bone); }
+.kh-faq__intro { border-radius: var(--k-r) 0 0 var(--k-r); gap: 20px; }
+.kh-faq__intro .k-btn {
+  min-height: 52px;
+  border-radius: var(--k-r-pill);
+  border-color: var(--k-amber);
+  background: var(--k-amber);
+  color: var(--k-ink);
+}
+.kh-faq__intro .k-btn:hover { border-color: #ffd452; background: #ffd452; color: var(--k-ink); }
+.kh-faq__list { border-radius: 0 var(--k-r) var(--k-r) 0; }
+
+.kh-faq__item {
+  background: transparent;
+  border-color: transparent;
+  border-bottom: 1px solid var(--k-hair-soft);
+  border-radius: 0;
+}
+.kh-faq__item:last-child { border-bottom: 0; }
+.kh-faq__item[open] { background: var(--k-bone); border-color: transparent; border-bottom-color: var(--k-hair-soft); }
+.kh-faq__item[open]::before { top: 0; bottom: 0; width: 3px; background: var(--k-amber); }
+.kh-faq__item summary:hover { color: var(--k-amber-deep); }
+
+.kh-faq__sign { background: transparent; border: 1px solid var(--k-hair); color: var(--k-ink); }
+.kh-faq__item[open] .kh-faq__sign { background: var(--k-amber); border-color: var(--k-amber); color: var(--k-ink); }
+
+@media (max-width: 999px) {
+  .kh-faq__intro { border-radius: var(--k-r); }
+  .kh-faq__list { border-radius: var(--k-r); }
+}
+
+/* --- ZNAČKOVÁ ŠÍPKA -----------------------------------------------------
+   V pokoji je to normálna šípka. Pri hoveri sa preklopí do jantárovej hranatej
+   zátvorky z loga Koverta — najdlhšia stredná čiara šípky sa stane zvislým
+   chrbtom zátvorky a obidve šikmé časti hrotu sa narovnajú do jej kratších
+   vodorovných ramien.
+
+   Geometria čiar je zapísaná v tvare zátvorky a šípka vzniká transformáciou.
+   Základ je teda „šípka" (transform v pokoji), hover transformáciu zruší.
+   Zapína sa triedou .k-arrow — používa sa len tam, kde je určená, nie na
+   každom odkaze a tlačidle.
+   -------------------------------------------------------------------------- */
+.k-arrow { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; overflow: visible; }
+.k-arrow line {
+  transform-box: view-box;
+  vector-effect: non-scaling-stroke;
+  transition: transform 420ms var(--k-ease-out);
+}
+.k-arrow__a { transform-origin: 15px 5px; transform: translate(4px, 7px) scale(0.849) rotate(45deg); }
+.k-arrow__b { transform-origin: 15px 19px; transform: translate(4px, -7px) scale(0.849) rotate(-45deg); }
+.k-arrow__s { transform-origin: 5px 12px; transform: translate(6px, 0) scale(1.143) rotate(90deg); }
+
+.k-link:hover .k-arrow line,
+.k-link:focus-visible .k-arrow line,
+a:hover > .k-arrow line,
+a:focus-visible > .k-arrow line { transform: none; }
+
+/* Po preklopení nesie zátvorka značkovú farbu. */
+.k-link:hover .k-arrow,
+a:hover > .k-arrow { color: var(--k-amber-deep); }
+.k-invert .k-link:hover .k-arrow,
+.k-invert a:hover > .k-arrow { color: var(--k-amber); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-arrow line { transition: none; }
+}
+
+
+/* Zátvorka v pokoji nesie značkovú farbu, po preklopení splynie s odkazom. */
+.k-link .k-arrow { color: var(--k-amber-deep); transition: color 300ms var(--k-ease); }
+.k-link:hover .k-arrow { color: inherit; }
+.k-invert .k-link .k-arrow,
+.kh-pick__lane:not(.is-premium) .k-link .k-arrow { color: var(--k-amber); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-arrow line { transition: none; }
+}
+
+/* --- KONFIGURÁTOR: ukázať, čo za tlačidlom naozaj je --------------------
+   Sekcia bola štyri rovnaké dlaždice a tlačidlo dole. Teraz nesie reálnu
+   snímku konfigurátora, tri kroky a jedno výrazné CTA hneď pri texte;
+   dlaždice sú až vstupné body do konkrétnych typov. */
+.kh-cfg__grid { align-items: center; margin-bottom: clamp(30px, 3.4vw, 52px); }
+@media (min-width: 900px) { .kh-cfg__grid { grid-template-columns: minmax(0, 5.4fr) minmax(0, 6.6fr); } }
+.kh-cfg__copy { gap: 18px; }
+.kh-cfg__copy .k-lead { max-width: 46ch; }
+
+.kh-cfg__steps { display: grid; gap: 0; margin: 4px 0 0; padding: 0; list-style: none; }
+.k .kh-cfg__steps { padding: 0; }
+.kh-cfg__steps li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 0;
+  border-top: 1px solid var(--k-hair-soft);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+.kh-cfg__steps li:last-child { border-bottom: 1px solid var(--k-hair-soft); }
+.kh-cfg__steps span {
+  font-family: var(--k-head);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--k-amber-deep);
+}
+
+.kh-cfg__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 6px; }
+.kh-cfg__cta .k-btn { min-height: 54px; padding-inline: 26px; }
+
+.kh-cfg__stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--k-r);
+  border: 1px solid var(--k-hair);
+  background: var(--k-white);
+  box-shadow: var(--k-shadow);
+}
+.kh-cfg__stage img { display: block; width: 100%; height: auto; }
+
+.kh-cfg__foot { max-width: 62ch; margin-top: clamp(18px, 2vw, 28px); font-size: 14px; color: var(--k-muted); }
+
+/* --- CTA: druhé tlačidlo musí byť tiež vidno ----------------------------
+   Priesvitné tlačidlo na fotke splývalo s podkladom. Dostáva plný biely
+   obrys a tmavú podložku, aby fungovalo aj na svetlom mieste fotografie. */
+.k-btn--glass {
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: rgba(9, 12, 14, 0.34);
+  color: #fff;
+  font-weight: 700;
+}
+.k-btn--glass:hover { border-color: #fff; background: #fff; color: var(--k-ink); }
+.kh-hero__actions .k-btn--glass { background: rgba(9, 12, 14, 0.34); }
+.kh-hero__actions .k-btn { min-height: 54px; padding-inline: 26px; font-size: 15px; }
+
+/* --- KATEGÓRIE: štyri veľké plochy 2 × 2 --------------------------------
+   Zadanie: štyri sekcie, hore prístrešky pre autá a pre terasu, dole doplnky.
+   Text sedí na fotke, nie pod ňou — dlaždica tak nemá dve časti a nepôsobí
+   preplnene. Značkové štítky na fotke sú preč. Pri hoveri sa fotka jemne
+   priblíži a vysunie sa popis s dvojicou odkazov. */
+@media (min-width: 620px) {
+  .kh-cat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 1.4vw, 22px); }
+}
+@media (min-width: 1000px) { .kh-cat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.kh-cat__card {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--k-r);
+  background: var(--k-ink);
+}
+.kh-cat__media { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; }
+.kh-cat__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--k-ease-out); }
+.kh-cat__card:hover .kh-cat__media img,
+.kh-cat__card:focus-visible .kh-cat__media img { transform: scale(1.05); }
+
+/* Čitateľnosť textu na fotke drží prechod, nie plná plocha. */
+.kh-cat__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 34%, rgba(9, 12, 14, 0.5) 62%, rgba(9, 12, 14, 0.88) 100%);
+  transition: opacity 420ms var(--k-ease);
+}
+
+.kh-cat__body {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 1;
+  gap: 8px;
+  padding: clamp(20px, 2.2vw, 32px);
+  color: #fff;
+}
+.kh-cat__body .k-h3 { color: #fff; font-size: clamp(20px, 1.9vw, 27px); }
+.kh-cat__card .k-h3::after { display: none; }
+
+/* Štítok je nadradený popis nad názvom, nie plaketa na fotke. */
+.kh-cat__label {
+  position: static;
+  order: -1;
+  align-self: flex-start;
+  padding: 0;
+  background: transparent;
+  color: var(--k-amber);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+.kh-cat__card:hover .kh-cat__label { background: transparent; }
+
+.kh-cat__specs li { color: rgba(255, 255, 255, 0.82); }
+.kh-cat__specs li + li::before { color: var(--k-amber); }
+
+/* Popis a odkazy sa vysunú až pri hoveri — na dotyku ich odkryje focus. */
+.kh-cat__more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  transition: grid-template-rows 420ms var(--k-ease-out), opacity 320ms var(--k-ease);
+}
+.kh-cat__more > div { overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding-top: 12px; }
+.kh-cat__more .k-copy { color: rgba(255, 255, 255, 0.85); }
+.kh-cat__card:hover .kh-cat__more,
+.kh-cat__card:focus-within .kh-cat__more,
+.kh-cat__card:focus-visible .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+
+/* Dvojica čipov — presne tá, ktorá sa zadávateľovi páčila. */
+.kh-cat__actions { gap: 10px; }
+.k .kh-cat__actions .k-link,
+.k .kh-cat__actions .kh-cat__cfg {
+  padding: 9px 15px;
+  border-radius: var(--k-r-pill);
+  font-size: 13px;
+  font-weight: 700;
+}
+.k .kh-cat__actions .k-link { background: var(--k-amber); color: var(--k-ink); }
+.k .kh-cat__actions .kh-cat__cfg { border: 1px solid rgba(255, 255, 255, 0.6); background: transparent; color: #fff; }
+.k .kh-cat__actions .kh-cat__cfg:hover { background: #fff; color: var(--k-ink); }
+.kh-cat__actions .k-link svg, .kh-cat__actions .kh-cat__cfg svg { width: 14px; height: 14px; }
+
+/* Na úzkych obrazovkách nemá zmysel nič skrývať — hover tam neexistuje. */
+@media (max-width: 619px) {
+  .kh-cat__grid { display: grid; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .kh-cat__item { flex: initial; }
+  .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+}
+
+/* Prémiová rada: podčiarknutie slova „architektúra" pôsobilo ako preklep.
+   Zvýraznenie tu nesie farba, nie linka. */
+
+/* --- FORMULÁR: jasne viditeľné polia ------------------------------------
+   Polia mali sotva viditeľný rám na bielej karte, takže nebolo vidno, kam
+   sa píše. Teraz majú vlastnú výplň, výraznejší rám a pri fokuse jantárový
+   prstenec. Tlačidlo má rovnaký tvar ako ostatné hlavné CTA na stránke. */
+.kh-field > span { color: var(--k-ink); font-size: 12px; }
+.kh-field input,
+.kh-field textarea {
+  min-height: 54px;
+  border: 1.5px solid rgba(18, 23, 26, 0.22);
+  border-radius: var(--k-r-sm);
+  background: #f4f5f5;
+}
+.kh-field input:hover,
+.kh-field textarea:hover { border-color: rgba(18, 23, 26, 0.42); }
+.kh-field input:focus,
+.kh-field textarea:focus {
+  border-color: var(--k-amber-deep);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.28);
+}
+.kh-field input::placeholder,
+.kh-field textarea::placeholder { color: rgba(18, 23, 26, 0.42); }
+
+.kh-form__choices span { border: 1.5px solid rgba(18, 23, 26, 0.16); border-radius: var(--k-r-sm); background: #f4f5f5; }
+.kh-form__choices label:hover span { border-color: rgba(18, 23, 26, 0.45); }
+
+.kh-form__submit .k-btn {
+  min-width: 0;
+  min-height: 54px;
+  padding-inline: 30px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  border-color: var(--k-amber);
+  color: var(--k-ink);
+}
+.kh-form__submit .k-btn:hover { background: #ffd452; border-color: #ffd452; }
+
+/* --- MATERIÁL A VÝBAVA --------------------------------------------------
+   Najprv jeden veľký detail materiálu s popiskou, potom dva stĺpce ako
+   technický list. Striedavé riadky obrázok/text pôsobili ako dva cudzie
+   bloky pod sebou a nedržali sekciu pokope. */
+.kh-mat { background: var(--k-bone); }
+.kh-mat .k-head { margin-bottom: clamp(22px, 2.6vw, 36px); }
+
+.kh-mat__stage {
+  position: relative;
+  margin: 0 0 clamp(28px, 3.2vw, 52px);
+  overflow: hidden;
+  border-radius: var(--k-r);
+  background: var(--k-bone-deep);
+}
+.kh-mat__stage img {
+  display: block;
+  width: 100%;
+  height: clamp(240px, 34vw, 460px);
+  object-fit: cover;
+}
+.kh-mat__stage figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(40px, 6vw, 72px) clamp(20px, 2.4vw, 34px) clamp(18px, 2vw, 26px);
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 0%, rgba(9, 12, 14, 0.78) 78%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kh-mat__cols { display: grid; gap: clamp(26px, 3vw, 56px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .kh-mat__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kh-mat__col { display: flex; flex-direction: column; gap: 14px; padding-top: 22px; border-top: 2px solid var(--k-ink); }
+
+.kh-mat__label {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--k-grey);
+}
+.kh-mat__label em { font-style: normal; font-family: var(--k-head); font-size: 13px; color: var(--k-amber-deep); }
+.kh-mat__title { max-width: 20ch; }
+.kh-mat__col .k-copy { max-width: 46ch; }
+
+/* Zoznam ako technický list — riadky s vlasovou linkou, bez fajok. */
+.kh-mat__list { display: grid; gap: 0; margin-top: 4px; }
+.k .kh-mat__list { padding: 0; }
+.kh-mat__list li {
+  display: block;
+  padding: 12px 0 12px 20px;
+  border-top: 1px solid rgba(18, 23, 26, 0.13);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--k-ink);
+  position: relative;
+}
+.kh-mat__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20px;
+  width: 8px;
+  height: 2px;
+  background: var(--k-amber-deep);
+}
+.kh-mat__list li:last-child { border-bottom: 1px solid rgba(18, 23, 26, 0.13); }
+
+/* --- KONFIGURÁTOR: vstupy ako kompaktné dlaždice ------------------------
+   Štyri karty s odsekom textu pôsobili ako ďalšia sekcia kategórií. Sú to
+   len vstupné body — stačí fotka, názov a značka. */
+.kh-cfg__list { gap: clamp(12px, 1.2vw, 18px); }
+.kh-cfg__item { border-radius: var(--k-r); background: var(--k-white); }
+.kh-cfg__thumb { aspect-ratio: 16 / 9; }
+.kh-cfg__body { gap: 6px; padding: 16px 18px 18px; }
+.kh-cfg__body p { display: none; }
+.kh-cfg__body strong { font-size: 15.5px; }
+.kh-cfg__badge {
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: var(--k-r-pill);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+}
+.k a.kh-cfg__go { margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--k-amber-deep); }
+.kh-cfg__go { color: var(--k-amber-deep); }
+
+/* --- PROCES: krajšie zobrazenie krokov ----------------------------------
+   Panely mali všetky rovnakú váhu a fotka bola len malý náhľad. Aktívny
+   krok teraz dostane bielu kartu, väčšiu fotku a jantárový prah; ostatné
+   ustúpia. Krok sa tak dá sledovať aj periférne pri scrollovaní. */
+.kh-proc__panel {
+  position: relative;
+  gap: clamp(16px, 1.8vw, 28px);
+  padding: clamp(14px, 1.4vw, 20px);
+  border: 0;
+  border-radius: var(--k-r);
+  background: transparent;
+  transition: background-color 460ms var(--k-ease), box-shadow 460ms var(--k-ease), opacity 460ms var(--k-ease);
+}
+.kh-proc__panel.is-active { background: var(--k-white); box-shadow: var(--k-shadow-sm); }
+.kh-proc__panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: clamp(14px, 1.4vw, 20px);
+  bottom: clamp(14px, 1.4vw, 20px);
+  width: 3px;
+  border-radius: 3px;
+  background: var(--k-amber);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 460ms var(--k-ease-out);
+}
+.kh-proc__panel.is-active::before { transform: scaleY(1); }
+
+.kh-proc__media { border-radius: var(--k-r-sm); }
+@media (min-width: 700px) {
+  .kh-proc__panel { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+  .kh-proc__media { min-height: 250px; }
+}
+.kh-proc__body { justify-content: center; padding-right: clamp(4px, 1vw, 16px); }
+.kh-proc__num { font-size: clamp(34px, 3.4vw, 52px); line-height: 1; }
+
+/* --- MATERIÁL A VÝBAVA: štyri karty -------------------------------------
+   Rovnaký jazyk ako ponuka a konfigurátor — fotka hore, telo dole. Sekcia
+   bola predtým jediná čisto textová plocha na stránke a nesedela k zvyšku.
+   Zoznam je technický list: vlasové linky a jantárová pomlčka. */
+.kh-mat { background: var(--k-bone); }
+.kh-mat .k-head { margin-bottom: clamp(22px, 2.6vw, 36px); }
+
+.kh-mat__grid { display: grid; gap: clamp(14px, 1.5vw, 22px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 620px) { .kh-mat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .kh-mat__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.kh-mat__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair-soft);
+  transition: border-color 300ms var(--k-ease), box-shadow 420ms var(--k-ease);
+}
+.kh-mat__card:hover { border-color: transparent; box-shadow: var(--k-shadow-sm); }
+
+.kh-mat__media { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: var(--k-bone-deep); }
+.kh-mat__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--k-ease-out); }
+.kh-mat__card:hover .kh-mat__media img { transform: scale(1.04); }
+
+.kh-mat__body { display: flex; flex-direction: column; gap: 10px; flex: 1 1 auto; padding: clamp(18px, 1.7vw, 24px); }
+.kh-mat__label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--k-grey);
+}
+.kh-mat__label em { font-style: normal; font-family: var(--k-head); font-size: 12.5px; color: var(--k-amber-deep); }
+.kh-mat__title {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(17px, 1.35vw, 20px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--k-ink);
+}
+
+/* Jeden stĺpec — staršie pravidlá zoznam lámali do dvoch a bol nečitateľný. */
+.kh-mat__list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: auto; padding-top: 6px; }
+.k .kh-mat__list { padding: 0; }
+.kh-mat__list li {
+  position: relative;
+  display: block;
+  padding: 10px 0 10px 18px;
+  border-top: 1px solid rgba(18, 23, 26, 0.12);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--k-muted);
+}
+.kh-mat__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  width: 8px;
+  height: 2px;
+  background: var(--k-amber-deep);
+}
+
+/* --- JEDNOTNÉ TLAČIDLÁ --------------------------------------------------
+   Audit ukázal tri tvary (12 px v hero a v pätičke, pilulka inde), tri výšky
+   (46/52/54) a štyri hrúbky písma vrátane 400 pri odoslaní formulára. Jedno
+   CTA sa nemá na každej sekcii tváriť inak. */
+.k .k-btn,
+.k-btn { border-radius: var(--k-r-pill); font-weight: 700; }
+.k .k-btn:not(.kv-bar__cta),
+.k-btn:not(.kv-bar__cta) { min-height: 54px; }
+.kv-bar__cta { min-height: 46px; }
+.kh-hero__actions .k-btn,
+.kf .k-btn,
+.kh-faq__intro .k-btn,
+.kh-form__submit .k-btn { border-radius: var(--k-r-pill); min-height: 54px; font-weight: 700; }
+
+/* --- DVE ZNAČKY: hlavička ako všade inde --------------------------------
+   Bola to jediná vycentrovaná hlavička na stránke — ostatné sekcie majú
+   nadpis vľavo a text vpravo. Vycentrovaný blok s jantárovou čiarkou pod
+   nadpisom pôsobil ako cudzia šablóna. */
+.kh-pick__head {
+  display: grid;
+  align-items: end;
+  gap: 12px clamp(24px, 3vw, 56px);
+  grid-template-columns: minmax(0, 1fr);
+  text-align: left;
+}
+@media (min-width: 900px) {
+  .kh-pick__head { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .kh-pick__head .k-eyebrow,
+  .kh-pick__head .k-h2 { grid-column: 1; }
+  .kh-pick__head .k-lead { grid-column: 2; grid-row: 1 / span 2; align-self: end; max-width: 42ch; }
+}
+.kh-pick__head .k-h2 { max-width: 20ch; }
+.kh-pick__rule { display: none; }
+
+/* --- ZVÝRAZNENÉ SLOVO V NADPISE: jedno riešenie ------------------------
+   Rovnaká trieda mala tri podoby — jantárový text v hero, podčiarknutie
+   v konfigurátore, farba v prémiovej rade. Ostáva farba; linka pod slovom
+   sa v nadpise čítala ako preklep. */
+.k-mark::after { display: none; }
+.k-mark { color: var(--k-amber-deep); }
+.k-invert .k-mark,
+.kh-hero .k-mark,
+
+/* --- RYTMUS PODKLADOV ---------------------------------------------------
+   Spodná polovica stránky bola štyri béžové pásy za sebou (proces, referencie,
+   materiál, otázky) a splývala do jednej plochy. Pásy sa teraz pravidelne
+   striedajú biela – béžová, takže je vidieť, kde sekcia začína a končí.
+
+   hero tmavý · značky biela · konfigurátor béžová · ponuka biela ·
+   Soltec tmavý · realizácie biela · proces béžová · referencie biela ·
+   materiál béžová · otázky biela · kontakt béžová
+   -------------------------------------------------------------------------- */
+.kh-rev { background: var(--k-white); }
+.kh-faq { background: var(--k-white); }
+.kh-cta { background: var(--k-bone); }
+
+/* Otázky na bielom páse: zoznam dostane béžový podklad, otvorená otázka bielu,
+   inak by panel na bielom zmizol. */
+.kh-faq__list { background: var(--k-bone); }
+.kh-faq__item[open] { background: var(--k-white); }
+.kh-faq__sign { border-color: rgba(18, 23, 26, 0.2); }
+
+/* Kontakt na béžovom páse — biela karta formulára tak vystúpi. */
+.kh-cta__card { background: var(--k-white); }
+
+/* --- MRIEŽKA: buď všade, alebo nikde -----------------------------------
+   Vlasová mriežka bola len na štyroch sekciách z jedenástich. Nedokončený
+   motív robí viac škody než úžitku. */
+.k-rules { display: none; }
+
+/* Veľkosť sekčného nadpisu je jedna — prémiová rada mala vlastnú škálu. */
+/* Nadpis prémiovej rady používa rovnakú škálu ako ostatné sekcie. */
+
+/* Drobné odchýlky z auditu: eyebrow v kontaktnom paneli mal inú veľkosť
+   a textové odkazy dve rôzne hrúbky. */
+.kh-cta__aside-head .k-eyebrow { font-size: 11px; letter-spacing: 0.13em; }
+.k-link { font-weight: 700; }
+
+/* ========================================================================
+   KOMPAKTNEJŠÍ RYTMUS
+   Sekcie „Koverta & Soltec", prémiová rada aj kontakt sa nezmestili na jednu
+   obrazovku. Pás dostal menšie odsadenie a nadpisy o stupeň nižšiu škálu —
+   obsah tým nič nestráca, len prestane byť roztiahnutý.
+   ===================================================================== */
+:root {
+  --k-band: clamp(58px, 5.6vw, 96px);
+  --k-band-tight: clamp(42px, 4vw, 68px);
+}
+.k-h2 { font-size: clamp(27px, 2.8vw, 42px); }
+.k-head { margin-bottom: clamp(20px, 2.2vw, 32px); }
+.k-lead { font-size: clamp(15px, 1.15vw, 17px); }
+
+/* --- MEGA MENU: položky s miniatúrou ------------------------------------
+   Textový zoznam nedával predstavu, ako produkt vyzerá, a veľká fotka vpravo
+   panel len rozťahovala. Každá položka má teraz vlastnú miniatúru a nadpis
+   stĺpca nesie značkový odznak. */
+.kv-mega { padding: clamp(22px, 2vw, 30px) clamp(22px, 2.2vw, 34px) 0; }
+.kv-mega__cols { display: grid; gap: clamp(24px, 2.6vw, 48px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .kv-mega__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.kv-mega__col { min-width: 0; }
+.kv-mega__brand {
+  display: flex;
+  align-items: center;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--k-hair);
+}
+.kv-mega__brand .k-logo { height: 20px; }
+.k-brand--soltec {
+  font-family: var(--k-head);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--k-slate);
+}
+.k-brand--soltec-img { height: 20px; width: auto; display: block; }
+
+/* Hlavička je mimo .k, takže pravidlá zoznamu sa nesmú scopovať pod .k. */
+.kv-mega__col ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.kv-mega__col li { margin: 0; }
+.kv-mega__col li::before { display: none; content: none; }
+.kv-mega__col a {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 8px;
+  border-radius: var(--k-r-sm);
+  text-decoration: none;
+  transition: background-color 220ms var(--k-ease);
+}
+.kv-mega__col a:hover,
+.kv-mega__col a:focus-visible { background: var(--k-bone); }
+
+.kv-mega__thumb {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--k-r-xs);
+  background: var(--k-bone-deep);
+}
+.kv-mega__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.kv-mega__text { display: grid; gap: 2px; min-width: 0; }
+.kv-mega__text strong { font-size: 14.5px; font-weight: 700; color: var(--k-ink); line-height: 1.25; }
+.kv-mega__text span { font-size: 12.5px; line-height: 1.4; color: var(--k-muted); }
+
+.kv-mega__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: clamp(16px, 1.8vw, 24px);
+  padding: 16px clamp(22px, 2.2vw, 34px);
+  margin-inline: calc(-1 * clamp(22px, 2.2vw, 34px));
+  border-top: 1px solid var(--k-hair);
+  background: var(--k-bone);
+  border-radius: 0 0 var(--k-r) var(--k-r);
+}
+.kv-mega__foot > span { font-size: 13px; color: var(--k-muted); }
+.k .kv-mega__cta { min-height: 42px; padding-inline: 20px; font-size: 13.5px; }
+
+/* Panel nesmie prerásť šírku lišty — inak sa druhý stĺpec odreže. */
+.kv-mega { width: min(1080px, calc(100vw - 32px)); max-width: 100%; }
+
+/* ========================================================================
+   PONUKA: dlaždice, ktoré predávajú
+   Fotka s názvom a textom skrytým do hoveru pôsobila prázdno a nedala sa
+   preletieť očami — na dotyku sa k obsahu nedalo dostať vôbec. Karta teraz
+   ukáže všetko naraz: fotku, názov, konkrétny údaj a dve akcie. Hover len
+   pridá pohyb, nič neodkrýva.
+   ===================================================================== */
+.kh-cat__card {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: auto;
+  background: var(--k-white);
+  border: 1px solid var(--k-hair-soft);
+}
+.kh-cat__card:hover { border-color: transparent; box-shadow: var(--k-shadow-sm); }
+.kh-cat__card::after { display: none; }
+
+.kh-cat__media { position: relative; aspect-ratio: 16 / 10; flex: 0 0 auto; }
+
+.kh-cat__body {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1 1 auto;
+  padding: clamp(18px, 1.8vw, 26px);
+  color: var(--k-ink);
+}
+.kh-cat__body .k-h3 { color: var(--k-ink); font-size: clamp(19px, 1.6vw, 24px); }
+
+.kh-cat__specs li { color: var(--k-muted); font-size: 13px; }
+.kh-cat__specs li + li::before { color: var(--k-amber-deep); }
+
+/* Popis aj akcie sú vidieť vždy — na nich stojí konverzia. */
+.kh-cat__more { display: block; grid-template-rows: none; opacity: 1; margin-top: auto; }
+.kh-cat__more > div { display: flex; flex-direction: column; gap: 14px; padding-top: 12px; overflow: visible; }
+.kh-cat__more .k-copy { color: var(--k-muted); font-size: 14px; line-height: 1.55; }
+
+.k .kh-cat__actions .k-link { background: var(--k-amber); color: var(--k-ink); }
+.k .kh-cat__actions .kh-cat__cfg { border: 1px solid rgba(18, 23, 26, 0.22); background: transparent; color: var(--k-ink); }
+.k .kh-cat__actions .kh-cat__cfg:hover { border-color: var(--k-ink); background: var(--k-ink); color: #fff; }
+
+/* --- KONFIGURÁTOR: vpravo to, čo sa dá nakonfigurovať -------------------
+   Fotka vpravo k sekcii nesedela a snímka rozhrania starne pri každej zmene
+   konfigurátora. Namiesto nej sú štyri vstupy 2 × 2 — sekcia je kratšia
+   a hovorí presne o tom, čo návštevník získa. */
+.kh-cfg__grid { align-items: center; }
+.kh-cfg__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1vw, 16px);
+  margin-top: 0;
+}
+.kh-cfg__item { border: 1px solid var(--k-hair-soft); }
+.kh-cfg__thumb { aspect-ratio: 4 / 3; }
+.kh-cfg__body { gap: 8px; padding: 14px 16px 16px; }
+.kh-cfg__body strong { font-size: 14.5px; line-height: 1.25; }
+
+/* Odznak nesie reálne logo, nie text v náhodnom reze. */
+.kh-cfg__badge {
+  display: inline-flex;
+  align-items: center;
+  top: 9px;
+  left: 9px;
+  padding: 5px 9px;
+  border-radius: var(--k-r-xs);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: none;
+  color: var(--k-ink);
+}
+.kh-cfg__badge .k-logo { height: 13px; color: var(--k-slate); }
+.kh-cfg__badge .k-brand--soltec { font-size: 10.5px; letter-spacing: 0.24em; color: var(--k-slate); }
+.kh-cfg__badge .k-brand--soltec-img { height: 13px; }
+
+.kh-cfg__foot { margin-top: clamp(18px, 2vw, 28px); }
+@media (max-width: 700px) { .kh-cfg__list { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- HERO: text ako jeden blok -----------------------------------------
+   Nadpis, odsek a tlačidlá pôsobili ako tri nezávislé vrstvy na fotke.
+   Text má teraz vlastný jemný závoj, užšiu mieru a tesnejší rytmus, takže
+   sa číta ako jeden odstavec a nie ako titulky poprelietavané cez auto. */
+.kh-hero__box {
+  max-width: 660px;
+  padding: clamp(22px, 2.4vw, 34px) clamp(22px, 2.6vw, 38px);
+  border-radius: var(--k-r-lg);
+  background: linear-gradient(105deg, rgba(9, 12, 14, 0.62) 0%, rgba(9, 12, 14, 0.34) 68%, rgba(9, 12, 14, 0) 100%);
+}
+.kh-hero .k-display { font-size: clamp(38px, 5vw, 74px); line-height: 1.02; letter-spacing: -0.035em; }
+.kh-hero__lead {
+  max-width: 46ch;
+  margin-top: 14px;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+.kh-hero__actions { margin-top: clamp(18px, 2vw, 26px); }
+
+/* --- PRÉMIOVÁ RADA: nižší pás ------------------------------------------ */
+
+/* --- ČASTÉ OTÁZKY: výraznejšie --------------------------------------- */
+.kh-faq__item > summary {
+  padding-block: clamp(16px, 1.5vw, 20px);
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.25vw, 18.5px);
+  font-weight: 700;
+  color: var(--k-ink);
+}
+.kh-faq__item + .kh-faq__item { border-top: 1px solid rgba(18, 23, 26, 0.16); }
+.kh-faq__item > summary:hover { color: var(--k-amber-deep); }
+.kh-faq__sign {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(18, 23, 26, 0.22);
+  border-radius: 50%;
+  color: var(--k-ink);
+  transition: background-color 240ms var(--k-ease), border-color 240ms var(--k-ease), color 240ms var(--k-ease);
+}
+.kh-faq__item > summary:hover .kh-faq__sign { border-color: var(--k-amber-deep); background: var(--k-amber); color: var(--k-ink); }
+.kh-faq__item[open] > summary { color: var(--k-amber-deep); }
+.kh-faq__item[open] .kh-faq__sign { background: var(--k-amber); border-color: var(--k-amber); }
+.kh-faq__answer { font-size: 14.5px; line-height: 1.65; color: var(--k-muted); }
+
+/* --- KONTAKT: celá sekcia bez scrollu ---------------------------------- */
+.kh-cta__card { padding: clamp(26px, 2.6vw, 44px); }
+.kh-cta__aside { padding: clamp(26px, 2.6vw, 44px); }
+.kh-form { gap: 16px; }
+.kh-field input,
+.kh-field textarea { min-height: 46px; padding: 11px 14px; }
+.kh-field textarea { min-height: 84px; }
+.kh-form__choices span { min-height: 44px; padding: 8px 12px; font-size: 13px; }
+.kh-cta__head .k-h2 { max-width: 16ch; }
+.kh-cta__aside-head h3 { font-size: clamp(24px, 2.2vw, 34px); }
+.kh-cta__steps li { padding-block: 14px; }
+
+/* Hero má vyplniť prvú obrazovku — po skrátení pásov ostávala pod ním diera. */
+.kh-hero { min-height: min(760px, calc(100svh - 92px)); }
+.kh-hero__inner { align-items: center; }
+
+/* --- DVE ZNAČKY: zmestiť sa na jednu obrazovku -------------------------- */
+.kh-pick { padding-bottom: 0; }
+.kh-pick__scene { aspect-ratio: 16 / 9; }
+@media (min-width: 900px) { .kh-pick__scene { aspect-ratio: 16 / 10; } }
+.kh-pick__lane {
+  gap: 14px;
+  padding: clamp(24px, 2.6vw, 40px) clamp(22px, 2.6vw, 44px) clamp(26px, 2.8vw, 44px);
+  min-height: 0;
+}
+.kh-pick__mark .k-logo { height: clamp(24px, 2.1vw, 30px); }
+.kh-pick__wordmark { font-size: clamp(22px, 2vw, 28px); }
+.kh-pick__lane p { font-size: 14.5px; line-height: 1.6; max-width: 44ch; }
+.kh-pick__lane-foot { padding-top: 14px; }
+.kh-pick__lane-rule { width: 44px; height: 2px; }
+
+/* --- REFERENCIE: zdroje hodnotenia ------------------------------------
+   Google je hlavný a overený zdroj — dostáva plnú kartu s číslom aj počtom
+   recenzií. Facebook je len druhý kanál, preto riadok bez čísla; hodnotenie
+   odtiaľ overené nemáme a vymyslieť sa nedá. */
+.kh-rev__brand { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; color: var(--k-ink); }
+.kh-rev__brand .k-google { width: 20px; height: 20px; }
+.kh-rev__big { padding: clamp(20px, 2vw, 28px); border: 1px solid var(--k-hair); border-radius: var(--k-r); background: var(--k-white); box-shadow: var(--k-shadow-sm); }
+.kh-rev__figures b { font-size: clamp(46px, 4.6vw, 68px); line-height: 0.9; }
+.kh-rev__figures small { color: var(--k-muted); font-size: 12.5px; }
+
+.kh-rev__social {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 13px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  text-decoration: none;
+  transition: border-color 220ms var(--k-ease), box-shadow 300ms var(--k-ease);
+}
+.kh-rev__social:hover { border-color: rgba(24, 119, 242, 0.5); box-shadow: var(--k-shadow-sm); }
+.kh-rev__social > svg:first-child { width: 26px; height: 26px; }
+.kh-rev__social span { display: grid; gap: 2px; min-width: 0; }
+.kh-rev__social strong { font-size: 14px; font-weight: 700; color: var(--k-ink); }
+.kh-rev__social span span { font-size: 12.5px; color: var(--k-muted); }
+.kh-rev__social svg:last-child { width: 16px; height: 16px; fill: none; stroke: var(--k-muted); stroke-width: 2; }
+
+/* Posledné doladenie výšky — sekcia dvoch značiek presahovala obrazovku o kúsok. */
+.kh-pick .kh-pick__head { margin-bottom: clamp(16px, 1.6vw, 24px); }
+.kh-pick { padding-top: clamp(44px, 4.2vw, 72px); }
+.kh-pick__lane { padding-block: clamp(20px, 2.2vw, 32px); }
+
+/* --- MATERIÁL: silnejšia karta ----------------------------------------
+   Karty boli len fotka a text pod ňou. Číslo sa presunulo na fotku ako
+   jantárový odznak, názov dostal váhu a celá karta reaguje na hover
+   rovnako ako dlaždice v ponuke — sekcia tým sadla k zvyšku. */
+.kh-mat__media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 46%;
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 0%, rgba(9, 12, 14, 0.55) 100%);
+}
+.kh-mat__num {
+  position: absolute;
+  z-index: 1;
+  left: 14px;
+  bottom: 12px;
+  font-family: var(--k-head);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--k-amber);
+}
+.kh-mat__label {
+  gap: 0;
+  color: var(--k-amber-deep);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+}
+.kh-mat__label em { display: none; }
+.kh-mat__title { font-size: clamp(17px, 1.4vw, 21px); }
+.kh-mat__card { border-color: var(--k-hair); }
+.kh-mat__list li { font-size: 13px; padding-block: 9px; }
+.kh-mat__list li::before { top: 16px; }
+
+/* Značkový štítok na fotkách realizácií aj v menu — jednotná veľkosť. */
+.kh-work__cap span,
+.kh-work__cap .is-premium {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: var(--k-r-xs);
+  background: rgba(255, 255, 255, 0.92);
+}
+.kh-work__cap .k-logo { height: 12px; color: var(--k-slate); }
+.kh-work__cap .k-brand--soltec { font-size: 10px; letter-spacing: 0.22em; color: var(--k-slate); }
+.kh-work__cap .k-brand--soltec-img { height: 12px; }
+
+/* Logo v štítku sa nesmie stlačiť — SVG má pomer ~6:1 a vo flexe mu inak
+   ostane len jantárová zátvorka. */
+.k-brand { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.k-brand .k-logo { flex: 0 0 auto; width: auto; }
+.kh-work__cap span,
+.kh-work__cap .is-premium { flex: 0 0 auto; }
+.kh-work__cap .k-logo { height: 11px; }
+.kh-cfg__badge .k-logo { height: 12px; }
+
+/* --k-slate sa používal na štyroch miestach, ale nikdy nebol definovaný —
+   `color: var(--k-slate)` bola neplatná hodnota a značky dedili bielu, takže
+   z loga v štítku ostala len jantárová zátvorka. Je to farba písmen v logu. */
+:root { --k-slate: #455a64; }
+
+/* Oba štítky vyzerajú rovnako — značku odlišuje logo, nie farba plochy. */
+.kh-work__cap span.is-premium { background: rgba(255, 255, 255, 0.92); color: var(--k-slate); }
+.kh-work__cap .k-brand--soltec { color: var(--k-slate); }
+
+/* ========================================================================
+   AKO TO PREBIEHA: kroky ako záložky
+   Päť panelov pod sebou robilo zo sekcie 1 700 px vysoký stĺpec, ktorým sa
+   muselo prejsť celé. Vľavo je zoznam krokov ako záložky, vpravo jeden
+   veľký panel — sekcia sa zmestí na obrazovku a krok si vyberie návštevník.
+   ===================================================================== */
+.kh-proc__grid { align-items: start; }
+.kh-proc__aside { position: static; }
+
+.k .kh-proc__list { display: grid; gap: 0; padding: 0; margin: 0; list-style: none; }
+.kh-proc__row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 14px;
+  border: 0;
+  border-radius: var(--k-r-sm);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: var(--k-muted);
+  cursor: pointer;
+  transition: background-color 260ms var(--k-ease), color 260ms var(--k-ease);
+}
+.kh-proc__row + .kh-proc__row { border-top: 1px solid var(--k-hair-soft); }
+.kh-proc__row:hover { color: var(--k-ink); background: rgba(18, 23, 26, 0.035); }
+.kh-proc__row.is-active { color: var(--k-ink); background: var(--k-white); box-shadow: var(--k-shadow-sm); }
+.kh-proc__row.is-active::before { display: none; }
+.kh-proc__row em { font-style: normal; font-family: var(--k-head); font-size: 13px; font-weight: 700; color: var(--k-grey); }
+.kh-proc__row.is-active em { color: var(--k-amber-deep); }
+.kh-proc__row strong { font-family: var(--k-head); font-size: clamp(15px, 1.2vw, 17px); font-weight: 700; letter-spacing: -0.015em; }
+.kh-proc__row:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+
+.kh-proc__panels { display: block; }
+.kh-proc__panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  opacity: 1;
+  overflow: hidden;
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  box-shadow: var(--k-shadow-sm);
+  animation: kProcIn 380ms var(--k-ease-out) both;
+}
+.kh-proc__panel[hidden] { display: none; }
+.kh-proc__panel::before { display: none; }
+@keyframes kProcIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.kh-proc__media { border-radius: 0; aspect-ratio: 16 / 9; min-height: 0; }
+.kh-proc__media img { transform: none; }
+.kh-proc__body { padding: clamp(22px, 2.4vw, 34px); gap: 10px; }
+.kh-proc__num { font-size: clamp(30px, 3vw, 44px); color: var(--k-amber-deep); }
+.kh-proc__panel.is-active .kh-proc__num,
+.kh-proc .kh-proc__panel.is-active .kh-proc__num { color: var(--k-amber-deep); }
+.kh-proc__body p { max-width: 56ch; }
+
+@media (min-width: 900px) {
+  .kh-proc__panel { grid-template-columns: minmax(0, 1fr); }
+  .kh-proc__media { aspect-ratio: 16 / 8.5; }
+}
+
+/* --- POSLEDNÉ SKRÁTENIE: kontakt, konfigurátor, prémiová rada -----------
+   Cieľ je, aby sa každá sekcia zmestila na bežnú obrazovku bez scrollovania
+   v rámci sekcie. Kontaktný pás bol najdlhší — formulár má teraz kompaktnejší
+   výber, nižšie polia a menšie odsadenie karty. */
+.kh-cta { padding-block: clamp(44px, 4.2vw, 68px); }
+.kh-cta__head { margin-bottom: clamp(18px, 1.8vw, 26px); }
+.kh-cta__card,
+.kh-cta__aside { padding: clamp(24px, 2.3vw, 38px); }
+.kh-form { gap: 14px; }
+.kh-form legend { margin-bottom: 8px; }
+.kh-form__choices { gap: 6px; }
+.kh-form__choices span { min-height: 38px; padding: 7px 12px; font-size: 12.5px; }
+.kh-form__grid { gap: 12px; }
+.kh-field { gap: 5px; }
+.kh-field > span { font-size: 11px; }
+.kh-field input { min-height: 44px; }
+.kh-field textarea { min-height: 68px; }
+.kh-form__note { font-size: 12px; }
+.kh-cta__aside-head { padding-bottom: 20px; }
+.kh-cta__steps li { padding-block: 12px; }
+.kh-cta__row { padding-block: 14px; }
+
+.kh-cfg { padding-block: clamp(48px, 4.6vw, 76px); }
+.kh-cfg__steps li { padding-block: 11px; }
+.kh-cfg__thumb { aspect-ratio: 3 / 2; }
+
+
+/* ========================================================================
+   OPRAVY Z REVÍZIE
+   ===================================================================== */
+
+/* Sklenené tlačidlo v hero: hover menil farbu textu na tmavú, ale pozadie
+   držalo tmavé pravidlo s vyššou špecificitou (.kh-hero__actions .k-btn--glass),
+   takže text zmizol. Hover teraz prepisuje obe vlastnosti naraz. */
+.kh-hero__actions .k-btn--glass:hover,
+.kh-hero__actions .k-btn--glass:focus-visible {
+  background: #fff;
+  border-color: #fff;
+  color: var(--k-ink);
+}
+
+/* Vlasové linky boli na 11 % krytia prakticky neviditeľné — okraje kariet
+   (najmä pri recenziách) splývali s podkladom. Platí na celý web. */
+:root {
+  --k-hair: rgba(18, 23, 26, 0.16);
+  --k-hair-soft: rgba(18, 23, 26, 0.09);
+  --k-hair-invert: rgba(255, 255, 255, 0.2);
+}
+.kh-rev__card,
+.kh-mat__card,
+.kh-cat__card,
+.kh-cfg__item { border-width: 1px; border-color: var(--k-hair); }
+.kh-rev__card { box-shadow: 0 1px 2px rgba(18, 23, 26, 0.05); }
+
+/* Hodnotenie na Google patrí vyššie — na hrane obrazovky ho návštevník minie. */
+.kh-hero__trust { margin-top: clamp(14px, 1.6vw, 20px); }
+.kh-hero__box { gap: 0; }
+.kh-hero__actions { margin-top: clamp(16px, 1.8vw, 24px); }
+
+/* `.k button { background: none }` má špecificitu 0-1-1 a prebíja každý
+   komponent zapísaný jednou triedou. Hodnotenie v hero je <button>, takže
+   oň prišlo o pozadie aj rám. Rovnaká pasca ako pri `.k a { color: inherit }`. */
+.k .kh-hero__rating {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(12, 16, 18, 0.5);
+}
+.k .kh-hero__rating:hover { background: rgba(12, 16, 18, 0.68); border-color: rgba(255, 255, 255, 0.55); }
+
+/* ========================================================================
+   VYHĽADÁVANIE
+   Lupa predtým iba odkazovala na /search. Panel teraz hľadá naživo v obsahu
+   stránky (menu, ponuka, realizácie, otázky) a ponúka aj prechod do e-shopu.
+   ===================================================================== */
+.kv-search {
+  position: absolute;
+  inset: 100% 0 auto 0;
+  z-index: 60;
+  padding: clamp(16px, 1.8vw, 24px) 0 clamp(18px, 2vw, 26px);
+  background: var(--k-white);
+  border-top: 1px solid var(--k-hair);
+  box-shadow: 0 24px 48px -24px rgba(9, 12, 14, 0.35);
+  animation: kSearchIn 220ms var(--k-ease-out) both;
+}
+@keyframes kSearchIn { from { opacity: 0; transform: translateY(-6px); } }
+.kv-search[hidden] { display: none; }
+.kv-search__in { display: grid; gap: 14px; }
+
+.kv-search__bar {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px solid rgba(18, 23, 26, 0.22);
+  border-radius: var(--k-r-pill);
+  background: #f4f5f5;
+}
+.kv-search__bar:focus-within { border-color: var(--k-amber-deep); background: #fff; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.28); }
+.kv-search__bar > svg { width: 20px; height: 20px; fill: none; stroke: var(--k-muted); stroke-width: 2; }
+.kv-search__bar input {
+  min-height: 34px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 16px;
+  color: var(--k-ink);
+  outline: none;
+}
+.kv-search__bar input::placeholder { color: rgba(18, 23, 26, 0.45); }
+.k .kv-search__close { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; }
+.k .kv-search__close:hover { background: rgba(18, 23, 26, 0.07); }
+.kv-search__close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+.kv-search__results { display: grid; gap: 2px; max-height: min(52vh, 420px); overflow-y: auto; }
+.kv-search__hit {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 8px;
+  border-radius: var(--k-r-sm);
+  text-decoration: none;
+}
+.kv-search__hit:hover,
+.kv-search__hit.is-active,
+.kv-search__hit:focus-visible { background: var(--k-bone); outline: none; }
+.kv-search__thumb { display: block; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--k-r-xs); background: var(--k-bone-deep); }
+.kv-search__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kv-search__thumb--blank { background: var(--k-bone); border: 1px dashed var(--k-hair); }
+.kv-search__text { display: grid; gap: 2px; min-width: 0; }
+.kv-search__text strong { font-size: 14.5px; font-weight: 700; color: var(--k-ink); }
+.kv-search__text span { font-size: 12.5px; color: var(--k-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.kv-search__empty { margin: 0; padding: 4px 8px 0; font-size: 13.5px; color: var(--k-muted); }
+.kv-search__shop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: start;
+  padding: 10px 16px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  color: var(--k-ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.kv-search__shop svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* ========================================================================
+   DOLADENIE PO REVÍZII II
+   ===================================================================== */
+
+/* --- MENU: pätka bez zbytočnej poznámky -------------------------------- */
+.kv-mega__foot > span { display: none; }
+.kv-mega__foot { justify-content: flex-end; }
+
+/* --- KONFIGURÁTOR: ľavý stĺpec nemá pôsobiť prázdno --------------------
+   Kroky dostali výraznejšie deliace linky, číslo v jantárovom krúžku
+   a postupný nábeh, takže stĺpec drží pohľad rovnako ako mriežka vpravo. */
+.k .kh-cfg__steps { display: grid; gap: 0; padding: 0; margin: clamp(18px, 2vw, 26px) 0 0; list-style: none; counter-reset: none; }
+.kh-cfg__steps li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 15px 0;
+  border-top: 1px solid var(--k-hair);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+.kh-cfg__steps li:last-child { border-bottom: 1px solid var(--k-hair); }
+.kh-cfg__steps li > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--k-amber);
+  font-family: var(--k-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+.kh-cfg__steps li::before { display: none; }
+.kh-cfg__copy .k-lead { max-width: 42ch; }
+
+/* --- PRÉMIOVÁ RADA: rovnaký jazyk ako zvyšok --------------------------
+
+
+/* Čipy v ponuke sú hlavné CTA sekcie — musia byť väčšie a vždy viditeľné. */
+.k .kh-cat__actions .k-link,
+.k .kh-cat__actions .kh-cat__cfg {
+  min-height: 42px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+}
+.kh-cat__actions .k-link svg,
+.kh-cat__actions .kh-cat__cfg svg { width: 15px; height: 15px; }
+
+/* Textová značka Soltec je dočasná náhrada, kým nebude v téme originál.
+   Podľa skutočného loga: malé písmená, ľahký rez, široké prestrkanie,
+   bridlicová farba — nie verzálky tučným rezom, ako to bolo predtým. */
+.k-brand--soltec {
+  font-family: var(--k-head);
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--k-slate);
+}
+.k-invert .k-brand--soltec,
+.kh-pick__lane:not(.is-premium) .k-brand--soltec { color: #fff; }
+
+/* --- PONUKA: pás fotografií v karte ------------------------------------
+   Jedna fotka na kategóriu nedala predstavu o rozsahu. Pás pod hlavnou
+   fotkou prepína zábery — hoverom aj klikom, takže funguje aj na dotyku. */
+.kh-cat__media { overflow: hidden; }
+.kh-cat__shots {
+  display: flex;
+  gap: 6px;
+  padding: 10px clamp(14px, 1.4vw, 20px) 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kh-cat__shots::-webkit-scrollbar { display: none; }
+.k .kh-cat__shot {
+  flex: 0 0 auto;
+  width: 62px;
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  border-radius: var(--k-r-xs);
+  background: var(--k-bone-deep);
+  cursor: pointer;
+  opacity: 0.62;
+  transition: opacity 220ms var(--k-ease), border-color 220ms var(--k-ease);
+}
+.kh-cat__shot img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.k .kh-cat__shot:hover,
+.k .kh-cat__shot:focus-visible { opacity: 1; }
+.k .kh-cat__shot.is-active { opacity: 1; border-color: var(--k-amber); }
+.kh-cat__media img { transition: transform 700ms var(--k-ease-out), opacity 260ms var(--k-ease); }
+.kh-cat__media.is-swapping img { opacity: 0.35; }
+
+@media (max-width: 619px) { .k .kh-cat__shot { width: 54px; } }
+
+/* --- MATERIÁL: prepínač značky ----------------------------------------- */
+.kh-mat__switch {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: clamp(16px, 1.8vw, 24px);
+  padding: 4px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-pill);
+  background: var(--k-white);
+}
+.k .kh-mat__tab {
+  display: grid;
+  place-items: center;
+  min-width: 118px;
+  min-height: 38px;
+  padding: 8px 18px;
+  border-radius: var(--k-r-pill);
+  background: transparent;
+  transition: background-color 240ms var(--k-ease);
+}
+.k .kh-mat__tab:hover { background: var(--k-bone); }
+.k .kh-mat__tab.is-active { background: var(--k-ink); }
+.kh-mat__tab .k-logo { height: 15px; color: var(--k-slate); }
+.kh-mat__tab .k-brand--soltec { font-size: 15px; color: var(--k-slate); }
+.kh-mat__tab.is-active .k-logo,
+.kh-mat__tab.is-active .k-brand--soltec { color: #fff; }
+.kh-mat__tab .k-brand--soltec-img { height: 15px; }
+.kh-mat__card[hidden] { display: none; }
+
+/* --- ZÁVEREČNÝ POHYB ---------------------------------------------------
+   Animácie majú stránke pridať tempo, nie ju spomaliť. Preto sú krátke
+   (do 420 ms), nábeh je len 10 px a nič sa neskrýva dlhšie, než trvá jeden
+   pohyb. Skript má navyše poistku, ktorá po 1,5 s odkryje všetko naraz. */
+.k-rise { transform: translateY(10px); transition: opacity 420ms var(--k-ease-out), transform 420ms var(--k-ease-out); }
+
+/* Eyebrow si pri vstupe dokreslí jantárovú linku — drobný detail, ktorý
+   dá sekcii začiatok bez toho, aby čokoľvek zdržal. */
+.k-eyebrow { position: relative; padding-left: 26px; }
+.k-eyebrow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 18px;
+  height: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 420ms var(--k-ease-out) 120ms;
+}
+.k-eyebrow.is-in::before,
+.is-in .k-eyebrow::before { transform: scaleX(1); }
+
+/* Karty sa dvíhajú jemnejšie a rýchlejšie. */
+.kh-cat__card,
+.kh-mat__card,
+.kh-cfg__item,
+.kh-work__item { transition: transform 320ms var(--k-ease-out), box-shadow 320ms var(--k-ease), border-color 260ms var(--k-ease); }
+.kh-cat__card:hover,
+.kh-mat__card:hover,
+.kh-cfg__item:hover { transform: translateY(-3px); }
+
+/* Primárne CTA má pri hoveri jemný impulz — pozornosť tam, kde sa konvertuje. */
+.k-btn--primary { transition: background-color 220ms var(--k-ease), border-color 220ms var(--k-ease), transform 220ms var(--k-ease-out), box-shadow 260ms var(--k-ease); }
+.k-btn--primary:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -12px rgba(255, 204, 0, 0.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-eyebrow::before { transform: scaleX(1); transition: none; }
+  .kh-cat__card:hover,
+  .kh-mat__card:hover,
+  .kh-cfg__item:hover,
+  .k-btn--primary:hover { transform: none; }
+}
+
+/* ========================================================================
+   LOGO SOLTEC — originál z firemných podkladov
+   Používa sa orezaná slovná značka (971 × 268) bez claimu „More life." —
+   pri výške 12–20 px v čipoch by bol claim nečitateľný. Na tmavých plochách
+   sa bridlicová verzia prefarbuje filtrom, aby nebolo treba druhý súbor
+   v každom mieste; biely originál je v `soltec-mark-white.png`.
+   ===================================================================== */
+.k-brand--soltec-img { display: block; width: auto; height: 15px; flex: 0 0 auto; }
+
+/* tmavé plochy */
+.k-invert .k-brand--soltec-img,
+.kh-soltec .k-brand--soltec-img,
+.kf .k-brand--soltec-img,
+.kh-mat__tab.is-active .k-brand--soltec-img,
+.kh-pick__lane:not(.is-premium) .k-brand--soltec-img { filter: brightness(0) invert(1); }
+
+/* veľkosti podľa miesta */
+.kv-mega__brand .k-brand--soltec-img { height: 19px; }
+.kh-cfg__badge .k-brand--soltec-img { height: 12px; }
+.kh-work__cap .k-brand--soltec-img { height: 11px; }
+.kh-mat__tab .k-brand--soltec-img { height: 16px; }
+.kh-pick__wordmark { display: block; }
+.kh-pick__wordmark .k-brand--soltec-img { height: clamp(24px, 2.2vw, 32px); }
+.kh-search .k-brand--soltec-img { height: 14px; }
+
+/* --- HERO: nábeh nadpisu po riadkoch -----------------------------------
+   Každý riadok je okno s orezaním, slová v ňom vychádzajú zdola. Pokojnejšie
+   a čitateľnejšie než vypisovanie po písmenách.
+
+   Základ je VIDITEĽNÉ — trieda .is-headline pridáva skript a animácia
+   s fill-mode: backwards skrýva len počas oneskorenia. Keď skript nenabehne
+   alebo sú animácie vypnuté, nadpis je normálne vidieť. */
+.k-line { display: block; overflow: hidden; }
+.k-line__in { display: block; }
+.is-headline .k-word {
+  display: inline-block;
+  animation: kWordUp 620ms cubic-bezier(0.16, 0.84, 0.24, 1) backwards;
+}
+@keyframes kWordUp {
+  from { transform: translateY(105%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-headline .k-word { animation: none; }
+}
+
+/* ========================================================================
+   PRÉMIOVÁ RADA SOLTEC — postavená odznova
+   Predtým to bol tmavý pás s vlastným jazykom: iná typografia, iné tvary,
+   výška cez celú obrazovku. Na stránke stál osamote a nedal sa prehliadnuť
+   jedným pohľadom. Teraz sú to tri karty presne také, aké má ponuka —
+   fotka hore, telo dole, dva čipy. Sekcia sa zmestí na jednu obrazovku.
+   ===================================================================== */
+.kh-soltec { background: var(--k-bone); }
+.kh-soltec__brand { margin: 0 0 10px; }
+.kh-soltec__brand .k-brand--soltec-img { height: 22px; }
+
+.kh-soltec__grid { display: grid; gap: clamp(14px, 1.5vw, 22px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 700px) { .kh-soltec__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .kh-soltec__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.kh-soltec__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r);
+  background: var(--k-white);
+  transition: transform 320ms var(--k-ease-out), box-shadow 320ms var(--k-ease), border-color 260ms var(--k-ease);
+}
+.kh-soltec__card:hover { transform: translateY(-3px); box-shadow: var(--k-shadow-sm); border-color: transparent; }
+
+.kh-soltec__media { display: block; overflow: hidden; aspect-ratio: 16 / 10; background: var(--k-bone-deep); }
+.kh-soltec__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--k-ease-out); }
+.kh-soltec__card:hover .kh-soltec__media img { transform: scale(1.04); }
+
+.kh-soltec__body { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; padding: clamp(18px, 1.8vw, 24px); }
+.kh-soltec__name {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(18px, 1.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+}
+.kh-soltec__note { margin: 0; font-size: 13.5px; color: var(--k-muted); }
+.kh-soltec__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 12px; }
+.k .kh-soltec__actions .k-link,
+.k .kh-soltec__actions .kh-soltec__cfg {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: var(--k-r-pill);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.k .kh-soltec__actions .k-link { background: var(--k-amber); color: var(--k-ink); }
+.k .kh-soltec__actions .k-link:hover { background: #ffd633; }
+.k .kh-soltec__actions .kh-soltec__cfg { border: 1px solid rgba(18, 23, 26, 0.22); color: var(--k-ink); }
+.k .kh-soltec__actions .kh-soltec__cfg:hover { border-color: var(--k-ink); background: var(--k-ink); color: #fff; }
+.kh-soltec__actions svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* --- PONUKA: prepínanie fotiek šípkami ---------------------------------
+   Pás náhľadov pod fotkou zaberal miesto a nebolo z neho zrejmé, že sa dá
+   prepínať. Šípky sedia priamo na okrajoch fotografie; pás zostáva v kóde
+   ako zdroj zoznamu fotiek, ale nezobrazuje sa. */
+.kh-cat__shots { display: none; }
+
+.k .kh-cat__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--k-ink);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 220ms var(--k-ease), transform 220ms var(--k-ease-out), background-color 200ms var(--k-ease);
+}
+.kh-cat__nav--prev { left: 10px; }
+.kh-cat__nav--next { right: 10px; }
+.kh-cat__nav svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.k .kh-cat__nav:hover { background: var(--k-amber); }
+.kh-cat__card:hover .kh-cat__nav,
+.kh-cat__card:focus-within .kh-cat__nav { opacity: 1; transform: none; }
+/* Na dotyku nie je hover — šípky musia byť vidieť vždy. */
+@media (hover: none) {
+  .k .kh-cat__nav { opacity: 1; transform: none; }
+}
+
+.kh-cat__count {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: var(--k-r-pill);
+  background: rgba(9, 12, 14, 0.62);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ========================================================================
+   OPRAVY Z REVÍZIE III
+   ===================================================================== */
+
+/* Čipy nesmú pri hoveri rozmazávať pozadie — namiesto blur je pohyb a farba. */
+.kh-work__cap span,
+.kh-cfg__badge,
+.kh-cat__nav,
+.kh-work__filters button { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.kh-work__cap span { transition: transform 240ms var(--k-ease-out), background-color 240ms var(--k-ease); }
+.kh-work__item:hover .kh-work__cap span { transform: translateY(-2px); background: var(--k-amber); }
+.kh-work__item:hover .kh-work__cap .k-logo,
+.kh-work__item:hover .kh-work__cap .k-brand--soltec-img { filter: none; }
+
+/* Logá v štítkoch a v prepínači sa nesmú deformovať — pomer drží aspect-ratio
+   a object-fit, nie iba width:auto. */
+.k-brand--soltec-img { aspect-ratio: 971 / 268; object-fit: contain; }
+.kh-mat__tab .k-logo,
+.kh-work__cap .k-logo,
+.kh-cfg__badge .k-logo { width: auto; max-width: none; }
+.k .kh-mat__tab { min-width: 132px; padding-inline: 22px; }
+
+/* Okraje kariet musia byť vidieť — recenzie aj materiál. */
+.kh-rev__card,
+.kh-mat__card,
+.kh-cat__card,
+.kh-cfg__item,
+.kh-soltec__card { border: 1px solid rgba(18, 23, 26, 0.2); }
+.kh-rev__card { box-shadow: 0 2px 6px -3px rgba(18, 23, 26, 0.18); }
+
+/* Zoznam v materiáli: väčšie riadkovanie a pomlčka, ktorá nekolidoval
+   s textom pri zalomení. */
+.kh-mat__list li { padding: 11px 0 11px 22px; line-height: 1.55; font-size: 13.5px; }
+.kh-mat__list li::before { top: 19px; width: 10px; }
+
+/* --- FORMULÁR: rozbaľovací selektor ------------------------------------
+   Päť čipov vedľa seba sa v úzkom stĺpci lámalo do dvoch riadkov. Selektor
+   ukazuje jednu voľbu a zvyšok odkryje po kliknutí. */
+.kh-select { position: relative; }
+.k .kh-select__btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(18, 23, 26, 0.22);
+  border-radius: var(--k-r-sm);
+  background: #f4f5f5;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--k-ink);
+  text-align: left;
+}
+.k .kh-select__btn:hover { border-color: rgba(18, 23, 26, 0.45); }
+.kh-select__btn[aria-expanded="true"] {
+  border-color: var(--k-amber-deep);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.28);
+}
+.kh-select__btn svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 240ms var(--k-ease-out); }
+.kh-select__btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.k .kh-select__list {
+  position: absolute;
+  z-index: 20;
+  inset: calc(100% + 6px) 0 auto 0;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: #fff;
+  box-shadow: 0 18px 36px -20px rgba(9, 12, 14, 0.4);
+  animation: kSelectIn 180ms var(--k-ease-out) both;
+}
+@keyframes kSelectIn { from { opacity: 0; transform: translateY(-4px); } }
+.kh-select__list[hidden] { display: none; }
+.kh-select__list li {
+  padding: 11px 12px;
+  border-radius: var(--k-r-xs);
+  font-size: 14.5px;
+  color: var(--k-ink);
+  cursor: pointer;
+}
+.kh-select__list li::before { display: none; }
+.kh-select__list li:hover,
+.kh-select__list li:focus-visible { background: var(--k-bone); outline: none; }
+.kh-select__list li[aria-selected="true"] { background: var(--k-amber); font-weight: 700; }
+
+/* Hodnotenie Google je v paneli hore — je to dôkaz, ktorý má návštevník
+   vidieť skôr než kontakty, nie až úplne dole. */
+.kh-cta__score { margin: 0 0 22px; padding-bottom: 22px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); }
+
+/* --- AKO TO PREBIEHA ----------------------------------------------------
+   Bez zvislej osi a bez bodiek. Krok je riadok; aktívny riadok je biela karta
+   s jantárovým prahom — presne ten istý zápis, aký má panel vpravo a karty
+   inde na stránke. Menej ozdoby, viac poriadku.
+
+   Fotka má pevný pomer a panel pevnú minimálnu výšku, takže sa pri zmene
+   kroku nič neposunie. */
+.k .kh-proc__list { padding-left: 0; }
+.k .kh-proc__list::before { display: none; }
+.kh-proc__row::after { display: none; }
+.kh-proc__row {
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--k-r-sm) var(--k-r-sm) 0;
+}
+.kh-proc__row.is-active { border-left-color: var(--k-amber); }
+
+.kh-proc__media { position: relative; overflow: hidden; aspect-ratio: 16 / 9; }
+.kh-proc__media img { width: 100%; height: 100%; object-fit: cover; transition: opacity 420ms var(--k-ease); }
+.kh-proc__media.is-swapping img { opacity: 0; }
+.kh-proc__media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 0%, rgba(9, 12, 14, 0.42) 100%);
+  pointer-events: none;
+}
+.kh-proc__step-of {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  bottom: 14px;
+  padding: 5px 11px;
+  border-radius: var(--k-r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--k-ink);
+}
+.kh-proc__panels { min-height: 0; }
+
+/* Fotka pri výmene neposkakuje: má pevnú výšku a prelína sa. */
+.kh-proc__media { position: relative; overflow: hidden; }
+.kh-proc__media img { transition: opacity 420ms var(--k-ease), transform 620ms var(--k-ease-out); }
+.kh-proc__media.is-swapping img { opacity: 0; transform: scale(1.03); }
+.kh-proc__media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 0%, rgba(9, 12, 14, 0.42) 100%);
+  pointer-events: none;
+}
+.kh-proc__step-of {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  bottom: 14px;
+  padding: 5px 11px;
+  border-radius: var(--k-r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--k-ink);
+}
+
+/* Popiska pod fotkou dáva kroku kontext — bez nej bol panel len obrázok. */
+.kh-proc__media { position: relative; }
+.kh-proc__media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(9, 12, 14, 0) 0%, rgba(9, 12, 14, 0.42) 100%);
+  pointer-events: none;
+}
+.kh-proc__step-of {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  bottom: 14px;
+  padding: 5px 11px;
+  border-radius: var(--k-r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--k-ink);
+}
+
+/* ========================================================================
+   MOBIL
+   Cieľ je, aby návštevník nemusel scrollovať hore-dole a nič nestratil.
+   Sekcie majú menej stĺpcov, ovládanie je vždy viditeľné a hlavné CTA
+   ostáva po ruke.
+   ===================================================================== */
+@media (max-width: 760px) {
+  :root { --k-band: clamp(40px, 9vw, 56px); }
+  .k-h2 { font-size: clamp(24px, 6.6vw, 30px); }
+  .kh-hero { min-height: min(620px, calc(100svh - 76px)); }
+  .kh-hero .k-display { font-size: clamp(31px, 9vw, 42px); }
+  .kh-hero__box { padding: 18px 18px 22px; }
+  .kh-hero__actions { display: grid; gap: 10px; }
+  .kh-hero__actions .k-btn { width: 100%; }
+
+  /* Dve značky pod sebou, aby si každá udržala plnú šírku fotky. */
+  .kh-pick__panorama,
+  .kh-pick__lanes { grid-template-columns: minmax(0, 1fr); }
+  .kh-pick__scene { aspect-ratio: 16 / 10; }
+
+  /* Karty a čipy: nič sa neskrýva do hoveru, ktorý na dotyku neexistuje. */
+  .kh-cat__actions,
+  .kh-soltec__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .k .kh-cat__actions .k-link,
+  .k .kh-cat__actions .kh-cat__cfg,
+  .k .kh-soltec__actions .k-link,
+  .k .kh-soltec__actions .kh-soltec__cfg { justify-content: center; width: 100%; }
+
+  /* Proces: zoznam krokov je vodorovná lišta, panel pod ním — bez skákania. */
+  .kh-proc__grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .k .kh-proc__list {
+    display: flex;
+    gap: 8px;
+    padding-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .k .kh-proc__list::-webkit-scrollbar { display: none; }
+  .k .kh-proc__list::before { display: none; }
+  .kh-proc__row {
+    flex: 0 0 auto;
+    grid-template-columns: auto;
+    gap: 2px;
+    min-width: 132px;
+    border-top: 0;
+    border: 1px solid var(--k-hair);
+  }
+  .kh-proc__row + .kh-proc__row { border-top: 1px solid var(--k-hair); }
+  .kh-proc__row::after { display: none; }
+  .kh-proc__row strong { font-size: 13.5px; }
+
+  /* Kontakt: formulár a panel pod sebou, oba v plnej šírke. */
+  .kh-cta__grid { grid-template-columns: minmax(0, 1fr); }
+  .kh-cta__card,
+  .kh-cta__aside { border-radius: var(--k-r); }
+
+  /* Otázky: tmavý úvod nad zoznamom, nie vedľa. */
+  .kh-faq__grid { grid-template-columns: minmax(0, 1fr); }
+  .kh-faq__intro,
+  .kh-faq__list { border-radius: var(--k-r); }
+
+  /* Menu: dva stĺpce značiek pod sebou. */
+  .kv-mega { width: 100%; }
+  .kv-mega__cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Lepivé CTA na mobile — hlavná akcia je vždy na dosah palca. */
+.kh-dock {
+  position: fixed;
+  z-index: 70;
+  inset: auto 0 0 0;
+  display: none;
+  gap: 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--k-hair);
+  background: rgba(255, 255, 255, 0.96);
+}
+@media (max-width: 760px) {
+  .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr); }
+  body { padding-bottom: 74px; }
+}
+.k .kh-dock__call {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(18, 23, 26, 0.22);
+  border-radius: var(--k-r-pill);
+  color: var(--k-ink);
+}
+.kh-dock__call svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.k .kh-dock .k-btn { width: 100%; min-height: 48px; }
+
+/* Posledné skrátenie: kontakt a materiál presahovali obrazovku. */
+.kh-cta { padding-block: clamp(38px, 3.6vw, 58px); }
+.kh-cta__score { margin-bottom: 18px; padding-bottom: 18px; }
+.kh-cta__aside-head { padding-bottom: 16px; }
+.kh-cta__aside-head h3 { font-size: clamp(22px, 2vw, 30px); }
+.kh-cta__row { padding-block: 12px; }
+.kh-mat { padding-block: clamp(42px, 4vw, 66px); }
+.kh-mat__media { aspect-ratio: 3 / 2; }
+.kh-mat__body { padding: clamp(15px, 1.5vw, 20px); gap: 8px; }
+.kh-mat__list li { padding: 9px 0 9px 22px; font-size: 13px; }
+.kh-mat__list li::before { top: 17px; }
+
+/* ========================================================================
+   OPRAVY Z REVÍZIE IV — každá overená v prehliadači
+   ===================================================================== */
+
+/* 1 · Hodnotenie Google je nad tlačidlami a hero je nižšie, aby pri okne
+       s výškou ~880 px neskončilo pod okrajom. Predtým padalo mimo pohľad. */
+.kh-hero { min-height: min(660px, calc(100svh - 130px)); }
+.kh-hero__trust { margin: 0 0 clamp(14px, 1.6vw, 20px); }
+.kh-hero__actions { margin-top: 0; }
+
+/* 2 · Odkazy v dvoch značkách vyzerajú ako všade inde: text, jantárová šípka
+       a sivá vlasová linka nad nimi — nie samostatný čip. */
+.kh-pick__lane-foot { border-top: 1px solid; padding-top: 16px; }
+.kh-pick__lane:not(.is-premium) .kh-pick__lane-foot { border-top-color: rgba(255, 255, 255, 0.22); }
+.kh-pick__lane.is-premium .kh-pick__lane-foot { border-top-color: rgba(18, 23, 26, 0.18); }
+.k .kh-pick__lane .k-link {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.kh-pick__lane:not(.is-premium) .k-link { color: var(--k-amber); }
+.kh-pick__lane.is-premium .k-link { color: var(--k-ink); }
+.kh-pick__lane .k-link svg { width: 16px; height: 16px; }
+
+/* 3 · Štítky na fotkách realizácií nemenia pri hoveri farbu a logo v nich má
+       rovnaký tón ako text štítku. Žltá plocha pod logom pôsobila lacno. */
+.kh-work__item:hover .kh-work__cap span,
+.kh-work__cap span:hover { background: rgba(255, 255, 255, 0.94); transform: none; }
+.kh-work__cap span,
+.kh-work__cap span.is-premium { background: rgba(255, 255, 255, 0.94); color: var(--k-ink); }
+.kh-work__cap .k-logo { color: var(--k-ink); }
+.kh-work__cap .k-brand--soltec-img { filter: brightness(0) saturate(0); opacity: 0.86; }
+
+/* 5 · Aktívna záložka materiálu: logo musí byť biele, inak je bridlicová
+       značka na čiernej pilulke neviditeľná. Platí pre obe značky. */
+.kh-mat__tab.is-active .k-logo { color: #fff; }
+.kh-mat__tab.is-active .k-logo path { fill: currentColor; }
+.kh-mat__tab.is-active .k-logo .k-logo__bracket path { fill: var(--k-amber); }
+.kh-mat__tab.is-active .k-brand--soltec-img { filter: brightness(0) invert(1); }
+
+/* Panely procesu sa prelínajú v jednej bunke mriežky — fotka tak pri zmene
+   kroku neposkočí. Triedu .is-stacked pridáva skript; bez neho ostanú panely
+   pod sebou a všetky sú čitateľné. */
+.kh-proc__panels.is-stacked { display: grid; }
+.kh-proc__panels.is-stacked > .kh-proc__panel {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  /* Žiadny posun — panel sa iba prelína. Akýkoľvek transform hýbe fotkou. */
+  transform: none;
+  transition: opacity 380ms var(--k-ease), visibility 0s linear 380ms;
+  animation: none;
+}
+.kh-proc__panels.is-stacked > .kh-proc__panel.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 380ms var(--k-ease), visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kh-proc__panels.is-stacked > .kh-proc__panel { transition: none; transform: none; }
+}
+
+/* ========================================================================
+   HERO — dotiahnutie
+   ===================================================================== */
+
+/* Text stál na tmavom obdĺžniku so zaoblenými rohmi, ktorý sa vznášal nad
+   fotkou ako nalepený panel. Závoj je teraz súčasťou fotografie: siaha od
+   ľavého okraja a zhora nadol vyprchá, takže hrana nie je vidieť. */
+.kh-hero__box {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  max-width: 620px;
+}
+.kh-hero__scrim {
+  background:
+    linear-gradient(100deg, rgba(9, 12, 14, 0.86) 0%, rgba(9, 12, 14, 0.66) 34%, rgba(9, 12, 14, 0.22) 60%, rgba(9, 12, 14, 0.05) 78%),
+    linear-gradient(180deg, rgba(9, 12, 14, 0.42) 0%, rgba(9, 12, 14, 0) 38%);
+}
+
+/* Jantárová linka pri odseku pôsobila ako zvyšok po inom rozložení. */
+.kh-hero__lead { padding-left: 0; border-left: 0; }
+
+/* Riadky nadpisu držia pokope — .k-line je blok, prázdny <br> je preč. */
+.kh-hero .k-display { line-height: 1.0; }
+.kh-hero__accent { display: block; color: var(--k-amber); }
+
+/* Fotografia sa pomaly primkne — hero tým žije bez toho, aby čokoľvek
+   zdržalo. Bez pohybu pri prefers-reduced-motion. */
+.kh-hero__bg img { animation: kHeroIn 12s var(--k-ease-out) both; }
+@keyframes kHeroIn { from { transform: scale(1.06); } to { transform: scale(1); } }
+
+/* Náznak, že stránka pokračuje. */
+.kh-hero__cue {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 18px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.kh-hero__cue span {
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  animation: kCue 2.4s var(--k-ease) infinite;
+}
+@keyframes kCue { 0%, 100% { opacity: 0.35; transform: scaleY(0.7); } 50% { opacity: 1; transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-hero__bg img { animation: none; }
+  .kh-hero__cue span { animation: none; }
+}
+@media (max-width: 760px) { .kh-hero__cue { display: none; } }
+
+/* Hierarchia v hero: nadpis dostane viac priestoru, odsek je čitateľnejší
+   a náznak scrollu ustúpi k ľavému okraju, aby nesúperil s fotkou. */
+.kh-hero .k-display { font-size: clamp(38px, 4.6vw, 68px); }
+.kh-hero__lead {
+  margin-top: clamp(16px, 1.8vw, 24px);
+  max-width: 44ch;
+  font-size: clamp(15.5px, 1.2vw, 17.5px);
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.92);
+}
+.kh-hero__trust { margin-top: clamp(18px, 2vw, 26px); }
+
+.kh-hero__cue {
+  left: auto;
+  right: clamp(20px, 3vw, 48px);
+  bottom: 22px;
+  transform: none;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+}
+.kh-hero__cue span { height: 32px; }
+
+/* --- DVE ZNAČKY: odkaz ako všade inde ----------------------------------
+   Jantárová čiarka nad textom a odlišný odkaz v každom pruhu — obe preč.
+   Odkaz je rovnaký zápis ako `.k-link` v ostatných sekciách. */
+.kh-pick__lane-rule { display: none; }
+.k .kh-pick__lane .k-link { color: var(--k-amber-deep); }
+.kh-pick__lane:not(.is-premium) .k-link { color: var(--k-amber); }
+.kh-pick__lane:not(.is-premium) .k-link:hover { color: #ffe066; }
+.kh-pick__lane.is-premium .k-link:hover { color: var(--k-ink); }
+
+/* --- MATERIÁL: pomlčky v zozname rovnako hrubé a v jednej farbe --------- */
+/* Pomlčka v technickom zozname. Oddeľovač v údajoch kategórie je bodka —
+   nesmie sa mu nastaviť výška a pozadie, inak sa z nej stane jantárový blok. */
+.kh-mat__list li::before {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--k-amber-deep);
+}
+.kh-cat__specs li + li::before {
+  height: auto;
+  background: none;
+  color: rgba(18, 23, 26, 0.32);
+}
+
+/* --- DVE ZNAČKY: linka pod logom a poriadne CTA ------------------------
+   Linka pod značkou ostáva, ale v neutrálnom tóne — jantár tam kričal.
+   Odkaz je tlačidlo, nie textový odkaz: je to hlavná akcia pruhu. */
+.kh-pick__lane-rule {
+  display: block;
+  width: 48px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(18, 23, 26, 0.22);
+}
+.kh-pick__lane:not(.is-premium) .kh-pick__lane-rule { background: rgba(255, 255, 255, 0.3); }
+
+.k .kh-pick__lane .k-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 12px 22px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  color: var(--k-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform .2s var(--k-ease-out), box-shadow .26s var(--k-ease), background-color .2s var(--k-ease);
+}
+.k .kh-pick__lane .k-link:hover {
+  background: #ffd633;
+  color: var(--k-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(255, 204, 0, 0.9);
+}
+.kh-pick__lane .k-link svg { width: 16px; height: 16px; }
+
+/* Pätka pruhu drží meta vľavo a tlačidlo vpravo, s odstupom od textu. */
+.kh-pick__lane-foot { align-items: center; gap: 14px 20px; padding-top: 18px; }
+.kh-pick__lane-meta { font-size: 13px; }
+
+/* ========================================================================
+   AKO TO PREBIEHA — pripnutý panel
+   Fotka ostáva na mieste, kým sa neprejdú všetky kroky. Zoznam vľavo dáva
+   scrollu dĺžku, panel vpravo je sticky a drží sa v hornej tretine okna.
+   Pod 900 px sa pinovanie vypína — na mobile by bralo celú obrazovku.
+   ===================================================================== */
+@media (min-width: 900px) {
+  .kh-proc__grid { align-items: start; }
+  .k .kh-proc__list { display: grid; align-content: start; }
+    /* Zoznam musí byť vyšší než panel, inak sa sticky nemá o čo oprieť
+     a fotka sa odscrolluje skôr, než sa prejdú všetky kroky. */
+  .kh-proc__row { min-height: 23vh; align-items: center; }
+  .kh-proc__panels { position: sticky; top: clamp(90px, 13vh, 150px); }
+}
+
+/* --- Kroky nie sú škatuľky ---------------------------------------------
+   Biela karta s rámom pôsobila ako formulárové políčko. Krok je riadok
+   v zozname: číslo, názov, vlasová linka. Aktívny riadok drží jantárový
+   prah a tmavý text — nič viac netreba. */
+.kh-proc__row {
+  padding: 18px 4px 18px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--k-hair-soft);
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.kh-proc__row:last-child { border-bottom: 0; }
+.kh-proc__row:hover { background: transparent; color: var(--k-ink); }
+.kh-proc__row.is-active {
+  border-left-color: var(--k-amber);
+  background: transparent;
+  box-shadow: none;
+}
+.kh-proc__row em { font-size: 14px; }
+.kh-proc__row strong { font-size: clamp(16px, 1.4vw, 19px); transition: color 260ms var(--k-ease); }
+.kh-proc__row.is-active strong { color: var(--k-ink); }
+
+/* --- Odrážka v technickom zozname --------------------------------------
+   Vlasová 2 px linka sa pri systémovom škálovaní (1,25×) na každom riadku
+   antialiasovala inak, takže pomlčky vyzerali rôzne hrubé. Malý plný
+   štvorček je pri akomkoľvek DPR rovnaký. */
+.kh-mat__list li::before {
+  top: 16px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--k-amber-deep);
+}
+
+/* --- Tlačidlá a čipy: bez vyfarbovania a bez rozmazania ----------------
+   Hover nemá plochu prefarbiť ani rozmazať pozadie. Reaguje rám, jemné
+   nadvihnutie a posun šípky — pohyb, nie farba. */
+.k [class*="backdrop"],
+.kv-header [class*="backdrop"] { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.k-btn--glass,
+.kh-hero__actions .k-btn--glass {
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(9, 12, 14, 0.32);
+  color: #fff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: border-color 240ms var(--k-ease), transform 240ms var(--k-ease-out);
+}
+.k .kh-hero__actions .k-btn--glass:hover,
+.k .kh-hero__actions .k-btn--glass:focus-visible,
+.k-btn--glass:hover,
+.k-btn--glass:focus-visible {
+  border-color: #fff;
+  background: rgba(9, 12, 14, 0.32);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Šípka v tlačidlách a odkazoch sa posunie — to je celá animácia. */
+.k-btn svg,
+.k-link svg { transition: transform 240ms var(--k-ease-out); }
+.k-btn:hover svg,
+.k-link:hover svg { transform: translateX(3px); }
+
+/* Čipy s dvomi akciami: obrysový nemení výplň, len rám a posun. */
+.k .kh-cat__actions .kh-cat__cfg:hover,
+.k .kh-soltec__actions .kh-soltec__cfg:hover {
+  border-color: var(--k-ink);
+  background: transparent;
+  color: var(--k-ink);
+  transform: translateY(-2px);
+}
+.k .kh-cat__actions .k-link:hover,
+.k .kh-soltec__actions .k-link:hover,
+.k .kh-pick__lane .k-link:hover {
+  background: var(--k-amber);
+  transform: translateY(-2px);
+}
+
+/* Posledné dve miesta s rozmazaním pozadia — lišta hlavičky a čip
+   s hodnotením. Zadávateľ zahmlievanie nechce nikde. */
+.kv-bar,
+.kh-hero__rating,
+.k .kh-hero__rating { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.kv-bar { background: rgba(255, 255, 255, 0.98); }
+.k .kh-hero__rating { background: rgba(12, 16, 18, 0.62); }

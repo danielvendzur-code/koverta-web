@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Technický náčrt prístrešku s kótami">
+  <title>Náčrt prístrešku s kótami</title>
+  <rect width="800" height="600" fill="#f6f5f2"/>
+  <g stroke="#c9c6bd" stroke-width="1">
+    <path d="M0 40h800M0 80h800M0 120h800M0 160h800M0 200h800M0 240h800M0 280h800M0 320h800M0 360h800M0 400h800M0 440h800M0 480h800M0 520h800M0 560h800" opacity=".45"/>
+    <path d="M40 0v600M80 0v600M120 0v600M160 0v600M200 0v600M240 0v600M280 0v600M320 0v600M360 0v600M400 0v600M440 0v600M480 0v600M520 0v600M560 0v600M600 0v600M640 0v600M680 0v600M720 0v600M760 0v600" opacity=".45"/>
+  </g>
+  <g fill="none" stroke="#12171a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M120 200h560l40 40H160z"/>
+    <path d="M160 240v220M640 240v220"/>
+    <path d="M120 200v-14M680 200v-14"/>
+    <path d="M100 470h600"/>
+  </g>
+  <g fill="none" stroke="#12171a" stroke-width="1.6" opacity=".55">
+    <path d="M200 240v-40M240 240v-40M280 240v-40M320 240v-40M360 240v-40M400 240v-40M440 240v-40M480 240v-40M520 240v-40M560 240v-40M600 240v-40"/>
+  </g>
+  <g fill="none" stroke="#a77a00" stroke-width="2" stroke-linecap="round">
+    <path d="M120 150h560M120 142v16M680 142v16"/>
+    <path d="M740 240v230M732 240h16M732 470h16"/>
+  </g>
+  <g fill="#a77a00" font-family="system-ui, sans-serif" font-size="20" font-weight="700">
+    <text x="400" y="136" text-anchor="middle">šírka</text>
+    <text x="762" y="362" text-anchor="middle" transform="rotate(90 762 362)">výška</text>
+  </g>
+  <g fill="#12171a" font-family="system-ui, sans-serif" font-size="17" opacity=".62">
+    <text x="120" y="510">stĺp 120 × 120 mm</text>
+    <text x="120" y="536">prievlak s integrovaným odkvapom</text>
+  </g>
+</svg>
