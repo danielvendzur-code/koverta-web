@@ -341,14 +341,14 @@
               const w = document.createElement('span');
               w.className = 'k-word';
               w.textContent = part;
-              w.style.animationDelay = wordIndex * 70 + 'ms';
+              w.style.animationDelay = wordIndex * 130 + 'ms';
               wordIndex += 1;
               inner.appendChild(w);
             });
           } else {
             const w = document.createElement('span');
             w.className = 'k-word';
-            w.style.animationDelay = wordIndex * 70 + 'ms';
+            w.style.animationDelay = wordIndex * 130 + 'ms';
             wordIndex += 1;
             w.appendChild(node.cloneNode(true));
             inner.appendChild(w);
@@ -363,9 +363,9 @@
       title.appendChild(frag);
       title.classList.add('is-headline');
 
-      const total = wordIndex * 70 + 520;
+      const total = wordIndex * 130 + 760;
       after.forEach((el, i) => {
-        window.setTimeout(() => el.classList.add('is-in'), total + i * 80);
+        window.setTimeout(() => el.classList.add('is-in'), total + i * 120);
       });
     });
   }

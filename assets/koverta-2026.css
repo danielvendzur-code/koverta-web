@@ -3238,14 +3238,25 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k-line__in { display: block; }
 .is-headline .k-word {
   display: inline-block;
-  animation: kWordUp 620ms cubic-bezier(0.16, 0.84, 0.24, 1) backwards;
+  animation: kWordUp 900ms cubic-bezier(0.16, 0.84, 0.24, 1) backwards;
 }
+/* Slovo nenabieha len zdola — na začiatku je aj rozostrené. Rozostrenie,
+   ktoré sa doostruje, číta oko ako pohyb v priestore, nie ako posun textu,
+   a znesie pokojnejšie tempo než samotný sklz. */
 @keyframes kWordUp {
-  from { transform: translateY(105%); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from { transform: translateY(112%); opacity: 0; filter: blur(7px); }
+  60%  { filter: blur(0.6px); }
+  to   { transform: none; opacity: 1; filter: blur(0); }
+}
+/* Fotka v hero sa pri načítaní veľmi pomaly usadí. Nie parallax — pri
+   scrollovaní stojí; je to jednorazové dosadnutie, ktoré dá úvodu hĺbku. */
+.kh-hero__bg img { animation: kHeroSettle 2600ms cubic-bezier(0.16, 0.84, 0.24, 1) backwards; }
+@keyframes kHeroSettle {
+  from { transform: scale(1.07); }
+  to   { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .is-headline .k-word { animation: none; }
+  .is-headline .k-word, .kh-hero__bg img { animation: none; }
 }
 
 /* ========================================================================
