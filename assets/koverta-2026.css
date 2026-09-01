@@ -5012,3 +5012,18 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
   .kh-cat__grid { height: auto; }
 }
+
+
+/* --- 13 · Koverta & SOLTEC: nižšie a v tej istej mriežke ------------------
+   Sekcia mala 923 px, čo z nej robilo najvyššiu na stránke, a jej dvojica
+   panelov išla od kraja po kraj, kým všetko ostatné stojí v spoločnom
+   stĺpci — preto pôsobila ako cudzia. Panely sú teraz v tej istej mriežke
+   ako zvyšok a fotografia je nižšia. Kompozícia dvoch značiek vedľa seba
+   ostáva nedotknutá. */
+@media (min-width: 900px) {
+  .kh-pick__scene { aspect-ratio: 16 / 6.8; min-height: 0; }
+}
+/* Zúženie na stĺpec sa neujalo: pás s fotografiami má iný obal než pruhy pod
+   ním, takže sa zúžili len pruhy a vznikol nesúlad. Kompozícia od kraja po
+   kraj teda ostáva — mení sa len výška, ktorá bola tým, čo sekciu vyťahovalo
+   nad zvyšok stránky. */
