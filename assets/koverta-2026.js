@@ -9,6 +9,11 @@
    ========================================================================== */
 
 (() => {
+  /* Skryté východisko odhaľovania platí len vtedy, keď skript naozaj beží.
+     Keby sa nenačítal alebo spadol, ostal by celý web prázdny — a to sa už
+     raz stalo. Trieda sa pridáva ako prvá vec, ešte pred čímkoľvek iným. */
+  document.documentElement.classList.add('k-js');
+
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   const smooth = () => (REDUCED.matches ? 'auto' : 'smooth');
 
@@ -306,9 +311,10 @@
   // backwards skrýva len počas oneskorenia.
   function initHeadline(root) {
     root.querySelectorAll('[data-k-headline]').forEach((title) => {
+      /* Nadpis sekcie nemá hero box; maska slov mu patrí rovnako, len po ňom
+         niet čo ďalej odkrývať. */
       const box = title.closest('[data-k-hero-box]');
-      if (!box) return;
-      const after = [].slice.call(box.querySelectorAll('.k-rise')).filter((el) => el !== title);
+      const after = box ? [].slice.call(box.querySelectorAll('.k-rise')).filter((el) => el !== title) : [];
 
       if (REDUCED.matches) {
         after.forEach((el) => el.classList.add('is-in'));
@@ -361,7 +367,16 @@
 
       title.innerHTML = '';
       title.appendChild(frag);
-      title.classList.add('is-headline');
+      /* Hero beží hneď; nadpis v sekcii čaká, kým sa k nemu doscrolluje —
+         inak by dobehol dávno predtým, než ho niekto uvidí. */
+      if (box) { title.classList.add('is-headline'); return; }
+      if (!('IntersectionObserver' in window)) { title.classList.add('is-headline'); return; }
+      const io2 = new IntersectionObserver((e) => {
+        e.forEach((x) => { if (!x.isIntersecting) return; title.classList.add('is-headline'); io2.unobserve(x.target); });
+      }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+      io2.observe(title);
+      /* Poistka rovnaká ako inde: obsah nesmie ostať schovaný nikdy. */
+      window.setTimeout(() => title.classList.add('is-headline'), 2500);
 
       const total = wordIndex * 130 + 760;
       after.forEach((el, i) => {

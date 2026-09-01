@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://danielvendzur-code.github.io/koverta-web/sitemap.xml
