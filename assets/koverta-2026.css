@@ -5183,6 +5183,17 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 
 
+/* --- 21b · Čítaný text nikdy pod 12 px -----------------------------------
+   Verzálky s prestrkom sú návrhársky prvok a 11 px im nevadí. Toto sú ale
+   veci, ktoré sa čítajú ako veta: popis políčka vo formulári, dátum pri
+   recenzii, odkaz v pätičke, počítadlo krokov. Tie nesmú klesnúť pod 12,5 px
+   na žiadnej šírke, nielen na telefóne. */
+.k .kh-field > span,
+.k .kh-rev__name small,
+.k .kh-proc__step-of,
+.k .kh-rev__award span span,
+.kf .kf__social a { font-size: 12.5px; }
+
 /* --- 22 · Telefón: to, čo namerali skutočné rozmery ----------------------
    Meranie pri 375 px našlo štyri veci naraz: tlačidlo v doku sa nezmestilo do
    svojho stĺpca, text prekrýval hero fotku, časť sadzby klesla pod 12 px
@@ -5418,4 +5429,168 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k-js .kh-parade__shot { position: relative; inset: auto; aspect-ratio: 16 / 10; }
   .k-js .kh-parade__shot img { transform: none; transition: none; }
   .k-js .kh-parade__say { position: relative; inset: auto; width: auto; transform: none; }
+}
+
+
+/* --- 24 · Čo na webe vyzeralo ako šablóna --------------------------------
+   Webdizajnér zadávateľa označil tri veci za znaky strojového návrhu a mal
+   pravdu: čiarka pred verzálkovým popisom sekcie, čísla v jantárových
+   krúžkoch nad deliacimi linkami a karty materiálov s obrovským 01 cez
+   fotografiu. Sú to prvky, ktoré nič nehovoria — len vypĺňajú miesto tam,
+   kde má byť obsah. Odchádzajú všetky tri. */
+
+/* Popis sekcie. Bola z neho verzálková linka s jantárovou čiarkou vľavo —
+   pásik, ktorý nič neoznačuje. Ostáva ticho položený riadok vo vetnom tvare:
+   povie, o čom sekcia je, a neberie pozornosť nadpisu pod sebou. */
+.k .k-eyebrow {
+  padding-left: 0;
+  font-family: var(--k-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--k-grey-soft);
+}
+.k .k-eyebrow::before { content: none; display: none; }
+.k .k-invert .k-eyebrow,
+.k-invert .k-eyebrow { color: rgba(255, 255, 255, 0.7); }
+.k .kh-cta__aside-head .k-eyebrow,
+.k .kh-faq__intro .k-eyebrow,
+.kf .kf__lead .k-eyebrow { color: var(--k-amber-deep); }
+
+/* Kroky konfigurátora. Číslo v žltom kruhu nad linkou cez celý stĺpec je
+   ozdoba, ktorú si žiadny výrobca prestrešení na svoj web nedá. Poradie je
+   pritom skutočné — vyberiete, nastavíte, pošlete — tak číslo ostáva, len
+   ako číslo: zavesené vľavo, v nadpisovom reze, tichou sivou. Linky preč. */
+.k .kh-cfg__steps { display: grid; gap: 18px; margin: clamp(20px, 2.2vw, 30px) 0 0; }
+.k .kh-cfg__steps li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--k-ink);
+}
+.k .kh-cfg__steps li:last-child { border-bottom: 0; }
+.k .kh-cfg__steps li > span {
+  display: block;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  font-family: var(--k-head);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-grey-soft);
+}
+
+/* Materiály. Karta niesla tri vrstvy nad sebou: číslo cez fotku, verzálkový
+   mikropopis a pod ním vetu, ktorá zhrnula presne to, čo hneď nasledovalo v
+   zozname. Ostáva fotografia, názov oblasti a fakty — a fakty sa dajú čítať,
+   lebo medzi nimi nie sú linky ako v tabuľke technického listu. */
+.kh-mat__num { display: none; }
+.kh-mat__card {
+  background: var(--k-white);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-md);
+  overflow: hidden;
+  box-shadow: none;
+}
+.kh-mat__media { aspect-ratio: 4 / 3; }
+.kh-mat__media img { width: 100%; height: 100%; object-fit: cover; }
+.kh-mat__body { display: flex; flex-direction: column; gap: 14px; padding: clamp(18px, 1.7vw, 24px); }
+.k .kh-mat__title {
+  font-family: var(--k-head);
+  font-size: clamp(19px, 1.55vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--k-ink);
+}
+.k .kh-mat__list { display: grid; gap: 9px; margin: 0; padding: 0; }
+.k .kh-mat__list li {
+  position: relative;
+  padding: 0 0 0 18px;
+  border: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--k-muted);
+}
+.k .kh-mat__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--k-amber);
+}
+.k .kh-mat__list li svg { display: none; }
+
+/* Popisky realizácií. Boli z nich verzálky v sivej, pod nimi linka a pod
+   linkou logo — teda tri prvky na to, aby sa človek dozvedel, čo je na
+   fotografii. Názov ide dopredu v čitateľnej veľkosti, značka za ním ticho,
+   linka preč. */
+.kh-work__cap { padding-top: 12px; }
+.k .kh-work__cap strong {
+  font-family: var(--k-head);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--k-ink);
+}
+.k .kh-work__cap span {
+  margin-top: 6px;
+  padding: 0;
+  border-top: 0;
+  line-height: 1;
+}
+.kh-work__cap .k-logo { height: 13px; color: var(--k-grey-soft); }
+.kh-work__cap .k-brand--soltec-img { height: 12px; opacity: 0.62; }
+/* Soltec bol v popiske obyčajné slovo bez značkovej triedy, tak zdedil
+   veľkosť popisky a vedľa 13 px vysokej Koverty stál ako nadpis. Teraz je
+   to ten istý pôvodný súbor ako všade inde, v rovnakej mierke. */
+.kh-work__cap span.is-premium { font-size: 0; line-height: 0; }
+.kh-work__item[data-k-brand="soltec"] .kh-work__cap strong { color: var(--k-ink); }
+
+/* Prestrkané verzálky. Weby výrobcov, na ktoré sa zadávateľ odvoláva —
+   Brustor aj Weinor — nemajú na stránke ani jeden takýto popisok: meranie
+   ich DOM našlo nulu, respektíve jediný v menu. Nadpisy majú vetný tvar,
+   text 16 až 24 px a žiadne vlasové linky. Tie, ktoré tu ostali, sú
+   drobné popisky filtrov, formulára, kontaktov a pätičky — idú do vetného
+   tvaru a nad hranicu čitateľnosti. */
+.k .kh-work__filter-label,
+.k .kh-parade__label,
+.k .kh-parade__label span,
+.k .kh-form legend,
+.k .kh-cta__row small,
+.kf .kf__col strong,
+.kf .kf__nav strong {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.k .kh-work__filter-label { font-size: 13px; font-weight: 500; color: var(--k-grey-soft); }
+.k .kh-parade__label { font-size: 13px; font-weight: 500; }
+.k .kh-form legend { font-size: 14px; }
+.k .kh-cta__row small { font-size: 13px; font-weight: 500; }
+.kf .kf__col strong,
+.kf .kf__nav strong { font-size: 15px; font-weight: 700; }
+.kf .kf__contact strong { text-transform: none; letter-spacing: normal; font-size: 15px; }
+/* Riadok pod pätičkou: autorské právo a tri právne odkazy. Boli na 11,5 px,
+   teda pod hranicou, kde sa text ešte pohodlne prečíta — a sú to jediné
+   odkazy na dokumenty, ktoré zákazník naozaj môže potrebovať. */
+.kf .kf__bottom,
+.kf .kf__bottom a,
+.kf .kf__bottom span { font-size: 13px; }
+
+@media (max-width: 760px) {
+  .k .kh-work__cap strong { font-size: 15px; }
+  .k .kh-mat__list li { font-size: 15px; }
 }
