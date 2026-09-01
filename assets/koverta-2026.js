@@ -490,6 +490,32 @@
       if (prev) prev.addEventListener('click', (e) => step(e, -1));
       if (next) next.addEventListener('click', (e) => step(e, 1));
       if (count) count.textContent = '1 / ' + srcs.length;
+
+      /* Fotografie sa striedajú samy — nikto nemá klikať na šípky, aby
+         zistil, ako to vyzerá. Beží to len vtedy, keď je karta na obrazovke
+         a keď je karta karta pod myšou, striedanie sa zastaví, nech si
+         človek stihne pozrieť to, na čo sa práve díva. */
+      if (REDUCED.matches) return;
+      let samocinne = 0;
+      let vidno = false;
+      let drzi = false;
+      const tik = () => { if (vidno && !drzi) show(i + 1); };
+      const spusti = () => { if (!samocinne) samocinne = window.setInterval(tik, 4200); };
+      const zastav = () => { if (samocinne) { window.clearInterval(samocinne); samocinne = 0; } };
+
+      card.addEventListener('mouseenter', () => { drzi = true; });
+      card.addEventListener('mouseleave', () => { drzi = false; });
+      card.addEventListener('focusin', () => { drzi = true; });
+      card.addEventListener('focusout', () => { drzi = false; });
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver((zaznamy) => {
+          zaznamy.forEach((z) => {
+            vidno = z.isIntersecting;
+            if (vidno) spusti(); else zastav();
+          });
+        }, { threshold: 0.25 }).observe(card);
+      } else spusti();
     });
   }
 

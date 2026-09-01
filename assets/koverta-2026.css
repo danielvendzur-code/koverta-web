@@ -4987,8 +4987,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
     overflow: hidden;
     transition: flex-basis 520ms cubic-bezier(.2,.75,.25,1);
   }
+  /* Pevných 262 px obsah orezávalo — druhé tlačidlo nebolo vidieť. Telo si
+     berie toľko, koľko potrebuje, a fotka ustúpi; nikdy však nezmizne. */
   .kh-cat__item:hover .kh-cat__body,
-  .kh-cat__item:focus-within .kh-cat__body { flex-basis: 262px; }
+  .kh-cat__item:focus-within .kh-cat__body { flex: 0 0 336px; }
+  .kh-cat__media { min-height: 170px; }
 
   /* Popis a odkazy sú zbalené do nulovej výšky, nie skryté priehľadnosťou —
      tak sa dá výška plynulo animovať a obsah ostáva v strome pre čítačku. */
