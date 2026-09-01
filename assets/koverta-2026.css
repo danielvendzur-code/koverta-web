@@ -5181,3 +5181,78 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 @media (max-width: 999px) {
   .k img, .k video, .k svg:not(.k-logo):not(.k-google) { max-width: 100%; }
 }
+
+
+/* --- 22 · Telefón: to, čo namerali skutočné rozmery ----------------------
+   Meranie pri 375 px našlo štyri veci naraz: tlačidlo v doku sa nezmestilo do
+   svojho stĺpca, text prekrýval hero fotku, časť sadzby klesla pod 12 px
+   a filtre mali na dotyk 37 px. Riešia sa tu spolu. */
+
+/* Prepočet šírky s odsadením platil len vnútri .k a .kv-header ------------
+   Reset box-sizing je v hlavičke štýlu napísaný ako .k *, .kv-header * —
+   teda pre obsah stránky a pre hlavičku. Prilepený dok na telefóne visí
+   priamo na body, mimo obidvoch, a tak sa mu odsadenie 26 px na každej
+   strane pripočítalo k šírke: tlačidlo malo 325 px v stĺpci širokom 295
+   a text sa orezal o pravý okraj obrazovky. To isté by postihlo čokoľvek
+   ďalšie mimo týchto dvoch obalov, tak reset platí pre celý dokument. */
+*, *::before, *::after { box-sizing: border-box; }
+
+@media (max-width: 760px) {
+  /* Hero: text zaberal 416 zo 660 px a z prístrešku ostal pruh. Fotka ani
+     text sa nemenia — obsah sa presunie na spodok a hero je vyššie, takže nad
+     ním ostane súvislý kus obrazu. Jednotka svh je výška okna bez panelov
+     prehliadača, takže sa hero na telefóne neroztiahne pod ovládanie. */
+  .kh-hero { min-height: 88svh; justify-content: flex-end; }
+  /* Spodok hero je pod prilepeným dokom, tak odsadenie ráta aj s ním —
+     hodnotenie na Google sa inak schovávalo za tlačidlo. */
+  .kh-hero__inner { padding-block: 24px 52px; }
+
+  /* Lišta s telefónom a e-mailom nad hlavičkou brala 40 px z prvej
+     obrazovky a telefón nesie aj prilepený dok na spodku. Na telefóne
+     preto ustúpi obrazu. */
+  .kv-topbar { display: none; }
+
+  /* Fotografia je 2400x1800; do okna širokého 375 sa vojde celá na výšku
+     a orezáva sa len po stranách. Zvislé ohnisko preto nemá čo posúvať —
+     hore ostane celá obloha zo zdroja a prístrešok spadne presne tam, kde
+     stojí text. Podklad sa preto zväčší nad rámec sekcie a hero ho oreže:
+     hore aj dole ubudne osmina, prístrešok vyjde do voľného pásma.
+     Meranie: prebytok na výšku bol 0 px, tak sa vyrába umelo. */
+  .kh-hero { overflow: hidden; }
+  .kh-hero__bg { top: -13%; bottom: auto; height: 126%; }
+  .kh-hero__box { gap: 11px; }
+  .kh-hero__actions { margin-top: 2px; }
+  .kh-hero__actions .k-btn { min-height: 48px; }
+  .kh-hero__trust { margin: 6px 0 0; }
+
+  /* Text pod 12 px: popisky realizácií, dátum recenzie a nadpisy v menu. */
+  .k .kh-work__cap strong,
+  .k .kh-rev__name small,
+  .k .kh-proc__step-of,
+  .kv-drawer__group p,
+  .kv-drawer__head .k-eyebrow,
+  .kh-rev__award span { font-size: 12.5px; }
+
+  /* Filtre realizácií mali 37 px; palec potrebuje 44. */
+  .kh-work__filter-block button,
+  .kh-work__filter-set button { min-height: 44px; }
+
+  /* Dve značky: na telefóne sa rozpadli na dve fotografie a pod nimi dva
+     texty, takže Koverta mala fotku na prvom mieste a slovo až na treťom.
+     Obidva obaly na telefóne prestanú tvoriť vlastnú škatuľu, ich obsah
+     sa stane súčasťou mriežky sekcie a poradie ich preloží: fotka Koverty,
+     Koverta, fotka Soltecu, Soltec. Na širokej obrazovke ostáva pás dvoch
+     fotografií nad dvoma pruhmi tak, ako bol. */
+  .kh-pick { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .kh-pick > .k-wrap { order: 0; }
+  .kh-pick__panorama,
+  .kh-pick__lanes { display: contents; }
+  .kh-pick__panorama > .kh-pick__scene:nth-child(1) { order: 1; }
+  .kh-pick__lanes > .kh-pick__lane:nth-child(1) { order: 2; }
+  .kh-pick__panorama > .kh-pick__scene:nth-child(2) { order: 3; }
+  .kh-pick__lanes > .kh-pick__lane:nth-child(2) { order: 4; }
+
+  /* Sekcie stáli na 44 px odsadenia zhora aj zdola bez ohľadu na šírku;
+     na telefóne je to cez dvanásť sekcií zbytočná dĺžka. */
+  .k-band { padding-block: clamp(38px, 8vw, 60px); }
+}
