@@ -397,7 +397,9 @@
           <p class="k-copy">Stačí približný rozmer a mesto. Ozveme sa do 24 hodín a dohodneme bezplatné zameranie.</p>
         </div>
 
-        <form class="kh-form">
+        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" data-k-dopyt>
+          <input type="hidden" name="form_type" value="contact">
+          <input type="hidden" name="utf8" value="✓">
           <fieldset>
             <legend>Čo riešite?</legend>
             <div class="kh-select" data-k-select>
@@ -412,18 +414,18 @@
                 <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
                 <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
               </ul>
-              <input type="hidden" name="produkt" value="Prístrešok pre auto" data-k-select-input>
+              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
             </div>
           </fieldset>
 
           <div class="kh-form__grid">
-            <label class="kh-field"><span>Meno</span><input type="text" name="name" autocomplete="name" required></label>
-            <label class="kh-field"><span>Telefón</span><input type="tel" name="phone" autocomplete="tel" required></label>
-            <label class="kh-field"><span>E-mail</span><input type="email" name="email" autocomplete="email" required></label>
-            <label class="kh-field"><span>Mesto realizácie</span><input type="text" name="mesto" autocomplete="address-level2"></label>
+            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
+            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" autocomplete="tel" required></label>
+            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email" required></label>
+            <label class="kh-field"><span>Mesto realizácie</span><input type="text" name="contact[Mesto realizácie]" autocomplete="address-level2"></label>
           </div>
 
-          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="body" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
 
           <div class="kh-form__submit">
             <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
