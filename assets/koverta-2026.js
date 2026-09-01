@@ -92,14 +92,33 @@
     /* Druhá poistka, ktorá nič nepredbieha: pri scrollovaní odkryje to, čo je
        naozaj v okne. Keby observer vypadol až neskôr, obsah aj tak nikdy
        neostane schovaný — a nič sa neodkryje skôr, než to má prísť na rad. */
-    const dokryLenViditelne = () => {
-      if (ozvalSa) return;              // observer beží, netreba doňho zasahovať
+    /* Tvrdý bod. Pri rýchlom scrollovaní prehliadač hlásenia pozorovateľa
+       zlučuje alebo ich stihne až po tom, čo prvok preletí oknom — a sekcia
+       sa potom neodkryje vôbec. Toto beží pri každom scrollovaní a odkryje
+       čokoľvek, čo je v okne alebo nad ním; pozorovateľ tak rieši pekný
+       nábeh, toto rieši istotu, že sa obsah ukáže vždy. */
+    let caka = false;
+    const tvrdyBod = () => {
+      caka = false;
+      const h = window.innerHeight;
       items.forEach((el) => {
+        if (el.classList.contains('is-in')) return;
         const r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight * 0.94 && r.bottom > 0) el.classList.add('is-in');
+        /* Prvok je v okne alebo tesne nad ním. Prvky, ktoré sú preč hore,
+           sa zámerne nechávajú tak — tie skryl pozorovateľ pri odchode a pri
+           návrate sa majú odkryť znova. Bez tejto druhej podmienky by sa obe
+           strany prebíjali a scrollovanie hore by prestalo animovať. */
+        if (r.top < h * 0.9 && r.bottom > -110) el.classList.add('is-in');
       });
     };
-    window.addEventListener('scroll', dokryLenViditelne, { passive: true });
+    const naplanuj = () => {
+      if (caka) return;
+      caka = true;
+      if (window.requestAnimationFrame) window.requestAnimationFrame(tvrdyBod);
+      else window.setTimeout(tvrdyBod, 60);
+    };
+    window.addEventListener('scroll', naplanuj, { passive: true });
+    window.addEventListener('resize', naplanuj);
   }
 
   /* --- 2 · posuvná lišta -------------------------------------------------- */
