@@ -4295,3 +4295,162 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 @media (prefers-reduced-motion: reduce) {
   .kh-fakty__cislo::after { transform: scaleX(1); transition: none; }
 }
+
+
+/* ==========================================================================
+   OPRAVY PO PREHLIADKE — logo na tmavom, hover bez vyfarbenia,
+   odrážka, ktorá sa zo šípky stane zátvorkou z loga
+   ========================================================================== */
+
+:root {
+  --k-sipka: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2012h13M12%206l6%206-6%206%22%2F%3E%3C%2Fsvg%3E");
+  --k-zatvorka: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%22200.84%20410.44%20126.26%2076.13%22%3E%3Cpath%20d%3D%22M%20327.1%2C410.44%20315.02835%2C422.53609%20211.54302%2C422.44%20v%2052%20L%20315.19743%2C474.41%20327.1%2C486.44%20200.84%2C486.57%20V%20410.44%20H%20327.1%22%2F%3E%3C%2Fsvg%3E");
+  /* Sivá z loga Koverty. V ploche pôsobí modro, preto ju používame len ako
+     tenký rám pri hoveri — tam je to farba značky, nie plocha. */
+  --k-logo-grey: #455a64;
+}
+
+/* --- 1 · Logo na tmavom podklade --------------------------------------
+   Písmená majú v súbore natvrdo #455a64. Na tmavom páse (pätička, aktívna
+   záložka materiálov) to dáva kontrast pod 2 : 1 a logo splýva. Na tmavom
+   preto písmená preberajú farbu textu; jantárová zátvorka ostáva jantárová. */
+.kf__logo .k-logo__letter path,
+.kh-mat__tab.is-active .k-logo__letter path,
+.kh-pick__mark .k-logo__letter path,
+.k-invert .k-logo__letter path {
+  fill: currentColor;
+}
+
+/* --- 2 · Hlavné tlačidlo: hover bez stmavnutia -------------------------
+   Jantár stmavený na #8a6600 je olivový a vyzerá ako chyba. Tlačidlo si
+   farbu drží; reaguje nadvihnutím a tenkým rámom v sivej z loga. */
+.k .k-btn--primary:hover,
+.k .k-btn--primary:focus-visible,
+.k button.k-btn--primary:hover,
+.kh-dock .k-btn--primary:hover,
+.kv-header .k-btn--primary:hover,
+.k-btn--primary:hover,
+.k-btn--primary:focus-visible {
+  background: var(--k-amber);
+  border-color: var(--k-logo-grey);
+  color: var(--k-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -10px rgba(18, 23, 26, 0.55);
+}
+
+/* Čipy rozmerov: rovnaké gesto, aby web reagoval všade rovnako. */
+.kh-size__chip:hover {
+  border-color: var(--k-logo-grey);
+  background: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 .9rem 1.8rem -1.1rem rgba(18, 23, 26, .45);
+}
+
+/* --- 3 · Odrážka: šípka, z ktorej sa stane zátvorka z loga -------------
+   V pokoji stojí na riadku šípka. Keď sa karta odkryje, šípka odíde doprava
+   a zľava sa dokreslí jantárová zátvorka — tá istá, ktorá je v logu. Beží
+   po riadkoch za sebou, takže zoznam sa „podpíše" sám.
+
+   Keby skript nikdy nedobehol, ostane šípka. Odrážka je vždy viditeľná. */
+.kh-mat__list li { position: relative; }
+
+.kh-mat__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 0;
+  background: var(--k-grey);
+  -webkit-mask: var(--k-sipka) no-repeat center / contain;
+          mask: var(--k-sipka) no-repeat center / contain;
+  transition: transform 520ms var(--k-ease-out), opacity 340ms var(--k-ease);
+}
+
+.kh-mat__list li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 15px;
+  height: 9px;
+  background: var(--k-amber);
+  -webkit-mask: var(--k-zatvorka) no-repeat left center / contain;
+          mask: var(--k-zatvorka) no-repeat left center / contain;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 620ms var(--k-ease-out);
+}
+
+.kh-mat__card.is-in .kh-mat__list li::before {
+  transform: translateX(10px);
+  opacity: 0;
+  transition-delay: calc(420ms + var(--i, 0) * 110ms);
+}
+.kh-mat__card.is-in .kh-mat__list li::after {
+  clip-path: inset(0);
+  transition-delay: calc(460ms + var(--i, 0) * 110ms);
+}
+
+/* Prejdenie myšou zátvorku na chvíľu roztiahne — drobné potvrdenie, že
+   riadok žije, bez akéhokoľvek prefarbovania. */
+.kh-mat__list li:hover::after { transform: scaleX(1.18); transform-origin: left; }
+.kh-mat__list li::after { transition: clip-path 620ms var(--k-ease-out), transform 320ms var(--k-ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-mat__list li::before { opacity: 0; }
+  .kh-mat__list li::after { clip-path: inset(0); transition: none; }
+}
+
+
+/* --- 4 · Rozmery s fotografiou -----------------------------------------
+   Samotný zoznam čísel nikomu nepovie, ako to bude vyzerať. Vedľa každej
+   skupiny stojí fotografia toho prístrešku z e-shopu Koverty. */
+.kh-size--foto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding-block: clamp(20px, 2.4vw, 32px);
+  border-top: 1px solid var(--k-hair);
+}
+.kh-size--foto:first-of-type { border-top: 0; }
+@media (min-width: 820px) {
+  .kh-size--foto { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 30px; }
+}
+.kh-size__media {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--k-bone-deep, #ece9e4);
+}
+.kh-size__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Fotka sa pri odkrytí pomaly usadí — rovnaké tempo ako inde na webe. */
+.kh-size--foto .kh-size__media img { transform: scale(1.05); transition: transform 1200ms var(--k-ease-out); }
+.kh-size--foto.is-in .kh-size__media img { transform: none; }
+.kh-size__body { min-width: 0; }
+
+/* --- 5 · Hodnotenie: Google ako kotva, nie ako drobec ------------------
+   Značka Google je to, čomu človek verí. Doteraz mala 20 px a strácala sa
+   nad číslom. Teraz stojí vedľa hodnotenia v jednej línii s ním. */
+.kh-rev__brand { align-items: center; gap: 14px; font-size: 15px; }
+.kh-rev__brand .k-google,
+.kh-rev__big .k-google { width: 44px; height: 44px; flex: 0 0 auto; }
+@media (min-width: 700px) {
+  .kh-rev__brand .k-google,
+  .kh-rev__big .k-google { width: 52px; height: 52px; }
+}
+.kh-rev__brand { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-size--foto .kh-size__media img { transform: none; transition: none; }
+}
+
+
+/* --- 6 · Odsek v hero potreboval medzeru ------------------------------
+   Box má gap: 0 a odstupy sa riešia zvlášť pri každom prvku. Na odsek sa
+   zabudlo, takže na telefóne začínal presne tam, kde končil nadpis, a celý
+   blok pôsobil zlepene. Zapísané cez dve triedy: pravidlo .k p { margin: 0 }
+   má špecificitu 0-1-1 a jednu triedu prebije, takže tri staršie pravidlá
+   s odstupom na tomto odseku nikdy neplatili. */
+.k .kh-hero__lead { margin-top: clamp(12px, 1.6vw, 18px); }
+.k .kh-hero__box .kh-crumbs { margin-bottom: clamp(10px, 1.4vw, 16px); }

@@ -286,11 +286,23 @@
           if (Date.now() < lockedUntil) return;
           // Sekcia je nižšia než okno, takže postup nemeriame v jej výške,
           // ale tým, ako prechádza oknom. Inak by sa krok nestihol prepnúť.
-          const r = scope.getBoundingClientRect();
-          const span = window.innerHeight + r.height;
-          const passed = (window.innerHeight - r.top) / span;
-          if (passed < 0.12 || passed > 0.98) return;
-          const t = (passed - 0.12) / 0.86;
+          // Krok sa má prepnúť, kým je panel na obrazovke. Pôvodné meranie
+          // rozložilo päť krokov cez celý prechod sekcie oknom, takže na
+          // posledný krok sa dalo dostať až vtedy, keď bol takmer preč —
+          // päťku nebolo vidieť bez toho, aby človek odscrolloval nadol.
+          // Teraz sa postup meria od chvíle, keď sekcia vojde do okna, po
+          // chvíľu, keď sa ho chystá opustiť.
+          // Postup sa meria na paneli s krokom, nie na celej sekcii. Sekcia je
+          // vyššia než okno, takže rozložiť päť krokov cez jej prechod znamenalo,
+          // že sa na posledný krok dalo dostať až vtedy, keď bol panel spodkom
+          // preč — päťku nebolo vidieť bez toho, aby človek scrolloval nadol.
+          // Teraz je odpočítané tak, aby posledný krok padol na chvíľu, keď
+          // panel dosadne k hornej hrane okna a je celý na obrazovke.
+          const r = (panels[0] || scope).getBoundingClientRect();
+          const zaciatok = window.innerHeight * 0.72;
+          const koniec = window.innerHeight * 0.05;
+          const t = (zaciatok - r.top) / Math.max(1, zaciatok - koniec);
+          if (t < 0 || t > 1) return;
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
           if (idx !== index) setActive(idx);
         });
