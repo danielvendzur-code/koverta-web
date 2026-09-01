@@ -28,8 +28,10 @@
       return;
     }
 
+    let ozvalSa = false;
     const io = new IntersectionObserver(
       (entries) => {
+        ozvalSa = true;
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add('is-in');
@@ -43,12 +45,85 @@
 
     items.forEach((el) => io.observe(el));
 
-    // Poistka: keby observer z akéhokoľvek dôvodu nedobehol (chyba, prerušené
-    // vykresľovanie, netypický prehliadač), po 1,5 s odkryjeme všetko naraz.
-    // Obsah, ktorý má návštevník vidieť, nesmie ostať schovaný nikdy.
+    /* Poistka. Predtým po 1,5 s odkryla úplne všetko vrátane sekcií hlboko
+       pod ohybom — kým sa k nim návštevník doscrolloval, boli dávno odkryté
+       a neanimovalo sa nič. To bola príčina, prečo na webe nebolo vidieť
+       žiadny pohyb. Teraz sa odkryje všetko len vtedy, keď observer naozaj
+       zlyhal, teda keď po 1,5 s nemá triedu ani jeden prvok. */
     window.setTimeout(() => {
+      if (ozvalSa) return;
       items.forEach((el) => el.classList.add('is-in'));
     }, 1500);
+
+    /* Druhá poistka, ktorá nič nepredbieha: pri scrollovaní odkryje to, čo je
+       naozaj v okne. Keby observer vypadol až neskôr, obsah aj tak nikdy
+       neostane schovaný — a nič sa neodkryje skôr, než to má prísť na rad. */
+    const dokryLenViditelne = () => {
+      let zostava = 0;
+      items.forEach((el) => {
+        if (el.classList.contains('is-in')) return;
+        zostava += 1;
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.94 && r.bottom > 0) el.classList.add('is-in');
+      });
+      if (!zostava) window.removeEventListener('scroll', dokryLenViditelne);
+    };
+    window.addEventListener('scroll', dokryLenViditelne, { passive: true });
+  }
+
+  /* --- 1b · vlnitý ukazovateľ postupu stránkou ---------------------------
+     Pás cez celú šírku hore. Sivá vlna je dráha, jantárová sa dokresľuje
+     podľa toho, ako ďaleko je človek na stránke. Vlna sa navyše pomaly
+     vlní sama — nie preto, aby na seba upozorňovala, ale aby ukazovateľ
+     nepôsobil ako mŕtvy pruh. Rovná čiara je to, čo má každý druhý web. */
+  function initPostup(root) {
+    if (document.querySelector('.kv-postup-pas')) return;
+    if (REDUCED.matches) return;
+
+    const V = 40;                     // výška v súradniciach krivky
+    const SIRKA = 1200;               // šírka v súradniciach krivky
+    const vln = 26;
+    const amp = 9;
+    let d = 'M 0 ' + (V / 2);
+    for (let i = 0; i < vln; i += 1) {
+      const k = SIRKA / vln;
+      const smer = i % 2 === 0 ? -amp : amp;
+      d += ' q ' + (k / 2) + ' ' + smer + ' ' + k + ' 0';
+    }
+
+    const pas = document.createElement('div');
+    pas.className = 'kv-postup-pas';
+    pas.setAttribute('aria-hidden', 'true');
+    pas.innerHTML = '<svg viewBox="0 0 ' + SIRKA + ' ' + V + '" preserveAspectRatio="none" focusable="false">' +
+      '<path class="kv-postup-pas__stopa" d="' + d + '"/>' +
+      '<path class="kv-postup-pas__ciara" d="' + d + '"/></svg>';
+    document.body.appendChild(pas);
+
+    const ciara = pas.querySelector('.kv-postup-pas__ciara');
+    const dlzka = ciara.getTotalLength();
+    ciara.style.transition = 'none';
+    ciara.style.strokeDasharray = dlzka + 'px';
+    ciara.style.strokeDashoffset = dlzka + 'px';
+    ciara.getBoundingClientRect();
+    window.setTimeout(() => { ciara.style.transition = ''; }, 60);
+
+    let caka = false;
+    const prepocitaj = () => {
+      if (caka) return;
+      caka = true;
+      const dokresli = () => {
+        caka = false;
+        const cele = document.documentElement.scrollHeight - window.innerHeight;
+        const podiel = cele > 0 ? Math.max(0, Math.min(1, window.scrollY / cele)) : 0;
+        ciara.style.strokeDashoffset = (dlzka * (1 - podiel)) + 'px';
+        pas.classList.toggle('is-zapnuty', window.scrollY > 40);
+      };
+      if (window.requestAnimationFrame) window.requestAnimationFrame(dokresli);
+      else window.setTimeout(dokresli, 16);
+    };
+    window.addEventListener('scroll', prepocitaj, { passive: true });
+    window.addEventListener('resize', prepocitaj);
+    prepocitaj();
   }
 
   /* --- 2 · posuvná lišta -------------------------------------------------- */
@@ -252,7 +327,6 @@
         row.addEventListener('click', (e) => {
           e.preventDefault();
           setActive(i);
-          kresliCiaru((i + 1) / panels.length);
         });
         row.addEventListener('keydown', (e) => {
           const map = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
@@ -263,46 +337,16 @@
         });
       });
 
-      /* Vlnitá jantárová čiara vedľa krokov. Kreslí sa presne podľa toho,
-         ako ďaleko je človek v postupe — je to ukazovateľ, nie ozdoba, preto
-         berie tú istú hodnotu, ktorá prepína kroky. Vlnu tvorí opakovaný
-         oblúk; rovná čiara by bola presne tá ozdoba, ktorú tu nechceme. */
-      let postupCiara = null;
-      const zoznam = scope.querySelector('.kh-proc__list');
-      if (zoznam && !zoznam.querySelector('.kh-proc__vlna') && window.matchMedia('(min-width: 1100px)').matches) {
-        const obal = document.createElement('span');
-        obal.className = 'kh-proc__vlna';
-        obal.setAttribute('aria-hidden', 'true');
-        const V = 1000;                       // výška v súradniciach krivky
-        const amplituda = 9;
-        const vlny = panels.length * 2;
-        let d = 'M 13 0';
-        for (let i = 0; i < vlny; i += 1) {
-          const k = V / vlny;
-          const smer = i % 2 === 0 ? amplituda : -amplituda;
-          d += ' q ' + smer + ' ' + (k / 2) + ' 0 ' + k;
-        }
-        obal.innerHTML = '<svg viewBox="0 0 26 ' + V + '" preserveAspectRatio="none" focusable="false">' +
-          '<path class="kv-stopa" d="' + d + '"/><path class="kv-postup" d="' + d + '"/></svg>';
-        if (getComputedStyle(zoznam).position === 'static') zoznam.style.position = 'relative';
-        zoznam.appendChild(obal);
-        postupCiara = obal.querySelector('.kv-postup');
-        const dlzka = postupCiara.getTotalLength();
-        /* Východiskový stav sa nastavuje s vypnutým prechodom. Inak by sa
-           čiara pri načítaní stránky sama „odkreslila" z nuly na plnú dĺžku
-           a až potom by reagovala na scrollovanie. */
-        postupCiara.style.transition = 'none';
-        postupCiara.style.strokeDasharray = dlzka + 'px';
-        postupCiara.style.strokeDashoffset = dlzka + 'px';
-        postupCiara.dataset.dlzka = dlzka;
-        postupCiara.getBoundingClientRect();
-        window.setTimeout(() => { postupCiara.style.transition = ''; }, 60);
+      /* Dráha, po ktorej sa scrolluje, kým obsah stojí prilepený. Bez nej
+         pripadalo na jeden krok ~120 px a fotky sa menili tak rýchlo, že
+         ich nebolo vidieť. */
+      const obal = scope.parentElement;
+      if (obal && !obal.querySelector('.kh-proc__draha')) {
+        const draha = document.createElement('div');
+        draha.className = 'kh-proc__draha';
+        draha.setAttribute('aria-hidden', 'true');
+        obal.appendChild(draha);
       }
-      const kresliCiaru = (podiel) => {
-        if (!postupCiara) return;
-        const dlzka = Number(postupCiara.dataset.dlzka);
-        postupCiara.style.strokeDashoffset = (dlzka * (1 - Math.max(0, Math.min(1, podiel)))) + 'px';
-      };
 
       const stack = panels[0] && panels[0].parentElement;
       if (stack) stack.classList.add('is-stacked');
@@ -317,6 +361,7 @@
       // prepínanie na chvíľu utlmí, aby mu nepreberalo voľbu pod rukami.
       if (REDUCED.matches) return;
       let lockedUntil = 0;
+      let poslednaZmena = 0;
       rows.forEach((row) => row.addEventListener('click', () => { lockedUntil = Date.now() + 4000; }));
 
       let ticking = false;
@@ -334,20 +379,22 @@
           // päťku nebolo vidieť bez toho, aby človek odscrolloval nadol.
           // Teraz sa postup meria od chvíle, keď sekcia vojde do okna, po
           // chvíľu, keď sa ho chystá opustiť.
-          // Postup sa meria na paneli s krokom, nie na celej sekcii. Sekcia je
-          // vyššia než okno, takže rozložiť päť krokov cez jej prechod znamenalo,
-          // že sa na posledný krok dalo dostať až vtedy, keď bol panel spodkom
-          // preč — päťku nebolo vidieť bez toho, aby človek scrolloval nadol.
-          // Teraz je odpočítané tak, aby posledný krok padol na chvíľu, keď
-          // panel dosadne k hornej hrane okna a je celý na obrazovke.
-          const r = (panels[0] || scope).getBoundingClientRect();
-          const zaciatok = window.innerHeight * 0.72;
-          const koniec = window.innerHeight * 0.05;
-          const t = (zaciatok - r.top) / Math.max(1, zaciatok - koniec);
+          /* Postup je to, ako ďaleko sme prešli dráhou, kým obsah stojí
+             prilepený. Na jeden krok tak pripadá pol obrazovky scrollu
+             namiesto 120 px a fotku je vidieť. */
+          const w = scope.parentElement.getBoundingClientRect();
+          const vyskaObsahu = scope.getBoundingClientRect().height;
+          const pripnuteHore = parseFloat(getComputedStyle(scope).top) || 0;
+          const drahaCelkom = Math.max(1, w.height - vyskaObsahu);
+          const t = (pripnuteHore - w.top) / drahaCelkom;
           if (t < 0 || t > 1) return;
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
-          kresliCiaru(t);
-          if (idx !== index) setActive(idx);
+          /* Aj pri prudkom scrollovaní musí krok chvíľu vydržať, inak sa
+             fotky len mihnú. */
+          if (idx !== index && Date.now() - poslednaZmena > 260) {
+            poslednaZmena = Date.now();
+            setActive(idx);
+          }
         });
       };
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -892,7 +939,7 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect, initPostup]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

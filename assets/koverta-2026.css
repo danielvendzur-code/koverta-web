@@ -4470,30 +4470,74 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k .kh-proc__list { align-content: start; align-self: start; position: sticky; top: clamp(90px, 13vh, 150px); }
 }
 
-/* Aktívny krok musí byť rozoznateľný na prvý pohľad, nie po hľadaní. */
-.kh-proc__row { border-left: 3px solid transparent; }
-.kh-proc__row.is-active {
-  border-left-color: var(--k-amber);
-  background: var(--k-white);
-  box-shadow: 0 10px 26px -18px rgba(18, 23, 26, 0.5);
+/* Aktívny krok: žiadna škatuľa ---------------------------------------------
+   Biela karta s ostrými rohmi a jantárovou lištou vyzerala ako formulárové
+   políčko. Krok je riadok, nie box: číslo sa rozsvieti do jantárovej, názov
+   stmavne a zľava sa pod ním dokreslí jantárová linka — to isté gesto, aké
+   má zvýraznené slovo v nadpisoch. Riadok sa navyše o kúsok odsunie, takže
+   je vidieť, ktorý to je, aj periférne. */
+.kh-proc__row {
+  border-left: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transition: color 320ms var(--k-ease), transform 420ms var(--k-ease-out), opacity 320ms var(--k-ease);
 }
-.kh-proc__row.is-active em { color: var(--k-ink); }
+.kh-proc__row.is-active {
+  background: none;
+  box-shadow: none;
+  border-left: 0;
+  transform: translateX(6px);
+}
+.kh-proc__row:not(.is-active) { opacity: 0.62; }
+.kh-proc__row.is-active { opacity: 1; }
+
+.kh-proc__row em {
+  transition: color 320ms var(--k-ease), font-variation-settings 320ms var(--k-ease);
+}
+.kh-proc__row.is-active em { color: var(--k-amber-deep); }
 .kh-proc__row.is-active strong { color: var(--k-ink); }
-/* Jantárová značka sa pri prepnutí vykreslí zhora nadol — vidno, že sa niečo
-   stalo, aj keď človek práve pozerá na fotku. */
-.kh-proc__row { position: relative; }
+
+/* Linka sa dokresľuje zľava pod celým riadkom. */
 .kh-proc__row::before {
   content: "";
   position: absolute;
-  left: -3px; top: 0; bottom: 0;
-  width: 3px;
+  left: 0;
+  right: 8px;
+  bottom: 6px;
+  top: auto;
+  width: auto;
+  height: 2px;
   background: var(--k-amber);
-  transform: scaleY(0);
-  transform-origin: top;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 620ms var(--k-ease-out);
+  display: block;
+}
+.kh-proc__row.is-active::before {
+  display: block;
+  width: auto;
+  inset: auto 8px 6px 0;
+  height: 2px;
+  transform: scaleX(1);
+}
+
+/* Bodka pred číslom potvrdí, kde človek je, aj keď sa práve pozerá na fotku. */
+.kh-proc__row::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--k-amber);
+  transform: scale(0);
   transition: transform 420ms var(--k-ease-out);
   display: block;
 }
-.kh-proc__row.is-active::before { transform: scaleY(1); display: block; }
+.kh-proc__row.is-active::after { transform: scale(1); }
 
 /* --- 3 · Fotka kroku sa nemení trhane ------------------------------------
    Pri scrollovaní sa prepínala tak rýchlo, že to pôsobilo ako blikanie.
@@ -4503,34 +4547,63 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 .kh-proc__media.is-swapping img { opacity: 0; transform: scale(1.04); }
 
-/* --- 4 · Vlnitá jantárová čiara ------------------------------------------
-   Vedie postupom zhora nadol a dokresľuje sa presne podľa toho, ako ďaleko
-   je človek v krokoch. Nie je to ozdoba: je to ukazovateľ postupu, ktorý
-   drží tú istú hodnotu ako prepínanie krokov. Vlna je z tvaru lamely —
-   rovná čiara by bola presne tá „basic" vec, ktorú tu nechceme. */
-.kh-proc__vlna {
-  position: absolute;
-  left: -34px;
-  top: 8px;
-  bottom: 8px;
-  width: 26px;
+/* --- 4 · Vlnitý ukazovateľ postupu stránkou ------------------------------
+   Pás cez celú šírku hore. Sivá vlna je dráha, jantárová sa dopĺňa podľa
+   toho, ako ďaleko je človek na stránke. Vlna sa pomaly posúva do strany,
+   takže ukazovateľ nepôsobí ako mŕtvy pruh — rovná čiara je presne to, čo
+   má každý druhý web. */
+.kv-postup-pas {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 90;
+  height: 9px;
   pointer-events: none;
-  overflow: visible;
+  opacity: 0;
+  transition: opacity 420ms var(--k-ease);
 }
-.kh-proc__vlna svg { width: 100%; height: 100%; display: block; }
-.kh-proc__vlna path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.kh-proc__vlna .kv-stopa { stroke: var(--k-hair); stroke-width: 2; }
-.kh-proc__vlna .kv-postup {
+.kv-postup-pas.is-zapnuty { opacity: 1; }
+.kv-postup-pas svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.kv-postup-pas path {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.kv-postup-pas__stopa { stroke: rgba(18, 23, 26, 0.14); stroke-width: 2; }
+.kv-postup-pas__ciara {
   stroke: var(--k-amber);
-  stroke-width: 3;
-  /* dĺžku aj posun dopĺňa skript podľa skutočnej dĺžky krivky */
-  transition: stroke-dashoffset 620ms var(--k-ease-out);
+  stroke-width: 3.5;
+  transition: stroke-dashoffset 240ms linear;
+  filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.55));
 }
-@media (max-width: 1099px) { .kh-proc__vlna { display: none; } }
+/* Vlna sa posúva o jednu svoju periódu a opakuje sa — pohyb je plynulý,
+   nikde nepreskočí. */
+.kv-postup-pas svg { animation: kvVlna 9s linear infinite; }
+@keyframes kvVlna {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-46.153px); }
+}
+
+/* --- 4b · Kroky sa nesmú prepínať pod rukami -----------------------------
+   Päť krokov na 600 px scrollu znamená zmenu každých 120 px — fotka sa
+   vymenila skôr, než ju stihol niekto zaregistrovať. Sekcia dostáva dráhu
+   navyše a obidva stĺpce sa prilepia, takže obsah stojí na mieste a scroll
+   len posúva krok. Prázdne miesto tým nevzniká: to, čo sa scrolluje, je
+   dráha za prilepeným obsahom. */
+.kh-proc__draha { display: none; }
+@media (min-width: 900px) {
+  .kh-proc .k-wrap { position: relative; }
+  .kh-proc__grid {
+    position: sticky;
+    top: clamp(84px, 12vh, 132px);
+  }
+  .kh-proc__draha { display: block; height: 210vh; pointer-events: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .kh-proc__vlna .kv-postup { transition: none; }
+  .kv-postup-pas svg { animation: none; }
+  .kv-postup-pas__ciara { transition: none; }
   .kh-proc__media img { transition: none; }
+  .kh-proc__draha { display: none; }
 }
 
 
