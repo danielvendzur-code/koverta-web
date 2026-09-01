@@ -4648,6 +4648,28 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 
 
+/* --- 5b · Preskočiť na obsah -------------------------------------------
+   Kto ide klávesnicou alebo čítačkou, musel na každej stránke prejsť celé
+   rozbaľovacie menu, než sa dostal k textu. Odkaz je skrytý, kým naň
+   neskočí zameranie. */
+.kv-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 120;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--k-ink, #12171a);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 240ms var(--k-ease-out);
+}
+.kv-skip:focus-visible { transform: none; outline: 2px solid var(--k-amber); outline-offset: 3px; }
+.k { scroll-margin-top: 0; }
+
 /* --- 6 · Telefón: čitateľný text a ciele, ktoré sa dajú trafiť ------------
    Nadpisy sekcií klesli na 10,5 px a odkaz na telefónne číslo bol vysoký
    14 px. Na mobile je to text, ktorý sa nedá prečítať, a cieľ, ktorý sa
