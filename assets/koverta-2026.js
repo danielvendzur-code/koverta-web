@@ -943,56 +943,48 @@
     }
   }
 
-  /* --- tri realizácie, ktoré sa otočia na tri recenzie --------------------
-     Pás sa prilepí, fotografie stoja, a keď scroll prejde bod na tretine
-     dráhy, stĺpce sa jeden po druhom otočia na recenzie a pás sadne na
-     kartovú výšku. Celý pohyb robí štýl; tu sa len prehodí trieda, takže
-     rýchly scroll pristane na správnom stave a cesta späť ho vráti.
+  /* --- clona z realizácií nad recenziami ----------------------------------
+     Nad hotovou sekciou recenzií leží clona z troch fotografií. Keď scroll
+     prejde bod na dráhe, clona sa rozostúpi a sekcia pod ňou sadne na
+     miesto. Celý pohyb robí štýl; tu sa len prehodí trieda, takže rýchly
+     scroll pristane na správnom stave a cesta späť ho vráti.
 
-     Bod je jeden, nie plynulá väzba na scroll: pri krokoch postupu sa
-     ukázalo, že obsah viazaný priamo na polohu sa mení skôr, než ho stihne
-     niekto zaregistrovať. Takto má prevrat vždy celých 900 ms. */
+     Body sú dva — nižší pre cestu späť —, inak by sa clona na hrane pri
+     najmenšom pohybe otvárala a zatvárala. */
 
-  function initPrevrat(root) {
-    const pas = root.querySelector('[data-k-flip]');
-    if (!pas) return;
-    const stage = pas.querySelector('.kh-flip__stick') || pas.querySelector('.kh-flip__stage');
+  function initRecenzie(root) {
+    const stage = root.querySelector('[data-k-recenzie]');
     if (!stage) return;
+    const clona = stage.querySelector('.kh-rev__clona');
+    if (!clona) return;
 
-    let otvorene = false;
+    let hotovo = false;
     let caka = false;
-    let raz = false;
 
-    /* Fotografie sa usadia zo zväčšenia, keď pás naozaj vojde do okna —
-       nie pri načítaní stránky, kde by to nikto nevidel. */
+    /* Fotografie sa usadia zo zväčšenia, keď clona naozaj vojde do okna. */
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver((z) => {
-        z.forEach((e) => { if (e.isIntersecting) { pas.classList.add('je-videt'); io.disconnect(); } });
+        z.forEach((e) => { if (e.isIntersecting) { stage.classList.add('je-videt'); io.disconnect(); } });
       }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
-      io.observe(pas);
+      io.observe(stage);
     } else {
-      pas.classList.add('je-videt');
+      stage.classList.add('je-videt');
     }
 
     const prepocitaj = () => {
       caka = false;
-      const draha = pas.offsetHeight - stage.offsetHeight;
-      if (draha <= 0) return;
-      const kam = -pas.getBoundingClientRect().top;
-      const podiel = kam / draha;
-      /* Dva rôzne body pre cestu dole a hore: keby bol jeden, na jeho hrane
-         by sa pás pri najmenšom pohybe prepínal tam a späť. */
-      const chce = otvorene ? podiel > 0.22 : podiel > 0.34;
-      if (chce === otvorene) return;
-      otvorene = chce;
-      /* Cesta späť má vlastnú animáciu, nie prehratie dopredu naopak: inak
-         by sa pri návrate hore zopakovalo aj vynáranie obsahu karty. Prvý
-         raz sa trieda pre návrat nepridáva, aby pás na začiatku nespustil
-         animáciu, ktorú nikto nevyvolal. */
-      pas.classList.toggle('is-otvorene', otvorene);
-      if (otvorene) pas.classList.remove('je-zavrete');
-      else if (raz) pas.classList.add('je-zavrete');
-      raz = true;
+      const r = stage.getBoundingClientRect();
+      const h = window.innerHeight;
+      /* Meria sa poloha voči oknu, nie voči výške clony. Keď to bolo
+         delené výškou clony, správalo sa to na telefóne inak než na
+         monitore: tri fotografie pod sebou sú vyššie než tri vedľa seba,
+         takže rovnaký scroll dal iný podiel a na telefóne sa clona
+         neotvorila vôbec. Takto platí to isté pravidlo všade — clona sa
+         rozostúpi, keď ju posuniete horným okrajom k vrchu okna. */
+      const chce = hotovo ? r.top < h * 0.42 : r.top < h * 0.20;
+      if (chce === hotovo) return;
+      hotovo = chce;
+      stage.classList.toggle('je-hotovo', hotovo);
     };
 
     const ozvi = () => { if (caka) return; caka = true; window.requestAnimationFrame(prepocitaj); };
@@ -1013,7 +1005,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initPrevrat]
+       initRecenzie]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
