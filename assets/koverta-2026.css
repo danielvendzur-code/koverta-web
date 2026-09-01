@@ -4725,29 +4725,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cat__media { position: relative; }
 
 .kh-cat__media .kh-cat__stitok,
-.kh-cat__stitok {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 2;
-  padding: 7px 13px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .93);
-  color: var(--k-ink, #12171a);
-  font-family: var(--k-head, inherit);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-  line-height: 1;
-  transform: translateY(-8px);
-  opacity: 0;
-  transition: transform 520ms var(--k-ease-out) 60ms, opacity 380ms var(--k-ease) 60ms;
-}
-.kh-cat__item.is-in .kh-cat__stitok,
-.kh-cat__media.is-in .kh-cat__stitok,
-.kh-cat__item:has(.is-in) .kh-cat__stitok { transform: none; opacity: 1; }
-
 .kh-cat__znacky {
   position: absolute;
   left: 14px;
@@ -4766,21 +4743,19 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cat__item.is-in .kh-cat__znacky,
 .kh-cat__media.is-in .kh-cat__znacky,
 .kh-cat__item:has(.is-in) .kh-cat__znacky { transform: none; opacity: 1; }
-.kh-cat__znacka {
-  font-family: var(--k-head, inherit);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: .03em;
-  color: #fff;
-  line-height: 1;
-}
-/* Soltec je prémiová vetva — nesie jantár, Koverta ostáva biela. */
-.kh-cat__znacka.is-soltec { color: var(--k-amber, #FFCC00); }
-.kh-cat__znacka + .kh-cat__znacka::before {
-  content: "/";
-  margin-right: 9px;
-  color: rgba(255, 255, 255, .38);
-  font-weight: 400;
+/* Logá, nie napísané mená. Berú sa tie isté, aké sú v menu a v pätičke:
+   Koverta ako kresba s jantárovou zátvorkou, Soltec ako jeho značka. Obe
+   na tmavom podklade, preto písmená Koverty preberajú bielu. */
+.kh-cat__znacka { display: block; line-height: 0; }
+.kh-cat__znacka.is-koverta { color: #fff; }
+.kh-cat__znacka.is-koverta .k-logo { height: 15px; width: auto; display: block; }
+.kh-cat__znacka.is-koverta .k-logo__letter path { fill: currentColor; }
+.kh-cat__znacka.is-soltec { height: 11px; width: auto; display: block; filter: brightness(0) invert(1); opacity: .92; }
+.kh-cat__delic {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, .3);
+  display: block;
 }
 
 /* Ovládanie fotiek nesmie štítkom prekážať. */
