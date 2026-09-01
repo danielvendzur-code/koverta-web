@@ -5612,3 +5612,94 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 @media (min-width: 900px) {
   .kh-soltec__body { padding: clamp(20px, 1.8vw, 26px); }
 }
+
+
+/* --- 27 · Prevrat, ktorý stojí za pozretie --------------------------------
+   Nápad je dobrý, prevedenie bolo prvá verzia: doska sa otočila o 180 stupňov
+   a tým to skončilo. Chýbalo mu všetko, čo z otáčania robí pohyb hmoty —
+   karta sa nikam nevzdiali, nedostane tieň, nič na nej nepríde po nej samej.
+   Tu sa dopĺňa štvoro:
+
+   1 · Karta sa v polovici otočky odsunie od diváka a zmenší; z plochého
+       preklopenia stránky je otočenie predmetu v priestore.
+   2 · Popiska fotografie zmizne hneď na začiatku — nemá čo cestovať dokola.
+   3 · Keď karta dosadne, dostane tieň, akoby si sadla na plochu.
+   4 · Obsah recenzie nepríde s kartou naraz: hviezdy, citát a meno sa
+       vynoria až po dosadnutí, jedno po druhom. To je ten rozdiel medzi
+       „otočilo sa to" a „niekto to položil na stôl".
+
+   Späť to ide vlastnou cestou, nie prehratím dopredu naopak — inak by sa
+   pri návrate hore zopakovalo aj vynáranie obsahu, ktoré tam nepatrí. */
+
+@keyframes k-prevrat {
+  0%   { transform: perspective(1800px) rotateY(0deg) scale(1) translateZ(0); }
+  38%  { transform: perspective(1800px) rotateY(74deg) scale(0.9) translateZ(-70px); }
+  100% { transform: perspective(1800px) rotateY(180deg) scale(1) translateZ(0); }
+}
+@keyframes k-prevrat-spat {
+  0%   { transform: perspective(1800px) rotateY(180deg) scale(1) translateZ(0); }
+  38%  { transform: perspective(1800px) rotateY(106deg) scale(0.9) translateZ(-70px); }
+  100% { transform: perspective(1800px) rotateY(0deg) scale(1) translateZ(0); }
+}
+@keyframes k-vynorit {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.k-js .kh-flip__col {
+  /* Perspektíva je na samotnej karte, nie na páse: keď sedela na páse, mali
+     krajné stĺpce inú os pohľadu než stredný a otáčali sa každý inak. */
+  animation-duration: 1050ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.32, 1);
+  animation-fill-mode: forwards;
+  transition: height 1050ms cubic-bezier(0.22, 1, 0.32, 1);
+}
+.k-js .kh-flip__stage { perspective: none; }
+.k-js .kh-flip.is-otvorene .kh-flip__col { animation-name: k-prevrat; transform: perspective(1800px) rotateY(180deg); }
+.k-js .kh-flip.je-zavrete .kh-flip__col { animation-name: k-prevrat-spat; transform: none; }
+.k-js .kh-flip__col:nth-child(2) { animation-delay: 150ms; transition-delay: 150ms; }
+.k-js .kh-flip__col:nth-child(3) { animation-delay: 300ms; transition-delay: 300ms; }
+
+/* Popiska fotografie odchádza hneď — nemá dôvod cestovať dokola. */
+.kh-flip__co { transition: opacity 260ms var(--k-ease), transform 380ms var(--k-ease-out); }
+.k-js .kh-flip.is-otvorene .kh-flip__co { opacity: 0; transform: translateY(8px); }
+
+/* Karta dosadne aj tieňom. */
+.k-js .kh-flip__face--slovo { box-shadow: none; transition: box-shadow 600ms var(--k-ease) 420ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__face--slovo { box-shadow: 0 20px 44px rgba(18, 23, 26, 0.11); }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(2) .kh-flip__face--slovo { transition-delay: 570ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(3) .kh-flip__face--slovo { transition-delay: 720ms; }
+
+/* Obsah recenzie sa vynorí až po dosadnutí, jedno po druhom. */
+.k-js .kh-flip__face--slovo .k-stars,
+.k-js .kh-flip__face--slovo .kh-rev__quote,
+.k-js .kh-flip__face--slovo .kh-rev__who { opacity: 0; }
+.k-js .kh-flip.is-otvorene .kh-flip__face--slovo .k-stars,
+.k-js .kh-flip.is-otvorene .kh-flip__face--slovo .kh-rev__quote,
+.k-js .kh-flip.is-otvorene .kh-flip__face--slovo .kh-rev__who {
+  animation: k-vynorit 620ms var(--k-ease-out) forwards;
+}
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(1) .k-stars { animation-delay: 620ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(1) .kh-rev__quote { animation-delay: 700ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(1) .kh-rev__who { animation-delay: 790ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(2) .k-stars { animation-delay: 770ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(2) .kh-rev__quote { animation-delay: 850ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(2) .kh-rev__who { animation-delay: 940ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(3) .k-stars { animation-delay: 920ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(3) .kh-rev__quote { animation-delay: 1000ms; }
+.k-js .kh-flip.is-otvorene .kh-flip__col:nth-child(3) .kh-rev__who { animation-delay: 1090ms; }
+
+/* Fotografia sa v páse pomaly usadí zo zväčšenia — pás nie je nehybný obraz,
+   ale ani sa nehýbe natoľko, aby to rušilo. */
+.kh-flip__face--foto img { transform: scale(1.06); transition: transform 2600ms var(--k-ease-out); }
+.k-js .kh-flip__face--foto img { transform: scale(1.06); }
+.k-js .kh-flip.je-videt .kh-flip__face--foto img { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-js .kh-flip__col { animation: none !important; transform: none !important; }
+  .k-js .kh-flip__face--slovo .k-stars,
+  .k-js .kh-flip__face--slovo .kh-rev__quote,
+  .k-js .kh-flip__face--slovo .kh-rev__who { opacity: 1; animation: none !important; }
+  .k-js .kh-flip__face--foto img { transform: none; transition: none; }
+  .k-js .kh-flip__co { opacity: 1 !important; transform: none !important; }
+}

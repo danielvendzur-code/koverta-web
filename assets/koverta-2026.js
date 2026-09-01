@@ -961,6 +961,18 @@
 
     let otvorene = false;
     let caka = false;
+    let raz = false;
+
+    /* Fotografie sa usadia zo zväčšenia, keď pás naozaj vojde do okna —
+       nie pri načítaní stránky, kde by to nikto nevidel. */
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((z) => {
+        z.forEach((e) => { if (e.isIntersecting) { pas.classList.add('je-videt'); io.disconnect(); } });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
+      io.observe(pas);
+    } else {
+      pas.classList.add('je-videt');
+    }
 
     const prepocitaj = () => {
       caka = false;
@@ -973,7 +985,14 @@
       const chce = otvorene ? podiel > 0.22 : podiel > 0.34;
       if (chce === otvorene) return;
       otvorene = chce;
+      /* Cesta späť má vlastnú animáciu, nie prehratie dopredu naopak: inak
+         by sa pri návrate hore zopakovalo aj vynáranie obsahu karty. Prvý
+         raz sa trieda pre návrat nepridáva, aby pás na začiatku nespustil
+         animáciu, ktorú nikto nevyvolal. */
       pas.classList.toggle('is-otvorene', otvorene);
+      if (otvorene) pas.classList.remove('je-zavrete');
+      else if (raz) pas.classList.add('je-zavrete');
+      raz = true;
     };
 
     const ozvi = () => { if (caka) return; caka = true; window.requestAnimationFrame(prepocitaj); };
