@@ -4949,10 +4949,63 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-mat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-mat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kh-vcene__rad:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  /* Ponuka ostáva v dvoch stĺpcoch — tak sekcia vyzerala predtým a tak sa
-     páčila viac. Štítok, značky a popis na kartách zostávajú. */
   .kh-cat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 620px) and (max-width: 1039px) {
   .kh-mat__grid:has(> :last-child:nth-child(3)) > :last-child { grid-column: 1 / -1; }
+}
+
+
+/* --- 12 · Ponuka: štyri karty, fotka cez celú výšku ----------------------
+   Toto rozloženie v súbore bolo, len ho prebíjali neskoršie pravidlá s
+   dvomi stĺpcami. Karta má pevnú výšku, fotografia zaberá všetko, čo jej
+   text nechá, a pod ňou stojí len názov s rozmermi. Popis a odkazy sa
+   vysunú, keď na kartu prídete myšou alebo tabom — vtedy fotka o kus
+   ustúpi. Je to jeden plynulý pohyb vnútri rámu, dlaždica sa nikam nedvíha. */
+@media (min-width: 1000px) {
+  .kh-cat__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: 610px;
+    gap: clamp(10px, 1vw, 15px);
+    overflow: visible;
+  }
+  .kh-cat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kh-cat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .kh-cat__item { min-width: 0; height: 100%; }
+  .kh-cat__card { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+  .kh-cat__media {
+    flex: 1 1 auto;
+    min-height: 0;
+    aspect-ratio: auto;
+    transition: flex-basis 520ms cubic-bezier(.2,.75,.25,1);
+  }
+  .kh-cat__body {
+    flex: 0 0 148px;
+    overflow: hidden;
+    transition: flex-basis 520ms cubic-bezier(.2,.75,.25,1);
+  }
+  .kh-cat__item:hover .kh-cat__body,
+  .kh-cat__item:focus-within .kh-cat__body { flex-basis: 262px; }
+
+  /* Popis a odkazy sú zbalené do nulovej výšky, nie skryté priehľadnosťou —
+     tak sa dá výška plynulo animovať a obsah ostáva v strome pre čítačku. */
+  .kh-cat__more {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 460ms cubic-bezier(.2,.75,.25,1),
+                opacity 340ms var(--k-ease);
+  }
+  .kh-cat__more > * { min-height: 0; overflow: hidden; }
+  .kh-cat__item:hover .kh-cat__more,
+  .kh-cat__item:focus-within .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+}
+
+/* Pod 1000 px nie je kam ustupovať ani čím hýbať — všetko je vidieť hneď. */
+@media (max-width: 999px) {
+  .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+  .kh-cat__grid { height: auto; }
 }
