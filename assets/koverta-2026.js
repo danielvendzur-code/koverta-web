@@ -14,6 +14,28 @@
      raz stalo. Trieda sa pridáva ako prvá vec, ešte pred čímkoľvek iným. */
   document.documentElement.classList.add('k-js');
 
+  /* Smer scrollovania si stránka pamätá na koreni. Pri ceste nahor je
+     odkrývanie tichšie — vraciate sa k tomu, čo ste už videli. */
+  (() => {
+    let posledny = window.scrollY;
+    const koren = document.documentElement;
+    let caka = false;
+    const zmer = () => {
+      caka = false;
+      const teraz = window.scrollY;
+      if (Math.abs(teraz - posledny) > 4) {
+        koren.classList.toggle('k-hore', teraz < posledny);
+        posledny = teraz;
+      }
+    };
+    window.addEventListener('scroll', () => {
+      if (caka) return;
+      caka = true;
+      if (window.requestAnimationFrame) window.requestAnimationFrame(zmer);
+      else window.setTimeout(zmer, 60);
+    }, { passive: true });
+  })();
+
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   const smooth = () => (REDUCED.matches ? 'auto' : 'smooth');
 
@@ -52,7 +74,7 @@
       /* Odkrytie sa spustí, len čo prvok vojde spodnou hranou do okna.
          Skôr by pohyb prebehol mimo obrazovky, neskôr by sa začínal až
          v strede — a to zadávateľ vytkol. */
-      { rootMargin: '0px 0px -4% 0px', threshold: 0 }
+      { rootMargin: '0px 0px -14% 0px', threshold: 0 }
     );
 
     items.forEach((el) => { io.observe(el); ioVon.observe(el); });
@@ -491,31 +513,24 @@
       if (next) next.addEventListener('click', (e) => step(e, 1));
       if (count) count.textContent = '1 / ' + srcs.length;
 
-      /* Fotografie sa striedajú samy — nikto nemá klikať na šípky, aby
-         zistil, ako to vyzerá. Beží to len vtedy, keď je karta na obrazovke
-         a keď je karta karta pod myšou, striedanie sa zastaví, nech si
-         človek stihne pozrieť to, na čo sa práve díva. */
+      /* Fotografie sa striedajú, len kým je karta pod myšou alebo pod
+         zameraním. Bez toho stoja — striedanie samo od seba odvádzalo
+         pozornosť a nikto oň nežiadal. Šípky na preklikávanie sú preč,
+         fotku netreba hľadať klikaním. */
+      if (prev) prev.remove();
+      if (next) next.remove();
       if (REDUCED.matches) return;
+
       let samocinne = 0;
-      let vidno = false;
-      let drzi = false;
-      const tik = () => { if (vidno && !drzi) show(i + 1); };
-      const spusti = () => { if (!samocinne) samocinne = window.setInterval(tik, 4200); };
-      const zastav = () => { if (samocinne) { window.clearInterval(samocinne); samocinne = 0; } };
-
-      card.addEventListener('mouseenter', () => { drzi = true; });
-      card.addEventListener('mouseleave', () => { drzi = false; });
-      card.addEventListener('focusin', () => { drzi = true; });
-      card.addEventListener('focusout', () => { drzi = false; });
-
-      if ('IntersectionObserver' in window) {
-        new IntersectionObserver((zaznamy) => {
-          zaznamy.forEach((z) => {
-            vidno = z.isIntersecting;
-            if (vidno) spusti(); else zastav();
-          });
-        }, { threshold: 0.25 }).observe(card);
-      } else spusti();
+      const spusti = () => { if (!samocinne) samocinne = window.setInterval(() => show(i + 1), 2600); };
+      const zastav = () => {
+        if (samocinne) { window.clearInterval(samocinne); samocinne = 0; }
+        if (i !== 0) show(0);          // po odchode sa vráti prvá fotka
+      };
+      card.addEventListener('mouseenter', spusti);
+      card.addEventListener('mouseleave', zastav);
+      card.addEventListener('focusin', spusti);
+      card.addEventListener('focusout', zastav);
     });
   }
 

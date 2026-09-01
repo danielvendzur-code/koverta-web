@@ -5027,3 +5027,26 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    ním, takže sa zúžili len pruhy a vznikol nesúlad. Kompozícia od kraja po
    kraj teda ostáva — mení sa len výška, ktorá bola tým, čo sekciu vyťahovalo
    nad zvyšok stránky. */
+
+
+/* --- 14 · Karta má presne dve veľkosti -----------------------------------
+   Keď rozbalená karta prerástla 610 px, mriežka zvýšila celý riadok a s ním
+   aj karty, nad ktorými nikto nebol — pri prechode z jednej na druhú to
+   vyzeralo, akoby sa hýbalo všetko. Riadok má pevnú výšku, takže existujú
+   len dva stavy a plynulý prechod medzi nimi. */
+@media (min-width: 1000px) {
+  .kh-cat__grid { grid-auto-rows: 610px; align-items: stretch; }
+  .kh-cat__item { height: 610px; overflow: hidden; }
+  .kh-cat__card { height: 610px; }
+}
+
+/* Šípky na preklikávanie fotiek sú preč aj zo štýlu. */
+.kh-cat__nav { display: none !important; }
+
+/* --- 15 · Nahor tichšie ---------------------------------------------------
+   Pri ceste nahor sa vraciate k tomu, čo ste už videli — pohyb má byť
+   nenápadný. Trieda na koreni prichádza zo skriptu podľa smeru scrollu. */
+.k-js.k-hore .k-rise { transition-duration: 460ms, 520ms; transition-delay: 0s; }
+.k-js.k-hore .k-rise:not(.is-in) { transform: translateY(14px); }
+.k-js.k-hore .kh-cat__media img,
+.k-js.k-hore .k-reveal img { transition-duration: 520ms; }
