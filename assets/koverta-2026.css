@@ -5056,3 +5056,105 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cfg__thumb:hover img { transform: none; }
 
 .kh-cat__count { display: none !important; }
+
+
+/* --- 19 · Poistky, aby sa z webu nestratili údaje -------------------------
+   Odkrývanie je vratné, takže prvok mimo okna má priehľadnosť 0. Kým je mimo
+   okna, nikomu to nevadí — ale existujú situácie, keď sa obsah číta inak než
+   scrollovaním, a vtedy nesmie ostať neviditeľný. */
+
+/* Tlač: papier nemá scrollovanie ani pozorovateľa. Všetko sa vypíše. */
+@media print {
+  .k-js .k-rise,
+  .k-js .k-reveal img,
+  .k-js .kh-cat__media img,
+  .k-js .kh-cat__specs li {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }
+  .kh-cat__more { grid-template-rows: 1fr !important; opacity: 1 !important; }
+  .kh-cat__grid, .kh-cat__item, .kh-cat__card { height: auto !important; }
+}
+
+/* Odkaz z obsahu alebo z vyhľadávania skočí rovno na prvok. Ten sa musí
+   ukázať okamžite, nie čakať na pozorovateľa. */
+.k-js .k-rise:target,
+.k-js .k-rise:has(:target),
+.k-js .k-rise:focus-within {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+
+/* Text vybraný myšou alebo nájdený cez Ctrl+F sa nesmie skrývať. */
+.k-js .k-rise::selection { opacity: 1; }
+
+/* Keď nie je k dispozícii pozorovateľ, nič sa neskrýva. Doteraz to riešil
+   len skript; toto je záchrana aj pre prípad, že skript zbehne len sčasti. */
+@supports not (selector(:has(*))) {
+  .k-js .k-rise { opacity: 1; transform: none; }
+}
+
+
+/* --- 20 · Jedna reakcia namiesto tuctu ------------------------------------
+   Čipy a tlačidlá reagovali každý inak: jeden sa dvíhal o 2 px, druhý o 3,
+   niektorý menil pozadie, iný rám, ďalší pridával tieň a niektorý nerobil
+   nič. Pri prechode myšou po stránke sa tým rozpadala do dvanástich rôznych
+   drobných správaní.
+
+   Ostáva jedno gesto pre všetko, čoho sa dá dotknúť: zdvih o 2 px, rám
+   prevezme sivú zo značky, farba plochy sa nemení a čas je všade rovnaký.
+   Odkazy si nechávajú posun šípky — to je vlastnosť odkazu, nie čipu. */
+.k .k-btn,
+.k .kh-cat__cfg,
+.k .kh-soltec__cfg,
+.kh-size__chip,
+.kh-work__filter-block button,
+.kh-mat__tab,
+.kh-rev__source,
+.kh-select__btn,
+.kv-icon-btn,
+.kh-dock .k-btn {
+  transition: transform 220ms var(--k-ease-out),
+              border-color 220ms var(--k-ease),
+              box-shadow 220ms var(--k-ease);
+}
+
+.k .k-btn:hover,
+.k .k-btn:focus-visible,
+.k .kh-cat__actions .kh-cat__cfg:hover,
+.k .kh-soltec__actions .kh-soltec__cfg:hover,
+.kh-size__chip:hover,
+.kh-work__filter-block button:hover:not([disabled]),
+.kh-mat__tab:hover,
+.kh-rev__source:hover,
+.k .kh-select__btn:hover,
+.kv-icon-btn:hover,
+.kh-dock .k-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--k-logo-grey, #455a64);
+  box-shadow: 0 8px 18px -12px rgba(18, 23, 26, .5);
+}
+
+/* Plocha si drží svoju farbu — žiadne prefarbovanie pod kurzorom. */
+.k .k-btn--primary:hover { background: var(--k-amber); color: var(--k-ink); }
+.k .k-btn--line:hover,
+.kh-size__chip:hover,
+.k .kh-select__btn:hover { background: #fff; }
+.k .kh-cat__actions .kh-cat__cfg:hover,
+.k .kh-soltec__actions .kh-soltec__cfg:hover { background: transparent; }
+.k .kh-pick__lane .k-link:hover,
+.k .kh-cat__actions .k-link:hover,
+.k .kh-soltec__actions .k-link:hover { background: transparent; box-shadow: none; transform: none; }
+
+/* Karty sa nedvíhajú vôbec — dlaždica nie je tlačidlo. */
+.kh-soltec__card:hover,
+.kh-cat__card:hover,
+.kh-mat__card:hover,
+.kh-work__item:hover .kh-work__cap span { transform: none; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .k-btn:hover, .kh-size__chip:hover, .kv-icon-btn:hover { transform: none; }
+}
