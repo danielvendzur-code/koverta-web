@@ -4532,3 +4532,33 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-proc__vlna .kv-postup { transition: none; }
   .kh-proc__media img { transition: none; }
 }
+
+
+/* --- 5 · Štyri údaje: rovnaké gesto ako nadpis v hero ---------------------
+   Sekcia bola dobrá, ale stála mimo rytmu zvyšku webu. Číslo sa teraz
+   dostáva vlastné tempo a text pod ním prichádza až po ňom. Deliace vlasové linky boli
+   pri 11 % neviditeľné; sú výraznejšie a siahajú cez celú výšku položky. */
+.kh-fakty { border-top: 1px solid var(--k-hair); }
+.kh-fakty__cislo { display: block; line-height: 1.06; }
+
+.kh-fakty__polozka { padding-block: 22px; }
+@media (min-width: 620px) {
+  .kh-fakty__polozka::before {
+    left: -18px;
+    top: 0;
+    bottom: 0;
+    background: var(--k-hair);
+  }
+}
+
+/* Popis a veta pod ním prichádzajú po čísle, nie s ním. */
+.kh-fakty__co { transition-delay: 120ms; }
+.kh-fakty__pod { transition-delay: 200ms; }
+
+/* Jantárová linka pod číslom sa dokresľuje dlhšie a s väčším odstupom —
+   je to posledný pohyb v sekcii, nie prvý. */
+.kh-fakty__cislo::after {
+  height: 3px;
+  margin-top: 14px;
+  transition: transform 900ms var(--k-ease-out) 320ms;
+}
