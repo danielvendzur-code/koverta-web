@@ -4010,12 +4010,22 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    pohyb v priestore, nie ako zmenu priehľadnosti. Číslo karty vychádza spod
    vlastnej hrany, čipy nabiehajú vlnou. Nič sa nehýbe pri scrollovaní. */
 
-.k-reveal img {
-  clip-path: inset(0 0 100% 0);
-  transform: scale(1.12);
-  transition: clip-path 1150ms var(--k-ease-out), transform 1500ms var(--k-ease-out);
+/* Pôvodne som pridal `transform: scale(1.12)` priamo k maske na `.k-reveal img`.
+   Maska oreže obrázok na nulovú výšku a spolu s `loading="lazy"` to znamená, že
+   prehliadač obrázok nikdy nenačíta — karta ostane navždy prázdna. Zväčšenie
+   preto sedí na ráme, nie na obrázku, a maska ostáva taká, aká na domovskej
+   roky funguje. Pravidlo: efekt, ktorý môže obsah nechať schovaný, sa nepoužije.
+   Základný stav je vždy viditeľný. */
+.kh-mat__media, .kh-cat__media, .kh-work__media { will-change: transform; }
+.k-rise .kh-mat__media img,
+.k-reveal .kh-cat__media img,
+.k-reveal .kh-work__media img {
+  transform: scale(1.07);
+  transition: transform 1400ms var(--k-ease-out);
 }
-.k-reveal.is-in img { clip-path: inset(0 0 0 0); transform: none; }
+.k-rise.is-in .kh-mat__media img,
+.k-reveal.is-in .kh-cat__media img,
+.k-reveal.is-in .kh-work__media img { transform: none; }
 
 /* Číslo karty vychádza spod hrany svojho políčka. */
 .kh-mat__num {
@@ -4059,7 +4069,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k .k-link:hover::after, .k .k-link:focus-visible::after { transform: scaleX(1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .k-reveal img { clip-path: none; transform: none; }
+  .k-rise .kh-mat__media img, .k-reveal .kh-cat__media img, .k-reveal .kh-work__media img { transform: none; transition: none; }
   .kh-mat__card .kh-mat__num,
   .kh-mat__card .kh-mat__list li,
   .kh-size .kh-size__chip { opacity: 1; transform: none; transition: none; }
