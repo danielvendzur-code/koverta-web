@@ -4454,3 +4454,17 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    s odstupom na tomto odseku nikdy neplatili. */
 .k .kh-hero__lead { margin-top: clamp(12px, 1.6vw, 18px); }
 .k .kh-hero__box .kh-crumbs { margin-bottom: clamp(10px, 1.4vw, 16px); }
+
+
+/* Firemné údaje v pätičke. Rok zápisu do registra je jediný doložiteľný údaj
+   o veku firmy — konkurencia ho uvádza a pôsobí tým usadenejšie. Sadzba je
+   tichá: je to doklad, nie tvrdenie. */
+.kf__firma {
+  margin: 0 0 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--k-hair-invert, rgba(255, 255, 255, 0.16));
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.62);
+}
+.kf__firma strong { color: rgba(255, 255, 255, 0.9); font-weight: 600; }
