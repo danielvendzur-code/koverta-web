@@ -29,19 +29,24 @@
     }
 
     let ozvalSa = false;
-    const REZERVA = 90;   // px za hranou okna, kde sa ešte nič neskrýva
+    /* Skrývanie má vlastného pozorovateľa s väčším okrajom. Keď to riešil
+       jeden, ohlásil sa presne na hrane okna — a podmienka „je celý mimo aj
+       s rezervou" v tej chvíli nikdy neplatila, takže sa trieda nikdy
+       neodobrala a pri scrollovaní hore sa už nič neanimovalo. */
+    const ioVon = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) entry.target.classList.remove('is-in');
+        });
+      },
+      { rootMargin: '160px 0px 160px 0px', threshold: 0 }
+    );
+
     const io = new IntersectionObserver(
       (entries) => {
         ozvalSa = true;
         entries.forEach((entry) => {
-          if (entry.isIntersecting) { entry.target.classList.add('is-in'); return; }
-          /* Prvok sa znovu skryje, len keď je celý mimo okna aj s rezervou —
-             inak by na hrane blikal. Pri návrate sa odkryje znovu, takže
-             pohyb je vidieť aj pri scrollovaní hore. */
-          const r = entry.boundingClientRect;
-          if (r.top > window.innerHeight + REZERVA || r.bottom < -REZERVA) {
-            entry.target.classList.remove('is-in');
-          }
+          if (entry.isIntersecting) entry.target.classList.add('is-in');
         });
       },
       // Prvok sa odkrýva ešte pred vstupom do okna (12 % pod hranou), aby
@@ -49,7 +54,7 @@
       { rootMargin: '0px 0px 12% 0px', threshold: 0.01 }
     );
 
-    items.forEach((el) => io.observe(el));
+    items.forEach((el) => { io.observe(el); ioVon.observe(el); });
 
     /* Poistka. Predtým po 1,5 s odkryla úplne všetko vrátane sekcií hlboko
        pod ohybom — kým sa k nim návštevník doscrolloval, boli dávno odkryté

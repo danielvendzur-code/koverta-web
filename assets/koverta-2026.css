@@ -4440,9 +4440,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    nezachytí — a zadávateľ opakovane hlásil, že web sa nehýbe. Dráha je teraz
    28 px a trvá 900 ms, s tempom, ktoré na konci spomalí. */
 .k-rise {
-  transition: opacity 900ms var(--k-ease-out), transform 900ms var(--k-ease-out);
+  transition: opacity 780ms var(--k-ease-out), transform 1000ms var(--k-ease-out);
 }
-.k-js .k-rise { opacity: 0; transform: translateY(28px); }
+.k-js .k-rise { opacity: 0; transform: translateY(44px) scale(0.985); }
 .k-js .k-rise.is-in { opacity: 1; transform: none; }
 
 /* Stupňovanie po stĺpcoch. Karty sa neodkrývajú naraz ako jeden blok —
@@ -4453,12 +4453,15 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k [data-k-delay="4"] { transition-delay: 440ms; }
 .k [data-k-delay="5"] { transition-delay: 550ms; }
 
-/* Fotografia sa odkrýva maskou zdola nahor a zároveň dosadá zo zväčšenia.
-   Trvá dlhšie než text, takže sa obraz „usadí" až po tom, čo si prečítate
-   nadpis — to je celý efekt, žiadny parallax. */
-.k-js .k-reveal img { clip-path: inset(0 0 100% 0); transform: scale(1.06); }
-.k-reveal img { transition: clip-path 1100ms var(--k-ease-out), transform 1600ms var(--k-ease-out); }
-.k-js .k-reveal.is-in img { clip-path: inset(0 0 0 0); transform: none; }
+/* Fotografie sa neodkrývajú maskou. Zadávateľ to odmietol: obraz má na
+   stránke stáť, nie sa odhaľovať. Celá karta príde ako celok — fotka sa iba
+   pomaly usadí zo zväčšenia, čo je pohyb, ktorý sa dá prehliadnuť, a to je
+   tu zámer. */
+.k-js .k-reveal img,
+.k-js .k-reveal.is-in img { clip-path: none !important; }
+.k-js .k-reveal img { transform: scale(1.045); }
+.k-reveal img { transition: transform 1500ms var(--k-ease-out); }
+.k-js .k-reveal.is-in img { transform: none; }
 
 /* --- 2 · Kroky postupu bez prázdnych medzier -------------------------------
    Riadok mal min-height: 23vh, teda 207 px na 50 px textu. Vznikli tým diery
@@ -4553,17 +4556,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    zväčšenia, štítky s rozmermi prídu po nej jeden po druhom a jantárová
    linka pod názvom sa dokreslí zľava. Karty idú za sebou podľa stĺpca. */
 .kh-cat__item .kh-cat__media { overflow: hidden; }
-.k-js .kh-cat__item .kh-cat__media img {
-  clip-path: inset(0 0 100% 0);
-  transform: scale(1.08);
-}
-.kh-cat__item .kh-cat__media img {
-  transition: clip-path 1100ms var(--k-ease-out), transform 1700ms var(--k-ease-out);
-}
-.k-js .kh-cat__item.is-in .kh-cat__media img {
-  clip-path: inset(0 0 0 0);
-  transform: none;
-}
+.k-js .kh-cat__item .kh-cat__media img,
+.k-js .kh-cat__media.k-reveal img { clip-path: none; transform: scale(1.06); }
+.kh-cat__item .kh-cat__media img { transition: transform 1600ms var(--k-ease-out); }
+.k-js .kh-cat__item.is-in .kh-cat__media img,
+.k-js .kh-cat__media.k-reveal.is-in img { transform: none; }
 
 /* Názov kategórie dostane jantárovú linku, ktorá sa dokreslí zľava. */
 .kh-cat__body .k-h3 { position: relative; display: inline-block; padding-bottom: 6px; }
@@ -4578,10 +4575,12 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   transform-origin: left;
   transition: transform 760ms var(--k-ease-out) 420ms;
 }
-.kh-cat__item.is-in .kh-cat__body .k-h3::after { transform: scaleX(1); }
+.kh-cat__item.is-in .kh-cat__body .k-h3::after,
+.kh-cat__item:has(.is-in) .kh-cat__body .k-h3::after { transform: scaleX(1); }
 
 /* Štítky s rozmermi prichádzajú po fotke, jeden po druhom. */
 .k-js .kh-cat__specs li { transform: translateY(8px); opacity: 0; }
+.k-js .kh-cat__item:has(.is-in) .kh-cat__specs li { transform: none; opacity: 1; }
 .kh-cat__specs li {
   transition: transform 620ms var(--k-ease-out), opacity 520ms var(--k-ease);
 }
@@ -4713,4 +4712,79 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 
   /* Dlažba kategórií: celá karta je odkaz, nech sa netrafí len nadpis. */
   .k .kh-cat__card { display: block; }
+}
+
+
+/* --- 7 · Karta kategórie povie, čo to je, ešte pred názvom ---------------
+   Štítok vľavo hore a značky vľavo dole. V staršej verzii to na kartách
+   bolo a fungovalo; tu je to o niečo tichšie — štítok nie je čierna
+   škatuľa, ale svetlý pás s rozstrkanými verzálkami, a značky sú dva malé
+   nápisy oddelené lomkou, nie dve tlačidlá. */
+.kh-cat__media { position: relative; }
+
+.kh-cat__media .kh-cat__stitok,
+.kh-cat__stitok {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .93);
+  color: var(--k-ink, #12171a);
+  font-family: var(--k-head, inherit);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  line-height: 1;
+  transform: translateY(-8px);
+  opacity: 0;
+  transition: transform 620ms var(--k-ease-out) 260ms, opacity 460ms var(--k-ease) 260ms;
+}
+.kh-cat__item.is-in .kh-cat__stitok,
+.kh-cat__media.is-in .kh-cat__stitok,
+.kh-cat__item:has(.is-in) .kh-cat__stitok { transform: none; opacity: 1; }
+
+.kh-cat__znacky {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(12, 16, 18, .74);
+  transform: translateY(8px);
+  opacity: 0;
+  transition: transform 620ms var(--k-ease-out) 360ms, opacity 460ms var(--k-ease) 360ms;
+}
+.kh-cat__item.is-in .kh-cat__znacky,
+.kh-cat__media.is-in .kh-cat__znacky,
+.kh-cat__item:has(.is-in) .kh-cat__znacky { transform: none; opacity: 1; }
+.kh-cat__znacka {
+  font-family: var(--k-head, inherit);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: #fff;
+  line-height: 1;
+}
+/* Soltec je prémiová vetva — nesie jantár, Koverta ostáva biela. */
+.kh-cat__znacka.is-soltec { color: var(--k-amber, #FFCC00); }
+.kh-cat__znacka + .kh-cat__znacka::before {
+  content: "/";
+  margin-right: 9px;
+  color: rgba(255, 255, 255, .38);
+  font-weight: 400;
+}
+
+/* Ovládanie fotiek nesmie štítkom prekážať. */
+.kh-cat__nav { z-index: 3; }
+.kh-cat__count { z-index: 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-cat__stitok, .kh-cat__znacky { transform: none; opacity: 1; transition: none; }
 }
