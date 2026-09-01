@@ -4750,7 +4750,19 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cat__znacka.is-koverta { color: #fff; }
 .kh-cat__znacka.is-koverta .k-logo { height: 15px; width: auto; display: block; }
 .kh-cat__znacka.is-koverta .k-logo__letter path { fill: currentColor; }
-.kh-cat__znacka.is-soltec { height: 11px; width: auto; display: block; filter: brightness(0) invert(1); opacity: .92; }
+/* Značka Soltec ako text — obrázok má biele pozadie a na tmavom odznaku by
+   z neho bol biely obdĺžnik. Veľkosť je zladená s logom Koverty: obe majú
+   rovnakú optickú výšku. */
+.kh-cat__znacka.is-soltec {
+  font-family: var(--k-head, inherit);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  text-transform: lowercase;
+  color: #fff;
+  line-height: 15px;
+  padding-right: .28em;
+}
 .kh-cat__delic {
   width: 1px;
   height: 14px;
@@ -5042,3 +5054,5 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-soltec__media:hover img,
 .kh-mat__card:hover .kh-mat__media img,
 .kh-cfg__thumb:hover img { transform: none; }
+
+.kh-cat__count { display: none !important; }
