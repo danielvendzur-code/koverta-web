@@ -4875,3 +4875,27 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-mat__list li::before { display: none; }
 .kh-mat__list li { padding-left: 0; border-top: 1px solid var(--k-hair-soft, rgba(18,23,26,.055)); }
 .kh-mat__list li:first-child { border-top: 0; }
+
+
+/* --- 9 · Vlnitý predel ---------------------------------------------------
+   Tam, kde sa mení podklad, stojí jantárová vlna. Dokreslí sa zľava doprava
+   presne vtedy, keď k nej človek doscrolluje — pomaly, aby to bolo vidieť,
+   a len raz na prechod, aby to nebolo cez celú stránku. */
+.kv-predel {
+  display: block;
+  height: 26px;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.kv-predel svg { display: block; width: 100%; height: 100%; }
+.kv-predel path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.kv-predel__stopa { stroke: var(--k-hair, rgba(18,23,26,.11)); stroke-width: 1.5; }
+.kv-predel__ciara {
+  stroke: var(--k-amber, #FFCC00);
+  stroke-width: 2.5;
+  transition: stroke-dashoffset 1600ms var(--k-ease-out);
+}
+.kv-predel.is-in .kv-predel__ciara { stroke-dashoffset: 0 !important; }
+
+@media (prefers-reduced-motion: reduce) { .kv-predel { display: none; } }

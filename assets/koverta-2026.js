@@ -79,6 +79,50 @@
     window.addEventListener('scroll', dokryLenViditelne, { passive: true });
   }
 
+  /* --- 1c · vlnitý predel medzi sekciami --------------------------------
+     Medzi bielou a kostenou plochou stojí jantárová vlna, ktorá sa dokreslí
+     zľava doprava vo chvíli, keď sa k nej doscrolluje. Kreslí ju skript,
+     lebo bez neho by v markupe stál prvok, ktorý nič nerobí. */
+  function initPredely(root) {
+    if (REDUCED.matches) return;
+    const sekcie = [...root.querySelectorAll('section.k-band')];
+    if (sekcie.length < 3) return;
+
+    const SIRKA = 1200, V = 26, VLN = 22, AMP = 5.5;
+    let d = 'M 0 ' + (V / 2);
+    for (let i = 0; i < VLN; i += 1) {
+      const k = SIRKA / VLN;
+      d += ' q ' + (k / 2) + ' ' + (i % 2 === 0 ? -AMP : AMP) + ' ' + k + ' 0';
+    }
+
+    const io = new IntersectionObserver((zaznamy) => {
+      zaznamy.forEach((z) => { if (z.isIntersecting) z.target.classList.add('is-in'); });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.4 });
+
+    /* Predel patrí tam, kde sa mení podklad — inak by ich bolo priveľa. */
+    sekcie.forEach((sek, i) => {
+      if (!i) return;
+      const predch = sekcie[i - 1];
+      const zmenaPodkladu = predch.classList.contains('k-bone') !== sek.classList.contains('k-bone');
+      if (!zmenaPodkladu) return;
+      if (sek.previousElementSibling && sek.previousElementSibling.classList.contains('kv-predel')) return;
+      const p = document.createElement('div');
+      p.className = 'kv-predel';
+      p.setAttribute('aria-hidden', 'true');
+      p.innerHTML = '<svg viewBox="0 0 ' + SIRKA + ' ' + V + '" preserveAspectRatio="none" focusable="false">' +
+        '<path class="kv-predel__stopa" d="' + d + '"/><path class="kv-predel__ciara" d="' + d + '"/></svg>';
+      sek.parentNode.insertBefore(p, sek);
+      const c = p.querySelector('.kv-predel__ciara');
+      const dlzka = c.getTotalLength();
+      c.style.transition = 'none';
+      c.style.strokeDasharray = dlzka + 'px';
+      c.style.strokeDashoffset = dlzka + 'px';
+      c.getBoundingClientRect();
+      window.setTimeout(() => { c.style.transition = ''; }, 60);
+      io.observe(p);
+    });
+  }
+
   /* --- 2 · posuvná lišta -------------------------------------------------- */
 
   function initRail(root) {
@@ -892,7 +936,7 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect, initPredely]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
