@@ -74,7 +74,7 @@
       /* Odkrytie sa spustí, len čo prvok vojde spodnou hranou do okna.
          Skôr by pohyb prebehol mimo obrazovky, neskôr by sa začínal až
          v strede — a to zadávateľ vytkol. */
-      { rootMargin: '0px 0px -14% 0px', threshold: 0 }
+      { rootMargin: '0px 0px 14% 0px', threshold: 0 }
     );
 
     items.forEach((el) => { io.observe(el); ioVon.observe(el); });
