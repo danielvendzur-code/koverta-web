@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260236883">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260689658">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -25,6 +25,34 @@
   }
 </style>
 <style>
+  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
+     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
+     funguje aj bez skriptu. */
+  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  @media (min-width: 1000px) {
+    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
+  }
+  .kv-legal__obsah-nadpis {
+    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
+  }
+  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
+  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah a {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
+    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
+    color: #3b4247; text-decoration: none;
+    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
+  }
+  .kv-legal__obsah a::before {
+    content: counter(kvc, decimal-leading-zero);
+    font-size: 1.1rem; font-weight: 700; color: #8a6600;
+    font-variant-numeric: tabular-nums;
+  }
+  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
+  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
   .kv-legal { max-width: 78ch; }
   .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
   .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
@@ -282,9 +310,10 @@
 </section>
 
 <section class="k-band" aria-label="Obchodné podmienky">
-  <div class="k-wrap">
+  <div class="k-wrap kv-legal__mriezka">
+    <nav class="kv-legal__obsah k-rise" aria-label="Obsah dokumentu"><p class="kv-legal__obsah-nadpis">V dokumente</p><ol><li><a href="#cast-1">Článok I</a></li><li><a href="#cast-2">Článok II</a></li><li><a href="#cast-3">Článok III</a></li><li><a href="#cast-4">Článok IV</a></li><li><a href="#cast-5">Článok V</a></li><li><a href="#cast-6">Článok VI</a></li><li><a href="#cast-7">Článok VII</a></li><li><a href="#cast-8">Článok VIII</a></li><li><a href="#cast-9">Článok IX</a></li><li><a href="#cast-10">Článok X</a></li><li><a href="#cast-11">Článok XI</a></li><li><a href="#cast-12">Článok XII</a></li><li><a href="#cast-13">Článok XIII</a></li><li><a href="#cast-14">Článok XIV</a></li><li><a href="#cast-15">Článok XV</a></li><li><a href="#cast-16">Článok XVI</a></li></ol></nav>
     <div class="kv-legal k-rise">
-<h2>Článok I</h2>
+<h2 id="cast-1">Článok I</h2>
 <p><strong>Všeobecné ustanovenia</strong></p>
 <ol>
 <li>Tieto obchodné podmienky upravujú práva a povinnosti zmluvných strán vyplývajúce z uzatvorenia zmluvy o dielo na diaľku medzi objednávateľom a zhotoviteľom, predmetom ktorej je zhotovenie prístrešku, garáže alebo iného projektu podľa požiadaviek zhotoviteľa prostredníctvom web stránky<span> </span><a href="http://www.koverta.sk/">www.koverta.sk</a><span> </span>(ďalej len "web stránka").</li>
@@ -302,7 +331,7 @@
 </li>
 <li>Objednávateľ zaslaním objednávky potvrdzuje, že sa s obchodnými podmienkami dôkladne oboznámil a ich obsahu porozumel.</li>
 </ol>
-<h2>Článok II</h2>
+<h2 id="cast-2">Článok II</h2>
 <p><strong>Vymedzenie pojmov</strong></p>
 <ol>
 <li>
@@ -338,12 +367,12 @@
 <li>
 <strong>Orgánom dozoru</strong><span> </span>je:<br>Slovenská obchodná inšpekcia (SOI)<br>Inšpektorát SOI pre Nitriansky kraj<br>Staničná 9, P. O. BOX 49A, 950 50 Nitra 1<br>Odbor výkonu dozoru<br>tel. č. 037/772 02 16<br>fax č. 037/772 00 24</li>
 </ol>
-<h2>Článok III</h2>
+<h2 id="cast-3">Článok III</h2>
 <p><strong>Charakteristika web stránky</strong></p>
 <ol>
 <li>Web stránka<span> </span><a href="http://www.koverta.sk/">www.koverta.sk</a><span> </span>je elektronická platforma, ktorá umožňuje návštevníkom navrhnúť si a objednať produkty vyrábané zhotoviteľom na zákazku podľa požiadaviek objednávateľa v rámci preddefinovaných špecifikácií.</li>
 </ol>
-<h2>Článok IV</h2>
+<h2 id="cast-4">Článok IV</h2>
 <p><strong>Uzatvorenie zmluvy o dielo</strong></p>
 <ol>
 <li>Zoznam produktov na web stránkach je katalógom produktov bežne vyrábaných zhotoviteľom. Záujemca si môže produkt objednať prostredníctvom web stránky alebo e-mailom.</li>
@@ -363,14 +392,14 @@
 <li>Prijatie objednávky potvrdí zhotoviteľ mailom, ktorého prílohou sú obchodné podmienky, technický výkres a zálohová faktúra.</li>
 <li>Zmluva o dielo sa považuje za uzatvorenú okamihom doručenia potvrdenia o uzatvorení zmluvy, zaslaného elektronickou poštou. Zhotoviteľ nie je povinný uzatvoriť s objednávateľom zmluvu, pokiaľ požiadavky objednávateľa nezodpovedajú ponúkaným parametrom alebo ich z iného dôvodu nie je možné splniť.</li>
 </ol>
-<h2>Článok V</h2>
+<h2 id="cast-5">Článok V</h2>
 <p><strong>Užívateľský účet</strong></p>
 <ol>
 <li>Záujemca si môže vytvoriť na web stránke užívateľský účet vyplnením registračného formulára. Záujemca je povinný pri registrácii uviesť pravdivé a úplné informácie.</li>
 <li>Užívateľský účet obsahuje osobné údaje registrovaného užívateľa a údaje o objednávkach.</li>
 <li>Vytvorenie užívateľského účtu je nepovinné. Záujemca môže vytvoriť a odoslať objednávku aj bez registrácie.</li>
 </ol>
-<h2>Článok VI</h2>
+<h2 id="cast-6">Článok VI</h2>
 <p><strong>Práva a povinnosti zmluvných strán</strong></p>
 <ol>
 <li>Predmetom zmluvy sú práva a povinnosti zmluvných strán.</li>
@@ -393,7 +422,7 @@
 </li>
 <li>Objednávateľ má právo, aby zhotoviteľ vyrobil produkt podľa zvolených parametrov a zabezpečil montáž riadne a včas.</li>
 </ol>
-<h2>Článok VII</h2>
+<h2 id="cast-7">Článok VII</h2>
 <p><strong>Cena za dielo</strong></p>
 <ol>
 <li>Ceny produktov sú zobrazené na týchto webových stránkach. Uvádzané sú s daňou z pridanej hodnoty (DPH), keďže zhotoviteľ je jej platcom.</li>
@@ -411,7 +440,7 @@
 <li>V prípade omeškania objednávateľa so zaplatením ktorejkoľvek časti ceny za dielo, má zhotoviteľ nárok na úrok z omeškania v zákonnej výške za každý aj začatý deň omeškania.</li>
 <li>Aj keď sa dielo nevykonalo, patrí zhotoviteľovi dojednaná cena, ak bol ochotný dielo vykonať a ak mu v tom zabránili okolnosti na strane objednávateľa. Je však povinný dať si započítať to, čo ušetril nevykonaním diela, čo zarobil inak alebo čo úmyselne zameškal zarobiť.</li>
 </ol>
-<h2>Článok VIII</h2>
+<h2 id="cast-8">Článok VIII</h2>
 <p><strong>Platobné podmienky</strong></p>
 <ol>
 <li>Objednávateľ zaplatí cenu za niektorým z nasledovných spôsobov:
@@ -423,7 +452,7 @@
 </ol>
 </li>
 </ol>
-<h2>Článok IX</h2>
+<h2 id="cast-9">Článok IX</h2>
 <p><strong>Zhotovenie a dodanie diela</strong></p>
 <ol>
 <li>Zhotoviteľ sa zaväzuje vyrobiť dielo do 60 dní odo dňa uzatvorenia zmluvy o dielo, t. j. odo dňa pripísania zálohy na bankový účet zhotoviteľa. O zhotovení diela informuje zhotoviteľ objednávateľa oznámením zaslaným mailom.</li>
@@ -443,14 +472,14 @@
 <li>Ak zhotoviteľa zdržali vo vykonávaní diela okolnosti na strane objednávateľa, patrí mu za to primeraná náhrada.</li>
 <li>Vlastnícke právo k dielu prechádza na objednávateľa až úplným zaplatením ceny za dielo, vrátane nákladov na dopravu.</li>
 </ol>
-<h2>Článok X</h2>
+<h2 id="cast-10">Článok X</h2>
 <p><strong>Technické predpoklady pre montáž</strong></p>
 <ol>
 <li>Objednávateľ sa zaväzuje, že ku dňu montáže produktu splní všetky právne predpoklady pre montáž produktu a zabezpečí všetky potrebné povolenia (napr. stavebné povolenie, ohlásenie stavby a pod. )</li>
 <li>Objednávateľ sa zaväzuje, že ku dňu montáže produktu splní technické predpoklady pre montáž produktu, ktoré mu zhotoviteľ zašle e-mailom po uzatvorení zmluvy.</li>
 <li>Pokiaľ objednávateľ nesplní niektorú z uvedených predpokladov pre montáž produktu, zhotoviteľ nie je povinný pristúpiť k montáži v dohodnutý termín. Zhotoviteľ pristúpi k montáži až po odstránení všetkých nedostatkov podľa podmienok uvedených v týchto obchodných podmienkach. Ak objednávateľ ani po upozornení neodstráni nedostatky alebo inak nesplní technické a právne podmienky pre montáž diela, môže zhotoviteľ od zmluvy odstúpiť.</li>
 </ol>
-<h2>Článok XI</h2>
+<h2 id="cast-11">Článok XI</h2>
 <p><strong>Platnosť zmluvy a odstúpenie od zmluvy</strong></p>
 <ol>
 <li>Zmluva sa uzatvára na dobu určitú, a to do riadneho splnenia si povinností oboch zmluvných strán vyplývajúcich zo zmluvy o dielo a týchto obchodných podmienok, ktoré sú jej neoddeliteľnou súčasťou.</li>
@@ -467,7 +496,7 @@
 </ol>
 </li>
 </ol>
-<h2>Článok XII</h2>
+<h2 id="cast-12">Článok XII</h2>
 <p><strong>Riešenie sporov</strong></p>
 <ol>
 <li>Právne vzťahy, ktoré vzniknú medzi objednávateľom a zhotoviteľom v súvislosti s používaním web stránky a uzatvorením zmluvného vzťahu sa riadia právnym poriadkom Slovenskej republiky.</li>
@@ -484,25 +513,25 @@
 <li>Subjekt alternatívneho riešenia sporov ukončí alternatívne riešenie sporu do 90 dní odo dňa jeho začatia. V osobitne zložitých prípadoch môže subjekt alternatívneho riešenia sporov lehotu podľa prvej vety predĺžiť o 30 dní, a to aj opakovane. Subjekt alternatívneho riešenia sporov je povinný o každom predĺžení lehoty podľa druhej vety bezodkladne informovať strany sporu spolu s uvedením dôvodu predĺženia lehoty.</li>
 <li>Ak medzi stranami sporu nedôjde k uzavretiu dohody a subjekt alternatívneho riešenia sporov na základe skutočností, ktoré zistí pri alternatívnom riešení sporu, dospeje k odôvodnenému záveru, že predávajúci porušil práva spotrebiteľa podľa predpisov na ochranu práv spotrebiteľa, ukončí alternatívne riešenie sporu vydaním nezáväzného odôvodneného stanoviska.</li>
 </ol>
-<h2>Článok XIII</h2>
+<h2 id="cast-13">Článok XIII</h2>
 <p><strong>Zodpovednosť predávajúceho za vady a reklamačné podmienky</strong></p>
 <ol>
 <li>Zodpovednosť predávajúceho za vady a podmienky uplatnenia a vybavenia reklamácie sa riadia príslušnými ustanoveniami reklamačného poriadku prijatého zhotoviteľom a zverejnenom na web stránke<span> </span><a href="http://www.koverta.sk/">www.koverta.sk</a>.</li>
 </ol>
-<h2>Článok XIV</h2>
+<h2 id="cast-14">Článok XIV</h2>
 <p><strong>Autorské práva</strong></p>
 <ol>
 <li>Vlastníkom týchto web stránok a všetkého obsahu, ktorý sa na nej nachádza, je zhotoviteľ, pričom tento je chránený na základe zákona č. 185/2015 Z. z. autorský zákon v znení neskorších právnych predpisov.</li>
 <li>Každé použitie obsahu, najmä vytvorenie rozmnoženiny, jeho verejné rozširovanie, spracovanie, preklad a adaptácia, verejné vystavenie, vykonanie alebo prenos, je bez predchádzajúceho súhlasu prevádzkovateľa ako autora zakázané.</li>
 <li>Obsah zverejnený na web stránkach je voľne prístupný pre návštevníkov, ktorí ho môžu použiť výhradne na súkromné účely v súlade s týmito obchodnými podmienkami. Každé použitie zverejneného obsahu, najmä vytvorenie rozmnoženiny, jeho verejné rozširovanie, spracovanie, preklad a adaptácia, verejné vystavenie, vykonanie alebo prenos, si vyžaduje súhlas prevádzkovateľa. Bez predchádzajúceho písomného súhlasu prevádzkovateľa je použitie diela na iné ako vymedzené účely zakázané.</li>
 </ol>
-<h2>Článok XV</h2>
+<h2 id="cast-15">Článok XV</h2>
 <p><strong>Ochrana osobných údajov</strong></p>
 <ol>
 <li>Osobné údaje objednávateľ spracúva zhotoviteľ v súlade s Nariadením Európskeho parlamentu a rady č. 2016/679 o ochrane fyzických osôb pri spracúvaní osobných údajov a o voľnom pohybe takýchto údajov (ďalej len „GDPR“) a zákonom č. 18/2018 Z. z. o ochrane osobných údajov (ďalej len „zákon o OOU“).</li>
 <li>Podmienky spracúvania osobných údajov prevádzkovateľom sú špecifikované na tejto web stránke v sekcii Ochrana osobných údajov.</li>
 </ol>
-<h2>Článok XVI</h2>
+<h2 id="cast-16">Článok XVI</h2>
 <p><strong>Záverečné ustanovenia</strong></p>
 <ol>
 <li>Tieto obchodné podmienky platia v znení uvedenom na web stránke v deň odoslania objednávky, pokiaľ sa zmluvné strany nedohodnú inak.</li>
@@ -581,7 +610,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788260158936"></script>
+<script src="../assets/koverta-2026.js?v=1788260617537"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

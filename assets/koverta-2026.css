@@ -4547,40 +4547,53 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 .kh-proc__media.is-swapping img { opacity: 0; transform: scale(1.04); }
 
-/* --- 4 · Vlnitý ukazovateľ postupu stránkou ------------------------------
-   Pás cez celú šírku hore. Sivá vlna je dráha, jantárová sa dopĺňa podľa
-   toho, ako ďaleko je človek na stránke. Vlna sa pomaly posúva do strany,
-   takže ukazovateľ nepôsobí ako mŕtvy pruh — rovná čiara je presne to, čo
-   má každý druhý web. */
-.kv-postup-pas {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 90;
-  height: 9px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 420ms var(--k-ease);
+/* --- 4 · Naša ponuka: karta sa otvorí, nie iba nabehne -------------------
+   Sekcia mala rovnaký nábeh ako všetko ostatné, takže hlavná ponuka webu
+   nemala vlastný okamih. Fotka sa odkryje maskou zdola a zároveň dosadne zo
+   zväčšenia, štítky s rozmermi prídu po nej jeden po druhom a jantárová
+   linka pod názvom sa dokreslí zľava. Karty idú za sebou podľa stĺpca. */
+.kh-cat__item .kh-cat__media { overflow: hidden; }
+.k-js .kh-cat__item .kh-cat__media img {
+  clip-path: inset(0 0 100% 0);
+  transform: scale(1.08);
 }
-.kv-postup-pas.is-zapnuty { opacity: 1; }
-.kv-postup-pas svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.kv-postup-pas path {
-  fill: none;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
+.kh-cat__item .kh-cat__media img {
+  transition: clip-path 1100ms var(--k-ease-out), transform 1700ms var(--k-ease-out);
 }
-.kv-postup-pas__stopa { stroke: rgba(18, 23, 26, 0.14); stroke-width: 2; }
-.kv-postup-pas__ciara {
-  stroke: var(--k-amber);
-  stroke-width: 3.5;
-  transition: stroke-dashoffset 240ms linear;
-  filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.55));
+.k-js .kh-cat__item.is-in .kh-cat__media img {
+  clip-path: inset(0 0 0 0);
+  transform: none;
 }
-/* Vlna sa posúva o jednu svoju periódu a opakuje sa — pohyb je plynulý,
-   nikde nepreskočí. */
-.kv-postup-pas svg { animation: kvVlna 9s linear infinite; }
-@keyframes kvVlna {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-46.153px); }
+
+/* Názov kategórie dostane jantárovú linku, ktorá sa dokreslí zľava. */
+.kh-cat__body .k-h3 { position: relative; display: inline-block; padding-bottom: 6px; }
+.kh-cat__body .k-h3::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 760ms var(--k-ease-out) 420ms;
+}
+.kh-cat__item.is-in .kh-cat__body .k-h3::after { transform: scaleX(1); }
+
+/* Štítky s rozmermi prichádzajú po fotke, jeden po druhom. */
+.k-js .kh-cat__specs li { transform: translateY(8px); opacity: 0; }
+.kh-cat__specs li {
+  transition: transform 620ms var(--k-ease-out), opacity 520ms var(--k-ease);
+}
+.kh-cat__item.is-in .kh-cat__specs li { transform: none; opacity: 1; }
+.kh-cat__item.is-in .kh-cat__specs li:nth-child(1) { transition-delay: 520ms; }
+.kh-cat__item.is-in .kh-cat__specs li:nth-child(2) { transition-delay: 620ms; }
+.kh-cat__item.is-in .kh-cat__specs li:nth-child(3) { transition-delay: 720ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-js .kh-cat__item .kh-cat__media img { clip-path: none; transform: none; }
+  .k-js .kh-cat__specs li { transform: none; opacity: 1; }
+  .kh-cat__body .k-h3::after { transform: scaleX(1); transition: none; }
 }
 
 /* --- 4b · Kroky sa nesmú prepínať pod rukami -----------------------------
@@ -4600,8 +4613,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kv-postup-pas svg { animation: none; }
-  .kv-postup-pas__ciara { transition: none; }
   .kh-proc__media img { transition: none; }
   .kh-proc__draha { display: none; }
 }

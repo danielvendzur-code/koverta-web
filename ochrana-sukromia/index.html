@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260236883">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260689658">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -25,6 +25,34 @@
   }
 </style>
 <style>
+  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
+     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
+     funguje aj bez skriptu. */
+  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  @media (min-width: 1000px) {
+    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
+  }
+  .kv-legal__obsah-nadpis {
+    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
+  }
+  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
+  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah a {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
+    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
+    color: #3b4247; text-decoration: none;
+    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
+  }
+  .kv-legal__obsah a::before {
+    content: counter(kvc, decimal-leading-zero);
+    font-size: 1.1rem; font-weight: 700; color: #8a6600;
+    font-variant-numeric: tabular-nums;
+  }
+  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
+  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
   .kv-legal { max-width: 78ch; }
   .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
   .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
@@ -282,14 +310,15 @@
 </section>
 
 <section class="k-band" aria-label="Ako spracúvame osobné údaje">
-  <div class="k-wrap">
+  <div class="k-wrap kv-legal__mriezka">
+    <nav class="kv-legal__obsah k-rise" aria-label="Obsah dokumentu"><p class="kv-legal__obsah-nadpis">V dokumente</p><ol><li><a href="#cast-1">Naše údaje</a></li><li><a href="#cast-2">Kategórie osobných údajov, účel, právny základ a obdobie</a></li><li><a href="#cast-3">Osoby mladšie ako 16 rokov</a></li><li><a href="#cast-4">Príjemcovia</a></li><li><a href="#cast-5">Tretie krajiny</a></li><li><a href="#cast-6">Sťažnosť</a></li><li><a href="#cast-7">Spôsob spracúvania osobných údajov</a></li><li><a href="#cast-8">Práva dotknutých osôb</a></li><li><a href="#cast-9">Záverečné ustanovenia</a></li></ol></nav>
     <div class="kv-legal k-rise">
 <div class="rte">
         <p>Osobné údaje spracúvame v súlade s Nariadením Európskeho parlamentu a rady č. 2016/679 o ochrane fyzických osôb pri spracúvaní osobných údajov a o voľnom pohybe takýchto údajov (ďalej len „GDPR“) a zákonom č. 18/2018 Z. z. o ochrane osobných údajov (ďalej len „zákon o OOU“). Bezpečnosť osobných údajov a ich spracúvanie zákonným spôsobom je pre nás prvoradé. Tu sa dozviete, ako vaše osobné údaje spracúvame a ako dosiahneme ich bezpečnosť.</p>
-<h2>Naše údaje</h2>
+<h2 id="cast-1">Naše údaje</h2>
 <p><strong>Kto spracúva vaše osobné údaje?</strong></p>
 <p>Obchodné meno: Venaco s. r. o.<br>Registrácia: Obchodný register Okresného súdu Nitra, odd. Sro, vl. č. 27111/N<br>Sídlo: J. C. Hronského 3427/6, Nitra 949 07<br>IČO: 45 648 107<br>Zast.: Roman Vendžúr, konateľ<br>tel.č.: +421 948 482 266<br>e-mail: roman.vendzur@koverta.sk<br>(ďalej len „prevádzkovateľ“).<br></p>
-<h2>Kategórie osobných údajov, účel, právny základ a obdobie</h2>
+<h2 id="cast-2">Kategórie osobných údajov, účel, právny základ a obdobie</h2>
 <p><strong>Aké osobné údaje spracúvame, na aký účel, na akom právnom základe a na aké obdobie?</strong></p>
 <p>Spracúvame len tie osobné údaje, ktoré nevyhnutne potrebujeme na dosiahnutie stanoveného účelu.<br>Osobné údaje spracúvame na tieto účely:</p>
 <ul>
@@ -306,10 +335,10 @@
 <li>
 <strong>Správa sociálnych sietí</strong><br>Osobné údaje fanúšikov našich oficiálnych stránok na sociálnych sieťach spracúvame na účely správy sociálnych sietí. Právnym základom na spracúvanie osobných údajov je oprávnený záujem, ktorým je prezentácia prevádzkovateľa a jeho služieb prostredníctvom sociálnych sietí. Osobné údaje spracovávame po celý čas, kým ste fanúšikom našej stránky.</li>
 </ul>
-<h2>Osoby mladšie ako 16 rokov</h2>
+<h2 id="cast-3">Osoby mladšie ako 16 rokov</h2>
 <p><strong>Máte menej ako 16 rokov?</strong></p>
 <p>Ponuka tovarov a služieb na tejto webovej stránke nie je určená pre osoby mladšie ako 16 rokov. Pokiaľ spracúvame osobné údaje v súvislosti so službami informačnej bezpečnosti na základe vášho súhlasu, tento súhlas nám môžete poskytnúť, len ak ste dovŕšili 16 rokov. Osobné údaje osôb mladších ako 16 rokov nespracúvame.</p>
-<h2>Príjemcovia</h2>
+<h2 id="cast-4">Príjemcovia</h2>
 <p><strong>Komu poskytujeme Vaše osobné údaje?</strong></p>
 <p>Osobné údaje poskytujeme tretej osobe, len ak nám to vyplýva z osobitného zákona alebo je to nevyhnutné na plnenie zmluvy.<br>Ide najmä o orgány verejnej správy a iné oprávnené subjekty.<br>Vaše osobné údaje môžu byť poskytnuté tretej osobe za účelom dopravy alebo zabezpečenia montáže.<br>Vaše osobné údaje ďalej poskytujeme sprostredkovateľom, ktorí nám dodávajú odborné a špecializované služby.<br>S každým sprostredkovateľom sme uzatvorili zmluvu o spracúvaní osobných údajov a zaviazali ich mlčanlivosťou.<br>Spracúvaním osobných údajov sme poverili:<br></p>
 <ul>
@@ -317,16 +346,16 @@
 <li>online fakturačný systém (<a href="https://www.superfaktura.sk/ochrana-sukromia">SuperFaktúra</a>)</li>
 <li>online systém pre správu internetového obchodu (<a href="https://www.shopify.com/legal/privacy/customers">Shopify</a>)</li>
 </ul>
-<h2>Tretie krajiny</h2>
+<h2 id="cast-5">Tretie krajiny</h2>
 <p><strong>Kam prenášame vaše osobné údaje?</strong></p>
 <p>Osobné údaje prenášame do tretích krajín - USA alebo Kanada, v súvislosti s prevádzkou internetového obchodu. Uvedené krajiny poskytujú primerané záruky za bezpečnosť vašich osobných údajov.</p>
-<h2>Sťažnosť</h2>
+<h2 id="cast-6">Sťažnosť</h2>
 <p><strong>Nie ste spokojný?</strong></p>
 <p>Ak nie ste spokojný s tým, ako spracúvame vaše osobné údaje, môžete nám dať o tom vedieť na email<span> </span><a href="mailto:pdo@koverta.sk">pdo@koverta.sk</a>.<br>Tiež máte možnosť podať sťažnosť na Úrad na ochranu osobných údajov, ak si myslíte, že vaše osobné údaje spracúvame nezákonne.<br><br>Úrad na ochranu osobných údajov<br>Hraničná 12, 820 07 Bratislava<br>Email: statny.dozor@pdp.gov.sk<br></p>
-<h2>Spôsob spracúvania osobných údajov</h2>
+<h2 id="cast-7">Spôsob spracúvania osobných údajov</h2>
 <p><strong>Ako spracúvame vaše osobné údaje?</strong></p>
 <p>Osobné údaje spracúvame v elektronickej a listinnej forme.<br>Nevyužívame žiadne prostriedky automatizovaného individuálneho rozhodovania.<br>Vedieme záznamy o všetkých spracovateľských činnostiach a máme zavedené potrebné technické a organizačné bezpečnostné opatrenia na zabezpečenie ochrany osobných údajov. Tieto opatrenia zahŕňajú najmä antivírusové programy, politiku silných hesiel a šifrovanie. Zverené osobné údaje pravidelne zálohujeme, aby sme ich mohli v prípade náhodného poškodenia alebo straty ihneď obnoviť. Osoby, ktoré spracúvajú osobné údaje, boli poučené a zaviazané mlčanlivosťou. K výberu sprostredkovateľov pristupujeme veľmi zodpovedne, pričom dbáme na to, aby vybraný sprostredkovateľ nám poskytol primerané záruky za bezpečnosť vašich osobných údajov.</p>
-<h2>Práva dotknutých osôb</h2>
+<h2 id="cast-8">Práva dotknutých osôb</h2>
 <p><strong>Aké máte ako dotknutá osoba práva?</strong></p>
 <p>GDPR Vám priznáva určité práva, ktorými môžete ovplyvniť, ako spracúvame vaše osobné údaje. Nie všetky práva však môžete uplatniť za každých okolností. Treba pritom vychádzať z právneho základu spracúvania osobných údajov.</p>
 <ul>
@@ -359,7 +388,7 @@
 <li>
 <strong>Právo namietať</strong><br>V prípadoch, keď vaše osobné údaje spracúvame na právnom základe oprávneného záujmu, máte právo namietať proti ich spracovávaniu. Pokiaľ nepreukážeme, že existuje vážny oprávnený dôvod na ich spracúvanie, ktorý prevažuje nad vašimi záujmami alebo právami, spracúvanie osobných údajov sa na základe vašej námietky bez zbytočného odkladu ukončí.<br>Vašu žiadosť, ktorou uplatňujete niektoré z uvedených práv, nám môžete poslať emailom alebo poštou na adresu uvedenú vyššie. Všetkými vašimi žiadosťami sa budeme zaoberať a o výsledku jej vybavenia vás budeme informovať rovnakým spôsobom, akým podáte žiadosť.</li>
 </ul>
-<h2>Záverečné ustanovenia</h2>
+<h2 id="cast-9">Záverečné ustanovenia</h2>
 <p>Tieto zásady ochrany osobných údajov nadobúdajú platnosť dňom ich zverejnenia. Vyhradzujeme si právo tieto zásady zmeniť, ak dôjde k zmene spracúvania osobných údajov v našej spoločnosti.</p>
 
 <h2 class="small--text-center"></h2>
@@ -433,7 +462,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788260158936"></script>
+<script src="../assets/koverta-2026.js?v=1788260617537"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

@@ -29,13 +29,19 @@
     }
 
     let ozvalSa = false;
+    const REZERVA = 90;   // px za hranou okna, kde sa ešte nič neskrýva
     const io = new IntersectionObserver(
       (entries) => {
         ozvalSa = true;
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-in');
-          io.unobserve(entry.target);
+          if (entry.isIntersecting) { entry.target.classList.add('is-in'); return; }
+          /* Prvok sa znovu skryje, len keď je celý mimo okna aj s rezervou —
+             inak by na hrane blikal. Pri návrate sa odkryje znovu, takže
+             pohyb je vidieť aj pri scrollovaní hore. */
+          const r = entry.boundingClientRect;
+          if (r.top > window.innerHeight + REZERVA || r.bottom < -REZERVA) {
+            entry.target.classList.remove('is-in');
+          }
         });
       },
       // Prvok sa odkrýva ešte pred vstupom do okna (12 % pod hranou), aby
@@ -59,71 +65,13 @@
        naozaj v okne. Keby observer vypadol až neskôr, obsah aj tak nikdy
        neostane schovaný — a nič sa neodkryje skôr, než to má prísť na rad. */
     const dokryLenViditelne = () => {
-      let zostava = 0;
+      if (ozvalSa) return;              // observer beží, netreba doňho zasahovať
       items.forEach((el) => {
-        if (el.classList.contains('is-in')) return;
-        zostava += 1;
         const r = el.getBoundingClientRect();
         if (r.top < window.innerHeight * 0.94 && r.bottom > 0) el.classList.add('is-in');
       });
-      if (!zostava) window.removeEventListener('scroll', dokryLenViditelne);
     };
     window.addEventListener('scroll', dokryLenViditelne, { passive: true });
-  }
-
-  /* --- 1b · vlnitý ukazovateľ postupu stránkou ---------------------------
-     Pás cez celú šírku hore. Sivá vlna je dráha, jantárová sa dokresľuje
-     podľa toho, ako ďaleko je človek na stránke. Vlna sa navyše pomaly
-     vlní sama — nie preto, aby na seba upozorňovala, ale aby ukazovateľ
-     nepôsobil ako mŕtvy pruh. Rovná čiara je to, čo má každý druhý web. */
-  function initPostup(root) {
-    if (document.querySelector('.kv-postup-pas')) return;
-    if (REDUCED.matches) return;
-
-    const V = 40;                     // výška v súradniciach krivky
-    const SIRKA = 1200;               // šírka v súradniciach krivky
-    const vln = 26;
-    const amp = 9;
-    let d = 'M 0 ' + (V / 2);
-    for (let i = 0; i < vln; i += 1) {
-      const k = SIRKA / vln;
-      const smer = i % 2 === 0 ? -amp : amp;
-      d += ' q ' + (k / 2) + ' ' + smer + ' ' + k + ' 0';
-    }
-
-    const pas = document.createElement('div');
-    pas.className = 'kv-postup-pas';
-    pas.setAttribute('aria-hidden', 'true');
-    pas.innerHTML = '<svg viewBox="0 0 ' + SIRKA + ' ' + V + '" preserveAspectRatio="none" focusable="false">' +
-      '<path class="kv-postup-pas__stopa" d="' + d + '"/>' +
-      '<path class="kv-postup-pas__ciara" d="' + d + '"/></svg>';
-    document.body.appendChild(pas);
-
-    const ciara = pas.querySelector('.kv-postup-pas__ciara');
-    const dlzka = ciara.getTotalLength();
-    ciara.style.transition = 'none';
-    ciara.style.strokeDasharray = dlzka + 'px';
-    ciara.style.strokeDashoffset = dlzka + 'px';
-    ciara.getBoundingClientRect();
-    window.setTimeout(() => { ciara.style.transition = ''; }, 60);
-
-    let caka = false;
-    const prepocitaj = () => {
-      if (caka) return;
-      caka = true;
-      const dokresli = () => {
-        caka = false;
-        const cele = document.documentElement.scrollHeight - window.innerHeight;
-        const podiel = cele > 0 ? Math.max(0, Math.min(1, window.scrollY / cele)) : 0;
-        ciara.style.strokeDashoffset = (dlzka * (1 - podiel)) + 'px';
-        pas.classList.toggle('is-zapnuty', window.scrollY > 40);
-      };
-      if (window.requestAnimationFrame) window.requestAnimationFrame(dokresli);
-      else window.setTimeout(dokresli, 16);
-    };
-    window.addEventListener('scroll', prepocitaj, { passive: true });
-    window.addEventListener('resize', prepocitaj);
-    prepocitaj();
   }
 
   /* --- 2 · posuvná lišta -------------------------------------------------- */
@@ -939,7 +887,7 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect, initPostup]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

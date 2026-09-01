@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260236883">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788260689658">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -25,6 +25,34 @@
   }
 </style>
 <style>
+  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
+     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
+     funguje aj bez skriptu. */
+  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  @media (min-width: 1000px) {
+    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
+  }
+  .kv-legal__obsah-nadpis {
+    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
+  }
+  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
+  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah a {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
+    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
+    color: #3b4247; text-decoration: none;
+    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
+  }
+  .kv-legal__obsah a::before {
+    content: counter(kvc, decimal-leading-zero);
+    font-size: 1.1rem; font-weight: 700; color: #8a6600;
+    font-variant-numeric: tabular-nums;
+  }
+  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
+  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
   .kv-legal { max-width: 78ch; }
   .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
   .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
@@ -282,11 +310,12 @@
 </section>
 
 <section class="k-band" aria-label="Reklamačný poriadok">
-  <div class="k-wrap">
+  <div class="k-wrap kv-legal__mriezka">
+    <nav class="kv-legal__obsah k-rise" aria-label="Obsah dokumentu"><p class="kv-legal__obsah-nadpis">V dokumente</p><ol><li><a href="#cast-1">Článok I</a></li><li><a href="#cast-2">Článok II</a></li><li><a href="#cast-3">Článok III</a></li><li><a href="#cast-4">Článok IV</a></li><li><a href="#cast-5">Článok V</a></li><li><a href="#cast-6">Článok IV</a></li></ol></nav>
     <div class="kv-legal k-rise">
 <div class="rte">
         
-<h2>Článok I</h2>
+<h2 id="cast-1">Článok I</h2>
 <p><strong>Úvodné ustanovenia</strong></p>
 <ol>
 <li>Tento reklamačný poriadok upravuje spôsob a miesto reklamácie, postup pri riešení reklamácií a spôsob vykonania záručných opráv.</li>
@@ -294,7 +323,7 @@
 <li>Tento reklamačný poriadok sa vzťahuje na produkt zhotovený zhotoviteľom:<br>Obchodné meno: Venaco s. r. o.<br>Registrácia: Obchodný register Okresného súdu Nitra, odd. Sro, vl. č. 27111/N<br>Sídlo: J. C. Hronského 3427/6, Nitra 949 07<br>IČO: 45 648 107<br>Zast.: Roman Vendžúr, konateľ<br>tel.č.: +421 948 482 266<br>e-mail: roman.vendzur@koverta.sk<br>(ďalej len "zhotoviteľ").</li>
 <li>Uzatvorením zmluvy o dielo objednávateľ prejavuje súhlas s obchodnými podmienkami a týmto reklamačným poriadkom.</li>
 </ol>
-<h2>Článok II</h2>
+<h2 id="cast-2">Článok II</h2>
 <p><strong>Zodpovednosť za vady</strong></p>
 <ol>
 <li>Zhotoviteľ zodpovedá objednávateľovi za to, že zhotovený produkt je v zhode so zmluvou o dielo, najmä, že je bez vád. Zhodou so zmluvou o dielo sa rozumie, že zhotovený produkt má akosť a úžitkové vlastnosti uvádzané zhotoviteľom, prípadne akosť a úžitkové vlastnosti pre vec takého druhu obvyklé, že zodpovedá požiadavkám právnych predpisov ku dňu dodania a zodpovedá účelu, ktorý zhotoviteľ na použitie produktu uvádza alebo pre ktorý sa produkt obvykle používa.</li>
@@ -313,7 +342,7 @@
 </ul>
 </li>
 </ol>
-<h2>Článok III</h2>
+<h2 id="cast-3">Článok III</h2>
 <p><strong>Uplatnenie reklamácie</strong></p>
 <ol>
 <li>Objednávateľ môže uplatniť reklamáciu jednou z nasledovných možností:
@@ -334,7 +363,7 @@
 </li>
 <li>Po prijatí reklamácie si zmluvné strany dohodnú termín obhliadky a prípadnej demontáži veci zhotoviteľom.</li>
 </ol>
-<h2>Článok IV</h2>
+<h2 id="cast-4">Článok IV</h2>
 <p><strong>Nároky z uplatnenej reklamácie</strong></p>
 <ol>
 <li>Ak ide o vadu, ktorú možno odstrániť, je objednávateľ oprávnený požadovať bezplatné odstránenie vady. Zhotoviteľ je povinný odstrániť vadu bez zbytočného odkladu.</li>
@@ -342,7 +371,7 @@
 <li>Práva zo zodpovednosti za vady sa musia uplatniť u zhotoviteľa v záručnej dobe; inak práva zaniknú. Čas od uplatnenia práva zo záruky až do vykonania opravy sa do záručnej doby nepočíta. Zhotoviteľ je povinný vydať objednávateľovi potvrdenie o tom, kedy právo uplatnil, ako aj o vykonaní opravy a čase jej trvania.</li>
 <li>Nároky z reklamácie uplatnenej objednávateľom, ktorý nie je spotrebiteľom, sa riadia podľa príslušných ustanovení Obchodného zákonníka.</li>
 </ol>
-<h2>Článok V</h2>
+<h2 id="cast-5">Článok V</h2>
 <p><strong>Vybavenie reklamácie spotrebiteľa</strong></p>
 <ol>
 <li>Ak je reklamácia uplatnená prostredníctvom prostriedkov diaľkovej komunikácie, zhotoviteľ je povinný potvrdenie o prijatí (uplatnení) reklamácie doručiť objednávateľovi ihneď; ak nie je možné potvrdenie doručiť ihneď, musí sa doručiť bez zbytočného odkladu, najneskôr však spolu s dokladom o vybavení reklamácie; potvrdenie o uplatnení reklamácie sa nemusí doručovať, ak kupujúci má možnosť preukázať uplatnenie reklamácie iným spôsobom.</li>
@@ -354,7 +383,7 @@
 <li>Spotrebiteľ má právo na úhradu nákladov (najmä poštovného), ktoré mu vznikli v súvislosti s uplatnením oprávnených práv zo zodpovednosti za vady a boli vynaložené skutočne a účelne.</li>
 <li>Vybavenie reklamácie objednávateľa, ktorý nie je spotrebiteľom, sa riadia podľa príslušných ustanovení Obchodného zákonníka.</li>
 </ol>
-<h2>Článok IV</h2>
+<h2 id="cast-6">Článok IV</h2>
 <p><strong>Záverečné ustanovenia</strong></p>
 <ol>
 <li>Tento reklamačný poriadok je vypracovaný advokátskou kanceláriou Lanikova Group, s.r.o. pre prevádzkovateľa tejto web stránky, pričom je chránený v zmysle zákona 185/2015 Z. z. Autorský zákon v znení neskorších právnych predpisov. Bez súhlasu autora je zakázané toto autorské dielo akýmkoľvek spôsobom použiť, a to najmä, nie však výlučne, kopírovať, zverejňovať, meniť, upravovať, rozširovať a inak zneužívať.</li>
@@ -431,7 +460,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788260158936"></script>
+<script src="../assets/koverta-2026.js?v=1788260617537"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
