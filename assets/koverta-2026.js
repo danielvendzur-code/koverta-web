@@ -943,6 +943,55 @@
     }
   }
 
+  /* --- prehliadka realizácií v recenziách ---------------------------------
+     Rám stojí na mieste a scroll v ňom prehadzuje dvojice: najprv sa usadí
+     fotografia, potom sa k nej vysunie recenzia, ďalšia dvojica prekryje
+     predchádzajúcu zľava. Späť to ide rovnako, len opačne.
+
+     Poloha sa počíta z dráhy pod prilepeným rámom, nie z počtu snímok, takže
+     rýchly scroll pristane na správnom kroku a nič sa nepreskočí. */
+
+  function initParada(root) {
+    const host = root.querySelector('[data-k-parade]');
+    if (!host) return;
+    const stick = host.querySelector('.kh-parade__stick');
+    const pary = Array.prototype.slice.call(host.querySelectorAll('[data-k-pair]'));
+    if (!stick || pary.length < 2) return;
+
+    /* Dva kroky na dvojicu: fotka, potom recenzia. */
+    const krokov = pary.length * 2;
+    let posledny = -1;
+    let caka = false;
+
+    const nastav = (krok) => {
+      if (krok === posledny) return;
+      posledny = krok;
+      const aktivna = Math.min(pary.length - 1, Math.floor(krok / 2));
+      const otvorena = krok % 2 === 1;
+      pary.forEach((p, i) => {
+        p.classList.toggle('is-live', i <= aktivna);
+        /* Dvojica, ktorú už prekryla ďalšia, ostáva otvorená — je pod ňou,
+           takže ju nikto nevidí, ale pri návrate hore je hneď na mieste. */
+        p.classList.toggle('is-open', i < aktivna || (i === aktivna && otvorena));
+      });
+    };
+
+    const prepocitaj = () => {
+      caka = false;
+      const draha = host.offsetHeight - stick.offsetHeight;
+      if (draha <= 0) { nastav(krokov - 1); return; }
+      const kam = -host.getBoundingClientRect().top;
+      const podiel = Math.min(0.9999, Math.max(0, kam / draha));
+      nastav(Math.floor(podiel * krokov));
+    };
+
+    const ozvi = () => { if (caka) return; caka = true; window.requestAnimationFrame(prepocitaj); };
+
+    window.addEventListener('scroll', ozvi, { passive: true });
+    window.addEventListener('resize', ozvi);
+    prepocitaj();
+  }
+
   /* --- štart -------------------------------------------------------------- */
 
   function init(scope) {
@@ -953,7 +1002,8 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect,
+       initParada]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

@@ -5231,6 +5231,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k .kh-proc__step-of,
   .kv-drawer__group p,
   .kv-drawer__head .k-eyebrow,
+  .kh-cta__row small,
   .kh-rev__award span { font-size: 12.5px; }
 
   /* Filtre realizácií mali 37 px; palec potrebuje 44. */
@@ -5255,4 +5256,166 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   /* Sekcie stáli na 44 px odsadenia zhora aj zdola bez ohľadu na šírku;
      na telefóne je to cez dvanásť sekcií zbytočná dĺžka. */
   .k-band { padding-block: clamp(38px, 8vw, 60px); }
+}
+
+
+/* --- 23 · Fotka realizácie, potom recenzia --------------------------------
+   Referencie mali doteraz jednu podobu: číslo 5,0 a lišta citátov. Číslo si
+   človek prečíta a ide ďalej — nevidel ani jednu stavbu. Prehliadka dáva
+   fotografii chvíľu samú pre seba a až potom k nej pribudne to, čo o práci
+   niekto napísal. Rám sa nedvíha ani nemení veľkosť; mení sa len to, čo je
+   v ňom, takže sekcia narastie o dráhu, nie o ďalšiu kopu obsahu.
+
+   Bez skriptu aj pri vypnutom pohybe je z toho obyčajný zoznam troch
+   dvojíc pod sebou — text sa nikdy neskrýva. */
+
+.kh-parade { position: relative; margin-top: clamp(28px, 3vw, 48px); }
+
+.kh-parade__label {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.kh-parade__label span + span::before {
+  content: ""; display: inline-block; width: 4px; height: 4px; margin-right: 10px;
+  border-radius: 50%; background: var(--k-amber); vertical-align: middle;
+}
+
+.kh-parade__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--k-r-md);
+  background: var(--k-ink);
+}
+
+.kh-parade__pair { position: relative; margin: 0; }
+.kh-parade__shot { display: block; position: relative; overflow: hidden; }
+.kh-parade__shot img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* Fotka sa pomaly usadí zo zväčšenia — to je ten okamih, ktorý má mať
+     sama pre seba, kým príde recenzia. */
+  transform: scale(1.075);
+  transition: transform 2200ms var(--k-ease-out);
+}
+
+/* Čo na fotke je. Popis stavby, nie meno človeka — dvojica netvrdí, komu
+   táto stavba patrí. */
+.kh-parade__what {
+  position: absolute; left: 16px; top: 16px; z-index: 3;
+  padding: 7px 13px;
+  border-radius: var(--k-r-pill);
+  background: rgba(12, 16, 18, 0.62);
+  backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff; font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em;
+}
+
+.kh-parade__say {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: clamp(18px, 2vw, 26px);
+  color: #fff;
+  background: var(--k-ink);
+}
+.kh-parade__say .k-stars svg { width: 15px; height: 15px; }
+.kh-parade__quote {
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.45vw, 21px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: #fff;
+  max-width: 34ch;
+}
+.kh-parade__who { display: flex; align-items: center; gap: 11px; margin-top: auto; }
+.kh-parade__avatar {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; flex: 0 0 34px;
+  border-radius: 50%;
+  background: var(--k-amber); color: var(--k-ink);
+  font-family: var(--k-head); font-size: 15px; font-weight: 700;
+}
+.kh-parade__name { display: grid; gap: 1px; }
+.kh-parade__name strong { font-size: 14.5px; }
+.kh-parade__name small { font-size: 12.5px; color: rgba(255, 255, 255, 0.62); }
+
+/* --- so skriptom: rám stojí, dvojice sa v ňom striedajú ----------------- */
+
+.k-js .kh-parade {
+  /* Výška rámu a dráha na jeden krok. Krokov je dvakrát toľko čo dvojíc:
+     najprv sa usadí fotka, potom sa vysunie recenzia. Dráha na krok je
+     zámerne veľká — pri krokoch postupu sa ukázalo, že 120 px na zmenu je
+     tak málo, že sa obsah vymení skôr, než ho stihne niekto zaregistrovať. */
+  --ram: min(54svh, 420px);
+  --krok: 175px;
+  height: calc(var(--ram) + 6 * var(--krok));
+}
+.k-js .kh-parade__stick {
+  position: sticky;
+  top: clamp(86px, 12vh, 128px);
+}
+.k-js .kh-parade__frame { height: var(--ram); }
+
+.k-js .kh-parade__pair {
+  position: absolute; inset: 0;
+  /* Ďalšia dvojica prekryje predchádzajúcu zľava doprava. Odkrývanie sa dá
+     prehrať aj opačne, takže scroll hore vráti presne to, čo bolo. */
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 760ms var(--k-ease-out);
+}
+.k-js .kh-parade__pair:first-child { clip-path: inset(0 0 0 0); }
+.k-js .kh-parade__pair.is-live { clip-path: inset(0 0 0 0); }
+.k-js .kh-parade__shot { position: absolute; inset: 0; }
+.k-js .kh-parade__pair.is-live .kh-parade__shot img { transform: none; }
+
+.k-js .kh-parade__say {
+  position: absolute; z-index: 2;
+  inset: auto 0 0 0;
+  /* Na telefóne sa recenzia vysunie zdola, na širokej obrazovke sprava do
+     miesta, ktoré fotka na nej nepotrebuje. Posun je transform, nie šírka,
+     takže sa počas neho nič neprepočítava. */
+  transform: translate3d(0, 101%, 0);
+  background: linear-gradient(to top, rgba(9, 12, 14, 0.96) 0%, rgba(9, 12, 14, 0.86) 68%, rgba(9, 12, 14, 0.72) 100%);
+  backdrop-filter: blur(8px) saturate(1.15);
+  transition: transform 820ms var(--k-ease-out);
+}
+.k-js .kh-parade__pair.is-open .kh-parade__say { transform: none; }
+
+@media (min-width: 900px) {
+  /* Rám cez celú šírku sekcie by bol 1310 x 420 — z fotografie by ostal
+     vodorovný pás. Užší a vyšší rám drží pomer okolo 2,3:1, čo je záber,
+     v ktorom je stavbu vidieť celú. */
+  .k-js .kh-parade { --ram: min(62svh, 500px); }
+  .kh-parade__frame,
+  .kh-parade__label { max-width: 1180px; margin-inline: auto; }
+
+  .k-js .kh-parade__say {
+    inset: 0 0 0 auto;
+    width: min(46%, 480px);
+    justify-content: center;
+    transform: translate3d(101%, 0, 0);
+    /* Posledná zastávka je takmer priehľadná, aby ľavá hrana panela nebola
+       ostrá čiara cez fotku, ale prechod. Text sa jej nedotkne, medzi ním
+       a hranou je odsadenie panela. */
+    background: linear-gradient(to left, rgba(9, 12, 14, 0.97) 0%, rgba(9, 12, 14, 0.94) 66%, rgba(9, 12, 14, 0.72) 88%, rgba(9, 12, 14, 0.28) 100%);
+  }
+  /* Panel je zvislo vycentrovaný, tak meno nesmie odtláčať automatický
+     horný okraj — inak medzi citátom a menom zíva prázdne miesto. */
+  .k-js .kh-parade__who { margin-top: 6px; }
+}
+
+@media (max-width: 899px) {
+  .k-js .kh-parade { --ram: min(56svh, 400px); --krok: 150px; }
+  .kh-parade__quote { max-width: none; }
+}
+
+/* Bez skriptu aj pri vypnutom pohybe: tri dvojice pod sebou, nič skryté. */
+@media (prefers-reduced-motion: reduce) {
+  .k-js .kh-parade { height: auto; }
+  .k-js .kh-parade__stick { position: static; }
+  .k-js .kh-parade__frame { height: auto; }
+  .k-js .kh-parade__pair { position: relative; inset: auto; clip-path: none; }
+  .k-js .kh-parade__shot { position: relative; inset: auto; aspect-ratio: 16 / 10; }
+  .k-js .kh-parade__shot img { transform: none; transition: none; }
+  .k-js .kh-parade__say { position: relative; inset: auto; width: auto; transform: none; }
 }
