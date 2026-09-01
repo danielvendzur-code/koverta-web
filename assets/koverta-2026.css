@@ -4899,3 +4899,65 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kv-predel.is-in .kv-predel__ciara { stroke-dashoffset: 0 !important; }
 
 @media (prefers-reduced-motion: reduce) { .kv-predel { display: none; } }
+
+
+/* --- 10 · Realizácie: popis patrí pod fotku ------------------------------
+   Popisok ležal na fotografii ako dva chipy vedľa seba — názov kategórie sa
+   lámal do dvoch riadkov a narážal do bielej pilulky s opisom. Na tmavších
+   záberoch sa to navyše nedalo prečítať. Teraz stojí pod obrázkom: kategória
+   drobným písmom nad opisom, oddelené vlasovou linkou. */
+.kh-work__item {
+  overflow: visible;
+  background: none;
+  border-radius: 0;
+}
+.kh-work__media {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--k-r-sm, 6px);
+  aspect-ratio: 4 / 3;
+  background: var(--k-bone-deep, #ece9e4);
+}
+.kh-work__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.kh-work__cap {
+  position: static;
+  display: block;
+  inset: auto;
+  padding: 12px 0 0;
+  background: none;
+  border-radius: 0;
+}
+.kh-work__cap strong {
+  display: block;
+  font-family: var(--k-head, inherit);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft, #767676);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.kh-work__cap span {
+  display: block;
+  margin-top: 7px;
+  padding: 7px 0 0;
+  border-top: 1px solid var(--k-hair);
+  background: none !important;
+  border-radius: 0;
+  color: var(--k-ink, #12171a);
+  font-size: 1.45rem;
+  line-height: 1.45;
+  backdrop-filter: none;
+}
+/* Soltec sa odlíši jantárovým názvom kategórie, nie tmavou plochou. */
+.kh-work__cap span.is-premium { color: var(--k-ink, #12171a); }
+.kh-work__item[data-k-brand="soltec"] .kh-work__cap strong { color: var(--k-amber-deep, #8a6600); }
+
+/* Fotka sa pri prejdení myšou jemne priblíži — jediná reakcia, ktorú
+   dlaždica potrebuje. */
+.kh-work__item:hover .kh-work__media img { transform: scale(1.04); }
+.kh-work__media img { transition: transform 900ms var(--k-ease-out); }
