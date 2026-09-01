@@ -4788,3 +4788,90 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 @media (prefers-reduced-motion: reduce) {
   .kh-cat__stitok, .kh-cat__znacky { transform: none; opacity: 1; transition: none; }
 }
+
+
+/* --- 8 · Čo je v cene ----------------------------------------------------
+   Fotografie tu nič nevysvetľovali a škatule z toho spravili formulár.
+   Ostáva to, čo na tomto webe funguje: veľké číslo, jantárová linka pod ním
+   a vlasová čiara medzi stĺpcami. */
+.kh-vcene__rad {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 660px) { .kh-vcene__rad { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .kh-vcene__rad { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.kh-vcene__polozka {
+  position: relative;
+  padding: 26px 30px 26px 0;
+  border-top: 1px solid var(--k-hair);
+}
+@media (min-width: 660px) {
+  .kh-vcene__polozka::before {
+    content: "";
+    position: absolute;
+    left: -18px; top: 26px; bottom: 26px;
+    width: 1px;
+    background: var(--k-hair);
+  }
+  .kh-vcene__polozka:nth-child(odd)::before { display: none; }
+}
+@media (min-width: 1040px) {
+  .kh-vcene__polozka:nth-child(odd)::before { display: block; }
+  .kh-vcene__polozka:nth-child(1)::before { display: none; }
+}
+
+.kh-vcene__cislo {
+  display: block;
+  font-family: var(--k-head, inherit);
+  font-size: clamp(2.6rem, 3.4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink, #12171a);
+}
+.kh-vcene__cislo::after {
+  content: "";
+  display: block;
+  width: 2.2rem;
+  height: 3px;
+  margin-top: 12px;
+  background: var(--k-amber, #FFCC00);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 820ms var(--k-ease-out) 280ms;
+}
+.kh-vcene__polozka.is-in .kh-vcene__cislo::after { transform: scaleX(1); }
+
+.kh-vcene__nazov {
+  margin: 14px 0 10px;
+  font-family: var(--k-head, inherit);
+  font-size: clamp(1.7rem, 1.5vw, 1.95rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--k-ink, #12171a);
+}
+.kh-vcene__body { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+/* Riadky delí vlasová linka, nie odrážka — čitateľ ich číta ako zoznam
+   aj bez značky a nič sa nemusí kresliť. */
+.kh-vcene__body li {
+  padding: 9px 0;
+  border-top: 1px solid var(--k-hair-soft, rgba(18,23,26,.055));
+  font-size: 1.42rem;
+  line-height: 1.55;
+  color: var(--k-grey, #5c5c5c);
+}
+.kh-vcene__body li:first-child { border-top: 0; padding-top: 0; }
+
+/* --- 8b · Odrážky v technickom zozname bez štvorčeka ---------------------
+   Malý jantárový štvorec pôsobil ako predvolená odrážka. Riadok teraz drží
+   pohromade vlasová linka a text má vlastný odstup; značka nie je potrebná. */
+.kh-mat__list li::before { display: none; }
+.kh-mat__list li { padding-left: 0; border-top: 1px solid var(--k-hair-soft, rgba(18,23,26,.055)); }
+.kh-mat__list li:first-child { border-top: 0; }
