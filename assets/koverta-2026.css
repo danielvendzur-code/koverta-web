@@ -4027,35 +4027,30 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k-reveal.is-in .kh-cat__media img,
 .k-reveal.is-in .kh-work__media img { transform: none; }
 
-/* Číslo karty vychádza spod hrany svojho políčka. */
-.kh-mat__num {
-  display: inline-block;
-  clip-path: inset(0 0 0 0);
-}
+/* Obsah sa nikdy neschováva cez `opacity: 0`. Prechod z nuly tu dvakrát zostal
+   visieť a text ostal neviditeľný — a neviditeľný text je horší než žiadna
+   animácia. Preto sa hýbe len posun, ktorý obsah nikdy nezakryje: keď sa
+   prechod nespustí, prvok jednoducho stojí o kúsok nižšie a je čitateľný. */
+.kh-mat__num { display: inline-block; }
 .kh-mat__card .kh-mat__num {
-  transform: translateY(110%);
-  opacity: 0;
-  transition: transform 900ms var(--k-ease-out) 220ms, opacity 700ms var(--k-ease-out) 220ms;
+  transform: translateY(14px);
+  transition: transform 900ms var(--k-ease-out) 220ms;
 }
-.kh-mat__card.is-in .kh-mat__num { transform: none; opacity: 1; }
+.kh-mat__card.is-in .kh-mat__num { transform: none; }
 
-/* Odrážky pod názvom prichádzajú po jednej, nie naraz. */
 .kh-mat__card .kh-mat__list li {
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 560ms var(--k-ease-out), transform 560ms var(--k-ease-out);
+  transform: translateY(7px);
+  transition: transform 620ms var(--k-ease-out);
   transition-delay: calc(320ms + var(--i, 0) * 90ms);
 }
-.kh-mat__card.is-in .kh-mat__list li { opacity: 1; transform: none; }
+.kh-mat__card.is-in .kh-mat__list li { transform: none; }
 
-/* Rozmerové čipy nabehnú vlnou zľava. */
 .kh-size .kh-size__chip {
-  opacity: 0;
-  transform: translateY(10px) scale(.96);
-  transition: opacity 480ms var(--k-ease-out), transform 480ms var(--k-ease-out);
-  transition-delay: calc(var(--i, 0) * 26ms);
+  transform: translateY(9px);
+  transition: transform 520ms var(--k-ease-out), border-color .18s ease, box-shadow .18s ease;
+  transition-delay: calc(var(--i, 0) * 26ms), 0s, 0s;
 }
-.kh-size.is-in .kh-size__chip { opacity: 1; transform: none; }
+.kh-size.is-in .kh-size__chip { transform: none; }
 
 /* Podčiarknutie odkazu sa dokresľuje od začiatku slova. */
 .k .k-link { position: relative; }
@@ -4072,7 +4067,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k-rise .kh-mat__media img, .k-reveal .kh-cat__media img, .k-reveal .kh-work__media img { transform: none; transition: none; }
   .kh-mat__card .kh-mat__num,
   .kh-mat__card .kh-mat__list li,
-  .kh-size .kh-size__chip { opacity: 1; transform: none; transition: none; }
+  .kh-size .kh-size__chip { transform: none; transition: none; }
   .k .k-link::after { display: none; }
 }
 
