@@ -4346,59 +4346,23 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   box-shadow: 0 .9rem 1.8rem -1.1rem rgba(18, 23, 26, .45);
 }
 
-/* --- 3 · Odrážka: šípka, z ktorej sa stane zátvorka z loga -------------
-   V pokoji stojí na riadku šípka. Keď sa karta odkryje, šípka odíde doprava
-   a zľava sa dokreslí jantárová zátvorka — tá istá, ktorá je v logu. Beží
-   po riadkoch za sebou, takže zoznam sa „podpíše" sám.
-
-   Keby skript nikdy nedobehol, ostane šípka. Odrážka je vždy viditeľná. */
+/* --- 3 · Odrážka v technickom zozname --------------------------------
+   Pokojná jantárová značka. Pohyb sa z nej odstránil — zadávateľ ho odmietol
+   a odrážka nie je miesto, kde má web upozorňovať na seba. */
 .kh-mat__list li { position: relative; }
-
 .kh-mat__list li::before {
   content: "";
   position: absolute;
   left: 0;
-  width: 15px;
-  height: 15px;
-  border-radius: 0;
-  background: var(--k-grey);
-  -webkit-mask: var(--k-sipka) no-repeat center / contain;
-          mask: var(--k-sipka) no-repeat center / contain;
-  transition: transform 520ms var(--k-ease-out), opacity 340ms var(--k-ease);
-}
-
-.kh-mat__list li::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 15px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
   background: var(--k-amber);
-  -webkit-mask: var(--k-zatvorka) no-repeat left center / contain;
-          mask: var(--k-zatvorka) no-repeat left center / contain;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 620ms var(--k-ease-out);
+  -webkit-mask: none;
+          mask: none;
+  transition: none;
 }
-
-.kh-mat__card.is-in .kh-mat__list li::before {
-  transform: translateX(10px);
-  opacity: 0;
-  transition-delay: calc(420ms + var(--i, 0) * 110ms);
-}
-.kh-mat__card.is-in .kh-mat__list li::after {
-  clip-path: inset(0);
-  transition-delay: calc(460ms + var(--i, 0) * 110ms);
-}
-
-/* Prejdenie myšou zátvorku na chvíľu roztiahne — drobné potvrdenie, že
-   riadok žije, bez akéhokoľvek prefarbovania. */
-.kh-mat__list li:hover::after { transform: scaleX(1.18); transform-origin: left; }
-.kh-mat__list li::after { transition: clip-path 620ms var(--k-ease-out), transform 320ms var(--k-ease-out); }
-
-@media (prefers-reduced-motion: reduce) {
-  .kh-mat__list li::before { opacity: 0; }
-  .kh-mat__list li::after { clip-path: inset(0); transition: none; }
-}
+.kh-mat__list li::after { content: none; }
 
 
 /* --- 4 · Rozmery s fotografiou -----------------------------------------
@@ -4468,3 +4432,103 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   color: rgba(255, 255, 255, 0.62);
 }
 .kf__firma strong { color: rgba(255, 255, 255, 0.9); font-weight: 600; }
+
+/* ====== POHYB, KTORÝ JE VIDIEŤ ====== */
+
+/* --- 1 · Odkrývanie, ktoré si človek všimne --------------------------------
+   Doteraz to bolo 10 px za 0,42 s. Taký pohyb technicky prebehne, ale oko ho
+   nezachytí — a zadávateľ opakovane hlásil, že web sa nehýbe. Dráha je teraz
+   28 px a trvá 900 ms, s tempom, ktoré na konci spomalí. */
+.k-rise {
+  transition: opacity 900ms var(--k-ease-out), transform 900ms var(--k-ease-out);
+}
+.k-js .k-rise { opacity: 0; transform: translateY(28px); }
+.k-js .k-rise.is-in { opacity: 1; transform: none; }
+
+/* Stupňovanie po stĺpcoch. Karty sa neodkrývajú naraz ako jeden blok —
+   prichádzajú zľava doprava, tak ako ich človek číta. */
+.k [data-k-delay="1"] { transition-delay: 110ms; }
+.k [data-k-delay="2"] { transition-delay: 220ms; }
+.k [data-k-delay="3"] { transition-delay: 330ms; }
+.k [data-k-delay="4"] { transition-delay: 440ms; }
+.k [data-k-delay="5"] { transition-delay: 550ms; }
+
+/* Fotografia sa odkrýva maskou zdola nahor a zároveň dosadá zo zväčšenia.
+   Trvá dlhšie než text, takže sa obraz „usadí" až po tom, čo si prečítate
+   nadpis — to je celý efekt, žiadny parallax. */
+.k-js .k-reveal img { clip-path: inset(0 0 100% 0); transform: scale(1.06); }
+.k-reveal img { transition: clip-path 1100ms var(--k-ease-out), transform 1600ms var(--k-ease-out); }
+.k-js .k-reveal.is-in img { clip-path: inset(0 0 0 0); transform: none; }
+
+/* --- 2 · Kroky postupu bez prázdnych medzier -------------------------------
+   Riadok mal min-height: 23vh, teda 207 px na 50 px textu. Vznikli tým diery
+   medzi krokmi a aktívny krok sa vysunul mimo obrazovku, takže vľavo nebolo
+   vidieť, kde človek je. Riadky sú teraz vysoké podľa obsahu a všetkých päť
+   sa zmestí naraz. */
+@media (min-width: 900px) {
+  .kh-proc__row { min-height: 0; padding: 16px 16px; }
+  .k .kh-proc__list { align-content: start; align-self: start; position: sticky; top: clamp(90px, 13vh, 150px); }
+}
+
+/* Aktívny krok musí byť rozoznateľný na prvý pohľad, nie po hľadaní. */
+.kh-proc__row { border-left: 3px solid transparent; }
+.kh-proc__row.is-active {
+  border-left-color: var(--k-amber);
+  background: var(--k-white);
+  box-shadow: 0 10px 26px -18px rgba(18, 23, 26, 0.5);
+}
+.kh-proc__row.is-active em { color: var(--k-ink); }
+.kh-proc__row.is-active strong { color: var(--k-ink); }
+/* Jantárová značka sa pri prepnutí vykreslí zhora nadol — vidno, že sa niečo
+   stalo, aj keď človek práve pozerá na fotku. */
+.kh-proc__row { position: relative; }
+.kh-proc__row::before {
+  content: "";
+  position: absolute;
+  left: -3px; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--k-amber);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 420ms var(--k-ease-out);
+  display: block;
+}
+.kh-proc__row.is-active::before { transform: scaleY(1); display: block; }
+
+/* --- 3 · Fotka kroku sa nemení trhane ------------------------------------
+   Pri scrollovaní sa prepínala tak rýchlo, že to pôsobilo ako blikanie.
+   Prelínačka je dvakrát dlhšia a obraz sa zároveň jemne priblíži. */
+.kh-proc__media img {
+  transition: opacity 620ms var(--k-ease), transform 900ms var(--k-ease-out);
+}
+.kh-proc__media.is-swapping img { opacity: 0; transform: scale(1.04); }
+
+/* --- 4 · Vlnitá jantárová čiara ------------------------------------------
+   Vedie postupom zhora nadol a dokresľuje sa presne podľa toho, ako ďaleko
+   je človek v krokoch. Nie je to ozdoba: je to ukazovateľ postupu, ktorý
+   drží tú istú hodnotu ako prepínanie krokov. Vlna je z tvaru lamely —
+   rovná čiara by bola presne tá „basic" vec, ktorú tu nechceme. */
+.kh-proc__vlna {
+  position: absolute;
+  left: -34px;
+  top: 8px;
+  bottom: 8px;
+  width: 26px;
+  pointer-events: none;
+  overflow: visible;
+}
+.kh-proc__vlna svg { width: 100%; height: 100%; display: block; }
+.kh-proc__vlna path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.kh-proc__vlna .kv-stopa { stroke: var(--k-hair); stroke-width: 2; }
+.kh-proc__vlna .kv-postup {
+  stroke: var(--k-amber);
+  stroke-width: 3;
+  /* dĺžku aj posun dopĺňa skript podľa skutočnej dĺžky krivky */
+  transition: stroke-dashoffset 620ms var(--k-ease-out);
+}
+@media (max-width: 1099px) { .kh-proc__vlna { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-proc__vlna .kv-postup { transition: none; }
+  .kh-proc__media img { transition: none; }
+}

@@ -252,6 +252,7 @@
         row.addEventListener('click', (e) => {
           e.preventDefault();
           setActive(i);
+          kresliCiaru((i + 1) / panels.length);
         });
         row.addEventListener('keydown', (e) => {
           const map = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
@@ -261,6 +262,47 @@
           rows[index].focus();
         });
       });
+
+      /* Vlnitá jantárová čiara vedľa krokov. Kreslí sa presne podľa toho,
+         ako ďaleko je človek v postupe — je to ukazovateľ, nie ozdoba, preto
+         berie tú istú hodnotu, ktorá prepína kroky. Vlnu tvorí opakovaný
+         oblúk; rovná čiara by bola presne tá ozdoba, ktorú tu nechceme. */
+      let postupCiara = null;
+      const zoznam = scope.querySelector('.kh-proc__list');
+      if (zoznam && !zoznam.querySelector('.kh-proc__vlna') && window.matchMedia('(min-width: 1100px)').matches) {
+        const obal = document.createElement('span');
+        obal.className = 'kh-proc__vlna';
+        obal.setAttribute('aria-hidden', 'true');
+        const V = 1000;                       // výška v súradniciach krivky
+        const amplituda = 9;
+        const vlny = panels.length * 2;
+        let d = 'M 13 0';
+        for (let i = 0; i < vlny; i += 1) {
+          const k = V / vlny;
+          const smer = i % 2 === 0 ? amplituda : -amplituda;
+          d += ' q ' + smer + ' ' + (k / 2) + ' 0 ' + k;
+        }
+        obal.innerHTML = '<svg viewBox="0 0 26 ' + V + '" preserveAspectRatio="none" focusable="false">' +
+          '<path class="kv-stopa" d="' + d + '"/><path class="kv-postup" d="' + d + '"/></svg>';
+        if (getComputedStyle(zoznam).position === 'static') zoznam.style.position = 'relative';
+        zoznam.appendChild(obal);
+        postupCiara = obal.querySelector('.kv-postup');
+        const dlzka = postupCiara.getTotalLength();
+        /* Východiskový stav sa nastavuje s vypnutým prechodom. Inak by sa
+           čiara pri načítaní stránky sama „odkreslila" z nuly na plnú dĺžku
+           a až potom by reagovala na scrollovanie. */
+        postupCiara.style.transition = 'none';
+        postupCiara.style.strokeDasharray = dlzka + 'px';
+        postupCiara.style.strokeDashoffset = dlzka + 'px';
+        postupCiara.dataset.dlzka = dlzka;
+        postupCiara.getBoundingClientRect();
+        window.setTimeout(() => { postupCiara.style.transition = ''; }, 60);
+      }
+      const kresliCiaru = (podiel) => {
+        if (!postupCiara) return;
+        const dlzka = Number(postupCiara.dataset.dlzka);
+        postupCiara.style.strokeDashoffset = (dlzka * (1 - Math.max(0, Math.min(1, podiel)))) + 'px';
+      };
 
       const stack = panels[0] && panels[0].parentElement;
       if (stack) stack.classList.add('is-stacked');
@@ -304,6 +346,7 @@
           const t = (zaciatok - r.top) / Math.max(1, zaciatok - koniec);
           if (t < 0 || t > 1) return;
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
+          kresliCiaru(t);
           if (idx !== index) setActive(idx);
         });
       };
