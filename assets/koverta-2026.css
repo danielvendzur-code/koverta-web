@@ -4449,11 +4449,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    prichádzajú zľava doprava, tak ako ich človek číta. */
 /* Stupňovanie po stĺpcoch. Karty sa neodkrývajú naraz ako jeden blok —
    prichádzajú zľava doprava, tak ako ich človek číta. */
-.k [data-k-delay="1"] { transition-delay: 110ms; }
-.k [data-k-delay="2"] { transition-delay: 220ms; }
-.k [data-k-delay="3"] { transition-delay: 330ms; }
-.k [data-k-delay="4"] { transition-delay: 440ms; }
-.k [data-k-delay="5"] { transition-delay: 550ms; }
+.k [data-k-delay="1"] { transition-delay: 60ms; }
+.k [data-k-delay="2"] { transition-delay: 120ms; }
+.k [data-k-delay="3"] { transition-delay: 180ms; }
+.k [data-k-delay="4"] { transition-delay: 240ms; }
+.k [data-k-delay="5"] { transition-delay: 300ms; }
 
 /* Fotografie sa neodkrývajú maskou. Zadávateľ to odmietol: obraz má na
    stránke stáť, nie sa odhaľovať. Celá karta príde ako celok — fotka sa iba
