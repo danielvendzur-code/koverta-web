@@ -4949,14 +4949,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-mat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-mat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kh-vcene__rad:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  /* Ponuka má na širokej ploche stáť v štyroch kartách vedľa seba — tak
-     to bolo v staršej verzii a tak si to zadávateľ vypýtal späť. Dva
-     stĺpce z nich robili obrovské dlaždice a sekciu na dve obrazovky. */
-  .kh-cat__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* Ponuka ostáva v dvoch stĺpcoch — tak sekcia vyzerala predtým a tak sa
+     páčila viac. Štítok, značky a popis na kartách zostávajú. */
   .kh-cat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .kh-cat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* Pri štyroch stĺpcoch je karta užšia, tak fotka smie byť vyššia. */
-  .kh-cat__media { aspect-ratio: 4 / 5; }
 }
 @media (min-width: 620px) and (max-width: 1039px) {
   .kh-mat__grid:has(> :last-child:nth-child(3)) > :last-child { grid-column: 1 / -1; }
