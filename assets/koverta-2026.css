@@ -21,6 +21,12 @@
    1 · TOKENY
    -------------------------------------------------------------------------- */
 
+/* Tokeny patria na koreň dokumentu, nie na dva konkrétne prvky. Lepivý
+   mobilný pruh stojí mimo `.k` aj mimo hlavičky, takže mu `var(--k-amber)`
+   nedávalo nič: tlačidlo ostalo bez pozadia a telefón sa vykreslil
+   východiskovou modrou prehliadača — farbou, ktorá na tomto webe nemá čo
+   robiť. Triedy nechávam v selektore kvôli vloženiu do cudzej šablóny. */
+:root,
 .k,
 .kv-header {
   /* farby ---------------------------------------------------------------- */
@@ -3642,7 +3648,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr); }
   body { padding-bottom: 74px; }
 }
-.k .kh-dock__call {
+.kh-dock__call {
   display: grid;
   place-items: center;
   border: 1px solid rgba(18, 23, 26, 0.22);
@@ -3650,7 +3656,10 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   color: var(--k-ink);
 }
 .kh-dock__call svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.k .kh-dock .k-btn { width: 100%; min-height: 48px; }
+/* Dok stojí mimo `.k`, takže sem nedosiahne ani zrušenie podčiarknutia
+   odkazov — tlačidlo aj telefón vyzerali ako holé odkazy. */
+.kh-dock .k-btn { width: 100%; min-height: 48px; }
+.kh-dock a { text-decoration: none; }
 
 /* Posledné skrátenie: kontakt a materiál presahovali obrazovku. */
 .kh-cta { padding-block: clamp(38px, 3.6vw, 58px); }
@@ -3747,6 +3756,16 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   background:
     linear-gradient(100deg, rgba(9, 12, 14, 0.86) 0%, rgba(9, 12, 14, 0.66) 34%, rgba(9, 12, 14, 0.22) 60%, rgba(9, 12, 14, 0.05) 78%),
     linear-gradient(180deg, rgba(9, 12, 14, 0.42) 0%, rgba(9, 12, 14, 0) 38%);
+}
+
+/* Tmavnutie zľava doprava má zmysel pri dvojstĺpcovom hero na veľkej ploche.
+   Na telefóne text zaberá celú šírku, takže musí tmavnúť zdola nahor —
+   inak posledný riadok odseku padne na svetlé miesto fotografie. Toto
+   pravidlo prichádza až po tom všeobecnom, preto ho prepíše. */
+@media (max-width: 1059px) {
+  .kh-hero__scrim {
+    background: linear-gradient(180deg, rgba(9, 12, 14, 0.55) 0%, rgba(9, 12, 14, 0.30) 26%, rgba(9, 12, 14, 0.46) 58%, rgba(9, 12, 14, 0.82) 100%);
+  }
 }
 
 /* Jantárová linka pri odseku pôsobila ako zvyšok po inom rozložení. */
