@@ -4646,3 +4646,49 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   margin-top: 14px;
   transition: transform 900ms var(--k-ease-out) 320ms;
 }
+
+
+/* --- 6 · Telefón: čitateľný text a ciele, ktoré sa dajú trafiť ------------
+   Nadpisy sekcií klesli na 10,5 px a odkaz na telefónne číslo bol vysoký
+   14 px. Na mobile je to text, ktorý sa nedá prečítať, a cieľ, ktorý sa
+   nedá trafiť palcom — pritom telefonát je hlavná akcia celého webu. */
+@media (max-width: 760px) {
+  .k .k-eyebrow,
+  .k .kh-mat__label,
+  .k .kh-work__cap,
+  .k .kh-size__label span { font-size: 12.5px; letter-spacing: .14em; }
+
+  /* Popisy polí vo formulári mali 11 px — to je text, ktorý musí človek
+     prečítať, kým vypĺňa dopyt. Rovnako názvy filtrov a popisky fotiek. */
+  .k .kh-field > span,
+  .k .kh-form legend,
+  .k .kh-work__filter-block > span,
+  .k .kh-work__filter-block > p,
+  .k .kh-mat__cap,
+  .k .kh-cat__count,
+  .kf a,
+  .kf__bottom span { font-size: 12.5px; }
+
+  /* Samostatné odkazy dostanú výšku palca. Odkazy vnútri vety sa nedvíhajú —
+     tam by rozhodili riadkovanie. */
+  .k .k-link,
+  .k .kh-cta__aside a,
+  .k .kh-cat__actions > *,
+  .k .kh-soltec__actions > *,
+  /* Pätička má odkazy v niekoľkých blokoch; berieme ich všetky okrem tých,
+     ktoré sedia vnútri vety. */
+  .kf a:not(.kf__firma a),
+  .kh-crumbs a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .k .kh-cta__aside a { padding-block: 6px; }
+
+  /* Telefón a e-mail v hornom páse sú na telefóne hlavná akcia webu.
+     Mali výšku 14 px — pás je vysoký 40 px, tak nech ho využijú celý. */
+  .kv-topbar__side a { min-height: 40px; display: inline-flex; align-items: center; }
+
+  /* Dlažba kategórií: celá karta je odkaz, nech sa netrafí len nadpis. */
+  .k .kh-cat__card { display: block; }
+}
