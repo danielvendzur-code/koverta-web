@@ -394,21 +394,82 @@
     </div>
   </div>
 </section>
-
-<!-- ===================================================== VÝZVA -->
 <section class="k-band kh-cta" id="ponuka" aria-labelledby="ctaTitle">
   <div class="k-wrap">
-    <header class="k-head">
-      <p class="k-eyebrow k-rise">Ďalší krok</p>
-      <h2 id="ctaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Máte otázku k tomuto dokumentu?</h2>
-      <p class="k-copy k-rise" data-k-delay="2">Ozvite sa nám — vysvetlíme, čo z toho pre vašu objednávku plynie, ešte pred podpisom.</p>
-    </header>
-    <div class="kh-cta__row k-rise" data-k-delay="3">
-      <a class="k-btn k-btn--primary" href="mailto:obchod@koverta.sk">obchod@koverta.sk <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      <a class="k-btn k-btn--line" href="tel:+421948482266">+421 948 482 266</a>
+    <div class="kh-cta__grid">
+
+      <div class="kh-cta__card k-rise">
+        <div class="kh-cta__head">
+          <p class="k-eyebrow">Cenová ponuka zadarmo</p>
+          <h2 id="ctaTitle" class="k-h2">Máte otázku k tomuto dokumentu?</h2>
+          <p class="k-copy">Ozvite sa nám — vysvetlíme, čo z toho pre vašu objednávku plynie, ešte pred podpisom.</p>
+        </div>
+
+        <form class="kh-form">
+          <fieldset>
+            <legend>Čo riešite?</legend>
+            <div class="kh-select" data-k-select>
+              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
+                <span data-k-select-label>Prístrešok pre auto</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
+                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
+              </ul>
+              <input type="hidden" name="produkt" value="Prístrešok pre auto" data-k-select-input>
+            </div>
+          </fieldset>
+
+          <div class="kh-form__grid">
+            <label class="kh-field"><span>Meno</span><input type="text" name="name" autocomplete="name" required></label>
+            <label class="kh-field"><span>Telefón</span><input type="tel" name="phone" autocomplete="tel" required></label>
+            <label class="kh-field"><span>E-mail</span><input type="email" name="email" autocomplete="email" required></label>
+            <label class="kh-field"><span>Mesto realizácie</span><input type="text" name="mesto" autocomplete="address-level2"></label>
+          </div>
+
+          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="body" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+
+          <div class="kh-form__submit">
+            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <p class="kh-form__note">Odoslaním súhlasíte so <a href="../ochrana-sukromia/">spracovaním údajov</a> na účely vybavenia dopytu.</p>
+          </div>
+        </form>
+      </div>
+
+      <aside class="kh-cta__aside k-rise" data-k-delay="1">
+        <div class="kh-cta__aside-head">
+          <p class="k-eyebrow">Kompletný servis</p>
+          <h3>Od návrhu po montáž</h3>
+          <p>Jeden tím vás prevedie výberom riešenia, zameraním aj hotovou realizáciou.</p>
+        </div>
+
+        <a class="kh-cta__row" href="tel:+421948482266">
+          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></span>
+          <span><small>Zavolajte</small><strong>+421 948 482 266</strong></span>
+        </a>
+        <a class="kh-cta__row" href="mailto:obchod@koverta.sk">
+          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><small>Napíšte</small><strong>obchod@koverta.sk</strong></span>
+        </a>
+        <div class="kh-cta__row">
+          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.3 7-11a7 7 0 1 0-14 0c0 5.7 7 11 7 11Z" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+          <span><small>Kde nás nájdete</small><strong>J. C. Hronského 3427/6<br>949 07 Nitra</strong></span>
+        </div>
+
+        
+      </aside>
+
     </div>
   </div>
+
 </section>
+
+</div>
 </div>
 
 <!-- ============================================================ PÄTIČKA -->
