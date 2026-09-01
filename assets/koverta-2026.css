@@ -5050,3 +5050,20 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k-js.k-hore .k-rise:not(.is-in) { transform: translateY(14px); }
 .k-js.k-hore .kh-cat__media img,
 .k-js.k-hore .k-reveal img { transition-duration: 520ms; }
+
+
+/* --- 16 · Krok postupu bez bodky -----------------------------------------
+   Jantárová bodka v okraji sa zadávateľovi nepáčila. Aktívny krok je aj tak
+   rozoznateľný: riadok sa odsunie, ostatné stlmia a pod názvom sa dokreslí
+   jantárová linka. */
+.kh-proc__row::after { content: none; }
+
+/* --- 17 · Fotografie sa pri prejdení myšou nepribližujú -------------------
+   Zväčšenie pod kurzorom pôsobí nepokojne. Fotografia stojí; reakciu na
+   hover nesú tlačidlá a linky, nie obraz. */
+.kh-pick__scene:hover img,
+.kh-cat__card:hover .kh-cat__media img,
+.kh-work__item:hover .kh-work__media img,
+.kh-soltec__media:hover img,
+.kh-mat__card:hover .kh-mat__media img,
+.kh-cfg__thumb:hover img { transform: none; }
