@@ -6280,3 +6280,40 @@ html { background: var(--k-ink); }
   .kh-tab table { min-width: 0; }
   .kh-tab th, .kh-tab td { padding-right: clamp(14px, 1.4vw, 24px); }
 }
+
+
+/* --- 8 · Tabuľka parametrov na telefóne ------------------------------------
+   Tri stĺpce sa na 390 px nezmestia a vodorovné posúvanie sa ľahko prehliadne
+   — z tabuľky bolo vidieť dva a pol stĺpca a zvyšok za okrajom. Na úzkej
+   obrazovke sa preto každý riadok rozloží pod seba: názov, potom hodnoty
+   s vlastným popiskom prevzatým z hlavičky. Hlavička sa skryje, lebo ju
+   nesie každý riadok sám. */
+@media (max-width: 767px) {
+  .kh-tab__scroll { overflow-x: visible; }
+  .kh-tab table { min-width: 0; display: block; border-top: 0; }
+  /* `display: block` na tabuľke zbaví popisok šírky a ten sa potom láme
+     po jednom slove — musí ju dostať späť. */
+  .kh-tab caption { display: block; width: 100%; }
+  .kh-tab thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .kh-tab tbody { display: block; }
+  .kh-tab tbody tr {
+    display: block;
+    padding: clamp(16px, 4vw, 22px) 0;
+    border-top: 1px solid var(--k-hair);
+  }
+  .kh-tab tbody th,
+  .kh-tab tbody td { display: block; padding: 0; border: 0; }
+  .kh-tab tbody th { margin-bottom: 8px; white-space: normal; }
+  .kh-tab tbody td { margin-top: 8px; padding-left: 0; }
+  .kh-tab tbody td::before {
+    content: attr(data-popis);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--k-grey-soft);
+  }
+  .kh-tab tbody td[colspan]::before { content: attr(data-popis); }
+}
