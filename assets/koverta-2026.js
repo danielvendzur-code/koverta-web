@@ -237,9 +237,7 @@
     recenzie: {
       draha: 0.58,
       stopy: [
-        { sel: '.kh-rev__card',  od: 0.10, do: 0.46, krok: 0.11, max: 3 },
-        { sel: '.kh-rev__foto',  od: 0.34, do: 0.80, krok: 0.11, max: 3 },
-        { sel: '.kh-rev__nav',   od: 0.30, do: 0.52 }
+        { sel: '.kh-rev__nav',   od: 0.46, do: 0.68 }
       ]
     },
     kroky: {
@@ -1052,9 +1050,145 @@
 
   /* --- 5 · hlavička ------------------------------------------------------- */
 
+  /* --- Fotografia začína na celej obrazovke a zmenší sa na recenziu -------
+     Zadanie znelo jasne: fotky majú začať ako fullscreen a potom sa zmenšiť
+     a pretransformovať na recenzie. Predchádzajúce riešenie odkrývalo fotku
+     vnútri karty orezaním — pohyb veľký asi ako necht, na obrazovke
+     prakticky neviditeľný.
+
+     Teraz letí fotografia mimo karty: kópia leží na celej ploche okna a ako
+     sa sekcia posúva, scvrkáva sa presne do svojho miesta v karte. Cieľový
+     rám sa meria každý snímok, takže pristátie sedí na pixel aj počas
+     scrollu. Tri fotografie idú za sebou — kým prvá dosadá, druhá sa práve
+     otvára.
+
+     Beží to len tam, kde to dáva zmysel: pri obmedzenom pohybe, bez skriptu
+     aj na úzkej obrazovke ostávajú fotografie rovno v kartách. */
+  function initFotoScena(root) {
+    const zoznam = root.querySelector('.kh-rev__list[data-k-scrub]');
+    if (!zoznam) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia('(min-width: 1000px)').matches) return;
+
+    const OKNA = [[0.02, 0.34], [0.30, 0.62], [0.58, 0.90]];
+    const karty = [...zoznam.querySelectorAll('.kh-rev__card')]
+      .filter((k) => k.querySelector('.kh-rev__foto'))
+      .slice(0, OKNA.length);
+    if (!karty.length) return;
+
+    const kusy = karty.map((karta, i) => {
+      const slot = karta.querySelector('.kh-rev__foto');
+      const obr = slot.querySelector('img');
+      const scena = document.createElement('div');
+      scena.className = 'kh-rev__scena';
+      scena.setAttribute('aria-hidden', 'true');
+      const kopia = new Image();
+      kopia.src = obr.currentSrc || obr.src;
+      kopia.alt = '';
+      kopia.decoding = 'async';
+      scena.appendChild(kopia);
+      document.body.appendChild(scena);
+      return { karta: karta, slot: slot, scena: scena, od: OKNA[i][0], koniec: OKNA[i][1], stav: -1 };
+    });
+
+    const sekcia = zoznam.closest('.kh-rev');
+    const mriezka = sekcia && sekcia.querySelector('.kh-rev__grid');
+    if (!sekcia || !mriezka) return;
+    sekcia.classList.add('ma-scenu');
+
+    const orez = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+    const medzi = (a, b, t) => a + (b - a) * t;
+    let ceka = false;
+    /* Odsadenie mriežky od vrchu sekcie sa meria, kým je sekcia ešte pod
+       oknom — vtedy určite nie je prilepená, takže je to jej pokojná poloha. */
+    let odsadenie = 0;
+    const preber = () => {
+      odsadenie = mriezka.getBoundingClientRect().top - sekcia.getBoundingClientRect().top;
+    };
+    preber();
+
+    const zmer = () => {
+      ceka = false;
+      const vh = window.innerHeight || 1;
+      const vw = window.innerWidth || 1;
+      /* Na úzkom okne scéna nebeží — keď sa okno zúži za behu, treba po
+         nej upratať, inak by mriežka ostala posunutá. */
+      if (vw < 1000) {
+        mriezka.style.transform = '';
+        kusy.forEach((k) => { k.scena.style.display = 'none'; k.slot.style.visibility = ''; k.karta.style.removeProperty('--k-p'); });
+        return;
+      }
+      const rs = sekcia.getBoundingClientRect();
+
+      /* Prelet z celej obrazovky do karty potrebuje dráhu. Sekcia si ju
+         drží sama: pod mriežkou je vyhradených 150 % výšky okna a mriežka
+         sa po ten čas drží na mieste — posunieme ju presne o toľko, o
+         koľko medzitým odscrolluje stránka.
+
+         `pred` je nábeh pred pridržaním: fotografia sa nezjaví strihom,
+         ale nabehne, kým sekcia prichádza zdola. */
+      const lep = Math.max(24, Math.min(88, vh * 0.07));
+      const y = -rs.top;
+      const y0 = odsadenie - lep;
+      const D = Math.max(1, vh * 1.5);
+      const pred = vh * 0.42;
+      if (y < y0 - pred) preber();
+      const drz = Math.min(Math.max(y - y0, 0), D);
+      mriezka.style.transform = drz > 0 ? 'translate3d(0,' + drz.toFixed(1) + 'px,0)' : '';
+      const p = orez((y - y0 + pred) / (D + pred));
+
+      kusy.forEach((k) => {
+        const q = orez((p - k.od) / (k.koniec - k.od));
+        /* Karta sa objavuje pod fotografiou v poslednej tretine jej letu,
+           takže fotografia dosadá na hotovú recenziu, nie do prázdna. */
+        k.karta.style.setProperty('--k-p', orez((q - 0.52) / 0.42).toFixed(3));
+        if (q <= 0 || q >= 1) {
+          /* mimo svojho okna fotografia buď ešte nezačala, alebo už dosadla */
+          if (k.stav !== q) {
+            k.scena.style.display = 'none';
+            k.slot.style.visibility = q >= 1 ? '' : 'hidden';
+            k.stav = q;
+          }
+          return;
+        }
+        k.stav = q;
+        k.slot.style.visibility = 'hidden';
+        const t = k.slot.getBoundingClientRect();
+        /* Zrýchli sa až v strede: na začiatku sa fotografia na celej ploche
+           stihne prečítať, na konci pristáva pomaly. */
+        const e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
+        const st = k.scena.style;
+        st.display = 'block';
+        st.left = medzi(0, t.left, e).toFixed(1) + 'px';
+        st.top = medzi(0, t.top, e).toFixed(1) + 'px';
+        st.width = medzi(vw, t.width, e).toFixed(1) + 'px';
+        st.height = medzi(vh, t.height, e).toFixed(1) + 'px';
+        st.borderRadius = medzi(0, 14, e).toFixed(1) + 'px';
+        st.opacity = Math.min(1, q * 14).toFixed(3);
+      });
+    };
+
+    const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(zmer); } };
+    window.addEventListener('scroll', naplan, { passive: true });
+    window.addEventListener('resize', naplan, { passive: true });
+    zmer();
+  }
+
   function initHeader(header) {
     if (header.dataset.kReady === 'true') return;
     header.dataset.kReady = 'true';
+
+    /* Výška hlavičky ide do premennej, aby si prvá obrazovka vedela odrátať
+       presne toľko, koľko hlavička zaberá. Bez toho fotografia v úvode
+       nedosiahla na spodný okraj okna a pod ňou ostával svetlý pruh. */
+    const mer = () => {
+      const v = Math.round(header.getBoundingClientRect().height);
+      if (v > 0) document.documentElement.style.setProperty('--kv-hlava', v + 'px');
+    };
+    mer();
+    window.addEventListener('resize', mer, { passive: true });
+    window.addEventListener('load', mer, { once: true });
+    if (window.ResizeObserver) new ResizeObserver(mer).observe(header);
 
     /* prilepenie — tieň a nižší riadok po odscrollovaní */
     const bar = header.querySelector('[data-k-bar]');
@@ -1158,7 +1292,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub]
+       initSubory, initScrub, initFotoScena]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

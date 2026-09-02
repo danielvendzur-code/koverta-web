@@ -5716,19 +5716,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
     transform: translate3d(calc((1 - var(--k-p, 1)) * 44px), 0, 0);
   }
 
-  /* Z fotky sa stane recenzia. Fotografia leží nad hotovou kartou a odkrýva
-     ju zhora nadol — v poradí, v akom sa karta číta: hviezdy, text, meno.
-     Orezanie robí celú prácu, takže sa nič neposúva a text pod ňou stojí. */
-  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card.is-foto .kh-rev__foto {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: var(--k-bone);
-    clip-path: inset(calc(var(--k-p, 1) * 100%) 0 0 0);
-    transform: translate3d(0, calc(var(--k-p, 1) * -4%), 0);
-  }
+  /* Prelet fotografie z celej obrazovky do karty rieši skript — pozri
+     vrstvu 37 nižšie. Orezávanie vnútri karty je zrušené. */
 
   /* --- Fotografia sa v ráme posúva -------------------------------------
      Rám stojí, obraz v ňom putuje o pár percent, kým rám prechádza oknom. */
@@ -6327,4 +6316,310 @@ html { background: var(--k-ink); }
 .k .kh-rev__card {
   border-color: var(--k-hair);
   box-shadow: 0 1px 2px rgba(18, 23, 26, 0.03);
+}
+
+
+/* ==========================================================================
+   33 · Ponuka: dlaždica sa pri prejdení naozaj zväčší
+   Odbúranie škatule vo vrstve 32 vyplo aj rozbaľovanie: telo dlaždice malo
+   pevnú výšku 610 px a `overflow: hidden`, takže popis a jantárové tlačidlo
+   sa síce odkryli, ale skončili pod hranou — z výzvy k akcii bolo vidieť
+   jedenásť pixelov. Dlaždica sa mala zväčšiť a nezväčšovala sa.
+
+   Riadok si preto dopredu rezervuje výšku rozbalenej dlaždice. Zbalené
+   dlaždice stoja na jeho vrchu a sú nižšie; dlaždica pod kurzorom dorastie
+   do rezervovanej výšky. Rastie teda naozaj — a keďže miesto už bolo
+   vyhradené, nič pod sekciou sa nepohne. Fotografia pritom o kúsok ustúpi,
+   takže rast je vidieť aj na nej.
+   ========================================================================== */
+@media (min-width: 1000px) {
+  .kh-cat__grid {
+    --kh-cat-h: 596px;
+    --kh-cat-h-open: 724px;
+    display: grid;
+    height: auto;
+    grid-auto-rows: var(--kh-cat-h-open);
+    align-items: start;
+    overflow: visible;
+  }
+  .kh-cat__item {
+    display: block;
+    height: auto;
+    min-width: 0;
+    overflow: visible;
+  }
+  /* Výšku dlaždice určuje obsah — rozbalenie ju plynulo dotiahne presne
+     tam, kam treba, takže pod tlačidlami neostáva hluché miesto. */
+  .kh-cat__card {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Fotografia ostáva rovnaká v oboch stavoch — rastie dlaždica, nie obraz.
+     Keby fotka ustupovala, dlaždica pod kurzorom by pôsobila menšie. */
+  .kh-cat__media {
+    flex: 0 0 auto;
+    aspect-ratio: 3 / 4;
+    max-height: 468px;
+  }
+  .kh-cat__body { flex: 0 0 auto; overflow: visible; }
+
+  .kh-cat__more {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-top: 0;
+    transition: grid-template-rows 520ms cubic-bezier(.2,.75,.25,1),
+                opacity 320ms var(--k-ease);
+  }
+  .kh-cat__more > * { min-height: 0; overflow: hidden; }
+  .kh-cat__item:hover .kh-cat__more,
+  .kh-cat__item:focus-within .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+}
+
+/* Užšie stĺpce lámu popis do viacerých riadkov, tak potrebujú vyšší riadok. */
+@media (min-width: 1000px) and (max-width: 1279px) {
+  .kh-cat__grid { --kh-cat-h: 556px; --kh-cat-h-open: 764px; }
+}
+
+/* Deväť dlaždíc v troch riadkoch by s rezervou vytvorilo tri prázdne pásy,
+   preto tam ostáva všetko odkryté a riadok sa meria obsahom. */
+@media (min-width: 1000px) {
+  .kh-cat__grid:has(> :nth-child(5)) {
+    grid-auto-rows: auto;
+    row-gap: clamp(28px, 2.6vw, 44px);
+  }
+  .kh-cat__grid:has(> :nth-child(5)) .kh-cat__card { height: auto; }
+  .kh-cat__grid:has(> :nth-child(5)) .kh-cat__media { flex: none; aspect-ratio: 4 / 3; min-height: 0; }
+  .kh-cat__grid:has(> :nth-child(5)) .kh-cat__more { grid-template-rows: 1fr; opacity: 1; }
+}
+
+
+/* ==========================================================================
+   34 · Pätka sa vrátila k tmavému podkladu
+   Vo vrstve 31 dostal každý blok `.k` kostenú plochu, aby pod úvodnou
+   fotografiou nesvietila biela. Pätka má triedu `.k` tiež — a keďže to
+   pravidlo prišlo neskôr, prebilo jej vlastnú tmavú farbu. Text v pätke
+   ostal biely, plocha zosvetlela a spodok stránky bol prakticky prázdny:
+   nadpis, odkazy aj kontakty biele na kostenej.
+
+   Pätka aj záverečná výzva sú teda znova tmavé, a to menovite, nie
+   dedením — nech ich žiadna neskoršia plošná oprava nezhasne.
+   ========================================================================== */
+.k.kf,
+footer.kf { background: var(--k-ink); color: #fff; }
+.kf .k-wrap { background: none; }
+
+
+/* ==========================================================================
+   35 · Úvodná fotografia siaha po spodný okraj okna
+   Hero mal strop 660 px. Na monitore s výškou 960 px teda pod fotografiou
+   ostával stopäťdesiatpixelový kostený pruh a prvá obrazovka vyzerala ako
+   nedotiahnutá — fotografia sa končila v polovici a zvyšok bol prázdny.
+
+   Výšku teraz určuje okno mínus hlavička (jej skutočný rozmer prináša
+   skript v premennej --kv-hlava). Fotografia tak končí presne na spodnej
+   hrane obrazovky, nech je okno akékoľvek vysoké. Spodná hranica 520 px
+   drží obsah čitateľný na nízkych oknách na šírku.
+   ========================================================================== */
+.kh-hero {
+  min-height: max(520px, calc(100svh - var(--kv-hlava, 117px)));
+}
+@media (max-width: 899px) { .kh-hero { --kv-hlava-zaloha: 77px; } }
+@media (max-width: 619px) { .kh-hero { --kv-hlava-zaloha: 65px; } }
+.kh-hero { min-height: max(520px, calc(100svh - var(--kv-hlava, var(--kv-hlava-zaloha, 117px)))); }
+
+/* Na veľmi vysokom okne by fotografia roztiahla text do prázdna, preto
+   obsah ostáva pri spodnej tretine a nie v strede prázdnej plochy. */
+@media (min-height: 1100px) and (min-width: 900px) {
+  .kh-hero { min-height: min(calc(100svh - var(--kv-hlava, 117px)), 1000px); }
+}
+
+
+/* ==========================================================================
+   36 · Jeden čip pre celú stránku
+   Na stránke ich bolo trinásť druhov: tlačidlo 53 px vysoké s písmom 15,
+   akcia v dlaždici raz 42 a raz 46 px s písmom 13 aj 13,5, filter 37 px
+   s polotučným rezom, odkaz na recenzie 48 px, štítok kroku 30 px, štítok
+   rozmeru 63 px s písmom 22. K tomu dva druhy šípok: jedna dedila farbu
+   textu, druhá bola natvrdo jantárová. Práve tá druhá vedela pri odkrývaní
+   ostať visieť sama — jantárová šípka na tmavom páse bez svojho popisu.
+
+   Ostávajú tri veľkosti jedného čipu (veľký, stredný, malý) a dve výplne
+   (jantárová a priehľadná s vlasovým rámom). Šípka je vždy vo farbe textu,
+   takže nemôže „prežiť" text, ktorý ju vysvetľuje.
+   ========================================================================== */
+:root,
+.k {
+  --cip-lg: 52px; --cip-lg-p: 26px; --cip-lg-f: 15px;
+  --cip-md: 44px; --cip-md-p: 17px; --cip-md-f: 13.5px;
+  --cip-sm: 36px; --cip-sm-p: 14px; --cip-sm-f: 13px;
+  --cip-ram: rgba(18, 23, 26, 0.18);
+  --cip-ram-tma: rgba(255, 255, 255, 0.3);
+}
+
+/* Veľký — hlavná akcia sekcie. */
+.k .k-btn,
+.kf .k-btn,
+.kv-bar__cta,
+.kv-mega__cta {
+  min-height: var(--cip-lg);
+  padding-block: 0;
+  padding-inline: var(--cip-lg-p);
+  font-size: var(--cip-lg-f);
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+/* Stredný — akcia vnútri dlaždice. */
+.k .kh-cat__actions .k-link,
+.k .kh-cat__actions .kh-cat__cfg,
+.k .kh-soltec__actions .k-link,
+.k .kh-soltec__actions .kh-soltec__cfg,
+.k .kh-pick__lane .k-link {
+  min-height: var(--cip-md);
+  padding: 0 var(--cip-md-p);
+  font-size: var(--cip-md-f);
+  font-weight: 700;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Malý — ovládač alebo štítok, nikdy nie hlavná akcia. */
+.k .kh-work__filter-block button,
+.k .kh-rev__source,
+.k .kh-size__chip,
+.k .kh-proc__step-of,
+.k .kh-mat__tab {
+  min-height: var(--cip-sm);
+  padding: 0 var(--cip-sm-p);
+  font-size: var(--cip-sm-f);
+  font-weight: 650;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.k .kh-size__chip { font-family: var(--k-head); font-weight: 700; }
+
+/* Dve výplne. Priehľadná nesie vlasový rám — na tmavom podklade svetlý. */
+.k .kh-cat__actions .kh-cat__cfg,
+.k .kh-soltec__actions .kh-soltec__cfg,
+.k .kh-work__filter-block button:not([aria-pressed="true"]):not(.is-active),
+.k .kh-rev__source,
+.k .kh-size__chip,
+.k .kh-mat__tab {
+  background: transparent;
+  border: 1px solid var(--cip-ram);
+  color: var(--k-ink);
+}
+.k-invert .kh-cat__actions .kh-cat__cfg,
+.k-invert .kh-soltec__actions .kh-soltec__cfg,
+.k-invert .kh-rev__source { border-color: var(--cip-ram-tma); color: #fff; }
+
+/* Šípka je vždy vo farbe textu a v mierke svojho čipu. Nikdy nie zvlášť
+   zafarbená — inak ostane po odkrytí visieť sama. */
+.k .k-btn svg,
+.k .k-link svg,
+.k .kh-cat__cfg svg,
+.k .kh-soltec__cfg svg,
+.k .kh-pick__lane .k-link svg,
+.kh-cat__actions .k-link svg,
+.kh-cat__actions .kh-cat__cfg svg {
+  stroke: currentColor;
+  fill: none;
+}
+.k .k-btn svg { width: 16px; height: 16px; }
+.k .kh-cat__actions .k-link svg,
+.k .kh-cat__actions .kh-cat__cfg svg,
+.k .kh-soltec__actions .k-link svg,
+.k .kh-soltec__actions .kh-soltec__cfg svg { width: 14px; height: 14px; }
+
+/* Dvojica akcií v dlaždici sa musí zmestiť do jedného riadku — pri 320 px
+   stĺpci ich staré odsadenie rozlomilo na dva a karta narástla o riadok. */
+.kh-cat__actions,
+.kh-soltec__actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Do jedného riadku sa dvojica akcií v 320 px stĺpci nezmestí pri žiadnom
+   rozumnom odsadení, tak stoja pod sebou — hlavná akcia hore. */
+
+/* Štítok značky na fotografii je informácia, nie tlačidlo: menší rez,
+   rovnaký polomer, rovnaké odsadenie ako malý čip. */
+.kh-cat__znacky,
+.kh-proc__step-of { font-size: 12px; }
+
+/* Odkazy v pätke a v dvoch značkách patria do tej istej mierky. */
+.kf .kf__social a { min-height: var(--cip-sm); padding: 0 var(--cip-sm-p); font-size: var(--cip-sm-f); border-radius: 999px; display: inline-flex; align-items: center; }
+.k .kh-pick__lane .k-link svg { width: 14px; height: 14px; }
+
+
+/* ==========================================================================
+   37 · Recenzie: fotografia príde cez celú obrazovku
+   Doterajší nábeh recenzií bol prakticky neviditeľný — fotografia sa
+   odkrývala vnútri karty, teda na ploche 320 × 200 px, a kým človek prešiel
+   sekciou, nič sa nestihlo prejaviť.
+
+   Fotografia realizácie preto po novom začína na celej ploche okna a počas
+   scrollu sa scvrkne presne do svojho miesta v karte s recenziou. Tri karty
+   sa striedajú za sebou. Let robí skript (musí merať cieľový rám počas
+   pohybu), tu je len podoba oboch koncov: fotografia v karte a scéna na
+   celej obrazovke.
+   ========================================================================== */
+
+/* Koncový stav: fotografia je riadny pás na vrchu karty. Existuje aj bez
+   skriptu — bez nej by karta po dosadnutí ostala prázdna. */
+.kh-rev__card { overflow: visible; }
+.kh-rev__card .kh-rev__foto {
+  display: block;
+  position: static;
+  inset: auto;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--k-bone);
+  clip-path: none;
+  transform: none;
+}
+.kh-rev__card .kh-rev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Scéna: kópia fotografie, ktorá letí ponad stránku. Nie je v strome
+   obsahu — je to čistá dekorácia, preto aria-hidden a bez zásahov myšou. */
+.kh-rev__scena {
+  position: fixed;
+  z-index: 40;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--k-ink);
+  box-shadow: 0 30px 60px -40px rgba(9, 12, 14, 0.6);
+  will-change: left, top, width, height;
+}
+.kh-rev__scena img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Bez skriptu a pri obmedzenom pohybe žiadna scéna nevznikne — fotografia
+   stojí v karte od začiatku a sekcia je hneď v koncovej podobe. */
+@media (prefers-reduced-motion: reduce) {
+  .kh-rev__scena { display: none !important; }
+}
+
+/* Sekcia si na prelet vyhradí dráhu: mriežka sa prilepí pod hlavičku a
+   spodné odsadenie sekcie je presne to, čo počas lepenia odscrollujeme.
+   Keď skript scénu nespustí (bez skriptu, obmedzený pohyb, úzke okno),
+   trieda `ma-scenu` nepribudne a sekcia ostáva bežne vysoká. */
+@media (min-width: 1000px) {
+  /* Voľné miesto pod mriežkou je dráha preletu. Samotné pridržanie mriežky
+     robí skript posunom — nie `position: sticky`: prilepenie by sa muselo
+     merať v inom systéme než let fotografie a v niektorých prehliadačoch
+     sa s orezaním na `main` nekamaráti. Posun je jeden a ten istý údaj pre
+     obe veci, takže nemôžu ísť od seba. */
+  .k-js .kh-rev.ma-scenu .kh-rev__grid { margin-bottom: 150vh; will-change: transform; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-js .kh-rev.ma-scenu .kh-rev__grid { margin-bottom: 0; transform: none !important; }
 }
