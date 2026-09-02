@@ -487,9 +487,6 @@
         rows.forEach((r, i) => {
           const on = i === index;
           r.classList.toggle('is-active', on);
-          /* Prejdené kroky sú na linke plné — zoznam tak ukáže aj to,
-             koľko postupu je za vami, nielen kde práve stojíte. */
-          r.classList.toggle('je-hotovy', i < index);
           r.setAttribute('aria-selected', on ? 'true' : 'false');
           r.tabIndex = on ? 0 : -1;
         });
@@ -533,7 +530,6 @@
       // návštevník na nič neklikne. Klik má prednosť: po ňom sa scrollové
       // prepínanie na chvíľu utlmí, aby mu nepreberalo voľbu pod rukami.
       if (REDUCED.matches) return;
-      const widePin = () => window.matchMedia('(min-width: 900px)').matches;
       let lockedUntil = 0;
       let poslednaZmena = 0;
       rows.forEach((row) => row.addEventListener('click', () => { lockedUntil = Date.now() + 4000; }));
@@ -557,16 +553,9 @@
              prilepený. Na jeden krok tak pripadá pol obrazovky scrollu
              namiesto 120 px a fotku je vidieť. */
           const w = scope.parentElement.getBoundingClientRect();
-          const vyskaObsahu = scope.offsetHeight;
-          const pripnuteHore = Math.max(24, Math.min(132, window.innerHeight * 0.12));
+          const vyskaObsahu = scope.getBoundingClientRect().height;
+          const pripnuteHore = parseFloat(getComputedStyle(scope).top) || 0;
           const drahaCelkom = Math.max(1, w.height - vyskaObsahu);
-          /* Obsah drží skript, nie `position: sticky`. Je to ten istý údaj,
-             ktorým sa počíta krok, takže pohľad a krok nemôžu ísť od seba —
-             a nezávisí to od toho, či prehliadač prilepenie zvládne vnútri
-             sekcie s orezaním. */
-          const drz = Math.min(Math.max(pripnuteHore - w.top, 0), drahaCelkom);
-          if (widePin()) scope.style.transform = drz > 0 ? 'translate3d(0,' + drz.toFixed(1) + 'px,0)' : '';
-          else scope.style.transform = '';
           const t = (pripnuteHore - w.top) / drahaCelkom;
           if (t < 0 || t > 1) return;
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
@@ -1081,10 +1070,13 @@
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(min-width: 1000px)').matches) return;
 
-    const OKNA = [[0.02, 0.34], [0.30, 0.62], [0.58, 0.90]];
+    /* Jedno okno pre všetky tri. Fotografie sa nestriedajú za sebou —
+       na začiatku pokrývajú obrazovku vedľa seba a naraz sa scvrknú, každá
+       do svojej karty. */
+    const OD = 0.04, DO = 0.94;
     const karty = [...zoznam.querySelectorAll('.kh-rev__card')]
       .filter((k) => k.querySelector('.kh-rev__foto'))
-      .slice(0, OKNA.length);
+      .slice(0, 3);
     if (!karty.length) return;
 
     const kusy = karty.map((karta, i) => {
@@ -1099,7 +1091,7 @@
       kopia.decoding = 'async';
       scena.appendChild(kopia);
       document.body.appendChild(scena);
-      return { karta: karta, slot: slot, scena: scena, od: OKNA[i][0], koniec: OKNA[i][1], stav: -1 };
+      return { karta: karta, slot: slot, scena: scena, poradie: i, stav: -1 };
     });
 
     const sekcia = zoznam.closest('.kh-rev');
@@ -1131,27 +1123,34 @@
       }
       const rs = sekcia.getBoundingClientRect();
 
-      /* Prelet z celej obrazovky do karty potrebuje dráhu. Sekcia si ju
-         drží sama: pod mriežkou je vyhradených 150 % výšky okna a mriežka
-         sa po ten čas drží na mieste — posunieme ju presne o toľko, o
-         koľko medzitým odscrolluje stránka.
+      /* Prelet z celej obrazovky do kariet potrebuje dráhu. Sekcia si ju
+         drží sama: pod mriežkou je vyhradená jedna výška okna a mriežka sa
+         po ten čas drží na mieste — posunieme ju presne o toľko, o koľko
+         medzitým odscrolluje stránka. Keďže sa všetky tri fotografie hýbu
+         naraz, stačí na to jedna obrazovka; pri striedaní za sebou to boli
+         poldruha.
 
-         `pred` je nábeh pred pridržaním: fotografia sa nezjaví strihom,
-         ale nabehne, kým sekcia prichádza zdola. */
+         `pred` je nábeh pred pridržaním: fotografie sa nezjavia strihom,
+         ale nabehnú, kým sekcia prichádza zdola. */
       const lep = Math.max(24, Math.min(88, vh * 0.07));
       const y = -rs.top;
       const y0 = odsadenie - lep;
-      const D = Math.max(1, vh * 1.5);
+      const D = Math.max(1, vh * 1.0);
       const pred = vh * 0.42;
       if (y < y0 - pred) preber();
       const drz = Math.min(Math.max(y - y0, 0), D);
       mriezka.style.transform = drz > 0 ? 'translate3d(0,' + drz.toFixed(1) + 'px,0)' : '';
       const p = orez((y - y0 + pred) / (D + pred));
 
+      const q = orez((p - OD) / (DO - OD));
+      /* Východisková poloha: fotografie stoja vedľa seba a spolu pokrývajú
+         celé okno. Každá si berie svoj zvislý pruh — koľká je v poradí,
+         taký pruh dostane. */
+      const pruh = vw / kusy.length;
+
       kusy.forEach((k) => {
-        const q = orez((p - k.od) / (k.koniec - k.od));
-        /* Karta sa objavuje pod fotografiou v poslednej tretine jej letu,
-           takže fotografia dosadá na hotovú recenziu, nie do prázdna. */
+        /* Karta sa objavuje pod fotografiou v poslednej tretine letu, takže
+           fotografia dosadá na hotovú recenziu, nie do prázdna. */
         k.karta.style.setProperty('--k-p', orez((q - 0.52) / 0.42).toFixed(3));
         if (q <= 0 || q >= 1) {
           /* mimo svojho okna fotografia buď ešte nezačala, alebo už dosadla */
@@ -1170,9 +1169,9 @@
         const e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
         const st = k.scena.style;
         st.display = 'block';
-        st.left = medzi(0, t.left, e).toFixed(1) + 'px';
+        st.left = medzi(k.poradie * pruh, t.left, e).toFixed(1) + 'px';
         st.top = medzi(0, t.top, e).toFixed(1) + 'px';
-        st.width = medzi(vw, t.width, e).toFixed(1) + 'px';
+        st.width = medzi(pruh, t.width, e).toFixed(1) + 'px';
         st.height = medzi(vh, t.height, e).toFixed(1) + 'px';
         st.borderRadius = medzi(0, 14, e).toFixed(1) + 'px';
         st.opacity = Math.min(1, q * 14).toFixed(3);
