@@ -6577,7 +6577,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   position: static;
   inset: auto;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  /* Rovnaký pomer ako majú fotografie v piatom kroku postupu — presun je
+     potom čistá zmena mierky, obraz sa nikde nedeformuje. */
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 14px;
   background: var(--k-bone);
@@ -6590,13 +6592,20 @@ footer.kf { background: var(--k-ink); color: #fff; }
    obsahu — je to čistá dekorácia, preto aria-hidden a bez zásahov myšou. */
 .kh-rev__scena {
   position: fixed;
+  left: 0;
+  top: 0;
   z-index: 40;
   display: none;
   overflow: hidden;
   pointer-events: none;
-  background: var(--k-ink);
-  box-shadow: 0 30px 60px -40px rgba(9, 12, 14, 0.6);
-  will-change: left, top, width, height;
+  border-radius: 14px;
+  background: var(--k-bone-deep, #e8e6e1);
+  /* Počiatok v ľavom hornom rohu — celý presun je potom jedno posunutie
+     a jedna mierka, bez dopočítavania stredu. Rozmery sa nemenia, takže
+     `will-change` sľubuje len to, čo sa naozaj mení. */
+  transform-origin: 0 0;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .kh-rev__scena img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -6606,21 +6615,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .kh-rev__scena { display: none !important; }
 }
 
-/* Sekcia si na prelet vyhradí dráhu: mriežka sa prilepí pod hlavičku a
-   spodné odsadenie sekcie je presne to, čo počas lepenia odscrollujeme.
-   Keď skript scénu nespustí (bez skriptu, obmedzený pohyb, úzke okno),
-   trieda `ma-scenu` nepribudne a sekcia ostáva bežne vysoká. */
-@media (min-width: 1000px) {
-  /* Voľné miesto pod mriežkou je dráha preletu. Samotné pridržanie mriežky
-     robí skript posunom — nie `position: sticky`: prilepenie by sa muselo
-     merať v inom systéme než let fotografie a v niektorých prehliadačoch
-     sa s orezaním na `main` nekamaráti. Posun je jeden a ten istý údaj pre
-     obe veci, takže nemôžu ísť od seba. */
-  .k-js .kh-rev.ma-scenu .kh-rev__grid { margin-bottom: 100vh; will-change: transform; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .k-js .kh-rev.ma-scenu .kh-rev__grid { margin-bottom: 0; transform: none !important; }
-}
+/* Nič sa nedrží a nič nepribúda: prelet sa zmestí do bežného príchodu
+   sekcie. Držanie posunom bolo práve to, čo sa knísalo — posun ide vždy
+   o snímok za skutočným scrollom. */
 
 
 /* ==========================================================================
@@ -6920,4 +6917,57 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (max-width: 419px) {
   .kh-hero__actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .kh-hero__actions .k-btn { width: 100%; }
+}
+
+
+/* ==========================================================================
+   41 · Piaty krok postupu: tri realizácie namiesto jednej
+   Krok „Montáž a odovzdanie" ukazoval jeden hotový prístrešok. Sú to tri
+   fotografie realizácií — a sú to presne tie tri, ktoré sa o pár riadkov
+   nižšie stanú kartami s recenziami. Rovnaký pomer strán ako má fotografia
+   v karte, takže presun medzi nimi je čistá zmena mierky.
+   ========================================================================== */
+/* Trojica stojí v tom istom stĺpci, kde bola predtým jedna fotografia, a
+   vypĺňa ho celý — pod sebou, nie vedľa seba. Panel tak nemá pod textom
+   prázdno a presun do troch kariet vedľa seba je zároveň to, čo na sekcii
+   naozaj vidieť: stĺpec sa rozostúpi do radu. */
+/* Panel je mriežka a jeho riadky sa naťahujú do výšky najvyššieho kroku —
+   pod trojicou tak vznikol sivý pás. Riadky si preto držia vlastnú výšku. */
+.kh-proc__panel:has(.kh-proc__media--trio) { align-content: start; }
+.kh-proc__media--trio {
+  aspect-ratio: auto;
+  min-height: 0;
+  overflow: visible;
+  background: none;
+  align-self: start;
+}
+/* Jedna veľká a dve menšie: kompozícia zaberie rovnakú plochu, akú mala
+   jedna fotografia v ostatných krokoch, takže panel nemá pod textom prázdno.
+   Všetky tri majú pomer 4 : 3, ten istý, aký má fotografia v karte
+   s recenziou — presun medzi nimi je preto čistá zmena mierky. */
+.kh-proc__trio {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: clamp(8px, 0.9vw, 12px);
+}
+.kh-proc__trio-kus {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone-deep, #e8e6e1);
+}
+.kh-proc__trio-kus:first-child { grid-row: 1 / 3; aspect-ratio: auto; }
+@media (max-width: 699px) {
+  .kh-proc__trio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kh-proc__trio-kus:first-child { grid-row: auto; aspect-ratio: 4 / 3; }
+}
+.kh-proc__trio-kus img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Štítok kroku sedí na prvej fotografii, nie na spoji medzi nimi. */
+.kh-proc__media--trio .kh-proc__step-of { left: clamp(10px, 1vw, 16px); bottom: clamp(10px, 1vw, 16px); }
+/* Na telefóne sú fotografie malé a štítok by prvú z nich prekryl celú —
+   stojí preto nad nimi ako bežný popisok. */
+@media (max-width: 699px) {
+  .kh-proc__media--trio { display: flex; flex-direction: column; gap: 10px; }
+  .kh-proc__media--trio .kh-proc__step-of { position: static; order: -1; align-self: flex-start; }
 }
