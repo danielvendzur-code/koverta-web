@@ -6317,3 +6317,14 @@ html { background: var(--k-ink); }
   }
   .kh-tab tbody td[colspan]::before { content: attr(data-popis); }
 }
+
+
+/* --- 9 · Karta recenzie: vlasová linka, nie sivý rám ----------------------
+   Keď rámy zmizli z ponuky, konfigurátora, prémiovej rady aj materiálov,
+   ostala karta recenzie ako jediná so silným sivým rámom na 20 % krytia.
+   Recenzia kartou zostáva — je to citát v ploche —, ale rám je vlasový a
+   biela plocha sa na kostnom podklade odlíši aj bez neho. */
+.k .kh-rev__card {
+  border-color: var(--k-hair);
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.03);
+}
