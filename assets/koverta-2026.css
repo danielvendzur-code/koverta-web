@@ -6179,3 +6179,69 @@ html { background: var(--k-ink); }
    karty a formulár — na kostnej sú čitateľnejšie než boli na bielej. */
 .k { background: var(--k-bone); }
 .kh-cta { background: var(--k-bone); }
+
+
+/* ==========================================================================
+   32 · Jeden jazyk pre celú stránku
+   Materiály sa zbavili rámu a fotografia v nich začala viesť. Ponuka,
+   konfigurátor aj prémiová rada pritom ostali v starom: biela škatuľa
+   s tvrdým sivým rámom, pod fotkou dva riadky textu a pod nimi prázdno,
+   a pod každým názvom jantárová linka — tá istá, ktorou je označený popis
+   sekcie o dva riadky vyššie. Štyri škatule vedľa seba s rovnakou ozdobou
+   sú presne to, čo robí zo stránky šablónu.
+
+   Rám aj biela výplň odchádzajú zo všetkých troch. Fotografia má svoj
+   polomer a nesie dlaždicu, text stojí pod ňou na podklade sekcie a
+   nezaberá viac miesta, než potrebuje. Jantár ostáva na jednom mieste na
+   sekciu — v jej popise.
+   ========================================================================== */
+
+.k .kh-cat__card,
+.k .kh-cfg__item,
+.k .kh-soltec__card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.kh-cat__media,
+.kh-cfg__thumb,
+.kh-soltec__media { border-radius: var(--k-r-sm); overflow: hidden; }
+
+/* Telá dlaždíc: bez vnútorného odsadenia po stranách, aby text lícoval
+   s hranou fotografie, a bez prázdnoty pod posledným riadkom. */
+.k .kh-cat__body,
+.k .kh-cfg__body,
+.k .kh-soltec__body {
+  padding: clamp(14px, 1.2vw, 18px) 0 0;
+  background: none;
+  flex: 0 0 auto;
+}
+
+/* Jantárová linka pod názvom dlaždice. Na jednej obrazovke ich bolo osem. */
+.k .kh-cat__card .k-h3::after,
+.k .kh-cat__body h3::after,
+.k .kh-soltec__body h3::after { content: none; }
+.k .kh-cat__card:hover .k-h3::after,
+.k .kh-cat__card:focus-within .k-h3::after { content: none; }
+
+/* Dlaždica reaguje fotografiou, nie rámom: obraz sa pod kurzorom mierne
+   pritmaví, takže je jasné, čo je pod kurzorom, a nič sa nehýbe. */
+.kh-cat__media img,
+.kh-cfg__thumb img,
+.kh-soltec__media img { transition: filter 320ms var(--k-ease); }
+.k .kh-cat__card:hover .kh-cat__media img,
+.k .kh-cfg__item:hover .kh-cfg__thumb img,
+.k .kh-soltec__card:hover .kh-soltec__media img { filter: brightness(0.94); }
+
+@media (min-width: 1000px) {
+  /* Karty ponuky mali pevnú výšku 610 px a telo 142 px; s bielou škatuľou to
+     držalo rad zarovnaný, bez nej z toho ostalo len prázdno pod textom. */
+  .kh-cat__grid { height: auto; align-items: start; }
+  .kh-cat__item { display: block; }
+  .kh-cat__media { flex: none; aspect-ratio: 3 / 4; }
+  .kh-cat__body { flex: none; }
+  .kh-cat__item:hover .kh-cat__body,
+  .kh-cat__item:focus-within .kh-cat__body { flex: none; }
+}
