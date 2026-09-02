@@ -773,3 +773,145 @@ body { background: var(--k-white); color: var(--k-ink); }
   #SoltecPremium .sp-cfg__head { margin-bottom: 1.2rem; }
   #SoltecPremium .sp-cfg__head .sp-copy { margin-top: .6rem; }
 }
+
+
+/* ==========================================================================
+   Dotykové ovládanie vizualizácie
+   Otáčanie modelu prstom scrollovalo stránkou: `touch-action: none` bolo len
+   na samotnom SVG, ale ťahanie počúva celá scéna, takže dotyk kdekoľvek mimo
+   plátna dal prehliadaču povolenie stránku posunúť. Model sa pod prstom
+   pootočil o kúsok a potom už len ušiel hore.
+
+   Scéna preto dotykové gestá preberá celá. Stránka sa scrolluje čímkoľvek
+   mimo nej — vizualizácia nie je na výšku obrazovky, takže je vždy čoho sa
+   chytiť.
+   ========================================================================== */
+#SoltecPremium .sp-stage,
+#SoltecPremium .sp-stage__canvas { touch-action: none; }
+/* Lišta pod scénou sú tlačidlá, tam musí dotyk fungovať normálne. */
+#SoltecPremium .sp-stage__bar,
+#SoltecPremium .sp-stage__ref { touch-action: auto; }
+
+/* Nápoveda „Ťahaním alebo šípkami otočíte model" je pre myš a klávesnicu.
+   Na dotyku sa `:hover` po ťuknutí zasekne, takže bublina vyskočila hore
+   ponad model a ostala tam visieť. Zobrazuje sa preto len tam, kde je
+   skutočný kurzor, a pri ovládaní klávesnicou. */
+#SoltecPremium .sp-stage__hint { opacity: 0; }
+@media (hover: hover) and (pointer: fine) {
+  #SoltecPremium .sp-stage:hover .sp-stage__hint { opacity: 1; }
+}
+#SoltecPremium .sp-stage:focus-visible .sp-stage__hint,
+#SoltecPremium .sp-stage:has(:focus-visible) .sp-stage__hint { opacity: 1; }
+
+
+/* ==========================================================================
+   Konfigurátor na telefóne
+   Lišta pod vizualizáciou bola mriežka so stĺpcom širokým podľa najširšieho
+   obsahu — 541 px v okne širokom 390. Rozmery, prepínač pohľadov, ovládanie
+   lamiel aj tlačidlá „Zavrieť / Otvoriť všetko" tak končili za pravým
+   okrajom a dalo sa k nim dostať len vodorovným posunom, ktorý nebolo ako
+   uhádnuť. Spodný riadok s cenou mal tri stĺpce vedľa seba, takže cena sa
+   lámala na „11 866" a pod tým samotné „€".
+
+   Všetko ide teraz pod seba na plnú šírku a tlačidlá majú palcovú veľkosť.
+   Nič sa neskrýva za okrajom, nikde netreba trafiť 30 px terč.
+   ========================================================================== */
+@media screen and (max-width: 749px) {
+
+  /* --- Lišta pod vizualizáciou: každý ovládač na svojom riadku ---------- */
+  #SoltecPremium .sp-stage__bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    overflow: visible;
+    padding: 1.2rem 1.4rem 1.4rem;
+  }
+  #SoltecPremium .sp-stage__bar > * { grid-column: 1; min-width: 0; }
+  #SoltecPremium .sp-stage__dims {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.45;
+  }
+
+  /* Päť pohľadov sa do 358 px zmestí, keď majú tesnejšie odsadenie —
+     posúvanie prstom potom netreba vôbec. */
+  #SoltecPremium .sp-viewpick {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .2rem;
+    width: 100%;
+  }
+  #SoltecPremium .sp-viewpick button {
+    min-height: 4rem;
+    padding: 0 .2rem;
+    font-size: 1.15rem;
+  }
+
+  /* Poloha lamiel: tri stavy na celú šírku, pod nimi jazdec s tlačidlami. */
+  #SoltecPremium .sp-louver { width: 100%; gap: 1rem; }
+  #SoltecPremium .sp-louver-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .2rem;
+    width: 100%;
+  }
+  #SoltecPremium .sp-louver-toggle button { min-height: 4.2rem; padding: 0 .4rem; font-size: 1.25rem; }
+  #SoltecPremium .sp-louver-run { width: 100%; gap: 1rem; }
+  #SoltecPremium .sp-louver-range { flex: 1 1 auto; min-width: 0; }
+  #SoltecPremium .sp-louver-btn { width: 4.4rem; height: 4.4rem; }
+
+  #SoltecPremium .kv-allmove {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+    width: 100%;
+  }
+  #SoltecPremium .kv-allmove__btn { width: 100%; min-height: 4.2rem; }
+  #SoltecPremium .sp-cfg__open { width: 100%; justify-content: center; min-height: 4.4rem; }
+
+  /* --- Spodný riadok: cena hore, tlačidlá pod ňou ---------------------- */
+  #SoltecPremium .sp-navrow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem 1rem;
+  }
+  #SoltecPremium .sp-navrow__price {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: .2rem .8rem;
+    text-align: center;
+  }
+  #SoltecPremium .sp-navrow__price b { white-space: nowrap; font-size: 2.4rem; }
+  #SoltecPremium .sp-navrow button[data-sp-back] { grid-column: 1; grid-row: 2; }
+  #SoltecPremium .sp-navrow button[data-sp-next] { grid-column: 2; grid-row: 2; }
+  #SoltecPremium .sp-navrow button { width: 100%; min-height: 4.8rem; padding-inline: 1rem; }
+
+  /* --- Kroky: palcové terče -------------------------------------------- */
+  #SoltecPremium .sp-rail button { padding-top: .4rem; }
+  #SoltecPremium .sp-rail button i { height: 4rem; font-size: 1.35rem; }
+  #SoltecPremium .sp-rail button span { display: none; }
+
+  /* --- Záložky produktov sa nesmú končiť za okrajom --------------------
+     Tri dlhé názvy v jednom neposúvateľnom rade končili za okrajom a prvý
+     z nich bol odrezaný uprostred slova. Zalomia sa teda do dvoch riadkov
+     — pri troch záložkách je to menej práce než hľadať skrytý posun. */
+  .kv-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    overflow: visible;
+  }
+  .kv-tabs a {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0 1.1rem;
+    font-size: 1.2rem;
+    white-space: nowrap;
+  }
+}

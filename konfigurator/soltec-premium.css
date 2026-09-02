@@ -1397,7 +1397,7 @@
 #SoltecPremium .sp-stage:focus { outline: none; }
 #SoltecPremium .sp-stage:focus-visible { outline: 2px solid var(--sp-ink); outline-offset: 3px; }
 #SoltecPremium .sp-stage__hint { position: absolute; left: 1.6rem; bottom: 1.6rem; margin: 0; padding: .5rem 1rem; border-radius: 100px; background: rgba(18,18,18,.62); color: #fff; font-size: 1.1rem; letter-spacing: .02em; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
-#SoltecPremium .sp-stage:hover .sp-stage__hint, #SoltecPremium .sp-stage:focus-within .sp-stage__hint { opacity: 1; }
+/* Nápoveda sa zapína vo vrstve koverta-cfg-skin.css — len pre myš a klávesnicu. */
 @media (prefers-reduced-motion: reduce) { #SoltecPremium .sp-stage__hint { transition: none; } }
 
 /* ═══ reference gallery ═══ */

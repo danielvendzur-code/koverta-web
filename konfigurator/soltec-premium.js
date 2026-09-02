@@ -2737,7 +2737,23 @@
                  nesie geometria — dva pásy na rube a tmavšia čelná hrana. */
               const obrys = { arris: false };
               const layO = Object.assign({}, lay, obrys);
-              quad([[aX,y0-lap,aZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[aX,y1+lap,aZ]], shade(louv, 0.16), layO);
+              /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
+                 lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
+                 je to ten 17 mm lap, ktorým strecha tesní.
+
+                 Bez neho splynuli zavreté lamely zhora do jednej hladkej
+                 dosky: plochy susedných lamiel na seba priamo nadväzujú a
+                 obrys sa kreslí vo farbe výplne, takže medzi nimi nebolo nič.
+                 Pohľad zhora tak nemal vôbec žiadnu textúru a spoje zmizli.
+
+                 Pás sa kreslí ako samostatná plocha, ktorá na hlavnú presne
+                 nadväzuje — neprekrýva ju. Prekryté plochy v jednej rovine sa
+                 medzi snímkami preraďujú a lamely by preblikávali, čo je
+                 chyba, ktorou si táto scéna už prešla. */
+              const lapF = 0.13;
+              const jX = aX + (bX - aX) * lapF, jZ = aZ + (bZ - aZ) * lapF;
+              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), layO);
+              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), layO);
               /* Rub lamely nie je jeden tón. Horná hrana je zastrčená pod
                  susednou lamelou, takže tá polovica je v jej tieni; spodná
                  hrana je otvorená k oblohe a je svetlejšia. Rub sa preto
