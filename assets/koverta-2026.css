@@ -5732,10 +5732,16 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 
   /* --- Fotografia sa v ráme posúva -------------------------------------
      Rám stojí, obraz v ňom putuje o pár percent, kým rám prechádza oknom. */
-  .k-js .kh-mat__media.je-scrub img,
   .k-js .kh-cat__media.je-scrub img,
   .k-js .kh-work__media.je-scrub img {
     transform: translate3d(0, calc((var(--k-p, 0.5) - 0.5) * -9%), 0) scale(1.12);
+    will-change: transform;
+  }
+  /* V materiáloch je fotografia najväčšia a sekcia je o nej — tam sa oplatí
+     posunúť viac, aby bol pohyb naozaj vidieť. Zväčšenie musí rásť s dráhou,
+     inak by sa pri krajnej polohe odkryl okraj rámu. */
+  .k-js .kh-mat__media.je-scrub img {
+    transform: translate3d(0, calc((var(--k-p, 0.5) - 0.5) * -16%), 0) scale(1.2);
     will-change: transform;
   }
 }
