@@ -291,7 +291,17 @@
         b.ciele.forEach((c) => c.el.style.setProperty('--k-p', '1'));
       });
     };
-    if (REDUCED.matches) { dokonca(); return; }
+    /* Pri prefers-reduced-motion sa engine NEvypína. Merať polohu nie je
+       pohyb — pohybom je až to, čo z čísla urobí CSS. Vypĺňanie číslic a
+       zosvetlenie hviezd sú zmeny farby, tie sa nechávajú vždy; posuny,
+       odkrývanie fotky a putovanie obrazu v ráme sú v CSS zavreté v bloku
+       `no-preference` a pri obmedzenom pohybe sa nekreslia.
+
+       Prečo to takto: Windows majú prepínač „Animačné efekty", ktorý toto
+       hlásenie zapína, a zapnutý býva aj u ľudí, ktorí o ňom nevedia —
+       zadávateľ nevidel ani jednu z animácií práve preto. Vestibulárny
+       problém robí pohyb, nie farba; toto rozdelenie dá zmysel obom
+       stranám. */
 
     const orez = (n) => (n < 0 ? 0 : n > 1 ? 1 : n);
 

@@ -5652,55 +5652,68 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-rev__card { position: relative; overflow: hidden; }
 .kh-rev__foto { display: none; }
 
+/* Farba nie je pohyb. Vypĺňanie číslice 5,0 a rozsvecovanie hviezd sa preto
+   kreslia vždy — aj vtedy, keď si systém pýta obmedzený pohyb. Posuny,
+   odkrývanie fotografie a putovanie obrazu v ráme sú nižšie, v bloku, ktorý
+   sa pri obmedzenom pohybe nepoužije. */
+
+/* Číslo 5,0. Dve vrstvy pozadia orezané na tvar číslic: sivá leží pod
+   uhlíkovou stále, takže hodnotenie je čitateľné aj pri --k-p = 0.
+   Odsadenie s opačným okrajom rozšíri plochu pozadia o chvost čiarky. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__figures b {
+    padding: 0.12em 0.06em 0.18em;
+    margin: -0.12em -0.06em -0.18em;
+    background-image:
+      linear-gradient(var(--k-ink), var(--k-ink)),
+      linear-gradient(rgba(18, 23, 26, 0.16), rgba(18, 23, 26, 0.16));
+    background-repeat: no-repeat;
+    background-position: 0 100%, 0 0;
+    background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* Hviezdy sa rozsvecujú zľava. Bez color-mix ostanú jantárové od začiatku —
+   to je prijateľné východisko, nie chyba. */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big .k-stars svg {
+    color: color-mix(in srgb, var(--k-amber) calc(var(--k-p, 1) * 100%), rgba(18, 23, 26, 0.14));
+  }
+}
+
+/* Priehľadnosť je pri obmedzenom pohybe odporúčaná náhrada za posun, tak
+   ostáva tiež — len bez toho posunu. */
+.k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big small,
+.k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__source,
+.k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__social,
+.k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__award,
+.k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card,
+.k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__nav {
+  opacity: var(--k-p, 1);
+}
+
 @media screen and (prefers-reduced-motion: no-preference) {
 
-  /* Číslo 5,0. Dve vrstvy pozadia orezané na tvar číslic: sivá leží pod
-     uhlíkovou stále, takže hodnotenie je čitateľné aj pri --k-p = 0.
-     Odsadenie s opačným okrajom rozšíri plochu pozadia o chvost čiarky. */
-  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__figures b {
-      padding: 0.12em 0.06em 0.18em;
-      margin: -0.12em -0.06em -0.18em;
-      background-image:
-        linear-gradient(var(--k-ink), var(--k-ink)),
-        linear-gradient(rgba(18, 23, 26, 0.16), rgba(18, 23, 26, 0.16));
-      background-repeat: no-repeat;
-      background-position: 0 100%, 0 0;
-      background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
-      -webkit-background-clip: text;
-              background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-    }
-  }
-
-  /* Hviezdy sa rozsvecujú zľava. Bez color-mix ostanú jantárové od začiatku —
-     to je prijateľné východisko, nie chyba. */
+  /* Hviezda ešte dorastie do svojej veľkosti. */
   .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big .k-stars svg {
     transform: scale(calc(0.66 + var(--k-p, 1) * 0.34));
   }
-  @supports (color: color-mix(in srgb, red 50%, blue)) {
-    .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big .k-stars svg {
-      color: color-mix(in srgb, var(--k-amber) calc(var(--k-p, 1) * 100%), rgba(18, 23, 26, 0.14));
-    }
-  }
 
-  /* Popis pod hviezdami a odkazy pod hodnotením — tichý nábeh zdola. */
+  /* Odkazy pod hodnotením nabiehajú zdola. */
   .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big small,
   .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__source,
   .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__social,
   .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__award {
-    opacity: var(--k-p, 1);
     transform: translate3d(0, calc((1 - var(--k-p, 1)) * 16px), 0);
   }
 
   /* Karty prichádzajú sprava ako rad, prvá prvá. */
   .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card {
-    opacity: var(--k-p, 1);
     transform: translate3d(calc((1 - var(--k-p, 1)) * 44px), 0, 0);
-  }
-  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__nav {
-    opacity: var(--k-p, 1);
   }
 
   /* Z fotky sa stane recenzia. Fotografia leží nad hotovou kartou a odkrýva
@@ -5716,12 +5729,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
     clip-path: inset(calc(var(--k-p, 1) * 100%) 0 0 0);
     transform: translate3d(0, calc(var(--k-p, 1) * -4%), 0);
   }
-  .kh-rev__card .kh-rev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   /* --- Fotografia sa v ráme posúva -------------------------------------
-     Rám stojí, obraz v ňom putuje o pár percent, kým rám prechádza oknom.
-     Zväčšenie o 12 % je práve toľko, aby sa pri krajnej polohe neodkryl
-     okraj. Rámy majú `overflow: hidden`, takže rozloženie sa nemení. */
+     Rám stojí, obraz v ňom putuje o pár percent, kým rám prechádza oknom. */
   .k-js .kh-mat__media.je-scrub img,
   .k-js .kh-cat__media.je-scrub img,
   .k-js .kh-work__media.je-scrub img {
@@ -5729,6 +5739,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
     will-change: transform;
   }
 }
+
+.kh-rev__card .kh-rev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* --- 6 · Materiál a výbava ------------------------------------------------
    Prepínač značky bol pilulka s pilulkou vnútri a pri prejdení myšou sa
@@ -6149,3 +6161,15 @@ html { background: var(--k-ink); }
 .kh-tab tbody tr:hover th { background: none; }
 .kh-tab tbody th { padding-block: clamp(15px, 1.4vw, 19px); }
 .kh-tab caption { padding-bottom: clamp(14px, 1.4vw, 20px); max-width: 78ch; }
+
+
+/* --- 6 · Podklad stránky je kostný, nie biely -----------------------------
+   Pod hero fotografiou stál pás čistej bielej (255, 255, 255) — sekcia so
+   štyrmi údajmi nemá vlastné pozadie a brala ho z `.k`. Zvyšok webu pritom
+   stojí na kostnej (246, 245, 242), takže hneď pod hlavnou fotografiou bola
+   jediná biela plocha na stránke. Zadávateľ na ňu ukazoval trikrát.
+
+   Podklad je teraz kostný všade, kde si sekcia nepýta inak. Biele ostávajú
+   karty a formulár — na kostnej sú čitateľnejšie než boli na bielej. */
+.k { background: var(--k-bone); }
+.kh-cta { background: var(--k-bone); }
