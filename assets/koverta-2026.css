@@ -6245,3 +6245,38 @@ html { background: var(--k-ink); }
   .kh-cat__item:hover .kh-cat__body,
   .kh-cat__item:focus-within .kh-cat__body { flex: none; }
 }
+
+
+/* --- 7 · Skladba konštrukcie: k tabuľke patrí kresba ----------------------
+   Sekcia bola samotná tabuľka cez celú šírku. Údaje sú správne, ale osem
+   riadkov názvov vrstiev bez toho, aby človek videl, kde tá vrstva na
+   prístrešku je, je technický list, nie stránka.
+
+   Vedľa tabuľky preto stojí rez zostavou — ten istý náčrt, ktorý je v prvom
+   kroku postupu. Na širokej obrazovke ostáva stáť, kým sa zoznam vrstiev
+   posúva popri ňom, takže kresba je pri ruke pri každom riadku. Na úzkej
+   obrazovke je kresba nad zoznamom a nič sa nelepí. */
+.kh-skladba { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(22px, 2.4vw, 34px); }
+.kh-skladba__vykres { margin: 0; }
+.kh-skladba__vykres img {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: clamp(16px, 1.8vw, 26px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.kh-skladba__vykres figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--k-grey-soft);
+}
+.kh-skladba .kh-tab { margin-top: 0; }
+
+@media (min-width: 1000px) {
+  .kh-skladba { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(34px, 3.4vw, 56px); align-items: start; }
+  .kh-skladba__vykres { position: sticky; top: 112px; }
+  .kh-tab table { min-width: 0; }
+  .kh-tab th, .kh-tab td { padding-right: clamp(14px, 1.4vw, 24px); }
+}
