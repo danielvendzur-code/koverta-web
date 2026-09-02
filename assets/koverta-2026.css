@@ -5601,103 +5601,64 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k .kh-cfg__item:focus-within { transform: none; box-shadow: none; border-color: rgba(18, 23, 26, 0.35); }
 
 
-/* --- 4 · Kroky konfigurátora sa vypĺňajú ----------------------------------
-   Čísla 01–03 stáli v tichej sivej a nič nehovorili o poradí. Teraz sa pri
-   príchode sekcie vypĺňajú zhora nadol — číslo sa „naleje" uhlíkovou, jedno
-   po druhom. Pohyb beží vtedy, keď sa na sekciu pozeráte (trieda `is-in`
-   sa už neodoberá), nie pri odchode z nej.
+/* --- 4 · Kroky konfigurátora sa vypĺňajú podľa scrollu --------------------
+   Čísla 01–03 stáli v tichej sivej a nič nehovorili o poradí. Teraz sa
+   vypĺňajú jantárovou zhora nadol — a viaže ich tá istá scroll-riadená
+   premenná ako recenzie, takže sa napĺňajú presne tak, ako sa stránka
+   posúva: pomaly, keď človek číta, a hotové sú, kým je sekcia v strede okna.
+   Zadávateľ to takto chcel a je to zároveň jediné riešenie, ktoré sa nedá
+   „prescrollovať".
 
-   Výplň je gradient orezaný na tvar číslice; keď prehliadač `background-clip`
-   nevie, ostáva pôvodná sivá číslica bez pohybu. */
+   Sivá vrstva leží pod jantárovou stále, takže číslo je čitateľné aj pri
+   nulovej výplni. Kde prehliadač background-clip nevie, číslo je sivé bez
+   pohybu. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .k .kh-cfg__steps li > span {
+  .k .kh-cfg__steps.je-scrub li > span {
     background-image:
-      linear-gradient(var(--k-ink), var(--k-ink)),
+      linear-gradient(var(--k-amber), var(--k-amber)),
       linear-gradient(rgba(18, 23, 26, 0.17), rgba(18, 23, 26, 0.17));
     background-repeat: no-repeat;
     background-position: 0 0, 0 0;
-    background-size: 100% 0%, 100% 100%;
+    background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
     -webkit-background-clip: text;
             background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    transition: background-size 760ms var(--k-ease-out);
   }
-  .k .kh-cfg__steps li:hover > span { color: transparent; }
-  .k .kh-cfg__steps.is-in li > span { background-size: 100% 100%, 100% 100%; }
-  .k .kh-cfg__steps.is-in li:nth-child(2) > span { transition-delay: 150ms; }
-  .k .kh-cfg__steps.is-in li:nth-child(3) > span { transition-delay: 300ms; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .k .kh-cfg__steps li > span { background-size: 100% 100%, 100% 100%; transition: none; }
-  }
+  .k .kh-cfg__steps.je-scrub li:hover > span { color: transparent; }
 }
 
+/* --- 5 · Referencie: pohyb podľa scrollu ----------------------------------
+   Vstupná animácia sekcie sa prepísala z časovanej na scroll-riadenú.
+   Časovaná verzia mala strážcu, ktorý ju pri rýchlom scrolle dorovnal na
+   koniec — a bežné koliesko myši (okolo 2 px/ms) bolo nad jeho hranicou, tak
+   sa animácia spustila pod spodnou hranou okna a hneď zavrela. Zadávateľ
+   z nej nevidel ani snímku; meranie v prehliadači to potvrdilo.
 
-/* --- 5 · Referencie: najprv dôkaz, potom hlasy ----------------------------
-   Clona z troch realizácií je preč aj z HTML: pri rýchlom scrolle sa nestihla
-   otvoriť a človek prešiel okolo sekcie s dojmom, že tam nič nie je. Nová
-   vstupná animácia nič nezakrýva — hodnotenie aj recenzie sú v sekcii od
-   prvej chvíle, pohyb ich len dosádza na miesto.
+   Teraz je stav funkciou polohy stránky. Skript počíta jediné číslo `--k-p`
+   (0 až 1) pre každý prvok, CSS z neho robí výplň, posun a priehľadnosť.
+   Rýchly scroll teda na koncovom stave len pristane, pomalý ho vykreslí celý
+   a cesta späť hore ho ukáže znova. Poradie ostáva: najprv dôkaz (5,0 sa
+   naleje, hviezdy sa rozsvietia zľava, potom odkazy), potom hlasy (karty
+   sprava; z prvých troch sa fotografia realizácie odsunie a odkryje
+   recenziu, ktorá pod ňou celý čas hotová leží).
 
-   Poradie nesie význam. Najprv dôkaz: číslo 5,0 stojí v tichej sivej a zdola
-   nahor sa naleje uhlíkovou — plné hodnotenie sa naplní po okraj. Hviezdy sa
-   rozsvietia jedna za druhou zľava doprava, za nimi príde popis a odkazy pod
-   hodnotením. Až potom hlasy: karty recenzií prichádzajú sprava ako rad,
-   v poradí, v akom sa čítajú.
+   Skryté východisko platí len pod `.k-js` a s triedou `je-scrub`, ktorú dáva
+   skript až po prvom meraní. Bez skriptu, pri tlači, pri obmedzenom pohybe,
+   pri skoku na `#recenzie` aj s fokusom v lište je sekcia rovno v koncovej
+   podobe. Pohyb sú len transformácie, priehľadnosť a orezanie — rozloženie
+   sa nemení, CLS 0, vodorovne nič nepretečie. */
 
-   Prvé tri karty prichádzajú s fotografiou realizácie — z fotky sa stane
-   recenzia. Fotografia leží nad kartou a odchádza nahor: text recenzie je
-   pod ňou celý čas a zostáva na svojom mieste, takže sa nič neposúva.
-   Fotografia je len vrstva navyše, nie clona nad sekciou; keď treba skočiť
-   do koncového stavu, zmizne v tej istej snímke.
-
-   Poistky proti rýchlemu scrollu:
-   · Skryté východisko platí len pod `.k-js`, na obrazovke a bez
-     prefers-reduced-motion. Bez skriptu, pri tlači a s obmedzeným pohybom je
-     sekcia rovno v koncovej podobe. To isté pri skoku odkazom na #recenzie
-     (`:target`) a keď je v lište recenzií fokus.
-   · Fotografia sa kreslí len vtedy, keď je naozaj načítaná (skript dá karte
-     `is-foto`). Nenačítaná fotografia by bola biela plocha nad textom.
-   · Skript pridá `is-in` (prehrať) alebo `is-in is-hned` (rovno na koniec).
-     Na koniec ide časť vtedy, keď do okna vletela rýchlo, keď v ňom už bola
-     pri načítaní, alebo keď človek uprostred pohybu zrýchli — a po 1,5 s
-     vždy. Niet stavu, v ktorom by obsah chýbal dlhšie, než trvá pohľad.
-   · Triedy sa neodoberajú: pri ceste späť hore sekcia stojí v koncovom stave.
-   Pohyb sú len animácie priehľadnosti, transformácie a farby — rozloženie sa
-   nemení (CLS 0), vodorovne nič nepretečie. Koncový stav je predvolený
-   štýl; animácia s fill-mode: backwards drží východisko len počas
-   oneskorenia, takže po dobehnutí platia bežné prechody pri hoveri. */
-
-/* Fotografia realizácie v karte. Mimo animácie sa nekreslí vôbec — bez
-   skriptu, pri tlači aj pri obmedzenom pohybe je karta rovno recenziou. */
 .kh-rev__card { position: relative; overflow: hidden; }
 .kh-rev__foto { display: none; }
 
-@keyframes k-ref-nalej { from { background-size: 100% 0%, 100% 100%; } }
-@keyframes k-ref-foto {
-  from { clip-path: inset(0 0 0 0); transform: none; }
-  to   { clip-path: inset(100% 0 0 0); transform: translateY(-4%); }
-}
-@keyframes k-ref-hviezda {
-  from { color: rgba(18, 23, 26, 0.14); transform: scale(0.62); }
-  55%  { color: var(--k-amber); transform: scale(1.1); }
-  to   { color: var(--k-amber); transform: none; }
-}
-@keyframes k-ref-vstup { from { opacity: 0; transform: translateY(14px); } }
-@keyframes k-ref-rad   { from { opacity: 0; transform: translateX(36px); } }
-@keyframes k-ref-zjav  { from { opacity: 0; } }
-
 @media screen and (prefers-reduced-motion: no-preference) {
 
-  /* Číslo: dve vrstvy pozadia orezané na tvar číslic. Krivka je kubická, nie
-     exponenciálna — nalievanie má mať váhu, nie švihnúť nahor za 150 ms. Sivá je pod uhlíkovou
-     stále, takže 5,0 je čitateľné aj pred pohybom. Odsadenie s opačným
-     okrajom rozšíri plochu pozadia o chvost čiarky — riadkovanie 0,8 by ho
-     inak odrezalo; rozloženie sa tým nemení. Kde prehliadač background-clip
-     nevie, číslo je od začiatku uhlíkové. */
+  /* Číslo 5,0. Dve vrstvy pozadia orezané na tvar číslic: sivá leží pod
+     uhlíkovou stále, takže hodnotenie je čitateľné aj pri --k-p = 0.
+     Odsadenie s opačným okrajom rozšíri plochu pozadia o chvost čiarky. */
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .k-js .kh-rev:not(:target) .kh-rev__score:not(:focus-within) .kh-rev__figures b {
+    .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__figures b {
       padding: 0.12em 0.06em 0.18em;
       margin: -0.12em -0.06em -0.18em;
       background-image:
@@ -5705,86 +5666,69 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
         linear-gradient(rgba(18, 23, 26, 0.16), rgba(18, 23, 26, 0.16));
       background-repeat: no-repeat;
       background-position: 0 100%, 0 0;
-      background-size: 100% 100%, 100% 100%;
+      background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
       -webkit-background-clip: text;
               background-clip: text;
       -webkit-text-fill-color: transparent;
       color: transparent;
     }
-    .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__figures b { background-size: 100% 0%, 100% 100%; }
-    .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__figures b {
-      animation: k-ref-nalej 1000ms cubic-bezier(0.33, 1, 0.68, 1) backwards;
+  }
+
+  /* Hviezdy sa rozsvecujú zľava. Bez color-mix ostanú jantárové od začiatku —
+     to je prijateľné východisko, nie chyba. */
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big .k-stars svg {
+    transform: scale(calc(0.66 + var(--k-p, 1) * 0.34));
+  }
+  @supports (color: color-mix(in srgb, red 50%, blue)) {
+    .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big .k-stars svg {
+      color: color-mix(in srgb, var(--k-amber) calc(var(--k-p, 1) * 100%), rgba(18, 23, 26, 0.14));
     }
   }
 
-  /* Hviezdy: v sivej a zmenšené, kým sa nerozsvietia — každá o 80 ms neskôr,
-     s malým prekmitom, aby mal zápal váhu. */
-  .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__big .k-stars svg {
-    color: rgba(18, 23, 26, 0.14);
-    transform: scale(0.62);
-  }
-  .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__big .k-stars svg {
-    animation: k-ref-hviezda 460ms cubic-bezier(0.2, 0.7, 0.3, 1) var(--k-ref-d) backwards;
-  }
-  /* Oneskorenia idú cez vlastnosť: pravidlo s animáciou má vyššiu špecificitu
-     a `animation-delay` by inak prepísalo. */
-  .k-js .kh-rev__big .k-stars svg { --k-ref-d: 520ms; }
-  .k-js .kh-rev__big .k-stars svg:nth-child(2) { --k-ref-d: 600ms; }
-  .k-js .kh-rev__big .k-stars svg:nth-child(3) { --k-ref-d: 680ms; }
-  .k-js .kh-rev__big .k-stars svg:nth-child(4) { --k-ref-d: 760ms; }
-  .k-js .kh-rev__big .k-stars svg:nth-child(5) { --k-ref-d: 840ms; }
-
-  /* Popis pod hviezdami a odkazy pod hodnotením: tichý nábeh zdola, jeden
-     po druhom, keď je číslo plné. */
-  .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__big small,
-  .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__source,
-  .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__social,
-  .k-js .kh-rev:not(:target) .kh-rev__score:not(.is-in):not(:focus-within) .kh-rev__award { opacity: 0; }
-  .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__big small,
-  .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__source,
-  .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__social,
-  .k-js .kh-rev:not(:target) .kh-rev__score.is-in:not(.is-hned):not(:focus-within) .kh-rev__award {
-    animation: k-ref-vstup 560ms var(--k-ease-out) var(--k-ref-d) backwards;
-  }
-  .k-js .kh-rev__big small { --k-ref-d: 820ms; }
-  .k-js .kh-rev__source   { --k-ref-d: 640ms; }
-  .k-js .kh-rev__social   { --k-ref-d: 740ms; }
-  .k-js .kh-rev__award    { --k-ref-d: 840ms; }
-
-  /* Karty: rad sprava, prvá karta prvá. Východiskové oneskorenie nechá číslu
-     jeho chvíľu; keď lišta prichádza sama (na telefóne je pod hodnotením),
-     skript dá `is-sam` a rad vyráža hneď. Za štvrtou kartou už niet čo
-     stupňovať — sú mimo viditeľnej časti lišty. */
-  .k-js .kh-rev:not(:target) .kh-rev__list:not(.is-in):not(:focus-within) .kh-rev__card,
-  .k-js .kh-rev:not(:target) .kh-rev__list:not(.is-in):not(:focus-within) .kh-rev__nav { opacity: 0; }
-  .k-js .kh-rev__list.is-in { --k-ref-rad: 360ms; }
-  .k-js .kh-rev__list.is-in.is-sam { --k-ref-rad: 0ms; }
-  .k-js .kh-rev:not(:target) .kh-rev__list.is-in:not(.is-hned):not(:focus-within) .kh-rev__card {
-    animation: k-ref-rad 680ms var(--k-ease-out) var(--k-ref-d) backwards;
-  }
-  .k-js .kh-rev__card                   { --k-ref-d: var(--k-ref-rad); }
-  .k-js .kh-rev__card:nth-child(2)      { --k-ref-d: calc(var(--k-ref-rad) + 100ms); }
-  .k-js .kh-rev__card:nth-child(3)      { --k-ref-d: calc(var(--k-ref-rad) + 200ms); }
-  .k-js .kh-rev__card:nth-child(n + 4)  { --k-ref-d: calc(var(--k-ref-rad) + 280ms); }
-  .k-js .kh-rev:not(:target) .kh-rev__list.is-in:not(.is-hned):not(:focus-within) .kh-rev__nav {
-    animation: k-ref-zjav 420ms var(--k-ease) calc(var(--k-ref-rad) + 380ms) backwards;
+  /* Popis pod hviezdami a odkazy pod hodnotením — tichý nábeh zdola. */
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__big small,
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__source,
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__social,
+  .k-js .kh-rev:not(:target) .kh-rev__score.je-scrub:not(:focus-within) .kh-rev__award {
+    opacity: var(--k-p, 1);
+    transform: translate3d(0, calc((1 - var(--k-p, 1)) * 16px), 0);
   }
 
-  /* Z fotky sa stane recenzia. Fotografia leží nad kartou, príde s ňou sprava
-     a odchádza nahor — odkrýva zhora nadol, teda v poradí, v akom sa karta
-     číta: hviezdy, text, meno. Recenzia pod ňou je hotová a nikam sa
-     neposunie. Karta má orezanie, takže fotografia drží jej tvar. */
-  .k-js .kh-rev:not(:target) .kh-rev__list.is-in:not(.is-hned):not(:focus-within) .kh-rev__card.is-foto .kh-rev__foto {
+  /* Karty prichádzajú sprava ako rad, prvá prvá. */
+  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card {
+    opacity: var(--k-p, 1);
+    transform: translate3d(calc((1 - var(--k-p, 1)) * 44px), 0, 0);
+  }
+  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__nav {
+    opacity: var(--k-p, 1);
+  }
+
+  /* Z fotky sa stane recenzia. Fotografia leží nad hotovou kartou a odkrýva
+     ju zhora nadol — v poradí, v akom sa karta číta: hviezdy, text, meno.
+     Orezanie robí celú prácu, takže sa nič neposúva a text pod ňou stojí. */
+  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card.is-foto .kh-rev__foto {
     display: block;
     position: absolute;
     inset: 0;
     z-index: 1;
+    pointer-events: none;
     background: var(--k-bone);
-    animation: k-ref-foto 560ms var(--k-ease-out) calc(var(--k-ref-d) + 200ms) both;
+    clip-path: inset(calc(var(--k-p, 1) * 100%) 0 0 0);
+    transform: translate3d(0, calc(var(--k-p, 1) * -4%), 0);
   }
-  .k-js .kh-rev__card .kh-rev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
-}
+  .kh-rev__card .kh-rev__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+  /* --- Fotografia sa v ráme posúva -------------------------------------
+     Rám stojí, obraz v ňom putuje o pár percent, kým rám prechádza oknom.
+     Zväčšenie o 12 % je práve toľko, aby sa pri krajnej polohe neodkryl
+     okraj. Rámy majú `overflow: hidden`, takže rozloženie sa nemení. */
+  .k-js .kh-mat__media.je-scrub img,
+  .k-js .kh-cat__media.je-scrub img,
+  .k-js .kh-work__media.je-scrub img {
+    transform: translate3d(0, calc((var(--k-p, 0.5) - 0.5) * -9%), 0) scale(1.12);
+    will-change: transform;
+  }
+}
 
 /* --- 6 · Materiál a výbava ------------------------------------------------
    Prepínač značky bol pilulka s pilulkou vnútri a pri prejdení myšou sa
@@ -6046,3 +5990,31 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-odtien span { display: grid; gap: 2px; min-width: 0; }
 .kh-odtien strong { font-size: 13.5px; font-weight: 600; color: var(--k-ink); }
 .kh-odtien small { font-size: 12px; color: var(--k-grey-soft); font-variant-numeric: tabular-nums; }
+
+
+/* ==========================================================================
+   31 · PREHLIADKA 2026-09-02 · II
+   ========================================================================== */
+
+/* --- 1 · Biela pod pätičkou ----------------------------------------------
+   Na telefóne je stránka kratšia než okno až na spodku: pätička skončí a pod
+   ňou ostane pás bielej. Je to podklad plátna — `body` má biele pozadie a to
+   sa pri prázdnom `html` prenáša na celé okno vrátane plochy za dokumentom.
+   Uhlíkovú dostane `html`, takže za koncom pätičky pokračuje tma, nie biela.
+   To isté rieši aj prepnutie do tmavej pri prehnutí (rubber-band) na iOS. */
+html { background: var(--k-ink); }
+
+
+/* --- 2 · Náčrt v postupe sa nesmie orezať ---------------------------------
+   Prvý krok postupu má namiesto fotografie technický náčrt s kótami. Rám ho
+   ukazoval cez `object-fit: cover`, takže popisy („stĺp 120 × 120 mm",
+   „šírka", „výška") zostali za okrajom — zadávateľ hlásil, že popis obrázka
+   nie je vidieť celý. Kresba sa vojde celá; spodné odsadenie nechá miesto
+   štítku s číslom kroku, aby ho neprekrýval. */
+.kh-proc__media img[src$=".svg"] {
+  object-fit: contain;
+  padding: clamp(14px, 1.6vw, 24px) clamp(14px, 1.6vw, 24px) clamp(38px, 3.4vw, 52px);
+  background: var(--k-white);
+  transform: none;
+}
+.kh-proc__panel.is-active .kh-proc__media img[src$=".svg"] { transform: none; }
