@@ -5582,3 +5582,300 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k-js .kh-rev__clona { display: none; }
   .k-js .kh-rev__grid { opacity: 1; transform: none; transition: none; }
 }
+
+
+/* ==========================================================================
+   29 · PREHLIADKA 2026-09-02
+   Zadávateľ prešiel domovskú stránku a označil sedem miest. Táto vrstva ich
+   rieši a nič iné nemení — každý blok nesie dôvod, prečo vyzerá takto.
+   ========================================================================== */
+
+/* --- 1 · Popis sekcie ------------------------------------------------------
+   Popisky nad nadpismi („Prémiová rada Soltec", „Materiál a výbava",
+   „Referencie") boli tichý sivý riadok, ktorý splýval s odsekom pod ním —
+   nedalo sa rozoznať, či ide o označenie sekcie alebo o vetu.
+
+   Nový tvar je typografický, nie ozdobný: slovo v nadpisovom reze, plná
+   uhlíková, a pod samotným slovom jantárová linka na šírku textu. Je to
+   register — to, čo v tlačenom katalógu označuje kapitolu. Žiadne verzálky
+   s bodkou, žiadna pilulka, žiadny krúžok. */
+.k .k-eyebrow,
+.kf .k-eyebrow {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  /* Hlavičky sekcií sú flex a grid kontajnery — v nich sa inline-block
+     zblokuje a roztiahne na celý stĺpec, takže linka pod slovom by bola
+     dlhá cez pol stránky. Toto ju vráti na šírku textu. */
+  align-self: flex-start;
+  justify-self: start;
+  padding: 0 0 7px;
+  border: 0;
+  border-bottom: 2px solid var(--k-amber);
+  background: none;
+  font-family: var(--k-head);
+  font-size: clamp(12.5px, 1.05vw, 14px);
+  font-weight: 700;
+  font-variation-settings: "wdth" 106;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  text-transform: none;
+  color: var(--k-ink);
+}
+.k .k-eyebrow::before,
+.k .k-eyebrow::after { content: none; }
+
+/* Na tmavých plochách nesie slovo bielu a linka ostáva jantárová — je to tá
+   istá značka, len na opačnom podklade. */
+.k .k-invert .k-eyebrow,
+.k-invert .k-eyebrow,
+.k .kh-cta__aside-head .k-eyebrow,
+.k .kh-faq__intro .k-eyebrow,
+.kf .kf__lead .k-eyebrow {
+  color: #fff;
+  border-bottom-color: var(--k-amber);
+}
+
+/* Popisok v hero leží na fotografii — linka by sa v nej stratila, tak je
+   biela a slovo tiež. */
+.k .kh-hero__eyebrow {
+  color: #fff;
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Hlavička sekcie mala pod popiskom 6 px; nová linka potrebuje vzduch, inak
+   sa dotýka nadpisu. */
+.k .k-head .k-eyebrow,
+.k .kh-cfg__copy .k-eyebrow,
+.k .kh-rev__score .k-eyebrow,
+.k .kh-pick__head .k-eyebrow,
+.k .kh-soltec .k-eyebrow { margin-bottom: clamp(12px, 1.2vw, 18px); }
+
+
+/* --- 2 · Dve značky: biely pás na konci sekcie -----------------------------
+   Na telefóne sa sekcia rozpadá na štyri prvky pod sebou (fotka, pruh,
+   fotka, pruh) a posledným prvkom je pruh cez celú šírku. Sekcia si však
+   v mobilnej vrstve vzala späť spodné odsadenie z `.k-band`, takže pod
+   posledným pruhom ostal 40–60 px vysoký biely pás — presne to, čo bolo
+   na fotografii vidieť. Pruh siaha po spodok sekcie. */
+@media (max-width: 760px) {
+  .k .kh-pick { padding-bottom: 0; }
+}
+
+/* Fotografia v páse bola orezaná na 16 : 9 zo zdroja v pomere 4 : 3 — z
+   prístrešku ostal pruh a spodok kompozície (príjazd, terén) sa stratil.
+   Pás je vyšší, takže je na fotografii vidieť celá stavba. */
+.kh-pick__scene { aspect-ratio: 4 / 3; }
+@media (min-width: 620px) { .kh-pick__scene { aspect-ratio: 3 / 2; } }
+@media (min-width: 900px) { .kh-pick__scene { aspect-ratio: 16 / 10; } }
+
+/* Pruh pod fotografiou si pri prejdení myšou menil odtieň (tmavý o niečo
+   tmavší, biely na kostný). Pri fotografii nad ním to čítalo oko ako zmenu
+   farby fotky. Plocha ostáva; reakciu nesie odkaz v jej päte. */
+.k .kh-pick__lane:not(.is-premium),
+.k .kh-pick__lane:not(.is-premium):hover,
+.k .kh-pick__lane:not(.is-premium):focus-within { background: var(--k-ink); }
+.k .kh-pick__lane.is-premium,
+.k .kh-pick__lane.is-premium:hover,
+.k .kh-pick__lane.is-premium:focus-within { background: var(--k-white); }
+
+
+/* --- 3 · Fotografie sa pod kurzorom nehýbu ani v konfigurátore -------------
+   Pravidlo „obraz stojí" sa písalo na `.kh-cfg__thumb:hover`, lenže zväčšenie
+   spúšťa `.kh-cfg__item:hover` — teda celá karta. Dlaždice konfigurátora ako
+   jediné na webe pod kurzorom stále priblížili fotku a nadvihli sa. */
+.k .kh-cfg__item:hover .kh-cfg__thumb img,
+.k .kh-cfg__item:focus-within .kh-cfg__thumb img { transform: none; }
+.k .kh-cfg__item:hover,
+.k .kh-cfg__item:focus-within { transform: none; box-shadow: none; border-color: rgba(18, 23, 26, 0.35); }
+
+
+/* --- 4 · Kroky konfigurátora sa vypĺňajú ----------------------------------
+   Čísla 01–03 stáli v tichej sivej a nič nehovorili o poradí. Teraz sa pri
+   príchode sekcie vypĺňajú zhora nadol — číslo sa „naleje" uhlíkovou, jedno
+   po druhom. Pohyb beží vtedy, keď sa na sekciu pozeráte (trieda `is-in`
+   sa už neodoberá), nie pri odchode z nej.
+
+   Výplň je gradient orezaný na tvar číslice; keď prehliadač `background-clip`
+   nevie, ostáva pôvodná sivá číslica bez pohybu. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .k .kh-cfg__steps li > span {
+    background-image:
+      linear-gradient(var(--k-ink), var(--k-ink)),
+      linear-gradient(rgba(18, 23, 26, 0.17), rgba(18, 23, 26, 0.17));
+    background-repeat: no-repeat;
+    background-position: 0 0, 0 0;
+    background-size: 100% 0%, 100% 100%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    transition: background-size 760ms var(--k-ease-out);
+  }
+  .k .kh-cfg__steps li:hover > span { color: transparent; }
+  .k .kh-cfg__steps.is-in li > span { background-size: 100% 100%, 100% 100%; }
+  .k .kh-cfg__steps.is-in li:nth-child(2) > span { transition-delay: 150ms; }
+  .k .kh-cfg__steps.is-in li:nth-child(3) > span { transition-delay: 300ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .k .kh-cfg__steps li > span { background-size: 100% 100%, 100% 100%; transition: none; }
+  }
+}
+
+
+/* --- 5 · Recenzie sú vidieť vždy ------------------------------------------
+   Clona z troch realizácií nad sekciou odišla aj z HTML: pri rýchlom scrolle
+   sa nestihla otvoriť a človek prešiel okolo sekcie s dojmom, že tam nič
+   nie je. Nová vstupná animácia sekcie je samostatné zadanie; dovtedy tu
+   niet čo odkrývať a hodnotenie aj recenzie stoja na svojom mieste. */
+.k .kh-rev__grid { opacity: 1; transform: none; transition: none; }
+.kh-rev__clona, .kh-rev__stage { display: none; }
+
+
+/* --- 6 · Materiál a výbava ------------------------------------------------
+   Prepínač značky bol pilulka s pilulkou vnútri a pri prejdení myšou sa
+   vnútorná záložka nadvihla o 2 px — spod nej vyskočila spodná vrstva. Tvary
+   sa navyše nezhodovali so zvyškom webu, kde sa prepína rovnými plochami.
+
+   Teraz sú to dve záložky na spoločnej vlasovej linke. Aktívna je označená
+   jantárovou linkou pod sebou — tým istým znakom ako popis sekcie vyššie.
+   Nič sa nedvíha, nič nemá vlastné pozadie. */
+.kh-mat__switch {
+  display: inline-flex;
+  gap: clamp(18px, 2vw, 30px);
+  margin-bottom: clamp(22px, 2.4vw, 34px);
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--k-hair);
+  border-radius: 0;
+  background: none;
+}
+.k .kh-mat__tab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 2px 13px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  opacity: 0.5;
+  transition: opacity 240ms var(--k-ease);
+}
+.k .kh-mat__tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 320ms var(--k-ease-out);
+}
+.k .kh-mat__tab:hover,
+.k .kh-mat__tab:focus-visible { opacity: 0.72; transform: none; box-shadow: none; background: none; border-color: transparent; }
+.k .kh-mat__tab.is-active { opacity: 1; background: none; }
+.k .kh-mat__tab.is-active::after { transform: scaleX(1); }
+/* Značky v záložkách stoja na tmavom texte stránky, nie na tmavej ploche —
+   biele prevrátenie z pilulky tu už nemá čo prevracať. */
+.kh-mat__tab .k-logo,
+.kh-mat__tab.is-active .k-logo { height: clamp(17px, 1.5vw, 20px); color: var(--k-ink); }
+.kh-mat__tab.is-active .k-logo__letter path { fill: var(--k-ink); }
+.kh-mat__tab.is-active .k-logo .k-logo__bracket path { fill: var(--k-amber); }
+.kh-mat__tab .k-brand--soltec-img,
+.kh-mat__tab.is-active .k-brand--soltec-img { height: clamp(17px, 1.5vw, 20px); filter: brightness(0); }
+
+/* Pravá polovica karty. Bola to zvislo vycentrovaná dvojica „nadpis a
+   zoznam", takže názvy dvoch kariet vedľa seba stáli v inej výške podľa
+   toho, koľko mala ktorá faktov — a nad zoznamom visela linka cez pol
+   karty. Text sa teraz zarovnáva zhora, názov drží jantárovú linku pod
+   sebou (ten istý znak ako inde v tejto vrstve) a fakty sú jeden stĺpec
+   s poriadnym riadkovaním. */
+.kh-mat__body { justify-content: flex-start; }
+.k .kh-mat__title {
+  position: relative;
+  margin: 0;
+  padding-bottom: clamp(13px, 1.2vw, 17px);
+}
+.k .kh-mat__title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 34px;
+  height: 3px;
+  background: var(--k-amber);
+}
+.k .kh-mat__list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(9px, 0.9vw, 13px);
+  padding-top: 0;
+  border-top: 0;
+}
+.k .kh-mat__list li { padding-left: 20px; color: rgba(18, 23, 26, 0.72); }
+/* Odrážka bola od jednej zo starších vrstiev vypnutá cez `display: none`,
+   pravidlá o pár vrstiev nižšie jej však ďalej nastavovali farbu aj rozmer —
+   takže z faktov ostal text odsadený o 18 px a pred ním nič. Jantárový
+   štvorček sa vracia; je to tá istá odrážka ako v technických zoznamoch
+   na podstránkach. */
+.k .kh-mat__list li::before {
+  content: "";
+  display: block;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--k-amber);
+}
+
+@media (min-width: 900px) {
+  .kh-mat__body { justify-content: flex-start; gap: clamp(15px, 1.4vw, 20px); padding: clamp(26px, 2.4vw, 36px); }
+  .kh-mat__media { min-height: 300px; }
+}
+
+
+/* --- 7 · Štyri údaje: „40 rokov" na jednom riadku -------------------------
+   „do 40 rokov" sa v štvrtom stĺpci zalomilo na dva riadky a rozhodilo
+   zarovnanie celého radu — jantárová linka aj popis pod ňou spadli o riadok
+   nižšie než v ostatných troch. Údaj je teraz „40 rokov" a nezalomí sa. */
+.kh-fakty__cislo { white-space: nowrap; }
+.kh-fakty__polozka { align-content: start; }
+
+
+/* --- 8 · Nadpis nabieha po riadkoch ---------------------------------------
+   Predtým sa hýbalo každé slovo zvlášť a ešte sa doostrovalo z rozostrenia:
+   sedem slov znamenalo sedem drobných pohybov za sebou a nadpis sa pred
+   očami „skladal". Teraz je gesto jedno na riadok — text vyjde spod tvrdej
+   hrany ako celok, druhý riadok začína, keď je prvý v polovici dráhy.
+
+   Základ ostáva VIDITEĽNÉ: animácia s fill-mode: backwards skrýva len počas
+   vlastného oneskorenia, takže bez skriptu je nadpis normálne na mieste. */
+.is-headline .k-word { display: inline; animation: none; filter: none; }
+.is-headline .k-line { display: block; overflow: hidden; }
+.is-headline .k-line__in {
+  display: block;
+  transform-origin: left bottom;
+  animation: kLineUp 940ms cubic-bezier(0.16, 1, 0.3, 1) var(--k-line-delay, 0ms) backwards;
+}
+@keyframes kLineUp {
+  from { transform: translate3d(0, 104%, 0); opacity: 0.2; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* Jantár v druhom riadku sa zapáli až keď riadok dosadne. Je to jediný
+   farebný moment v hero a stojí za to, aby prišiel sám, nie s pohybom. */
+.is-headline .kh-hero__accent {
+  animation: kAccentIn 620ms var(--k-ease) 900ms backwards;
+}
+@keyframes kAccentIn {
+  from { color: #fff; }
+  to   { color: var(--k-amber); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-headline .k-line__in,
+  .is-headline .kh-hero__accent { animation: none; }
+}

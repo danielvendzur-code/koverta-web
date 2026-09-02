@@ -51,24 +51,20 @@
     }
 
     let ozvalSa = false;
-    /* Skrývanie má vlastného pozorovateľa s väčším okrajom. Keď to riešil
-       jeden, ohlásil sa presne na hrane okna — a podmienka „je celý mimo aj
-       s rezervou" v tej chvíli nikdy neplatila, takže sa trieda nikdy
-       neodobrala a pri scrollovaní hore sa už nič neanimovalo. */
-    const ioVon = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) entry.target.classList.remove('is-in');
-        });
-      },
-      { rootMargin: '110px 0px 110px 0px', threshold: 0 }
-    );
-
+    /* Odkrytie je jednosmerné. Predtým mu druhý pozorovateľ triedu pri
+       odchode z okna zase odoberal — a to bola presne tá chyba, ktorú
+       zadávateľ hlásil na recenziách: pri rýchlom scrollovaní prvok vojde
+       a vyjde skôr, než dobehne 780 ms dlhý prechod, takže sekcia sa
+       preletí v polovičnej priehľadnosti a nie je ju vidieť. Čo raz
+       prišlo, ostáva na mieste. */
     const io = new IntersectionObserver(
       (entries) => {
         ozvalSa = true;
         entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add('is-in');
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
         });
       },
       /* Odkrytie sa spustí, len čo prvok vojde spodnou hranou do okna.
@@ -77,7 +73,7 @@
       { rootMargin: '0px 0px 14% 0px', threshold: 0 }
     );
 
-    items.forEach((el) => { io.observe(el); ioVon.observe(el); });
+    items.forEach((el) => io.observe(el));
 
     /* Poistka. Predtým po 1,5 s odkryla úplne všetko vrátane sekcií hlboko
        pod ohybom — kým sa k nim návštevník doscrolloval, boli dávno odkryté
@@ -104,11 +100,11 @@
       items.forEach((el) => {
         if (el.classList.contains('is-in')) return;
         const r = el.getBoundingClientRect();
-        /* Prvok je v okne alebo tesne nad ním. Prvky, ktoré sú preč hore,
-           sa zámerne nechávajú tak — tie skryl pozorovateľ pri odchode a pri
-           návrate sa majú odkryť znova. Bez tejto druhej podmienky by sa obe
-           strany prebíjali a scrollovanie hore by prestalo animovať. */
-        if (r.top < h * 0.9 && r.bottom > -110) el.classList.add('is-in');
+        /* Všetko od spodnej hrany okna nahor. Odkrytie je jednosmerné, takže
+           prvok, ktorý pri rýchlom scrollovaní preletel oknom skôr, než sa
+           pozorovateľ ozval, sa tu dorovná — a pri ceste späť hore je hotový,
+           nie v polovici prechodu. */
+        if (r.top < h * 0.9) el.classList.add('is-in');
       });
     };
     const naplanuj = () => {
@@ -399,9 +395,11 @@
 
   /* --- 3b · Hero: nábeh nadpisu ---------------------------------------- */
 
-  // Nadpis nabieha po riadkoch: každý riadok je okno s orezaním a slová v ňom
-  // vychádzajú zdola. Je to pokojnejšie a čitateľnejšie než vypisovanie po
-  // písmenách, ktoré pri veľkom displayi pôsobilo lacno.
+  // Nadpis nabieha po celých riadkoch: každý riadok je okno s orezaním a text
+  // v ňom vyjde zdola ako jeden kus. Predtým sa hýbalo každé slovo zvlášť a
+  // ešte sa doostrovalo z rozostrenia — pri siedmich slovách to bolo sedem
+  // drobných pohybov za sebou a nadpis sa „skladal". Jedno gesto na riadok
+  // má váhu a nadpis je čitateľný od prvej chvíle.
   //
   // Text ostáva v DOM celý, delíme len na spany — vyhľadávače aj čítačky ho
   // vidia nezmenený. Základný stav je VIDITEĽNÉ; animácia s fill-mode:
@@ -428,7 +426,6 @@
       lines.push(current);
 
       const frag = document.createDocumentFragment();
-      let wordIndex = 0;
 
       lines.forEach((nodes, li) => {
         const line = document.createElement('span');
@@ -444,20 +441,19 @@
               const w = document.createElement('span');
               w.className = 'k-word';
               w.textContent = part;
-              w.style.animationDelay = wordIndex * 130 + 'ms';
-              wordIndex += 1;
               inner.appendChild(w);
             });
           } else {
             const w = document.createElement('span');
             w.className = 'k-word';
-            w.style.animationDelay = wordIndex * 130 + 'ms';
-            wordIndex += 1;
             w.appendChild(node.cloneNode(true));
             inner.appendChild(w);
           }
         });
 
+        // Oneskorenie nesie riadok, nie slovo — druhý riadok vychádza, keď je
+        // prvý v polovici dráhy, takže nadpis príde ako jeden pohyb.
+        inner.style.setProperty('--k-line-delay', li * 140 + 'ms');
         line.appendChild(inner);
         frag.appendChild(line);
       });
@@ -475,7 +471,7 @@
       /* Poistka rovnaká ako inde: obsah nesmie ostať schovaný nikdy. */
       window.setTimeout(() => title.classList.add('is-headline'), 2500);
 
-      const total = wordIndex * 130 + 760;
+      const total = lines.length * 140 + 720;
       after.forEach((el, i) => {
         window.setTimeout(() => el.classList.add('is-in'), total + i * 120);
       });
@@ -943,56 +939,10 @@
     }
   }
 
-  /* --- clona z realizácií nad recenziami ----------------------------------
-     Nad hotovou sekciou recenzií leží clona z troch fotografií. Keď scroll
-     prejde bod na dráhe, clona sa rozostúpi a sekcia pod ňou sadne na
-     miesto. Celý pohyb robí štýl; tu sa len prehodí trieda, takže rýchly
-     scroll pristane na správnom stave a cesta späť ho vráti.
-
-     Body sú dva — nižší pre cestu späť —, inak by sa clona na hrane pri
-     najmenšom pohybe otvárala a zatvárala. */
-
-  function initRecenzie(root) {
-    const stage = root.querySelector('[data-k-recenzie]');
-    if (!stage) return;
-    const clona = stage.querySelector('.kh-rev__clona');
-    if (!clona) return;
-
-    let hotovo = false;
-    let caka = false;
-
-    /* Fotografie sa usadia zo zväčšenia, keď clona naozaj vojde do okna. */
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver((z) => {
-        z.forEach((e) => { if (e.isIntersecting) { stage.classList.add('je-videt'); io.disconnect(); } });
-      }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
-      io.observe(stage);
-    } else {
-      stage.classList.add('je-videt');
-    }
-
-    const prepocitaj = () => {
-      caka = false;
-      const r = stage.getBoundingClientRect();
-      const h = window.innerHeight;
-      /* Meria sa poloha voči oknu, nie voči výške clony. Keď to bolo
-         delené výškou clony, správalo sa to na telefóne inak než na
-         monitore: tri fotografie pod sebou sú vyššie než tri vedľa seba,
-         takže rovnaký scroll dal iný podiel a na telefóne sa clona
-         neotvorila vôbec. Takto platí to isté pravidlo všade — clona sa
-         rozostúpi, keď ju posuniete horným okrajom k vrchu okna. */
-      const chce = hotovo ? r.top < h * 0.42 : r.top < h * 0.20;
-      if (chce === hotovo) return;
-      hotovo = chce;
-      stage.classList.toggle('je-hotovo', hotovo);
-    };
-
-    const ozvi = () => { if (caka) return; caka = true; window.requestAnimationFrame(prepocitaj); };
-
-    window.addEventListener('scroll', ozvi, { passive: true });
-    window.addEventListener('resize', ozvi);
-    prepocitaj();
-  }
+  /* Clona z realizácií nad recenziami je preč — aj z HTML aj z CSS. Pri
+     rýchlom scrollovaní sa nestihla otvoriť a sekcia sa preletela prázdna;
+     hodnotenie aj recenzie teraz stoja rovno na svojom mieste. Vstupná
+     animácia sekcie je samostatné zadanie. */
 
   /* --- štart -------------------------------------------------------------- */
 
@@ -1004,8 +954,7 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initRecenzie]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
