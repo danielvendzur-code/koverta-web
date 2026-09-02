@@ -4606,10 +4606,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-proc__draha { display: none; }
 @media (min-width: 900px) {
   .kh-proc .k-wrap { position: relative; }
-  .kh-proc__grid {
-    position: sticky;
-    top: clamp(84px, 12vh, 132px);
-  }
+  /* Pridržanie robí skript posunom — pozri initProcess. Je to ten istý údaj,
+     ktorým sa počíta krok, takže obraz a krok nemôžu ísť od seba. */
+  .kh-proc__grid { will-change: transform; }
   .kh-proc__draha { display: block; height: 210vh; pointer-events: none; }
 }
 
@@ -6855,3 +6854,201 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-tab:has(thead th:nth-child(4)) tbody tr:hover td,
 .kh-tab:has(thead th:nth-child(4)) tbody tr:hover th { background: rgba(255, 204, 0, 0.09); }
 .kh-tab:has(thead th:nth-child(4)) tbody th { color: var(--k-ink); }
+
+
+/* ==========================================================================
+   41 · Postup: krok je udalosť, nie kartička
+   Pravá polovica sekcie bola biela zaoblená karta: fotka hore, pod ňou číslo,
+   názov a odsek — a pod odsekom tretina karty prázdna, lebo výška sa držala
+   podľa najdlhšieho kroku. Vľavo stálo päť riadkov s bodkou. Bolo to
+   funkčné a úplne neutrálne.
+
+   Karta odchádza. Fotografia vedie na celú šírku stĺpca, číslo kroku je
+   nadpisové a stojí na jednom riadku s názvom, text pod ním na podklade
+   sekcie. Vľavo je z riadkov skutočný stepper: zvislá linka, na nej bodky,
+   prejdené kroky sú plné, aktívny jantárový, ďalšie prázdne — vidno na
+   ňom, kde ste a koľko ešte zostáva.
+   ========================================================================== */
+
+/* --- Panel: bez škatule ------------------------------------------------- */
+.k .kh-proc__panel,
+.k .kh-proc__panel.is-active {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.kh-proc__panel::before { content: none; }
+.k .kh-proc__body {
+  padding: clamp(18px, 1.8vw, 24px) 0 0;
+  gap: 8px;
+}
+.k .kh-proc__num {
+  font-family: var(--k-head);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--k-amber-deep);
+}
+.k .kh-proc__panel.is-active .kh-proc__num { color: var(--k-amber-deep); }
+.kh-proc__body .k-h3 { font-size: clamp(20px, 1.8vw, 26px); }
+.kh-proc__body p { max-width: 52ch; }
+
+@media (min-width: 700px) {
+  /* Fotka nad textom, nie vedľa neho: v stĺpci širokom 560 px ostávalo na
+     obraz 240 px a z realizácie nebolo nič. */
+  .kh-proc__panel { display: block; }
+  .kh-proc__media { aspect-ratio: 16 / 10; min-height: 0; }
+}
+
+/* --- Zoznam krokov ako stepper ------------------------------------------ */
+.k .kh-proc__list {
+  position: relative;
+  gap: 2px;
+  padding-left: 26px;
+}
+/* Zvislá linka spája kroky. Vedie od stredu prvej bodky po strednú poslednej,
+   aby nikde nevytŕčala. */
+.kh-proc__list::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 26px;
+  bottom: 26px;
+  width: 2px;
+  background: var(--k-hair);
+}
+.k .kh-proc__row {
+  position: relative;
+  padding: 14px 12px 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+}
+.k .kh-proc__list .kh-proc__row:last-child { border-bottom: 0; }
+.k .kh-proc__row:hover:not(.is-active) { background: none; }
+.k .kh-proc__row.is-active { background: none; transform: none; }
+.kh-proc__row::before { content: none; }
+
+/* Bodka na linke. Prejdené kroky sú plné, aktívny jantárový a väčší,
+   nasledujúce prázdne. */
+.k .kh-proc__row::after {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border: 2px solid var(--k-hair);
+  border-radius: 50%;
+  background: var(--k-bone);
+  transform: none;
+  transition: background-color 320ms var(--k-ease), border-color 320ms var(--k-ease), transform 320ms var(--k-ease-out);
+}
+.k .kh-proc__row.is-active::after {
+  border-color: var(--k-amber-deep);
+  background: var(--k-amber);
+  transform: scale(1.34);
+}
+.k .kh-proc__row.je-hotovy::after {
+  border-color: var(--k-ink);
+  background: var(--k-ink);
+}
+.k .kh-proc__row em { font-size: 12px; letter-spacing: 0.14em; }
+.k .kh-proc__row strong { font-size: clamp(15px, 1.3vw, 17px); }
+.k .kh-proc__row:not(.is-active) { opacity: 0.55; }
+.k .kh-proc__row:hover:not(.is-active) { opacity: 0.82; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-proc__row::after { transition: none; }
+}
+
+/* Náčrt v prvom kroku stál na bielej ploche, ktorá vyzerala ako karta —
+   presne tá škatuľa, ktorej sa sekcia zbavila. Kresba je čiarová, patrí na
+   podklad stránky. */
+.k .kh-proc__media img[src$=".svg"] { background: var(--k-bone); }
+.k .kh-proc__media:has(img[src$=".svg"]) { background: var(--k-bone); }
+/* Kresba má pomer 3 : 2. V ráme 4 : 3 sa zmenší tak, aby sa vošla, a hore aj
+   dole po nej ostane pás prázdna — na telefóne z nej potom nie je nič. Rám
+   sa preto pri kresbe drží jej vlastného pomeru. */
+.k .kh-proc__media:has(img[src$=".svg"]) { aspect-ratio: 3 / 2; }
+
+/* Na telefóne bol každý krok vysoký 72 px, päť krokov teda zabralo pol
+   obrazovky ešte pred fotkou. Riadky sú tesnejšie a číslo stojí vedľa názvu,
+   nie nad ním. */
+@media (max-width: 899px) {
+  .k .kh-proc__row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 11px 0;
+  }
+  .k .kh-proc__row em { flex: 0 0 auto; }
+  .kh-proc__list::before { top: 20px; bottom: 20px; }
+}
+
+
+/* ==========================================================================
+   42 · Kde sa na stránke nachádzate
+   Cesta v úvode podstránky mala dva stupne — „Koverta / Prístrešky pre autá".
+   Menu má pritom tri: značka, skupina a riešenie. Kto prišiel z vyhľadávania,
+   nemal ako zistiť, do ktorej časti ponuky sa dostal.
+
+   Pribúda stredný stupeň so skupinou z menu. Nie je to odkaz — skupina
+   vlastnú stránku nemá a odkaz, ktorý nikam nevedie, je horší než jeho
+   absencia. Aktuálna stránka je označená plnou farbou a jantárovou linkou,
+   takže je na prvý pohľad jasné, ktorý zo stupňov je ten váš.
+   ========================================================================== */
+.kh-crumbs {
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.kh-crumbs__cast { opacity: 0.82; }
+.kh-crumbs [aria-current] {
+  position: relative;
+  padding-bottom: 3px;
+  font-weight: 700;
+}
+.kh-crumbs [aria-current]::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--k-amber);
+}
+.kh-hero__box .kh-crumbs { color: rgba(255, 255, 255, 0.78); }
+.kh-hero__box .kh-crumbs [aria-current] { color: #fff; }
+
+
+/* ==========================================================================
+   43 · Telefón: väčšie terče a lepší výrez úvodnej fotky
+   Odkazy typu „Zobraziť celú ponuku" boli vysoké 16 px — na dotyk sa do nich
+   trafí len ten, kto to skúsi trikrát. Dostávajú palcovú výšku bez toho, aby
+   sa z nich stali tlačidlá: rastie len plocha, ktorej sa dá dotknúť.
+
+   Úvodná fotografia je široká; na telefóne z nej pri strede výrezu ostávala
+   horná polovica strechy a obloha. Výrez sa preto posúva nižšie, kde je to,
+   o čom fotografia je.
+   ========================================================================== */
+@media (max-width: 899px) {
+  .k .k-link {
+    min-height: 40px;
+    align-items: center;
+  }
+  .k .k-copy .k-link,
+  .k p > .k-link:not(:only-child) { min-height: 0; }
+
+  .kh-hero__bg img { object-position: 62% 68%; }
+}
+
+/* Na úzkom telefóne sa dvojica tlačidiel v úvode neroztiahne cez celú šírku
+   len preto, že tam miesto je — ostávajú vedľa seba, kým sa zmestia. */
+@media (max-width: 419px) {
+  .kh-hero__actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .kh-hero__actions .k-btn { width: 100%; }
+}

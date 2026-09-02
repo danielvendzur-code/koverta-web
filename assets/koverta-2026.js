@@ -487,6 +487,9 @@
         rows.forEach((r, i) => {
           const on = i === index;
           r.classList.toggle('is-active', on);
+          /* Prejdené kroky sú na linke plné — zoznam tak ukáže aj to,
+             koľko postupu je za vami, nielen kde práve stojíte. */
+          r.classList.toggle('je-hotovy', i < index);
           r.setAttribute('aria-selected', on ? 'true' : 'false');
           r.tabIndex = on ? 0 : -1;
         });
@@ -530,6 +533,7 @@
       // návštevník na nič neklikne. Klik má prednosť: po ňom sa scrollové
       // prepínanie na chvíľu utlmí, aby mu nepreberalo voľbu pod rukami.
       if (REDUCED.matches) return;
+      const widePin = () => window.matchMedia('(min-width: 900px)').matches;
       let lockedUntil = 0;
       let poslednaZmena = 0;
       rows.forEach((row) => row.addEventListener('click', () => { lockedUntil = Date.now() + 4000; }));
@@ -553,9 +557,16 @@
              prilepený. Na jeden krok tak pripadá pol obrazovky scrollu
              namiesto 120 px a fotku je vidieť. */
           const w = scope.parentElement.getBoundingClientRect();
-          const vyskaObsahu = scope.getBoundingClientRect().height;
-          const pripnuteHore = parseFloat(getComputedStyle(scope).top) || 0;
+          const vyskaObsahu = scope.offsetHeight;
+          const pripnuteHore = Math.max(24, Math.min(132, window.innerHeight * 0.12));
           const drahaCelkom = Math.max(1, w.height - vyskaObsahu);
+          /* Obsah drží skript, nie `position: sticky`. Je to ten istý údaj,
+             ktorým sa počíta krok, takže pohľad a krok nemôžu ísť od seba —
+             a nezávisí to od toho, či prehliadač prilepenie zvládne vnútri
+             sekcie s orezaním. */
+          const drz = Math.min(Math.max(pripnuteHore - w.top, 0), drahaCelkom);
+          if (widePin()) scope.style.transform = drz > 0 ? 'translate3d(0,' + drz.toFixed(1) + 'px,0)' : '';
+          else scope.style.transform = '';
           const t = (pripnuteHore - w.top) / drahaCelkom;
           if (t < 0 || t > 1) return;
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
