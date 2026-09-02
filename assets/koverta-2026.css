@@ -6493,8 +6493,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-work__filter-block button,
 .k .kh-rev__source,
 .k .kh-size__chip,
-.k .kh-proc__step-of,
-.k .kh-mat__tab {
+.k .kh-proc__step-of {
   min-height: var(--cip-sm);
   padding: 0 var(--cip-sm-p);
   font-size: var(--cip-sm-f);
@@ -6513,8 +6512,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-soltec__actions .kh-soltec__cfg,
 .k .kh-work__filter-block button:not([aria-pressed="true"]):not(.is-active),
 .k .kh-rev__source,
-.k .kh-size__chip,
-.k .kh-mat__tab {
+.k .kh-size__chip {
   background: transparent;
   border: 1px solid var(--cip-ram);
   color: var(--k-ink);
@@ -6623,3 +6621,237 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .k-js .kh-rev.ma-scenu .kh-rev__grid { margin-bottom: 0; transform: none !important; }
 }
+
+
+/* ==========================================================================
+   38 · Lišta s menu sa pri ceste nahor vráti
+   Hlavička odscrollovala preč a na dlhej podstránke sa k menu nedalo dostať
+   inak než návratom na úplný vrch. Pravidlo je teraz jednoduché: smerom dole
+   lišta odíde a nezavadzia, pri prvom pohybe nahor je späť.
+
+   Prilepí sa až po tom, čo úplne odscrollovala, takže obsah nikam neposkočí
+   a netreba dopĺňať rozperu. Triedy dáva skript podľa smeru scrollu.
+   ========================================================================== */
+.kv-bar.je-plava {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  transform: translate3d(0, 0, 0);
+  transition: transform 300ms var(--k-ease-out), box-shadow 260ms var(--k-ease);
+  box-shadow: var(--k-shadow-sm);
+}
+.kv-bar.je-plava.je-schovana { transform: translate3d(0, -101%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-bar.je-plava { transition: none; }
+}
+
+
+/* ==========================================================================
+   39 · Prepínač značiek má obe strany rovnaké
+   Dve značky vedľa seba mali každá inú šírku aj inú veľkosť znaku: Koverta
+   153 px, Soltec 102 px, a logá 123 × 20 proti 72 × 20. Prepínač tak
+   vyzeral, akoby jedna značka bola dôležitejšia — pritom je to jeden
+   prepínač s dvomi rovnocennými stranami.
+
+   Obe polovice sú preto rovnako široké (jedna mriežka, dva rovnaké stĺpce)
+   a obe značky majú rovnakú optickú výšku. Aktívnu stranu označuje jantárová
+   linka pod ňou — ten istý znak ako pri popise sekcie.
+   ========================================================================== */
+.kh-mat__switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(148px, 1fr);
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--k-hair);
+  border-radius: 0;
+  background: none;
+  margin-bottom: clamp(22px, 2.4vw, 34px);
+}
+.k .kh-mat__tab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 12px 14px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  transition: opacity 240ms var(--k-ease);
+}
+.k .kh-mat__tab:hover { background: none; }
+.k .kh-mat__tab.is-active { background: none; }
+
+/* Obe značky na spoločnej optickej výške. Koverta je široká a nízka,
+   Soltec kratší a vyšší — preto nie rovnaká hodnota, ale rovnaký dojem. */
+.kh-mat__tab .k-logo,
+.kh-mat__tab.is-active .k-logo { height: 18px; width: auto; color: var(--k-ink); }
+.kh-mat__tab .k-brand--soltec-img,
+.kh-mat__tab.is-active .k-brand--soltec-img { height: 16px; width: auto; filter: brightness(0); }
+.kh-mat__tab .k-brand--soltec,
+.kh-mat__tab.is-active .k-brand--soltec { font-size: 18px; color: var(--k-ink); }
+
+/* Neaktívna strana je stlmená, aktívna plná a podčiarknutá. */
+.k .kh-mat__tab:not(.is-active) { opacity: 0.5; }
+.k .kh-mat__tab:not(.is-active):hover { opacity: 0.78; }
+.kh-mat__tab::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transition: transform 320ms var(--k-ease-out);
+}
+.kh-mat__tab.is-active::after { transform: scaleX(1); }
+.kh-mat__tab.is-active .k-logo__letter path { fill: var(--k-ink); }
+.kh-mat__tab.is-active .k-logo .k-logo__bracket path { fill: var(--k-amber); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-mat__tab::after { transition: none; }
+}
+
+
+/* ==========================================================================
+   40 · Skladba konštrukcie: vrstvy, nie tabuľka
+   Sekcia bola osem riadkov trojstĺpcovej tabuľky vedľa tenkej kresby na
+   milimetrovom papieri v bielom ráme — technický list z kancelárie, nie
+   miesto na stránke. Pod kresbou navyše ostávala tretina obrazovky prázdna.
+
+   Vrstvy sú teraz dlaždice: číslo vrstvy jantárovým rezom, názov nadpisovým
+   písmom a pod ním dva krátke údaje s vlastnými popiskami — z čoho a na
+   výber. Sú v dvoch stĺpcoch, takže osem vrstiev zaberie štyri riadky, nie
+   osem, a kresba vedľa nich už nemá pod sebou prázdno.
+
+   Kresba stráca biely rám aj papier: je to čiarová schéma a stojí priamo na
+   podklade sekcie, ako všetko ostatné v tejto vrstve.
+
+   Platí pre trojstĺpcové prehľady (vrstva — z čoho — na výber). Tabuľky
+   typov a rozmerov, ktoré si zadávateľ vyžiadal, ostávajú tabuľkami; tie sú
+   nižšie.
+   ========================================================================== */
+
+.kh-skladba__vykres {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.kh-skladba__vykres img {
+  width: 100%;
+  height: auto;
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+.kh-skladba__vykres figcaption {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-hair);
+  max-width: 46ch;
+}
+
+/* --- Prehľad vrstiev ako dlaždice --------------------------------------- */
+.kh-tab:not(:has(thead th:nth-child(4))) .kh-tab__scroll { overflow-x: visible; }
+.kh-tab:not(:has(thead th:nth-child(4))) table {
+  display: block;
+  min-width: 0;
+  border-top: 0;
+}
+.kh-tab:not(:has(thead th:nth-child(4))) caption {
+  display: block;
+  width: 100%;
+  padding-bottom: clamp(20px, 2vw, 28px);
+  text-align: left;
+}
+.kh-tab:not(:has(thead th:nth-child(4))) thead {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  counter-reset: kv-vrstva;
+  background: var(--k-hair);
+  border-block: 1px solid var(--k-hair);
+}
+@media (min-width: 760px) {
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
+  display: block;
+  counter-increment: kv-vrstva;
+  padding: clamp(20px, 2vw, 26px) clamp(18px, 1.8vw, 24px);
+  border: 0;
+  background: var(--k-bone);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody th,
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+  display: block;
+  padding: 0;
+  border: 0;
+  white-space: normal;
+}
+/* Číslo vrstvy stojí nad názvom — poradie je informácia, nie ozdoba. */
+.kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
+  content: counter(kv-vrstva, decimal-leading-zero);
+  display: block;
+  margin-bottom: 7px;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--k-amber-deep);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody th {
+  margin-bottom: 14px;
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.4vw, 18px);
+  font-weight: 700;
+  color: var(--k-ink);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td + td { margin-top: 12px; }
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--k-ink);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td::before {
+  content: attr(data-popis);
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody tr:hover { background: #fff; }
+
+/* Na širokej obrazovke stojí kresba vedľa vrstiev a drží sa, kým ich
+   prechádzate — schéma je tak po ruke pri každej vrstve. */
+@media (min-width: 1000px) {
+  .kh-skladba { grid-template-columns: minmax(0, 5.1fr) minmax(0, 6.9fr); gap: clamp(30px, 3vw, 48px); }
+  .kh-skladba__vykres { top: 96px; }
+}
+
+/* --- Tabuľky typov a rozmerov ostávajú tabuľkami ------------------------- */
+.kh-tab:has(thead th:nth-child(4)) thead th {
+  border-bottom: 2px solid var(--k-ink);
+  color: var(--k-ink);
+}
+.kh-tab:has(thead th:nth-child(4)) tbody tr + tr th,
+.kh-tab:has(thead th:nth-child(4)) tbody tr + tr td { border-top: 1px solid var(--k-hair); }
+.kh-tab:has(thead th:nth-child(4)) tbody tr:hover td,
+.kh-tab:has(thead th:nth-child(4)) tbody tr:hover th { background: rgba(255, 204, 0, 0.09); }
+.kh-tab:has(thead th:nth-child(4)) tbody th { color: var(--k-ink); }

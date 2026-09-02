@@ -1190,12 +1190,45 @@
     window.addEventListener('load', mer, { once: true });
     if (window.ResizeObserver) new ResizeObserver(mer).observe(header);
 
-    /* prilepenie — tieň a nižší riadok po odscrollovaní */
+    /* --- Menu je pri ceste nahor vždy po ruke ----------------------------
+       Hlavička doteraz odscrollovala preč a späť sa dala dostať len návratom
+       na úplný vrch stránky — na dlhej podstránke to znamená pol minúty
+       scrollovania. Teraz platí jednoduché pravidlo: idete dole, lišta ide
+       preč a nezavadzia; otočíte sa nahor, lišta je okamžite späť.
+
+       Prilepí sa až potom, čo úplne odscrollovala, takže obsah nikam
+       neposkočí a nič sa nemusí dopĺňať rozperou. */
     const bar = header.querySelector('[data-k-bar]');
     if (bar) {
-      const onScroll = () => bar.classList.toggle('is-stuck', window.scrollY > 12);
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+      let posledneY = window.scrollY;
+      let ceka = false;
+      const prah = 8;
+
+      const prekresli = () => {
+        ceka = false;
+        const y = window.scrollY;
+        const vyska = bar.getBoundingClientRect().height || 76;
+        const hranica = header.offsetHeight + 40;
+        bar.classList.toggle('is-stuck', y > 12);
+
+        if (y <= hranica) {
+          /* pri vrchu stránky je lišta na svojom mieste v toku */
+          bar.classList.remove('je-plava', 'je-schovana');
+          posledneY = y;
+          return;
+        }
+        bar.classList.add('je-plava');
+        const rozdiel = y - posledneY;
+        if (rozdiel > prah) bar.classList.add('je-schovana');
+        else if (rozdiel < -prah) bar.classList.remove('je-schovana');
+        if (Math.abs(rozdiel) > prah) posledneY = y;
+        void vyska;
+      };
+
+      const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(prekresli); } };
+      window.addEventListener('scroll', naplan, { passive: true });
+      window.addEventListener('resize', naplan, { passive: true });
+      prekresli();
     }
 
     /* mega menu — otvára sa hoverom aj klávesnicou, zatvára Escapom */

@@ -1,29 +1,98 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Technický náčrt prístrešku s kótami">
-  <title>Náčrt prístrešku s kótami</title>
-  <rect width="800" height="600" fill="#f6f5f2"/>
-  <g stroke="#c9c6bd" stroke-width="1">
-    <path d="M0 40h800M0 80h800M0 120h800M0 160h800M0 200h800M0 240h800M0 280h800M0 320h800M0 360h800M0 400h800M0 440h800M0 480h800M0 520h800M0 560h800" opacity=".45"/>
-    <path d="M40 0v600M80 0v600M120 0v600M160 0v600M200 0v600M240 0v600M280 0v600M320 0v600M360 0v600M400 0v600M440 0v600M480 0v600M520 0v600M560 0v600M600 0v600M640 0v600M680 0v600M720 0v600M760 0v600" opacity=".45"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 560" role="img" aria-label="Rez prístreškom s očíslovanými vrstvami a kótami šírky a výšky">
+  <title>Rez prístreškom s očíslovanými vrstvami</title>
+
+  <!-- Terén -->
+  <g stroke="#12171a" stroke-linecap="round">
+    <path d="M52 462h736" stroke-width="2"/>
+    <path d="M52 470h736" stroke-width="1" opacity=".2"/>
+    <path d="M60 470l-8 12M100 470l-8 12M140 470l-8 12M180 470l-8 12M220 470l-8 12M260 470l-8 12M300 470l-8 12M340 470l-8 12M380 470l-8 12M420 470l-8 12M460 470l-8 12M500 470l-8 12M540 470l-8 12M580 470l-8 12M620 470l-8 12M660 470l-8 12M700 470l-8 12M740 470l-8 12M780 470l-8 12" stroke-width="1" opacity=".22"/>
   </g>
-  <g fill="none" stroke="#12171a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M120 200h560l40 40H160z"/>
-    <path d="M160 240v220M640 240v220"/>
-    <path d="M120 200v-14M680 200v-14"/>
-    <path d="M100 470h600"/>
+
+  <!-- Auto pod prístreškom, len pre mierku -->
+  <g fill="none" stroke="#12171a" stroke-width="1.6" opacity=".26" stroke-linejoin="round">
+    <path d="M262 458v-26c0-6 4-11 10-13l24-7 26-22c4-3 9-5 14-5h84c5 0 10 2 14 5l26 22 24 7c6 2 10 7 10 13v26"/>
+    <path d="M296 412h192"/>
+    <circle cx="310" cy="458" r="17"/>
+    <circle cx="470" cy="458" r="17"/>
   </g>
-  <g fill="none" stroke="#12171a" stroke-width="1.6" opacity=".55">
-    <path d="M200 240v-40M240 240v-40M280 240v-40M320 240v-40M360 240v-40M400 240v-40M440 240v-40M480 240v-40M520 240v-40M560 240v-40M600 240v-40"/>
+
+  <!-- Strešná doska -->
+  <rect x="126" y="176" width="588" height="17" fill="#12171a" opacity=".9"/>
+  <!-- Prievlak s integrovaným odkvapom -->
+  <rect x="150" y="193" width="540" height="27" fill="none" stroke="#12171a" stroke-width="2.4"/>
+  <path d="M160 213h520" stroke="#12171a" stroke-width="1" opacity=".35"/>
+
+  <!-- Stĺpy -->
+  <rect x="168" y="220" width="20" height="242" fill="none" stroke="#12171a" stroke-width="2.4"/>
+  <rect x="652" y="220" width="20" height="242" fill="none" stroke="#12171a" stroke-width="2.4"/>
+  <!-- Zvod schovaný v stĺpe -->
+  <path d="M662 226v230" stroke="#12171a" stroke-width="1.4" stroke-dasharray="6 5" opacity=".5"/>
+
+  <!-- Pätky pod terénom -->
+  <g fill="none" stroke="#12171a" stroke-width="1.6" stroke-dasharray="5 4" opacity=".55">
+    <path d="M152 462h52v42h-52z"/>
+    <path d="M636 462h52v42h-52z"/>
   </g>
-  <g fill="none" stroke="#a77a00" stroke-width="2" stroke-linecap="round">
-    <path d="M120 150h560M120 142v16M680 142v16"/>
-    <path d="M740 240v230M732 240h16M732 470h16"/>
+
+  <!-- Bočná výplň — lamely -->
+  <g stroke="#12171a" stroke-width="2" opacity=".55" stroke-linecap="round">
+    <path d="M566 262h78M566 282h78M566 302h78M566 322h78M566 342h78M566 362h78M566 382h78M566 402h78M566 422h78M566 442h78"/>
   </g>
-  <g fill="#a77a00" font-family="system-ui, sans-serif" font-size="20" font-weight="700">
-    <text x="400" y="136" text-anchor="middle">šírka</text>
-    <text x="762" y="362" text-anchor="middle" transform="rotate(90 762 362)">výška</text>
+  <path d="M566 254v196" stroke="#12171a" stroke-width="1.4" opacity=".4"/>
+
+  <!-- LED v podhľade -->
+  <g fill="#12171a" opacity=".4">
+    <circle cx="300" cy="228" r="3"/><circle cx="360" cy="228" r="3"/><circle cx="420" cy="228" r="3"/>
+    <circle cx="480" cy="228" r="3"/><circle cx="540" cy="228" r="3"/>
   </g>
-  <g fill="#12171a" font-family="system-ui, sans-serif" font-size="17" opacity=".62">
-    <text x="120" y="510">stĺp 120 × 120 mm</text>
-    <text x="120" y="536">prievlak s integrovaným odkvapom</text>
+
+  <!-- Kóty -->
+  <g stroke="#8a6600" stroke-width="1.8" stroke-linecap="round" fill="none">
+    <path d="M126 132h588M126 124v16M714 124v16"/>
+    <path d="M772 176v286M764 176h16M764 462h16"/>
+  </g>
+  <g fill="#8a6600" font-family="Archivo, system-ui, sans-serif" font-size="19" font-weight="700" letter-spacing="0.02em">
+    <text x="420" y="118" text-anchor="middle">šírka</text>
+    <text x="796" y="319" text-anchor="middle" transform="rotate(90 796 319)">výška</text>
+  </g>
+
+  <!-- Čísla vrstiev — sedia s prehľadom vedľa kresby -->
+  <g font-family="Archivo, system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">
+    <g>
+      <circle cx="178" cy="350" r="13" fill="#FFCC00"/>
+      <text x="178" y="354" fill="#12171a">01</text>
+    </g>
+    <g>
+      <circle cx="250" cy="207" r="13" fill="#FFCC00"/>
+      <text x="250" y="211" fill="#12171a">02</text>
+    </g>
+    <g>
+      <circle cx="610" cy="207" r="13" fill="#FFCC00"/>
+      <text x="610" y="211" fill="#12171a">03</text>
+    </g>
+    <g>
+      <circle cx="420" cy="185" r="13" fill="#FFCC00"/>
+      <text x="420" y="189" fill="#12171a">04</text>
+    </g>
+    <g>
+      <circle cx="662" cy="300" r="13" fill="#FFCC00"/>
+      <text x="662" y="304" fill="#12171a">05</text>
+    </g>
+    <g>
+      <circle cx="605" cy="412" r="13" fill="#FFCC00"/>
+      <text x="605" y="416" fill="#12171a">06</text>
+    </g>
+    <g>
+      <circle cx="360" cy="252" r="13" fill="#FFCC00"/>
+      <text x="360" y="256" fill="#12171a">07</text>
+    </g>
+    <g>
+      <circle cx="178" cy="490" r="13" fill="#FFCC00"/>
+      <text x="178" y="494" fill="#12171a">08</text>
+    </g>
+  </g>
+
+  <g fill="#12171a" font-family="Archivo, system-ui, sans-serif" font-size="14" opacity=".6">
+    <text x="52" y="530">stĺp 120 × 120 mm · prievlak s integrovaným odkvapom · zvod vedený vnútri stĺpa</text>
   </g>
 </svg>
