@@ -5490,98 +5490,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 
 
-/* --- 28 · Tri realizácie, ktoré sa rozostúpia a odhalia hodnotenie ---------
-   Tretie prevedenie a posledné. Prvé bolo prilepený rám s dvojicami, druhé
-   otáčalo karty do strany — a zadávateľ mal pri obidvoch tú istú výhradu:
-   po premene ostalo prázdno a recenzie bolo treba hľadať ďalej dole.
-
-   Tak je to otočené naopak. Fotografie nie sú vlastná sekcia pred
-   recenziami, ale clona nad nimi. Pod clonou celý čas leží hotová sekcia:
-   hodnotenie 5,0 na Google aj lišta, z ktorej sa dá hneď listovať. Clona sa
-   pri scrollovaní rozostúpi do strán a nadvihne, sekcia pod ňou sadne na
-   miesto — a tým to končí. Nič sa neotáča, nič nie je dvakrát a po premene
-   je hneď čo pozerať.
-
-   Rozostúpenie ide od stredu von, tak ako sa otvára opona. */
-
-.kh-rev__stage { position: relative; }
-
-.kh-rev__clona {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  border-radius: var(--k-r-md);
-  overflow: hidden;
-}
-.kh-rev__shot { position: relative; margin: 0; overflow: hidden; background: var(--k-bone-deep); }
-.kh-rev__shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.kh-rev__shot figcaption {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--k-r-pill);
-  background: rgba(12, 16, 18, 0.58);
-  backdrop-filter: blur(10px) saturate(1.2);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-/* Bez skriptu clona nemá čo odhaľovať, tak sa nekreslí vôbec. */
-.kh-rev__clona { display: none; }
-.k-js .kh-rev__clona { display: grid; }
-
-/* --- so skriptom -------------------------------------------------------- */
-
-/* Žiadna dráha navyše. Predchádzajúce dve prevedenia si pod premenu pridali
-   vlastnú výšku a práve tá bola tým, čo zadávateľ videl ako prázdno: keď sa
-   premena skončila, ostalo pod ňou pol obrazovky ničoho. Clona preto leží
-   presne na mriežke recenzií a sekcia je vysoká presne toľko čo jej obsah.
-   Premena sa spustí tým, ako sekcia vchádza do okna. */
-.k-js .kh-rev__clona {
-  position: absolute;
-  inset: 0;
-  height: auto;
-  z-index: 3;
-  transition: opacity 700ms var(--k-ease);
-}
-.k-js .kh-rev__shot {
-  transition: transform 950ms cubic-bezier(0.22, 1, 0.32, 1), opacity 620ms var(--k-ease);
-}
-/* Opona sa otvára od stredu: krajné diely idú von, stredný hore. */
-.k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(1) { transform: translate3d(-13%, -4%, 0) scale(1.03); opacity: 0; }
-.k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(2) { transform: translate3d(0, -7%, 0) scale(1.05); opacity: 0; transition-delay: 70ms; }
-.k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(3) { transform: translate3d(13%, -4%, 0) scale(1.03); opacity: 0; transition-delay: 140ms; }
-.k-js .kh-rev__stage.je-hotovo .kh-rev__clona { opacity: 0; pointer-events: none; }
-
-/* Sekcia pod clonou sadá na miesto, nie je len odkrytá. */
-.k-js .kh-rev__grid {
-  opacity: 0;
-  transform: translateY(26px) scale(0.985);
-  transition: opacity 760ms var(--k-ease) 180ms, transform 900ms cubic-bezier(0.22, 1, 0.32, 1) 180ms;
-}
-.k-js .kh-rev__stage.je-hotovo .kh-rev__grid { opacity: 1; transform: none; }
-
-/* Fotografia sa v clone pomaly usadí zo zväčšenia — pás nie je nehybný
-   obraz, ale ani sa nehýbe natoľko, aby to rušilo. */
-.k-js .kh-rev__shot img { transform: scale(1.06); transition: transform 2600ms var(--k-ease-out); }
-.k-js .kh-rev__stage.je-videt .kh-rev__shot img { transform: none; }
-
-@media (max-width: 899px) {
-  /* Tri fotografie vedľa seba by mali na telefóne 110 px na šírku. Idú pod
-     seba a opona sa otvára nahor. */
-  .kh-rev__clona { grid-template-columns: minmax(0, 1fr); }
-  .k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(1) { transform: translate3d(0, -10%, 0) scale(1.03); }
-  .k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(2) { transform: translate3d(0, -13%, 0) scale(1.03); }
-  .k-js .kh-rev__stage.je-hotovo .kh-rev__shot:nth-child(3) { transform: translate3d(0, -16%, 0) scale(1.03); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .k-js .kh-rev__clona { display: none; }
-  .k-js .kh-rev__grid { opacity: 1; transform: none; transition: none; }
-}
+/* Clona z troch realizácií nad recenziami je zrušená — HTML, CSS aj skript.
+   Pri rýchlom scrollovaní sa nestihla otvoriť a sekcia sa preletela prázdna.
+   Vstupná animácia recenzií je samostatné zadanie. */
 
 
 /* ==========================================================================
@@ -5729,7 +5640,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    nie je. Nová vstupná animácia sekcie je samostatné zadanie; dovtedy tu
    niet čo odkrývať a hodnotenie aj recenzie stoja na svojom mieste. */
 .k .kh-rev__grid { opacity: 1; transform: none; transition: none; }
-.kh-rev__clona, .kh-rev__stage { display: none; }
 
 
 /* --- 6 · Materiál a výbava ------------------------------------------------
