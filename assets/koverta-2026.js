@@ -2,6 +2,7 @@
    KOVERTA 2026 — správanie
      · odhaľovanie pri scrollovaní
      · posuvná lišta recenzií (šípky, ťahanie, klávesnica)
+     · nástup referencií — najprv dôkaz, potom hlasy
      · filter realizácií
      · FAQ — naraz otvorená len jedna odpoveď
      · hlavička — prilepenie, mega menu, mobilná zásuvka
@@ -193,6 +194,140 @@
       rail.addEventListener('pointerup', release);
       rail.addEventListener('pointerleave', release);
     });
+  }
+
+  /* --- 2b · referencie: najprv dôkaz, potom hlasy ------------------------- */
+
+  /* Sekcia má dve časti a každá nastupuje sama: hodnotenie (číslo 5,0 sa
+     naleje, hviezdy sa rozsvietia, odkazy prídu) a lišta recenzií (karty
+     prichádzajú sprava ako rad a z prvých troch fotografií realizácií sa
+     stanú recenzie). Pohyb je v CSS; tu sa rozhoduje len JEDNO —
+     či sa vôbec prehrá, alebo či časť skočí rovno do koncového stavu.
+
+     Rovno na koniec (`is-hned`) ide časť vtedy, keď
+       · do okna vletela rýchlo (nad 1,5 px/ms — pozorovateľ sa pri takom
+         scrolle ozve až vtedy, keď je prvok dávno v okne),
+       · je už hlboko v okne (skok odkazom na #recenzie, alebo stránka
+         otvorená so scrollom v tejto polohe — vtedy sa na ňu človek pozerá
+         a nemá čakať),
+       · človek uprostred pohybu zrýchli — stráž ho dorovná okamžite,
+       · alebo uplynul tvrdý strop 1,5 s.
+     Prehrá sa len raz a triedy sa neodoberajú: pri ceste hore stojí. Bez
+     pozorovateľa a pri prefers-reduced-motion je koncový stav hneď; CSS
+     to isté zaručuje bez skriptu, pri tlači a pri `:target`. */
+  function initReferencie(root) {
+    /* Každá časť má kotvu, podľa ktorej sa meria vstup do okna: pri hodnotení
+       je to karta s číslom, nie popisok sekcie nad ňou — ten je o 120 px
+       vyššie a číslo by sa nalialo ešte pod spodnou hranou okna. Pri lište
+       je kotvou samotný rad kariet, nie šípky nad ním. */
+    const casti = [];
+    root.querySelectorAll('[data-k-referencie]').forEach((sekcia) => {
+      const skore = sekcia.querySelector('.kh-rev__score');
+      const lista = sekcia.querySelector('.kh-rev__list');
+      const par = {};
+      if (skore) { par.skore = { el: skore, kotva: skore.querySelector('.kh-rev__big') || skore, par }; casti.push(par.skore); }
+      if (lista) { par.lista = { el: lista, kotva: lista.querySelector('.kh-rev__rail') || lista, par }; casti.push(par.lista); }
+    });
+    if (!casti.length) return;
+
+    /* Fotografia realizácie sa kreslí len vtedy, keď je naozaj načítaná.
+       Nenačítaná by bola biela plocha nad textom recenzie — presne to, čo sa
+       nesmie stať. Načítava sa lenivo, takže do príchodu sekcie na to má čas;
+       keď nestihne, karta príde bez nej a recenzia je vidieť rovnako. */
+    root.querySelectorAll('.kh-rev__foto img').forEach((img) => {
+      const hotovo = () => {
+        const karta = img.closest('.kh-rev__card');
+        if (karta && img.naturalWidth) karta.classList.add('is-foto');
+      };
+      if (img.complete) hotovo();
+      else img.addEventListener('load', hotovo, { once: true });
+    });
+
+    const hned = (c) => c.el.classList.add('is-in', 'is-hned');
+    if (REDUCED.matches || !('IntersectionObserver' in window)) { casti.forEach(hned); return; }
+
+    const RYCHLO = 1.5;   // px/ms — nad tým sa nič neprehráva
+    const STROP = 1500;   // ms — po tejto chvíli je koncový stav vždy
+
+    /* Rýchlosť scrollu z posledných dvoch udalostí. Keď sa dlhšie nescrolluje,
+       platí nula — stará hodnota by inak zastavila aj pokojný nástup. */
+    let posY = window.scrollY;
+    let posT = performance.now();
+    let tempo = 0;
+    const rychlost = () => (performance.now() - posT > 120 ? 0 : tempo);
+    window.addEventListener('scroll', () => {
+      const t = performance.now();
+      const y = window.scrollY;
+      if (t - posT > 0) tempo = Math.abs(y - posY) / (t - posT);
+      posY = y;
+      posT = t;
+    }, { passive: true });
+
+    const spusti = (c, rovno) => {
+      const el = c.el;
+      if (el.classList.contains('is-in')) return;
+      const top = c.kotva.getBoundingClientRect().top;
+      if (rovno || rychlost() > RYCHLO || top < window.innerHeight * 0.5) { hned(c); return; }
+
+      /* Na širokej obrazovke stoja hodnotenie a lišta vedľa seba a lišta má
+         vrch vyššie — bez tohto by karty vyrazili pred číslom a poradie
+         „najprv dôkaz, potom hlasy" by sa obrátilo. Keď teda prichádza lišta
+         a hodnotenie vedľa nej je tiež v okne, hodnotenie ide prvé a rad
+         kariet si nechá svoje oneskorenie. Keď je lišta na rade sama (na
+         telefóne je pod hodnotením), vyráža hneď — čakať by nemala na čo. */
+      const par = c.par || {};
+      if (c === par.lista && par.skore && !par.skore.el.classList.contains('is-in')
+          && par.skore.kotva.getBoundingClientRect().top < window.innerHeight) {
+        spusti(par.skore, false);
+      }
+      if (c === par.lista && !(par.skore && par.skore.el.classList.contains('is-in')
+          && !par.skore.el.classList.contains('is-hned'))) el.classList.add('is-sam');
+      el.classList.add('is-in');
+
+      const koniec = () => {
+        window.clearTimeout(strop);
+        window.removeEventListener('scroll', straz);
+        el.classList.add('is-hned');
+      };
+      const straz = () => { if (rychlost() > RYCHLO) koniec(); };
+      const strop = window.setTimeout(koniec, STROP);
+      window.addEventListener('scroll', straz, { passive: true });
+    };
+
+    /* Prvé hlásenie pozorovateľa príde hneď po pripojení: čo je v okne už
+       vtedy, sa nekrýva ani neprehráva — na to sa človek práve pozerá. */
+    let prve = true;
+    const io = new IntersectionObserver((entries) => {
+      const rovno = prve;
+      prve = false;
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        casti.forEach((c) => { if (c.kotva === entry.target) spusti(c, rovno); });
+      });
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
+    casti.forEach((c) => io.observe(c.kotva));
+
+    /* Tvrdý bod ako pri odhaľovaní: pri rýchlom scrolle prehliadač hlásenia
+       zlúči alebo ich stihne až po prelete. Toto beží pri každom scrollovaní
+       a dorovná všetko, čo je v okne alebo nad ním. */
+    let caka = false;
+    const dorovnaj = () => {
+      caka = false;
+      const h = window.innerHeight;
+      casti.forEach((c) => {
+        if (c.el.classList.contains('is-in')) return;
+        if (c.kotva.getBoundingClientRect().top < h * 0.9) spusti(c, false);
+      });
+    };
+    const naplanuj = () => {
+      if (caka) return;
+      caka = true;
+      if (window.requestAnimationFrame) window.requestAnimationFrame(dorovnaj);
+      else window.setTimeout(dorovnaj, 60);
+    };
+    window.addEventListener('scroll', naplanuj, { passive: true });
+    window.addEventListener('resize', naplanuj);
   }
 
   /* --- 3 · filter realizácií ---------------------------------------------- */
@@ -966,11 +1101,6 @@
     }
   }
 
-  /* Clona z realizácií nad recenziami je preč — aj z HTML aj z CSS. Pri
-     rýchlom scrollovaní sa nestihla otvoriť a sekcia sa preletela prázdna;
-     hodnotenie aj recenzie teraz stoja rovno na svojom mieste. Vstupná
-     animácia sekcie je samostatné zadanie. */
-
   /* --- štart -------------------------------------------------------------- */
 
   function init(scope) {
@@ -980,7 +1110,7 @@
       /* Každá sekcia sa spúšťa samostatne. Keď na stránke nejaká chýba —
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
-      [initReveal, initRail, initFilters, initFaq, initAnchors,
+      [initReveal, initRail, initReferencie, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
        initSubory]
         .forEach((fn) => {
