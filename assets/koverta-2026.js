@@ -237,14 +237,14 @@
     recenzie: {
       draha: 0.58,
       stopy: [
-        { sel: '.kh-rev__card',  od: 0.06, do: 0.40, krok: 0.08, max: 3 },
-        { sel: '.kh-rev__foto',  od: 0.30, do: 0.72, krok: 0.08, max: 3 },
+        { sel: '.kh-rev__card',  od: 0.10, do: 0.46, krok: 0.11, max: 3 },
+        { sel: '.kh-rev__foto',  od: 0.34, do: 0.80, krok: 0.11, max: 3 },
         { sel: '.kh-rev__nav',   od: 0.30, do: 0.52 }
       ]
     },
     kroky: {
       draha: 0.52,
-      stopy: [ { sel: 'li > span', od: 0.06, do: 0.46, krok: 0.13 } ]
+      stopy: [ { sel: 'li > span', od: 0.08, do: 0.50, krok: 0.15 } ]
     },
     /* Fotografia sa v ráme posúva po celý čas, čo je rám na obrazovke —
        preto spojitá dráha od spodnej po hornú hranu okna. */
@@ -307,19 +307,34 @@
 
     const zmer = () => {
       const vh = window.innerHeight;
+      /* Na konci stránky sa už nedá scrollovať ďalej. Prvok, ktorý by svoju
+         dráhu dokončil až za koncom dokumentu, by tam ostal v polovici — a
+         teda polopriehľadný. Posledná obrazovka je preto vždy hotová. */
+      const dno = (document.documentElement.scrollHeight - window.scrollY - vh) < 4;
       bloky.forEach((b) => {
         const r = b.blok.getBoundingClientRect();
         /* Prvky ďaleko mimo okna sa nepočítajú — držia si poslednú hodnotu,
            takže to, čo už prešlo hore, ostáva hotové. */
         if (r.bottom < -240 || r.top > vh + 240) return;
+        /* Dráha sa meria od chvíle, keď vrch prvku vojde spodnou hranou do
+           okna, po chvíľu, keď vystúpi k hornej pätine. Je to takmer celá
+           výška okna — pri kolieskovej myši osem až deväť otočiek —, takže
+           pohyb beží celý čas, čo je prvok v strede obrazovky.
+
+           Predtým to bolo 0,58 výšky okna a dráha končila, keď mal prvok
+           vrch ešte v spodnej tretine: animácia dobehla, kým boli karty pri
+           spodnej hrane, a v strede obrazovky už len stáli. Zadávateľ ju
+           preto nevidel ani raz — a meranie premenných to neodhalilo, lebo
+           tie sa menili správne, len na nesprávnom mieste obrazovky. */
         const p = b.plan.spojite
           ? orez((vh - r.top) / (vh + r.height))
-          : orez((vh - r.top) / (vh * b.plan.draha));
-        if (Math.abs(p - b.posledne) < 0.004) return;
-        b.posledne = p;
-        b.blok.style.setProperty('--k-p', p.toFixed(4));
+          : orez((vh * 0.95 - r.top) / (vh * 0.80));
+        const pk = dno ? 1 : p;
+        if (Math.abs(pk - b.posledne) < 0.004) return;
+        b.posledne = pk;
+        b.blok.style.setProperty('--k-p', pk.toFixed(4));
         b.ciele.forEach((c) => {
-          c.el.style.setProperty('--k-p', orez((p - c.od) / (c.do - c.od)).toFixed(4));
+          c.el.style.setProperty('--k-p', orez((pk - c.od) / (c.do - c.od)).toFixed(4));
         });
       });
     };
