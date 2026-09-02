@@ -398,7 +398,7 @@
           <p class="k-copy">Natočenie lamiel, boky aj osvetlenie si viete vyskúšať v 3D. Zostavu nám pošlite a doladíme ju pri zameraní.</p>
         </div>
 
-        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" data-k-dopyt>
+        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
           <input type="hidden" name="form_type" value="contact">
           <input type="hidden" name="utf8" value="✓">
           <fieldset>
@@ -427,6 +427,15 @@
           </div>
 
           <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+
+          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
+               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
+               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
+          <label class="kh-field kh-field--subor">
+            <span>Fotky miesta <small>nepovinné</small></span>
+            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
+          </label>
 
           <div class="kh-form__submit">
             <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
@@ -502,10 +511,6 @@
       <div class="kf__contact"><strong>Kontakt</strong><a href="tel:+421948482266">+421 948 482 266</a><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a><div class="kf__social"><a href="https://www.facebook.com/KovertaSK">Facebook</a><a href="https://instagram.com/koverta.sk">Instagram</a></div></div>
     </div>
 
-    <!-- Overené v Obchodnom registri OS Nitra: deň zápisu 20. 7. 2010.
-         Konkurencia píše „od 2009" a pôsobí tým usadenejšie; tu je to isté,
-         len doložené registrom, nie tvrdením. -->
-    <p class="kf__firma">Prevádzkovateľ <strong>Venaco s. r. o.</strong>, značka Koverta · v obchodnom registri od roku 2010 · J. C. Hronského 3427/6, 949 07 Nitra · IČO 45 648 107 · zapísaná v OR OS Nitra, odd. Sro, vl. č. 27111/N</p>
 
     <div class="kf__bottom"><span>© 2026 Koverta. Všetky práva vyhradené.</span><nav aria-label="Právne informácie"><a href="../ochrana-sukromia/">Ochrana súkromia</a><a href="../obchodne-podmienky/">Obchodné podmienky</a><a href="../reklamacie/">Reklamácie</a></nav></div>
   </div>

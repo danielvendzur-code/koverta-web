@@ -580,6 +580,33 @@
     });
   }
 
+  /* --- 3f · Prílohy v dopyte --------------------------------------------- */
+
+  // Natívne pole na súbory ukáže po výbere len „3 files" v jazyku prehliadača.
+  // Toto pod ním vypíše, čo je naozaj vybraté — človek tak vidí, že sa fotky
+  // pripli, ešte pred odoslaním. Keď skript nenabehne, pole funguje ako predtým.
+  function initSubory(root) {
+    root.querySelectorAll('[data-k-subory]').forEach((input) => {
+      const pole = input.closest('.kh-field');
+      const hint = pole && pole.querySelector('.kh-field__hint');
+      if (!hint) return;
+      const povodny = hint.textContent;
+      input.addEventListener('change', () => {
+        const n = input.files ? input.files.length : 0;
+        if (!n) {
+          hint.textContent = povodny;
+          pole.classList.remove('je-vybrate');
+          return;
+        }
+        const mena = [].slice.call(input.files).map((f) => f.name);
+        hint.textContent = n === 1
+          ? 'Pripojené: ' + mena[0]
+          : 'Pripojené ' + n + ' súbory: ' + mena.join(', ');
+        pole.classList.add('je-vybrate');
+      });
+    });
+  }
+
   /* --- 3c · Vyhľadávanie ------------------------------------------------ */
 
   // Ikona lupy predtým len odkazovala na /search. Teraz otvára panel, ktorý
@@ -954,7 +981,8 @@
          a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect]
+       initProcess, initHeadline, initShots, initMatTabs, initSelect,
+       initSubory]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

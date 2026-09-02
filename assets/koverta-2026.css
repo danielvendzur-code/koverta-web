@@ -5789,3 +5789,116 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .is-headline .k-line__in,
   .is-headline .kh-hero__accent { animation: none; }
 }
+
+
+/* ==========================================================================
+   30 · PRIPOMIENKY MAJITEĽA — 2026-09-02
+   ========================================================================== */
+
+/* --- 1 · Príloha v dopyte -------------------------------------------------
+   Fotografia miesta je pri prístreškoch najužitočnejšia vec, ktorú vieme
+   od zákazníka dostať. Pole vyzerá ako ostatné polia formulára, len namiesto
+   textu drží tlačidlo prehliadača; to je zámerné — vlastný „pekný" nahrávač
+   býva prvá vec, ktorá na cudzom telefóne prestane fungovať. */
+.kh-field--subor { gap: 8px; }
+.kh-field--subor > span small {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--k-grey-soft);
+}
+.k .kh-field--subor input[type="file"] {
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 1px dashed rgba(18, 23, 26, 0.28);
+  border-radius: var(--k-r-sm);
+  background: #f7f8f8;
+  font-family: var(--k-body);
+  font-size: 14px;
+  color: var(--k-muted);
+  cursor: pointer;
+}
+.k .kh-field--subor input[type="file"]:hover { border-color: rgba(18, 23, 26, 0.45); background: #fff; }
+.k .kh-field--subor input[type="file"]:focus-visible { border-color: #a77a00; box-shadow: 0 0 0 3px rgba(255, 204, 0, .18); background: #fff; }
+.k .kh-field--subor input[type="file"]::file-selector-button {
+  margin-right: 14px;
+  padding: 8px 14px;
+  border: 1px solid rgba(18, 23, 26, 0.2);
+  border-radius: var(--k-r-xs);
+  background: #fff;
+  font-family: var(--k-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--k-ink);
+  cursor: pointer;
+}
+.kh-field__hint { font-size: 12.5px; line-height: 1.5; color: var(--k-grey-soft); }
+.kh-field--subor.je-vybrate input[type="file"] { border-style: solid; border-color: rgba(18, 23, 26, .28); background: #fff; }
+.kh-field--subor.je-vybrate .kh-field__hint { color: var(--k-ink); font-weight: 600; }
+
+
+/* --- 2 · Tabuľka parametrov ----------------------------------------------
+   Podstránky Soltecu potrebujú to, čo má katalóg: typorozmer proti rozmeru,
+   ktorý zákazník chce. Tabuľka je jediný tvar, v ktorom sa to dá prečítať —
+   na úzkom displeji sa posúva do strany namiesto toho, aby sa lámala. */
+.kh-tab { margin-top: clamp(20px, 2.2vw, 30px); }
+.kh-tab__scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-md, 14px);
+  background: var(--k-white);
+  scrollbar-width: thin;
+}
+.kh-tab table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14.5px; }
+.kh-tab caption {
+  padding: 0 0 12px;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-tab th,
+.kh-tab td {
+  padding: 14px clamp(12px, 1.2vw, 18px);
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid var(--k-hair-soft);
+  line-height: 1.45;
+}
+.kh-tab thead th {
+  border-top: 0;
+  border-bottom: 1px solid var(--k-hair);
+  font-family: var(--k-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--k-ink);
+  white-space: nowrap;
+}
+.kh-tab tbody th {
+  font-family: var(--k-head);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--k-ink);
+  white-space: nowrap;
+}
+.kh-tab tbody th small { display: block; margin-top: 3px; font-size: 12px; font-weight: 500; color: var(--k-grey-soft); }
+.kh-tab td { color: var(--k-muted); }
+.kh-tab tbody tr:hover td,
+.kh-tab tbody tr:hover th { background: var(--k-bone); }
+.kh-tab__note { margin-top: 12px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft); }
+
+/* Paleta odtieňov. Vzorka je štvorec s vlasovým rámom — na svetlých RAL
+   odtieňoch by inak nebolo vidieť, kde vzorka končí. */
+.kh-odtiene { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: clamp(12px, 1.2vw, 18px); margin-top: clamp(18px, 2vw, 26px); }
+.kh-odtien { display: flex; align-items: center; gap: 12px; }
+.kh-odtien i {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(18, 23, 26, .18);
+  border-radius: var(--k-r-xs);
+}
+.kh-odtien span { display: grid; gap: 2px; min-width: 0; }
+.kh-odtien strong { font-size: 13.5px; font-weight: 600; color: var(--k-ink); }
+.kh-odtien small { font-size: 12px; color: var(--k-grey-soft); font-variant-numeric: tabular-nums; }
