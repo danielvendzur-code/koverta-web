@@ -557,8 +557,13 @@
           const pripnuteHore = parseFloat(getComputedStyle(scope).top) || 0;
           const drahaCelkom = Math.max(1, w.height - vyskaObsahu);
           const t = (pripnuteHore - w.top) / drahaCelkom;
-          if (t < 0 || t > 1) return;
-          const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(t * panels.length)));
+          if (t < 0) return;
+          /* Nad hornou hranicou sa krok nevracia na začiatok, ale ostáva na
+             poslednom. Bez toho zostal postup stáť tam, kde ho scroll opustil
+             — a keď sa doň človek vrátil zhora, ukazoval prvý krok, hoci
+             posledný bol práve ten, z ktorého fotografie odchádzali. */
+          const tt = Math.min(t, 0.999);
+          const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(tt * panels.length)));
           /* Aj pri prudkom scrollovaní musí krok chvíľu vydržať, inak sa
              fotky len mihnú. */
           if (idx !== index && Date.now() - poslednaZmena > 260) {
@@ -1104,18 +1109,41 @@
 
     const orez = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
     const medzi = (a, b, t) => a + (b - a) * t;
+    const kolaj = zoznam.querySelector('[data-k-rail-track]') || zoznam;
     let ceka = false;
+
+    /* Prelet mieri do prvých troch kariet. Keď si niekto v recenziách posunie
+       lištu na ďalšie, tie tri karty odídu nabok — a fotografie by leteli za
+       nimi mimo obrazovku. Vtedy sa prelet nespúšťa vôbec: fotografie stoja
+       v piatom kroku aj v kartách tak, ako majú. */
+    /* Prah je vyšší než jedna medzera medzi kartami: prehliadač si lištu
+       so `scroll-snap` sám dorovnáva o pár desiatok pixelov a to ešte
+       neznamená, že si niekto listuje ďalšie recenzie. */
+    const vedla = () => kolaj.scrollLeft > 40;
+
+    const vypni = () => {
+      kusy.forEach((k) => {
+        if (k.letí !== 'vyp') {
+          k.scena.style.display = 'none';
+          k.slot.style.visibility = '';
+          k.zdroj.style.visibility = '';
+          k.kp = '1'; k.karta.style.setProperty('--k-p', '1');
+          k.letí = 'vyp';
+        }
+      });
+    };
 
     const zmer = () => {
       ceka = false;
       const vh = window.innerHeight || 1;
+      if (vedla()) { vypni(); return; }
       if (window.innerWidth < 1000) {
         kusy.forEach((k) => {
           if (k.letí !== false) {
             k.scena.style.display = 'none';
             k.slot.style.visibility = '';
             k.zdroj.style.visibility = '';
-            k.karta.style.removeProperty('--k-p');
+            k.kp = null; k.karta.style.removeProperty('--k-p');
             k.letí = false;
           }
         });
@@ -1145,8 +1173,11 @@
       kusy.forEach((k) => {
         const letí = p > 0.001 && p < 0.999;
         /* Karta sa objavuje pod fotografiou v poslednej tretine presunu,
-           takže fotografia dosadá na hotovú recenziu, nie do prázdna. */
-        k.karta.style.setProperty('--k-p', orez((p - 0.55) / 0.4).toFixed(3));
+           takže fotografia dosadá na hotovú recenziu, nie do prázdna.
+           Zapisuje sa len pri zmene — každý zápis do karty je prepočet
+           štýlu vnútri posuvnej lišty a tá si po ňom dorovnáva polohu. */
+        const kp = orez((p - 0.55) / 0.4).toFixed(3);
+        if (k.kp !== kp) { k.kp = kp; k.karta.style.setProperty('--k-p', kp); }
 
         if (!letí) {
           if (k.letí !== p) {
@@ -1186,6 +1217,7 @@
     const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(zmer); } };
     window.addEventListener('scroll', naplan, { passive: true });
     window.addEventListener('resize', naplan, { passive: true });
+    kolaj.addEventListener('scroll', naplan, { passive: true });
     zmer();
   }
 

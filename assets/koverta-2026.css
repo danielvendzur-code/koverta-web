@@ -5711,10 +5711,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
     transform: translate3d(0, calc((1 - var(--k-p, 1)) * 16px), 0);
   }
 
-  /* Karty prichádzajú sprava ako rad, prvá prvá. */
-  .k-js .kh-rev:not(:target) .kh-rev__list.je-scrub:not(:focus-within) .kh-rev__card {
-    transform: translate3d(calc((1 - var(--k-p, 1)) * 44px), 0, 0);
-  }
+  /* Karty sa už neposúvajú sprava. Bol to vodorovný posun o 44 px vnútri
+     posuvnej lišty — a posun mení šírku jej obsahu, takže si prehliadač
+     dorovnával polohu lišty a tá pri každom scrollovaní preskakovala medzi
+     0 a 44 px. Fotografie pri prelete potom uhýbali nabok. Karta sa objaví
+     priehľadnosťou, presne keď na ňu dosadá jej fotografia. */
 
   /* Prelet fotografie z celej obrazovky do karty rieši skript — pozri
      vrstvu 37 nižšie. Orezávanie vnútri karty je zrušené. */
@@ -6971,3 +6972,128 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .kh-proc__media--trio { display: flex; flex-direction: column; gap: 10px; }
   .kh-proc__media--trio .kh-proc__step-of { position: static; order: -1; align-self: flex-start; }
 }
+
+/* Lišta recenzií mala `scroll-snap-type: x mandatory`. Prehliadač si pri
+   povinnom prichytávaní dorovnáva polohu po každej zmene štýlu vnútri lišty
+   — a keďže počas preletu sa karty menia každý snímok, lišta sa sama
+   posúvala o desiatky pixelov sem a tam. Fotografie za ňou uhýbali nabok.
+   `proximity` prichytáva rovnako ochotne pri listovaní prstom, ale sama od
+   seba nikam neskáče. */
+.kh-rev__rail { scroll-snap-type: x proximity; }
+
+
+/* ==========================================================================
+   42 · Fotografie sa nikde nepribližujú
+   Vo vrstvách sa nazbieralo pätnásť miest, kde sa obraz pri odkrytí alebo
+   pod kurzorom zväčšil o tri až šesť percent — v ponuke, v realizáciách,
+   v materiáloch, v prémiovej rade, v postupe aj v dvojici značiek. Každé
+   samo o sebe drobné, dokopy sa na stránke stále niečo nafukovalo
+   a splasklo. Zadávateľ to nechce nikde.
+
+   Fotografia teda stojí. Odkrytie nesie priehľadnosť a posun rámu, reakciu
+   na kurzor nesú tlačidlá a odkazy. Jediný pohyb, ktorý na obraze ostáva, je
+   prelet troch realizácií do recenzií — a ten fotografiu nepribližuje, len
+   ju presúva a zmenšuje na jej cieľovú veľkosť.
+   ========================================================================== */
+.k .kh-pick__scene img,
+.k .kh-pick__scene:hover img,
+.k .kh-cfg__thumb img,
+.k .kh-cfg__item:hover .kh-cfg__thumb img,
+.k .kh-cat__media img,
+.k .kh-cat__card:hover .kh-cat__media img,
+.k .kh-cat__card:focus-visible .kh-cat__media img,
+.k .kh-work__media img,
+.k .kh-work__item:hover .kh-work__media img,
+.k .kh-mat__media img,
+.k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-soltec__media img,
+.k .kh-soltec__card:hover .kh-soltec__media img,
+.k .kh-size__media img,
+.k .kh-proc__media img,
+.k .kh-proc__panel.is-active .kh-proc__media img,
+.k-js .k-reveal img,
+.k-js .k-reveal.is-in img,
+.k-js .kh-cat__media.k-reveal img,
+.k-js .kh-cat__item .kh-cat__media img,
+.k-js .kh-cat__item.is-in .kh-cat__media img,
+.k-js .kh-cat__media.je-scrub img,
+.k-js .kh-work__media.je-scrub img,
+.k-js .kh-mat__media.je-scrub img {
+  transform: none;
+}
+/* Prelínačka pri výmene kroku ostáva — mení sa priehľadnosť, nie mierka. */
+.k .kh-proc__media.is-swapping img { opacity: 0; transform: none; }
+
+/* Aj úvodná fotografia sa dvanásť sekúnd pomaly odzoomovávala. Je to ten
+   istý pohyb, len pomalší — takže odchádza tiež. */
+.kh-hero__bg img { animation: none; transform: none; }
+
+
+/* ==========================================================================
+   43 · Popiska realizácie a fakty v úvode
+   V galérii realizácií nesie `<strong>` kategóriu a `<span>` názov snímky.
+   Štýl bol pritom napísaný pre domovskú stránku, kde je v tom istom mieste
+   značka — názov teda vypadol z nadpisového písma do textového a bol väčší
+   než kategória nad ním. Na stránke to vyzeralo, akoby tam bolo iné písmo.
+
+   Popiska má teraz poradie, aké má mať: kategória je drobný popisok, názov
+   snímky nadpisové písmo. Značkové popisky na domovskej stránke ostávajú
+   nedotknuté — rozlišujú sa tým, že namiesto textu nesú logo.
+   ========================================================================== */
+.k .kh-work__cap strong {
+  display: block;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.k .kh-work__cap span:not(.is-premium):not(:has(svg)):not(:has(img)) {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--k-head);
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--k-ink);
+}
+/* Kde popiska nesie značku a nie názov, ostáva pôvodné poradie: názov hore,
+   logo pod ním. */
+.k .kh-work__cap:has(svg) strong,
+.k .kh-work__cap:has(img) strong {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--k-ink);
+}
+
+/* --- Fakty v úvode podstránky ------------------------------------------
+   „celá SR montáže" na jednom riadku bez oddelenia sa čítalo ako jedna
+   pomýlená veta. Údaj a jeho popis stoja pod sebou: hore hodnota, pod ňou
+   drobným popiskom, čoho sa týka. */
+.k .kh-hero__chip {
+  display: block;
+  align-items: initial;
+  min-height: 0;
+  padding: 9px 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+.k .kh-hero__chip strong {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--k-head);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: #fff;
+}
+.k .kh-hero__trust { gap: 10px; align-items: stretch; }
