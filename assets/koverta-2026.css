@@ -7266,3 +7266,136 @@ footer.kf { background: var(--k-ink); color: #fff; }
     .kh-znacky__pata { align-self: start; }
   }
 }
+
+/* ==========================================================================
+   VRSTVA 47 · „Ako to prebieha" na telefóne — päť kariet, každá s fotkou
+   ==========================================================================
+   Na mobile stál nad panelom zoznam piatich názvov a pod ním jediný panel.
+   Názvy sa o pár riadkov nižšie zopakovali v paneli, takže návštevník
+   prescrolloval sedemsto pixelov nadpisov, aby sa dostal k jednej fotke —
+   a ostatné štyri kroky nevidel vôbec. Zoznam preto na telefóne vypíname
+   a všetkých päť krokov stojí pod sebou ako karty, každá s vlastnou
+   fotografiou. Na širokej obrazovke sa nič nemení: tam je zoznam vľavo
+   a panely sa prelínajú v jednej bunke, ako doteraz. */
+@media (max-width: 899.98px) {
+  .k .kh-proc__list { display: none; }
+
+  /* Panely sa už neprekrývajú v jednej bunke — každý má vlastný riadok. */
+  .kh-proc__panels,
+  .kh-proc__panels.is-stacked { display: grid; grid-auto-flow: row; gap: 12px; }
+  .kh-proc__panels.is-stacked > .kh-proc__panel,
+  .kh-proc__panels.is-stacked > .kh-proc__panel.is-active {
+    grid-area: auto;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  /* Bez zoznamu nemá „aktívny" krok význam — všetky karty vyzerajú rovnako. */
+  .k .kh-proc__panel .kh-proc__num,
+  .k .kh-proc__panel.is-active .kh-proc__num { color: var(--k-amber-deep); }
+
+  /* Číslo a názov na jednom riadku: ušetrí päťkrát jeden riadok výšky. */
+  .kh-proc__body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 11px;
+    row-gap: 6px;
+    padding: 15px 16px 19px;
+  }
+  .kh-proc__num { font-size: 25px; line-height: 1; }
+  .kh-proc__body h3 { font-size: 18.5px; }
+  .kh-proc__body p { grid-column: 1 / -1; font-size: 14.5px; max-width: none; }
+
+  .kh-proc__media { aspect-ratio: 16 / 9; }
+  .kh-proc__aside { gap: 18px; }
+}
+
+/* ==========================================================================
+   VRSTVA 48 · Skladba konštrukcie na telefóne — riadok, nie kartotéka
+   ==========================================================================
+   Osem dlaždíc pod sebou malo takmer dvetisíc pixelov a každá vyzerala
+   rovnako: číslo, názov, veľký popisok Z ČOHO, text, veľký popisok NA VÝBER,
+   text. Šestnásť rovnakých veľkých popiskov je šum — čitateľ ich prestane
+   vnímať po druhom. Na telefóne preto číslo sadá do žltého terčíka (rovnako
+   ako výnosky na reze vedľa), materiál je hlavný riadok a voľba sa k nemu
+   pripája jedným krátkym štítkom. Vrstva je tak vysoká zhruba polovicu
+   a hierarchia je vidieť na prvý pohľad. Na širokej obrazovke, kde sú
+   dlaždice v dvoch stĺpcoch vedľa kresby, ostáva všetko po starom. */
+@media (max-width: 759.98px) {
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
+    padding: 15px 16px 17px;
+  }
+  /* Číslo vrstvy je terčík — ten istý znak, aký nesie výnoska na reze. */
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody th {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 16.5px;
+  }
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--k-amber);
+    color: var(--k-ink);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+  }
+  /* Materiál je hlavná veta vrstvy, takže nepotrebuje nadpis nad sebou. */
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+    padding-left: 35px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--k-ink);
+  }
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody td::before { display: none; }
+  /* Voľba sa pripája k materiálu jedným štítkom v riadku, nie nad ním. */
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td {
+    margin-top: 6px;
+    color: var(--k-muted);
+  }
+  .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td::before {
+    content: attr(data-popis) " · ";
+    display: inline;
+    margin: 0;
+    font-family: var(--k-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--k-amber-deep);
+  }
+}
+
+/* Piaty krok nesie trojicu fotografií, nie jednu — pomer 16 : 9 by pod ňou
+   nechal sivý pás. Trojica si preto drží vlastnú výšku a na telefóne stojí
+   v tej istej kompozícii ako na širokej obrazovke (jedna veľká, dve menšie),
+   len chce menej miesta než tri rovnaké vedľa seba. */
+@media (max-width: 899.98px) {
+  .kh-proc__media--trio { aspect-ratio: auto; }
+}
+@media (max-width: 699px) {
+  .kh-proc__media--trio { gap: 8px; }
+  .kh-proc__trio { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .kh-proc__trio-kus:first-child { grid-row: 1 / 3; aspect-ratio: auto; }
+}
+
+/* Na tablete a väčšom telefóne na šírku je miesto na to, aby fotka stála
+   vedľa textu — päť kariet pod sebou by inak malo takmer tri tisíc pixelov.
+   Pod 680 px sa fotka vracia nad text, lebo užší stĺpec by text zalomil
+   na dve slová v riadku. */
+@media (min-width: 680px) and (max-width: 899.98px) {
+  .k .kh-proc__panel { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: stretch; }
+  .k .kh-proc__panel .kh-proc__media { aspect-ratio: auto; min-height: 190px; }
+  .k .kh-proc__panel .kh-proc__media--trio { aspect-ratio: auto; min-height: 0; align-self: center; }
+  .kh-proc__body { align-content: center; padding: 18px 20px 20px; }
+}
