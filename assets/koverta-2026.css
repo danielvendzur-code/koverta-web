@@ -7158,7 +7158,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    vami, a zastaví na spodku panela. Posun robí skript; tu je len to, že sa
    hýbe plynulo a že farebná plocha panela ostáva stáť.
    ========================================================================== */
-.kh-faq__intro-in { will-change: transform; }
+/* posun úvodu otázok rieši `position: sticky`, nie skript — pozri vrstvu 57 */
 @media (prefers-reduced-motion: reduce) {
   .kh-faq__intro-in { transform: none !important; }
 }
@@ -7420,25 +7420,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-proc__panel .kh-proc__media { aspect-ratio: auto; min-height: 190px; }
   .k .kh-proc__panel .kh-proc__media--trio { aspect-ratio: auto; min-height: 0; align-self: center; }
   .kh-proc__body { align-content: center; padding: 18px 20px 20px; }
-}
-
-/* ==========================================================================
-   VRSTVA 49 · Úvod otázok nesmie vycestovať z panelu
-   ==========================================================================
-   Posun úvodu počítal voľné miesto z celej výšky panelu vrátane vnútorného
-   odsadenia, takže nadpis aj telefónne tlačidlo skončili pod tmavou plochou
-   na svetlom podklade. Dráhu opravuje skript; `overflow: hidden` je poistka,
-   aby sa obsah za žiadnych okolností nedostal mimo panel — panel má zaoblené
-   rohy, takže orezanie je aj tak prirodzené. */
-.kh-faq__intro { overflow: hidden; }
-
-/* Panel obsah zvisle centruje. Pri centrovanej východiskovej polohe už bola
-   polovica voľného miesta minutá nahor, takže posun nadol musel skončiť pod
-   panelom. Keď skript obsah zabalí (teda keď posun naozaj beží), obsah
-   začína hore a dráha vedie k spodnej hrane. Bez skriptu — na telefóne aj
-   pri obmedzenom pohybe — ostáva centrovanie. */
-@media (min-width: 1000px) {
-  .kh-faq__intro:has(> .kh-faq__intro-in) { justify-content: flex-start; }
 }
 
 /* ==========================================================================
@@ -7874,3 +7855,99 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Rozpera pod hlavičkou, kým je lišta prilepená — bez nej sa obsah posunie
    nahor o jej výšku a prehliadač to zapíše ako posun rozloženia. */
 .kv-header.ma-rozperu { padding-bottom: var(--kv-lista, 76px); }
+
+/* ==========================================================================
+   VRSTVA 57 · Úvod otázok drží prehliadač, nie skript
+   ==========================================================================
+   Posun úvodu som doteraz počítal v skripte: kde má začať, koľko má voľného
+   miesta a kde má zastaviť. Zakaždým sa to o kúsok nezhodovalo — raz vyšiel
+   obsah z panelu von, raz zastavil skoro, raz neskoro. Celý ten výpočet vie
+   prehliadač urobiť sám a presne: `position: sticky` drží obsah v paneli,
+   nikdy ho z neho nepustí a zastaví ho na spodnej hrane. Skript je preč,
+   výsledok je plynulý a hlavne vždy rovnaký.
+
+   Panel sám ostáva presne taký, aký bol — tmavá plocha na celú výšku
+   zoznamu so zaoblením naľavo. Mení sa len to, čo je vnútri. */
+.k .kh-faq__intro { display: block; }
+.kh-faq__intro-in {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+@media (min-width: 1000px) {
+  .kh-faq__intro-in {
+    position: sticky;
+    /* Pod prilepenou hlavičkou, nie za ňou. */
+    top: clamp(96px, 13vh, 150px);
+  }
+}
+
+/* Panel má výšku celého zoznamu, ale text a tlačidlo zaberú necelú polovicu —
+   spodok ostával prázdny čierny. Fotografia večernej realizácie pod textom
+   ho zaplní bez toho, aby si pýtala pozornosť: je stlmená a zospodu sa
+   vytráca do farby panelu. Cesta v `url()` sa počíta od tohto súboru, takže
+   platí rovnako na úvode aj na podstránkach. */
+@media (min-width: 1000px) {
+  .k .kh-faq__intro { position: relative; isolation: isolate; }
+  .k .kh-faq__intro::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: url("kh-faq-podklad.jpg") center bottom / cover no-repeat;
+    opacity: 0.3;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
+    mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
+    pointer-events: none;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 58 · Očíslované otázky
+   ==========================================================================
+   Zoznam ôsmich otázok rovnakej váhy sa čítal ako jedna dlhá plocha. Číslo
+   pred otázkou dá zoznamu rytmus a nadviaže na rovnakú reč, akou hovorí
+   zvyšok webu — kroky postupu, vrstvy konštrukcie aj oddelenia sú číslované
+   rovnako. */
+.k .kh-faq__list { counter-reset: kv-otazka; }
+.k .kh-faq__item { counter-increment: kv-otazka; }
+.k .kh-faq__item summary { gap: 16px; }
+.k .kh-faq__item summary::before {
+  content: counter(kv-otazka, decimal-leading-zero);
+  flex: none;
+  width: 2.1em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--k-grey);
+  transition: color 240ms var(--k-ease);
+}
+.k .kh-faq__item[open] summary::before,
+.k .kh-faq__item summary:hover::before { color: var(--k-amber-deep); }
+/* Odpoveď sa zarovná pod text otázky, nie pod jej číslo. */
+.k .kh-faq__item > div { padding-left: calc(2.1em + 16px); }
+@media (max-width: 599px) {
+  .k .kh-faq__item summary { gap: 12px; }
+  .k .kh-faq__item summary::before { width: 1.9em; font-size: 11px; }
+  .k .kh-faq__item > div { padding-left: calc(1.9em + 12px); }
+}
+
+/* Text otázky je medzi číslom a znamienkom tretím prvkom v riadku — bez
+   nároku na miesto by ho `space-between` vystrčilo do stredu. Berie si preto
+   celý zvyšok šírky a začína hneď za číslom. */
+.k .kh-faq__item summary > span:not(.kh-faq__sign) { flex: 1 1 auto; }
+
+/* Karta piateho kroku sa počas preletu vytráca — fotografie z nej odchádzajú
+   a ona sa za nimi zavrie. Bez toho by na obrazovke ostávala biela karta
+   s prázdnymi rámčekmi po fotografiách, čo vyzerá ako chyba. Hodnotu píše
+   skript, ktorý prelet riadi; pri ceste hore sa karta rovnako vráti. */
+.k .kh-proc__panels .kh-proc__panel:has(.kh-proc__media--trio),
+.k .kh-proc__panels.is-stacked > .kh-proc__panel.is-active:has(.kh-proc__media--trio) {
+  opacity: calc(1 - var(--k-odlet, 0));
+}
+@media (max-width: 999px) {
+  .k .kh-proc__panels .kh-proc__panel:has(.kh-proc__media--trio),
+  .k .kh-proc__panels.is-stacked > .kh-proc__panel.is-active:has(.kh-proc__media--trio) { opacity: 1; }
+}

@@ -1115,6 +1115,7 @@
       return { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, w: 0, h: 0, letí: null };
     });
 
+    const panelKroku = trio.closest('.kh-proc__panel');
     const orez = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
     const medzi = (a, b, t) => a + (b - a) * t;
     const kolaj = zoznam.querySelector('[data-k-rail-track]') || zoznam;
@@ -1129,7 +1130,15 @@
        neznamená, že si niekto listuje ďalšie recenzie. */
     const vedla = () => kolaj.scrollLeft > 40;
 
+    const vratKartu = () => {
+      if (panelKroku && panelKroku.dataset.kOdlet !== '0') {
+        panelKroku.dataset.kOdlet = '0';
+        panelKroku.style.removeProperty('--k-odlet');
+      }
+    };
+
     const vypni = () => {
+      vratKartu();
       kusy.forEach((k) => {
         if (k.letí !== 'vyp') {
           k.scena.style.display = 'none';
@@ -1146,6 +1155,7 @@
       const vh = window.innerHeight || 1;
       if (vedla()) { vypni(); return; }
       if (window.innerWidth < 1000) {
+        vratKartu();
         kusy.forEach((k) => {
           if (k.letí !== false) {
             k.scena.style.display = 'none';
@@ -1169,7 +1179,18 @@
          stránke prekonať, takže na obrazovke celý čas mierne stúpajú a nikdy
          sa neotočia späť. */
       const r = zoznam.getBoundingClientRect();
-      const p = orez((vh * 1.00 - r.top) / (vh * 0.88));
+      /* Odmerané na úvode pri okne 900 px: piaty krok je prilepený pod
+         hlavičkou (fotografie na 108 px) dovtedy, kým je zoznam recenzií
+         zhruba 1,15 obrazovky pod okrajom. Až vtedy sa odlepí a začne
+         odchádzať hore. Presne tam musí prelet začať — pri pôvodnom začiatku
+         na jednej obrazovke boli fotografie v tej chvíli už 20 px nad horným
+         okrajom okna a prelet sa rozbiehal mimo obrazovky. Koniec je tam, kde
+         karty recenzií dosadnú do hornej tretiny okna. Pri týchto hraniciach
+         idú fotografie po obrazovke 120 → 200 px, teda stále mierne nadol,
+         nikdy nie za hlavičku a nikdy sa neotočia. */
+      const zaciatok = vh * 1.15;
+      const koniec = vh * 0.12;
+      const p = orez((zaciatok - r.top) / (zaciatok - koniec));
       /* Postup je rovnomerný, zámerne bez zrýchlenia v strede. Fotografie
          majú na stránke prekonať menšiu vzdialenosť, než akú medzitým
          odscrolluje okno — pri rovnomernom postupe preto na obrazovke stále
@@ -1177,6 +1198,17 @@
          strede by ich na chvíľu poslalo nadol a to je presne to knísanie,
          ktoré na predchádzajúcej podobe rušilo. */
       const e = p;
+
+      /* Fotografie odlietajú z piateho kroku, ale samotná karta kroku ostáva
+         ešte dlho na obrazovke — a s prázdnymi rámčekmi po fotografiách
+         vyzerá pokazene. Karta sa preto počas preletu vytráca: fotografie
+         z nej odchádzajú a ona sa za nimi zavrie. Späť pri scrollovaní hore
+         sa rovnako vráti. */
+      const odlet = orez(p / 0.26).toFixed(3);
+      if (panelKroku && panelKroku.dataset.kOdlet !== odlet) {
+        panelKroku.dataset.kOdlet = odlet;
+        panelKroku.style.setProperty('--k-odlet', odlet);
+      }
 
       kusy.forEach((k) => {
         const letí = p > 0.001 && p < 0.999;
@@ -1240,50 +1272,6 @@
      Robí to skript posunom, nie `position: sticky`: posun je jeden údaj,
      ktorý sa dá presne ohraničiť, takže panel nikdy nevyjde zo svojej plochy.
      Panel má vlastnú farebnú plochu, preto sa hýbe jeho obsah, nie on sám. */
-  function initFaqPanel(root) {
-    if (REDUCED.matches) return;
-    root.querySelectorAll('.kh-faq__grid').forEach((mriezka) => {
-      const uvod = mriezka.querySelector('.kh-faq__intro');
-      if (!uvod || uvod.dataset.kReady === 'true') return;
-      uvod.dataset.kReady = 'true';
-
-      const obsah = document.createElement('div');
-      obsah.className = 'kh-faq__intro-in';
-      while (uvod.firstChild) obsah.appendChild(uvod.firstChild);
-      uvod.appendChild(obsah);
-
-      let ceka = false;
-      const zmer = () => {
-        ceka = false;
-        if (!window.matchMedia('(min-width: 1000px)').matches) {
-          obsah.style.transform = '';
-          return;
-        }
-        const rm = mriezka.getBoundingClientRect();
-        const vyskaObsahu = obsah.offsetHeight;
-        /* Voľné miesto sa počíta z vnútra panelu, nie z jeho celej výšky.
-           `offsetHeight` obsahuje aj vnútorné odsadenie — s ním dráha
-           prerástla panel o dvojnásobok odsadenia a nadpis aj tlačidlo
-           vycestovali dolu von z tmavej plochy. */
-        const styl = getComputedStyle(uvod);
-        const vnutro = uvod.clientHeight
-          - (parseFloat(styl.paddingTop) || 0)
-          - (parseFloat(styl.paddingBottom) || 0);
-        const volno = vnutro - vyskaObsahu;
-        if (volno <= 8) { obsah.style.transform = ''; return; }
-        const lep = Math.max(24, Math.min(120, window.innerHeight * 0.12));
-        const drah = Math.max(1, rm.height - vyskaObsahu);
-        const p = Math.min(1, Math.max(0, (lep - rm.top) / drah));
-        obsah.style.transform = p > 0 ? 'translate3d(0,' + (p * volno).toFixed(1) + 'px,0)' : '';
-      };
-      const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(zmer); } };
-      window.addEventListener('scroll', naplan, { passive: true });
-      window.addEventListener('resize', naplan, { passive: true });
-      /* Otvorená odpoveď mení výšku zoznamu, takže sa dráha musí premerať. */
-      mriezka.addEventListener('toggle', naplan, true);
-      zmer();
-    });
-  }
 
   /* --- Súhlas s meraním ---------------------------------------------------
      Google Consent Mode beží už v hlavičke a kým návštevník nerozhodne, sú
@@ -1672,7 +1660,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initFaqPanel, initVideo]
+       initSubory, initScrub, initPrelet, initVideo]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
