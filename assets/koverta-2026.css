@@ -7140,3 +7140,129 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .kh-faq__intro-in { transform: none !important; }
 }
+
+
+/* ==========================================================================
+   46 · Dve značky ako rozcestník (plán B)
+   Sekcia „Dve značky" bola dve fotografie a dva odstavce — pekné, ale
+   návštevník z nej odchádzal tam, kde bol. Prémiová rada Soltec pritom o dve
+   sekcie nižšie hovorila to isté ešte raz, len s tromi kartami.
+
+   Teraz je to jedna sekcia a robí prácu rozcestníka: dva panely, v každom
+   fotografia, značka, jedna veta a tri konkrétne odkazy na riešenia tej
+   značky. Odtiaľto sa dá odísť rovno na to, čo človek rieši.
+
+   Panel nemá rám ani plochu — nesie ho fotografia a vlasové linky medzi
+   odkazmi, ako všade inde na stránke. Jantár je len v popise sekcie a v
+   šípke odkazu pod kurzorom.
+   ========================================================================== */
+.kh-znacky__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(38px, 4vw, 60px);
+  margin-top: clamp(26px, 3vw, 44px);
+}
+@media (min-width: 900px) {
+  .kh-znacky__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(30px, 3.2vw, 56px); }
+}
+
+.kh-znacky__media {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone-deep, #e8e6e1);
+}
+.kh-znacky__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.kh-znacky__body { padding-top: clamp(18px, 1.8vw, 26px); }
+
+/* Značka stojí v rovnakej optickej výške na oboch stranách — je to prepínač
+   dvoch rovnocenných ciest, nie hlavná a vedľajšia. */
+.kh-znacky__mark { margin: 0 0 12px; line-height: 0; }
+.kh-znacky__mark .k-logo { height: 20px; width: auto; color: var(--k-ink); }
+.kh-znacky__mark .k-logo__letter path { fill: currentColor; }
+.kh-znacky__mark .k-brand--soltec-img { height: 17px; width: auto; filter: brightness(0); }
+
+.kh-znacky__lead {
+  margin: 0 0 clamp(16px, 1.6vw, 22px);
+  max-width: 46ch;
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  line-height: 1.62;
+  color: var(--k-muted);
+}
+
+/* Tri odkazy pod sebou na vlasových linkách. Riadok je celý klikateľný,
+   šípka sa pod kurzorom posunie — to je jediná reakcia, obraz stojí. */
+.kh-znacky__zoznam { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--k-hair); }
+.kh-znacky__zoznam li { border-bottom: 1px solid var(--k-hair); }
+.k .kh-znacky__zoznam a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 62px;
+  padding: 12px 0;
+  color: var(--k-ink);
+  text-decoration: none;
+}
+.kh-znacky__zoznam strong {
+  display: block;
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.25vw, 17px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.kh-znacky__zoznam small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--k-grey-soft);
+}
+.kh-znacky__zoznam svg {
+  width: 17px; height: 17px; flex: 0 0 auto;
+  fill: none; stroke: currentColor; stroke-width: 1.9;
+  transition: transform 260ms var(--k-ease-out);
+}
+.k .kh-znacky__zoznam a:hover svg,
+.k .kh-znacky__zoznam a:focus-visible svg { transform: translateX(5px); }
+.k .kh-znacky__zoznam a:hover strong { color: var(--k-amber-deep); }
+
+.kh-znacky__pata {
+  margin: clamp(14px, 1.4vw, 18px) 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--k-grey-soft);
+}
+.kh-znacky__pata a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+.kh-znacky__spolu {
+  margin: clamp(30px, 3.2vw, 46px) 0 0;
+  padding-top: clamp(20px, 2.2vw, 28px);
+  border-top: 1px solid var(--k-hair);
+  max-width: 62ch;
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-znacky__spolu a { color: var(--k-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-znacky__zoznam svg { transition: none; }
+}
+
+/* Oba panely majú rovnako dlhý úvodný odstavec len náhodou. Aby zoznamy
+   odkazov začínali v rovnakej výške aj vtedy, keď sa text zmení, delia si
+   panely riadky spoločnej mriežky. */
+@media (min-width: 900px) {
+  @supports (grid-template-rows: subgrid) {
+    .kh-znacky__grid { grid-template-rows: auto auto auto auto auto; }
+    .kh-znacky__panel { display: grid; grid-row: span 5; grid-template-rows: subgrid; gap: 0; }
+    .kh-znacky__body { display: contents; }
+    .kh-znacky__mark { margin-top: clamp(18px, 1.8vw, 26px); align-self: end; }
+    .kh-znacky__lead { align-self: start; }
+    .kh-znacky__zoznam { align-self: start; }
+    .kh-znacky__pata { align-self: start; }
+  }
+}
