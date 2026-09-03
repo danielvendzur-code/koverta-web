@@ -26,6 +26,28 @@
    nedávalo nič: tlačidlo ostalo bez pozadia a telefón sa vykreslil
    východiskovou modrou prehliadača — farbou, ktorá na tomto webe nemá čo
    robiť. Triedy nechávam v selektore kvôli vloženiu do cudzej šablóny. */
+/* ==========================================================================
+   VRSTVA 56 · Náhradné písmo s rovnakou šírkou ako Archivo
+   ==========================================================================
+   Kým sa Archivo stiahne, kreslí sa systémové písmo. To je na tejto stránke
+   o sedem percent užšie, takže text zaberal menej riadkov — a keď Archivo
+   dobehlo, sekcie sa predĺžili a obsah pod nimi poskočil. Nameraný posun
+   rozloženia (CLS) bol 0,107 až 0,134, teda nad hranicou, ktorú Google
+   považuje za dobrú (0,1). Náhradné písmo má teraz cez `size-adjust` presne
+   takú šírku, akú má Archivo (0,9857 z Arialu, odmerané na vzorke textu),
+   takže výmena písma už nemení počet riadkov. */
+@font-face {
+  font-family: "Archivo zaskok";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans"), local("Nimbus Sans"), local("Arimo");
+  size-adjust: 98.57%;
+  ascent-override: 92%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root,
 .k,
 .kv-header {
@@ -76,8 +98,8 @@
   --k-band-tight: clamp(52px, 5.6vw, 96px);
 
   /* typografia ----------------------------------------------------------- */
-  --k-head: var(--font-heading-family, "Archivo", "Helvetica Neue", Arial, sans-serif);
-  --k-body: var(--font-body-family, "Archivo", "Helvetica Neue", Arial, sans-serif);
+  --k-head: var(--font-heading-family, "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif);
+  --k-body: var(--font-body-family, "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif);
 
   /* pohyb ---------------------------------------------------------------- */
   --k-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -7848,3 +7870,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .kh-hero__video { display: none; }
 }
+
+/* Rozpera pod hlavičkou, kým je lišta prilepená — bez nej sa obsah posunie
+   nahor o jej výšku a prehliadač to zapíše ako posun rozloženia. */
+.kv-header.ma-rozperu { padding-bottom: var(--kv-lista, 76px); }

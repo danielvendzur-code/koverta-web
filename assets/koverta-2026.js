@@ -1554,9 +1554,16 @@
         if (y <= hranica) {
           /* pri vrchu stránky je lišta na svojom mieste v toku */
           bar.classList.remove('je-plava', 'je-schovana');
+          header.classList.remove('ma-rozperu');
           posledneY = y;
           return;
         }
+        /* Keď lišta vypadne z toku, obsah pod hlavičkou by sa posunul nahor
+           o jej výšku — a to je posun rozloženia, ktorý sa počíta do CLS aj
+           keď sa deje mimo obrazovky. Hlavička si preto na jej mieste drží
+           rozperu presne takej výšky, akú lišta mala. */
+        header.style.setProperty('--kv-lista', Math.round(vyska) + 'px');
+        header.classList.add('ma-rozperu');
         bar.classList.add('je-plava');
         const rozdiel = y - posledneY;
         if (rozdiel > prah) bar.classList.add('je-schovana');
