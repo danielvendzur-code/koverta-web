@@ -7337,65 +7337,64 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* ==========================================================================
-   VRSTVA 48 · Skladba konštrukcie na telefóne — riadok, nie kartotéka
+   VRSTVA 48 · Skladba konštrukcie — riadok, nie kartotéka
    ==========================================================================
    Osem dlaždíc pod sebou malo takmer dvetisíc pixelov a každá vyzerala
    rovnako: číslo, názov, veľký popisok Z ČOHO, text, veľký popisok NA VÝBER,
    text. Šestnásť rovnakých veľkých popiskov je šum — čitateľ ich prestane
-   vnímať po druhom. Na telefóne preto číslo sadá do žltého terčíka (rovnako
-   ako výnosky na reze vedľa), materiál je hlavný riadok a voľba sa k nemu
-   pripája jedným krátkym štítkom. Vrstva je tak vysoká zhruba polovicu
-   a hierarchia je vidieť na prvý pohľad. Na širokej obrazovke, kde sú
-   dlaždice v dvoch stĺpcoch vedľa kresby, ostáva všetko po starom. */
-@media (max-width: 759.98px) {
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
-    padding: 15px 16px 17px;
-  }
-  /* Číslo vrstvy je terčík — ten istý znak, aký nesie výnoska na reze. */
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody th {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 9px;
-    font-size: 16.5px;
-  }
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 25px;
-    height: 25px;
-    margin: 0;
-    border-radius: 50%;
-    background: var(--k-amber);
-    color: var(--k-ink);
-    font-size: 10.5px;
-    letter-spacing: 0.02em;
-  }
-  /* Materiál je hlavná veta vrstvy, takže nepotrebuje nadpis nad sebou. */
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody td {
-    padding-left: 35px;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--k-ink);
-  }
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody td::before { display: none; }
-  /* Voľba sa pripája k materiálu jedným štítkom v riadku, nie nad ním. */
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td {
-    margin-top: 6px;
-    color: var(--k-muted);
-  }
-  .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td::before {
-    content: attr(data-popis) " · ";
-    display: inline;
-    margin: 0;
-    font-family: var(--k-head);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--k-amber-deep);
-  }
+   vnímať po druhom. Číslo preto sadá do žltého terčíka — do toho istého
+   znaku, aký nesie výnoska na reze vedľa — materiál je hlavný riadok a voľba
+   sa k nemu pripája jedným krátkym štítkom v riadku. Vrstva je tak vysoká
+   zhruba polovicu a hierarchia je vidieť na prvý pohľad. Platí to rovnako
+   na telefóne aj na širokej obrazovke: keď to na malej funguje, nie je dôvod
+   mať na veľkej niečo iné. */
+.kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
+  padding: 15px 16px 17px;
+}
+/* Číslo vrstvy je terčík — ten istý znak, aký nesie výnoska na reze. */
+.kh-tab:not(:has(thead th:nth-child(4))) tbody th {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 16.5px;
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--k-amber);
+  color: var(--k-ink);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+/* Materiál je hlavná veta vrstvy, takže nepotrebuje nadpis nad sebou. */
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+  padding-left: 35px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--k-ink);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td::before { display: none; }
+/* Voľba sa pripája k materiálu jedným štítkom v riadku, nie nad ním. */
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td + td {
+  margin-top: 6px;
+  color: var(--k-muted);
+}
+.kh-tab:not(:has(thead th:nth-child(4))) tbody td + td::before {
+  content: attr(data-popis) " · ";
+  display: inline;
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
 }
 
 /* Piaty krok nesie trojicu fotografií, nie jednu — pomer 16 : 9 by pod ňou
@@ -7951,3 +7950,159 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-proc__panels .kh-proc__panel:has(.kh-proc__media--trio),
   .k .kh-proc__panels.is-stacked > .kh-proc__panel.is-active:has(.kh-proc__media--trio) { opacity: 1; }
 }
+
+/* ==========================================================================
+   VRSTVA 59 · Karty kategórií majú rovnakú výšku a nič neskrývajú
+   ==========================================================================
+   Riadok si rezervoval výšku rozbalenej karty (724 px), aby sa pri prejdení
+   myšou nič pod sekciou nehýbalo. Kým ale nikto kurzorom nikde nebol, stáli
+   v ňom karty vysoké 596 px a pod nimi ostávala prázdna plocha cez pol
+   obrazovky. A na dotykových zariadeniach, kde prejdenie myšou neexistuje,
+   sa popis a odkazy nedali vyvolať vôbec.
+
+   Karty preto ukazujú všetko hneď a majú rovnakú výšku. Prázdne miesto
+   zmizlo, obsah je dostupný aj prstom a niet čo animovať, takže sa pri
+   prechode medzi kartami nemá čo hýbať. */
+@media (min-width: 1000px) {
+  .k .kh-cat__grid {
+    grid-auto-rows: auto;
+    align-items: stretch;
+    height: auto;
+  }
+  .k .kh-cat__item { height: auto; overflow: visible; }
+  .k .kh-cat__card { height: 100%; }
+
+  .k .kh-cat__more,
+  .k .kh-cat__item:hover .kh-cat__more,
+  .k .kh-cat__item:focus-within .kh-cat__more,
+  .k .kh-cat__card:hover .kh-cat__more,
+  .k .kh-cat__card:focus-within .kh-cat__more {
+    display: block;
+    grid-template-rows: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .k .kh-cat__more > * { min-height: 0; overflow: visible; }
+
+  /* Telo karty už nemusí pri prejdení myšou naberať výšku — má ju stále. */
+  .k .kh-cat__body,
+  .k .kh-cat__item:hover .kh-cat__body,
+  .k .kh-cat__item:focus-within .kh-cat__body { flex: 1 1 auto; }
+  .k .kh-cat__media { flex: 0 0 auto; }
+}
+
+/* Odkazy sedia na spodnej hrane karty, nie hneď pod textom — inak by v rade
+   stáli v štyroch rôznych výškach podľa toho, aký dlhý má ktorá karta popis. */
+@media (min-width: 1000px) {
+  .k .kh-cat__more { display: flex; flex-direction: column; flex: 1 1 auto; }
+  .k .kh-cat__more > div { display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; }
+  .k .kh-cat__actions { margin-top: auto; }
+}
+
+/* ==========================================================================
+   VRSTVA 60 · Údaje v úvode ako riadok, nie ako tri škatuľky
+   ==========================================================================
+   Tri orámované boxy s priesvitným podkladom pôsobili ako infografika
+   nalepená na fotografiu. Údaje teraz stoja priamo na fotografii v jednom
+   riadku, oddelené vlasovou čiarou — hodnota v nadpisovom reze, popis pod
+   ňou drobným písmom. Čitateľnosť na svetlejších miestach fotografie drží
+   jemný tieň textu, nie plocha za ním. */
+.k .kh-hero__trust {
+  gap: 0;
+  align-items: stretch;
+  flex-wrap: wrap;
+  row-gap: 14px;
+}
+.k .kh-hero__chip {
+  padding: 0 clamp(16px, 1.7vw, 26px) 0 0;
+  margin: 0 clamp(16px, 1.7vw, 26px) 0 0;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  font-size: 11px;
+  letter-spacing: 0.11em;
+  color: rgba(255, 255, 255, 0.66);
+  text-shadow: 0 1px 10px rgba(9, 12, 14, 0.45);
+}
+.k .kh-hero__chip:last-of-type {
+  padding-right: 0;
+  margin-right: 0;
+  border-right: 0;
+}
+.k .kh-hero__chip strong {
+  margin-bottom: 4px;
+  font-size: clamp(17px, 1.5vw, 21px);
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 14px rgba(9, 12, 14, 0.5);
+}
+/* Hodnotenie z Google stojí vedľa v tej istej výške, ale ostáva čipom —
+   je to odkaz, takže potrebuje plochu, na ktorú sa dá kliknúť. */
+.k .kh-hero__trust .kh-hero__rating { margin-left: clamp(4px, 1vw, 14px); }
+@media (max-width: 599px) {
+  .k .kh-hero__chip { padding-right: 14px; margin-right: 14px; }
+  .k .kh-hero__chip strong { font-size: 16px; }
+}
+
+/* Prvá veta popisu hovorí, o ktorej značke je reč — stránka pokrýva oceľovú
+   Kovertu aj celohliníkový Soltec a bez toho by zoznam vrstiev vyzeral ako
+   spoločný pre obe. */
+.kh-tab:not(:has(thead th:nth-child(4))) caption strong {
+  font-family: var(--k-head);
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+/* ==========================================================================
+   VRSTVA 61 · Galéria montáží na podstránkach
+   ==========================================================================
+   Fotografia a pod ňou sivá veta v bežnom texte — vyzeralo to ako kontaktný
+   hárok, nie ako ukážka práce. Popis má teraz rovnakú stavbu, akú má zvyšok
+   webu: jantárové poradové číslo, vlasová čiara a názov v nadpisovom reze.
+   Vzťahuje sa len na galériové dlaždice, teda tie bez popisu a odkazov —
+   karty kategórií ostávajú, aké boli. */
+.k .kh-cat__grid { counter-reset: kv-real; }
+.k .kh-cat__item:not(:has(.kh-cat__more)) { counter-increment: kv-real; }
+
+.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__media {
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+}
+.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 13px 2px 0;
+  border-top: 1px solid var(--k-hair);
+  transition: border-color 240ms var(--k-ease);
+}
+.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body::before {
+  content: counter(kv-real, decimal-leading-zero);
+  padding-top: 2px;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--k-amber-deep);
+}
+.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body .k-copy {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  color: var(--k-ink);
+}
+.k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body { border-top-color: var(--k-amber); }
+.k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body .k-copy { color: var(--k-amber-deep); }
