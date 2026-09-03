@@ -8131,3 +8131,36 @@ footer.kf { background: var(--k-ink); color: #fff; }
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+
+/* ==========================================================================
+   VRSTVA 63 · Plochy na dotyk
+   ==========================================================================
+   Kontrola na telefóne našla niekoľko ovládacích prvkov nižších než 32 px:
+   logo v hlavičke malo 24 px, odkazy na oddelenia 23 px a zaškrtávacie
+   políčka 19 px. Na dotyku sa do nich ťažko trafí. Text ani rozloženie sa
+   nemenia — pribúda len plocha okolo. */
+@media (hover: none), (pointer: coarse) {
+  .kv-logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .kh-odd__odkaz {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+  }
+  .kf__bottom a,
+  .kf__suhlas {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+  .kv-suhlas__volba input,
+  .kh-form__suhlas input {
+    width: 22px;
+    height: 22px;
+  }
+  /* Celý riadok so súhlasom je plocha na klik — políčko samo stačí malé. */
+  .kh-form__suhlas { padding: 4px 0; }
+}

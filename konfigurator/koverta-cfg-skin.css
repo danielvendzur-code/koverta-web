@@ -915,3 +915,53 @@ body { background: var(--k-white); color: var(--k-ink); }
     white-space: nowrap;
   }
 }
+
+/* ==========================================================================
+   Čitateľnosť a plochy na dotyk na telefóne
+   ==========================================================================
+   Kontrola na telefóne našla texty s veľkosťou 9,5 až 10,5 px — názvy krokov,
+   označenia typov, rozmery aj kódy RAL. Na displeji v ruke sa to číta ťažko.
+   Nič sa nepresúva ani neprepisuje, mení sa len veľkosť písma a plocha,
+   do ktorej sa dá trafiť prstom. */
+@media (max-width: 767px) {
+  /* Pôvodné pravidlá sú písané cez `#SoltecPremium`, takže sa dajú prebiť
+     len rovnakým prefixom. Jednotka je tu 1 rem = 10 px. */
+  #SoltecPremium .sp-rail button span,
+  #SoltecPremium .sp-tile span,
+  #SoltecPremium .sp-tile span b,
+  #SoltecPremium .sp-tile span small,
+  #SoltecPremium .sp-side-opts__group,
+  #SoltecPremium small,
+  #SoltecPremium em {
+    font-size: 1.2rem;
+    line-height: 1.35;
+  }
+  /* Kódy RAL pri vzorkách sú krátke čísla — 1,15 rem im stačí a nerozbijú
+     mriežku vzoriek. */
+  #SoltecPremium .sp-swatch small { font-size: 1.15rem; }
+  /* Popisy pod dlaždicami modelov a kódy RAL pri farbách. */
+  #SoltecPremium .sp-modelgrid button small { font-size: 1.2rem; line-height: 1.35; }
+  #SoltecPremium .sp-colorrow .sp-colorchip small { font-size: 1.15rem; }
+  /* Krajné hodnoty pod posuvníkmi rozmerov a popis strany strechy. */
+  #SoltecPremium .sp-scale span,
+  #SoltecPremium .sp-roof-finish__legend span { font-size: 1.2rem; }
+  /* Poznámky pri doplnkoch („podľa šírky", „na nacenenie"). */
+  #SoltecPremium .sp-side-opts em,
+  #SoltecPremium[data-sp-page] .sp-switch em { font-size: 1.15rem; line-height: 1.3; }
+  /* Telefón v hornej lište je odkaz — potrebuje výšku na prst. */
+  .kv-topbar a[href^="tel:"] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  /* Logo a telefón v hlavičke konfigurátora sú odkazy — potrebujú výšku,
+     do ktorej sa dá trafiť. */
+  .kv-logo,
+  .sp-topbar a,
+  .sp-head a[href^="tel:"] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
