@@ -7097,3 +7097,46 @@ footer.kf { background: var(--k-ink); color: #fff; }
   color: #fff;
 }
 .k .kh-hero__trust { gap: 10px; align-items: stretch; }
+
+
+/* ==========================================================================
+   44 · Graf výberu typoradu
+   Majiteľ žiadal, aby pri Soltecu bolo vidieť, ktorý typorozmer treba na
+   rozmer, ktorý zákazník chce — tak, ako to je v cenníku výrobcu. Graf je
+   presne tá stránka z cenníka 2026: vodorovne dĺžka, zvisle šírka, a šesť
+   vnorených oblastí. Kde bod padne, ten model rozmer unesie.
+
+   Kresba je čiarová, stojí na podklade sekcie a nemá rám. Pod ňou je tá istá
+   informácia v tabuľke — graf je rýchly odhad, tabuľka presné číslo.
+   ========================================================================== */
+.kh-graf { margin-bottom: clamp(24px, 2.6vw, 38px); }
+.kh-graf__plocha { margin: 0; }
+.kh-graf__plocha svg { display: block; width: 100%; height: auto; }
+.kh-graf__plocha figcaption {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-hair);
+  max-width: 74ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+@media (min-width: 1000px) {
+  .kh-graf { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(28px, 3vw, 46px); align-items: center; }
+  .kh-graf__plocha figcaption { margin: 0; padding: 0 0 0 clamp(24px, 2.4vw, 34px); border-top: 0; border-left: 2px solid var(--k-amber); }
+  .kh-graf__plocha { display: contents; }
+}
+
+
+/* ==========================================================================
+   45 · Popis otázok sa posúva so zoznamom
+   Nadpis a telefón v ľavom paneli stáli na mieste, kým človek prechádzal
+   dvanásť otázok pod sebou — pri poslednej odpovedi bol popis dávno mimo
+   pohľadu. Obsah panela sa teraz posúva úmerne tomu, koľko zo zoznamu je za
+   vami, a zastaví na spodku panela. Posun robí skript; tu je len to, že sa
+   hýbe plynulo a že farebná plocha panela ostáva stáť.
+   ========================================================================== */
+.kh-faq__intro-in { will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .kh-faq__intro-in { transform: none !important; }
+}

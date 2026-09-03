@@ -1221,6 +1221,54 @@
     zmer();
   }
 
+  /* --- Popis otázok ide s vami, ale úmerne --------------------------------
+     Ľavý panel s nadpisom a telefónom stál v strede a pri dlhom zozname
+     otázok ostal na mieste, kým človek čítal dvanásť odpovedí pod sebou.
+
+     Text v paneli sa teraz posúva presne o toľko, o koľko odscrolluje zoznam
+     — teda úmerne, nie skokom — a zastaví, keď dosiahne spodok panela. Hore
+     pri prvej otázke je hore, pri poslednej dole.
+
+     Robí to skript posunom, nie `position: sticky`: posun je jeden údaj,
+     ktorý sa dá presne ohraničiť, takže panel nikdy nevyjde zo svojej plochy.
+     Panel má vlastnú farebnú plochu, preto sa hýbe jeho obsah, nie on sám. */
+  function initFaqPanel(root) {
+    if (REDUCED.matches) return;
+    root.querySelectorAll('.kh-faq__grid').forEach((mriezka) => {
+      const uvod = mriezka.querySelector('.kh-faq__intro');
+      if (!uvod || uvod.dataset.kReady === 'true') return;
+      uvod.dataset.kReady = 'true';
+
+      const obsah = document.createElement('div');
+      obsah.className = 'kh-faq__intro-in';
+      while (uvod.firstChild) obsah.appendChild(uvod.firstChild);
+      uvod.appendChild(obsah);
+
+      let ceka = false;
+      const zmer = () => {
+        ceka = false;
+        if (!window.matchMedia('(min-width: 1000px)').matches) {
+          obsah.style.transform = '';
+          return;
+        }
+        const rm = mriezka.getBoundingClientRect();
+        const vyskaObsahu = obsah.offsetHeight;
+        const volno = uvod.offsetHeight - vyskaObsahu;
+        if (volno <= 8) { obsah.style.transform = ''; return; }
+        const lep = Math.max(24, Math.min(120, window.innerHeight * 0.12));
+        const drah = Math.max(1, rm.height - vyskaObsahu);
+        const p = Math.min(1, Math.max(0, (lep - rm.top) / drah));
+        obsah.style.transform = p > 0 ? 'translate3d(0,' + (p * volno).toFixed(1) + 'px,0)' : '';
+      };
+      const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(zmer); } };
+      window.addEventListener('scroll', naplan, { passive: true });
+      window.addEventListener('resize', naplan, { passive: true });
+      /* Otvorená odpoveď mení výšku zoznamu, takže sa dráha musí premerať. */
+      mriezka.addEventListener('toggle', naplan, true);
+      zmer();
+    });
+  }
+
   function initHeader(header) {
     if (header.dataset.kReady === 'true') return;
     header.dataset.kReady = 'true';
@@ -1372,7 +1420,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet]
+       initSubory, initScrub, initPrelet, initFaqPanel]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

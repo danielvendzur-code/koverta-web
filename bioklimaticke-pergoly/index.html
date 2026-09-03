@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788414780941">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788415364040">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -308,8 +308,9 @@
 <!-- Zadanie od majiteľa: pri produktoch Soltec chýbal graf, z ktorého sa dá
      prečítať, ktorý typorozmer treba na rozmer, aký zákazník chce. Toto je
      tá tabuľka, prepísaná z katalógu Soltec Bioclimatic Pergolas & Canopies
-     (vydanie 2025-01) — päť typov SL, ich najväčšie rozmery pri štyroch a
-     pri šiestich stĺpoch, kotvenie, odvodnenie a počet motorov. -->
+     (cenník 2026, vydanie jún 2026) — graf výberu podľa šírky a dĺžky a za ním
+     šesť typov SL s najväčšími rozmermi pri štyroch a pri šiestich stĺpoch,
+     kotvením, odvodnením a počtom motorov. -->
 <section class="k-band kh-work" aria-labelledby="typTitle">
   <div class="k-rules" aria-hidden="true"></div>
   <div class="k-wrap">
@@ -319,18 +320,75 @@
         <h2 id="typTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Ktorý model na aký rozmer</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
-        <p class="k-copy">Rozmer, ktorý chcete prestrešiť, určuje typorad. Čím väčší rozpon, tým hrubší profil a väčšia lamela — pod 3,5 m stačí najmenší typ, nad 4,3 m sa ide do profilu 24. Nájdite v tabuľke svoj rozmer a vyjde vám model.</p>
+        <p class="k-copy">Rozmer, ktorý chcete prestrešiť, určuje typorad. Čím väčší rozpon, tým hrubší profil a väčšia lamela — pod 3,5 m stačí najmenší typ, nad 4,3 m sa ide do profilu 24. Nájdite svoj rozmer v grafe a vyjde vám model.</p>
         <a class="k-link" href="../konfigurator/?page=bio">Vyskúšať v konfigurátore <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </header>
 
+    <div class="kh-graf k-rise">
+      <figure class="kh-graf__plocha">
+        <svg viewBox="0 0 720 420" role="img" aria-labelledby="grafT grafD">
+          <title id="grafT">Graf výberu modelu pergoly podľa šírky a dĺžky</title>
+          <desc id="grafD">Vodorovne dĺžka pergoly od 3 do 9,3 metra, zvisle šírka od 3 do 6 metrov. Vyznačené sú štyri oblasti: do 3,5 metra šírky model SL 170/28, do 4,3 metra SL 170/36 alebo SL 240/36, do 4,8 metra SL 170/42 alebo SL 240/42 a nad to SL 240/60, ktorý zvládne 6 metrov šírky do dĺžky 6 metrov alebo 5 metrov šírky do dĺžky 8 metrov. Presné hodnoty sú v tabuľke pod grafom.</desc>
+
+          <g stroke="#e6e3dc" stroke-width="1" stroke-dasharray="3 4">
+            <path d="M173 70v290M267 70v290M360 70v290M453 70v290M547 70v290M640 70v290"/>
+          </g>
+
+          <!-- oblasti: od najväčšieho modelu po najmenší -->
+          <path d="M80 98h280v87h187v175H80z" fill="#f7f0d4" stroke="#d9cb92" stroke-width="1.2"/>
+          <rect x="80" y="203" width="588" height="157" fill="#efe4b6" stroke="#cbb96e" stroke-width="1.2"/>
+          <rect x="80" y="246" width="588" height="114" fill="#e7d896" stroke="#bda449" stroke-width="1.2"/>
+          <rect x="80" y="316" width="588" height="44" fill="#ddc86c" stroke="#a8902f" stroke-width="1.2"/>
+
+          <g stroke="#12171a" stroke-width="1.4">
+            <path d="M80 60v300M80 360h600"/>
+          </g>
+
+          <g font-family="Archivo, system-ui, sans-serif" font-size="13" font-weight="700" fill="#12171a">
+            <text x="94" y="344">SL 170/28</text>
+            <text x="94" y="284">SL 170/36 · SL 240/36</text>
+            <text x="94" y="230">SL 170/42 · SL 240/42</text>
+            <text x="94" y="130">SL 240/60</text>
+          </g>
+          <g font-family="Archivo, system-ui, sans-serif" font-size="11.5" fill="#5c6469">
+            <text x="376" y="130">6 × 6 m</text>
+            <text x="376" y="216">5 × 8 m</text>
+          </g>
+
+          <g font-family="Archivo, system-ui, sans-serif" font-size="12" fill="#5c6469">
+            <text x="80" y="381" text-anchor="middle">3</text>
+            <text x="173" y="381" text-anchor="middle">4</text>
+            <text x="267" y="381" text-anchor="middle">5</text>
+            <text x="360" y="381" text-anchor="middle">6</text>
+            <text x="453" y="381" text-anchor="middle">7</text>
+            <text x="547" y="381" text-anchor="middle">8</text>
+            <text x="640" y="381" text-anchor="middle">9</text>
+            <text x="668" y="398" text-anchor="middle">9,3</text>
+            <text x="70" y="364" text-anchor="end">3</text>
+            <text x="70" y="320" text-anchor="end">3,5</text>
+            <text x="70" y="250" text-anchor="end">4,3</text>
+            <text x="70" y="207" text-anchor="end">4,8</text>
+            <text x="70" y="189" text-anchor="end">5</text>
+            <text x="70" y="102" text-anchor="end">6</text>
+          </g>
+          <g font-family="Archivo, system-ui, sans-serif" font-size="12" font-weight="700" fill="#12171a">
+            <text x="374" y="414" text-anchor="middle">dĺžka (m)</text>
+            <text x="22" y="210" text-anchor="middle" transform="rotate(-90 22 210)">šírka (m)</text>
+          </g>
+        </svg>
+        <figcaption>Nájdite si v grafe svoj rozmer — vodorovne dĺžku, zvisle šírku. Model, do ktorého oblasti bod padne, je ten najúspornejší, ktorý rozmer unesie. Dvojice 170 a 240 majú rovnaký rozmer, líšia sa nosnosťou: profil 17 je do 140 kg/m², profil 24 do 240 kg/m² — vo vyšších snehových oblastiach preto ideme do 240. Na jeden modul najviac 45 m²; väčšie plochy sa skladajú z modulov vedľa seba.</figcaption>
+      </figure>
+    </div>
+
     <div class="kh-tab k-rise" data-k-delay="1">
       <div class="kh-tab__scroll">
         <table>
-          <caption>Najväčšie rozmery jedného modulu. Výška stĺpa je vo všetkých typoch najviac 3 m; väčšie plochy sa skladajú z viacerých modulov vedľa seba.</caption>
+          <caption>Najväčšie rozmery jedného modulu (šírka × dĺžka). Výška stĺpa je vo všetkých typoch najviac 3 m, najmenšia dĺžka pergoly 3 m. Pri dĺžke nad 6 m výrobca odporúča pridať stĺp alebo pozdĺžny sklon 3 cm.</caption>
           <thead>
             <tr>
               <th scope="col">Model</th>
+              <th scope="col">Lamela</th>
               <th scope="col">Profil / stĺp</th>
               <th scope="col">4 stĺpy</th>
               <th scope="col">6 stĺpov</th>
@@ -341,47 +399,64 @@
           </thead>
           <tbody>
             <tr>
-              <th scope="row">SL 160/28<small>lamela S</small></th>
-              <td data-popis="Profil / stĺp">160 / 120 mm · stĺp 120 / 120 mm</td>
-              <td data-popis="4 stĺpy">3,5 × 5 m</td>
-              <td data-popis="6 stĺpov">—</td>
-              <td data-popis="Kotvenie">vnútorné aj vonkajšie</td>
-              <td data-popis="Vývody vody">2</td>
-              <td data-popis="Motory">1</td>
-            </tr>
-            <tr>
-              <th scope="row">SL 170/28<small>lamela S</small></th>
+              <th scope="row">SL 170/28</th>
+              <td data-popis="Lamela">200 / 28 mm</td>
               <td data-popis="Profil / stĺp">170 / 120 mm · stĺp 120 / 120 mm</td>
-              <td data-popis="4 stĺpy">3,5 × 7 m</td>
-              <td data-popis="6 stĺpov">3,5 × 9 m</td>
+              <td data-popis="4 stĺpy">3,5 × 6,5 m</td>
+              <td data-popis="6 stĺpov">3,5 × 9,3 m</td>
               <td data-popis="Kotvenie">vnútorné aj vonkajšie</td>
               <td data-popis="Vývody vody">2 – 3</td>
               <td data-popis="Motory">1 – 2</td>
             </tr>
             <tr>
-              <th scope="row">SL 170/36<small>lamela L</small></th>
+              <th scope="row">SL 170/36</th>
+              <td data-popis="Lamela">200 / 36 mm</td>
               <td data-popis="Profil / stĺp">170 / 120 mm · stĺp 120 / 120 mm</td>
-              <td data-popis="4 stĺpy">4,3 × 7 m</td>
+              <td data-popis="4 stĺpy">4,3 × 6,5 m</td>
+              <td data-popis="6 stĺpov">4,3 × 9,3 m</td>
+              <td data-popis="Kotvenie">vnútorné aj vonkajšie</td>
+              <td data-popis="Vývody vody">2 – 3</td>
+              <td data-popis="Motory">1 – 2</td>
+            </tr>
+            <tr>
+              <th scope="row">SL 170/42</th>
+              <td data-popis="Lamela">200 / 42 mm</td>
+              <td data-popis="Profil / stĺp">170 / 120 mm · stĺp 120 / 120 mm</td>
+              <td data-popis="4 stĺpy">4,8 × 6,5 m</td>
+              <td data-popis="6 stĺpov">4,8 × 9,3 m</td>
+              <td data-popis="Kotvenie">vnútorné aj vonkajšie</td>
+              <td data-popis="Vývody vody">2 – 3</td>
+              <td data-popis="Motory">1 – 2</td>
+            </tr>
+            <tr>
+              <th scope="row">SL 240/36</th>
+              <td data-popis="Lamela">200 / 36 mm</td>
+              <td data-popis="Profil / stĺp">240 / 150 mm · stĺp 150 / 150 mm</td>
+              <td data-popis="4 stĺpy">4,3 × 8 m</td>
               <td data-popis="6 stĺpov">4,3 × 9 m</td>
-              <td data-popis="Kotvenie">vnútorné aj vonkajšie</td>
+              <td data-popis="Kotvenie">vonkajšie (za príplatok)</td>
               <td data-popis="Vývody vody">2 – 3</td>
               <td data-popis="Motory">1 – 2</td>
             </tr>
             <tr>
-              <th scope="row">SL 240/36<small>lamela L 200/36</small></th>
+              <th scope="row">SL 240/42</th>
+              <td data-popis="Lamela">200 / 42 mm</td>
               <td data-popis="Profil / stĺp">240 / 150 mm · stĺp 150 / 150 mm</td>
-              <td colspan="2" data-popis="4 stĺpy">4,3 × 8 m v jednom module</td>
-              <td data-popis="Kotvenie">vonkajšie</td>
+              <td data-popis="4 stĺpy">4,8 × 8 m</td>
+              <td data-popis="6 stĺpov">4,8 × 9 m</td>
+              <td data-popis="Kotvenie">vonkajšie (za príplatok)</td>
               <td data-popis="Vývody vody">2 – 3</td>
               <td data-popis="Motory">1 – 2</td>
             </tr>
             <tr>
-              <th scope="row">SL 240/60<small>lamela XL 270/60</small></th>
+              <th scope="row">SL 240/60</th>
+              <td data-popis="Lamela">270 / 60 mm</td>
               <td data-popis="Profil / stĺp">240 / 150 mm · stĺp 150 / 150 mm</td>
-              <td colspan="2" data-popis="4 stĺpy">6 × 6 m alebo 5 × 8 m, najviac 40 m²</td>
-              <td data-popis="Kotvenie">vonkajšie</td>
+              <td data-popis="4 stĺpy">6 × 6 m</td>
+              <td data-popis="6 stĺpov">5 × 8 m, najviac 40 m²</td>
+              <td data-popis="Kotvenie">vonkajšie (za príplatok)</td>
               <td data-popis="Vývody vody">2 – 3</td>
-              <td data-popis="Motory">1 – 2</td>
+              <td data-popis="Motory">1 – 3</td>
             </tr>
           </tbody>
         </table>
@@ -694,6 +769,22 @@
         </a>
 
         
+
+        <div class="kh-cta__score">
+          <span class="kh-fact__row">
+            <svg class="k-google k-google--lg" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+            </svg>
+            <b>5,0</b>
+            <span class="k-stars" role="img" aria-label="5 z 5"><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg></span>
+          </span>
+          <small>Priemer 5 z 5 na Google</small>
+          <a href="https://www.google.com/maps/search/?api=1&query=Koverta%20Nitra">Prečítať recenzie
+            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
       </aside>
 
     </div>
@@ -748,7 +839,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788414780941"></script>
+<script src="../assets/koverta-2026.js?v=1788415364040"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
