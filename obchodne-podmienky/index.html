@@ -3,14 +3,80 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
+     kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
+<script>
+(function (w) {
+  w.dataLayer = w.dataLayer || [];
+  function gtag() { w.dataLayer.push(arguments); }
+  w.kvGtag = gtag;
+  w.KV_SUHLAS_KLUC = 'koverta-suhlas';
+  var v = null;
+  try { v = JSON.parse(w.localStorage.getItem(w.KV_SUHLAS_KLUC) || 'null'); } catch (e) {}
+  if (v && v.verzia !== 1) v = null;
+  w.kvSuhlas = v;
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+  if (v) {
+    gtag('consent', 'update', {
+      ad_storage: v.marketing ? 'granted' : 'denied',
+      ad_user_data: v.marketing ? 'granted' : 'denied',
+      ad_personalization: v.marketing ? 'granted' : 'denied',
+      analytics_storage: v.analytika ? 'granted' : 'denied',
+      functionality_storage: v.preferencie ? 'granted' : 'denied',
+      personalization_storage: v.preferencie ? 'granted' : 'denied',
+      security_storage: 'granted'
+    });
+  }
+  gtag('set', 'ads_data_redaction', !(v && v.marketing));
+  gtag('set', 'url_passthrough', true);
+})(window);
+</script>
+<!-- Google Tag Manager -->
+<script>
+(function (w, d, s, l, i) {
+  w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+  j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+  f.parentNode.insertBefore(j, f);
+})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
+</script>
+<!-- Koniec Google Tag Manager -->
+
 <title>Obchodné podmienky — Koverta</title>
 <meta name="description" content="Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku — od objednávky po odovzdanie.">
+<!-- KOVERTA-SEO -->
+<link rel="canonical" href="https://danielvendzur-code.github.io/koverta-web/obchodne-podmienky/">
+<meta name="theme-color" content="#12171a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Koverta">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:title" content="Obchodné podmienky — Koverta">
+<meta property="og:description" content="Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku — od objednávky po odovzdanie.">
+<meta property="og:url" content="https://danielvendzur-code.github.io/koverta-web/obchodne-podmienky/">
+<meta property="og:image" content="https://koverta.sk/cdn/shop/files/03.jpg?width=1200">
+<meta property="og:image:alt" content="Obchodné podmienky — Koverta">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Obchodné podmienky — Koverta">
+<meta name="twitter:description" content="Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku — od objednávky po odovzdanie.">
+<meta name="twitter:image" content="https://koverta.sk/cdn/shop/files/03.jpg?width=1200">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://danielvendzur-code.github.io/koverta-web/#organizacia","name":"Koverta","url":"https://danielvendzur-code.github.io/koverta-web/","logo":"https://danielvendzur-code.github.io/koverta-web/assets/favicon.svg","description":"Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby na Slovensku. Zameranie a návrh zadarmo, doprava a montáž v cene.","email":"obchod@koverta.sk","telephone":"+421948482266","areaServed":{"@type":"Country","name":"Slovensko"},"sameAs":["https://www.facebook.com/KovertaSK","https://instagram.com/koverta.sk","https://pinterest.com/KovertaSK","https://koverta.sk/"],"contactPoint":[{"@type":"ContactPoint","contactType":"sales","name":"Obchodné oddelenie","telephone":"+421948482266","email":"obchod@koverta.sk","availableLanguage":["sk"],"areaServed":"SK"},{"@type":"ContactPoint","contactType":"technical support","name":"Projektové oddelenie","telephone":"+421911298341","email":"design@koverta.sk","availableLanguage":["sk"],"areaServed":"SK"},{"@type":"ContactPoint","contactType":"billing support","name":"Účtovné oddelenie","telephone":"+421905482266","email":"financie@koverta.sk","availableLanguage":["sk"],"areaServed":"SK"},{"@type":"ContactPoint","contactType":"customer support","name":"Ochrana osobných údajov","telephone":"+421905482266","email":"dpo@koverta.sk","availableLanguage":["sk"],"areaServed":"SK"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Koverta","item":"https://danielvendzur-code.github.io/koverta-web/"},{"@type":"ListItem","position":2,"name":"Dokumenty"},{"@type":"ListItem","position":3,"name":"Obchodné podmienky"}]}</script>
+<!-- /KOVERTA-SEO -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788438194041">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788449087904">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -65,6 +131,7 @@
 </style>
 </head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <a class="kv-skip" href="#obsah">Preskočiť na obsah</a>
 
 <!-- ======================================================== HLAVIČKA -->
@@ -669,7 +736,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788438194041"></script>
+<script src="../assets/koverta-2026.js?v=1788449087904"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

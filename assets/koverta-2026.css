@@ -7399,3 +7399,173 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-proc__panel .kh-proc__media--trio { aspect-ratio: auto; min-height: 0; align-self: center; }
   .kh-proc__body { align-content: center; padding: 18px 20px 20px; }
 }
+
+/* ==========================================================================
+   VRSTVA 49 · Úvod otázok nesmie vycestovať z panelu
+   ==========================================================================
+   Posun úvodu počítal voľné miesto z celej výšky panelu vrátane vnútorného
+   odsadenia, takže nadpis aj telefónne tlačidlo skončili pod tmavou plochou
+   na svetlom podklade. Dráhu opravuje skript; `overflow: hidden` je poistka,
+   aby sa obsah za žiadnych okolností nedostal mimo panel — panel má zaoblené
+   rohy, takže orezanie je aj tak prirodzené. */
+.kh-faq__intro { overflow: hidden; }
+
+/* Panel obsah zvisle centruje. Pri centrovanej východiskovej polohe už bola
+   polovica voľného miesta minutá nahor, takže posun nadol musel skončiť pod
+   panelom. Keď skript obsah zabalí (teda keď posun naozaj beží), obsah
+   začína hore a dráha vedie k spodnej hrane. Bez skriptu — na telefóne aj
+   pri obmedzenom pohybe — ostáva centrovanie. */
+@media (min-width: 1000px) {
+  .kh-faq__intro:has(> .kh-faq__intro-in) { justify-content: flex-start; }
+}
+
+/* ==========================================================================
+   VRSTVA 50 · Lišta súhlasu s meraním
+   ==========================================================================
+   Sedí dole, nie cez celú obrazovku: rozhodnutie o meraní nemá byť brána,
+   cez ktorú sa treba prebiť k obsahu. Na telefóne stojí nad lepivým
+   tlačidlom ponuky, aby ho neprekryla. Tmavá plocha ju odlíši od stránky
+   a jasne povie, že je to systémová vec, nie ďalšia ponuka. */
+.kv-suhlas {
+  position: fixed;
+  z-index: 90;
+  left: clamp(10px, 2vw, 24px);
+  right: clamp(10px, 2vw, 24px);
+  bottom: clamp(10px, 2vw, 24px);
+  display: flex;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+@media (max-width: 899px) {
+  .kv-suhlas { bottom: calc(var(--kv-dok, 0px) + 10px); }
+}
+.kv-suhlas__in {
+  width: min(560px, 100%);
+  padding: clamp(18px, 2vw, 24px);
+  border-radius: var(--k-r);
+  background: #171d20;
+  color: #fff;
+  box-shadow: 0 24px 60px rgba(18, 23, 26, 0.32);
+  pointer-events: auto;
+  transform: translate3d(0, 18px, 0);
+  opacity: 0;
+  transition: transform 320ms var(--k-ease-out), opacity 320ms var(--k-ease);
+}
+.kv-suhlas.je-vidno .kv-suhlas__in { transform: none; opacity: 1; }
+.kv-suhlas.je-siroka .kv-suhlas__in { width: min(620px, 100%); }
+@media (prefers-reduced-motion: reduce) {
+  .kv-suhlas__in { transition: none; transform: none; }
+}
+
+.kv-suhlas__text strong {
+  display: block;
+  margin-bottom: 7px;
+  font-family: var(--k-head);
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.kv-suhlas__text p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+.kv-suhlas__text a { color: var(--k-amber); text-underline-offset: 3px; }
+
+.kv-suhlas__volby {
+  display: grid;
+  gap: 2px;
+  margin-top: 16px;
+  max-height: min(46vh, 320px);
+  overflow-y: auto;
+}
+.kv-suhlas__volba {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--k-r-sm);
+  cursor: pointer;
+}
+.kv-suhlas__volba:hover { background: rgba(255, 255, 255, 0.05); }
+.kv-suhlas__volba.je-pevna { cursor: default; opacity: 0.66; }
+.kv-suhlas__volba.je-pevna:hover { background: transparent; }
+.kv-suhlas__volba input {
+  width: 19px;
+  height: 19px;
+  margin-top: 2px;
+  accent-color: var(--k-amber);
+  cursor: inherit;
+}
+.kv-suhlas__volba span {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+.kv-suhlas__volba span strong {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.kv-suhlas__akcie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 17px;
+}
+.kv-suhlas__btn {
+  flex: 1 1 auto;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--k-r-pill);
+  font-family: var(--k-head);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 200ms var(--k-ease), border-color 200ms var(--k-ease), color 200ms var(--k-ease);
+}
+.kv-suhlas__btn--ano { background: var(--k-amber); color: var(--k-ink); }
+.kv-suhlas__btn--ano:hover { background: #ffd452; }
+.kv-suhlas__btn--nie {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.kv-suhlas__btn--nie:hover { border-color: #fff; background: rgba(255, 255, 255, 0.08); }
+.kv-suhlas__viac {
+  flex: 0 0 auto;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  font-family: var(--k-body);
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.kv-suhlas__viac:hover { color: #fff; }
+.kv-suhlas__btn:focus-visible,
+.kv-suhlas__viac:focus-visible { outline: 2px solid var(--k-amber); outline-offset: 2px; }
+
+/* Odkaz v pätke vyzerá ako ostatné právne odkazy, len je to tlačidlo. */
+.kf__suhlas {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+}
+.kf__suhlas:hover { text-decoration-color: currentColor; }

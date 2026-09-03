@@ -898,14 +898,14 @@
 
       if (shopLink) {
         shopLink.hidden = !nq;
-        shopLink.href = '/search?q=' + encodeURIComponent(q);
+        shopLink.href = 'https://koverta.sk/search?q=' + encodeURIComponent(q);
         const label = shopLink.querySelector('span');
         if (label) label.textContent = 'Hľadať „' + q + '" v celom e-shope';
       }
 
       if (!nq) {
         empty.hidden = false;
-        empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „tienenie" alebo „smetné koše".';
+        empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „tienenie" alebo „prístrešok pre dve autá".';
         return;
       }
 
@@ -953,12 +953,12 @@
       });
     };
 
-    const open = () => {
+    const open = (predvolba) => {
       if (!index) index = buildIndex(document);
       panel.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
-      input.value = '';
-      render('');
+      input.value = predvolba || '';
+      render(input.value);
       input.focus();
     };
 
@@ -986,6 +986,14 @@
       if (panel.hidden) return;
       if (!panel.contains(e.target) && !trigger.contains(e.target)) close();
     });
+
+    /* Odkaz s `?q=` otvorí vyhľadávanie rovno s hľadaným výrazom. Vďaka tomu
+       je `SearchAction` v štruktúrovaných dátach pravdivá — Google aj ktokoľvek
+       iný sa vie odkázať priamo na výsledok hľadania. */
+    try {
+      const hladane = new URLSearchParams(window.location.search).get('q');
+      if (hladane) open(hladane);
+    } catch (e) {}
   }
 
   /* --- 3f · Rozbaľovací selektor vo formulári ---------------------------- */
@@ -1253,7 +1261,15 @@
         }
         const rm = mriezka.getBoundingClientRect();
         const vyskaObsahu = obsah.offsetHeight;
-        const volno = uvod.offsetHeight - vyskaObsahu;
+        /* Voľné miesto sa počíta z vnútra panelu, nie z jeho celej výšky.
+           `offsetHeight` obsahuje aj vnútorné odsadenie — s ním dráha
+           prerástla panel o dvojnásobok odsadenia a nadpis aj tlačidlo
+           vycestovali dolu von z tmavej plochy. */
+        const styl = getComputedStyle(uvod);
+        const vnutro = uvod.clientHeight
+          - (parseFloat(styl.paddingTop) || 0)
+          - (parseFloat(styl.paddingBottom) || 0);
+        const volno = vnutro - vyskaObsahu;
         if (volno <= 8) { obsah.style.transform = ''; return; }
         const lep = Math.max(24, Math.min(120, window.innerHeight * 0.12));
         const drah = Math.max(1, rm.height - vyskaObsahu);
@@ -1267,6 +1283,184 @@
       mriezka.addEventListener('toggle', naplan, true);
       zmer();
     });
+  }
+
+  /* --- Súhlas s meraním ---------------------------------------------------
+     Google Consent Mode beží už v hlavičke a kým návštevník nerozhodne, sú
+     všetky kategórie zamietnuté — Tag Manager sa načíta, ale žiadna značka
+     nesmie zapisovať do prehliadača. Lišta je len rozhranie k tomu
+     rozhodnutiu: zapíše ho, pošle `consent update` a zmizne. Voľba sa dá
+     kedykoľvek zmeniť odkazom v pätke. */
+  function initSuhlas(scope) {
+    const doc = scope.ownerDocument || scope;
+    if (doc.body.dataset.kSuhlasReady === 'true') return;
+    doc.body.dataset.kSuhlasReady = 'true';
+
+    const KLUC = window.KV_SUHLAS_KLUC || 'koverta-suhlas';
+    const gtag = window.kvGtag || function () {};
+    const KAT = [
+      ['analytika', 'Analytika', 'Koľko ľudí stránku navštívi a ktoré riešenia si pozerajú. Bez toho netušíme, čo tu chýba.'],
+      ['marketing', 'Marketing', 'Aby sa naša ponuka ukázala tam, kde zastrešenie naozaj hľadáte, a aby sme vedeli, či to má zmysel.'],
+      ['preferencie', 'Preferencie', 'Zapamätá si drobnosti, napríklad túto voľbu alebo rozpracovanú zostavu v konfigurátore.']
+    ];
+
+    const nacitaj = () => {
+      try {
+        const v = JSON.parse(window.localStorage.getItem(KLUC) || 'null');
+        return v && v.verzia === 1 ? v : null;
+      } catch (e) { return null; }
+    };
+
+    const uloz = (v) => {
+      v.verzia = 1;
+      v.kedy = new Date().toISOString();
+      try { window.localStorage.setItem(KLUC, JSON.stringify(v)); } catch (e) {}
+      window.kvSuhlas = v;
+      gtag('consent', 'update', {
+        ad_storage: v.marketing ? 'granted' : 'denied',
+        ad_user_data: v.marketing ? 'granted' : 'denied',
+        ad_personalization: v.marketing ? 'granted' : 'denied',
+        analytics_storage: v.analytika ? 'granted' : 'denied',
+        functionality_storage: v.preferencie ? 'granted' : 'denied',
+        personalization_storage: v.preferencie ? 'granted' : 'denied',
+        security_storage: 'granted'
+      });
+      gtag('set', 'ads_data_redaction', !v.marketing);
+      (window.dataLayer = window.dataLayer || []).push({
+        event: 'koverta_suhlas',
+        suhlas_analytika: !!v.analytika,
+        suhlas_marketing: !!v.marketing,
+        suhlas_preferencie: !!v.preferencie
+      });
+    };
+
+    /* Stránky sedia v rôznej hĺbke, takže cestu k ochrane súkromia si lišta
+       požičia z odkazu, ktorý už v pätke je. */
+    const kamSukromie = () => {
+      const a = doc.querySelector('a[href*="ochrana-sukromia"]');
+      return a ? a.getAttribute('href') : 'ochrana-sukromia/';
+    };
+
+    let lista = null;
+
+    const zavri = () => {
+      if (!lista) return;
+      lista.classList.remove('je-vidno');
+      const von = lista;
+      window.setTimeout(() => { if (von.parentNode) von.parentNode.removeChild(von); }, 320);
+      lista = null;
+      doc.documentElement.style.removeProperty('--kv-lista');
+    };
+
+    const otvor = (predvolba) => {
+      if (lista) return;
+      const v = predvolba || nacitaj() || { analytika: false, marketing: false, preferencie: false };
+
+      lista = doc.createElement('section');
+      lista.className = 'kv-suhlas';
+      lista.setAttribute('data-k-suhlas', '');
+      lista.setAttribute('role', 'region');
+      lista.setAttribute('aria-label', 'Nastavenie súkromia');
+
+      const vnutro = doc.createElement('div');
+      vnutro.className = 'kv-suhlas__in';
+
+      const text = doc.createElement('div');
+      text.className = 'kv-suhlas__text';
+      text.innerHTML = '<strong>Súkromie a meranie</strong>'
+        + '<p>Nevyhnutné súbory potrebuje stránka na svoj chod. Ostatné nám ukazujú, čo tu ľudí zaujíma, '
+        + 'a pomáhajú dostať našu ponuku k tým, čo zastrešenie hľadajú. Bez vášho súhlasu nebeží ani jedno. '
+        + 'Podrobnosti sú v <a href="' + kamSukromie() + '">ochrane súkromia</a>.</p>';
+      vnutro.appendChild(text);
+
+      const volby = doc.createElement('div');
+      volby.className = 'kv-suhlas__volby';
+      volby.hidden = true;
+      volby.innerHTML = '<label class="kv-suhlas__volba je-pevna">'
+        + '<input type="checkbox" checked disabled><span><strong>Nevyhnutné</strong>'
+        + 'Bez nich stránka nefunguje — formulár, konfigurátor a táto voľba. Vypnúť sa nedajú.</span></label>';
+      KAT.forEach((k) => {
+        const l = doc.createElement('label');
+        l.className = 'kv-suhlas__volba';
+        const i = doc.createElement('input');
+        i.type = 'checkbox';
+        i.checked = !!v[k[0]];
+        i.setAttribute('data-kat', k[0]);
+        const sp = doc.createElement('span');
+        sp.innerHTML = '<strong>' + k[1] + '</strong>' + k[2];
+        l.appendChild(i);
+        l.appendChild(sp);
+        volby.appendChild(l);
+      });
+      vnutro.appendChild(volby);
+
+      const akcie = doc.createElement('div');
+      akcie.className = 'kv-suhlas__akcie';
+      const tl = (trieda, popis) => {
+        const b = doc.createElement('button');
+        b.type = 'button';
+        b.className = trieda;
+        b.textContent = popis;
+        return b;
+      };
+      const vsetko = tl('kv-suhlas__btn kv-suhlas__btn--ano', 'Prijať všetko');
+      const nic = tl('kv-suhlas__btn kv-suhlas__btn--nie', 'Iba nevyhnutné');
+      const nastav = tl('kv-suhlas__viac', 'Nastaviť');
+      const ulozit = tl('kv-suhlas__btn kv-suhlas__btn--ano', 'Uložiť voľbu');
+      ulozit.hidden = true;
+      akcie.appendChild(vsetko);
+      akcie.appendChild(ulozit);
+      akcie.appendChild(nic);
+      akcie.appendChild(nastav);
+      vnutro.appendChild(akcie);
+
+      lista.appendChild(vnutro);
+      doc.body.appendChild(lista);
+
+      /* Lišta nesmie prekryť lepivé tlačidlo ponuky na telefóne — to sedí
+         nad ňou a jeho výška ide do premennej. */
+      const dok = doc.querySelector('.kh-dock');
+      const vyska = dok ? Math.round(dok.getBoundingClientRect().height) : 0;
+      if (vyska > 0) doc.documentElement.style.setProperty('--kv-dok', vyska + 'px');
+
+      requestAnimationFrame(() => lista.classList.add('je-vidno'));
+
+      vsetko.addEventListener('click', () => {
+        uloz({ analytika: true, marketing: true, preferencie: true });
+        zavri();
+      });
+      nic.addEventListener('click', () => {
+        uloz({ analytika: false, marketing: false, preferencie: false });
+        zavri();
+      });
+      nastav.addEventListener('click', () => {
+        volby.hidden = false;
+        nastav.hidden = true;
+        vsetko.hidden = true;
+        ulozit.hidden = false;
+        lista.classList.add('je-siroka');
+      });
+      ulozit.addEventListener('click', () => {
+        const vysledok = { analytika: false, marketing: false, preferencie: false };
+        volby.querySelectorAll('input[data-kat]').forEach((i) => { vysledok[i.getAttribute('data-kat')] = i.checked; });
+        uloz(vysledok);
+        zavri();
+      });
+    };
+
+    /* Odkaz v pätke, aby sa voľba dala zmeniť aj potom, čo lišta zmizne. */
+    doc.querySelectorAll('.kf__bottom nav').forEach((nav) => {
+      if (nav.querySelector('[data-k-suhlas-odkaz]')) return;
+      const a = doc.createElement('button');
+      a.type = 'button';
+      a.className = 'kf__suhlas';
+      a.setAttribute('data-k-suhlas-odkaz', '');
+      a.textContent = 'Nastavenia súkromia';
+      a.addEventListener('click', () => { zavri(); otvor(nacitaj()); });
+      nav.appendChild(a);
+    });
+
+    if (!nacitaj()) otvor(null);
   }
 
   function initHeader(header) {
@@ -1433,6 +1627,8 @@
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.
     try { initSearch(scope === document ? document : scope); }
     catch (e) { if (window.console) console.warn("koverta: initSearch — " + e.message); }
+    try { initSuhlas(scope === document ? document : scope); }
+    catch (e) { if (window.console) console.warn("koverta: initSuhlas — " + e.message); }
   }
 
   const boot = () => init(document);
