@@ -7569,3 +7569,183 @@ footer.kf { background: var(--k-ink); color: #fff; }
   text-decoration-color: rgba(255, 255, 255, 0.3);
 }
 .kf__suhlas:hover { text-decoration-color: currentColor; }
+
+/* ==========================================================================
+   VRSTVA 51 · Ceny pri katalógových rozmeroch a vstup do konfigurátora
+   ==========================================================================
+   Čip rozmeru bol doteraz len rozmer. Cena je pritom prvé, čo o prístrešku
+   chce vedieť každý — bez nej si návštevník nevie povedať, či je toto vôbec
+   preňho. Čip preto nesie rozmer a pod ním cenu, a vpravo má oddelený vstup
+   do konfigurátora e-shopu, kde sa dá zostava doladiť a objednať. Rám drží
+   obal, nie odkaz — dva odkazy tak sedia v jednej pilulke bez švíku. */
+.kh-size__grid { align-items: stretch; }
+
+.k .kh-size__kus {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--cip-ram);
+  border-radius: 999px;
+  background: transparent;
+  transform: translateY(9px);
+  transition: transform 520ms var(--k-ease-out), border-color 180ms var(--k-ease), box-shadow 180ms var(--k-ease);
+  transition-delay: calc(var(--i, 0) * 26ms), 0s, 0s;
+}
+.kh-size.is-in .kh-size__kus { transform: none; }
+.k .kh-size__kus:hover {
+  border-color: rgba(18, 23, 26, 0.38);
+  box-shadow: 0 .8rem 1.8rem -1.2rem rgba(18, 23, 26, 0.5);
+}
+
+/* Čip vnútri obalu už nemá vlastný rám ani zdvih — o oboje sa stará obal. */
+.k .kh-size__kus .kh-size__chip {
+  display: grid;
+  gap: 1px;
+  min-height: 0;
+  padding: 9px 16px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+.k .kh-size__kus .kh-size__chip:hover { transform: none; box-shadow: none; }
+.k .kh-size__kus .kh-size__chip > span { font-size: 14px; line-height: 1.2; }
+.k .kh-size__kus .kh-size__chip small {
+  font-family: var(--k-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--k-amber-deep);
+}
+
+.k .kh-size__cfg {
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 0 13px;
+  border-left: 1px solid var(--cip-ram);
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--k-grey);
+  text-decoration: none;
+  transition: background 180ms var(--k-ease), color 180ms var(--k-ease);
+}
+.k .kh-size__cfg:hover { background: var(--k-amber); color: var(--k-ink); }
+.k .kh-size__cfg:focus-visible { outline: 2px solid var(--k-ink); outline-offset: -2px; }
+
+.kh-size__od {
+  font-family: var(--k-head);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--k-amber-deep);
+}
+.kh-size__pozn {
+  max-width: 74ch;
+  margin: 2.2rem 0 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--k-muted);
+}
+.kh-size__pozn strong { font-family: var(--k-head); color: var(--k-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-size__kus { transform: none; transition: none; }
+}
+
+/* ==========================================================================
+   VRSTVA 52 · Výslovný súhlas vo formulári
+   ==========================================================================
+   Pôvodne stála pod tlačidlom veta „Odoslaním súhlasíte…". Taký súhlas je
+   mlčky daný a pri obchodných podmienkach nestačí — starý e-shop mal na to
+   samostatné zaškrtnutie. Teraz je to políčko, ktoré treba naozaj označiť,
+   a stojí nad tlačidlom, nie pod ním: rozhodnutie patrí pred akciu. */
+.kh-form__suhlas {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  margin: 0 0 4px;
+  cursor: pointer;
+}
+.kh-form__suhlas input {
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+  accent-color: var(--k-amber);
+  cursor: inherit;
+}
+.kh-form__suhlas span {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-form__suhlas a { color: var(--k-ink); text-underline-offset: 3px; }
+.kh-form__suhlas a:hover { color: var(--k-amber-deep); }
+/* Súhlas je nad tlačidlom, takže riadok s odoslaním sa už nedelí na dva stĺpce. */
+.kh-form__submit:has(> .k-btn:only-child) { display: block; }
+
+/* ==========================================================================
+   VRSTVA 53 · Oddelenia na kontaktnej stránke
+   ==========================================================================
+   Celý web viedol na jednu adresu a jedno číslo. Firma má štyri oddelenia
+   a faktúra ani žiadosť k osobným údajom nepatria obchodníkovi. Karty sú
+   zámerne strohé — meno, čo tam patrí, e-mail, telefón. Adresa tu nie je
+   a nebude: firma nemá prevádzku, kam by mal zákazník prísť. */
+.kh-odd__grid {
+  display: grid;
+  gap: 1px;
+  margin-top: clamp(28px, 3vw, 44px);
+  background: var(--k-hair);
+  border-block: 1px solid var(--k-hair);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 640px) { .kh-odd__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1080px) { .kh-odd__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.kh-odd__karta {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: clamp(20px, 2vw, 26px) clamp(18px, 1.8vw, 24px) clamp(22px, 2.2vw, 28px);
+  background: var(--k-bone);
+  transition: background 200ms var(--k-ease);
+}
+.kh-odd__karta:hover { background: var(--k-white); }
+.kh-odd__cislo {
+  margin: 0 0 4px;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--k-amber-deep);
+}
+.kh-odd__nazov {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.4vw, 18px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.kh-odd__popis {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-odd__odkaz {
+  font-family: var(--k-head);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--k-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(18, 23, 26, 0.22);
+  font-variant-numeric: tabular-nums;
+}
+.kh-odd__odkaz:hover { color: var(--k-amber-deep); text-decoration-color: currentColor; }
