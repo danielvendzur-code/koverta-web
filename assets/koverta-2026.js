@@ -1291,6 +1291,57 @@
      nesmie zapisovať do prehliadača. Lišta je len rozhranie k tomu
      rozhodnutiu: zapíše ho, pošle `consent update` a zmizne. Voľba sa dá
      kedykoľvek zmeniť odkazom v pätke. */
+  /* --- Video v úvode ------------------------------------------------------
+     Fotografia ostáva v značke aj naďalej: nesie alternatívny text, načíta sa
+     prvá a je to ona, čo prehliadač meria ako najväčší prvok. Video sa na ňu
+     položí až keď sa naozaj rozbehne, takže úvod nikdy nebliká na prázdno.
+     Nepustí sa pri obmedzenom pohybe, pri zapnutom šetrení dát ani na pomalom
+     pripojení — dve megabajty nemá zmysel ťahať cez EDGE. Keď úvod odscrolluje
+     z obrazovky, video sa zastaví, aby zbytočne nekreslilo. */
+  function initVideo(root) {
+    const vsetky = root.querySelectorAll('video[data-k-video]');
+    if (!vsetky.length) return;
+    if (REDUCED.matches) return;
+    const siet = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (siet && (siet.saveData === true || /(^|-)2g$/.test(siet.effectiveType || ''))) return;
+
+    vsetky.forEach((v) => {
+      if (v.dataset.kReady === 'true') return;
+      v.dataset.kReady = 'true';
+
+      let pustene = false;
+      const pusti = () => {
+        if (!pustene) {
+          pustene = true;
+          /* MP4 stojí prvé — je menšie a vie ho každý bežný prehliadač.
+             WebM je poistka pre zostavenia bez H.264 (napríklad Chromium
+             na Linuxe), kde by inak úvod ostal na fotografii. */
+          [['data-k-video', 'video/mp4'], ['data-k-video-webm', 'video/webm']].forEach((par) => {
+            const url = v.getAttribute(par[0]);
+            if (!url) return;
+            const z = document.createElement('source');
+            z.src = url;
+            z.type = par[1];
+            v.appendChild(z);
+          });
+          v.load();
+        }
+        const p = v.play();
+        if (p && p.catch) p.catch(() => {});
+      };
+      v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
+
+      if (!('IntersectionObserver' in window)) { pusti(); return; }
+      const sled = new IntersectionObserver((zaznamy) => {
+        zaznamy.forEach((z) => {
+          if (z.isIntersecting) pusti();
+          else if (pustene) v.pause();
+        });
+      }, { rootMargin: '120px' });
+      sled.observe(v);
+    });
+  }
+
   function initSuhlas(scope) {
     const doc = scope.ownerDocument || scope;
     if (doc.body.dataset.kSuhlasReady === 'true') return;
@@ -1614,7 +1665,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initFaqPanel]
+       initSubory, initScrub, initPrelet, initFaqPanel, initVideo]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

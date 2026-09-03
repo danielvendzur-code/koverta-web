@@ -7749,3 +7749,102 @@ footer.kf { background: var(--k-ink); color: #fff; }
   font-variant-numeric: tabular-nums;
 }
 .kh-odd__odkaz:hover { color: var(--k-amber-deep); text-decoration-color: currentColor; }
+
+/* ==========================================================================
+   VRSTVA 54 · Katalógy na stiahnutie
+   ==========================================================================
+   Starý web mal katalógy výrobcu na stiahnutie, nový ich stratil. Vážny
+   záujemca si katalóg vezme a ukáže ho doma — je to jedna z mála vecí, ktorá
+   sa z webu dostane ďalej. Karta hovorí vopred, čo dostane: formát, jazyk aj
+   veľkosť súboru, aby nikto na mobilných dátach nesťahoval jedenásť megabajtov
+   naslepo. */
+/* Kartotéka so spoločnými vlasovými čiarami by pri piatich kartách nechala
+   šiestu bunku prázdnu a tá by na mriežke ostala ako sivý obdĺžnik. Karty
+   preto nesú vlastný rám a stoja vedľa seba s medzerou — prázdna bunka tak
+   jednoducho nie je. */
+.kh-kat__grid {
+  display: grid;
+  gap: 12px;
+  margin-top: clamp(28px, 3vw, 44px);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+/* Päť kariet v štyroch stĺpcoch necháva poslednú samú v druhom riadku.
+   Tri stĺpce ich rozdelia na 3 + 2, čo sa číta pokojnejšie. */
+@media (min-width: 1080px) { .kh-kat__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1080px) { .kh-kat__grid:not(:has(> :nth-child(3))) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1080px) { .kh-kat__grid:not(:has(> :nth-child(2))) { grid-template-columns: minmax(0, 520px); } }
+
+.kh-kat__karta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: clamp(18px, 1.9vw, 24px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+  color: var(--k-ink);
+  text-decoration: none;
+  transition: background 200ms var(--k-ease), border-color 200ms var(--k-ease);
+}
+.kh-kat__karta:hover { background: var(--k-white); border-color: rgba(18, 23, 26, 0.28); }
+.kh-kat__karta:focus-visible { outline: 2px solid var(--k-ink); outline-offset: -2px; }
+
+.kh-kat__ikona {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--k-r-sm);
+  background: var(--k-amber);
+}
+.kh-kat__ikona svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: var(--k-ink);
+  stroke-width: 1.6;
+}
+.kh-kat__telo { display: grid; gap: 4px; }
+.kh-kat__nazov {
+  font-family: var(--k-head);
+  font-size: clamp(15.5px, 1.3vw, 17px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.kh-kat__karta:hover .kh-kat__nazov { color: var(--k-amber-deep); }
+.kh-kat__popis { font-size: 13.5px; line-height: 1.55; color: var(--k-muted); }
+.kh-kat__meta {
+  margin-top: 3px;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-grey);
+}
+
+/* ==========================================================================
+   VRSTVA 55 · Video v úvode
+   ==========================================================================
+   Pôvodné súbory z e-shopu mali 47,7 MB a 9,1 MB — export s bitrate 30 Mbit/s.
+   Prekódované na 2,03 MB a 0,29 MB pri rovnakom rozlíšení 1920 × 1080; rozdiel
+   voči originálu na plátne úvodu nie je vidieť. Fotografia ostáva pod videom:
+   nesie alternatívny text a načíta sa prvá, takže úvod nikdy nezostane prázdny.
+   Video sa na ňu položí až keď sa rozbehne. */
+.kh-hero__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 700ms var(--k-ease);
+}
+.kh-hero__video.je-vidno { opacity: 1; }
+.kh-hero__bg .kh-hero__scrim { z-index: 2; }
+@media (prefers-reduced-motion: reduce) {
+  .kh-hero__video { display: none; }
+}
