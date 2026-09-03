@@ -8106,3 +8106,28 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body { border-top-color: var(--k-amber); }
 .k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body .k-copy { color: var(--k-amber-deep); }
+
+/* ==========================================================================
+   VRSTVA 62 · Preč s rozostrením pod lištou a nad videom
+   ==========================================================================
+   Horná lišta mala `backdrop-filter: blur(14px) saturate(1.4)`. Rozostrenie
+   podkladu musí prehliadač prepočítať v každom snímku, kým sa pod lištou
+   niečo hýbe — teda po celý čas scrollovania. Pri podklade s krytím 0,92
+   až 0,97 z toho aj tak nebolo prakticky nič vidieť, takže je to zaplatené
+   sekanie za nič. Lišta je teraz nepriehľadná.
+
+   To isté nad úvodným videom: rozostrenie za tlačidlom a za hodnotením sa
+   prepočítavalo pri každom snímku videa. */
+.kv-bar {
+  background: var(--k-white);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.kv-bar.is-stuck { background: var(--k-white); }
+.kh-hero .k-score,
+.kh-hero .k-btn--glass,
+.kh-hero__chip,
+.kh-hero__rating {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

@@ -1112,7 +1112,15 @@
       kopia.decoding = 'async';
       scena.appendChild(kopia);
       document.body.appendChild(scena);
-      return { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, w: 0, h: 0, letí: null };
+      const kus = { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, kopia: kopia, w: 0, h: 0, letí: null };
+      /* Po obnovení stránky priamo v tejto časti webu ešte fotografie nie sú
+         načítané. Kým nie sú, nesmie sa prelet spustiť — inak by leteli tri
+         prázdne rámčeky a fotografie v piatom kroku by boli medzitým skryté.
+         Do tej chvíle teda stoja na svojom mieste v kroku a prelet čaká. */
+      /* `naplan` je deklarovaný nižšie; šípka odloží jeho vyhľadanie až na
+         chvíľu, keď fotografia doletí — vtedy už dávno existuje. */
+      if (!kopia.complete) kopia.addEventListener('load', () => naplan(), { once: true });
+      return kus;
     });
 
     const panelKroku = trio.closest('.kh-proc__panel');
@@ -1189,8 +1197,12 @@
          idú fotografie po obrazovke 120 → 200 px, teda stále mierne nadol,
          nikdy nie za hlavičku a nikdy sa neotočia. */
       const zaciatok = vh * 1.15;
-      const koniec = vh * 0.12;
-      const p = orez((zaciatok - r.top) / (zaciatok - koniec));
+      const koniec = vh * 0.18;
+      let p = orez((zaciatok - r.top) / (zaciatok - koniec));
+      /* Kým nie je načítaná každá z troch kópií, prelet nebeží: fotografie
+         ostávajú v piatom kroku a v kartách recenzií tam, kde majú byť. */
+      const pripravene = kusy.every((k) => k.kopia.complete && k.kopia.naturalWidth > 0);
+      if (!pripravene) p = 0;
       /* Postup je rovnomerný, zámerne bez zrýchlenia v strede. Fotografie
          majú na stránke prekonať menšiu vzdialenosť, než akú medzitým
          odscrolluje okno — pri rovnomernom postupe preto na obrazovke stále
@@ -1199,19 +1211,28 @@
          ktoré na predchádzajúcej podobe rušilo. */
       const e = p;
 
+      const letí = p > 0.001 && p < 0.999;
+
+      /* Najprv sa všetko odmeria a až potom sa všetko zapíše. Keď sa čítanie
+         a zápis striedali v jednom cykle, prehliadač musel po každom zápise
+         prepočítať rozloženie znova, aby vedel odpovedať na ďalšie meranie —
+         tri také prepočty v každom snímku boli hlavný dôvod, prečo scroll
+         v tejto časti stránky poskakoval. */
+      const merania = letí ? kusy.map((k) => ({
+        d: k.slot.getBoundingClientRect(),
+        z: k.zdroj.getBoundingClientRect()
+      })) : null;
+
       /* Fotografie odlietajú z piateho kroku, ale samotná karta kroku ostáva
          ešte dlho na obrazovke — a s prázdnymi rámčekmi po fotografiách
-         vyzerá pokazene. Karta sa preto počas preletu vytráca: fotografie
-         z nej odchádzajú a ona sa za nimi zavrie. Späť pri scrollovaní hore
-         sa rovnako vráti. */
+         vyzerá pokazene. Karta sa preto počas preletu vytráca. */
       const odlet = orez(p / 0.26).toFixed(3);
       if (panelKroku && panelKroku.dataset.kOdlet !== odlet) {
         panelKroku.dataset.kOdlet = odlet;
         panelKroku.style.setProperty('--k-odlet', odlet);
       }
 
-      kusy.forEach((k) => {
-        const letí = p > 0.001 && p < 0.999;
+      kusy.forEach((k, i) => {
         /* Karta sa objavuje pod fotografiou v poslednej tretine presunu,
            takže fotografia dosadá na hotovú recenziu, nie do prázdna.
            Zapisuje sa len pri zmene — každý zápis do karty je prepočet
@@ -1230,8 +1251,8 @@
         }
         k.letí = p;
 
-        const d = k.slot.getBoundingClientRect();
-        const z = k.zdroj.getBoundingClientRect();
+        const d = merania[i].d;
+        const z = merania[i].z;
         if (!d.width || !z.width) return;
 
         /* Rozmer sa nastaví len vtedy, keď sa naozaj zmenil — inak by sa
@@ -1532,11 +1553,27 @@
       let ceka = false;
       const prah = 8;
 
+      /* Výšky sa merajú pri štarte a pri zmene veľkosti okna, nie v každom
+         snímku scrollu. Meranie prvku núti prehliadač dokončiť rozloženie —
+         dve také merania na snímok boli pri scrollovaní zbytočná práca
+         a bolo to cítiť. */
+      let vyskaListy = 76;
+      let vyskaHlavicky = 117;
+      const premeraj = () => {
+        const v = bar.getBoundingClientRect().height;
+        if (v > 0) vyskaListy = v;
+        const h = header.offsetHeight;
+        if (h > 0) vyskaHlavicky = h;
+      };
+      premeraj();
+      window.addEventListener('resize', premeraj, { passive: true });
+      window.addEventListener('load', premeraj, { once: true });
+
       const prekresli = () => {
         ceka = false;
         const y = window.scrollY;
-        const vyska = bar.getBoundingClientRect().height || 76;
-        const hranica = header.offsetHeight + 40;
+        const vyska = vyskaListy;
+        const hranica = vyskaHlavicky + 40;
         bar.classList.toggle('is-stuck', y > 12);
 
         if (y <= hranica) {
