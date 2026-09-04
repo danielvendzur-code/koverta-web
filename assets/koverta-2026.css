@@ -9494,3 +9494,59 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-field--subor.je-vybrate .kh-field__vyber { border-style: solid; border-color: rgba(18, 23, 26, .28); background: #fff; }
 .k .kh-field--subor.je-vybrate .kh-field__stav { color: var(--k-ink); font-weight: 600; }
+
+/* ==========================================================================
+   VRSTVA 86 · Dvojica fotka + zoznam: na mobile vedie nadpis, nie fotografia
+   ==========================================================================
+   Na úzkom displeji padla celá sekcia pod fotografiu — očko, nadpis, veta,
+   odrážky aj tlačidlo. Človek najprv uvidel obrázok bez toho, aby vedel, čo
+   sa mu ukazuje. Očko a nadpis idú preto nad fotku, zvyšok ostáva pod ňou;
+   na širokej obrazovke sa nemení nič, tam stoja stĺpce vedľa seba.
+   `display: contents` rozpustí telo do mriežky, takže sa dá poradie miešať
+   bez zásahu do značiek. */
+@media (max-width: 999px) {
+  .k .kh-duo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(12px, 2.6vw, 18px);
+  }
+  .k .kh-duo__telo { display: contents; }
+  .k .kh-duo__telo > * { order: 4; }
+  .k .kh-duo__telo > .k-eyebrow { order: 1; }
+  .k .kh-duo__telo > .k-h2 { order: 2; }
+  .k .kh-duo__foto { order: 3; margin: 4px 0 6px; }
+}
+
+/* ==========================================================================
+   VRSTVA 87 · Mapa realizácií: väčšia mapa, dlhší zoznam obcí
+   ==========================================================================
+   Mapa zaberala necelú polovicu výšky svojho stĺpca a pod ňou ostávala
+   štvrtina pásu prázdna, kým vedľa nej sa zoznam 33 obcí tlačil do okienka
+   na päť riadkov. Karta vybranej realizácie ide preto pod mapu a zoznam
+   dostane celú výšku vedľa nich — obcí bude pribúdať, zoznam je hlavný
+   navigačný prvok sekcie. Spodný okraj zoznamu sa stráca do stratena, aby
+   bolo vidieť, že pokračuje. Panel rozpustíme cez `display: contents`,
+   takže sa poradie skladá bez zásahu do značiek. */
+@media (min-width: 1040px) {
+  .k .kh-mapa__plocha {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+  .k .kh-mapa__svk {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding-inline: clamp(0px, 1.4vw, 20px);
+  }
+  .k .kh-mapa__panel { display: contents; }
+  .k .kh-mapa__karta { grid-column: 1; grid-row: 2; }
+  .k .kh-mapa__zoznam {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-height: clamp(420px, 62vh, 700px);
+    align-self: start;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
+  }
+}
