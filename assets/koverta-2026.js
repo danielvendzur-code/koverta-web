@@ -1569,13 +1569,20 @@
     /* Výška hlavičky ide do premennej, aby si prvá obrazovka vedela odrátať
        presne toľko, koľko hlavička zaberá. Bez toho fotografia v úvode
        nedosiahla na spodný okraj okna a pod ňou ostával svetlý pruh. */
+    /* Lišta sa po odscrollovaní zmenší o dvanásť pixelov. Kým sa tá zmenšená
+       výška dostávala do premennej, úvodná fotografia pri prvom posunutí
+       o toľko povyrástla a viditeľne poskočila — a s ňou aj údaje pod ňou.
+       Meriame preto len vtedy, keď je stránka na vrchu a lišta je vo svojom
+       pokojnom rozmere; inak si necháme poslednú platnú hodnotu. */
     const mer = () => {
+      if (window.scrollY > 8) return;
       const v = Math.round(header.getBoundingClientRect().height);
       if (v > 0) document.documentElement.style.setProperty('--kv-hlava', v + 'px');
     };
     mer();
     window.addEventListener('resize', mer, { passive: true });
     window.addEventListener('load', mer, { once: true });
+    window.addEventListener('scroll', () => { if (window.scrollY <= 8) mer(); }, { passive: true });
     if (window.ResizeObserver) new ResizeObserver(mer).observe(header);
 
     /* --- Menu je pri ceste nahor vždy po ruke ----------------------------
@@ -1707,6 +1714,10 @@
         openBtn.setAttribute('aria-expanded', String(open));
         drawer.setAttribute('aria-hidden', String(!open));
         document.documentElement.style.overflow = open ? 'hidden' : '';
+        /* Lepivý pás s ponukou prekrýval spodok otvoreného menu — tlačidlo
+           v menu bolo spolovice pod ním a dve rovnaké výzvy pod sebou pôsobili
+           ako chyba. Kým je menu otvorené, pás odchádza; menu má vlastnú. */
+        document.documentElement.classList.toggle('ma-otvorene-menu', open);
         if (open) {
           const first = drawer.querySelector('a, button');
           if (first) first.focus();

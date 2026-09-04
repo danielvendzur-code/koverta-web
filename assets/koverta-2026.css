@@ -7972,12 +7972,18 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-cat__item { height: auto; overflow: visible; }
   .k .kh-cat__card { height: 100%; }
 
+  /* Pozor: `display` tu musí byť rovnaké pre pokoj aj pre stav pod kurzorom.
+     Kým tu stálo `block`, prebilo to neskoršie `flex` (má nižšiu váhu, lebo
+     nemá `:hover`) — a pri prejdení myšou sa stĺpec rozpadol, `margin-top:
+     auto` prestalo držať a tlačidlo vyskočilo o dvesto pixelov hore. */
   .k .kh-cat__more,
   .k .kh-cat__item:hover .kh-cat__more,
   .k .kh-cat__item:focus-within .kh-cat__more,
   .k .kh-cat__card:hover .kh-cat__more,
   .k .kh-cat__card:focus-within .kh-cat__more {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     grid-template-rows: none;
     opacity: 1;
     transform: none;
@@ -7995,9 +8001,12 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Odkazy sedia na spodnej hrane karty, nie hneď pod textom — inak by v rade
    stáli v štyroch rôznych výškach podľa toho, aký dlhý má ktorá karta popis. */
 @media (min-width: 1000px) {
-  .k .kh-cat__more { display: flex; flex-direction: column; flex: 1 1 auto; }
-  .k .kh-cat__more > div { display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; }
-  .k .kh-cat__actions { margin-top: auto; }
+  .k .kh-cat__more > div,
+  .k .kh-cat__item:hover .kh-cat__more > div,
+  .k .kh-cat__item:focus-within .kh-cat__more > div { display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; }
+  .k .kh-cat__actions,
+  .k .kh-cat__item:hover .kh-cat__actions,
+  .k .kh-cat__item:focus-within .kh-cat__actions { margin-top: auto; }
 }
 
 /* ==========================================================================
@@ -8409,5 +8418,175 @@ footer.kf { background: var(--k-ink); color: #fff; }
     border-left: 1px solid var(--k-hair);
     text-align: right;
     white-space: nowrap;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 70 · Katalógové rozmery ako cenník, nie ako kopa piluliek
+   ==========================================================================
+   Dvadsaťsedem rozmerov stálo vedľa seba ako dvadsaťsedem rovnakých sivých
+   piluliek — na telefóne štrnásť riadkov, v ktorých sa opakovala tá istá
+   šírka a jediné, čo sa menilo, boli desatiny za krížikom. Prečítať sa to
+   nedalo a vyzeralo to ako výpis z databázy.
+
+   Rozmery sú pritom mriežka: deväť šírok krát tri dĺžky. Tak sa teraz aj
+   zobrazujú — šírka je nadpis riadka, dĺžky s cenami stoja vedľa nej. Z kopy
+   piluliek je cenník: nájdete si svoju šírku a hneď vidíte tri ceny.
+   ========================================================================== */
+.k .kh-size__grid--matica {
+  display: grid;
+  gap: 0;
+  align-items: stretch;
+}
+.k .kh-size__rad {
+  display: grid;
+  grid-template-columns: 6.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-size__rad:first-child { border-top: 0; padding-top: 0; }
+.k .kh-size__sirka {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+.k .kh-size__sirka strong {
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.3vw, 17px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.k .kh-size__sirka span {
+  font-family: var(--k-head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.k .kh-size__dlzky {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.k .kh-size__grid--matica .kh-size__kus { display: flex; }
+.k .kh-size__grid--matica .kh-size__chip { flex: 1 1 auto; padding-inline: 12px; }
+
+/* Na telefóne ide šírka nad ceny a tri dĺžky si rozdelia riadok. Cena je
+   pod dĺžkou, takže sa aj v tretine obrazovky zmestí bez lámania. */
+@media (max-width: 620px) {
+  .k .kh-size__rad { grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px 0; }
+  .k .kh-size__dlzky { gap: 6px; }
+  .k .kh-size__grid--matica .kh-size__chip { padding: 7px 8px 8px; text-align: center; }
+  .k .kh-size__grid--matica .kh-size__chip > span { font-size: 13px; }
+  .k .kh-size__grid--matica .kh-size__chip small { font-size: 11px; }
+  .k .kh-size__grid--matica .kh-size__cfg { padding: 0 9px; font-size: 10.5px; }
+}
+
+/* Jediný rozmer (prístrešok pre tri autá) nepotrebuje mriežku cez celú
+   šírku — ostáva ako jedna pilulka. */
+.k .kh-size__grid--matica:not(:has(.kh-size__rad + .kh-size__rad)) .kh-size__dlzky {
+  grid-template-columns: max-content;
+}
+
+/* Hlavička skupiny rozmerov: na telefóne názov na svojom riadku a údaje pod
+   ním. Kým stáli vedľa seba, „od 4 497 €“ sa lámalo na dva riadky a euro
+   ostávalo samo. */
+@media (max-width: 620px) {
+  .k .kh-size__label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin-bottom: 14px;
+  }
+  .k .kh-size__label > span { white-space: nowrap; }
+}
+
+/* Fotografia pri cenníku rozmerov drží celú výšku stĺpca. Kým bola nízka
+   (4 : 3 a hotovo), vedľa deviatich riadkov cien pod ňou ostávalo pol metra
+   prázdnej kostenej plochy. Na širokej obrazovke sa preto pripne a rastie
+   s cenníkom; pomer 3 : 4 jej dáva tvar, ktorý s tabuľkou sedí. */
+@media (min-width: 820px) {
+  .k .kh-size--foto .kh-size__media {
+    position: sticky;
+    top: clamp(96px, 12vh, 140px);
+    align-self: start;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--k-r-sm);
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 71 · Riadok výbavy — čísla, nie odseky
+   ==========================================================================
+   Výbava sa doteraz skrývala v texte. Zákazník ju však hľadá ako údaje:
+   hrúbka dosky, značka kovania, objem chladničky, dĺžka záruky. Stojí preto
+   v riadku ako fakty — hodnota v nadpisovom reze, popis pod ňou. */
+.kh-vyb {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+  margin: 0;
+  padding: clamp(30px, 3.4vw, 48px) 0 0;
+  list-style: none;
+}
+.kh-vyb li {
+  display: grid;
+  gap: 4px;
+  padding-top: 13px;
+  border-top: 1px solid var(--k-hair);
+}
+.kh-vyb strong {
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.5vw, 20px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+}
+.kh-vyb span {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--k-muted);
+}
+@media (max-width: 620px) {
+  .kh-vyb { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+}
+
+/* ==========================================================================
+   VRSTVA 72 · Rozbaľovacie menu široké presne na svoj obsah
+   ==========================================================================
+   Panel mal natvrdo 1080 px. Pod „Pre autá“ sú v ňom pritom dve položky —
+   jedna Koverta, jedna Soltec — takže dve tretiny panelu boli prázdne a pod
+   nimi sivý pás s jediným tlačidlom. Vyzeralo to ako nedonačítané menu.
+   Panel je teraz široký presne na svoj obsah a strop 1080 px ostáva len
+   ako poistka pre najplnšiu ponuku. */
+@media (min-width: 900px) {
+  .kv-mega {
+    width: max-content;
+    max-width: min(1080px, calc(100vw - 32px));
+  }
+  .kv-mega__cols { grid-template-columns: repeat(2, minmax(230px, 1fr)); align-items: start; }
+  .kv-mega__col ul { min-width: 0; }
+  .kv-mega__col a { padding-right: clamp(18px, 2vw, 30px); }
+  /* Pätka s tlačidlom je riadok, nie pás — pri dvoch položkách zaberala
+     rovnako veľa miesta ako celá ponuka nad ňou. */
+  .kv-mega__foot { padding-block: 12px; }
+}
+
+/* Kým je otvorené mobilné menu, lepivý pás s ponukou nezavadzia — menu má
+   vlastné tlačidlo a dve rovnaké výzvy pod sebou vyzerali ako chyba. */
+.ma-otvorene-menu .kh-dock { display: none; }
+
+/* Skupina s jediným rozmerom (prístrešok pre tri autá) nepotrebuje vysokú
+   fotografiu — vedľa jednej pilulky by z nej ostal meter prázdna. */
+@media (min-width: 820px) {
+  .k .kh-size--foto:has(.kh-size__grid--matica:not(:has(.kh-size__rad + .kh-size__rad))) .kh-size__media {
+    position: static;
+    aspect-ratio: 4 / 3;
   }
 }
