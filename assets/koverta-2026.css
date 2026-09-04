@@ -9529,7 +9529,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    takže sa poradie skladá bez zásahu do značiek. */
 @media (min-width: 1040px) {
   .k .kh-mapa__plocha {
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.72fr) minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: start;
   }
@@ -9537,16 +9537,100 @@ footer.kf { background: var(--k-ink); color: #fff; }
     grid-column: 1;
     grid-row: 1;
     align-self: center;
-    padding-inline: clamp(0px, 1.4vw, 20px);
+    padding-inline: 0;
   }
   .k .kh-mapa__panel { display: contents; }
   .k .kh-mapa__karta { grid-column: 1; grid-row: 2; }
   .k .kh-mapa__zoznam {
     grid-column: 2;
     grid-row: 1 / span 2;
-    max-height: clamp(420px, 62vh, 700px);
+    max-height: clamp(420px, 74vh, 860px);
     align-self: start;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
   }
+}
+
+/* ==========================================================================
+   VRSTVA 88 · Mapa: obec s viacerými realizáciami
+   ==========================================================================
+   Značka už nezastupuje jednu stavbu, ale obec — a v niektorých ich stojí
+   osem. Karta preto namiesto jednej vety nesie zoznam toho, čo sa tam
+   postavilo, a vedľa názvu obce stojí počet. Zoznam je krátky a vecný,
+   rozmer za rozmerom; mená zákazníkov naň nepatria. */
+.k .kh-mapa__kde span {
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-mapa__zoz {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-mapa__zoz li {
+  position: relative;
+  margin: 0;
+  padding-left: 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--k-muted);
+}
+.k .kh-mapa__zoz li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--k-amber);
+}
+.k .kh-mapa__zoz li:last-child:not(:first-child) { color: var(--k-grey-soft); }
+
+/* Pri sto značkách sa terče miestami dotýkajú; menší priemer a tenký biely
+   lem ich od seba oddelia bez toho, aby mapa stratila čitateľnosť.
+   Názov obce sme zároveň vybrali z toku: dovtedy roztiahol tlačidlo na šírku
+   celého mena, takže susedná značka ležala pod ním a nedala sa kliknúť —
+   Bratislavu prekrývala Rovinka. Tlačidlo je teraz veľké presne ako terč. */
+.k .kh-mapa__bod {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  gap: 0;
+}
+.k .kh-mapa__bod:hover,
+.k .kh-mapa__bod:focus-visible,
+.k .kh-mapa__bod[aria-pressed="true"] { z-index: 3; }
+.k .kh-mapa__terc {
+  width: 11px;
+  height: 11px;
+  box-shadow: 0 0 0 1.5px var(--k-white);
+}
+.k .kh-mapa__bod:hover .kh-mapa__terc,
+.k .kh-mapa__bod[aria-pressed="true"] .kh-mapa__terc {
+  width: 15px;
+  height: 15px;
+  box-shadow: 0 0 0 2px var(--k-white);
+}
+.k .kh-mapa__meno {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Na telefóne sa deväťdesiatdeväť značiek zmestí do troch stoviek bodov
+   šírky — v okolí Bratislavy by z nich bola jedna škvrna. Terče sú tam
+   menšie a mapa slúži ako obraz rozsahu; vyberá sa zo zoznamu pod ňou. */
+@media (max-width: 719px) {
+  .k .kh-mapa__bod { width: 11px; height: 11px; }
+  .k .kh-mapa__terc { width: 8px; height: 8px; border-width: 1.5px; }
+  .k .kh-mapa__bod[aria-pressed="true"] .kh-mapa__terc { width: 12px; height: 12px; }
 }

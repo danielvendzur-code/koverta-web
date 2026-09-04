@@ -50,6 +50,14 @@ Rozhoduje zastavaná plocha. Prístrešok do 50 m² sa vo väčšine prípadov r
 3. Pošleme návrh s rozmermi, rozmiestnením stĺpov, cenou a termínom.
 4. Vyrobíme, dovezieme a namontujeme. Bežný prístrešok za jeden deň.
 
+## Kde sme stavali
+
+Montujeme po celom Slovensku; doprava a montáž sú v cene bez ohľadu na vzdialenosť. Prístrešky a pergoly Koverta a Soltec stoja v týchto obciach a mestách (99 obcí, 145 realizácií):
+
+Bánov, Banská Bystrica, Bašovce, Bernolákovo, Biely Kostol, Bošany, Bratislava, Bratislava – Devín, Bratislava – Jarovce, Bratislava – Rusovce, Bratislava – Záhorská Bystrica, Brezany, Cecejovce, Čechynce, Chorvátsky Grob, Cífer, Diviacka Nová Ves, Dolné Obdokovce, Dolné Orešany, Dunajská Streda, Hliník nad Hronom, Hlohovec, Horné Orešany, Horné Saliby, Horné Srnie, Hronská Breznica, Hrubá Borša, Hurbanovo, Hviezdoslavov, Ivanka pri Dunaji, Jánovce, Jasenie, Kalinčiakovo, Kanianka, Klasov, Klokočov, Kočovce, Kolíňany, Krasňany, Kvetoslavov, Levice, Limbach, Liptovský Mikuláš, Ľubietová, Ľubochňa, Lučenec, Malinovo, Malý Lapáš, Marianka, Martin, Martinček, Melčice-Lieskové, Miloslavov, Mojš, Nitra, Nová Baňa, Nové Mesto nad Váhom, Pezinok, Plavecký Štvrtok, Podolie, Podrečany, Podvysoká, Pohranice, Potvorice, Rajec, Reca, Revúca, Rovinka, Rybník, Šaľa, Šebedražie, Selce, Senec, Skalica, Slovenský Grob, Stará Turá, Štefanovičová, Štiavnik, Svätoplukovo, Svederník, Tornaľa, Trebišov, Trenčín, Trnava, Tvrdošín, Urmince, Váhovce, Varín, Veľká Lúka, Veľké Úľany, Veľký Lapáš, Veľký Slavkov, Vinodol, Voderady, Vrútky, Žilina, Žilinská Lehota, Žirany, Zvolen.
+
+Mapa s rozpisom je na stránke [Realizácie](https://danielvendzur-code.github.io/koverta-web/realizacie/#mapa).
+
 ## Stránky
 
 - [Úvod](https://danielvendzur-code.github.io/koverta-web/): prehľad riešení, ceny, realizácie, recenzie.
