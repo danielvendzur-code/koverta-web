@@ -81,7 +81,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788535881698">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788536351159">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -1544,11 +1544,11 @@
   <div class="k-wrap">
     <header class="k-head k-head--split">
       <div class="k-head__title">
-        <p class="k-eyebrow k-rise">Kde stoja</p>
-        <h2 id="mapaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Mapa realizácií</h2>
+        <p class="k-eyebrow k-rise">33 obcí</p>
+        <h2 id="mapaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Kde už stoja</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
-        <p class="k-copy">Kliknite na značku a pozrite si, čo tam stojí.</p>
+        <p class="k-copy">Kliknite na značku alebo na obec v zozname.</p>
         <a class="k-link" href="#ponuka">Chcem prístrešok aj u nás <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </header>
@@ -1558,36 +1558,285 @@
        <div class="kh-mapa__vnutro">
         <svg viewBox="0 0 1000 520" role="img" aria-labelledby="mapaSvgT mapaSvgD" focusable="false">
           <title id="mapaSvgT">Mapa Slovenska s obcami, kde stoja naše prístrešky</title>
-          <desc id="mapaSvgD">Obrys Slovenska so značkami pri obciach. Rovnaký zoznam obcí je aj vedľa mapy.</desc>
+          <desc id="mapaSvgD">Obrys Slovenska so značkami pri obciach. Rovnaký zoznam obcí je vedľa mapy.</desc>
           <path d="M456 2 455 6 442 15 441 23 423 24 418 30 417 45 410 51 412 57 404 59 390 56 382 62 374 62 376 52 371 45 373 32 368 28 345 29 335 36 322 31 299 33 299 42 287 58 281 63 274 61 276 69 269 80 236 91 229 103 230 110 220 155 208 164 189 166 184 191 165 191 151 209 140 211 133 214 133 218 125 217 122 222 120 218 117 220 107 213 98 221 92 222 85 213 65 204 47 218 45 229 38 234 23 263 19 276 21 297 4 320 0 341 19 371 26 400 39 406 44 419 43 437 57 444 71 440 72 445 87 447 108 477 120 482 128 497 135 495 153 513 170 516 209 512 257 519 283 510 290 514 299 510 315 512 330 503 333 497 352 496 346 486 336 481 338 457 335 452 345 448 347 435 358 430 375 431 379 425 388 430 402 426 421 431 423 424 432 421 448 422 455 418 459 423 470 389 488 377 494 380 499 390 510 387 517 392 516 403 525 401 526 397 534 400 537 405 534 412 541 409 548 400 557 397 561 400 575 384 575 376 588 377 593 369 602 374 609 371 624 345 625 331 640 311 640 299 646 301 647 296 654 298 666 291 700 286 703 294 712 292 723 303 729 299 738 301 747 311 765 298 780 302 782 291 799 292 803 285 816 294 821 306 833 306 842 338 853 349 872 354 872 346 889 346 905 338 916 343 924 341 928 335 925 330 930 287 946 267 961 257 965 244 962 235 969 227 969 207 975 202 976 189 985 173 996 168 999 146 974 143 965 131 956 133 940 129 940 120 934 123 926 115 912 112 906 109 907 94 897 84 894 75 884 75 873 63 867 66 864 73 852 57 841 56 836 48 802 57 787 47 774 44 763 60 748 51 734 55 744 67 740 71 734 70 725 80 725 85 713 89 709 82 704 83 706 79 702 75 697 79 691 76 694 72 684 68 681 56 673 55 665 60 660 56 652 67 627 56 628 62 608 60 607 76 591 74 581 81 580 87 578 83 570 102 567 122 549 107 538 106 532 115 516 116 510 114 516 97 521 94 516 89 516 58 508 58 503 64 488 58 489 45 479 45 470 13 456 2 Z" fill="var(--k-white)" stroke="rgba(18,23,26,.2)" stroke-width="2" stroke-linejoin="round"/>
         </svg>
-        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="plavecky" aria-pressed="true" style="--x: 2.99%; --y: 67.27%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Plavecký Štvrtok</span></button>
-        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="nitra" aria-pressed="false" style="--x: 21.85%; --y: 69.48%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Nitra</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="plavecky-stvrtok" aria-pressed="true" style="--x: 2.89%; --y: 65.89%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Plavecký Štvrtok</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="nitra" aria-pressed="false" style="--x: 21.90%; --y: 69.16%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Nitra</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="slovensky-grob" aria-pressed="false" style="--x: 7.87%; --y: 72.22%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Slovenský Grob</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="trnava" aria-pressed="false" style="--x: 13.12%; --y: 65.78%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Trnava</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="banov" aria-pressed="false" style="--x: 23.68%; --y: 83.13%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Bánov</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="potvorice" aria-pressed="false" style="--x: 17.79%; --y: 49.19%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Potvorice</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="bratislava-devin" aria-pressed="false" style="--x: 2.61%; --y: 76.48%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Bratislava – Devín</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="vahovce" aria-pressed="false" style="--x: 16.60%; --y: 72.49%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Váhovce</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="diviacka-nova-ves" aria-pressed="false" style="--x: 29.00%; --y: 46.13%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Diviacka Nová Ves</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="vrutky" aria-pressed="false" style="--x: 36.47%; --y: 27.04%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Vrútky</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="podvysoka" aria-pressed="false" style="--x: 32.01%; --y: 10.86%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Podvysoká</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="trebisov" aria-pressed="false" style="--x: 85.19%; --y: 52.45%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Trebišov</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="nove-mesto-nad-vahom" aria-pressed="false" style="--x: 17.39%; --y: 45.33%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Nové Mesto nad Váhom</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="tornala" aria-pressed="false" style="--x: 60.84%; --y: 63.38%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Tornaľa</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="rybnik" aria-pressed="false" style="--x: 30.12%; --y: 70.24%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Rybník</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="kolinany" aria-pressed="false" style="--x: 23.74%; --y: 66.68%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Kolíňany</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="bratislava" aria-pressed="false" style="--x: 4.82%; --y: 77.69%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Bratislava</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="kvetoslavov" aria-pressed="false" style="--x: 8.96%; --y: 82.79%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Kvetoslavov</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="limbach" aria-pressed="false" style="--x: 6.78%; --y: 70.43%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Limbach</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="dunajska-streda" aria-pressed="false" style="--x: 13.65%; --y: 85.95%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Dunajská Streda</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="hviezdoslavov" aria-pressed="false" style="--x: 8.99%; --y: 82.17%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Hviezdoslavov</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="chorvatsky-grob" aria-pressed="false" style="--x: 7.97%; --y: 73.67%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Chorvátsky Grob</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="cecejovce" aria-pressed="false" style="--x: 73.75%; --y: 54.08%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Čečejovce</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="liptovsky-mikulas" aria-pressed="false" style="--x: 48.45%; --y: 28.38%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Liptovský Mikuláš</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="zirany" aria-pressed="false" style="--x: 23.36%; --y: 65.60%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Žirany</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="voderady" aria-pressed="false" style="--x: 12.66%; --y: 71.08%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Voderady</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="podrecany" aria-pressed="false" style="--x: 48.26%; --y: 64.23%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Podrečany</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="mojs" aria-pressed="false" style="--x: 34.65%; --y: 22.24%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Mojš</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="hlinik-nad-hronom" aria-pressed="false" style="--x: 34.03%; --y: 57.24%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Hliník nad Hronom</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="hlohovec" aria-pressed="false" style="--x: 16.83%; --y: 63.07%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Hlohovec</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="kalinciakovo" aria-pressed="false" style="--x: 31.71%; --y: 75.27%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Kalinčiakovo</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="bernolakovo" aria-pressed="false" style="--x: 8.14%; --y: 75.19%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Bernolákovo</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="lucenec" aria-pressed="false" style="--x: 49.34%; --y: 68.23%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Lučenec</span></button>
        </div>
       </div>
       <div class="kh-mapa__panel">
-        <figure class="kh-mapa__karta" data-k-mapa-karta="plavecky">
+        <figure class="kh-mapa__karta" data-k-mapa-karta="plavecky-stvrtok">
           <img src="../assets/mapa-plavecky-stvrtok.jpg" alt="Prístrešok pre tri autá v Plaveckom Štvrtku" width="1400" height="587" loading="lazy" decoding="async">
           <figcaption>
-            <p class="kh-mapa__kde"><strong>Plavecký Štvrtok</strong><span>okres Malacky</span></p>
+            <p class="kh-mapa__kde"><strong>Plavecký Štvrtok</strong></p>
             <p class="kh-mapa__co">Prístrešok pre tri autá<span>2025</span></p>
           </figcaption>
         </figure>
         <figure class="kh-mapa__karta" data-k-mapa-karta="nitra" hidden>
           <img src="../assets/mapa-nitra.jpg" alt="Prístrešok pre dve autá s uzamykateľným boxom v Nitre" width="1400" height="917" loading="lazy" decoding="async">
           <figcaption>
-            <p class="kh-mapa__kde"><strong>Nitra</strong><span>okres Nitra</span></p>
+            <p class="kh-mapa__kde"><strong>Nitra</strong></p>
             <p class="kh-mapa__co">Prístrešok pre dve autá s boxom<span>2026</span></p>
           </figcaption>
         </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="slovensky-grob" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Slovenský Grob</strong></p>
+            <p class="kh-mapa__co">Prístrešok 4,5 × 6 m<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="trnava" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Trnava</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,8 × 5,6 m v tvare L<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="banov" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Bánov</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,2 × 6 m, RAL 8017<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="potvorice" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Potvorice</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,2 × 5,6 m, RAL 7016<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="bratislava-devin" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Bratislava – Devín</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,9 × 6 m<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="vahovce" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Váhovce</strong></p>
+            <p class="kh-mapa__co">Prístrešok 4,2 × 6 m, RAL 9006<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="diviacka-nova-ves" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Diviacka Nová Ves</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6 × 6 m, RAL 7016<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="vrutky" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Vrútky</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,4 × 5,1 m<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="podvysoka" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Podvysoká</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,2 × 6 m, RAL 9006<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="trebisov" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Trebišov</strong></p>
+            <p class="kh-mapa__co">Prístrešok 7,8 × 5,6 m, RAL 7016<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="nove-mesto-nad-vahom" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Nové Mesto nad Váhom</strong></p>
+            <p class="kh-mapa__co">Prístrešok 3,2 × 6 m, RAL 7005<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="tornala" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Tornaľa</strong></p>
+            <p class="kh-mapa__co">Prístrešok 3,5 × 7 m a prístrešok na karavan<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="rybnik" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Rybník</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,2 × 5,2 m, RAL 1015 a 9005<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="kolinany" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Kolíňany</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,8 × 6 m so stenou, RAL 7016<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="bratislava" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Bratislava</strong></p>
+            <p class="kh-mapa__co">Prístrešky 6,2 × 5,6 m a 6,2 × 4,8 m<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="kvetoslavov" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Kvetoslavov</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5 × 5,2 m<span>2026</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="limbach" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Limbach</strong></p>
+            <p class="kh-mapa__co">Tri prístrešky, najväčší 7,2 × 6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="dunajska-streda" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Dunajská Streda</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,6 × 5,2 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="hviezdoslavov" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Hviezdoslavov</strong></p>
+            <p class="kh-mapa__co">Prístrešok 4,2 × 5,3 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="chorvatsky-grob" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Chorvátsky Grob</strong></p>
+            <p class="kh-mapa__co">Prístrešok 7,8 × 5,7 m s prístavbou<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="cecejovce" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Čečejovce</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6 × 5,8 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="liptovsky-mikulas" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Liptovský Mikuláš</strong></p>
+            <p class="kh-mapa__co">Prístrešky 5,8 × 6 m a 3,2 × 5,2 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="zirany" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Žirany</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,2 × 5,2 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="voderady" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Voderady</strong></p>
+            <p class="kh-mapa__co">Prístrešok 3,2 × 5,6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="podrecany" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Podrečany</strong></p>
+            <p class="kh-mapa__co">Prístrešok 3,5 × 5,2 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="mojs" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Mojš</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6 × 4 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="hlinik-nad-hronom" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Hliník nad Hronom</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6 × 5,6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="hlohovec" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Hlohovec</strong></p>
+            <p class="kh-mapa__co">Prístrešok 6,6 × 5,6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="kalinciakovo" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Kalinčiakovo</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,6 × 5,6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="bernolakovo" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Bernolákovo</strong></p>
+            <p class="kh-mapa__co">Prístrešok 5,8 × 6 m<span>2025</span></p>
+          </figcaption>
+        </figure>
+        <figure class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="lucenec" hidden>
+          <figcaption>
+            <p class="kh-mapa__kde"><strong>Lučenec</strong></p>
+            <p class="kh-mapa__co">Prístrešok pre auto<span>2025</span></p>
+          </figcaption>
+        </figure>
         <ul class="kh-mapa__zoznam">
-        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="plavecky" aria-pressed="true"><strong>Plavecký Štvrtok</strong><span>Prístrešok pre tri autá</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="plavecky-stvrtok" aria-pressed="true"><strong>Plavecký Štvrtok</strong><span>Prístrešok pre tri autá</span></button></li>
         <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="nitra" aria-pressed="false"><strong>Nitra</strong><span>Prístrešok pre dve autá s boxom</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="slovensky-grob" aria-pressed="false"><strong>Slovenský Grob</strong><span>Prístrešok 4,5 × 6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="trnava" aria-pressed="false"><strong>Trnava</strong><span>Prístrešok 5,8 × 5,6 m v tvare L</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="banov" aria-pressed="false"><strong>Bánov</strong><span>Prístrešok 6,2 × 6 m, RAL 8017</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="potvorice" aria-pressed="false"><strong>Potvorice</strong><span>Prístrešok 6,2 × 5,6 m, RAL 7016</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="bratislava-devin" aria-pressed="false"><strong>Bratislava – Devín</strong><span>Prístrešok 5,9 × 6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="vahovce" aria-pressed="false"><strong>Váhovce</strong><span>Prístrešok 4,2 × 6 m, RAL 9006</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="diviacka-nova-ves" aria-pressed="false"><strong>Diviacka Nová Ves</strong><span>Prístrešok 6 × 6 m, RAL 7016</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="vrutky" aria-pressed="false"><strong>Vrútky</strong><span>Prístrešok 6,4 × 5,1 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="podvysoka" aria-pressed="false"><strong>Podvysoká</strong><span>Prístrešok 6,2 × 6 m, RAL 9006</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="trebisov" aria-pressed="false"><strong>Trebišov</strong><span>Prístrešok 7,8 × 5,6 m, RAL 7016</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="nove-mesto-nad-vahom" aria-pressed="false"><strong>Nové Mesto nad Váhom</strong><span>Prístrešok 3,2 × 6 m, RAL 7005</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="tornala" aria-pressed="false"><strong>Tornaľa</strong><span>Prístrešok 3,5 × 7 m a prístrešok na karavan</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="rybnik" aria-pressed="false"><strong>Rybník</strong><span>Prístrešok 6,2 × 5,2 m, RAL 1015 a 9005</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="kolinany" aria-pressed="false"><strong>Kolíňany</strong><span>Prístrešok 5,8 × 6 m so stenou, RAL 7016</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="bratislava" aria-pressed="false"><strong>Bratislava</strong><span>Prístrešky 6,2 × 5,6 m a 6,2 × 4,8 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="kvetoslavov" aria-pressed="false"><strong>Kvetoslavov</strong><span>Prístrešok 5 × 5,2 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="limbach" aria-pressed="false"><strong>Limbach</strong><span>Tri prístrešky, najväčší 7,2 × 6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="dunajska-streda" aria-pressed="false"><strong>Dunajská Streda</strong><span>Prístrešok 5,6 × 5,2 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="hviezdoslavov" aria-pressed="false"><strong>Hviezdoslavov</strong><span>Prístrešok 4,2 × 5,3 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="chorvatsky-grob" aria-pressed="false"><strong>Chorvátsky Grob</strong><span>Prístrešok 7,8 × 5,7 m s prístavbou</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="cecejovce" aria-pressed="false"><strong>Čečejovce</strong><span>Prístrešok 6 × 5,8 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="liptovsky-mikulas" aria-pressed="false"><strong>Liptovský Mikuláš</strong><span>Prístrešky 5,8 × 6 m a 3,2 × 5,2 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="zirany" aria-pressed="false"><strong>Žirany</strong><span>Prístrešok 6,2 × 5,2 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="voderady" aria-pressed="false"><strong>Voderady</strong><span>Prístrešok 3,2 × 5,6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="podrecany" aria-pressed="false"><strong>Podrečany</strong><span>Prístrešok 3,5 × 5,2 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="mojs" aria-pressed="false"><strong>Mojš</strong><span>Prístrešok 6 × 4 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="hlinik-nad-hronom" aria-pressed="false"><strong>Hliník nad Hronom</strong><span>Prístrešok 6 × 5,6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="hlohovec" aria-pressed="false"><strong>Hlohovec</strong><span>Prístrešok 6,6 × 5,6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="kalinciakovo" aria-pressed="false"><strong>Kalinčiakovo</strong><span>Prístrešok 5,6 × 5,6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="bernolakovo" aria-pressed="false"><strong>Bernolákovo</strong><span>Prístrešok 5,8 × 6 m</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="lucenec" aria-pressed="false"><strong>Lučenec</strong><span>Prístrešok pre auto</span></button></li>
         </ul>
       </div>
     </div>
   </div>
 </section>
+
 
 
 <!-- ===================================================== OTÁZKY -->
@@ -1776,7 +2025,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788535881698"></script>
+<script src="../assets/koverta-2026.js?v=1788536351159"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

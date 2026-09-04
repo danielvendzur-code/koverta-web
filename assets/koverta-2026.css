@@ -9375,3 +9375,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-duo__telo .kh-soltec__brand { margin: 0; }
 .kh-duo__telo .kh-soltec__brand img { height: clamp(24px, 2.2vw, 32px); width: auto; filter: brightness(0); opacity: 0.86; }
 .kh-duo__akcia { margin: clamp(8px, 1vw, 14px) 0 0; }
+
+/* Karta bez fotografie: obec a rozmer stačia, prázdny rám by len klamal. */
+.kh-mapa__karta--bezfoto { background: var(--k-white); }
+.kh-mapa__karta--bezfoto figcaption { padding: clamp(20px, 2.2vw, 30px); }
+.kh-mapa__zoznam { max-height: clamp(260px, 34vh, 380px); }
