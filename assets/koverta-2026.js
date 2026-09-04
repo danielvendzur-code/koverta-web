@@ -891,8 +891,84 @@
       trigger.setAttribute('aria-expanded', 'false');
     };
 
+    /* Index celého webu. Doteraz sa hľadalo len v tom, čo práve bolo na
+       stránke — slovo z inej podstránky sa preto nedalo nájsť vôbec. Teraz sa
+       pri prvom otvorení stiahne pripravený zoznam (názvy sekcií, otázky,
+       produkty, riadky tabuliek, výbava) zo všetkých pätnástich stránok.
+       Kým sa stiahne — a keby sa nestiahol vôbec — platí pôvodný index
+       z otvorenej stránky, takže vyhľadávanie funguje vždy. */
+    const cestaIndexu = () => {
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const zaklad = css ? css.getAttribute('href').replace(/koverta-2026\.css.*$/, '') : './assets/';
+      return zaklad + 'hladanie.json';
+    };
+
+    /* Odkazy v indexe sú od koreňa webu, lebo ten istý index slúži všetkým
+       podstránkam. Na podstránke sa preto pred ne dá „../“. */
+    const koren = () => {
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const zaklad = css ? css.getAttribute('href').replace(/assets\/koverta-2026\.css.*$/, '') : './';
+      return zaklad || './';
+    };
+
+    let cely = null;
+    let stahujem = false;
+    const dotiahni = () => {
+      if (cely || stahujem || !window.fetch) return;
+      stahujem = true;
+      window.fetch(cestaIndexu(), { credentials: 'omit' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !d.polozky || !d.polozky.length) return;
+          cely = d.polozky.map(function (it) {
+            return {
+              title: it.t,
+              note: it.p,
+              href: /^(https?:|mailto:|tel:)/.test(it.u) ? it.u : koren() + it.u,
+              img: it.o,
+              kind: it.k,
+              hay: it.h + ' ' + norm(it.t + ' ' + it.p)
+            };
+          });
+          if (!panel.hidden) render(input.value);
+        })
+        .catch(function () {});
+    };
+
+    const zdroj = function () { return cely || index || []; };
+
+    /* Hľadá sa po slovách: nájsť treba všetky, nie len celý reťazec. Vďaka
+       tomu prejde aj „pergola zip" alebo „carport 6 m". */
+    const skore = function (it, slova, dopyt) {
+      const t = norm(it.title);
+      let sk = 0;
+      for (let i = 0; i < slova.length; i++) {
+        const w = slova[i];
+        if (t.indexOf(w) === 0) sk += 6;
+        else if ((' ' + t).indexOf(' ' + w) > -1) sk += 4;
+        else if (t.indexOf(w) > -1) sk += 3;
+        else if ((' ' + it.hay).indexOf(' ' + w) > -1) sk += 2;
+        else if (it.hay.indexOf(w) > -1) sk += 1;
+        else {
+          /* Slovenčina ohýba: „ohlásenie“ verzus „ohlásením“, „pätka“ verzus
+             „pätky“. Keď celé slovo nesadne, skúsi sa jeho kmeň — prvých päť
+             znakov stačí na to, aby sa tvary stretli, a je to dosť dlhé na to,
+             aby to nespájalo nesúvisiace slová. */
+          const kmen = w.length > 5 ? w.slice(0, w.length - Math.min(3, w.length - 5)) : w;
+          if (kmen.length >= 5 && (t.indexOf(kmen) > -1 || it.hay.indexOf(kmen) > -1)) sk += 1;
+          else return 0;
+        }
+      }
+      if (t === dopyt) sk += 10;
+      else if (t.indexOf(dopyt) === 0) sk += 5;
+      if (it.kind === 'Stránka' || it.kind === 'Produkt') sk += 2;
+      return sk;
+    };
+
     const render = (q) => {
       const nq = norm(q);
+      /* Čísla nechávame aj jednoznakové („9 × 6 m“), písmená až od dvoch. */
+      const slova = nq.split(' ').filter(function (w) { return w.length > 1 || /[0-9]/.test(w); });
       list.innerHTML = '';
       active = -1;
 
@@ -903,30 +979,22 @@
         if (label) label.textContent = 'Hľadať „' + q + '" v celom e-shope';
       }
 
-      if (!nq) {
+      if (!slova.length) {
         empty.hidden = false;
-        empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „tienenie" alebo „prístrešok pre dve autá".';
+        empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „ZIP roleta" alebo „prístrešok pre dve autá".';
         return;
       }
 
-      // Zhoda na začiatku názvu váži viac než zhoda kdekoľvek v texte.
-      const hits = index
-        .map((it) => {
-          const t = norm(it.title);
-          let score = 0;
-          if (t.indexOf(nq) === 0) score = 3;
-          else if (t.indexOf(nq) > -1) score = 2;
-          else if (it.hay.indexOf(nq) > -1) score = 1;
-          return { it: it, score: score };
-        })
-        .filter((r) => r.score > 0)
-        .sort((a, b) => b.score - a.score)
+      const hits = zdroj()
+        .map(function (it) { return { it: it, score: skore(it, slova, nq) }; })
+        .filter(function (r) { return r.score > 0; })
+        .sort(function (a, b) { return b.score - a.score; })
         .slice(0, 8);
 
       empty.hidden = hits.length > 0;
       if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte — poradíme.';
 
-      hits.forEach((r) => {
+      hits.forEach(function (r) {
         const a = document.createElement('a');
         a.className = 'kv-search__hit';
         a.href = r.it.href;
@@ -936,6 +1004,7 @@
           const im = document.createElement('img');
           im.src = r.it.img;
           im.alt = '';
+          im.loading = 'lazy';
           thumb.appendChild(im);
         }
         const text = document.createElement('span');
@@ -948,6 +1017,12 @@
         text.appendChild(sn);
         a.appendChild(thumb);
         a.appendChild(text);
+        if (r.it.kind) {
+          const kd = document.createElement('span');
+          kd.className = 'kv-search__druh';
+          kd.textContent = r.it.kind;
+          a.appendChild(kd);
+        }
         a.addEventListener('click', close);
         list.appendChild(a);
       });
@@ -955,6 +1030,7 @@
 
     const open = (predvolba) => {
       if (!index) index = buildIndex(document);
+      dotiahni();
       panel.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
       input.value = predvolba || '';
@@ -1307,6 +1383,85 @@
      Nepustí sa pri obmedzenom pohybe, pri zapnutom šetrení dát ani na pomalom
      pripojení — dve megabajty nemá zmysel ťahať cez EDGE. Keď úvod odscrolluje
      z obrazovky, video sa zastaví, aby zbytočne nekreslilo. */
+  /* --- Dopyt: poďakovanie namiesto odchodu na e-shop -----------------------
+     Formulár posiela dáta do Shopify na koverta.sk. Doteraz to znamenalo, že
+     prehliadač odišiel preč a zákazník skončil na cudzej stránke bez toho,
+     aby vedel, čo bude ďalej. Odoslanie teraz ide cez skrytý rám — je to ten
+     istý skutočný POST vrátane príloh —, stránka ostáva a na mieste formulára
+     sa objaví poďakovanie s postupom.
+
+     Keby skript nebežal, formulár sa odošle tak ako predtým. Nič sa nestratí. */
+  function initDopyt(root) {
+    const formulare = root.querySelectorAll('form[data-k-dopyt]');
+    if (!formulare.length) return;
+    const doc = root.ownerDocument || document;
+
+    formulare.forEach((f) => {
+      if (f.dataset.kReady === 'true') return;
+      f.dataset.kReady = 'true';
+      const dakujem = f.parentElement.querySelector('[data-k-dakujem]');
+      if (!dakujem) return;
+
+      const menoRamu = 'kv-odoslanie-' + Math.random().toString(36).slice(2, 8);
+      const ram = doc.createElement('iframe');
+      ram.name = menoRamu;
+      ram.title = 'Odoslanie dopytu';
+      ram.setAttribute('aria-hidden', 'true');
+      ram.tabIndex = -1;
+      ram.style.cssText = 'position:absolute;width:0;height:0;border:0;left:-9999px';
+      f.parentElement.appendChild(ram);
+      f.target = menoRamu;
+
+      let odoslane = false;
+      let cakac = 0;
+
+      /* Nadpis sekcie („Napíšte nám…“) aj jeho výzva by nad poďakovaním
+         pôsobili, akoby sa nič neodoslalo — na ten čas odchádzajú tiež. */
+      const hlava = f.parentElement.querySelector('.kh-cta__head');
+
+      const ukaz = () => {
+        if (!odoslane) return;
+        window.clearTimeout(cakac);
+        f.hidden = true;
+        if (hlava) hlava.hidden = true;
+        dakujem.hidden = false;
+        const nadpis = dakujem.querySelector('.kh-dakujem__nadpis');
+        if (nadpis) {
+          nadpis.setAttribute('tabindex', '-1');
+          nadpis.focus({ preventScroll: true });
+        }
+        const r = dakujem.getBoundingClientRect();
+        if (r.top < 0 || r.bottom > window.innerHeight) {
+          dakujem.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'center' });
+        }
+      };
+
+      ram.addEventListener('load', () => { if (odoslane) ukaz(); });
+
+      f.addEventListener('submit', () => {
+        odoslane = true;
+        const btn = f.querySelector('[type="submit"]');
+        if (btn) { btn.disabled = true; btn.classList.add('je-odosielane'); }
+        /* Poistka: keby rám neohlásil načítanie (blokovaný tretí subjekt),
+           poďakovanie sa ukáže aj tak — dopyt je odoslaný a zákazník nemá
+           ostať pozerať na zamrznuté tlačidlo. */
+        cakac = window.setTimeout(ukaz, 6000);
+      });
+
+      const znova = dakujem.querySelector('[data-k-znova]');
+      if (znova) znova.addEventListener('click', () => {
+        odoslane = false;
+        dakujem.hidden = true;
+        if (hlava) hlava.hidden = false;
+        f.hidden = false;
+        f.reset();
+        const btn = f.querySelector('[type="submit"]');
+        if (btn) { btn.disabled = false; btn.classList.remove('je-odosielane'); }
+        f.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
+      });
+    });
+  }
+
   function initVideo(root) {
     const vsetky = root.querySelectorAll('video[data-k-video]');
     if (!vsetky.length) return;
@@ -1747,7 +1902,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initVideo]
+       initSubory, initScrub, initPrelet, initVideo, initDopyt]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }

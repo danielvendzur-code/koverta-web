@@ -8590,3 +8590,170 @@ footer.kf { background: var(--k-ink); color: #fff; }
     aspect-ratio: 4 / 3;
   }
 }
+
+/* ==========================================================================
+   VRSTVA 73 · Referencie výrobcu Soltec
+   ==========================================================================
+   Prémiová rada potrebuje dôkaz, že nejde o katalógový sľub. Výrobca vedie
+   verejný zoznam realizácií — mesto, krajina, model. Stojí tu ako riadok
+   údajov: žiadne fotografie navyše, len miesta, ktoré sa dajú overiť. */
+.kh-ref {
+  margin-top: clamp(30px, 3.4vw, 52px);
+  padding-top: clamp(24px, 2.6vw, 36px);
+  border-top: 1px solid var(--k-hair);
+}
+.kh-ref__uvod {
+  max-width: 62ch;
+  margin: 0 0 clamp(26px, 3vw, 38px);
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-ref__uvod strong { color: var(--k-ink); font-weight: 700; }
+.kh-ref__zoznam {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+  margin: 0 0 clamp(20px, 2.2vw, 30px);
+  padding: 0;
+  list-style: none;
+}
+.kh-ref__zoznam li {
+  display: grid;
+  gap: 2px;
+  padding-top: 12px;
+  border-top: 1px solid var(--k-hair);
+}
+.kh-ref__zoznam li::before { content: none; }
+.kh-ref__zoznam strong {
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.35vw, 18px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+}
+.kh-ref__zoznam span { font-size: 12.5px; color: var(--k-grey-soft); }
+.kh-ref__zoznam em {
+  font-style: normal;
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+@media (max-width: 620px) {
+  .kh-ref__zoznam { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+}
+
+/* ==========================================================================
+   VRSTVA 74 · Kontakt: formulár hneď, nie na konci stránky
+   ==========================================================================
+   Kontaktná stránka mala formulár až úplne dole, za cenami, oddeleniami,
+   postupom aj otázkami. Kto prišiel napísať, musel prescrollovať celú
+   stránku — a väčšina to nespraví. Formulár je teraz hneď za úvodom a úvod
+   je nižší, takže je vidieť takmer okamžite. */
+.kh-hero--kratky { min-height: max(360px, min(52svh, 520px)); }
+@media (max-width: 760px) {
+  .kh-hero--kratky { min-height: max(320px, min(58svh, 480px)); }
+}
+/* Úvod kontaktu nepotrebuje tri údaje pod tlačidlom — sú v ňom už hore
+   v pruhu a hneď pod ním vo formulári. */
+.kh-hero--kratky .kh-hero__trust { display: none; }
+
+/* ==========================================================================
+   VRSTVA 75 · Poďakovanie po odoslaní dopytu
+   ==========================================================================
+   Po odoslaní zákazník doteraz skončil na e-shope a nevedel, čo bude ďalej.
+   Na mieste formulára sa teraz objaví poďakovanie a tri kroky, ktoré po ňom
+   nasledujú — rovnaké, aké sľubujeme na stránke postupu. */
+.kh-dakujem {
+  display: grid;
+  gap: clamp(14px, 1.5vw, 20px);
+  padding: clamp(6px, 1vw, 12px) 0;
+}
+.kh-dakujem__znak {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--k-amber);
+}
+.kh-dakujem__znak svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--k-ink);
+  stroke-width: 2.4;
+}
+.kh-dakujem__nadpis {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+.kh-dakujem__nadpis:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 4px; }
+.kh-dakujem__text { margin: 0; font-size: 15px; line-height: 1.6; color: var(--k-muted); }
+.kh-dakujem__kroky {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: kv-dak;
+}
+.kh-dakujem__kroky li {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 2px 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--k-hair);
+  counter-increment: kv-dak;
+}
+.kh-dakujem__kroky li::before {
+  content: counter(kv-dak, decimal-leading-zero);
+  grid-row: 1 / span 2;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  color: var(--k-amber-deep);
+}
+.kh-dakujem__kroky strong { font-family: var(--k-head); font-size: 16px; font-weight: 700; letter-spacing: -0.015em; }
+.kh-dakujem__kroky span { font-size: 13.5px; line-height: 1.55; color: var(--k-muted); }
+.kh-dakujem__spoj { margin: 0; font-size: 14px; color: var(--k-muted); }
+.kh-dakujem__spoj a { color: var(--k-ink); font-weight: 600; }
+.k .kh-dakujem [data-k-znova] { justify-self: start; border: 0; background: none; cursor: pointer; }
+
+/* Kým odosielanie beží, tlačidlo hovorí, že sa niečo deje. */
+.k .k-btn.je-odosielane { opacity: 0.6; pointer-events: none; }
+
+/* `hidden` je len návrh — vlastné `display` ho prebije. Formulár aj
+   poďakovanie sa preto skrývajú natvrdo. */
+.k .kh-form[hidden],
+.k .kh-dakujem[hidden] { display: none !important; }
+.k .kh-cta__head[hidden] { display: none !important; }
+
+/* Druh výsledku (Otázka, Produkt, Parameter…) — aby bolo hneď vidieť, kam
+   odkaz vedie, nielen ako sa výsledok volá. */
+.kv-search__druh {
+  flex: none;
+  align-self: center;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--k-bone);
+  font-family: var(--k-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+  white-space: nowrap;
+}
+@media (max-width: 520px) { .kv-search__druh { display: none; } }

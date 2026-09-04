@@ -81,7 +81,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788505488730">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788517130089">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -308,7 +308,7 @@
 <main class="k" id="obsah" data-k-root>
 
 <!-- ===================================================== HERO STRÁNKY -->
-<section class="kh-hero" aria-labelledby="pgTitle">
+<section class="kh-hero kh-hero--kratky" aria-labelledby="pgTitle">
   <div class="kh-hero__bg">
     <img src="https://koverta.sk/cdn/shop/files/20250528_161743.jpg?width=1800" alt="Prístrešok Koverta pri rodinnom dome" fetchpriority="high" decoding="async">
     <span class="kh-hero__scrim" aria-hidden="true"></span>
@@ -331,6 +331,131 @@
       </div>
     </div>
   </div>
+</section>
+
+<section class="k-band kh-cta" id="ponuka" aria-labelledby="ctaTitle">
+  <div class="k-wrap">
+    <div class="kh-cta__grid">
+
+      <div class="kh-cta__card k-rise">
+        <div class="kh-cta__head">
+          <p class="k-eyebrow">Cenová ponuka zadarmo</p>
+          <h2 id="ctaTitle" class="k-h2">Napíšte nám, aké riešenie potrebujete</h2>
+          <p class="k-copy">Stačí približný rozmer a mesto. Ozveme sa do 24 hodín a dohodneme bezplatné zameranie.</p>
+        </div>
+
+        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+          <input type="hidden" name="form_type" value="contact">
+          <input type="hidden" name="utf8" value="✓">
+          <fieldset>
+            <legend>Čo riešite?</legend>
+            <div class="kh-select" data-k-select>
+              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
+                <span data-k-select-label>Prístrešok pre auto</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
+                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
+              </ul>
+              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
+            </div>
+          </fieldset>
+
+          <div class="kh-form__grid">
+            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
+            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" autocomplete="tel" required></label>
+            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email" required></label>
+            <label class="kh-field"><span>Mesto realizácie</span><input type="text" name="contact[Mesto realizácie]" autocomplete="address-level2"></label>
+          </div>
+
+          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+
+          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
+               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
+               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
+          <label class="kh-field kh-field--subor">
+            <span>Fotky miesta <small>nepovinné</small></span>
+            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
+          </label>
+
+          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="../obchodne-podmienky/">obchodnými podmienkami</a> a so <a href="../ochrana-sukromia/">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+
+          <div class="kh-form__submit">
+            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </form>
+        <div class="kh-dakujem" data-k-dakujem hidden>
+          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
+          <h3 class="kh-dakujem__nadpis">Ďakujeme, dopyt je odoslaný</h3>
+          <p class="kh-dakujem__text">Máme ho u seba aj s fotkami, ak ste ich pripojili. Takto to bude pokračovať:</p>
+          <ol class="kh-dakujem__kroky">
+            <li><strong>Ozveme sa do 24 hodín</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
+            <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne — aj keď si nakoniec vyberiete inak.</span></li>
+            <li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, rozmiestnením stĺpov a termínom montáže.</span></li>
+          </ol>
+          <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
+          <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+
+      </div>
+
+      <aside class="kh-cta__aside k-rise" data-k-delay="1">
+        <div class="kh-cta__aside-head">
+          <p class="k-eyebrow">Kompletný servis</p>
+          <h3>Od návrhu po montáž</h3>
+          <p>Jeden tím vás prevedie výberom riešenia, zameraním aj hotovou realizáciou.</p>
+        </div>
+
+        <a class="kh-cta__row" href="tel:+421948482266">
+          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></span>
+          <span><small>Zavolajte</small><strong>+421 948 482 266</strong></span>
+        </a>
+        <a class="kh-cta__row" href="mailto:obchod@koverta.sk">
+          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><small>Napíšte</small><strong>obchod@koverta.sk</strong></span>
+        </a>
+
+        <!-- Bočný panel držal adresu sídla. Tá odtiaľto odišla — sídlo nie je
+             miesto, kam sa oplatí prísť. Namiesto nej stojí to, čo človek na
+             kontaktnej stránke naozaj rieši: čo bude nasledovať po odoslaní. -->
+        <ol class="kh-cta__steps">
+          <li><span>01</span><strong>Ozveme sa do 24 hodín</strong><small>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</small></li>
+          <li><span>02</span><strong>Prídeme zamerať</strong><small>Na mieste, zadarmo a nezáväzne — aj keď si nakoniec vyberiete inak.</small></li>
+          <li><span>03</span><strong>Pošleme návrh a cenu</strong><small>S rozmermi, rozmiestnením stĺpov a tým, čo je v cene.</small></li>
+        </ol>
+
+        
+
+        <div class="kh-cta__score">
+          <span class="kh-fact__row">
+            <svg class="k-google k-google--lg" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+            </svg>
+            <b>5,0</b>
+            <span class="k-stars" role="img" aria-label="5 z 5"><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg></span>
+          </span>
+          <small>Hodnotenie na Google</small>
+          <a href="https://www.google.com/maps/search/?api=1&query=Koverta%20Nitra">Prečítať recenzie
+            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      
+        <figure class="kh-cta__foto">
+          <img src="../assets/soltec-canopy-f170-real.jpg" alt="Prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async">
+        </figure>
+      </aside>
+
+    </div>
+  </div>
+
 </section>
 
 <!-- ===================================================== ČO JE V CENE -->
@@ -478,119 +603,6 @@
     </div>
   </div>
 </section>
-<section class="k-band kh-cta" id="ponuka" aria-labelledby="ctaTitle">
-  <div class="k-wrap">
-    <div class="kh-cta__grid">
-
-      <div class="kh-cta__card k-rise">
-        <div class="kh-cta__head">
-          <p class="k-eyebrow">Cenová ponuka zadarmo</p>
-          <h2 id="ctaTitle" class="k-h2">Napíšte nám, aké riešenie potrebujete</h2>
-          <p class="k-copy">Stačí približný rozmer a mesto. Ozveme sa do 24 hodín a dohodneme bezplatné zameranie.</p>
-        </div>
-
-        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
-          <input type="hidden" name="form_type" value="contact">
-          <input type="hidden" name="utf8" value="✓">
-          <fieldset>
-            <legend>Čo riešite?</legend>
-            <div class="kh-select" data-k-select>
-              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
-                <span data-k-select-label>Prístrešok pre auto</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
-                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
-              </ul>
-              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
-            </div>
-          </fieldset>
-
-          <div class="kh-form__grid">
-            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
-            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" autocomplete="tel" required></label>
-            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email" required></label>
-            <label class="kh-field"><span>Mesto realizácie</span><input type="text" name="contact[Mesto realizácie]" autocomplete="address-level2"></label>
-          </div>
-
-          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
-
-          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
-               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
-               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
-          <label class="kh-field kh-field--subor">
-            <span>Fotky miesta <small>nepovinné</small></span>
-            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
-            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
-          </label>
-
-          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="../obchodne-podmienky/">obchodnými podmienkami</a> a so <a href="../ochrana-sukromia/">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
-
-          <div class="kh-form__submit">
-            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
-              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </div>
-        </form>
-      </div>
-
-      <aside class="kh-cta__aside k-rise" data-k-delay="1">
-        <div class="kh-cta__aside-head">
-          <p class="k-eyebrow">Kompletný servis</p>
-          <h3>Od návrhu po montáž</h3>
-          <p>Jeden tím vás prevedie výberom riešenia, zameraním aj hotovou realizáciou.</p>
-        </div>
-
-        <a class="kh-cta__row" href="tel:+421948482266">
-          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></span>
-          <span><small>Zavolajte</small><strong>+421 948 482 266</strong></span>
-        </a>
-        <a class="kh-cta__row" href="mailto:obchod@koverta.sk">
-          <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <span><small>Napíšte</small><strong>obchod@koverta.sk</strong></span>
-        </a>
-
-        <!-- Bočný panel držal adresu sídla. Tá odtiaľto odišla — sídlo nie je
-             miesto, kam sa oplatí prísť. Namiesto nej stojí to, čo človek na
-             kontaktnej stránke naozaj rieši: čo bude nasledovať po odoslaní. -->
-        <ol class="kh-cta__steps">
-          <li><span>01</span><strong>Ozveme sa do 24 hodín</strong><small>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</small></li>
-          <li><span>02</span><strong>Prídeme zamerať</strong><small>Na mieste, zadarmo a nezáväzne — aj keď si nakoniec vyberiete inak.</small></li>
-          <li><span>03</span><strong>Pošleme návrh a cenu</strong><small>S rozmermi, rozmiestnením stĺpov a tým, čo je v cene.</small></li>
-        </ol>
-
-        
-
-        <div class="kh-cta__score">
-          <span class="kh-fact__row">
-            <svg class="k-google k-google--lg" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
-              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
-              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
-              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
-            </svg>
-            <b>5,0</b>
-            <span class="k-stars" role="img" aria-label="5 z 5"><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg></span>
-          </span>
-          <small>Hodnotenie na Google</small>
-          <a href="https://www.google.com/maps/search/?api=1&query=Koverta%20Nitra">Prečítať recenzie
-            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-        </div>
-      
-        <figure class="kh-cta__foto">
-          <img src="../assets/soltec-canopy-f170-real.jpg" alt="Prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async">
-        </figure>
-      </aside>
-
-    </div>
-  </div>
-
-</section>
-
-</main>
 </main>
 
 <!-- ============================================================ PÄTIČKA -->
@@ -637,7 +649,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788505488730"></script>
+<script src="../assets/koverta-2026.js?v=1788517130089"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
