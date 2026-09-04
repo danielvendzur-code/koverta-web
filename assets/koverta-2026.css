@@ -8061,22 +8061,25 @@ footer.kf { background: var(--k-ink); color: #fff; }
    Fotografia a pod ňou sivá veta v bežnom texte — vyzeralo to ako kontaktný
    hárok, nie ako ukážka práce. Popis má teraz rovnakú stavbu, akú má zvyšok
    webu: jantárové poradové číslo, vlasová čiara a názov v nadpisovom reze.
-   Vzťahuje sa len na galériové dlaždice, teda tie bez popisu a odkazov —
-   karty kategórií ostávajú, aké boli. */
+   Vzťahuje sa len na galériové dlaždice, teda tie bez odkazu na podstránku —
+   karty kategórií (tie majú `.kh-cat__card`) ostávajú, aké boli. Podmienka
+   pôvodne skúmala `.kh-cat__more`, lenže ten má iba úvodná stránka: karty na
+   /produkty/ ho nemajú, takže dostali poradové číslo a ich telo sa rozpadlo
+   na dva stĺpce — nadpis prekrýval popis aj tlačidlo. */
 .k .kh-cat__grid { counter-reset: kv-real; }
-.k .kh-cat__item:not(:has(.kh-cat__more)) { counter-increment: kv-real; }
+.k .kh-cat__item:not(:has(.kh-cat__card)) { counter-increment: kv-real; }
 
-.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__media {
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media {
   aspect-ratio: 4 / 3;
   min-height: 0;
 }
-.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__media img {
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body {
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
@@ -8086,7 +8089,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-top: 1px solid var(--k-hair);
   transition: border-color 240ms var(--k-ease);
 }
-.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body::before {
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body::before {
   content: counter(kv-real, decimal-leading-zero);
   padding-top: 2px;
   font-family: var(--k-head);
@@ -8095,7 +8098,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   letter-spacing: 0.14em;
   color: var(--k-amber-deep);
 }
-.k .kh-cat__item:not(:has(.kh-cat__more)) .kh-cat__body .k-copy {
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body .k-copy {
   margin: 0;
   font-family: var(--k-head);
   font-size: clamp(14.5px, 1.15vw, 16px);
@@ -8104,8 +8107,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
   line-height: 1.35;
   color: var(--k-ink);
 }
-.k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body { border-top-color: var(--k-amber); }
-.k .kh-cat__item:not(:has(.kh-cat__more)):hover .kh-cat__body .k-copy { color: var(--k-amber-deep); }
+.k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__body { border-top-color: var(--k-amber); }
+.k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__body .k-copy { color: var(--k-amber-deep); }
 
 /* ==========================================================================
    VRSTVA 62 · Preč s rozostrením pod lištou a nad videom
@@ -8163,4 +8166,248 @@ footer.kf { background: var(--k-ink); color: #fff; }
   }
   /* Celý riadok so súhlasom je plocha na klik — políčko samo stačí malé. */
   .kh-form__suhlas { padding: 4px 0; }
+}
+
+/* ==========================================================================
+   VRSTVA 64 · Spodok úvodnej obrazovky nesmie končiť pod lepivým pásom
+   ==========================================================================
+   Úvod je vysoký na celé okno a jeho obsah sedí pri spodnej hrane. Lepivý
+   pás s ponukou je pripnutý na spodok okna, takže hodnotenie z Google aj
+   riadok s údajmi (ZIP K130, 0 – 135°, 1 – 3 autá…) končili pod ním —
+   z druhého riadka popiskov nebolo vidieť nič. Úvod si teraz odráta presne
+   toľko, koľko pás zaberá; výšku meria skript, 74 px je záloha pre prípad,
+   že skript nebeží. */
+@media (max-width: 760px) {
+  .k .kh-hero__inner {
+    padding-bottom: calc(var(--kv-dok, 74px) + 18px);
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 65 · Filtre a široké tabuľky: nič nesmie končiť za okrajom
+   ==========================================================================
+   Dve chyby z telefónu, obe rovnakého druhu — obsah bol tam, kam sa nezmestí.
+
+   1 · Čipy filtra. Riešili sme ich vodorovným posunom, lenže posledný čip
+   („Tienenie“) končil 30 px za pravým okrajom a vyzeralo to ako useknutá
+   stránka, nie ako lišta na posun. Čipy sa preto lámu do mriežky rovnakých
+   stĺpcov: 5 riešení sedí ako 3 + 2, značky ako 3 v jednom riadku. Nič sa
+   neposúva, nič nekončí za hranou.
+
+   2 · Tabuľky parametrov so štyrmi a viac stĺpcami. Na telefóne sa každá
+   hodnota rozložila pod svoj popisok, takže riadok Soltec Bio (osem stĺpcov)
+   zabral šestnásť riadkov textu a z toho polovicu tvorili veľké písmená
+   MATERIÁL / MAX. VÝŠKA / MAX. ŠÍRKA / OVLÁDANIE. Prečítať sa to nedalo.
+   Riadok je teraz karta: názov typu ako nadpis, pod ním dvojica popisok –
+   hodnota vedľa seba, tak ako to má katalógový list. Popisok drží ľavý úzky
+   stĺpec, hodnota zvyšok šírky.
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .k .kh-work__filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+    gap: 8px;
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+    padding-bottom: 0;
+  }
+  .k .kh-work__filters button {
+    min-width: 0;
+    padding-inline: 10px;
+    justify-content: center;
+    text-align: center;
+  }
+  /* Značka má tri voľby — patria do jedného riadka, nie do dvoch. */
+  .k .kh-work__filters--brand { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .k .kh-tab:has(thead th:nth-child(4)) tbody tr {
+    padding: clamp(15px, 3.6vw, 20px) clamp(14px, 3.6vw, 18px);
+  }
+  .k .kh-tab:has(thead th:nth-child(4)) tbody tr:first-child { border-top: 0; }
+
+  /* Názov typu je jediný nadpis karty — nesie ho tučné písmo, nie veľkosť. */
+  .k .kh-tab:has(thead th:nth-child(4)) tbody th {
+    margin-bottom: 10px;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+  .k .kh-tab:has(thead th:nth-child(4)) tbody th small {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--k-grey-soft);
+  }
+
+  /* Popisok vľavo v úzkom stĺpci, hodnota vpravo — dva riadky namiesto štyroch. */
+  .k .kh-tab:has(thead th:nth-child(4)) tbody td {
+    display: grid;
+    grid-template-columns: 6.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px 12px;
+    margin: 0;
+    padding: 7px 0;
+    border-top: 1px solid var(--k-hair);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .k .kh-tab:has(thead th:nth-child(4)) tbody td::before {
+    margin: 0;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+    color: var(--k-amber-deep);
+    overflow-wrap: anywhere;
+  }
+  /* Riadok cez celú šírku (poznámka pod tabuľkou) popisok nad sebou neťahá. */
+  .k .kh-tab:has(thead th:nth-child(4)) tbody td[colspan] { display: block; }
+}
+
+/* Na najužších displejoch by úzky stĺpec popisku lámal „MAX. ŠÍRKA“ na dva
+   riadky pri každej hodnote — tam je čitateľnejší popisok nad hodnotou. */
+@media (max-width: 359.98px) {
+  .k .kh-tab:has(thead th:nth-child(4)) tbody td { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==========================================================================
+   VRSTVA 66 · Materiály na širokej obrazovke: tri karty vedľa seba sa nedelia
+   ==========================================================================
+   Na počítači sa stretli dve staršie pravidlá. Jedno hovorí, že tri karty
+   majú tri stĺpce (aby vpravo neostal prázdny), druhé, že karta má fotografiu
+   vedľa textu. Spolu z toho vyšlo na 1440 px šesť stĺpčekov po ~200 px:
+   nadpisy sa lámali na štyri riadky („Otočné od zatvorenia po otvorené
+   nebo“), popisky kategórií skákali každý v inej výške, lebo text bol
+   vycentrovaný voči vlastnej fotografii, a pod krátkou kartou ostalo prázdno.
+
+   Tri karty preto na širokej obrazovke stoja tak, ako sa tri karty stavajú:
+   fotografia hore, text pod ňou cez celú šírku stĺpca. Fotografie majú
+   rovnaký pomer, takže všetky tri popisky aj nadpisy začínajú na jednej
+   linke. Dve alebo štyri karty ostávajú s fotografiou vedľa textu — tam je
+   na ňu miesta dosť —, len sa text zarovnáva k hornej hrane, aby nadpisy
+   v riadku sedeli v jednej výške.
+   ========================================================================== */
+
+@media (min-width: 900px) {
+  /* Text vedľa fotografie začína hore, nie v strede — inak dva nadpisy
+     v jednom riadku končia v dvoch rôznych výškach. A keďže text už nie je
+     vycentrovaný, fotografia sa neťahá na pevnú výšku: drží pomer 4 : 3,
+     takže dve karty v riadku majú rovnako vysoký obraz a pod textom
+     neostáva prázdny pás. */
+  .k .kh-mat__body { justify-content: flex-start; }
+  .k .kh-mat__card { align-items: start; }
+  .k .kh-mat__media { aspect-ratio: 4 / 3; height: auto; min-height: 0; }
+}
+
+@media (min-width: 1040px) {
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__card {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__media {
+    aspect-ratio: 4 / 3;
+    height: auto;
+    min-height: 0;
+  }
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__body {
+    padding: clamp(16px, 1.4vw, 20px) 0 0;
+  }
+  /* V troch stĺpcoch má nadpis celú šírku stĺpca — dva riadky namiesto
+     štyroch. */
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__title {
+    max-width: none;
+    font-size: clamp(20px, 1.5vw, 24px);
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 67 · Tmavý panel pri formulári nesmie končiť prázdnotou
+   ==========================================================================
+   Formulár a tmavý panel vedľa neho tvoria jeden blok, takže panel je vždy
+   taký vysoký ako formulár. Jeho obsah (telefón, e-mail, hodnotenie) však
+   zaberal necelú polovicu a pod ním ostávalo 450 px čiernej plochy. Panel
+   preto končí fotografiou, ktorá dorastie presne do zvyšku výšky — nech je
+   formulár akokoľvek vysoký, pod ním nie je prázdno. Na telefóne sa panel
+   skladá pod formulár a je presne taký vysoký ako obsah, takže fotografia
+   tam nemá čo dorovnávať a nezobrazuje sa. */
+.kh-cta__foto { display: none; }
+
+@media (min-width: 1000px) {
+  .kh-cta__aside { display: flex; flex-direction: column; }
+  .kh-cta__foto {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 150px;
+    margin: clamp(22px, 2.2vw, 32px) 0 0;
+    overflow: hidden;
+    border-radius: var(--k-r-sm);
+  }
+  .kh-cta__foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 68 · Karty kategórií bez rozbaľovania majú tlačidlá v jednej línii
+   ==========================================================================
+   Karty na /produkty/ nemajú blok `.kh-cat__more`, ktorý inde tlačí odkazy
+   na spodnú hranu. Tlačidlo „Zobraziť“ preto stálo hneď pod popisom a v rade
+   štyroch kariet skončilo v štyroch rôznych výškach podľa toho, ako dlhý mal
+   ktorý popis. Telo karty je stĺpec a odkazy si berú zvyšok výšky. */
+@media (min-width: 1000px) {
+  /* Staršie pravidlo pre mriežky s piatimi a viac dlaždicami vracia karte
+     `height: auto` a je špecifickejšie než `.k .kh-cat__card` — karta s
+     kratším nadpisom preto neurástla do výšky riadka. */
+  .k .kh-cat__item:has(.kh-cat__card):not(:has(.kh-cat__more)) .kh-cat__card {
+    height: 100%;
+  }
+  .k .kh-cat__item:has(.kh-cat__card):not(:has(.kh-cat__more)) .kh-cat__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+  }
+  .k .kh-cat__item:has(.kh-cat__card):not(:has(.kh-cat__more)) .kh-cat__actions {
+    margin-top: auto;
+    padding-top: clamp(12px, 1.2vw, 18px);
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 69 · Jediný katalóg nesmie byť malá kartička v prázdnom páse
+   ==========================================================================
+   Podstránky s jedným katalógom mali kartu širokú 520 px a vedľa nej 800 px
+   ničoho — celá sekcia potom pôsobila, akoby sa nedonačítala. Jediná karta
+   preto ide cez celú šírku a mení sa na sťahovací riadok: ikona vľavo, názov
+   s popisom v strede, formát a veľkosť súboru pri pravom okraji. Dva a viac
+   katalógov ostáva v mriežke, aká bola. */
+@media (min-width: 1080px) {
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) .kh-kat__karta {
+    align-items: center;
+    gap: clamp(18px, 1.9vw, 26px);
+    padding: clamp(20px, 2vw, 28px) clamp(22px, 2.2vw, 32px);
+  }
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) .kh-kat__telo {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: clamp(20px, 2.4vw, 36px);
+  }
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) .kh-kat__nazov,
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) .kh-kat__popis { grid-column: 1; }
+  .k .kh-kat__grid:not(:has(> :nth-child(2))) .kh-kat__meta {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin-top: 0;
+    padding-left: clamp(20px, 2.2vw, 32px);
+    border-left: 1px solid var(--k-hair);
+    text-align: right;
+    white-space: nowrap;
+  }
 }

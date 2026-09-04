@@ -1335,10 +1335,29 @@
           });
           v.load();
         }
+        /* Safari na iPhone spustí video len vtedy, keď je stíšené a značka
+           to hovorí ešte pred prvým prehraním. V úspornom režime batérie
+           prehrávanie odmietne úplne — vtedy ostáva úvodná fotografia, ktorá
+           je pod videom, a video sa už nepokúša presadiť. */
+        v.muted = true;
+        v.defaultMuted = true;
         const p = v.play();
-        if (p && p.catch) p.catch(() => {});
+        if (p && p.catch) p.catch(vzdaj);
+        /* Úsporný režim vie sľub prehrávania aj potvrdiť a video potom ostane
+           stáť na nule. Po dvoch a pol sekundách sa preto pozrieme, či sa
+           naozaj pohlo; ak nie, úvod ostáva na fotografii. */
+        window.setTimeout(() => { if (v.currentTime === 0) vzdaj(); }, 2500);
+      };
+      /* Vzdať sa videa znamená vrátiť úvod fotografii, ktorá je pod ním —
+         nikdy nenechať prázdne miesto. */
+      const vzdaj = () => {
+        if (v.hidden) return;
+        v.classList.remove('je-vidno');
+        v.hidden = true;
+        try { v.pause(); } catch (e) {}
       };
       v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
+      v.addEventListener('error', vzdaj);
 
       if (!('IntersectionObserver' in window)) { pusti(); return; }
       const sled = new IntersectionObserver((zaznamy) => {
@@ -1349,6 +1368,26 @@
       }, { rootMargin: '120px' });
       sled.observe(v);
     });
+  }
+
+  /* --- Výška lepivého pásu s ponukou ---------------------------------------
+     Pás je pripnutý na spodok okna a prekrýval spodok úvodnej obrazovky —
+     hodnotenie z Google aj riadok s údajmi končili pod ním. Jeho výška ide
+     do premennej, aby si úvod vedel odrátať presne toľko, koľko pás zaberá. */
+  function initDok(scope) {
+    const doc = scope.ownerDocument || scope;
+    const dok = doc.querySelector('.kh-dock');
+    if (!dok || dok.dataset.kReady === 'true') return;
+    dok.dataset.kReady = 'true';
+    const mer = () => {
+      const v = Math.round(dok.getBoundingClientRect().height);
+      if (v > 0) doc.documentElement.style.setProperty('--kv-dok', v + 'px');
+      else doc.documentElement.style.removeProperty('--kv-dok');
+    };
+    mer();
+    window.addEventListener('resize', mer, { passive: true });
+    window.addEventListener('load', mer, { once: true });
+    if (window.ResizeObserver) new ResizeObserver(mer).observe(dok);
   }
 
   function initSuhlas(scope) {
@@ -1710,6 +1749,8 @@
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.
     try { initSearch(scope === document ? document : scope); }
     catch (e) { if (window.console) console.warn("koverta: initSearch — " + e.message); }
+    try { initDok(scope === document ? document : scope); }
+    catch (e) { if (window.console) console.warn("koverta: initDok — " + e.message); }
     try { initSuhlas(scope === document ? document : scope); }
     catch (e) { if (window.console) console.warn("koverta: initSuhlas — " + e.message); }
   }
