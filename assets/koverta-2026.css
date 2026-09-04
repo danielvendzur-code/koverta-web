@@ -8532,9 +8532,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: clamp(14px, 1.6vw, 24px);
   margin: 0;
-  padding: clamp(30px, 3.4vw, 48px) 0 0;
+  padding: 0;
   list-style: none;
 }
+/* Zoznam v `.k` má vlastné odsadenie, preto vyššia váha. */
+.k .kh-vyb { margin-top: clamp(30px, 3.4vw, 48px); padding: 0; }
 .kh-vyb li {
   display: grid;
   gap: 4px;
@@ -8757,3 +8759,169 @@ footer.kf { background: var(--k-ink); color: #fff; }
   white-space: nowrap;
 }
 @media (max-width: 520px) { .kv-search__druh { display: none; } }
+
+/* ==========================================================================
+   VRSTVA 76 · Dvojica: veľká fotografia a odrážky vedľa nej
+   ==========================================================================
+   Podstránky otvárali tabuľkou alebo mriežkou kariet — čísla hneď na začiatku,
+   obraz až kdesi ďalej. Táto dvojica dá stránke to, čo jej chýbalo: jednu
+   veľkú fotografiu a vedľa nej štyri vety, ktoré sa dajú prečítať za pár
+   sekúnd. Na telefóne ide fotografia nad text, poradie ostáva.
+   ========================================================================== */
+.kh-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(22px, 3vw, 44px);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .kh-duo { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(40px, 4.4vw, 80px); }
+  /* Striedanie strán: druhá dvojica na stránke má fotografiu vpravo, aby
+     stránka nešla celá po jednej osi. */
+  .kh-duo--obratene .kh-duo__foto { order: 2; }
+}
+.kh-duo__foto {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone-deep, #ece9e4);
+  aspect-ratio: 4 / 3;
+}
+.kh-duo__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.kh-duo__telo { display: grid; gap: clamp(12px, 1.4vw, 18px); min-width: 0; }
+.kh-duo__telo .k-h2 { margin: 0; max-width: 18ch; }
+.kh-duo__telo .k-copy { margin: 0; max-width: 46ch; }
+.kh-duo__body { margin: 0; }
+
+.kh-duo__zoznam {
+  display: grid;
+  gap: 12px;
+  margin: clamp(6px, 0.8vw, 12px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-duo__zoznam { padding: 0; }
+.kh-duo__zoznam li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin: 0;
+  font-size: clamp(14.5px, 1.15vw, 16.5px);
+  line-height: 1.5;
+  color: var(--k-ink);
+}
+.kh-duo__zoznam li::before { content: none; }
+.kh-duo__zoznam svg {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--k-amber-deep);
+  stroke-width: 2.4;
+}
+
+/* ==========================================================================
+   VRSTVA 77 · Dva štýly čipov, nie tridsaťdva
+   ==========================================================================
+   Prehliadač našiel na siedmich stránkach tridsaťdva rôznych podôb toho
+   istého tvaru: raz jantárová výplň, raz jantárový rám okolo jantárovej
+   výplne, raz biela plocha, raz sivá, polomer 999 aj 12 px. Vyzeralo to,
+   akoby stránku skladalo viac ľudí.
+
+   Odteraz platia dva. PLNÝ je jantárový a znamená hlavnú akciu — jeden na
+   obrazovku. OBRYSOVÝ má vlasový rám a priehľadnú plochu a je všetko
+   ostatné: druhá akcia, filter, rozmer, prepínač. Na tmavom podklade sa
+   obrysovému mení len farba linky, tvar ostáva.
+   ========================================================================== */
+
+/* --- Plný ---------------------------------------------------------------- */
+.k .k-btn--primary,
+.k .kv-suhlas__btn--ano,
+.k .kh-cat__actions > .k-link,
+.k .kh-dock .k-btn--primary {
+  background: var(--k-amber);
+  border: 1px solid var(--k-amber);
+  color: var(--k-ink);
+  box-shadow: none;
+}
+.k .k-btn--primary:hover,
+.k .kv-suhlas__btn--ano:hover,
+.k .kh-cat__actions > .k-link:hover {
+  background: var(--k-amber);
+  border-color: var(--k-ink);
+  color: var(--k-ink);
+}
+
+/* --- Obrysový ------------------------------------------------------------ */
+.k .k-btn--line,
+.k .k-btn--glass,
+.k .kh-cat__cfg,
+.k .kh-soltec__cfg,
+.k .kh-size__kus,
+.k .kh-rev__source,
+.k .kh-proc__step-of,
+.k .kv-suhlas__btn--nie,
+.k .kh-work__filters button:not([aria-pressed="true"]) {
+  background: transparent;
+  border: 1px solid var(--cip-ram, rgba(18, 23, 26, 0.18));
+  color: var(--k-ink);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.k .k-btn--line:hover,
+.k .k-btn--glass:hover,
+.k .kh-cat__cfg:hover,
+.k .kh-soltec__cfg:hover,
+.k .kh-rev__source:hover,
+.k .kh-work__filters button:not([aria-pressed="true"]):hover {
+  background: transparent;
+  border-color: var(--k-ink);
+  color: var(--k-ink);
+}
+
+/* Na tmavom podklade sa mení len farba linky a textu. */
+.k-invert .k-btn--line,
+.k-invert .k-btn--glass,
+.k-invert .kh-soltec__cfg,
+.kh-hero .k-btn--glass,
+.kv-suhlas .kv-suhlas__btn--nie,
+.kh-cta__aside .k-btn--line {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+.k-invert .k-btn--line:hover,
+.k-invert .k-btn--glass:hover,
+.kh-hero .k-btn--glass:hover,
+.kv-suhlas .kv-suhlas__btn--nie:hover,
+.kh-cta__aside .k-btn--line:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Vybraný filter je jediná výnimka: plná tmavá plocha hovorí „toto platí“. */
+.k .kh-work__filters button[aria-pressed="true"] {
+  background: var(--k-ink);
+  border: 1px solid var(--k-ink);
+  color: var(--k-white);
+}
+
+/* --- Škatuľky (nie čipy) majú jeden polomer ------------------------------ */
+.k .kh-select__btn,
+.k .kh-kat__ikona,
+.k .kh-rev__social,
+.k .kh-field input,
+.k .kh-field textarea { border-radius: var(--k-r-sm); }
+
+/* Okrúhle ovládače v hlavičke (hľadanie, košík, menu) sú tiež obrysové —
+   sivá výplň z nich robila tretí druh čipu. */
+.k .kv-icon-btn,
+.kv-header .kv-icon-btn {
+  background: transparent;
+  border: 1px solid var(--cip-ram, rgba(18, 23, 26, 0.18));
+  color: var(--k-ink);
+}
+.k .kv-icon-btn:hover,
+.kv-header .kv-icon-btn:hover { background: transparent; border-color: var(--k-ink); }

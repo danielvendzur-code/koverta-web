@@ -1,0 +1,66 @@
+# Koverta
+
+> Slovenský výrobca prístreškov pre autá, záhradných prístreškov a pergol. Vlastná oceľová výroba na Slovensku plus dodávka a montáž hliníkových systémov Soltec. Zameranie, návrh a cenová ponuka sú zadarmo a nezáväzné; doprava a montáž sú v cene. Bežný prístrešok stojí za jeden deň.
+
+## Základné fakty
+
+- **Čo robíme:** prístrešky pre 1–3 autá, záhradné prístrešky a zastrešenie terás, bioklimatické pergoly, pevné prestrešenia, tienenie (ZIP rolety, lamely, brisoleje) a vonkajšie kuchyne.
+- **Kde:** celé Slovensko. Prevádzku pre zákazníkov nemáme — zameranie robíme priamo u zákazníka.
+- **Dve rady:** *Koverta* je vlastná oceľová výroba s hliníkovým obkladom. *Soltec* je celohliníkový systém od slovinského výrobcu Soltec d.o.o., ktorý dodávame a montujeme.
+- **Kontakt:** obchod@koverta.sk, +421 948 482 266. Projekty: design@koverta.sk. Faktúry: financie@koverta.sk. Ochrana údajov: dpo@koverta.sk.
+- **E-shop s katalógovými rozmermi a cenami:** https://koverta.sk/
+- **Hodnotenie:** 5,0 na Google.
+
+## Ceny (katalógové zostavy, vrátane DPH, doprava a montáž v cene)
+
+- Prístrešok pre 1 auto: **od 4 497 €** — 27 rozmerov, šírka 2,5–4,5 m, dĺžky 5,2 / 5,6 / 6 m.
+- Prístrešok pre 2 autá: **od 6 497 €** — 27 rozmerov, šírka 5–7 m.
+- Prístrešok pre 3 autá: **od 12 490 €** — 9 × 6 m.
+- Záhradný prístrešok: **od 4 297 €** — 12 rozmerov od 3 × 3 m po 8 × 4 m.
+- Rozmer mimo katalógu vyrobíme na mieru.
+
+## Z čoho je prístrešok Koverta
+
+- Nosná konštrukcia: oceľové stĺpy a prievlaky, zvárané vo vlastnej výrobe.
+- Obklad: hliníkové profily cez celú konštrukciu (voliteľné).
+- Povrch: práškový lak vypálený v peci, ktorýkoľvek odtieň z palety RAL. Záruka kvality povrchov do 40 rokov.
+- Strecha: pultová z trapézového profilu, osadená odkvapom. Izolácia proti teplu a hluku dažďa je doplnok.
+- Výplne bokov: lamely z hliníka, dreva alebo WPC, prípadne plná stena.
+- Elektro: prípojka vedená vnútri stĺpa, LED v podhľade, príprava na fotovoltiku.
+- Kotvenie: betónové pätky (doplnková služba) alebo kotvenie do existujúcej spevnenej plochy.
+- Rozmery: šírka do 8 m, štandardná svetlá výška 2,4 m.
+
+## Z čoho je systém Soltec
+
+- Celohliníkový rám a nerezové spojovacie prvky, vyrobené v EÚ.
+- Strecha: ISO panel s integrovaným spádom, sklo alebo otočné lamely podľa radu.
+- Odtok vody vedený v stĺpoch, bez viditeľných odkvapov a skrutiek.
+- Záruka: 7 rokov na konštrukciu, 10 rokov na ISO panely a na vonkajšie kuchyne.
+- Bioklimatická pergola: patentované otočné lamely (SI 24401), norma EN 13561, jeden modul do 45 m².
+- Modely carportov: F170, F240, SL170, SL240. Typorady pergol: SL 170/28 až SL 240/60.
+
+## Povolenia
+
+Rozhoduje zastavaná plocha. Prístrešok do 50 m² sa vo väčšine prípadov rieši ohlásením drobnej stavby; nad 50 m², na hranici pozemku alebo v pamiatkovej zóne úrad zvyčajne žiada stavebné povolenie. Posledné slovo má vždy miestny stavebný úrad. Podklady k ohláseniu pripravíme.
+
+## Ako to prebieha
+
+1. Ozveme sa do 24 hodín od dopytu.
+2. Prídeme zamerať — na mieste, zadarmo a nezáväzne.
+3. Pošleme návrh s rozmermi, rozmiestnením stĺpov, cenou a termínom.
+4. Vyrobíme, dovezieme a namontujeme. Bežný prístrešok za jeden deň.
+
+## Stránky
+
+- [Úvod](https://danielvendzur-code.github.io/koverta-web/): prehľad riešení, ceny, realizácie, recenzie.
+- [Prístrešky pre autá](https://danielvendzur-code.github.io/koverta-web/pristresky-pre-auta/): katalógové rozmery a ceny, skladba konštrukcie, podklad a kotvenie.
+- [Záhradné prístrešky](https://danielvendzur-code.github.io/koverta-web/zahradne-pristresky/): zastrešenie terasy, vstupu a posedenia.
+- [Bioklimatické pergoly](https://danielvendzur-code.github.io/koverta-web/bioklimaticke-pergoly/): typorady, nosnosti, farby, doplnky.
+- [Pevné prestrešenia](https://danielvendzur-code.github.io/koverta-web/pevne-prestresenia/): rady F a G, ISO panel a sklo.
+- [Tienenie](https://danielvendzur-code.github.io/koverta-web/tienenie/): ZIP rolety, posuvné panely, lamelové clony, brisoleje.
+- [Carport Soltec](https://danielvendzur-code.github.io/koverta-web/carport-soltec/): hliníkové carporty a uzamykateľný box.
+- [Vonkajšie kuchyne](https://danielvendzur-code.github.io/koverta-web/outdoor-kuchyne/): moduly Chef a Station, výbava, príprava rozvodov.
+- [Realizácie](https://danielvendzur-code.github.io/koverta-web/realizacie/): fotografie z montáží.
+- [Kontakt](https://danielvendzur-code.github.io/koverta-web/kontakt/): formulár, oddelenia, postup.
+- [3D konfigurátor](https://danielvendzur-code.github.io/koverta-web/konfigurator/): vyskladanie zostavy a orientačná cena.
+- [Obchodné podmienky](https://danielvendzur-code.github.io/koverta-web/obchodne-podmienky/), [Ochrana súkromia](https://danielvendzur-code.github.io/koverta-web/ochrana-sukromia/), [Reklamácie](https://danielvendzur-code.github.io/koverta-web/reklamacie/).
