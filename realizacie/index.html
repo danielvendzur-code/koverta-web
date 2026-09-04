@@ -81,7 +81,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788518382853">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788535881698">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -263,7 +263,7 @@
       <div class="k-wrap kv-search__in">
         <div class="kv-search__bar">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5" stroke-linecap="round"/></svg>
-          <input type="search" placeholder="Hľadajte prístrešok, pergolu, tienenie…" aria-label="Hľadať na stránke" autocomplete="off">
+          <input type="text" placeholder="Hľadajte prístrešok, pergolu, tienenie…" aria-label="Hľadať na stránke" autocomplete="off">
           <button class="kv-search__close" type="button" data-k-search-close aria-label="Zavrieť hľadanie"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
         </div>
         <div class="kv-search__results" data-k-search-results></div>
@@ -1544,11 +1544,11 @@
   <div class="k-wrap">
     <header class="k-head k-head--split">
       <div class="k-head__title">
-        <p class="k-eyebrow k-rise">Kde sme stavali</p>
+        <p class="k-eyebrow k-rise">Kde stoja</p>
         <h2 id="mapaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Mapa realizácií</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
-        <p class="k-copy">Montujeme po celom Slovensku. Uvádzame obec, nie adresu — súkromie zákazníkov je súkromie.</p>
+        <p class="k-copy">Kliknite na značku a pozrite si, čo tam stojí.</p>
         <a class="k-link" href="#ponuka">Chcem prístrešok aj u nás <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </header>
@@ -1557,35 +1557,38 @@
       <div class="kh-mapa__svk">
        <div class="kh-mapa__vnutro">
         <svg viewBox="0 0 1000 520" role="img" aria-labelledby="mapaSvgT mapaSvgD" focusable="false">
-          <title id="mapaSvgT">Mapa Slovenska s obcami, kde sme stavali</title>
-          <desc id="mapaSvgD">Obrys Slovenska so značkami pri obciach, v ktorých stoja naše prístrešky. Zoznam obcí je aj v tlačidlách pod mapou.</desc>
-          <path d="M456 2 455 6 442 15 441 23 423 24 418 30 417 45 410 51 412 57 404 59 390 56 382 62 374 62 376 52 371 45 373 32 368 28 345 29 335 36 322 31 299 33 299 42 287 58 281 63 274 61 276 69 269 80 236 91 229 103 230 110 220 155 208 164 189 166 184 191 165 191 151 209 140 211 133 214 133 218 125 217 122 222 120 218 117 220 107 213 98 221 92 222 85 213 65 204 47 218 45 229 38 234 23 263 19 276 21 297 4 320 0 341 19 371 26 400 39 406 44 419 43 437 57 444 71 440 72 445 87 447 108 477 120 482 128 497 135 495 153 513 170 516 209 512 257 519 283 510 290 514 299 510 315 512 330 503 333 497 352 496 346 486 336 481 338 457 335 452 345 448 347 435 358 430 375 431 379 425 388 430 402 426 421 431 423 424 432 421 448 422 455 418 459 423 470 389 488 377 494 380 499 390 510 387 517 392 516 403 525 401 526 397 534 400 537 405 534 412 541 409 548 400 557 397 561 400 575 384 575 376 588 377 593 369 602 374 609 371 624 345 625 331 640 311 640 299 646 301 647 296 654 298 666 291 700 286 703 294 712 292 723 303 729 299 738 301 747 311 765 298 780 302 782 291 799 292 803 285 816 294 821 306 833 306 842 338 853 349 872 354 872 346 889 346 905 338 916 343 924 341 928 335 925 330 930 287 946 267 961 257 965 244 962 235 969 227 969 207 975 202 976 189 985 173 996 168 999 146 974 143 965 131 956 133 940 129 940 120 934 123 926 115 912 112 906 109 907 94 897 84 894 75 884 75 873 63 867 66 864 73 852 57 841 56 836 48 802 57 787 47 774 44 763 60 748 51 734 55 744 67 740 71 734 70 725 80 725 85 713 89 709 82 704 83 706 79 702 75 697 79 691 76 694 72 684 68 681 56 673 55 665 60 660 56 652 67 627 56 628 62 608 60 607 76 591 74 581 81 580 87 578 83 570 102 567 122 549 107 538 106 532 115 516 116 510 114 516 97 521 94 516 89 516 58 508 58 503 64 488 58 489 45 479 45 470 13 456 2 Z" fill="var(--k-white)" stroke="rgba(18,23,26,.22)" stroke-width="2" stroke-linejoin="round"/>
+          <title id="mapaSvgT">Mapa Slovenska s obcami, kde stoja naše prístrešky</title>
+          <desc id="mapaSvgD">Obrys Slovenska so značkami pri obciach. Rovnaký zoznam obcí je aj vedľa mapy.</desc>
+          <path d="M456 2 455 6 442 15 441 23 423 24 418 30 417 45 410 51 412 57 404 59 390 56 382 62 374 62 376 52 371 45 373 32 368 28 345 29 335 36 322 31 299 33 299 42 287 58 281 63 274 61 276 69 269 80 236 91 229 103 230 110 220 155 208 164 189 166 184 191 165 191 151 209 140 211 133 214 133 218 125 217 122 222 120 218 117 220 107 213 98 221 92 222 85 213 65 204 47 218 45 229 38 234 23 263 19 276 21 297 4 320 0 341 19 371 26 400 39 406 44 419 43 437 57 444 71 440 72 445 87 447 108 477 120 482 128 497 135 495 153 513 170 516 209 512 257 519 283 510 290 514 299 510 315 512 330 503 333 497 352 496 346 486 336 481 338 457 335 452 345 448 347 435 358 430 375 431 379 425 388 430 402 426 421 431 423 424 432 421 448 422 455 418 459 423 470 389 488 377 494 380 499 390 510 387 517 392 516 403 525 401 526 397 534 400 537 405 534 412 541 409 548 400 557 397 561 400 575 384 575 376 588 377 593 369 602 374 609 371 624 345 625 331 640 311 640 299 646 301 647 296 654 298 666 291 700 286 703 294 712 292 723 303 729 299 738 301 747 311 765 298 780 302 782 291 799 292 803 285 816 294 821 306 833 306 842 338 853 349 872 354 872 346 889 346 905 338 916 343 924 341 928 335 925 330 930 287 946 267 961 257 965 244 962 235 969 227 969 207 975 202 976 189 985 173 996 168 999 146 974 143 965 131 956 133 940 129 940 120 934 123 926 115 912 112 906 109 907 94 897 84 894 75 884 75 873 63 867 66 864 73 852 57 841 56 836 48 802 57 787 47 774 44 763 60 748 51 734 55 744 67 740 71 734 70 725 80 725 85 713 89 709 82 704 83 706 79 702 75 697 79 691 76 694 72 684 68 681 56 673 55 665 60 660 56 652 67 627 56 628 62 608 60 607 76 591 74 581 81 580 87 578 83 570 102 567 122 549 107 538 106 532 115 516 116 510 114 516 97 521 94 516 89 516 58 508 58 503 64 488 58 489 45 479 45 470 13 456 2 Z" fill="var(--k-white)" stroke="rgba(18,23,26,.2)" stroke-width="2" stroke-linejoin="round"/>
         </svg>
-        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="plavecky" aria-pressed="true"
-                style="--x: 2.99%; --y: 67.27%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Plavecký Štvrtok</span></button>
-        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="nitra" aria-pressed="false"
-                style="--x: 21.85%; --y: 69.48%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Nitra</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="plavecky" aria-pressed="true" style="--x: 2.99%; --y: 67.27%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Plavecký Štvrtok</span></button>
+        <button class="kh-mapa__bod" type="button" data-k-mapa-bod="nitra" aria-pressed="false" style="--x: 21.85%; --y: 69.48%"><span class="kh-mapa__terc" aria-hidden="true"></span><span class="kh-mapa__meno">Nitra</span></button>
        </div>
       </div>
       <div class="kh-mapa__panel">
         <figure class="kh-mapa__karta" data-k-mapa-karta="plavecky">
-          <img src="../assets/mapa-plavecky-stvrtok.jpg" alt="Prístrešok pre tri autá v Plaveckom Štvrtku" width="1400" height="629" loading="lazy" decoding="async">
+          <img src="../assets/mapa-plavecky-stvrtok.jpg" alt="Prístrešok pre tri autá v Plaveckom Štvrtku" width="1400" height="587" loading="lazy" decoding="async">
           <figcaption>
             <p class="kh-mapa__kde"><strong>Plavecký Štvrtok</strong><span>okres Malacky</span></p>
             <p class="kh-mapa__co">Prístrešok pre tri autá<span>2025</span></p>
           </figcaption>
         </figure>
         <figure class="kh-mapa__karta" data-k-mapa-karta="nitra" hidden>
-          <img src="../assets/mapa-nitra.jpg" alt="Prístrešok pre dve autá s boxom v Nitre" width="1400" height="917" loading="lazy" decoding="async">
+          <img src="../assets/mapa-nitra.jpg" alt="Prístrešok pre dve autá s uzamykateľným boxom v Nitre" width="1400" height="917" loading="lazy" decoding="async">
           <figcaption>
             <p class="kh-mapa__kde"><strong>Nitra</strong><span>okres Nitra</span></p>
-            <p class="kh-mapa__co">Prístrešok pre dve autá s uzamykateľným boxom<span>2026</span></p>
+            <p class="kh-mapa__co">Prístrešok pre dve autá s boxom<span>2026</span></p>
           </figcaption>
         </figure>
+        <ul class="kh-mapa__zoznam">
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="plavecky" aria-pressed="true"><strong>Plavecký Štvrtok</strong><span>Prístrešok pre tri autá</span></button></li>
+        <li><button class="kh-mapa__polozka" type="button" data-k-mapa-bod="nitra" aria-pressed="false"><strong>Nitra</strong><span>Prístrešok pre dve autá s boxom</span></button></li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
+
 
 <!-- ===================================================== OTÁZKY -->
 <section class="k-band kh-faq" aria-labelledby="faqTitle">
@@ -1773,7 +1776,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788518382853"></script>
+<script src="../assets/koverta-2026.js?v=1788535881698"></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

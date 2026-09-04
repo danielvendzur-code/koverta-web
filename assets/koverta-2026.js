@@ -1477,15 +1477,22 @@
       const karty = [].slice.call(plocha.querySelectorAll('[data-k-mapa-karta]'));
       if (!body.length || !karty.length) return;
 
+      /* Značka na mape a položka v zozname sú dve tlačidlá k tomu istému
+         miestu — obe nesú rovnaké `data-k-mapa-bod`, takže stačí jedno
+         prepnutie pre všetky. */
+      const spinace = [].slice.call(plocha.querySelectorAll('[data-k-mapa-bod]'));
+
       const ukaz = (id) => {
-        body.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kMapaBod === id)));
+        spinace.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kMapaBod === id)));
         karty.forEach((k) => { k.hidden = k.dataset.kMapaKarta !== id; });
       };
 
-      body.forEach((b) => {
+      spinace.forEach((b) => {
         b.addEventListener('click', () => ukaz(b.dataset.kMapaBod));
-        b.addEventListener('mouseenter', () => ukaz(b.dataset.kMapaBod));
         b.addEventListener('focus', () => ukaz(b.dataset.kMapaBod));
+        if (b.classList.contains('kh-mapa__bod')) {
+          b.addEventListener('mouseenter', () => ukaz(b.dataset.kMapaBod));
+        }
       });
     });
   }

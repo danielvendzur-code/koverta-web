@@ -9036,3 +9036,342 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .kh-mapa__meno { display: none; font-size: 10.5px; }
   .kh-mapa__bod[aria-pressed="true"] .kh-mapa__meno { display: block; }
 }
+
+/* ==========================================================================
+   VRSTVA 79 · Hľadanie: linka, nie sivá pilulka
+   ==========================================================================
+   Panel hľadania mal sivú pilulku so silným rámom, pri zaostrení jantárovú
+   žiaru dokola a v rohu okrúhly krížik s vlastnou plochou. Boli to tri cudzie
+   prvky na webe, ktorý inak stojí na vlasových linkách a nadpisovom reze.
+
+   Zostáva riadok: lupa, veľké písmo a pod ním jedna linka, ktorá pri písaní
+   zjantárovie. Krížik má rovnaký tvar ako ovládače v hlavičke.
+   ========================================================================== */
+.k .kv-search,
+.kv-header .kv-search {
+  padding: clamp(22px, 2.6vw, 36px) 0 clamp(20px, 2.4vw, 30px);
+  box-shadow: 0 30px 60px -32px rgba(9, 12, 14, 0.4);
+}
+.k .kv-search__in,
+.kv-header .kv-search__in { gap: clamp(16px, 1.8vw, 24px); }
+
+.kv-header .kv-search__bar,
+.k .kv-search__bar {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(12px, 1.4vw, 18px);
+  padding: 0 0 clamp(12px, 1.4vw, 18px);
+  border: 0;
+  border-bottom: 2px solid var(--k-ink);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transition: border-color 200ms var(--k-ease);
+}
+.kv-header .kv-search__bar:focus-within,
+.k .kv-search__bar:focus-within {
+  border-color: var(--k-amber-deep);
+  background: none;
+  box-shadow: none;
+}
+.kv-header .kv-search__bar > svg,
+.k .kv-search__bar > svg {
+  width: clamp(20px, 2vw, 26px);
+  height: clamp(20px, 2vw, 26px);
+  stroke: var(--k-ink);
+  stroke-width: 2.1;
+}
+.kv-header .kv-search__bar input,
+.k .kv-search__bar input {
+  min-height: 0;
+  padding: 0;
+  font-family: var(--k-head);
+  font-size: clamp(19px, 2.2vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--k-ink);
+}
+.kv-header .kv-search__bar input::placeholder,
+.k .kv-search__bar input::placeholder {
+  color: rgba(18, 23, 26, 0.3);
+  font-weight: 700;
+}
+/* Prehliadač si k poľu typu search pridáva vlastný krížik — máme svoj. */
+.k .kv-search__bar input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.kv-header .kv-search__close,
+.kv-header .kv-search__close {
+  width: clamp(38px, 3.4vw, 44px);
+  height: clamp(38px, 3.4vw, 44px);
+  border: 1px solid var(--cip-ram, rgba(18, 23, 26, 0.18));
+  border-radius: 50%;
+  background: transparent;
+  color: var(--k-ink);
+  transition: border-color 180ms var(--k-ease);
+}
+.kv-header .kv-search__close:hover,
+.kv-header .kv-search__close:hover { background: transparent; border-color: var(--k-ink); }
+.kv-header .kv-search__close svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+/* Výsledok je riadok s vlasovou linkou, nie karta v karte. */
+.kv-header .kv-search__hit {
+  gap: clamp(12px, 1.4vw, 18px);
+  padding: 11px 0;
+  border-radius: 0;
+  border-top: 1px solid var(--k-hair);
+  background: none;
+}
+.kv-header .kv-search__hit:first-child { border-top: 0; }
+.kv-header .kv-search__hit:hover,
+.kv-header .kv-search__hit.is-active,
+.kv-header .kv-search__hit:focus-visible { background: none; }
+.kv-header .kv-search__hit:hover .kv-search__text strong,
+.kv-header .kv-search__hit.is-active .kv-search__text strong { color: var(--k-amber-deep); }
+.kv-header .kv-search__thumb { border-radius: var(--k-r-sm); }
+.kv-header .kv-search__empty { margin: 0; font-size: 14px; color: var(--k-muted); }
+
+/* Odkaz do e-shopu je obrysový čip, nie jantárový pás cez celú šírku. */
+.kv-header .kv-search__shop {
+  justify-self: start;
+  padding: 0 clamp(16px, 1.6vw, 22px);
+  min-height: 44px;
+  border: 1px solid var(--cip-ram, rgba(18, 23, 26, 0.18));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--k-ink);
+}
+.kv-header .kv-search__shop:hover { background: transparent; border-color: var(--k-ink); }
+
+/* Pole typu `search` si prehliadač kreslí sám — rám aj vlastný modrý krížik.
+   Oboje preč, tvar drží linka pod ním. */
+.kv-header .kv-search__bar input,
+.kv-header .kv-search__bar input {
+  appearance: none;
+  -webkit-appearance: none;
+  outline: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.kv-header .kv-search__bar input::-webkit-search-decoration,
+.kv-header .kv-search__bar input::-webkit-search-results-button,
+.kv-header .kv-search__bar input::-webkit-search-results-decoration { -webkit-appearance: none; appearance: none; }
+
+/* Výsledok: miniatúra, text a druh v jednom riadku. Druh sa predtým lámal
+   pod riadok, lebo mriežka mala len dva stĺpce. */
+.kv-header .kv-search__hit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+/* Bez fotografie nemá zmysel prázdny biely štvorec — ostáva jantárová bodka. */
+.kv-header .kv-search__thumb--blank {
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 1px solid var(--k-hair);
+}
+.kv-header .kv-search__thumb--blank::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--k-amber);
+}
+
+/* Druh výsledku je popisok, nie ďalší čip — plocha za ním nie je potrebná. */
+.kv-header .kv-search__druh,
+.kv-search__druh {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--k-grey-soft);
+}
+
+/* Miniatúra má pevný rozmer — pri stránke s úvodnou fotografiou sa inak
+   roztiahla cez celý riadok. */
+.kv-header .kv-search__thumb,
+.kv-search__thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+}
+.kv-header .kv-search__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ==========================================================================
+   VRSTVA 80 · Skladba konštrukcie ako zoznam, nie ako tabuľka dlaždíc
+   ==========================================================================
+   Osem dlaždíc v dvoch stĺpcoch, každá s jantárovým kolieskom a s nápisom
+   NA VÝBER — ten istý nápis osemkrát pod sebou. Medzi stĺpcami zvislá linka,
+   vedľa toho bledý technický výkres a pod ním pol obrazovky prázdna.
+
+   Ostáva jeden stĺpec riadkov: poradové číslo drobným jantárovým rezom,
+   názov vrstvy v nadpisovom písme, pod ním jedna veta o materiáli a druhá,
+   stlmená, o voľbe. Žiadne opakované nápisy, žiadne mriežkové linky. Výkres
+   sa pripne, takže vedľa zoznamu nezostane hluché miesto.
+   ========================================================================== */
+@media (min-width: 760px) {
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody { grid-template-columns: minmax(0, 1fr); }
+}
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody {
+  gap: 0;
+  background: none;
+  border-block: 0;
+}
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
+  padding: clamp(16px, 1.8vw, 22px) 0;
+  border-top: 1px solid var(--k-hair);
+  background: none;
+}
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody tr:first-child { border-top: 0; padding-top: 0; }
+
+/* Číslo je drobný jantárový rez pred názvom, nie koliesko. */
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody th {
+  display: grid;
+  grid-template-columns: 2.3rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 12px;
+  margin-bottom: 7px;
+  font-size: clamp(16px, 1.5vw, 19px);
+}
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--k-amber-deep);
+}
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+  padding-left: calc(2.3rem + 12px);
+  font-size: clamp(14px, 1.15vw, 15.5px);
+  line-height: 1.55;
+}
+/* Druhá veta je voľba — hovorí to jej stlmená farba, nie nápis pred ňou. */
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td { margin-top: 4px; color: var(--k-grey-soft); }
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td::before { content: none; }
+
+/* Výkres drží výšku zoznamu, aby vedľa neho nezostalo prázdno. */
+@media (min-width: 1000px) {
+  .k .kh-skladba__vykres { position: sticky; top: clamp(96px, 12vh, 140px); align-self: start; }
+}
+
+/* Výkres je technická kresba — potrebuje vlastnú plochu, inak sa bledé linky
+   strácajú v kostenom podklade a vyzerá to ako nedokreslené. */
+.k .kh-skladba__vykres img {
+  padding: clamp(20px, 2.4vw, 34px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.k .kh-skladba__vykres figcaption { max-width: 34ch; }
+
+/* ==========================================================================
+   VRSTVA 81 · Kontakt: fakturačné údaje ako výpis, nie ako karty
+   ==========================================================================
+   Na kontaktnú stránku patrí formulár, e-maily, čísla a údaje na faktúru.
+   Údaje sú výpis pojem – hodnota; nič sa nezdobí, lebo ich nikto nečíta pre
+   radosť, ale prepisuje do dokladu. */
+.kh-udaje__zoznam {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+}
+@media (min-width: 760px) {
+  .kh-udaje__zoznam { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(30px, 3.4vw, 60px); }
+}
+.kh-udaje__zoznam > div {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 18px;
+  padding: 13px 0;
+  border-top: 1px solid var(--k-hair);
+}
+.kh-udaje__zoznam dt {
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.kh-udaje__zoznam dd { margin: 0; font-size: 15px; line-height: 1.5; color: var(--k-ink); }
+.kh-udaje__zoznam dd a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
+.kh-udaje__zoznam dd a:hover { color: var(--k-amber-deep); }
+@media (max-width: 520px) {
+  .kh-udaje__zoznam > div { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==========================================================================
+   VRSTVA 82 · Mapa unesie aj desiatky miest
+   ==========================================================================
+   Dve značky sa na mape nájdu ľahko. Pri dvadsiatich by sa názvy obcí
+   prekrývali a hľadať konkrétnu by znamenalo mieriť myšou na bodku veľkú
+   pätnásť pixelov. Vedľa mapy preto stojí zoznam obcí — dá sa v ňom
+   prechádzať aj tabulátorom — a názov pri značke sa ukáže len vtedy, keď je
+   vybraná alebo pod kurzorom. Mapa tak ostáva čitateľná pri akomkoľvek počte.
+   ========================================================================== */
+.kh-mapa__meno {
+  opacity: 0;
+  transition: opacity 180ms var(--k-ease);
+  pointer-events: none;
+}
+.kh-mapa__bod:hover .kh-mapa__meno,
+.kh-mapa__bod:focus-visible .kh-mapa__meno,
+.kh-mapa__bod[aria-pressed="true"] .kh-mapa__meno { opacity: 1; }
+
+.kh-mapa__panel { display: grid; gap: clamp(16px, 1.8vw, 24px); align-content: start; }
+
+.kh-mapa__zoznam {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.kh-mapa__zoznam li { margin: 0; }
+.kh-mapa__zoznam li::before { content: none; }
+.k .kh-mapa__polozka {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  width: 100%;
+  padding: 11px 2px;
+  border: 0;
+  border-top: 1px solid var(--k-hair);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.kh-mapa__zoznam li:first-child .kh-mapa__polozka { border-top: 0; }
+.k .kh-mapa__polozka strong {
+  font-family: var(--k-head);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.k .kh-mapa__polozka span { font-size: 13px; color: var(--k-muted); }
+.k .kh-mapa__polozka:hover strong,
+.k .kh-mapa__polozka[aria-pressed="true"] strong { color: var(--k-amber-deep); }
+.k .kh-mapa__polozka[aria-pressed="true"] { box-shadow: inset 3px 0 0 var(--k-amber); padding-left: 12px; }
+
+@media (min-width: 900px) {
+  .kh-mapa__plocha { align-items: start; }
+}
+
+/* Značka a tlačidlo v dvojici: logo drží svoju veľkosť a akcia stojí pod
+   odrážkami, nie zaň prilepená. */
+.kh-duo__telo .kh-soltec__brand { margin: 0; }
+.kh-duo__telo .kh-soltec__brand img { height: clamp(24px, 2.2vw, 32px); width: auto; filter: brightness(0); opacity: 0.86; }
+.kh-duo__akcia { margin: clamp(8px, 1vw, 14px) 0 0; }
