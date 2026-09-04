@@ -775,10 +775,33 @@
       const hint = pole && pole.querySelector('.kh-field__hint');
       if (!hint) return;
       const povodny = hint.textContent;
+
+      // Natívne pole píše „Choose Files / No file chosen" v jazyku prehliadača,
+      // teda po anglicky aj na slovenskom webe. Postavíme nad ním vlastnú
+      // plochu so slovenským popisom; pole samo ostáva v labeli, takže klik
+      // kdekoľvek na plochu otvorí výber súborov. Keď skript nenabehne,
+      // zobrazí sa pôvodné natívne pole a formulár funguje ako predtým.
+      let stav = null;
+      if (pole && !pole.querySelector('.kh-field__vyber')) {
+        const box = document.createElement('span');
+        box.className = 'kh-field__vyber';
+        const btn = document.createElement('span');
+        btn.className = 'kh-field__tlacidlo';
+        btn.textContent = 'Vybrať fotky';
+        stav = document.createElement('span');
+        stav.className = 'kh-field__stav';
+        stav.textContent = 'Zatiaľ nič nevybraté';
+        box.appendChild(btn);
+        box.appendChild(stav);
+        input.parentNode.insertBefore(box, input);
+        pole.classList.add('ma-vyber');
+      }
+
       input.addEventListener('change', () => {
         const n = input.files ? input.files.length : 0;
         if (!n) {
           hint.textContent = povodny;
+          if (stav) stav.textContent = 'Zatiaľ nič nevybraté';
           pole.classList.remove('je-vybrate');
           return;
         }
@@ -786,6 +809,11 @@
         hint.textContent = n === 1
           ? 'Pripojené: ' + mena[0]
           : 'Pripojené ' + n + ' súbory: ' + mena.join(', ');
+        if (stav) {
+          stav.textContent = n === 1
+            ? mena[0]
+            : n + (n < 5 ? ' súbory' : ' súborov');
+        }
         pole.classList.add('je-vybrate');
       });
     });

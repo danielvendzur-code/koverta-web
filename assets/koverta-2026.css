@@ -5357,7 +5357,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-mat__card {
   background: var(--k-white);
   border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-md);
+  border-radius: var(--k-r-sm);
   overflow: hidden;
   box-shadow: none;
 }
@@ -5964,7 +5964,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-md, 14px);
+  border-radius: var(--k-r-sm);
   background: var(--k-white);
   scrollbar-width: thin;
 }
@@ -9416,3 +9416,81 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-faq__intro .k-btn--line:hover,
 .k .kh-faq__intro-in .k-btn--line:hover,
 .k .kh-cta__aside .k-btn--line:hover { background: var(--k-white); border-color: var(--k-white); color: var(--k-amber-deep); }
+
+/* ==========================================================================
+   VRSTVA 84 · Galéria montáží: počet stĺpcov podľa počtu fotografií
+   ==========================================================================
+   Galérie majú šesť až osem záberov, mriežka ich však lámala vždy do štyroch
+   stĺpcov. Pri šiestich tak posledný riadok ostal spolovice prázdny — presne
+   tá diera, ktorú sme už raz odstraňovali pri kartách kategórií. Šesť fotiek
+   sa teraz skladá do dvoch riadkov po troch, pri siedmich sa posledná roztiahne
+   cez dve políčka, aby riadok dosadol. Osem sedí do štvorice samo.
+   Pravidlo sa týka len galériových dlaždíc — karty kategórií majú
+   `.kh-cat__card` a tie ostávajú štyri vedľa seba. */
+@media (min-width: 1000px) {
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(6)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(7)) > :last-child {
+    grid-column: span 2;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 85 · Príloha vo formulári po slovensky
+   ==========================================================================
+   Natívne pole na súbory si popis kreslí prehliadač a píše ho vo svojom
+   jazyku — na slovenskom formulári tak svietilo „Choose Files / No file
+   chosen". Skript nad pole vloží vlastnú plochu s tlačidlom a stavom;
+   samotný `input` ostáva v `label`, takže klik kdekoľvek na ploche otvorí
+   výber a klávesnica funguje ďalej. Bez skriptu sa vlastná plocha nevytvorí
+   a ostane natívne pole — formulár preto nikdy neostane bez ovládania. */
+.k .kh-field--subor.ma-vyber input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+.k .kh-field__vyber {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px dashed rgba(18, 23, 26, 0.28);
+  border-radius: var(--k-r-sm);
+  background: #f7f8f8;
+  cursor: pointer;
+  transition: border-color 200ms var(--k-ease), background 200ms var(--k-ease);
+}
+.k .kh-field--subor.ma-vyber:hover .kh-field__vyber { border-color: rgba(18, 23, 26, 0.45); background: #fff; }
+.k .kh-field--subor.ma-vyber:has(input:focus-visible) .kh-field__vyber {
+  border-color: #a77a00;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, .18);
+  background: #fff;
+}
+.k .kh-field__tlacidlo {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid rgba(18, 23, 26, 0.2);
+  border-radius: var(--k-r-xs);
+  background: #fff;
+  font-family: var(--k-head);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+.k .kh-field__stav {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--k-grey-soft);
+}
+.k .kh-field--subor.je-vybrate .kh-field__vyber { border-style: solid; border-color: rgba(18, 23, 26, .28); background: #fff; }
+.k .kh-field--subor.je-vybrate .kh-field__stav { color: var(--k-ink); font-weight: 600; }
