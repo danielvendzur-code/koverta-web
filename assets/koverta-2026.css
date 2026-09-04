@@ -9380,3 +9380,39 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-mapa__karta--bezfoto { background: var(--k-white); }
 .kh-mapa__karta--bezfoto figcaption { padding: clamp(20px, 2.2vw, 30px); }
 .kh-mapa__zoznam { max-height: clamp(260px, 34vh, 380px); }
+
+/* ==========================================================================
+   VRSTVA 83 · Na fotografii nič priehľadné
+   ==========================================================================
+   Obrysový čip funguje na kostenej ploche, kde má za sebou pokoj. Na
+   fotografii je z neho sklo: linka sa stráca v konároch, text raz vidno a
+   raz nie. Druhá akcia v úvode a v tmavých pásoch je preto plná biela —
+   rovnaký tvar, len iná výplň.
+   ========================================================================== */
+.k .kh-hero .k-btn--line,
+.k .kh-hero__actions .k-btn--line,
+.k .kh-pick .k-btn--line {
+  background: var(--k-white);
+  border-color: var(--k-white);
+  color: var(--k-ink);
+}
+.k .kh-hero .k-btn--line:hover,
+.k .kh-hero__actions .k-btn--line:hover,
+.k .kh-pick .k-btn--line:hover {
+  background: var(--k-white);
+  border-color: var(--k-white);
+  color: var(--k-amber-deep);
+}
+
+/* Tmavý panel otázok má za sebou fotografiu — telefónne číslo tam nesmie
+   byť obrysové, inak sa linka stráca v dlažbe na pozadí. */
+.k .kh-faq__intro .k-btn--line,
+.k .kh-faq__intro-in .k-btn--line,
+.k .kh-cta__aside .k-btn--line {
+  background: var(--k-white);
+  border-color: var(--k-white);
+  color: var(--k-ink);
+}
+.k .kh-faq__intro .k-btn--line:hover,
+.k .kh-faq__intro-in .k-btn--line:hover,
+.k .kh-cta__aside .k-btn--line:hover { background: var(--k-white); border-color: var(--k-white); color: var(--k-amber-deep); }
