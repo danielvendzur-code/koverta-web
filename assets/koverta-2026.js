@@ -1462,6 +1462,34 @@
     });
   }
 
+  /* --- Mapa realizácií ------------------------------------------------------
+     Klik na značku prepne kartu s fotografiou. Bez skriptu ostane viditeľná
+     prvá karta a značky sú obyčajné tlačidlá — mapa teda funguje ako obrázok
+     so zoznamom obcí, nie ako prázdne miesto. */
+  function initMapa(root) {
+    const plochy = root.querySelectorAll('[data-k-mapa]');
+    if (!plochy.length) return;
+
+    plochy.forEach((plocha) => {
+      if (plocha.dataset.kReady === 'true') return;
+      plocha.dataset.kReady = 'true';
+      const body = [].slice.call(plocha.querySelectorAll('[data-k-mapa-bod]'));
+      const karty = [].slice.call(plocha.querySelectorAll('[data-k-mapa-karta]'));
+      if (!body.length || !karty.length) return;
+
+      const ukaz = (id) => {
+        body.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kMapaBod === id)));
+        karty.forEach((k) => { k.hidden = k.dataset.kMapaKarta !== id; });
+      };
+
+      body.forEach((b) => {
+        b.addEventListener('click', () => ukaz(b.dataset.kMapaBod));
+        b.addEventListener('mouseenter', () => ukaz(b.dataset.kMapaBod));
+        b.addEventListener('focus', () => ukaz(b.dataset.kMapaBod));
+      });
+    });
+  }
+
   function initVideo(root) {
     const vsetky = root.querySelectorAll('video[data-k-video]');
     if (!vsetky.length) return;
@@ -1902,7 +1930,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initVideo, initDopyt]
+       initSubory, initScrub, initPrelet, initVideo, initDopyt, initMapa]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
