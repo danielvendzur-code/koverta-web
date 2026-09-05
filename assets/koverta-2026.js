@@ -897,20 +897,50 @@
     kontakt: ['telefon', 'email'],
     mapa: ['realizacie', 'obce'],
     referencie: ['realizacie'],
-    galeria: ['realizacie', 'fotografie']
+    galeria: ['realizacie', 'fotografie'],
+    /* Značka sa píše aj foneticky a aj s veľkými písmenami — veľké písmená
+       zrovná normalizácia, „soltek" nie. */
+    soltek: ['soltec'],
+    soltech: ['soltec'],
+    /* Fotovoltika verzus fotovoltaika: obidva tvary sú v obehu, na webe je
+       jeden. FVE je skratka z faktúr a z rečí okolo dotácií. */
+    fotovoltaika: ['fotovoltika', 'solar', 'panely'],
+    fotovoltaicky: ['fotovoltika', 'solar', 'panely'],
+    fve: ['fotovoltika', 'solar', 'panely'],
+    panel: ['fotovoltika', 'solar'],
+    panely: ['fotovoltika', 'solar'],
+    /* Rozmer sa pýta aj slovom. */
+    rozmer: ['rozmery', 'sirka', 'dlzka'],
+    velkost: ['rozmery'],
+    m2: ['rozmery', 'plocha'],
+    /* Bežné vstupy do poľa, ktoré na webe nemajú svoje slovo. */
+    dvojgaraz: ['dve', 'auta', 'carport'],
+    jednogaraz: ['jedno', 'auto', 'carport'],
+    obytny: ['pergola', 'terasa'],
+    prislusenstvo: ['vybava', 'doplnky'],
+    doplnky: ['vybava', 'prislusenstvo'],
+    vybava: ['doplnky', 'prislusenstvo']
   };
 
-  /* Rozmery ľudia píšu troma spôsobmi: „6x6", „6 × 6" aj „6 na 6". Aby sa
-     stretli, znak násobenia sa mení na x a medzi číslice sa doplní medzera. */
+  /* Vyhľadávacie pole a pripravený index musia zrovnávať text rovnako, inak
+     sa nestretnú. Platí jedno pravidlo pre obidve strany: dole, bez dĺžňov,
+     násobenie ako „x" s medzerami okolo čísel, horný index ako číslica
+     (m² = m2) a všetko ostatné, čo nie je písmeno ani číslica — spojovník,
+     lomka, bodka, úvodzovka — sa mení na medzeru.
+
+     Vďaka tomu nájde „6x6" aj „6 × 6", „m2" aj „m²", „bio-klimaticka" aj
+     „bioklimaticka" a „6,5" aj „6.5". */
   const norm = (s) =>
     (s || '')
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[×✕✖]/g, ' x ')
+      .replace(/[×✕✖]/g, 'x')
+      .replace(/²/g, '2')
+      .replace(/³/g, '3')
       .replace(/(\d)\s*x\s*(\d)/g, '$1 x $2')
-      .replace(/,(\d)/g, '.$1')
-      .replace(/\s+/g, ' ')
+      .replace(/(\d)\s*x\s*(\d)/g, '$1 x $2')
+      .replace(/[^a-z0-9]+/g, ' ')
       .trim();
 
   function buildIndex(root) {
@@ -981,9 +1011,28 @@
     let index = null;
     let active = -1;
 
+    /* Odčítač obrazovky nemal z čoho poznať, že písanie do poľa mení zoznam
+       pod ním: pole bolo obyčajný input a výsledky obyčajné odkazy. Pole je
+       preto combobox, ktorý ovláda zoznam volieb, a počet nájdeného sa
+       ohlási zvlášť — inak by čítalo desať odkazov bez toho, aby povedalo,
+       koľko ich je. */
+    if (!list.id) list.id = 'kv-search-vysledky';
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', 'Výsledky hľadania');
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-controls', list.id);
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
+    const hlas = document.createElement('p');
+    hlas.className = 'k-visually-hidden';
+    hlas.setAttribute('role', 'status');
+    hlas.setAttribute('aria-live', 'polite');
+    list.parentNode.insertBefore(hlas, list);
+
     const close = () => {
       panel.hidden = true;
       trigger.setAttribute('aria-expanded', 'false');
+      input.setAttribute('aria-expanded', 'false');
     };
 
     /* Index celého webu. Doteraz sa hľadalo len v tom, čo práve bolo na
@@ -994,8 +1043,13 @@
        z otvorenej stránky, takže vyhľadávanie funguje vždy. */
     const cestaIndexu = () => {
       const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
-      const zaklad = css ? css.getAttribute('href').replace(/koverta-2026\.css.*$/, '') : './assets/';
-      return zaklad + 'hladanie.json';
+      const href = css ? css.getAttribute('href') : '';
+      const zaklad = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      /* Index sa berie s tou istou značkou verzie ako štýl. Bez nej ostával
+         v prehliadači starý zoznam aj po tom, čo na webe pribudla stránka —
+         hľadalo sa v tom, čo tam bolo minule. */
+      const verzia = (href.match(/\?v=[^&#]*/) || [''])[0];
+      return zaklad + 'hladanie.json' + verzia;
     };
 
     /* Odkazy v indexe sú od koreňa webu, lebo ten istý index slúži všetkým
@@ -1152,6 +1206,7 @@
       if (!slova.length) {
         empty.hidden = false;
         empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „ZIP roleta" alebo „prístrešok pre dve autá".';
+        hlas.textContent = '';
         return;
       }
 
@@ -1167,18 +1222,41 @@
         return rad;
       });
 
-      const hits = zdroj()
+      const vsetky = zdroj()
         .map(function (it) { return { it: it, score: skore(it, skupiny, nq) }; })
         .filter(function (r) { return r.score > 0; })
-        .sort(function (a, b) { return b.score - a.score; })
-        .slice(0, 10);
+        .sort(function (a, b) { return b.score - a.score; });
+
+      /* Desať výsledkov z jednej podstránky je zoznam kotiev, nie odpoveď.
+         Na „pergola" boli osem z desiatich riadky z bioklimatických pergol
+         a stránka o záhradných prístreškoch sa nezmestila.
+
+         Z každej podstránky preto najprv prejdú najviac dva najsilnejšie
+         výsledky. Až keď ich je dokopy menej ako desať, dopĺňajú sa ostatné
+         v pôvodnom poradí — takže sa nikdy nestratí nič, čo by inak bolo
+         vidieť. */
+      const strana = function (r) { return String(r.it.href || '').split('#')[0]; };
+      const kolko = {};
+      const prve = [];
+      const zvysok = [];
+      vsetky.forEach(function (r) {
+        const s = strana(r);
+        kolko[s] = (kolko[s] || 0) + 1;
+        (kolko[s] <= 2 ? prve : zvysok).push(r);
+      });
+      const hits = prve.concat(zvysok).slice(0, 10);
 
       empty.hidden = hits.length > 0;
       if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte — poradíme.';
+      hlas.textContent = hits.length
+        ? (hits.length === 1 ? '1 výsledok' : (hits.length < 5 ? hits.length + ' výsledky' : hits.length + ' výsledkov'))
+        : 'Žiadny výsledok';
 
       hits.forEach(function (r) {
         const a = document.createElement('a');
         a.className = 'kv-search__hit';
+        a.setAttribute('role', 'option');
+        a.setAttribute('aria-selected', 'false');
         a.href = r.it.href;
         const thumb = document.createElement('span');
         thumb.className = 'kv-search__thumb' + (r.it.img ? '' : ' kv-search__thumb--blank');
@@ -1215,6 +1293,7 @@
       dotiahni();
       panel.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
+      input.setAttribute('aria-expanded', 'true');
       input.value = predvolba || '';
       render(input.value);
       input.focus();
@@ -1224,7 +1303,10 @@
       const hits = [].slice.call(list.querySelectorAll('.kv-search__hit'));
       if (!hits.length) return;
       active = (active + dir + hits.length) % hits.length;
-      hits.forEach((h, i) => h.classList.toggle('is-active', i === active));
+      hits.forEach((h, i) => {
+        h.classList.toggle('is-active', i === active);
+        h.setAttribute('aria-selected', i === active ? 'true' : 'false');
+      });
       hits[active].focus();
     };
 
@@ -1244,6 +1326,20 @@
       if (panel.hidden) return;
       if (!panel.contains(e.target) && !trigger.contains(e.target)) close();
     });
+
+    /* Index má 383 položiek a 161 kB (40 kB po kompresii). Sťahoval sa až
+       pri prvom otvorení panela, takže prvé napísané slovo hľadalo len
+       v otvorenej stránke a zvyšok webu dobehol o chvíľu neskôr. Teraz sa dotiahne v čase, keď
+       prehliadač aj tak nič nerobí — po načítaní a v nečinnosti, nie počas
+       nej. Keď `requestIdleCallback` nie je (Safari), stačí odklad. */
+    const predstiahni = () => {
+      if (navigator.connection && (navigator.connection.saveData ||
+          /2g/.test(navigator.connection.effectiveType || ''))) return;
+      if (window.requestIdleCallback) window.requestIdleCallback(dotiahni, { timeout: 4000 });
+      else setTimeout(dotiahni, 2500);
+    };
+    if (document.readyState === 'complete') predstiahni();
+    else window.addEventListener('load', predstiahni, { once: true });
 
     /* Odkaz s `?q=` otvorí vyhľadávanie rovno s hľadaným výrazom. Vďaka tomu
        je `SearchAction` v štruktúrovaných dátach pravdivá — Google aj ktokoľvek
@@ -1945,6 +2041,27 @@
     window.addEventListener('resize', naplan, { passive: true });
     window.addEventListener('load', naplan, { once: true });
     if (window.ResizeObserver) new ResizeObserver(naplan).observe(dok);
+
+    /* Pás je `position: fixed` k spodku okna. Klávesnica na telefóne okno
+       nezmenší — zmenší len viditeľnú časť, takže pás ostal sedieť pod ňou
+       a pri vypĺňaní dopytu prekrýval práve to políčko, do ktorého sa písalo.
+       Kým je klávesnica hore, pás odchádza; keď sa zavrie, vráti sa.
+
+       Rozdiel merajú dve výšky: `visualViewport` je to, čo je vidieť,
+       `innerHeight` celé okno. Sto pixelov je viac než adresný riadok
+       prehliadača a menej než ktorákoľvek klávesnica. */
+    const vv = window.visualViewport;
+    if (vv) {
+      let malo = null;
+      const klavesnica = () => {
+        const je = (window.innerHeight - vv.height) > 100;
+        if (je === malo) return;
+        malo = je;
+        doc.documentElement.classList.toggle('ma-klavesnicu', je);
+      };
+      vv.addEventListener('resize', klavesnica, { passive: true });
+      klavesnica();
+    }
   }
 
   function initSuhlas(scope) {
@@ -2273,11 +2390,35 @@
     const closeBtn = header.querySelector('[data-k-drawer-close]');
 
     if (drawer && scrim && openBtn) {
+      /* Zásuvka je zavretá posunutím mimo obrazovku, nie skrytím. Odkazy v nej
+         teda ostávali na tabulátore: po hlavičke skočil kurzor do zavretého
+         menu a človek písal do niečoho, čo nevidel. `inert` ju vyradí celú —
+         z tabulátora, z myši aj z odčítača obrazovky. */
+      const uspi = (spi) => {
+        if ('inert' in HTMLElement.prototype) drawer.inert = spi;
+        drawer.setAttribute('aria-hidden', String(spi));
+      };
+
+      /* Kým je zásuvka otvorená, tabulátor sa v nej točí dokola. Bez toho
+         prešiel za posledný odkaz do stránky pod prekrytím — kurzor zmizol
+         za tmavým sklom a Escape už nemal čo zavrieť. */
+      const OSTRE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const drz = (e) => {
+        if (e.key !== 'Tab' || !drawer.classList.contains('is-open')) return;
+        const body = [].slice.call(drawer.querySelectorAll(OSTRE))
+          .filter((el) => el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+        if (!body.length) return;
+        const prvy = body[0];
+        const posledny = body[body.length - 1];
+        if (e.shiftKey && document.activeElement === prvy) { e.preventDefault(); posledny.focus(); }
+        else if (!e.shiftKey && document.activeElement === posledny) { e.preventDefault(); prvy.focus(); }
+      };
+
       const setDrawer = (open) => {
         drawer.classList.toggle('is-open', open);
         scrim.classList.toggle('is-open', open);
         openBtn.setAttribute('aria-expanded', String(open));
-        drawer.setAttribute('aria-hidden', String(!open));
+        uspi(!open);
         document.documentElement.style.overflow = open ? 'hidden' : '';
         /* Lepivý pás s ponukou prekrýval spodok otvoreného menu — tlačidlo
            v menu bolo spolovice pod ním a dve rovnaké výzvy pod sebou pôsobili
@@ -2294,10 +2435,17 @@
       openBtn.addEventListener('click', () => setDrawer(true));
       if (closeBtn) closeBtn.addEventListener('click', () => setDrawer(false));
       scrim.addEventListener('click', () => setDrawer(false));
+      drawer.addEventListener('keydown', drz);
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && drawer.classList.contains('is-open')) setDrawer(false);
       });
-      drawer.setAttribute('aria-hidden', 'true');
+      /* Odkaz v menu vedie na kotvu na tej istej stránke — menu sa má zavrieť,
+         inak ostane prekrytie nad cieľom, na ktorý človek práve klikol. */
+      drawer.addEventListener('click', (e) => {
+        const a = e.target.closest && e.target.closest('a[href]');
+        if (a && drawer.classList.contains('is-open')) setDrawer(false);
+      });
+      uspi(true);
     }
   }
 

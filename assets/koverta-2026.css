@@ -615,10 +615,15 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   font-size: 13.5px; color: var(--k-muted);
 }
 
-/* mobilná navigácia */
+/* mobilná navigácia
+   Zásuvka nastupovala už pod 1180 px, takže tablet na šírku aj menší
+   notebook dostali hamburger, hoci ponuka mala kam ísť. Meranie: pri 1024 px
+   zaberá značka 148, ponuka 444 a pravá strana 298 px — spolu 890 v riadku
+   širokom 942, teda ešte 41 px vzduchu vpravo. Tesno začína byť pri 980 px,
+   preto hranica stojí na 1024. */
 .kv-burger { display: none; }
 .kv-drawer { display: none; }
-@media (max-width: 1180px) {
+@media (max-width: 1023px) {
   .kv-nav { display: none; }
   .kv-burger { display: inline-grid; }
   /* CTA ostáva až do telefónu — na tablete by inak v hlavičke zostala diera. */
@@ -673,7 +678,6 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: min(78vh, 720px);
   padding-top: 0;
   background: var(--k-ink);
   isolation: isolate;
@@ -790,7 +794,6 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 .kh-score__link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
 
 @media (max-width: 719px) {
-  .kh-hero { min-height: min(76svh, 660px); }
   .kh-hero__inner { padding-block: 32px; }
   .kh-hero__box { gap: 13px; }
   .kh-hero__lead { font-size: 15px; line-height: 1.5; }
@@ -1531,7 +1534,6 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
    ========================================================================== */
 
 /* Hero: jedna jasná ponuka, jedno hodnotenie, žiadne duplicitné proof chips. */
-.kh-hero { min-height: min(78svh, 720px); }
 .kh-hero__box { max-width: 760px; gap: clamp(14px, 1.35vw, 20px); }
 .kh-hero h1 { max-width: 11.5ch; }
 .kh-hero__accent { display: block; color: #fff; }
@@ -2743,8 +2745,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cta__aside-head h3 { font-size: clamp(24px, 2.2vw, 34px); }
 .kh-cta__steps li { padding-block: 14px; }
 
-/* Hero má vyplniť prvú obrazovku — po skrátení pásov ostávala pod ním diera. */
-.kh-hero { min-height: min(760px, calc(100svh - 92px)); }
 .kh-hero__inner { align-items: center; }
 
 /* --- DVE ZNAČKY: zmestiť sa na jednu obrazovku -------------------------- */
@@ -3613,7 +3613,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 @media (max-width: 760px) {
   :root { --k-band: clamp(40px, 9vw, 56px); }
   .k-h2 { font-size: clamp(24px, 6.6vw, 30px); }
-  .kh-hero { min-height: min(620px, calc(100svh - 76px)); }
   .kh-hero .k-display { font-size: clamp(31px, 9vw, 42px); }
   .kh-hero__box { padding: 18px 18px 22px; }
   .kh-hero__actions { display: grid; gap: 10px; }
@@ -3714,9 +3713,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    OPRAVY Z REVÍZIE IV — každá overená v prehliadači
    ===================================================================== */
 
-/* 1 · Hodnotenie Google je nad tlačidlami a hero je nižšie, aby pri okne
-       s výškou ~880 px neskončilo pod okrajom. Predtým padalo mimo pohľad. */
-.kh-hero { min-height: min(660px, calc(100svh - 130px)); }
+/* 1 · Hodnotenie Google je nad tlačidlami, aby pri okne s výškou ~880 px
+       neskončilo pod okrajom. Predtým padalo mimo pohľad. */
 .kh-hero__trust { margin: 0 0 clamp(14px, 1.6vw, 20px); }
 .kh-hero__actions { margin-top: 0; }
 
@@ -5247,10 +5245,13 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 
 @media (max-width: 760px) {
   /* Hero: text zaberal 416 zo 660 px a z prístrešku ostal pruh. Fotka ani
-     text sa nemenia — obsah sa presunie na spodok a hero je vyššie, takže nad
-     ním ostane súvislý kus obrazu. Jednotka svh je výška okna bez panelov
-     prehliadača, takže sa hero na telefóne neroztiahne pod ovládanie. */
-  .kh-hero { min-height: 88svh; justify-content: flex-end; }
+     text sa nemenia — obsah sa presunie na spodok, takže nad ním ostane
+     súvislý kus obrazu.
+
+     Výšku tu už neurčujeme. Pôvodných 88svh prepisovala neskoršia vrstva 35
+     (okno mínus skutočná hlavička) a deklarácia tu len mýlila pri čítaní —
+     vyzerala ako platné pravidlo pre telefón, hoci nikdy nič neurobila. */
+  .kh-hero { justify-content: flex-end; }
   /* Spodok hero je pod prilepeným dokom, tak odsadenie ráta aj s ním —
      hodnotenie na Google sa inak schovávalo za tlačidlo. */
   .kh-hero__inner { padding-block: 24px 52px; }
@@ -6274,36 +6275,10 @@ html { background: var(--k-ink); }
 }
 
 
-/* --- 7 · Skladba konštrukcie: k tabuľke patrí kresba ----------------------
-   Sekcia bola samotná tabuľka cez celú šírku. Údaje sú správne, ale osem
-   riadkov názvov vrstiev bez toho, aby človek videl, kde tá vrstva na
-   prístrešku je, je technický list, nie stránka.
-
-   Vedľa tabuľky preto stojí rez zostavou — ten istý náčrt, ktorý je v prvom
-   kroku postupu. Na širokej obrazovke ostáva stáť, kým sa zoznam vrstiev
-   posúva popri ňom, takže kresba je pri ruke pri každom riadku. Na úzkej
-   obrazovke je kresba nad zoznamom a nič sa nelepí. */
-.kh-skladba { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(22px, 2.4vw, 34px); }
-.kh-skladba__vykres { margin: 0; }
-.kh-skladba__vykres img {
-  display: block;
-  width: 100%;
-  height: auto;
-  padding: clamp(16px, 1.8vw, 26px);
-  border-radius: var(--k-r-sm);
-  background: var(--k-white);
-}
-.kh-skladba__vykres figcaption {
-  margin-top: 12px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--k-grey-soft);
-}
-.kh-skladba .kh-tab { margin-top: 0; }
-
+/* --- 7 · Tabuľka na širokej obrazovke -------------------------------------
+   Keď je miesta dosť, tabuľka sa neroztiahne na šírku okna, ale rozdýchne
+   stĺpce — čísla sú tak od seba, nie od okraja. */
 @media (min-width: 1000px) {
-  .kh-skladba { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(34px, 3.4vw, 56px); align-items: start; }
-  .kh-skladba__vykres { position: sticky; top: 112px; }
   .kh-tab table { min-width: 0; }
   .kh-tab th, .kh-tab td { padding-right: clamp(14px, 1.4vw, 24px); }
 }
@@ -6462,9 +6437,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
    hrane obrazovky, nech je okno akékoľvek vysoké. Spodná hranica 520 px
    drží obsah čitateľný na nízkych oknách na šírku.
    ========================================================================== */
-.kh-hero {
-  min-height: max(520px, calc(100svh - var(--kv-hlava, 117px)));
-}
 @media (max-width: 899px) { .kh-hero { --kv-hlava-zaloha: 77px; } }
 @media (max-width: 619px) { .kh-hero { --kv-hlava-zaloha: 65px; } }
 .kh-hero { min-height: max(520px, calc(100svh - var(--kv-hlava, var(--kv-hlava-zaloha, 117px)))); }
@@ -6763,34 +6735,10 @@ footer.kf { background: var(--k-ink); color: #fff; }
    výber. Sú v dvoch stĺpcoch, takže osem vrstiev zaberie štyri riadky, nie
    osem, a kresba vedľa nich už nemá pod sebou prázdno.
 
-   Kresba stráca biely rám aj papier: je to čiarová schéma a stojí priamo na
-   podklade sekcie, ako všetko ostatné v tejto vrstve.
-
    Platí pre trojstĺpcové prehľady (vrstva — z čoho — na výber). Tabuľky
    typov a rozmerov, ktoré si zadávateľ vyžiadal, ostávajú tabuľkami; tie sú
    nižšie.
    ========================================================================== */
-
-.kh-skladba__vykres {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
-.kh-skladba__vykres img {
-  width: 100%;
-  height: auto;
-  display: block;
-  padding: 0;
-  border-radius: 0;
-  background: none;
-}
-.kh-skladba__vykres figcaption {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--k-hair);
-  max-width: 46ch;
-}
 
 /* --- Prehľad vrstiev ako dlaždice --------------------------------------- */
 .kh-tab:not(:has(thead th:nth-child(4))) .kh-tab__scroll { overflow-x: visible; }
@@ -6872,13 +6820,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
   color: var(--k-grey-soft);
 }
 .kh-tab:not(:has(thead th:nth-child(4))) tbody tr:hover { background: #fff; }
-
-/* Na širokej obrazovke stojí kresba vedľa vrstiev a drží sa, kým ich
-   prechádzate — schéma je tak po ruke pri každej vrstve. */
-@media (min-width: 1000px) {
-  .kh-skladba { grid-template-columns: minmax(0, 5.1fr) minmax(0, 6.9fr); gap: clamp(30px, 3vw, 48px); }
-  .kh-skladba__vykres { top: 96px; }
-}
 
 /* --- Tabuľky typov a rozmerov ostávajú tabuľkami ------------------------- */
 .kh-tab:has(thead th:nth-child(4)) thead th {
@@ -8600,6 +8541,12 @@ footer.kf { background: var(--k-ink); color: #fff; }
    vlastné tlačidlo a dve rovnaké výzvy pod sebou vyzerali ako chyba. */
 .ma-otvorene-menu .kh-dock { display: none; }
 
+/* To isté, kým je hore klávesnica: pás je prilepený k spodku okna, nie
+   k spodku toho, čo je vidieť, takže pri písaní do dopytu sadol práve na
+   políčko, do ktorého sa písalo. Triedu nasadzuje skript podľa toho, o koľko
+   je viditeľná časť okna nižšia ako okno samo. */
+.ma-klavesnicu .kh-dock { display: none; }
+
 /* Skupina s jediným rozmerom (prístrešok pre tri autá) nepotrebuje vysokú
    fotografiu — vedľa jednej pilulky by z nej ostal meter prázdna. */
 @media (min-width: 820px) {
@@ -9272,21 +9219,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td { margin-top: 4px; color: var(--k-grey-soft); }
 .k .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td::before { content: none; }
 
-/* Výkres drží výšku zoznamu, aby vedľa neho nezostalo prázdno. */
-@media (min-width: 1000px) {
-  .k .kh-skladba__vykres { position: sticky; top: clamp(96px, 12vh, 140px); align-self: start; }
-}
-
-/* Výkres je technická kresba — potrebuje vlastnú plochu, inak sa bledé linky
-   strácajú v kostenom podklade a vyzerá to ako nedokreslené. */
-.k .kh-skladba__vykres img {
-  padding: clamp(20px, 2.4vw, 34px);
-  border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-sm);
-  background: var(--k-white);
-}
-.k .kh-skladba__vykres figcaption { max-width: 34ch; }
-
 /* ==========================================================================
    VRSTVA 81 · Kontakt: fakturačné údaje ako výpis, nie ako karty
    ==========================================================================
@@ -9822,8 +9754,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-mat__list li::before,
 .k .kh-duo__zoznam li::before,
 .k .kh-mapa__zoz li::before,
-.k .kh-vyb__zoznam li::before,
-.k .kh-skladba__body li::before {
+.k .kh-vyb__zoznam li::before {
   content: "";
   position: absolute;
   left: 0;
