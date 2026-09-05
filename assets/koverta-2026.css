@@ -8257,32 +8257,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
    v riadku sedeli v jednej výške.
    ========================================================================== */
 
-@media (min-width: 900px) {
-  /* Text vedľa fotografie začína hore, nie v strede — inak dva nadpisy
-     v jednom riadku končia v dvoch rôznych výškach. A keďže text už nie je
-     vycentrovaný, fotografia sa neťahá na pevnú výšku: drží pomer 4 : 3,
-     takže dve karty v riadku majú rovnako vysoký obraz a pod textom
-     neostáva prázdny pás. */
-  .k .kh-mat__body { justify-content: flex-start; }
-  .k .kh-mat__card { align-items: start; }
-  .k .kh-mat__media { aspect-ratio: 4 / 3; height: auto; min-height: 0; }
-}
-
+/* Karta má odteraz jeden tvar pre všetky počty kariet — je vo vrstve 101 na
+   konci štýlu. Zvláštny prípad pre tri karty (iné odsadenie a iná veľkosť
+   nadpisu než pri dvoch alebo štyroch) tu ostal len ako nadpis: v troch
+   stĺpcoch je miesta viac, tak nadpis nemusí byť menší. */
 @media (min-width: 1040px) {
-  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__card {
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-  }
-  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__media {
-    aspect-ratio: 4 / 3;
-    height: auto;
-    min-height: 0;
-  }
-  .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__body {
-    padding: clamp(16px, 1.4vw, 20px) 0 0;
-  }
-  /* V troch stĺpcoch má nadpis celú šírku stĺpca — dva riadky namiesto
-     štyroch. */
   .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__title {
     max-width: none;
     font-size: clamp(20px, 1.5vw, 24px);
@@ -9859,68 +9838,15 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* ==========================================================================
-   VRSTVA 93 · Aké riešenie potrebujete: odpoveď skôr, než sa preklikne
+   VRSTVA 93 · Aké riešenie potrebujete: karta bez prekvapení
    ==========================================================================
-   Karty niesli názov, dva parametre a vetu — a to bolo všetko, čo sa dalo
-   zistiť bez prekliku. Na širokej obrazovke sa pri prejdení myšou vysunie
-   ešte to, čo človek naozaj rieši: pre koho to je, na čo sa to hodí a čo
-   z toho má. Fotografia im na to uvoľní miesto, karta si drží výšku a nič
-   sa nikam nedvíha. Na telefóne hover neexistuje, tam sú riadky vidieť
-   rovno — je to informácia, nie ozdoba.
+   Karta mala pri prejdení myšou vysunúť ešte tri riadky „pre koho — hodí sa
+   na — prínos". Bol to tretí štýl popiskov na webe, karty pod sebou mali
+   rôznu výšku a tlačidlá sa nedržali v jednej línii. Preč: ostáva fotografia,
+   názov, jeden riadok parametrov, veta a akcia. To je celá karta.
 
    Tlačidlo „Zobraziť ponuku" pri hoveri obopol tmavý rám. Ostáva jantár,
    len o odtieň jasnejší, a šípka sa pohne o tri pixely. Nič viac. */
-.k .kh-cat__pre {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--k-hair);
-}
-.k .kh-cat__pre > div {
-  display: grid;
-  grid-template-columns: 5.6rem minmax(0, 1fr);
-  gap: 10px;
-  align-items: baseline;
-}
-.k .kh-cat__pre dt {
-  margin: 0;
-  font-family: var(--k-head);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--k-amber-deep);
-}
-.k .kh-cat__pre dd {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--k-muted);
-}
-
-@media (min-width: 1000px) {
-  /* Skrytý blok stojí v mriežke s nulovou výškou — otvára sa bez skoku a bez
-     prepočtu rozloženia zvyšku stránky. */
-  .k .kh-cat__pre {
-    display: grid;
-    grid-template-rows: 0fr;
-    padding-top: 0;
-    border-top-color: transparent;
-    opacity: 0;
-    transition: grid-template-rows 420ms var(--k-ease-out),
-                opacity 260ms var(--k-ease),
-                padding-top 420ms var(--k-ease-out);
-  }
-  .k .kh-cat__pre > div { overflow: hidden; }
-  .k .kh-cat__item:hover .kh-cat__pre,
-  .k .kh-cat__item:focus-within .kh-cat__pre {
-    grid-template-rows: 1fr;
-    padding-top: 12px;
-    border-top-color: var(--k-hair);
-    opacity: 1;
-  }
-}
 
 /* Karta reaguje na prejdenie myšou tichým zdvihnutím rámu, nie pohybom. */
 .k .kh-cat__card { transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease); }
@@ -9947,9 +9873,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-cat__item:hover .kh-cat__actions > .k-link svg { transform: translateX(3px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .k .kh-cat__pre { transition: none; }
   .k .kh-cat__actions > .k-link svg { transition: none; }
 }
+
 
 /* ==========================================================================
    VRSTVA 94 · Prémiová rada Soltec
@@ -10604,3 +10530,205 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-tab__note,
 .k .kh-size__pozn { margin-top: var(--k-s4); }
 .k .kh-tab .kh-tab__note { margin-top: var(--k-s3); }
+
+
+/* ==========================================================================
+   VRSTVA 101 · Karta materiálu: jedna karta, jedno pravidlo
+   ==========================================================================
+   Sekcia „Z čoho je to postavené" mala na jednej karte tri protichodné
+   pravidlá z troch vrstiev. Výsledok bol vidieť: karta bola biela škatuľa
+   s rámom, vnútri nej plávala fotografia s vlastným zaoblením a odstupom
+   (dva rámy v sebe), text stál zvisle v strede pravej polovice a pod ním
+   ostávala tretina karty prázdna. Karty vedľa seba mali rôzne dlhé zoznamy,
+   takže prázdno bolo pri každej inak veľké.
+
+   Odteraz je to jeden predmet. Fotografia sedí hore od okraja po okraj a
+   zaoblenie jej dáva karta, nie ona sama. Pod ňou je text: názov oblasti,
+   nadpis a výpočet. Zoznam rastie do zvyšku karty, takže spodná hrana je
+   pri všetkých kartách v jednej línii a nikde nie je diera.
+
+   Toto pravidlo je posledné a platí pre všetky štyri sekcie na siedmich
+   podstránkach — nič pred ním už kartu neprestavuje. */
+
+.k .kh-mat__grid {
+  display: grid;
+  gap: clamp(14px, 1.4vw, 22px);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+@media (min-width: 620px) {
+  .k .kh-mat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Počet stĺpcov podľa počtu kariet, aby posledný riadok nebol poloprázdny:
+   tri karty do troch stĺpcov, šesť do troch (3 + 3, nie 4 + 2), dve do dvoch.
+   Osem kariet na úvodnej stránke je prepínač dvoch značiek — naraz sú vidieť
+   štyri, tak tam ostávajú štyri stĺpce.
+
+   Trojica ide do troch stĺpcov už od 900 px. Predtým ju tablet dostal do dvoch
+   a tretia karta ostala v druhom riadku sama vedľa prázdneho miesta. */
+@media (min-width: 900px) {
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)),
+  .k .kh-mat__grid:has(> :last-child:nth-child(6)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1040px) {
+  .k .kh-mat__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)),
+  .k .kh-mat__grid:has(> :last-child:nth-child(6)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .k .kh-mat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Medzi 620 a 899 px sú dva stĺpce. Trojica by tam nechala tretiu kartu samu,
+   preto zaberie celý riadok — a fotografia sa na tú šírku roztiahne na
+   pomer 16 : 10, aby z nej nebol meter vysoký pás. */
+@media (min-width: 620px) and (max-width: 899px) {
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) > :last-child { grid-column: 1 / -1; }
+  .k .kh-mat__grid:has(> :last-child:nth-child(3)) > :last-child .kh-mat__media { aspect-ratio: 16 / 10; }
+}
+
+.k .kh-mat__card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-content: stretch;
+  justify-content: flex-start;
+  grid-template-columns: none;
+  height: 100%;
+  margin: 0;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  overflow: hidden;
+  transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
+}
+.k .kh-mat__card:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
+
+/* Fotografia: hore, cez celú šírku karty, bez vlastného zaoblenia a odstupu.
+   Pomer 4 : 3 drží všetky fotografie rovnako vysoké, nech je zdroj akýkoľvek. */
+.k .kh-mat__media {
+  flex: 0 0 auto;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: var(--k-bone-deep);
+}
+.k .kh-mat__media img,
+.k .kh-mat__media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Text: hore názov oblasti a nadpis, dole výpočet, ktorý dopĺňa zvyšok karty. */
+.k .kh-mat__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 0;
+  justify-content: flex-start;
+  padding: clamp(17px, 1.5vw, 24px);
+}
+/* Nadpis drží miesto na dva riadky, aj keď má jeden. Bez toho stála deliaca
+   linka pri každej karte v inej výške a riadok kariet vyzeral rozsypaný. */
+.k .kh-mat__title { min-height: 2.32em; }
+
+/* Výpočet začína hneď pod nadpisom, nie na spodku karty. Keď sa tlačil dole,
+   vznikla medzi nadpisom a ním diera veľká podľa toho, o koľko bol susedný
+   zoznam dlhší — teraz je prípadný zvyšok dole, kde ho nevidno. */
+.k .kh-mat__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0;
+  margin: 0;
+  padding-top: var(--k-s3);
+  border-top: 1px solid var(--k-hair);
+}
+
+/* Skrytá karta (prepínač značiek na úvodnej stránke) sa nesmie kresliť.
+   `display: flex` vyššie má vyššiu váhu než `[hidden]`, tak to treba povedať
+   výslovne — inak sa obidve značky ukážu naraz. */
+.k .kh-mat__card[hidden] { display: none; }
+
+/* Na telefóne je karta cez celú šírku, tak fotografia môže byť širšia než
+   vysoká — inak by jedna karta zabrala celú obrazovku. */
+@media (max-width: 619px) {
+  .k .kh-mat__media { aspect-ratio: 16 / 10; }
+}
+
+
+/* ==========================================================================
+   VRSTVA 102 · Aby nič nevytŕčalo
+   ==========================================================================
+   Posledný prechod po celom webe na monitore aj na telefóne. Sú tu len
+   miesta, kde jeden prvok vybočil zo systému, ktorý drží zvyšok stránky. */
+
+/* --- 102a · Tlačidlá v kartách riešení stoja v jednej línii ---------------
+   Dve karty majú pod textom dve tlačidlá (ponuka a konfigurátor), dve len
+   jedno. Keďže blok akcií sedí na spodku karty, žlté tlačidlo „Zobraziť
+   ponuku" bolo pri prvých dvoch kartách o päťdesiat pixelov vyššie než pri
+   ďalších dvoch a riadok kariet vyzeral rozhádzaný. Blok má odteraz miesto
+   na dva riadky vždy — tlačidlá tak začínajú na tej istej linke a prípadný
+   zvyšok ostáva pod nimi, kde ho nevidno.
+
+   Na telefóne sú karty pod sebou, tam by rezerva bola len prázdnym pásom,
+   preto platí až od dvoch kariet vedľa seba. */
+@media (min-width: 620px) {
+  .k .kh-cat__actions {
+    min-height: 100px;
+    align-content: flex-start;
+  }
+}
+
+/* --- 102b · Výkresy modulov na spoločnom podklade -------------------------
+   Štyri moduly vonkajšej kuchyne nie sú fotografie, ale výkresy na bielom.
+   V karte, ktorá je tiež biela, sa strácali a orezanie na pomer 4 : 3 z nich
+   navyše ukrojilo boky — každý modul vyzeral inak veľký a inak orezaný.
+   Výkres teraz stojí celý na kostenom podklade, rovnako veľký pri všetkých
+   štyroch. */
+.k .kh-mat__media--vykres { background: var(--k-bone); }
+.k .kh-mat__media--vykres img {
+  object-fit: contain;
+  padding: clamp(12px, 1.4vw, 22px);
+}
+/* Tmavý spodok pod fotografiou je podklad pre číslo vrstvy. Na bielom výkrese
+   z neho ostane len špinavý pás, tak tam nie je — a číslo si vezme farbu
+   podľa podkladu. */
+.k .kh-mat__media--vykres::after { content: none; }
+.k .kh-mat__media--vykres .kh-mat__num { color: var(--k-grey-soft); }
+
+/* --- 102c · Jeden drobný popisok pre celý web -----------------------------
+   Verzálkový popisok nad názvom sa na weboch objavuje na piatich miestach a
+   každé si ho nieslo po svojom: 10, 10,5, 11, 11,5 aj 12 pixelov, päť rôznych
+   preložení písmen a tri odtiene sivej. Vedľa seba to vyzerá ako päť rôznych
+   šablón zlepených dokopy.
+
+   Odteraz má jednu mieru: 11 px, tučné, preloženie 0,14 em. Farbu určuje
+   úloha — jantárová, keď popisok vec pomenúva (Profil, Strecha, ZIP roleta
+   K130), stlmená sivá, keď je to len údaj popri nej (PDF · 6,7 MB, IČO). */
+.k .kh-mat__label,
+.k .kh-kat__meta,
+.k .kh-rady__nazov span,
+.k .kh-rady__kedy > span,
+.k .kh-udaje__zoznam dt,
+.k .kh-size__sirka span {
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.k .kh-mat__label,
+.k .kh-rady__nazov span,
+.k .kh-rady__kedy > span { color: var(--k-amber-deep); }
+.k .kh-kat__meta,
+.k .kh-udaje__zoznam dt,
+.k .kh-size__sirka span { color: var(--k-grey-soft); }
