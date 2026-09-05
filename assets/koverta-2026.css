@@ -9759,3 +9759,29 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .kv-lupa, .kv-lupa__ram img { transition: none; }
 }
+
+/* ==========================================================================
+   VRSTVA 90 · Zoznam pri fotografii bez fajok
+   ==========================================================================
+   Jantárové fajky pred každým riadkom sú tvar z letáku — sľubujú, že ide o
+   výhody, ešte než si ich človek prečíta. Zoznam ostáva zoznamom, len ho
+   drží vlasová linka: rovnaká, akou je delený zvyšok webu. Text je o kúsok
+   väčší, lebo teraz nesie riadok sám. */
+.k .kh-duo__zoznam { gap: 0; }
+.k .kh-duo__zoznam li {
+  display: block;
+  padding: clamp(11px, 1vw, 14px) 0;
+  border-top: 1px solid var(--k-hair);
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.5;
+  color: var(--k-ink);
+}
+.k .kh-duo__zoznam li:first-child { border-top: 0; padding-top: 2px; }
+.k .kh-duo__zoznam li:last-child { padding-bottom: 2px; }
+
+/* Hlavička musí ostať nad obsahom stránky. Prelet fotografií z piateho kroku
+   kreslí kópie priamo do `body` s vlastnou vrstvou; hlavička mala vlastný
+   `z-index: 30`, ktorý jej založil kontext, takže jej vnútorných 60 platilo
+   len vnútri nej a fotografie jej preleteli ponad menu. */
+.kv-header { z-index: 80; }
+

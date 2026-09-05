@@ -1232,6 +1232,10 @@
     const medzi = (a, b, t) => a + (b - a) * t;
     const kolaj = zoznam.querySelector('[data-k-rail-track]') || zoznam;
     let ceka = false;
+    /* Vykresľovaná hodnota preletu a príznak, že sa má dobiehať ďalej. */
+    let mojP = null;
+    let bezi = false;
+    const hladko = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* Prelet mieri do prvých troch kariet. Keď si niekto v recenziách posunie
        lištu na ďalšie, tie tri karty odídu nabok — a fotografie by leteli za
@@ -1251,6 +1255,7 @@
 
     const vypni = () => {
       vratKartu();
+      mojP = null;
       kusy.forEach((k) => {
         if (k.letí !== 'vyp') {
           k.scena.style.display = 'none';
@@ -1268,6 +1273,7 @@
       if (vedla()) { vypni(); return; }
       if (window.innerWidth < 1000) {
         vratKartu();
+        mojP = null;
         kusy.forEach((k) => {
           if (k.letí !== false) {
             k.scena.style.display = 'none';
@@ -1303,6 +1309,18 @@
       const zaciatok = vh * 1.15;
       const koniec = vh * 0.18;
       let p = orez((zaciatok - r.top) / (zaciatok - koniec));
+      /* Koliesko myši posúva stránku po skokoch — surová hodnota z polohy
+         scrollu preto fotografie posúvala tiež skokom. Vykresľovaná hodnota
+         teraz beží za cieľovou vlastným tempom, takže prelet plynie aj vtedy,
+         keď scroll prichádza po stovkách pixelov. Pri obmedzenom pohybe sa
+         nedohaňa nič — tam má byť pohyb čo najkratší. */
+      if (hladko) {
+        if (mojP === null) mojP = p;
+        const rozdiel = p - mojP;
+        if (Math.abs(rozdiel) < 0.0008) mojP = p;
+        else { mojP += rozdiel * 0.24; bezi = true; }
+        p = mojP;
+      }
       /* Kým nie je načítaná každá z troch kópií, prelet nebeží: fotografie
          ostávajú v piatom kroku a v kartách recenzií tam, kde majú byť. */
       const pripravene = kusy.every((k) => k.kopia.complete && k.kopia.naturalWidth > 0);
@@ -1379,7 +1397,12 @@
       });
     };
 
-    const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(zmer); } };
+    const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(krok); } };
+    function krok() {
+      bezi = false;
+      zmer();
+      if (bezi) { ceka = true; requestAnimationFrame(krok); }
+    }
     window.addEventListener('scroll', naplan, { passive: true });
     window.addEventListener('resize', naplan, { passive: true });
     kolaj.addEventListener('scroll', naplan, { passive: true });
@@ -1676,15 +1699,25 @@
     const dok = doc.querySelector('.kh-dock');
     if (!dok || dok.dataset.kReady === 'true') return;
     dok.dataset.kReady = 'true';
+    /* Zápis premennej na koreň dokumentu prepočíta štýl celej stránky. Robí
+       sa preto len vtedy, keď sa hodnota naozaj zmenila, a najviac raz za
+       snímok — inak si pozorovateľ rozmeru vypýtal prepočet aj vtedy, keď
+       sa nezmenilo nič. */
+    let posledna = null;
+    let caka = false;
     const mer = () => {
+      caka = false;
       const v = Math.round(dok.getBoundingClientRect().height);
+      if (v === posledna) return;
+      posledna = v;
       if (v > 0) doc.documentElement.style.setProperty('--kv-dok', v + 'px');
       else doc.documentElement.style.removeProperty('--kv-dok');
     };
+    const naplan = () => { if (!caka) { caka = true; requestAnimationFrame(mer); } };
     mer();
-    window.addEventListener('resize', mer, { passive: true });
-    window.addEventListener('load', mer, { once: true });
-    if (window.ResizeObserver) new ResizeObserver(mer).observe(dok);
+    window.addEventListener('resize', naplan, { passive: true });
+    window.addEventListener('load', naplan, { once: true });
+    if (window.ResizeObserver) new ResizeObserver(naplan).observe(dok);
   }
 
   function initSuhlas(scope) {
@@ -1871,16 +1904,24 @@
        o toľko povyrástla a viditeľne poskočila — a s ňou aj údaje pod ňou.
        Meriame preto len vtedy, keď je stránka na vrchu a lišta je vo svojom
        pokojnom rozmere; inak si necháme poslednú platnú hodnotu. */
+    let poslednaV = null;
+    let cakaV = false;
     const mer = () => {
+      cakaV = false;
       if (window.scrollY > 8) return;
       const v = Math.round(header.getBoundingClientRect().height);
-      if (v > 0) document.documentElement.style.setProperty('--kv-hlava', v + 'px');
+      /* Zápis na koreň dokumentu prepočíta štýl celej stránky, preto sa robí
+         len pri skutočnej zmene a najviac raz za snímok. */
+      if (v <= 0 || v === poslednaV) return;
+      poslednaV = v;
+      document.documentElement.style.setProperty('--kv-hlava', v + 'px');
     };
+    const naplanV = () => { if (!cakaV) { cakaV = true; requestAnimationFrame(mer); } };
     mer();
-    window.addEventListener('resize', mer, { passive: true });
-    window.addEventListener('load', mer, { once: true });
-    window.addEventListener('scroll', () => { if (window.scrollY <= 8) mer(); }, { passive: true });
-    if (window.ResizeObserver) new ResizeObserver(mer).observe(header);
+    window.addEventListener('resize', naplanV, { passive: true });
+    window.addEventListener('load', naplanV, { once: true });
+    window.addEventListener('scroll', () => { if (window.scrollY <= 8) naplanV(); }, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(naplanV).observe(header);
 
     /* --- Menu je pri ceste nahor vždy po ruke ----------------------------
        Hlavička doteraz odscrollovala preč a späť sa dala dostať len návratom
@@ -2035,40 +2076,62 @@
 
   /* --- štart -------------------------------------------------------------- */
 
+  /* Každá sekcia sa spúšťa samostatne. Keď na stránke nejaká chýba — a na
+     podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok: predtým
+     padlo odkrývanie obsahu a stránka ostala prázdna biela. */
+  const spusti = (fn, ciel) => {
+    try { fn(ciel); }
+    catch (e) { if (window.console) console.warn('koverta: ' + fn.name + ' — ' + e.message); }
+  };
+
+  /* Naštartovanie stránky trvalo šesťdesiat milisekúnd v jedinom snímku —
+     to je štyri snímky, počas ktorých prehliadač nestihol nič vykresliť a
+     stránka na začiatku sekla. Hneď preto beží len to, čo je vidieť alebo
+     čo musí odpovedať na prvý dotyk: odkrytie obsahu, nadpis, hlavička,
+     video v úvode a lišta súhlasu. Zvyšok sa rozdelí do snímkov po ôsmich
+     milisekundách, takže žiadny z nich nezmešká svoj termín. */
+  const HNED = [initReveal, initHeadline, initAnchors, initVideo];
+  const POTOM = [initRail, initFilters, initFaq, initProcess, initShots,
+                 initMatTabs, initSelect, initSubory, initScrub, initPrelet,
+                 initDopyt, initMapa, initLupa];
+
+  const davkuj = (ulohy) => {
+    let i = 0;
+    const krok = () => {
+      const zaciatok = performance.now();
+      while (i < ulohy.length && performance.now() - zaciatok < 8) ulohy[i++]();
+      if (i < ulohy.length) requestAnimationFrame(krok);
+    };
+    requestAnimationFrame(krok);
+  };
+
   function init(scope) {
+    const ulohy = [];
     scope.querySelectorAll('[data-k-root]').forEach((root) => {
       if (root.dataset.kReady === 'true') return;
       root.dataset.kReady = 'true';
-      /* Každá sekcia sa spúšťa samostatne. Keď na stránke nejaká chýba —
-         a na podstránkach chýba väčšina — nesmie jej chyba zhodiť zvyšok:
-         predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
-      [initReveal, initRail, initFilters, initFaq, initAnchors,
-       initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initVideo, initDopyt, initMapa, initLupa]
-        .forEach((fn) => {
-          try { fn(root); }
-          catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
-        });
+      HNED.forEach((fn) => spusti(fn, root));
+      POTOM.forEach((fn) => ulohy.push(() => spusti(fn, root)));
     });
-    scope.querySelectorAll('[data-k-header]').forEach((h) => {
-      try { initHeader(h); } catch (e) { if (window.console) console.warn("koverta: initHeader — " + e.message); }
-    });
+    scope.querySelectorAll('[data-k-header]').forEach((h) => spusti(initHeader, h));
+    const dok = scope === document ? document : scope;
+    spusti(initSuhlas, dok);
     // Vyhľadávanie je v hlavičke, teda mimo [data-k-root] — inicializuje sa
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.
-    try { initSearch(scope === document ? document : scope); }
-    catch (e) { if (window.console) console.warn("koverta: initSearch — " + e.message); }
-    try { initDok(scope === document ? document : scope); }
-    catch (e) { if (window.console) console.warn("koverta: initDok — " + e.message); }
-    try { initSuhlas(scope === document ? document : scope); }
-    catch (e) { if (window.console) console.warn("koverta: initSuhlas — " + e.message); }
+    ulohy.push(() => spusti(initSearch, dok));
+    ulohy.push(() => spusti(initDok, dok));
+    if (ulohy.length) davkuj(ulohy);
   }
 
   const boot = () => init(document);
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(boot), { once: true });
   } else {
-    boot();
+    /* Skript beží na konci tela, takže dokument je už rozobraný. Keby sa
+       štart spustil rovno tu, pripočítal by sa k snímku, v ktorom sa skript
+       vyhodnocuje — a to je práve ten dlhý snímok. */
+    requestAnimationFrame(boot);
   }
 
   document.addEventListener('shopify:section:load', (e) => init(e.target));
