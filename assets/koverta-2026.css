@@ -10732,3 +10732,232 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-kat__meta,
 .k .kh-udaje__zoznam dt,
 .k .kh-size__sirka span { color: var(--k-grey-soft); }
+
+
+/* ==========================================================================
+   VRSTVA 103 · Sekcia „fotografia a text" podľa referencie
+   ==========================================================================
+   Zadávateľ ukázal Brustor a Schüco. Obidve stránky majú v tomto mieste to
+   isté a nič viac: veľkú fotografiu, veľký nadpis, jednu-dve pilulky, jeden
+   poriadne vysadený odsek a veľké tlačidlo s rámom. Žiadny zoznam odrážok,
+   žiadna tabuľka pojmov.
+
+   Náš blok mal nadpis, drobný sivý odsek a pod ním štyri odrážky — a presne
+   tie odrážky z toho robili poznámkový blok. Odrážky sú preč; to, čo bolo
+   v nich, hovorí odsek vetou. Fakt, ktorý má byť vidieť na prvý pohľad,
+   nesie pilulka.
+
+   Mierka je to hlavné: nadpis väčší, odsek 18 px s riadkovaním 1,62 a
+   šírkou 44 znakov, medzi blokmi vzduch. */
+
+.k .kh-duo__telo { gap: 0; }
+.k .kh-duo__telo .k-eyebrow { margin-bottom: var(--k-s4); }
+.k .kh-duo__telo .k-h2 {
+  max-width: 15ch;
+  margin: 0 0 var(--k-s4);
+  font-size: clamp(30px, 3.2vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+.k .kh-duo__telo > .k-copy {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(16px, 1.35vw, 18.5px);
+  line-height: 1.62;
+  color: var(--k-grey);
+}
+
+/* Pilulka nesie číslo alebo jedno slovo, ktoré má byť vidieť skôr než odsek.
+   Sú najviac dve — tri už nikto neprečíta ako fakty, ale ako ozdobu. */
+.k .kh-duo__znaky {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: var(--k-s5) 0 0;
+}
+.k .kh-duo__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: 999px;
+  background: var(--k-white);
+  font-size: 13.5px;
+  line-height: 1.2;
+  color: var(--k-grey-soft);
+  white-space: nowrap;
+}
+.k .kh-duo__chip strong {
+  font-family: var(--k-head);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--k-ink);
+}
+
+/* Tlačidlo je veľké a s rámom — je to jediná akcia v celej sekcii. */
+.k .kh-duo__akcia { margin: var(--k-s6) 0 0; }
+.k .kh-duo__akcia .k-btn {
+  min-height: 56px;
+  padding-inline: clamp(24px, 2.4vw, 34px);
+  font-size: 15px;
+}
+
+/* --- 103b · Trojstĺpcový prehľad ako prehľad, nie ako odsek --------------
+   Tabuľka „časť — z čoho — kedy sa rieši" sa na každej šírke rozpadala na
+   riadky pod sebou. Na monitore tak zabrala ľavú polovicu a pravá ostala
+   prázdna; tri údaje, ktoré k sebe patria, boli tri odseky.
+
+   Od 900 px stoja stĺpce vedľa seba a zarovnané: názov časti tmavým písmom
+   s jantárovým poradím nad ním, z čoho to je a kedy sa to rieši. Pod 900 px
+   ostáva pôvodné skladanie pod seba — tam je to jediné, čo sa zmestí.
+
+   Čo treba vyriešiť pred betónovaním, nesie jantárový štítok. Je to jediná
+   vec v tabuľke, ktorú sa nedá dobehnúť neskôr. */
+@media (min-width: 900px) {
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody { display: block; }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody tr {
+    display: grid;
+    grid-template-columns: clamp(9rem, 15vw, 15rem) minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: clamp(20px, 2.4vw, 40px);
+    align-items: baseline;
+    margin: 0;
+    padding: clamp(16px, 1.5vw, 22px) 0;
+    border: 0;
+    border-bottom: 1px solid var(--k-hair);
+    background: none;
+  }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody tr:hover { background: none; }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody th {
+    margin: 0;
+    padding: 0;
+    font-family: var(--k-head);
+    font-size: clamp(16px, 1.3vw, 18px);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--k-ink);
+  }
+  /* Poradie stojí nad názvom, nie pred ním — nerozbíja riadok. */
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody th::before {
+    display: block;
+    position: static;
+    margin-bottom: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--k-amber-deep);
+  }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody td {
+    margin: 0;
+    padding: 0;
+    font-size: clamp(14px, 1.15vw, 15.5px);
+    line-height: 1.55;
+    color: var(--k-ink);
+  }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody td + td { margin: 0; color: var(--k-grey-soft); }
+  /* Popisky stĺpcov nesie hlavička tabuľky, netreba ich pri každom údaji. */
+  .k .kh-tab:not(:has(thead th:nth-child(4))) tbody td::before { content: none; }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) thead {
+    position: static;
+    display: grid;
+    grid-template-columns: clamp(9rem, 15vw, 15rem) minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: clamp(20px, 2.4vw, 40px);
+    width: auto;
+    height: auto;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--k-ink);
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) thead tr { display: contents; }
+  .k .kh-tab:not(:has(thead th:nth-child(4))) thead th {
+    padding: 0;
+    border: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--k-grey-soft);
+  }
+}
+
+/* Zvýraznené slovo v prehľade je štítok, nie tučný text v odseku. */
+.k .kh-tab:not(:has(thead th:nth-child(4))) tbody td strong {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--k-amber);
+  font-family: var(--k-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-ink);
+}
+
+/* --- 103c · Výpočet v karte znesie pohľad --------------------------------
+   Riadky v kartách boli 14,5 px svetlosivé — na kostenom podklade takmer
+   nečitateľné a v porovnaní s nadpisom karty bez váhy. Sú to fakty o výrobku,
+   nie poznámky: tmavšie, o pol bodu väčšie a s väčším riadkovaním. Bodka
+   ostáva, len sa zarovná na prvý riadok textu. */
+.k .kh-mat__list li,
+.k .kh-vyb__zoznam li {
+  font-size: clamp(14.5px, 1.15vw, 15.5px);
+  line-height: 1.55;
+  color: var(--k-ink);
+}
+.k .kh-mat__list li::before,
+.k .kh-vyb__zoznam li::before { top: 0.62em; }
+
+/* --- 103d · Pás čísel má váhu čísel --------------------------------------
+   Šesť údajov pod mriežkou modulov (20 mm, Blum, 104 l, 10 rokov) malo
+   rovnakú veľkosť ako bežný text, takže sa v ňom stratili. Na úvodnej stránke
+   pritom ten istý typ pásu — nula eur, 24 hodín, jeden deň — nesie čísla
+   veľké. Zjednotené: hodnota veľkým nadpisovým písmom, popis pod ňou drobným
+   verzálkovým, ako všetky ostatné popisky na webe. */
+.k .kh-vyb strong {
+  font-size: clamp(19px, 1.9vw, 27px);
+  line-height: 1.1;
+}
+.k .kh-vyb li { gap: 7px; padding-top: 15px; border-top-color: var(--k-ink); }
+/* Popis pod číslom je veta („kamenná doska s odkvapkávacou hranou"), nie
+   názov kategórie. Verzálky s preložením sa na dvoch riadkoch čítajú ťažko,
+   preto tu ostáva bežné písmo — len menšie a stlmené. */
+.k .kh-vyb span {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+
+/* --- 103e · Výkres vyplní kartu ------------------------------------------
+   Výkresy modulov stáli v kartách ako malé obrázky uprostred veľkej kostenej
+   plochy — karta pôsobila poloprázdne. Plocha je nižšia a výkres v nej väčší,
+   takže je vidieť, čo modul obsahuje, aj aké má kóty. */
+.k .kh-mat__media--vykres { aspect-ratio: 16 / 10; background: var(--k-white); }
+.k .kh-mat__media--vykres img { padding: clamp(6px, 0.7vw, 12px); }
+/* Výkres má biele pozadie — keby plocha pod ním bola kostená, presvitala by
+   okolo neho ako svetlejší obdĺžnik. */
+.k .kh-mat__card:has(.kh-mat__media--vykres) { border-color: var(--k-hair); }
+
+/* --- 103f · Sekcia „fotografia a text" v mierke referencie ----------------
+   Zadávateľ ukázal Brustor a Schüco: veľký nadpis, jeden poriadne vysadený
+   odsek a skutočné tlačidlo. Nič viac. Naša sekcia mala nadpis, drobný sivý
+   odsek a žiadnu akciu — preto pôsobila ako text nasypaný pod obrázok.
+
+   Odsek je väčší a tmavší, nadpis dostal viac miesta a pod výpisom stojí
+   tlačidlo s rámom, nie holý odkaz. */
+.k .kh-duo__telo .k-h2 { max-width: 15ch; }
+.k .kh-duo__telo > .k-copy {
+  max-width: 44ch;
+  font-size: clamp(16px, 1.35vw, 18.5px);
+  line-height: 1.62;
+  color: var(--k-grey);
+}
+.k .kh-duo__akcia { margin: var(--k-s5) 0 0; }
+.k .kh-duo__akcia .k-btn { min-height: 52px; padding-inline: clamp(20px, 2vw, 30px); }
