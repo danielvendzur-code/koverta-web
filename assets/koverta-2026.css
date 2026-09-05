@@ -9544,7 +9544,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-mapa__zoznam {
     grid-column: 2;
     grid-row: 1 / span 2;
-    max-height: clamp(420px, 74vh, 860px);
+    max-height: clamp(360px, 62vh, 660px);
     align-self: start;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - 46px), transparent);
@@ -9633,4 +9633,129 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-mapa__bod { width: 11px; height: 11px; }
   .k .kh-mapa__terc { width: 8px; height: 8px; border-width: 1.5px; }
   .k .kh-mapa__bod[aria-pressed="true"] .kh-mapa__terc { width: 12px; height: 12px; }
+}
+
+/* ==========================================================================
+   VRSTVA 89 · Fotografia pri obci: malý náhľad, po kliknutí veľká
+   ==========================================================================
+   Ku každej obci je teraz fotografia zo stavby. V karte je len náhľad —
+   karta má ostať kartou, nie galériou — a po kliknutí sa fotka otvorí cez
+   celú obrazovku. Náhľad je tlačidlo, takže ho ovládne aj klávesnica;
+   zväčšenina sa zatvára Escapom, krížikom aj kliknutím vedľa. */
+.k .kh-mapa__karta:not(.kh-mapa__karta--bezfoto) {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(14px, 1.4vw, 20px);
+  padding: clamp(14px, 1.4vw, 18px);
+}
+.k .kh-mapa__karta:not(.kh-mapa__karta--bezfoto) figcaption { padding: 2px 0 0; }
+/* Mriežka vyššie prebíja pôvodné `display: none` pre skryté karty — bez tohto
+   by na sebe stálo deväťdesiat kariet naraz a spodná by chytala kliknutia. */
+.k .kh-mapa__karta[hidden] { display: none; }
+.k .kh-mapa__nahlad {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-xs);
+  background: var(--k-bone);
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: border-color 200ms var(--k-ease);
+}
+.k .kh-mapa__nahlad img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 620ms var(--k-ease-out);
+}
+.k .kh-mapa__nahlad:hover { border-color: rgba(18, 23, 26, 0.4); }
+.k .kh-mapa__nahlad:hover img { transform: scale(1.05); }
+.k .kh-mapa__nahlad:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+.k .kh-mapa__lupa {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(18, 23, 26, 0.24);
+}
+.k .kh-mapa__lupa svg { width: 15px; height: 15px; fill: none; stroke: var(--k-ink); stroke-width: 1.9; }
+
+@media (max-width: 619px) {
+  .k .kh-mapa__karta:not(.kh-mapa__karta--bezfoto) { grid-template-columns: minmax(0, 118px) minmax(0, 1fr); }
+}
+
+/* Zväčšenina */
+.kv-lupa {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 44px);
+  background: rgba(12, 16, 18, 0.86);
+  opacity: 0;
+  transition: opacity 200ms var(--k-ease);
+}
+.kv-lupa[hidden] { display: none; }
+.kv-lupa.je-vidno { opacity: 1; }
+.kv-lupa__ram {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  max-width: min(1180px, 100%);
+  max-height: 100%;
+  justify-items: center;
+}
+.kv-lupa__ram img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - clamp(96px, 12vh, 150px));
+  width: auto;
+  height: auto;
+  border-radius: var(--k-r-sm);
+  background: #0c1012;
+  transform: scale(0.985);
+  transition: transform 240ms var(--k-ease-out);
+}
+.kv-lupa.je-vidno .kv-lupa__ram img { transform: none; }
+.kv-lupa__popis {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+.kv-lupa__zavri {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--k-white);
+  color: var(--k-ink);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+.kv-lupa__zavri svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.1; }
+.kv-lupa__zavri:hover { background: var(--k-amber); }
+.kv-lupa__zavri:focus-visible { outline: 2px solid var(--k-white); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .kv-lupa, .kv-lupa__ram img { transition: none; }
 }

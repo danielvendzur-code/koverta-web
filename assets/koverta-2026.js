@@ -1490,6 +1490,85 @@
     });
   }
 
+  /* --- Zväčšenie fotografie -------------------------------------------------
+     Náhľad v karte je malý zámerne — karta má ostať prehľadná. Kto si chce
+     stavbu pozrieť poriadne, klikne a fotka sa otvorí cez celú obrazovku.
+     Prekrytie sa stavia až pri prvom kliknutí a je v dokumente jediné, takže
+     deväťdesiat kariet nenesie deväťdesiat skrytých vrstiev. Bez skriptu je
+     náhľad obyčajné tlačidlo, ktoré nič nerozbije. */
+  function initLupa(root) {
+    const spinace = root.querySelectorAll('[data-k-lupa]');
+    if (!spinace.length) return;
+
+    let vrstva = null;
+    let obrazok = null;
+    let popis = null;
+    let odkial = null;
+
+    const zavri = () => {
+      if (!vrstva || vrstva.hidden) return;
+      vrstva.classList.remove('je-vidno');
+      document.documentElement.style.overflow = '';
+      const koniec = () => {
+        vrstva.hidden = true;
+        obrazok.removeAttribute('src');
+      };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) koniec();
+      else window.setTimeout(koniec, 210);
+      if (odkial && document.contains(odkial)) odkial.focus();
+      odkial = null;
+    };
+
+    const postav = () => {
+      vrstva = document.createElement('div');
+      vrstva.className = 'kv-lupa';
+      vrstva.hidden = true;
+      vrstva.setAttribute('role', 'dialog');
+      vrstva.setAttribute('aria-modal', 'true');
+      vrstva.setAttribute('aria-label', 'Fotografia realizácie');
+      const ram = document.createElement('div');
+      ram.className = 'kv-lupa__ram';
+      obrazok = document.createElement('img');
+      obrazok.alt = '';
+      obrazok.decoding = 'async';
+      popis = document.createElement('p');
+      popis.className = 'kv-lupa__popis';
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'kv-lupa__zavri';
+      x.setAttribute('aria-label', 'Zavrieť');
+      x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>';
+      x.addEventListener('click', zavri);
+      ram.appendChild(obrazok);
+      ram.appendChild(popis);
+      ram.appendChild(x);
+      vrstva.appendChild(ram);
+      vrstva.addEventListener('click', (e) => { if (e.target === vrstva) zavri(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri(); });
+      document.body.appendChild(vrstva);
+      return x;
+    };
+
+    spinace.forEach((tl) => {
+      tl.addEventListener('click', () => {
+        const zdroj = tl.getAttribute('data-k-lupa');
+        if (!zdroj) return;
+        const x = vrstva ? vrstva.querySelector('.kv-lupa__zavri') : postav();
+        odkial = tl;
+        const nahlad = tl.querySelector('img');
+        obrazok.alt = nahlad ? nahlad.alt : '';
+        obrazok.src = zdroj;
+        popis.textContent = tl.getAttribute('data-k-lupa-popis') || '';
+        vrstva.hidden = false;
+        document.documentElement.style.overflow = 'hidden';
+        window.requestAnimationFrame(() => {
+          vrstva.classList.add('je-vidno');
+          x.focus();
+        });
+      });
+    });
+  }
+
   /* --- Mapa realizácií ------------------------------------------------------
      Klik na značku prepne kartu s fotografiou. Bez skriptu ostane viditeľná
      prvá karta a značky sú obyčajné tlačidlá — mapa teda funguje ako obrázok
@@ -1965,7 +2044,7 @@
          predtým padlo odkrývanie obsahu a stránka ostala prázdna biela. */
       [initReveal, initRail, initFilters, initFaq, initAnchors,
        initProcess, initHeadline, initShots, initMatTabs, initSelect,
-       initSubory, initScrub, initPrelet, initVideo, initDopyt, initMapa]
+       initSubory, initScrub, initPrelet, initVideo, initDopyt, initMapa, initLupa]
         .forEach((fn) => {
           try { fn(root); }
           catch (e) { if (window.console) console.warn("koverta: " + fn.name + " — " + e.message); }
