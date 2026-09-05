@@ -97,6 +97,21 @@
   --k-band: clamp(76px, 8.4vw, 148px);
   --k-band-tight: clamp(52px, 5.6vw, 96px);
 
+  /* Odstupy vnútri sekcií. Doteraz si každý blok riešil medzery sám a na
+     stránke vznikli desiatky hodnôt bez vzťahu — niekde bol čip nalepený na
+     text, inde nadpis odtrhnutý od vety pod ním. Toto je jedna stupnica;
+     kroky sú od seba dosť ďaleko, aby bolo vidieť, čo k čomu patrí. */
+  --k-s1: 4px;                       /* dotyk — riadok a jeho značka        */
+  --k-s2: clamp(8px, 0.7vw, 11px);   /* v rámci jedného prvku               */
+  --k-s3: clamp(13px, 1.1vw, 17px);  /* prvky, ktoré spolu súvisia          */
+  --k-s4: clamp(19px, 1.6vw, 26px);  /* nadpis a text pod ním               */
+  --k-s5: clamp(28px, 2.4vw, 38px);  /* text a akcia                        */
+  --k-s6: clamp(38px, 3.2vw, 54px);  /* skupiny vnútri sekcie               */
+  --k-s7: clamp(54px, 4.6vw, 76px);  /* hlavička sekcie a jej obsah         */
+
+  /* Odrážka je na celom webe tá istá: malá jantárová bodka. */
+  --k-bodka: 6px;
+
   /* typografia ----------------------------------------------------------- */
   --k-head: var(--font-heading-family, "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif);
   --k-body: var(--font-body-family, "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif);
@@ -9785,3 +9800,707 @@ footer.kf { background: var(--k-ink); color: #fff; }
    len vnútri nej a fotografie jej preleteli ponad menu. */
 .kv-header { z-index: 80; }
 
+
+/* ==========================================================================
+   VRSTVA 92 · Jeden dizajnový systém: odrážky, odstupy, fotografia pri hoveri
+   ==========================================================================
+   Audit celého webu ukázal tri veci, ktoré sa opakujú na každej podstránke a
+   ktoré sa nedajú opraviť lokálne:
+
+   1. Odrážky. V zoznamoch stáli štvorčeky (7 × 7 s polomerom 2 px), pomlčky
+      (8 × 2), krúžky aj nič. Odteraz je to všade tá istá bodka.
+   2. Odstupy. Hero mal jednu medzeru pre všetko a k tomu ručné doladenia po
+      pár pixeloch, takže veta bola nalepená na nadpis a hodnotenie odtrhnuté
+      od tlačidiel. Rytmus teraz vychádza zo stupnice --k-s1 až --k-s7.
+   3. Fotografia pri hoveri. Niekde sa k pohybu pridal filter jasu, inde bol
+      posun taký veľký, že prehliadač obraz preškáloval z pôvodného rastru a
+      fotka na chvíľu zmäkla. Pohyb je teraz jeden pre celý web a bez filtra.
+   ========================================================================== */
+
+/* --- 92a · Odrážka: jedna bodka pre celý web ----------------------------- */
+.k .kh-mat__list li::before,
+.k .kh-duo__zoznam li::before,
+.k .kh-mapa__zoz li::before,
+.k .kh-vyb__zoznam li::before,
+.k .kh-skladba__body li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.66em;
+  width: var(--k-bodka);
+  height: var(--k-bodka);
+  border-radius: 999px;
+  background: var(--k-amber);
+  transform: none;
+}
+.k .kh-mat__list li,
+.k .kh-duo__zoznam li,
+.k .kh-mapa__zoz li,
+.k .kh-vyb__zoznam li {
+  position: relative;
+  padding-left: 18px;
+}
+
+/* Zoznam pri fotografii nesie odrážku aj vlasovú linku: bodka hovorí, že je
+   to výpočet, linka drží riadky od seba. */
+.k .kh-duo__zoznam li { padding-top: clamp(11px, 1vw, 14px); padding-bottom: clamp(11px, 1vw, 14px); }
+.k .kh-duo__zoznam li::before { top: calc(clamp(11px, 1vw, 14px) + 0.62em); }
+.k .kh-duo__zoznam li:first-child::before { top: calc(2px + 0.62em); }
+
+/* --- 92b · Rytmus úvodného pásu ------------------------------------------
+   Poradie je vždy rovnaké: drobný text nad nadpisom, nadpis, veta, tlačidlá,
+   dôkaz. Medzery medzi nimi rastú smerom nadol — čím ďalej od nadpisu, tým
+   samostatnejší blok. Žiadne ručné dolaďovanie po dvoch pixeloch. */
+.k .kh-hero__box { gap: 0; }
+.k .kh-hero__box > * { margin-top: 0; margin-bottom: 0; }
+.k .kh-hero__box > .kh-crumbs { margin-bottom: var(--k-s4); }
+.k .kh-hero__box > .k-eyebrow { margin-bottom: var(--k-s3); }
+.k .kh-hero__box > .k-display,
+.k .kh-hero__box > .k-h1,
+.k .kh-hero__box > h1 { margin-bottom: var(--k-s4); }
+.k .kh-hero__box > .k-lead { margin-bottom: var(--k-s5); }
+.k .kh-hero__box > .kh-hero__actions { margin-bottom: var(--k-s5); }
+.k .kh-hero__box > .kh-hero__trust { margin-bottom: 0; }
+.k .kh-hero__box > *:last-child { margin-bottom: 0; }
+
+/* --- 92c · Fotografia sa pri hoveri nesmie zhoršiť -----------------------
+   Filter jasu na fotke pri hoveri je preč: obraz má ostať taký, aký je, a
+   pohyb má niesť odozvu. Posun je jednotný a malý; väčší znamená, že
+   prehliadač musí rastrovať navyše a fotka na okamih zmäkne. Vrstva sa
+   pripraví vopred (`translateZ`), takže sa prekresľuje len posun, nie obraz. */
+.k .kh-work__media img,
+.k .kh-cat__media img,
+.k .kh-mat__media img,
+.k .kh-duo__foto img,
+.k .kh-soltec__media img,
+.k .kh-pick__scene img {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  image-rendering: auto;
+  transition: transform 620ms var(--k-ease-out);
+  filter: none;
+}
+.k .kh-work__item:hover .kh-work__media img,
+.k .kh-cat__item:hover .kh-cat__media img,
+.k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-duo:hover .kh-duo__foto img,
+.k .kh-soltec__card:hover .kh-soltec__media img,
+.k .kh-pick__scene:hover img {
+  transform: translateZ(0) scale(1.03);
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-work__media img,
+  .k .kh-cat__media img,
+  .k .kh-mat__media img,
+  .k .kh-duo__foto img,
+  .k .kh-soltec__media img,
+  .k .kh-pick__scene img { transition: none; }
+  .k .kh-work__item:hover .kh-work__media img,
+  .k .kh-cat__item:hover .kh-cat__media img,
+  .k .kh-mat__card:hover .kh-mat__media img,
+  .k .kh-duo:hover .kh-duo__foto img,
+  .k .kh-soltec__card:hover .kh-soltec__media img,
+  .k .kh-pick__scene:hover img { transform: translateZ(0); }
+}
+
+/* --- 92d · Údaj a jeho popis --------------------------------------------
+   V pásoch s číslami („EN 13561", „trieda 3", „7 rokov") bola hodnota väčšia
+   než nadpis sekcie a popis pod ňou takmer rovnako silný ako ona. Sekcii má
+   vládnuť jej nadpis; hodnota je druhá úroveň a popis tretia. */
+.k .kh-fakty__cislo,
+.k .kh-fakty__polozka > strong:first-child {
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.k .kh-fakty__co {
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  line-height: 1.35;
+}
+.k .kh-fakty__pod {
+  font-size: clamp(13.5px, 1vw, 14.5px);
+  line-height: 1.55;
+}
+
+/* ==========================================================================
+   VRSTVA 93 · Aké riešenie potrebujete: odpoveď skôr, než sa preklikne
+   ==========================================================================
+   Karty niesli názov, dva parametre a vetu — a to bolo všetko, čo sa dalo
+   zistiť bez prekliku. Na širokej obrazovke sa pri prejdení myšou vysunie
+   ešte to, čo človek naozaj rieši: pre koho to je, na čo sa to hodí a čo
+   z toho má. Fotografia im na to uvoľní miesto, karta si drží výšku a nič
+   sa nikam nedvíha. Na telefóne hover neexistuje, tam sú riadky vidieť
+   rovno — je to informácia, nie ozdoba.
+
+   Tlačidlo „Zobraziť ponuku" pri hoveri obopol tmavý rám. Ostáva jantár,
+   len o odtieň jasnejší, a šípka sa pohne o tri pixely. Nič viac. */
+.k .kh-cat__pre {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-cat__pre > div {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+.k .kh-cat__pre dt {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-cat__pre dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--k-muted);
+}
+
+@media (min-width: 1000px) {
+  /* Skrytý blok stojí v mriežke s nulovou výškou — otvára sa bez skoku a bez
+     prepočtu rozloženia zvyšku stránky. */
+  .k .kh-cat__pre {
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    border-top-color: transparent;
+    opacity: 0;
+    transition: grid-template-rows 420ms var(--k-ease-out),
+                opacity 260ms var(--k-ease),
+                padding-top 420ms var(--k-ease-out);
+  }
+  .k .kh-cat__pre > div { overflow: hidden; }
+  .k .kh-cat__item:hover .kh-cat__pre,
+  .k .kh-cat__item:focus-within .kh-cat__pre {
+    grid-template-rows: 1fr;
+    padding-top: 12px;
+    border-top-color: var(--k-hair);
+    opacity: 1;
+  }
+}
+
+/* Karta reaguje na prejdenie myšou tichým zdvihnutím rámu, nie pohybom. */
+.k .kh-cat__card { transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease); }
+.k .kh-cat__item:hover .kh-cat__card,
+.k .kh-cat__item:focus-within .kh-cat__card {
+  border-color: rgba(18, 23, 26, 0.26);
+  box-shadow: var(--k-shadow-sm);
+}
+
+/* CTA v karte: jantár ostáva jantárom, len o odtieň jasnejší. */
+.k .kh-cat__actions > .k-link {
+  transition: background-color 200ms var(--k-ease), color 200ms var(--k-ease);
+}
+.k .kh-cat__actions > .k-link:hover,
+.k .kh-cat__item:hover .kh-cat__actions > .k-link {
+  background: #ffd452;
+  border-color: #ffd452;
+  color: var(--k-ink);
+  box-shadow: none;
+  transform: none;
+}
+.k .kh-cat__actions > .k-link svg { transition: transform 200ms var(--k-ease-out); }
+.k .kh-cat__actions > .k-link:hover svg,
+.k .kh-cat__item:hover .kh-cat__actions > .k-link svg { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-cat__pre { transition: none; }
+  .k .kh-cat__actions > .k-link svg { transition: none; }
+}
+
+/* ==========================================================================
+   VRSTVA 94 · Prémiová rada Soltec
+   ==========================================================================
+   Sekcia bola štyri riadky textu vedľa fotky — o prémiovom systéme hovorila
+   len tým, že to o sebe napísala. Teraz stojí na tmavej ploche, akú web
+   používa všade, kde je reč o hodnote (čo je v cene, otázky), fotografia
+   nesie polovicu šírky a výhody sú štyri dlaždice s vlastným nadpisom, nie
+   odrážky v odseku. Tlačidlo je jantárové ako všetky hlavné akcie na webe;
+   biele obrysové tam pôsobilo ako druhoradý odkaz. */
+.kh-prem {
+  background: var(--k-ink);
+  color: #fff;
+  overflow: hidden;
+}
+.kh-prem .k-eyebrow { color: var(--k-amber); }
+.kh-prem .k-eyebrow::before { background: var(--k-amber); }
+.kh-prem .k-h2 { color: #fff; }
+
+.kh-prem__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--k-s6);
+  align-items: center;
+}
+@media (min-width: 1000px) {
+  .kh-prem__grid { grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); gap: clamp(40px, 4vw, 76px); }
+}
+
+.kh-prem__telo { display: block; min-width: 0; }
+.kh-prem__telo > * { margin: 0; }
+.kh-prem__telo > .k-eyebrow { margin-bottom: var(--k-s3); }
+.kh-prem__telo > .k-h2 { margin-bottom: var(--k-s4); max-width: 16ch; }
+.kh-prem__lead {
+  margin-bottom: var(--k-s6) !important;
+  max-width: 46ch;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+/* Štyri dlaždice: nadpis nesie výhodu, veta pod ním ju dokladá. Na tmavom
+   podklade ich delí vlasová linka, nie rámy — rámy by z pásu spravili tabuľku. */
+.kh-prem__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 0 0 var(--k-s6);
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 620px) {
+  .kh-prem__body { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(24px, 2.4vw, 40px); }
+}
+.k .kh-prem__body li {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: clamp(14px, 1.3vw, 18px) 0 clamp(14px, 1.3vw, 18px) 18px;
+  border-top: 1px solid var(--k-hair-invert-soft);
+}
+.k .kh-prem__body li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(clamp(14px, 1.3vw, 18px) + 0.55em);
+  width: var(--k-bodka);
+  height: var(--k-bodka);
+  border-radius: 999px;
+  background: var(--k-amber);
+}
+.k .kh-prem__body strong {
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.2vw, 17px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #fff;
+}
+.k .kh-prem__body span {
+  font-size: clamp(13px, 1.02vw, 14.5px);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.kh-prem__akcia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(14px, 1.4vw, 22px);
+}
+.k .kh-prem__viac { color: #fff; }
+.k .kh-prem__viac:hover { color: var(--k-amber); }
+
+.kh-prem__foto {
+  position: relative;
+  margin: 0;
+  border-radius: var(--k-r);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+.kh-prem__foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+@media (min-width: 1000px) {
+  .kh-prem__foto img { aspect-ratio: 5 / 4; }
+}
+.kh-prem__foto figcaption {
+  position: absolute;
+  left: clamp(12px, 1.2vw, 18px);
+  bottom: clamp(12px, 1.2vw, 18px);
+  padding: 7px 12px;
+  border-radius: var(--k-r-pill);
+  background: rgba(12, 16, 18, 0.72);
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Na telefóne vedie nadpis, potom fotografia a až za ňou výhody — rovnaké
+   poradie, aké má zvyšok webu v dvojiciach fotka + zoznam. */
+@media (max-width: 999px) {
+  .kh-prem__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--k-s5); }
+  .kh-prem__telo { display: contents; }
+  .kh-prem__telo > .k-eyebrow { order: 1; }
+  .kh-prem__telo > .k-h2 { order: 2; }
+  .kh-prem__lead { order: 3; margin-bottom: 0 !important; }
+  .kh-prem__foto { order: 4; }
+  .kh-prem__body { order: 5; margin-bottom: 0; }
+  .kh-prem__akcia { order: 6; }
+}
+
+/* ==========================================================================
+   VRSTVA 95 · Skladba konštrukcie: rez prepojený so zoznamom vrstiev
+   ==========================================================================
+   Doteraz to bola tabuľka o troch stĺpcoch vedľa kresby — dva samostatné
+   objekty, medzi ktorými si musel čitateľ hľadať vzťah sám. Kresba má pritom
+   svoje vrstvy očíslované. Body na rezu sú teraz tlačidlá a každý má v
+   zozname svoj riadok: prejdete po riadku a na kresbe sa rozsvieti presne tá
+   vrstva; prejdete po bode na kresbe a zvýrazní sa jeho riadok. Bez skriptu
+   ostáva kresba kresbou a zoznam zoznamom — čitateľné je oboje.
+   Ten istý komponent je na prístreškoch pre autá aj na záhradných. */
+.kh-vrstvy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--k-s6);
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .kh-vrstvy { grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); gap: clamp(34px, 3.4vw, 64px); }
+  .kh-vrstvy__vykres { position: sticky; top: calc(var(--kv-hlava, 72px) + 28px); }
+}
+
+.kh-vrstvy__vykres { margin: 0; display: grid; gap: var(--k-s3); }
+.kh-vrstvy__plocha {
+  position: relative;
+  display: block;
+  padding: clamp(14px, 1.6vw, 26px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r);
+  background: var(--k-white);
+}
+.kh-vrstvy__plocha img { display: block; width: 100%; height: auto; }
+.kh-vrstvy__vykres figcaption {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+
+/* Bod leží presne na krúžku, ktorý je nakreslený v rezu. Sám nič nekreslí —
+   až pri vybratí sa okolo neho rozbehne jantárový prstenec. */
+.kh-vrstvy__bod {
+  position: absolute;
+  left: calc(clamp(14px, 1.6vw, 26px) + (100% - 2 * clamp(14px, 1.6vw, 26px)) * var(--kx));
+  top: calc(clamp(14px, 1.6vw, 26px) + (100% - 2 * clamp(14px, 1.6vw, 26px)) * var(--ky));
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+.kh-vrstvy__bod span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 0 0 rgba(255, 204, 0, 0);
+  transition: box-shadow 260ms var(--k-ease-out);
+}
+.kh-vrstvy__bod:hover span,
+.kh-vrstvy__bod:focus-visible span,
+.kh-vrstvy[data-k-aktivna] .kh-vrstvy__bod.je-vybrany span {
+  box-shadow: 0 0 0 7px rgba(255, 204, 0, 0.32);
+}
+.kh-vrstvy__bod:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+
+.kh-vrstvy__uvod {
+  margin: 0 0 var(--k-s4);
+  font-size: clamp(14px, 1.1vw, 15.5px);
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.kh-vrstvy__uvod strong { color: var(--k-ink); }
+
+.kh-vrstvy__zoznam { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.kh-vrstvy__zoznam li { margin: 0; }
+.kh-vrstvy__zoznam li::before { content: none; }
+
+.k .kh-vrstvy__riadok {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  grid-template-areas: "cislo nazov" ".     zcoho" ".     vyber";
+  gap: 2px 14px;
+  width: 100%;
+  padding: clamp(14px, 1.3vw, 18px) 14px clamp(14px, 1.3vw, 18px) 0;
+  border: 0;
+  border-top: 1px solid var(--k-hair);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 220ms var(--k-ease);
+}
+.kh-vrstvy__zoznam li:first-child .kh-vrstvy__riadok { border-top: 0; }
+.k .kh-vrstvy__riadok::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--k-amber);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 300ms var(--k-ease-out);
+}
+.k .kh-vrstvy__riadok:hover,
+.k .kh-vrstvy__riadok:focus-visible,
+.k .kh-vrstvy__riadok.je-vybrany { background: var(--k-bone); }
+.k .kh-vrstvy__riadok:hover::before,
+.k .kh-vrstvy__riadok:focus-visible::before,
+.k .kh-vrstvy__riadok.je-vybrany::before { transform: scaleY(1); }
+.k .kh-vrstvy__riadok:focus-visible { outline: 2px solid var(--k-ink); outline-offset: -2px; }
+
+.kh-vrstvy__cislo {
+  grid-area: cislo;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--k-grey-soft);
+  transition: color 220ms var(--k-ease);
+}
+.k .kh-vrstvy__riadok:hover .kh-vrstvy__cislo,
+.k .kh-vrstvy__riadok.je-vybrany .kh-vrstvy__cislo { color: var(--k-amber-deep); }
+.kh-vrstvy__nazov {
+  grid-area: nazov;
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.2vw, 17px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.kh-vrstvy__zcoho {
+  grid-area: zcoho;
+  font-size: clamp(13.5px, 1.05vw, 14.5px);
+  line-height: 1.5;
+  color: var(--k-ink);
+}
+.kh-vrstvy__vyber {
+  grid-area: vyber;
+  margin-top: 3px;
+  font-size: clamp(12.5px, 1vw, 13.5px);
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+
+@media (max-width: 619px) {
+  .k .kh-vrstvy__riadok { grid-template-columns: 2.2rem minmax(0, 1fr); }
+  .kh-vrstvy__plocha { padding: 12px; }
+  .kh-vrstvy__bod { width: 30px; height: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-vrstvy__riadok, .k .kh-vrstvy__riadok::before, .kh-vrstvy__bod span { transition: none; }
+}
+
+/* ==========================================================================
+   VRSTVA 96 · Rozprávanie o materiáli — jeden systém pre celý web
+   ==========================================================================
+   „Z čoho je prístrešok postavený", „Materiál", „Hliník", „Lamely" — štyri
+   sekcie na štyroch podstránkach, ktoré hovoria to isté: z čoho je to, prečo
+   je to tak a čo z toho zákazník má. Doteraz mala každá vlastnú váhu písma a
+   vlastný odstup a všetky pôsobili ako text položený na bielom. Odteraz majú
+   jednu stavbu: fotografia vedie, nad ňou drobný verzálkový názov oblasti,
+   pod ním silný nadpis a až potom výpočet s bodkami. Karta má vlastný rám,
+   ktorý pri prejdení myšou zosilnie — je to hmatateľný predmet, nie odsek. */
+.k .kh-mat__card {
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  overflow: hidden;
+  transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
+}
+.k .kh-mat__card:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
+
+.k .kh-mat__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: clamp(18px, 1.7vw, 26px);
+}
+.k .kh-mat__label {
+  margin: 0 0 var(--k-s2);
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-mat__title {
+  margin: 0 0 var(--k-s3);
+  font-family: var(--k-head);
+  font-size: clamp(18px, 1.45vw, 23px);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.022em;
+  color: var(--k-ink);
+}
+.k .kh-mat__list { margin: 0; padding-top: var(--k-s2); border-top: 1px solid var(--k-hair); }
+.k .kh-mat__list li {
+  padding-top: clamp(9px, 0.8vw, 12px);
+  padding-bottom: clamp(9px, 0.8vw, 12px);
+  border-top: 0;
+  font-size: clamp(13.5px, 1.05vw, 14.5px);
+  color: var(--k-muted);
+}
+.k .kh-mat__list li::before { top: calc(clamp(9px, 0.8vw, 12px) + 0.6em); }
+
+/* Dvojica fotografia + zoznam (Hliník, Soltec na podstránkach) dostáva ten
+   istý rytmus: očko, nadpis, veta, výpočet, akcia — s odstupmi zo stupnice. */
+.k .kh-duo__telo { display: block; }
+.k .kh-duo__telo > * { margin-top: 0; margin-bottom: 0; }
+.k .kh-duo__telo > .k-eyebrow { margin-bottom: var(--k-s3); }
+.k .kh-duo__telo > .k-h2,
+.k .kh-duo__telo > .k-h3 { margin-bottom: var(--k-s4); }
+.k .kh-duo__telo > .k-copy { margin-bottom: var(--k-s5); }
+.k .kh-duo__telo > .kh-duo__zoznam { margin-bottom: var(--k-s5); }
+.k .kh-duo__telo > .kh-duo__akcia { margin-bottom: 0; }
+.k .kh-duo__telo > *:last-child { margin-bottom: 0; }
+.k .kh-duo__foto { border-radius: var(--k-r); overflow: hidden; }
+
+/* ==========================================================================
+   VRSTVA 97 · Rady F a SL: rozdiel je vidieť skôr než tabuľku
+   ==========================================================================
+   Sekcia začínala tabuľkou so šiestimi stĺpcami. Kto nevie, čo znamená
+   „F240", z nej rozdiel neprečíta — a rozdiel je pritom jednoduchý: F je
+   čistý kváder, SL ráta s uzamykateľným boxom. Dve karty s fotografiou a
+   veľkým znakom radu to povedia na prvý pohľad; tabuľka pod nimi ostáva
+   presne taká, aká bola, pre toho, kto ide do čísel. */
+.kh-rady {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2vw, 30px);
+  margin-bottom: var(--k-s6);
+}
+@media (min-width: 780px) { .kh-rady { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.kh-rady__kus {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  overflow: hidden;
+  transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
+}
+.kh-rady__kus:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
+
+.kh-rady__foto { position: relative; display: block; overflow: hidden; }
+.kh-rady__foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: transform 620ms var(--k-ease-out);
+}
+.kh-rady__kus:hover .kh-rady__foto img { transform: translateZ(0) scale(1.03); }
+/* Znak radu je jediná vec, ktorú si má človek z karty odniesť. */
+.kh-rady__znak {
+  position: absolute;
+  left: clamp(12px, 1.2vw, 18px);
+  bottom: clamp(10px, 1vw, 14px);
+  font-family: var(--k-head);
+  font-size: clamp(38px, 4vw, 58px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+
+.kh-rady__telo { display: block; padding: clamp(18px, 1.7vw, 26px); }
+.kh-rady__telo > * { margin: 0; }
+.kh-rady__nazov {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: var(--k-s3);
+  font-family: var(--k-head);
+  font-size: clamp(18px, 1.4vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+}
+.kh-rady__nazov span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.kh-rady__veta {
+  margin-bottom: var(--k-s4);
+  font-size: clamp(14px, 1.1vw, 15.5px);
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+.k .kh-rady__zoznam {
+  display: grid;
+  gap: 0;
+  margin: 0 0 var(--k-s4);
+  padding: var(--k-s2) 0 0;
+  border-top: 1px solid var(--k-hair);
+  list-style: none;
+}
+.k .kh-rady__zoznam li {
+  position: relative;
+  margin: 0;
+  padding: clamp(9px, 0.8vw, 12px) 0 clamp(9px, 0.8vw, 12px) 18px;
+  font-size: clamp(13.5px, 1.05vw, 14.5px);
+  line-height: 1.5;
+  color: var(--k-ink);
+}
+.k .kh-rady__zoznam li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(clamp(9px, 0.8vw, 12px) + 0.6em);
+  width: var(--k-bodka);
+  height: var(--k-bodka);
+  border-radius: 999px;
+  background: var(--k-amber);
+}
+.kh-rady__kedy {
+  display: grid;
+  gap: 4px;
+  padding: clamp(12px, 1.1vw, 16px);
+  border-radius: var(--k-r-xs);
+  background: var(--k-bone);
+  font-size: clamp(13px, 1.02vw, 14px);
+  line-height: 1.5;
+  color: var(--k-ink);
+}
+.kh-rady__kedy span {
+  font-family: var(--k-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kh-rady__foto img, .kh-rady__kus { transition: none; }
+  .kh-rady__kus:hover .kh-rady__foto img { transform: translateZ(0); }
+}

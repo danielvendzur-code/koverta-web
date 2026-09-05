@@ -429,68 +429,35 @@
       </div>
     </header>
 
-    <div class="kh-skladba">
-      <figure class="kh-skladba__vykres k-rise">
-        <img src="../assets/koverta-sketch-carport.svg" alt="Technický náčrt prístrešku s kótami šírky a výšky" loading="lazy" decoding="async">
+    <div class="kh-vrstvy" data-k-vrstvy>
+      <figure class="kh-vrstvy__vykres k-rise">
+        <span class="kh-vrstvy__plocha">
+          <img src="../assets/koverta-sketch-carport.svg" alt="Technický náčrt prístrešku s kótami šírky a výšky" width="840" height="560" loading="lazy" decoding="async">
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="1" style="--kx: 0.2119; --ky: 0.6250" aria-label="Nosná konštrukcia — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="2" style="--kx: 0.2976; --ky: 0.3696" aria-label="Obklad konštrukcie — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="3" style="--kx: 0.7262; --ky: 0.3696" aria-label="Povrch — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="4" style="--kx: 0.5000; --ky: 0.3304" aria-label="Strecha — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="5" style="--kx: 0.7881; --ky: 0.5357" aria-label="Odvodnenie — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="6" style="--kx: 0.7202; --ky: 0.7357" aria-label="Výplne bokov — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="7" style="--kx: 0.4286; --ky: 0.4500" aria-label="Elektro — ukázať v zozname"><span aria-hidden="true"></span></button>
+        <button class="kh-vrstvy__bod" type="button" data-k-vrstva="8" style="--kx: 0.2119; --ky: 0.8750" aria-label="Kotvenie — ukázať v zozname"><span aria-hidden="true"></span></button>
+        </span>
         <figcaption>Rez zostavou. Kóty aj rozmiestnenie stĺpov dostanete v návrhu pred výrobou.</figcaption>
       </figure>
-      <div class="kh-tab k-rise" data-k-delay="1">
-      <div class="kh-tab__scroll">
-        <table>
-          <caption><strong>Takto je postavený prístrešok Koverta.</strong> Hliníkový Soltec má inú skladbu — celý z hliníka, bez oceľového skeletu. Presné profily dostanete v návrhu.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Vrstva</th>
-              <th scope="col">Z čoho</th>
-              <th scope="col">Na výber</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Nosná konštrukcia</th>
-              <td data-popis="Z čoho">Oceľové stĺpy a prievlaky, zvárané vo vlastnej výrobe</td>
-              <td data-popis="Na výber">Rozmer profilu podľa rozponu a snehovej oblasti</td>
-            </tr>
-            <tr>
-              <th scope="row">Obklad konštrukcie</th>
-              <td data-popis="Z čoho">Hliníkové profily, ktoré zakrývajú oceľ po celej konštrukcii</td>
-              <td data-popis="Na výber">Obklad je voliteľný — bez neho ostáva oceľ v práškovom laku priznaná</td>
-            </tr>
-            <tr>
-              <th scope="row">Povrch</th>
-              <td data-popis="Z čoho">Práškový lak, vypálený v peci</td>
-              <td data-popis="Na výber">Ktorýkoľvek odtieň z palety RAL, aj štruktúrovaný</td>
-            </tr>
-            <tr>
-              <th scope="row">Strecha</th>
-              <td data-popis="Z čoho">Pultová strecha z trapézového profilu, osadená odkvapom</td>
-              <td data-popis="Na výber">Izolácia ako doplnok — tlmí hluk dažďa a bráni prehrievaniu</td>
-            </tr>
-            <tr>
-              <th scope="row">Odvodnenie</th>
-              <td data-popis="Z čoho">Odkvap po celej dĺžke strechy</td>
-              <td data-popis="Na výber">Zvod do zeme, do dlažby alebo do kanalizácie</td>
-            </tr>
-            <tr>
-              <th scope="row">Výplne bokov</th>
-              <td data-popis="Z čoho">Lamely z hliníka, dreva alebo WPC, prípadne plná stena</td>
-              <td data-popis="Na výber">Po celej výške alebo do polovice, na jednej strane aj dookola</td>
-            </tr>
-            <tr>
-              <th scope="row">Elektro</th>
-              <td data-popis="Z čoho">Prípojka vedená vnútri stĺpa</td>
-              <td data-popis="Na výber">LED v podhľade, zásuvka, príprava na fotovoltiku</td>
-            </tr>
-            <tr>
-              <th scope="row">Kotvenie</th>
-              <td data-popis="Z čoho">Betónové pätky alebo kotvenie do existujúcej plochy</td>
-              <td data-popis="Na výber">Pätky ako doplnková služba k montáži</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="kh-vrstvy__panel k-rise" data-k-delay="1">
+        <p class="kh-vrstvy__uvod"><strong>Takto je postavený prístrešok Koverta.</strong> Hliníkový Soltec má inú skladbu — celý z hliníka, bez oceľového skeletu. Presné profily dostanete v návrhu.</p>
+        <ol class="kh-vrstvy__zoznam">
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="1"><span class="kh-vrstvy__cislo">01</span><span class="kh-vrstvy__nazov">Nosná konštrukcia</span><span class="kh-vrstvy__zcoho">Oceľové stĺpy a prievlaky, zvárané vo vlastnej výrobe</span><span class="kh-vrstvy__vyber">Rozmer profilu podľa rozponu a snehovej oblasti</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="2"><span class="kh-vrstvy__cislo">02</span><span class="kh-vrstvy__nazov">Obklad konštrukcie</span><span class="kh-vrstvy__zcoho">Hliníkové profily, ktoré zakrývajú oceľ po celej konštrukcii</span><span class="kh-vrstvy__vyber">Obklad je voliteľný — bez neho ostáva oceľ v práškovom laku priznaná</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="3"><span class="kh-vrstvy__cislo">03</span><span class="kh-vrstvy__nazov">Povrch</span><span class="kh-vrstvy__zcoho">Práškový lak, vypálený v peci</span><span class="kh-vrstvy__vyber">Ktorýkoľvek odtieň z palety RAL, aj štruktúrovaný</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="4"><span class="kh-vrstvy__cislo">04</span><span class="kh-vrstvy__nazov">Strecha</span><span class="kh-vrstvy__zcoho">Pultová strecha z trapézového profilu, osadená odkvapom</span><span class="kh-vrstvy__vyber">Izolácia ako doplnok — tlmí hluk dažďa a bráni prehrievaniu</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="5"><span class="kh-vrstvy__cislo">05</span><span class="kh-vrstvy__nazov">Odvodnenie</span><span class="kh-vrstvy__zcoho">Odkvap po celej dĺžke strechy</span><span class="kh-vrstvy__vyber">Zvod do zeme, do dlažby alebo do kanalizácie</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="6"><span class="kh-vrstvy__cislo">06</span><span class="kh-vrstvy__nazov">Výplne bokov</span><span class="kh-vrstvy__zcoho">Lamely z hliníka, dreva alebo WPC, prípadne plná stena</span><span class="kh-vrstvy__vyber">Po celej výške alebo do polovice, na jednej strane aj dookola</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="7"><span class="kh-vrstvy__cislo">07</span><span class="kh-vrstvy__nazov">Elektro</span><span class="kh-vrstvy__zcoho">Prípojka vedená vnútri stĺpa</span><span class="kh-vrstvy__vyber">LED v podhľade, zásuvka, príprava na fotovoltiku</span></button></li>
+        <li><button class="kh-vrstvy__riadok" type="button" data-k-vrstva="8"><span class="kh-vrstvy__cislo">08</span><span class="kh-vrstvy__nazov">Kotvenie</span><span class="kh-vrstvy__zcoho">Betónové pätky alebo kotvenie do existujúcej plochy</span><span class="kh-vrstvy__vyber">Pätky ako doplnková služba k montáži</span></button></li>
+        </ol>
       </div>
-      <p class="kh-tab__note">Prístrešok počítame na sneh podľa vašej oblasti. V Nitre a pod Tatrami preto nie je rovnaká zostava.</p>
-      </div>
+    </div>
     </div>
   </div>
 </section>

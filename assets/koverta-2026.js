@@ -1513,6 +1513,49 @@
     });
   }
 
+  /* --- Skladba konštrukcie: rez a zoznam si rozumejú ----------------------
+     Kresba má svoje vrstvy očíslované a zoznam vedľa nej ich vysvetľuje.
+     Doteraz to boli dva samostatné objekty. Teraz prejdenie po riadku
+     rozsvieti bod na kresbe a prejdenie po bode zvýrazní riadok — vzťah
+     medzi číslom na reze a vetou v zozname netreba hľadať očami.
+     Bez skriptu ostáva kresba kresbou a zoznam zoznamom. */
+  function initVrstvy(root) {
+    root.querySelectorAll('[data-k-vrstvy]').forEach((blok) => {
+      if (blok.dataset.kReadyVrstvy === 'true') return;
+      blok.dataset.kReadyVrstvy = 'true';
+      const spinace = [].slice.call(blok.querySelectorAll('[data-k-vrstva]'));
+      if (!spinace.length) return;
+
+      const uprac = () => {
+        spinace.forEach((s) => s.classList.remove('je-vybrany'));
+        blok.removeAttribute('data-k-aktivna');
+      };
+      const vyber = (cislo) => {
+        blok.setAttribute('data-k-aktivna', cislo);
+        spinace.forEach((s) => s.classList.toggle('je-vybrany', s.dataset.kVrstva === cislo));
+      };
+
+      spinace.forEach((s) => {
+        const cislo = s.dataset.kVrstva;
+        s.addEventListener('mouseenter', () => vyber(cislo));
+        s.addEventListener('focus', () => vyber(cislo));
+        s.addEventListener('mouseleave', uprac);
+        s.addEventListener('blur', uprac);
+        s.addEventListener('click', (e) => {
+          e.preventDefault();
+          vyber(cislo);
+          /* Klik na bod v kresbe odvedie pozornosť k riadku, ktorý ho
+             vysvetľuje — na telefóne je to jediný spôsob, ako sa k nemu
+             dostať, lebo prejdenie myšou tam neexistuje. */
+          if (s.classList.contains('kh-vrstvy__bod')) {
+            const riadok = blok.querySelector('.kh-vrstvy__riadok[data-k-vrstva="' + cislo + '"]');
+            if (riadok) riadok.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        });
+      });
+    });
+  }
+
   /* --- Zväčšenie fotografie -------------------------------------------------
      Náhľad v karte je malý zámerne — karta má ostať prehľadná. Kto si chce
      stavbu pozrieť poriadne, klikne a fotka sa otvorí cez celú obrazovku.
@@ -2093,7 +2136,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa];
+                 initDopyt, initMapa, initLupa, initVrstvy];
 
   const davkuj = (ulohy) => {
     let i = 0;
