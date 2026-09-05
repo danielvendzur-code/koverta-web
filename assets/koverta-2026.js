@@ -838,11 +838,78 @@
     'vonkajsie kuchyne': 'outdoor kuchyna grill gril nerez varenie'
   };
 
+  /* Čo človek napíše verzus ako sa to na webe volá. Kľúč je to, čo príde do
+     poľa; hodnoty sú slová, ktoré sa majú hľadať popri ňom. Bez tohto nenájde
+     „garáž" prístrešok, „žalúzie" tienenie ani „cenník" stránku s cenami — a
+     to sú tri najčastejšie veci, ktoré ľudia do poľa naozaj píšu. */
+  const SLOVNIK = {
+    carport: ['pristresok', 'auto'],
+    garaz: ['pristresok', 'auto', 'carport'],
+    parkovanie: ['pristresok', 'auto', 'carport'],
+    vozidlo: ['auto'],
+    pristresok: ['carport', 'prestresenie'],
+    pristresky: ['carport', 'prestresenie'],
+    prestresenie: ['pristresok', 'strecha'],
+    zastresenie: ['pristresok', 'prestresenie', 'strecha'],
+    altanok: ['pergola', 'zahradny'],
+    altan: ['pergola'],
+    pergola: ['bioklimaticka', 'lamely'],
+    zaluzie: ['lamely', 'tienenie'],
+    zaluzia: ['lamely', 'tienenie'],
+    markiza: ['tienenie', 'roleta'],
+    roleta: ['zip', 'tienenie'],
+    rolety: ['zip', 'tienenie'],
+    screen: ['zip', 'roleta', 'tienenie'],
+    clona: ['tienenie', 'lamely'],
+    brisolej: ['tienenie', 'lamely'],
+    terasa: ['zahradne', 'pergola'],
+    balkon: ['prestresenie', 'pristresok'],
+    vchod: ['prestresenie', 'pristresok'],
+    kuchyna: ['kuchyne', 'gril'],
+    gril: ['kuchyne'],
+    grill: ['kuchyne'],
+    cennik: ['cena', 'ponuka'],
+    cena: ['ponuka', 'cennik'],
+    stoji: ['cena'],
+    zameranie: ['obhliadka', 'ponuka'],
+    montaz: ['realizacia', 'dodanie'],
+    povolenie: ['ohlasenie', 'urad'],
+    ohlasenie: ['povolenie', 'urad'],
+    patky: ['zaklad', 'kotvenie'],
+    patka: ['zaklad', 'kotvenie'],
+    zaklady: ['patky', 'kotvenie'],
+    kotvenie: ['patky', 'zaklad'],
+    hlinik: ['soltec', 'alu'],
+    alu: ['hlinik'],
+    ocel: ['koverta', 'konstrukcia'],
+    farba: ['ral', 'lak', 'odtien'],
+    farby: ['ral', 'lak', 'odtien'],
+    ral: ['farba', 'lak'],
+    fotovoltika: ['solar', 'panely'],
+    solar: ['fotovoltika'],
+    led: ['osvetlenie', 'svetlo'],
+    svetlo: ['led', 'osvetlenie'],
+    box: ['sklad', 'uzamykatelny'],
+    sklad: ['box'],
+    sneh: ['zatazenie', 'nosnost'],
+    vietor: ['odolnost', 'snimac'],
+    zaruka: ['norma', 'reklamacia'],
+    kontakt: ['telefon', 'email'],
+    mapa: ['realizacie', 'obce'],
+    referencie: ['realizacie'],
+    galeria: ['realizacie', 'fotografie']
+  };
+
+  /* Rozmery ľudia píšu troma spôsobmi: „6x6", „6 × 6" aj „6 na 6". Aby sa
+     stretli, znak násobenia sa mení na x a medzi číslice sa doplní medzera. */
   const norm = (s) =>
     (s || '')
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[×✕✖]/g, ' x ')
+      .replace(/(\d)\s*x\s*(\d)/g, '$1 x $2')
+      .replace(/,(\d)/g, '.$1')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -965,38 +1032,113 @@
 
     const zdroj = function () { return cely || index || []; };
 
-    /* Hľadá sa po slovách: nájsť treba všetky, nie len celý reťazec. Vďaka
-       tomu prejde aj „pergola zip" alebo „carport 6 m". */
-    const skore = function (it, slova, dopyt) {
-      const t = norm(it.title);
-      let sk = 0;
-      for (let i = 0; i < slova.length; i++) {
-        const w = slova[i];
-        if (t.indexOf(w) === 0) sk += 6;
-        else if ((' ' + t).indexOf(' ' + w) > -1) sk += 4;
-        else if (t.indexOf(w) > -1) sk += 3;
-        else if ((' ' + it.hay).indexOf(' ' + w) > -1) sk += 2;
-        else if (it.hay.indexOf(w) > -1) sk += 1;
-        else {
-          /* Slovenčina ohýba: „ohlásenie“ verzus „ohlásením“, „pätka“ verzus
-             „pätky“. Keď celé slovo nesadne, skúsi sa jeho kmeň — prvých päť
-             znakov stačí na to, aby sa tvary stretli, a je to dosť dlhé na to,
-             aby to nespájalo nesúvisiace slová. */
-          const kmen = w.length > 5 ? w.slice(0, w.length - Math.min(3, w.length - 5)) : w;
-          if (kmen.length >= 5 && (t.indexOf(kmen) > -1 || it.hay.indexOf(kmen) > -1)) sk += 1;
-          else return 0;
+    /* Vzdialenosť na jednu-dve opravy — preklep typu „pergla" alebo
+       „pristesok". Počíta sa len po prekročenie limitu, takže je to lacné aj
+       pri stovkách položiek. */
+    const blizko = function (a, b, limit) {
+      const rozdiel = a.length - b.length;
+      if (rozdiel > limit || rozdiel < -limit) return false;
+      let i = 0, j = 0, chyby = 0;
+      while (i < a.length && j < b.length) {
+        if (a.charCodeAt(i) === b.charCodeAt(j)) { i++; j++; continue; }
+        if (++chyby > limit) return false;
+        if (a.length > b.length) i++;
+        else if (a.length < b.length) j++;
+        else { i++; j++; }
+      }
+      return chyby + (a.length - i) + (b.length - j) <= limit;
+    };
+
+    /* Slovenčina ohýba: „ohlásenie" verzus „ohlásením", „pätka" verzus
+       „pätky". Kmeň je prvých päť až sedem znakov — dosť na to, aby sa tvary
+       stretli, a dosť dlhý na to, aby nespájal nesúvisiace slová. */
+    const kmen = function (w) {
+      return w.length > 5 ? w.slice(0, w.length - Math.min(3, w.length - 5)) : w;
+    };
+
+    /* Ako blízko je jedno slovo k jednej položke. Nula znamená „vôbec".
+       Poradie váh je poradie istoty: názov pred popisom, začiatok pred
+       stredom, presné slovo pred kmeňom a kmeň pred preklepom. */
+    const slovoSkore = function (it, w) {
+      const t = it.nt || (it.nt = norm(it.title));
+      const np = it.np || (it.np = norm(it.note));
+      if (t === w) return 14;
+      if (t.indexOf(w + ' ') === 0) return 11;
+      if ((' ' + t).indexOf(' ' + w) > -1) return 9;
+      if (t.indexOf(w) === 0) return 8;
+      if (t.indexOf(w) > -1) return 6;
+      if ((' ' + np).indexOf(' ' + w) > -1) return 4;
+      if (np.indexOf(w) > -1) return 3;
+      if ((' ' + it.hay).indexOf(' ' + w) > -1) return 2.5;
+      if (it.hay.indexOf(w) > -1) return 1.6;
+      const k = kmen(w);
+      if (k.length >= 5 && (t.indexOf(k) > -1 || it.hay.indexOf(k) > -1)) return 1.2;
+      /* Preklep skúšame až celkom na koniec a len proti slovám v názve —
+         inde by to bolo drahé aj nepresné. */
+      if (w.length >= 5) {
+        const limit = w.length >= 8 ? 2 : 1;
+        const casti = t.split(' ');
+        for (let i = 0; i < casti.length; i++) {
+          if (casti[i].length >= 4 && blizko(casti[i], w, limit)) return 1.8;
         }
       }
-      if (t === dopyt) sk += 10;
-      else if (t.indexOf(dopyt) === 0) sk += 5;
-      if (it.kind === 'Stránka' || it.kind === 'Produkt') sk += 2;
+      return 0;
+    };
+
+    /* Hľadá sa po slovách: nájsť treba všetky, nie len celý reťazec. Vďaka
+       tomu prejde aj „pergola zip" alebo „carport 6 m". Každé slovo si so
+       sebou nesie svoje synonymá — stačí, aby sadlo ktorékoľvek z nich, len
+       sa počíta slabšie než to, čo človek naozaj napísal. */
+    const skore = function (it, skupiny, dopyt) {
+      let sk = 0;
+      let sedi = 0;
+      let dlhe = true;
+      let silne = false;
+      for (let i = 0; i < skupiny.length; i++) {
+        const varianty = skupiny[i];
+        let najlepsie = 0;
+        for (let j = 0; j < varianty.length; j++) {
+          const v = slovoSkore(it, varianty[j]) * (j === 0 ? 1 : 0.62);
+          if (v > najlepsie) najlepsie = v;
+        }
+        if (najlepsie) { sedi++; sk += najlepsie; if (najlepsie >= 6) silne = true; }
+        else if (varianty.hlavne) dlhe = false;
+      }
+      /* Keď človek napíše vetu — „box na náradie" —, nemusí byť na webe každé
+         slovo. Stačí, aby sadla väčšina a medzi nimi to najdlhšie; za každé
+         nenájdené sa strhne. Pri jedinom slove sa neodpúšťa nič. */
+      const chyba = skupiny.length - sedi;
+      if (!sedi) return 0;
+      /* Pri jedinom slove sa neodpúšťa nič. Pri vete stačí, aby sadla
+         polovica slov alebo aspoň jedno priamo v názve — „box na náradie"
+         nájde box aj vtedy, keď slovo náradie na webe nie je. */
+      if (skupiny.length === 1) { if (chyba) return 0; }
+      else if (!dlhe && !silne && sedi * 2 < skupiny.length) return 0;
+      sk -= chyba * 3;
+      if (sk <= 0) return 0;
+      if (it.nt === dopyt) sk += 20;
+      else if (it.nt.indexOf(dopyt) === 0) sk += 8;
+      else if (it.nt.indexOf(dopyt) > -1) sk += 4;
+      /* Stránka a produkt sú cieľ, sekcia a parameter len cesta k nemu. */
+      if (it.kind === 'Stránka') sk += 5;
+      else if (it.kind === 'Produkt' || it.kind === 'Katalóg') sk += 3;
+      else if (it.kind === 'Obec') sk += 2;
+      else if (it.kind === 'Otázka') sk += 1;
+      /* Pri rovnakej zhode vyhráva kratší názov — býva konkrétnejší. */
+      sk += Math.max(0, 3 - it.nt.length / 22);
       return sk;
     };
 
     const render = (q) => {
       const nq = norm(q);
       /* Čísla nechávame aj jednoznakové („9 × 6 m“), písmená až od dvoch. */
-      const slova = nq.split(' ').filter(function (w) { return w.length > 1 || /[0-9]/.test(w); });
+      /* Predložky a spojky nič nehľadajú, len rozostrujú — „pergola na
+         terasu" má hľadať pergolu a terasu. */
+      const VYPLN = ' a aj do i k na nad o od pod po pre pri s so u v vo z za je su sa ktory ktora ';
+      const slova = nq.split(' ').filter(function (w) {
+        if (VYPLN.indexOf(' ' + w + ' ') > -1) return false;
+        return w.length > 1 || /[0-9]/.test(w);
+      });
       list.innerHTML = '';
       active = -1;
 
@@ -1013,11 +1155,23 @@
         return;
       }
 
+      /* Každé napísané slovo dostane svoju skupinu: prvé je to, čo človek
+         naozaj napísal, za ním jeho synonymá. */
+      let najdlhsie = '';
+      slova.forEach(function (w) { if (w.length > najdlhsie.length) najdlhsie = w; });
+      const skupiny = slova.map(function (w) {
+        const rad = [w];
+        const syn = SLOVNIK[w] || SLOVNIK[kmen(w)];
+        if (syn) for (let i = 0; i < syn.length; i++) rad.push(syn[i]);
+        rad.hlavne = w === najdlhsie;
+        return rad;
+      });
+
       const hits = zdroj()
-        .map(function (it) { return { it: it, score: skore(it, slova, nq) }; })
+        .map(function (it) { return { it: it, score: skore(it, skupiny, nq) }; })
         .filter(function (r) { return r.score > 0; })
         .sort(function (a, b) { return b.score - a.score; })
-        .slice(0, 8);
+        .slice(0, 10);
 
       empty.hidden = hits.length > 0;
       if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte — poradíme.';
@@ -1511,6 +1665,36 @@
         f.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
       });
     });
+  }
+
+  /* --- Krátka slučka vnútri obsahu ---------------------------------------
+     Pohyb lamiel sa fotografiou vysvetliť nedá — otočná strecha je pohyb.
+     Klip je pôvodný, tri sekundy, bez zvuku a v slučke. Sťahuje sa až vtedy,
+     keď sa karta priblíži k oknu, a zastaví sa, len čo z neho odíde; kým
+     nebeží, drží miesto plagát, takže sa nič neposúva. Pri obmedzenom pohybe
+     alebo pri šetrení dát ostáva plagát a video sa nesťahuje vôbec. */
+  function initSlucka(root) {
+    const klipy = root.querySelectorAll('[data-k-slucka]');
+    if (!klipy.length) return;
+    const setri = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const spojenie = navigator.connection || null;
+    const skromne = spojenie && (spojenie.saveData || /2g/.test(spojenie.effectiveType || ''));
+    if (setri || skromne || !('IntersectionObserver' in window)) return;
+
+    const pozor = new IntersectionObserver((zaznamy) => {
+      zaznamy.forEach((z) => {
+        const v = z.target;
+        if (z.isIntersecting) {
+          if (v.preload !== 'auto') { v.preload = 'auto'; v.load(); }
+          const beh = v.play();
+          if (beh && beh.catch) beh.catch(() => {});
+        } else if (!v.paused) {
+          v.pause();
+        }
+      });
+    }, { rootMargin: '160px 0px', threshold: 0.2 });
+
+    klipy.forEach((v) => { v.muted = true; pozor.observe(v); });
   }
 
   /* --- Skladba konštrukcie: rez a zoznam si rozumejú ----------------------
@@ -2136,7 +2320,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa, initVrstvy];
+                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka];
 
   const davkuj = (ulohy) => {
     let i = 0;

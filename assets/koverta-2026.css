@@ -6260,7 +6260,7 @@ html { background: var(--k-ink); }
 .kh-soltec__media img { transition: filter 320ms var(--k-ease); }
 .k .kh-cat__card:hover .kh-cat__media img,
 .k .kh-cfg__item:hover .kh-cfg__thumb img,
-.k .kh-soltec__card:hover .kh-soltec__media img { filter: brightness(0.94); }
+/* Filter jasu na fotke pri hoveri je preč — pozri vrstvu 92c. */
 
 @media (min-width: 1000px) {
   /* Karty ponuky mali pevnú výšku 610 px a telo 142 px; s bielou škatuľou to
@@ -7043,6 +7043,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-work__item:hover .kh-work__media img,
 .k .kh-mat__media img,
 .k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-mat__card:hover .kh-mat__media video,
 .k .kh-soltec__media img,
 .k .kh-soltec__card:hover .kh-soltec__media img,
 .k .kh-size__media img,
@@ -9871,6 +9872,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-work__media img,
 .k .kh-cat__media img,
 .k .kh-mat__media img,
+.k .kh-mat__media video,
 .k .kh-duo__foto img,
 .k .kh-soltec__media img,
 .k .kh-pick__scene img {
@@ -9883,6 +9885,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-work__item:hover .kh-work__media img,
 .k .kh-cat__item:hover .kh-cat__media img,
 .k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-mat__card:hover .kh-mat__media video,
 .k .kh-duo:hover .kh-duo__foto img,
 .k .kh-soltec__card:hover .kh-soltec__media img,
 .k .kh-pick__scene:hover img {
@@ -9899,6 +9902,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-work__item:hover .kh-work__media img,
   .k .kh-cat__item:hover .kh-cat__media img,
   .k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-mat__card:hover .kh-mat__media video,
   .k .kh-duo:hover .kh-duo__foto img,
   .k .kh-soltec__card:hover .kh-soltec__media img,
   .k .kh-pick__scene:hover img { transform: translateZ(0); }
@@ -10504,3 +10508,168 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .kh-rady__foto img, .kh-rady__kus { transition: none; }
   .kh-rady__kus:hover .kh-rady__foto img { transform: translateZ(0); }
 }
+
+/* Krátka slučka namiesto fotografie tam, kde je predmetom pohyb. Rozmery sú
+   rovnaké ako pri fotografii, takže sa pri načítaní nič neposunie. */
+.k .kh-mat__media--video { position: relative; }
+.k .kh-mat__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--k-bone-deep);
+}
+.k .kh-mat__stopa {
+  position: absolute;
+  left: clamp(10px, 1vw, 14px);
+  bottom: clamp(10px, 1vw, 14px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: var(--k-r-pill);
+  background: rgba(12, 16, 18, 0.66);
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+.k .kh-mat__stopa::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--k-amber);
+}
+
+/* ==========================================================================
+   VRSTVA 98 · Mapa realizácií sa dá nájsť z navigácie
+   ==========================================================================
+   Mapa stojí na konci dlhej stránky s tromi stovkami fotografií — kto o nej
+   nevie, nedoscrolluje k nej. Položka Realizácie sa preto rozbaľuje na dve:
+   celú galériu a mapu. Je to ten istý panel, aký má zvyšok navigácie, len
+   úzky; žiadne tlačidlo navyše v obsahu. */
+.kv-mega--uzke {
+  width: max-content;
+  max-width: min(360px, 92vw);
+  padding: 10px;
+}
+.kv-pod { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.kv-pod li { margin: 0; }
+.kv-pod li::before { content: none; }
+.kv-pod a {
+  display: grid;
+  gap: 2px;
+  padding: 11px 12px;
+  border-radius: var(--k-r-xs);
+  text-decoration: none;
+  color: var(--k-ink);
+  transition: background-color 180ms var(--k-ease);
+}
+.kv-pod a:hover,
+.kv-pod a:focus-visible { background: var(--k-bone); }
+.kv-pod strong {
+  font-family: var(--k-head);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.kv-pod span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--k-grey-soft);
+}
+
+/* Úzky panel musí visieť pod svojou položkou, nie pri ľavom okraji stránky —
+   široké mega panely idú cez celú šírku, tento nie. */
+.kv-nav__item--uzke { position: relative; }
+.kv-nav__item--uzke .kv-mega--uzke { left: -10px; }
+
+/* Aj v hornej lište je odrážka bodka, nie fajka. Zoznam tam nie je odpočet
+   splnených úloh, sú to tri vety o tom, ako firma pracuje. */
+.kv-topbar__usps li::before {
+  content: "";
+  width: var(--k-bodka);
+  height: var(--k-bodka);
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--k-amber);
+}
+
+/* ==========================================================================
+   VRSTVA 99 · Jeden pohyb pre celý web
+   ==========================================================================
+   Reč pohybu na webe je jedna a bola správna: obsah pripláva zdola so
+   zmiernením, fotografia sa odkryje maskou zdola nahor. Len bola taká tichá,
+   že ju miestami nebolo vidieť — dráha šestnásť pixelov pri nadpise vysokom
+   šesťdesiat je pod prahom vnímania. Dráha aj čas idú preto o kúsok hore a
+   skupiny kariet prichádzajú za sebou, nie naraz. Nič nepribudlo: žiadne
+   odrazy, žiadne zväčšovanie, žiadny scroll-jacking. Pri obmedzenom pohybe
+   sa nehýbe nič, o to sa stará pravidlo vyššie. */
+.k-rise { transition: opacity 820ms var(--k-ease-out), transform 820ms var(--k-ease-out); }
+.k-js .k-rise { transform: translateY(22px); }
+
+/* Skupina kariet prichádza po jednej. Odstup je krátky — je to rytmus, nie
+   čakanie; po štvrtej karte sa už nepredlžuje, aby posledná nemeškala. */
+.k .kh-cat__grid > *,
+.k .kh-mat__grid > *,
+.k .kh-rady > *,
+.k .kh-vcene__rad > *,
+.k .kh-fakty__rad > * { transition-delay: 0ms; }
+.k .kh-cat__grid > *:nth-child(2),
+.k .kh-mat__grid > *:nth-child(2),
+.k .kh-rady > *:nth-child(2),
+.k .kh-vcene__rad > *:nth-child(2),
+.k .kh-fakty__rad > *:nth-child(2) { transition-delay: 90ms; }
+.k .kh-cat__grid > *:nth-child(3),
+.k .kh-mat__grid > *:nth-child(3),
+.k .kh-vcene__rad > *:nth-child(3),
+.k .kh-fakty__rad > *:nth-child(3) { transition-delay: 180ms; }
+.k .kh-cat__grid > *:nth-child(n + 4),
+.k .kh-mat__grid > *:nth-child(n + 4),
+.k .kh-vcene__rad > *:nth-child(n + 4),
+.k .kh-fakty__rad > *:nth-child(n + 4) { transition-delay: 270ms; }
+
+/* Úvodný pás sa skladá po vrstvách: najprv nadpis, potom veta, tlačidlá a
+   nakoniec dôkaz. Je to tá istá dráha ako inde, len s dlhšími odstupmi —
+   úvod má čas, zvyšok stránky nie. */
+.k .kh-hero__box > .kh-crumbs { transition-delay: 40ms; }
+.k .kh-hero__box > .k-display,
+.k .kh-hero__box > .k-h1,
+.k .kh-hero__box > h1 { transition-delay: 90ms; }
+.k .kh-hero__box > .k-lead { transition-delay: 220ms; }
+.k .kh-hero__box > .kh-hero__actions { transition-delay: 340ms; }
+.k .kh-hero__box > .kh-hero__trust { transition-delay: 460ms; }
+.k-js .kh-hero__box > .k-rise { transform: translateY(26px); }
+
+/* Jantárová linka pod drobným nadpisom sa dokresľuje zľava — je to jediný
+   prvok, ktorý sa hýbe inak než zvislo, a má to dôvod: je to podčiarknutie. */
+.k .k-eyebrow::before { transition: transform 620ms var(--k-ease-out) 120ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-cat__grid > *, .k .kh-mat__grid > *, .k .kh-rady > *,
+  .k .kh-vcene__rad > *, .k .kh-fakty__rad > *,
+  .k .kh-hero__box > * { transition-delay: 0ms !important; }
+}
+
+/* ==========================================================================
+   VRSTVA 100 · Doladenie odstupov po audite
+   ==========================================================================
+   Prehliadač prešiel jedenásť podstránok na širokej obrazovke aj na telefóne
+   a hľadal miesta, kde sa dva bloky dotýkajú. Našiel štyri: vysvetľujúca
+   poznámka pod tabuľkou, pod paletou odtieňov, pod pásom čísel a pod mriežkou
+   modulov nemala nad sebou nič. A v prémiovom páse zrušil odstup pravidlu
+   `--k-s6` súrodenecký selektor s vyššou váhou. */
+.k .kh-prem__telo > .kh-prem__body { margin-bottom: var(--k-s6); }
+.k .kh-prem__telo > .kh-prem__lead { margin-bottom: var(--k-s6); }
+@media (max-width: 999px) {
+  .k .kh-prem__telo > .kh-prem__body { margin-bottom: 0; }
+  .k .kh-prem__telo > .kh-prem__lead { margin-bottom: 0; }
+}
+
+/* Poznámka je vysvetlivka k tomu, čo je nad ňou — nesmie sa toho dotýkať. */
+.k .kh-tab__note,
+.k .kh-size__pozn { margin-top: var(--k-s4); }
+.k .kh-tab .kh-tab__note { margin-top: var(--k-s3); }

@@ -81,7 +81,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788597472663">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788601457410">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -107,9 +107,9 @@
   <div class="kv-topbar">
     <div class="k-wrap kv-topbar__in">
       <ul class="kv-topbar__usps">
-        <li><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Vlastná výroba na Slovensku</li>
-        <li><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Zameranie a ponuka zadarmo</li>
-        <li><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Doprava a montáž v cene</li>
+        <li>Vlastná výroba na Slovensku</li>
+        <li>Zameranie a ponuka zadarmo</li>
+        <li>Doprava a montáž v cene</li>
       </ul>
       <div class="kv-topbar__side">
         <a href="tel:+421948482266"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg>+421 948 482 266</a>
@@ -245,7 +245,17 @@
             </div>
           </div>
         </div>
-        <div class="kv-nav__item"><a class="kv-nav__link" href="../realizacie/">Realizácie</a></div>
+        <div class="kv-nav__item"><div class="kv-nav__item kv-nav__item--uzke" data-k-mega-item>
+          <button class="kv-nav__link" type="button" data-k-mega-trigger aria-expanded="false" aria-haspopup="true">
+            Realizácie <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="kv-mega kv-mega--uzke">
+            <ul class="kv-pod">
+              <li><a href="../realizacie/"><strong>Všetky realizácie</strong><span>Fotografie z montáží podľa typu prístrešku.</span></a></li>
+              <li><a href="../realizacie/#mapa"><strong>Mapa realizácií</strong><span>99 obcí, 145 stavieb — nájdite tú najbližšiu.</span></a></li>
+            </ul>
+          </div>
+        </div></div>
         <div class="kv-nav__item"><a class="kv-nav__link" href="../konfigurator/">3D konfigurátor</a></div>
         <div class="kv-nav__item"><a class="kv-nav__link" href="../kontakt/">Kontakt</a></div>
       </nav>
@@ -594,7 +604,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788597472663" defer></script>
+<script src="../assets/koverta-2026.js?v=1788601457410" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
