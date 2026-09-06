@@ -671,6 +671,21 @@
         const inner = document.createElement('span');
         inner.className = 'k-line__in';
 
+        /* Písmená sa počítajú v rámci riadku — každý riadok má vlastné
+           oneskorenie a vlastný rozbeh, takže nadpis nabieha zľava doprava
+           a druhý riadok nečaká, kým dobehne celý prvý. */
+        let poradie = 0;
+        const naPismena = (ciel, text) => {
+          [].slice.call(text).forEach((znak) => {
+            if (znak === ' ') { ciel.appendChild(document.createTextNode(' ')); return; }
+            const l = document.createElement('span');
+            l.className = 'k-pismeno';
+            l.style.setProperty('--k-i', String(poradie++));
+            l.textContent = znak;
+            ciel.appendChild(l);
+          });
+        };
+
         nodes.forEach((node) => {
           if (node.nodeType === 3) {
             node.textContent.split(/(\s+)/).forEach((part) => {
@@ -678,13 +693,19 @@
               if (/^\s+$/.test(part)) { inner.appendChild(document.createTextNode(" ")); return; }
               const w = document.createElement('span');
               w.className = 'k-word';
-              w.textContent = part;
+              naPismena(w, part);
               inner.appendChild(w);
             });
           } else {
+            /* Prvok v nadpise (jantárom podčiarknuté slovo) si ponechá svoj
+               obal aj triedy — rozdelia sa len písmená v ňom, aby sa
+               podčiarknutie kreslilo pod celým slovom, nie pod každým
+               písmenom zvlášť. */
             const w = document.createElement('span');
             w.className = 'k-word';
-            w.appendChild(node.cloneNode(true));
+            const kopia = node.cloneNode(false);
+            naPismena(kopia, node.textContent);
+            w.appendChild(kopia);
             inner.appendChild(w);
           }
         });
@@ -696,7 +717,14 @@
         frag.appendChild(line);
       });
 
+      /* Rozdelený nadpis by čítačka obrazovky mohla prečítať po písmenách.
+         Celý text preto ostáva ako prístupný názov a rozdelený obsah sa
+         z prístupnostného stromu vynechá. Pre vyhľadávače je text v DOM-e
+         naďalej celý. */
+      const cely = title.textContent.replace(/\s+/g, ' ').trim();
+      if (cely && !title.hasAttribute('aria-label')) title.setAttribute('aria-label', cely);
       title.innerHTML = '';
+      frag.querySelectorAll('.k-line').forEach((l) => l.setAttribute('aria-hidden', 'true'));
       title.appendChild(frag);
       /* Hero beží hneď; nadpis v sekcii čaká, kým sa k nemu doscrolluje —
          inak by dobehol dávno predtým, než ho niekto uvidí. */
