@@ -12886,3 +12886,144 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (max-width: 899px) {
   .k .kh-cit { grid-template-columns: minmax(0, 1fr); gap: 18px; }
 }
+
+
+/* ==========================================================================
+   VRSTVA 119 · Kontaktná stránka nemá pás s fotografiou
+   ==========================================================================
+   Na kontakt človek nechodí čítať sľuby — chodí zavolať, napísať alebo
+   vyplniť dopyt. Pás cez celú obrazovku s fotografiou a nadpisom „Povedzte
+   nám rozmer" ho k tomu iba oddialil o jednu obrazovku. Namiesto neho je tu
+   meno stránky, jedna veta a tri cesty. Formulár tak začína hneď pod tým. */
+.k .kh-hlava {
+  /* Hlavička stránky nie je pod lištou ako pás s fotografiou — začína pod ňou,
+     takže sa jej výška do odsadenia nepripočítava. */
+  padding-top: clamp(30px, 3.4vw, 50px);
+  padding-bottom: clamp(30px, 3.4vw, 48px);
+  background: var(--k-white);
+  border-bottom: 1px solid var(--k-hair);
+}
+.k .kh-hlava .kh-crumbs { margin-bottom: clamp(16px, 1.8vw, 24px); }
+.k .kh-hlava__nadpis {
+  margin: 0 0 clamp(12px, 1.4vw, 18px);
+  font-family: var(--k-head);
+  font-size: clamp(38px, 4.6vw, 64px);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--k-ink);
+}
+.k .kh-hlava__lead {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--k-grey);
+}
+
+/* Tri cesty. Každá je celá klikateľná — na telefóne je celá dlaždica terč,
+   nie len text v nej. */
+.k .kh-rychlo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px);
+  margin: clamp(26px, 3vw, 40px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-rychlo__kus { min-width: 0; }
+.k .kh-rychlo__kus::before { content: none; }
+.k .kh-rychlo__kus > a {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "ikona co" "ikona hodnota" "ikona pod";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 2px;
+  height: 100%;
+  padding: clamp(16px, 1.7vw, 22px) clamp(16px, 1.8vw, 24px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone, #f6f5f2);
+  text-decoration: none;
+  transition: border-color 240ms var(--k-ease), background 240ms var(--k-ease), transform 280ms var(--k-ease-out);
+}
+.k .kh-rychlo__kus > a:hover {
+  transform: translateY(-3px);
+  border-color: rgba(18, 23, 26, 0.2);
+  background: var(--k-white);
+}
+.k .kh-rychlo__kus > a:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 3px; }
+.k .kh-rychlo__kus svg {
+  grid-area: ikona;
+  align-self: center;
+  width: 26px;
+  height: 26px;
+  color: var(--k-amber-deep);
+}
+.k .kh-rychlo__co {
+  grid-area: co;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-grey-soft);
+}
+.k .kh-rychlo__hodnota {
+  grid-area: hodnota;
+  font-family: var(--k-head);
+  font-size: clamp(16px, 1.35vw, 19px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  color: var(--k-ink);
+  overflow-wrap: anywhere;
+}
+.k .kh-rychlo__pod {
+  grid-area: pod;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #464C50;
+}
+@media (max-width: 899px) {
+  .k .kh-rychlo { grid-template-columns: minmax(0, 1fr); }
+}
+@media (hover: none) {
+  .k .kh-rychlo__kus > a:hover { transform: none; }
+}
+
+/* Pás pôsobnosti na kontakte. Je to jedna veta a jeden odkaz — mapa má
+   vlastnú stránku, tu by len zaberala miesto pred fakturačnými údajmi. */
+.k .kh-kde__pas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(18px, 2.4vw, 40px);
+  padding: clamp(24px, 2.6vw, 36px) clamp(22px, 2.6vw, 38px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone, #f6f5f2);
+}
+.k .kh-kde__text { min-width: 0; max-width: 62ch; }
+.k .kh-kde__text .k-eyebrow { margin-bottom: 12px; }
+.k .kh-kde__nadpis {
+  margin: 0 0 8px;
+  font-family: var(--k-head);
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  color: var(--k-ink);
+  text-wrap: balance;
+}
+.k .kh-kde__pod {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #464C50;
+}
+.k .kh-kde__pod strong { font-weight: 600; color: var(--k-ink); }
+.k .kh-kde__pas > .k-btn { flex: 0 0 auto; }
+@media (max-width: 719px) {
+  .k .kh-kde__pas > .k-btn { width: 100%; justify-content: center; }
+}
