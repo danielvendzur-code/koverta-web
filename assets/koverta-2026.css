@@ -8035,6 +8035,20 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-hero__chip { padding-right: 14px; margin-right: 14px; }
   .k .kh-hero__chip strong { font-size: 16px; }
 }
+/* Tri čipy majú na telefóne stáť v jednom riadku. Na úzkych displejoch sa
+   im preto zúži odstup aj písmo — druhý riadok pod výzvou vyzerá ako zvyšok,
+   ktorý sa nezmestil. */
+@media (max-width: 400px) {
+  .k .kh-hero__trust { flex-wrap: nowrap; }
+  .k .kh-hero__chip {
+    min-width: 0;
+    padding-right: 10px;
+    margin-right: 10px;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+  }
+  .k .kh-hero__chip strong { font-size: 14.5px; letter-spacing: -0.025em; }
+}
 
 /* Prvá veta popisu hovorí, o ktorej značke je reč — stránka pokrýva oceľovú
    Kovertu aj celohliníkový Soltec a bez toho by zoznam vrstiev vyzeral ako
@@ -13027,3 +13041,12 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (max-width: 719px) {
   .k .kh-kde__pas > .k-btn { width: 100%; justify-content: center; }
 }
+
+/* Cena od v čipe karty kategórie. Zákazník, ktorý príde na úvod, mal doteraz
+   prvé číslo až v otázkach na konci stránky — a tie sú zbalené. */
+.k .kh-cat__cena {
+  color: var(--k-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.k .kh-cat__cena::after { background: var(--k-amber); }
