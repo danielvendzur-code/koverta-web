@@ -84,6 +84,14 @@
   /* Mäkšie plochy. Ostré 6–8 px pôsobilo tvrdo a technicky; toto je späť
      bližšie k tvarom, ktoré na stránke fungovali. */
   --k-r-xs: 8px;
+  /* Príchod obsahu. Je to premenná preto, aby ju vedel prevziať každý
+     prvok, ktorý si pýta vlastný prechod: skratka `transition` prepíše
+     všetko, čo bolo pred ňou, takže pravidlo, ktoré chce animovať tieň
+     alebo farbu, musí príchod zopakovať. Merané dôsledky, keď sa naň
+     zabudlo: 85 otázok, 52 kariet materiálu a 11 tlačidiel prichádzalo
+     skokom, bez prechodu priehľadnosti. */
+  --k-prichod: opacity 640ms var(--k-ease-out), transform 640ms var(--k-ease-out);
+
   --k-r-sm: 12px;
   --k-r: 18px;
   --k-r-lg: 26px;
@@ -9761,16 +9769,24 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* --- 92b · Rytmus úvodného pásu ------------------------------------------
    Poradie je vždy rovnaké: drobný text nad nadpisom, nadpis, veta, tlačidlá,
    dôkaz. Medzery medzi nimi rastú smerom nadol — čím ďalej od nadpisu, tým
-   samostatnejší blok. Žiadne ručné dolaďovanie po dvoch pixeloch. */
-.k .kh-hero__box { gap: 0; }
+   samostatnejší blok.
+
+   Merané odstupy boli 39, 51 a 66 pixelov: hodnotenie na Google plávalo
+   pod tlačidlami samo pre seba a pás sa rozťahoval do prázdna. Odstupy sú
+   preto tesnejšie a rozdiel medzi nimi menší — pás drží pokope a dôkaz
+   patrí k tlačidlám, nie do samostatného poschodia.
+
+   Medzeru nesú výhradne okraje, medzera mriežky je nula. Predtým sa
+   sčítavali obe a výsledok sa nedal spočítať zo zápisu. */
+.k .kh-hero__box { gap: 0; row-gap: 0; }
 .k .kh-hero__box > * { margin-top: 0; margin-bottom: 0; }
-.k .kh-hero__box > .kh-crumbs { margin-bottom: var(--k-s4); }
-.k .kh-hero__box > .k-eyebrow { margin-bottom: var(--k-s3); }
+.k .kh-hero__box > .kh-crumbs { margin-bottom: clamp(14px, 1.4vw, 20px); }
+.k .kh-hero__box > .k-eyebrow { margin-bottom: clamp(10px, 1vw, 14px); }
 .k .kh-hero__box > .k-display,
 .k .kh-hero__box > .k-h1,
-.k .kh-hero__box > h1 { margin-bottom: var(--k-s4); }
-.k .kh-hero__box > .k-lead { margin-bottom: var(--k-s5); }
-.k .kh-hero__box > .kh-hero__actions { margin-bottom: var(--k-s5); }
+.k .kh-hero__box > h1 { margin-bottom: clamp(18px, 1.9vw, 28px); }
+.k .kh-hero__box > .k-lead { margin-bottom: clamp(22px, 2.4vw, 34px); }
+.k .kh-hero__box > .kh-hero__actions { margin-bottom: clamp(20px, 2.1vw, 30px); }
 .k .kh-hero__box > .kh-hero__trust { margin-bottom: 0; }
 .k .kh-hero__box > *:last-child { margin-bottom: 0; }
 
@@ -9848,12 +9864,14 @@ footer.kf { background: var(--k-ink); color: #fff; }
    Tlačidlo „Zobraziť ponuku" pri hoveri obopol tmavý rám. Ostáva jantár,
    len o odtieň jasnejší, a šípka sa pohne o tri pixely. Nič viac. */
 
-/* Karta reaguje na prejdenie myšou tichým zdvihnutím rámu, nie pohybom. */
-.k .kh-cat__card { transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease); }
+/* Karta na prejdenie myšou nereaguje vôbec. Tieň pod ňou aj tmavší rám
+   kreslili pod kartou hranu, ktorú tam zadávateľ nechce; reaguje výzva
+   v karte, a to stačí. */
+.k .kh-cat__card { transition: none; }
 .k .kh-cat__item:hover .kh-cat__card,
 .k .kh-cat__item:focus-within .kh-cat__card {
-  border-color: rgba(18, 23, 26, 0.26);
-  box-shadow: var(--k-shadow-sm);
+  border-color: inherit;
+  box-shadow: none;
 }
 
 /* CTA v karte: jantár ostáva jantárom, len o odtieň jasnejší. */
@@ -10186,7 +10204,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-radius: var(--k-r-sm);
   background: var(--k-white);
   overflow: hidden;
-  transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
+  transition: var(--k-prichod), border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
 }
 .k .kh-mat__card:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
 
@@ -11054,10 +11072,12 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .kv-bar .k-wrap { min-height: 68px; }
 }
 
-/* Odstupy vnútri úvodnej obrazovky o niečo tesnejšie — text ostáva rovnako
-   veľký, len medzi blokmi je menej vzduchu. */
-.k .kh-hero__box { gap: clamp(13px, 1.15vw, 18px); }
-.k .kh-hero__trust { margin-top: clamp(10px, 1vw, 16px); }
+/* Odstupy vnútri úvodnej obrazovky nesú výhradne okraje jednotlivých blokov
+   (vrstva 92b). Medzera mriežky sa k nim predtým pripočítavala, takže sa
+   výsledok nedal zo zápisu spočítať a hodnotenie na Google skončilo
+   šesťdesiat pixelov pod tlačidlami. */
+.k .kh-hero__box { gap: 0; }
+.k .kh-hero__trust { margin-top: 0; }
 
 
 /* ==========================================================================
@@ -11079,12 +11099,16 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: var(--k-white);
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
-  transition: box-shadow 320ms var(--k-ease), transform 320ms var(--k-ease-out);
+  /* Príchod musí byť v zozname, inak ho táto skratka prepíše a karta sa
+     objaví skokom — presne to sa dialo na 52 kartách materiálu. */
+  transition: var(--k-prichod), box-shadow 320ms var(--k-ease);
 }
+/* Karta sa pri prejdení nenadvihuje. Posun by šiel po tej istej vlastnosti
+   ako príchod, teda aj jeho časom — a dvojpixelový zdvih trvajúci šesťsto
+   milisekúnd vyzerá ako chyba. Zosilnie tieň, a to stačí. */
 .k .kh-mat__card:hover {
   border: 0;
   box-shadow: 0 2px 4px rgba(18, 23, 26, 0.05), 0 16px 36px rgba(18, 23, 26, 0.10);
-  transform: translateY(-2px);
 }
 .k .kh-mat__media { aspect-ratio: 4 / 3; }
 .k .kh-mat__media::after { content: none; }
@@ -11192,8 +11216,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
    Nič sa nezväčšuje, nič sa neodráža, nič neuletí zboku. Pri obmedzenom
    pohybe sa nehýbe nič — pravidlo je na konci vrstvy. */
 
-.k-rise { transition: opacity 900ms var(--k-ease-out), transform 900ms var(--k-ease-out); }
-.k-js .k-rise { transform: translateY(32px); }
+.k-rise { transition: var(--k-prichod); }
+.k-js .k-rise { transform: translateY(24px); }
 
 /* Rozostup v mriežke kariet. Po štvrtej sa už nepredlžuje, aby posledná
    karta nemeškala o pol sekundy. */
@@ -11321,11 +11345,16 @@ footer.kf { background: var(--k-ink); color: #fff; }
      presne to sa dialo hodnoteniu na Google. Odstupy v bloku sú tesnejšie,
      úvodná veta o kúsok menšia a tlačidlá nižšie. Text ostáva rovnaký, len
      dýcha menej — na telefóne je to lepšie než odseknutý posledný riadok. */
-  .k .kh-hero__box { gap: 10px; }
+  .k .kh-hero__box { gap: 0; }
+  .k .kh-hero__box > .k-display,
+  .k .kh-hero__box > .k-h1,
+  .k .kh-hero__box > h1 { margin-bottom: 18px; }
+  .k .kh-hero__box > .k-lead { margin-bottom: 20px; }
+  .k .kh-hero__box > .kh-hero__actions { margin-bottom: 16px; }
   .k .kh-hero__lead { font-size: clamp(14.5px, 4vw, 16px); line-height: 1.55; }
   .k .kh-hero__actions { gap: 8px; }
   .k .kh-hero__actions .k-btn { min-height: 50px; }
-  .k .kh-hero__trust { margin-top: 4px; }
+  .k .kh-hero__trust { margin-top: 0; }
 }
 
 /* --- 108b · Pás čísel na telefóne v dvoch stĺpcoch ------------------------
@@ -11418,6 +11447,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 .k .kh-faq__item {
   transition:
+    var(--k-prichod),
     margin 380ms var(--k-ease-out),
     background-color 380ms var(--k-ease),
     box-shadow 380ms var(--k-ease),
@@ -12019,49 +12049,57 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 
 /* ==========================================================================
-   VRSTVA 113 · Tlačidlá s hĺbkou, riadky bez čiar, odtiene ako paleta
+   VRSTVA 113 · Výzvy: pôvodný tvar, výmena textu pri prejdení
    ==========================================================================
-   Zadávateľ poslal ako vzor plastické tlačidlo z Frameru. Ten komponent je
-   React a na tento web sa nedá pripojiť — je to statické HTML bez zostavenia
-   a bez cudzích skriptov. Ten istý dojem sa dá spraviť samotným CSS a je to
-   aj rýchlejšie: pod tlačidlom leží tmavšia podstava, tlačidlo na nej stojí,
-   pri prejdení sa nadvihne a pri stlačení do nej zapadne. Tvar pilulky sa
-   nemení, mení sa len hĺbka.
+   Predošlá podoba dávala tlačidlu plnú tmavšiu podstavu — malo to pôsobiť
+   plasticky, ale na karte kategórie to čítalo ako podčiarknutie a zadávateľ
+   to odmietol. Podstava je preč a tlačidlo je späť také, aké bolo: plná
+   pilulka bez čiary pod sebou.
 
-   Podstava je plná farba, nie rozmazaný tieň — to je celý rozdiel medzi
-   „plastickým“ a „mäkkým“ tlačidlom. Rozmazaný tieň pod ňou ostáva, aby
-   tlačidlo nesedelo na ploche nasucho. */
-:root, .k, .kv-header {
-  --k-podstava: #d9a800;   /* jantár o tri odtiene tmavší */
-  --k-podstava-tmava: #000;
-  --k-podstava-svetla: rgba(18, 23, 26, 0.18);
-}
+   Namiesto hĺbky prišiel pohyb, ktorý si zadávateľ vypýtal: pri prejdení
+   nápis odíde hore a zospodu príde ten istý nápis znova. Kopiu textu
+   dopĺňa skript (`initTlacidla`), aby sa nemuselo prepisovať sto výziev
+   v HTML a aby to platilo aj pre tie, ktoré pribudnú.
+
+   Farebne ostávajú tri: jantárová, čierna a biela. */
 
 .k .k-btn,
 .kv-header .k-btn,
 .k .kh-cat__actions > .k-link,
 .k .kh-pick__lane .k-link {
-  /* `will-change` tu bolo a bolo to na škodu: prehliadač by pre každé
-     tlačidlo na stránke držal vlastnú vrstvu v pamäti, aj keď sa nikdy
-     nepohne. Posun sa aj tak deje cez `transform`, čo vrstvu vytvorí až
-     v okamihu, keď treba. */
   transition:
-    transform 180ms cubic-bezier(.2, .8, .3, 1),
-    box-shadow 180ms cubic-bezier(.2, .8, .3, 1),
-    background-color 200ms var(--k-ease),
-    border-color 200ms var(--k-ease),
-    color 200ms var(--k-ease);
+    var(--k-prichod),
+    background-color 220ms var(--k-ease),
+    border-color 220ms var(--k-ease),
+    color 220ms var(--k-ease);
 }
 
-/* Plné jantárové tlačidlo — väčšina výziev na webe. */
+/* Žiadna podstava, žiadny posun nahor — pilulka stojí. */
+.k .k-btn,
+.kv-header .k-btn,
 .k .k-btn--primary,
 .kv-header .k-btn--primary,
+.k .k-btn--ink,
+.k .k-btn--line,
+.k .k-btn--glass,
 .k .kv-suhlas__btn--ano,
 .k .kh-cat__actions > .k-link,
 .k .kh-pick__lane .k-link,
-.k .kh-dock .k-btn--primary {
-  box-shadow: 0 3px 0 var(--k-podstava), 0 6px 14px rgba(18, 23, 26, 0.16);
+.k .kh-dock .k-btn--primary { box-shadow: none; }
+
+.k .k-btn:hover,
+.k .k-btn:active,
+.kv-header .k-btn:hover,
+.kv-header .k-btn:active,
+.k .kh-cat__actions > .k-link:hover,
+.k .kh-cat__item:hover .kh-cat__actions > .k-link,
+.k .kh-pick__lane .k-link:hover {
+  box-shadow: none;
+  transform: none;
 }
+
+/* Jantárová pri prejdení o odtieň zosvetlie, čierna sčernie, biela dostane
+   tmavší obrys. Nič viac — farba je jediné, čo sa mení. */
 .k .k-btn--primary:hover,
 .kv-header .k-btn--primary:hover,
 .k .kv-suhlas__btn--ano:hover,
@@ -12072,70 +12110,46 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: #ffd452;
   border-color: #ffd452;
   color: var(--k-ink);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 0 var(--k-podstava), 0 12px 24px rgba(18, 23, 26, 0.2);
 }
-.k .k-btn--primary:active,
-.kv-header .k-btn--primary:active,
-.k .kv-suhlas__btn--ano:active,
-.k .kh-cat__actions > .k-link:active,
-.k .kh-pick__lane .k-link:active,
-.k .kh-dock .k-btn--primary:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 var(--k-podstava), 0 2px 5px rgba(18, 23, 26, 0.18);
-}
-
-/* Tmavé tlačidlo — používa sa striedmo, podstava je čierna. */
-.k .k-btn--ink {
-  box-shadow: 0 3px 0 var(--k-podstava-tmava), 0 6px 14px rgba(18, 23, 26, 0.2);
-}
-.k .k-btn--ink:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 0 var(--k-podstava-tmava), 0 12px 24px rgba(18, 23, 26, 0.26);
-}
-.k .k-btn--ink:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 var(--k-podstava-tmava), 0 2px 5px rgba(18, 23, 26, 0.2);
-}
-
-/* Obrysové tlačidlo dostane hĺbku tiež, len tichšiu — podstava je vlasová. */
-.k .k-btn--line,
-.k .k-btn--glass {
-  box-shadow: 0 2px 0 var(--k-podstava-svetla), 0 5px 12px rgba(18, 23, 26, 0.1);
-}
+.k .k-btn--ink:hover { background: #000; border-color: #000; color: #fff; }
 .k .k-btn--line:hover,
-.k .k-btn--glass:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 0 var(--k-podstava-svetla), 0 10px 20px rgba(18, 23, 26, 0.14);
-}
-.k .k-btn--line:active,
-.k .k-btn--glass:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 var(--k-podstava-svetla), 0 2px 5px rgba(18, 23, 26, 0.12);
-}
+.k .k-btn--glass:hover { border-color: var(--k-ink); color: var(--k-ink); }
 
-/* Na tmavej ploche je podstava jantáru tmavší jantár, nie čierna — inak by
-   sa tlačidlo utopilo. */
-.k .kh-modul__mieru .k-btn--primary,
-.k .kh-zost__panel .k-btn--primary,
-.k .kh-cta .k-btn--primary,
-.k .k-invert .k-btn--primary {
-  box-shadow: 0 3px 0 var(--k-podstava), 0 8px 20px rgba(0, 0, 0, 0.34);
+/* --- Výmena nápisu ------------------------------------------------------
+   Dve kópie toho istého slova nad sebou v jednej bunke mriežky. Horná
+   odíde nahor, spodná príde zdola na jej miesto. Orezanie je na obale,
+   takže je vidieť vždy len jednu; zvislé odsadenie mu vráti priestor na
+   dotiahnuté písmená, ktoré by inak orezanie odrezalo. */
+/* Bez `.k` v selektore naschvál: výzvy sú aj v hlavičke a v lepivom pruhu,
+   teda mimo `main.k`. Keby sa obal neorezal, vypísali by sa obe kópie textu
+   vedľa seba — „Nezáväzná ponukaNezáväzná ponuka“. */
+.k-btn__slovo {
+  display: inline-grid;
+  overflow: hidden;
+  padding-block: 3px;
+  margin-block: -3px;
 }
+.k-btn__slovo > span {
+  grid-area: 1 / 1;
+  transition: transform 320ms var(--k-ease-out), opacity 320ms var(--k-ease);
+}
+.k-btn__slovo-b { transform: translateY(115%); opacity: 0; }
+.k-btn:hover .k-btn__slovo-a,
+.k-link:hover .k-btn__slovo-a,
+.kh-cat__item:hover .k-btn__slovo-a { transform: translateY(-115%); opacity: 0; }
+.k-btn:hover .k-btn__slovo-b,
+.k-link:hover .k-btn__slovo-b,
+.kh-cat__item:hover .k-btn__slovo-b { transform: translateY(0); opacity: 1; }
 
-/* Šípka v tlačidle sa posunie, keď sa tlačidlo nadvihne. */
-.k .k-btn:hover svg { transform: translateX(4px); }
-.k .k-btn:active svg { transform: translateX(2px); }
+/* Šípka ide za textom. */
+.k .k-btn:hover svg,
+.k .kh-cat__actions > .k-link:hover svg,
+.k .kh-cat__item:hover .kh-cat__actions > .k-link svg { transform: translateX(4px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .k .k-btn, .kv-header .k-btn,
-  .k .kh-cat__actions > .k-link, .k .kh-pick__lane .k-link {
-    transition: background-color 200ms linear, color 200ms linear;
-  }
-  .k .k-btn:hover, .k .k-btn:active,
-  .kv-header .k-btn:hover,
-  .k .kh-cat__actions > .k-link:hover,
-  .k .kh-pick__lane .k-link:hover { transform: none; }
+  .k-btn__slovo > span { transition: none; }
+  .k-btn__slovo-b { display: none; }
+  .k-btn:hover .k-btn__slovo-a { transform: none; opacity: 1; }
 }
 
 
@@ -12171,8 +12185,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     background-color 320ms var(--k-ease),
     box-shadow 320ms var(--k-ease),
     color 320ms var(--k-ease),
-    opacity 320ms var(--k-ease),
-    transform 420ms var(--k-ease-out);
+    opacity 320ms var(--k-ease);
 }
 .k .kh-proc__row.is-active {
   background: var(--k-white);
@@ -12180,6 +12193,38 @@ footer.kf { background: var(--k-ink); color: #fff; }
   transform: none;
 }
 .k .kh-proc__row:hover:not(.is-active) { background: rgba(18, 23, 26, 0.04); }
+
+/* Na ktorom kroku človek stojí, má byť vidieť na prvý pohľad. Číslo kroku
+   je preto pri aktívnom riadku jantárová pilulka — ten istý tvar, aký nesú
+   čísla v prehľade skladby — a názov kroku je tmavý. Ostatné čísla sú tiché
+   a názvy zosivené, takže sa aktívny riadok nedá prehliadnuť. */
+.k .kh-proc__row {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.2vw, 16px);
+}
+.k .kh-proc__row em {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--k-r-pill);
+  background: transparent;
+  font-style: normal;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--k-grey);
+  opacity: 1;
+  transition: background-color 280ms var(--k-ease), color 280ms var(--k-ease);
+}
+.k .kh-proc__row.is-active em { background: var(--k-amber); color: var(--k-ink); }
+.k .kh-proc__row strong { color: var(--k-grey); transition: color 280ms var(--k-ease); }
+.k .kh-proc__row.is-active strong { color: var(--k-ink); }
 
 
 /* --- Odtiene ako paleta, nie ako riadok drobností -------------------------
@@ -12202,12 +12247,32 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: none;
 }
 .k .kh-odtien i {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 5;
+  /* Vyššia dlaždica sa číta ako vzorka laku, nie ako farebný štvorček. */
+  aspect-ratio: 3 / 4;
   border-radius: var(--k-r-sm);
-  box-shadow: inset 0 0 0 1px rgba(18, 23, 26, 0.09);
+  box-shadow:
+    inset 0 0 0 1px rgba(18, 23, 26, 0.09),
+    0 1px 2px rgba(18, 23, 26, 0.05),
+    0 8px 20px rgba(18, 23, 26, 0.07);
+  overflow: hidden;
+}
+/* Šikmý lesk. Práškový lak nie je matná plocha — bez odlesku vyzerá vzorka
+   ako výplň v tabuľke. Je to jediný svetelný efekt na webe a je slabý. */
+.k .kh-odtien i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 34%,
+    rgba(255, 255, 255, 0) 46%,
+    rgba(18, 23, 26, 0.05) 100%
+  );
 }
 .k .kh-odtien > span {
   display: flex;
@@ -12253,6 +12318,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
   transform: none;
 }
 .k .kh-cat__body > .kh-cat__znacky .kh-cat__znacka { color: var(--k-grey); }
+/* Soltec je značka a má vlastný znak — nie napísané slovo. Obidve značky
+   stoja na rovnakej výške, aby ani jedna nepôsobila ako tá dôležitejšia. */
+.k .kh-cat__znacky .k-logo,
+.k .kh-cat__znacky .k-brand--soltec-img { height: 15px; width: auto; display: block; }
+.k .kh-cat__znacky .k-brand--soltec-img { opacity: 0.72; }
 .k .kh-cat__body > .kh-cat__znacky .k-logo path { fill: currentColor; }
 .k .kh-cat__body > .kh-cat__znacky .k-logo__bracket path { fill: var(--k-amber); }
 .k .kh-cat__body > .kh-cat__znacky .kh-cat__delic { background: var(--k-hair); }
