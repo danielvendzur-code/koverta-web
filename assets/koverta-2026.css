@@ -349,8 +349,8 @@
 .k-btn svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; transition: transform 300ms var(--k-ease-out); }
 .k-btn:hover svg { transform: translateX(3px); }
 
-.k-btn--primary { background: var(--k-amber); color: var(--k-ink); box-shadow: 0 5px 16px rgba(18, 23, 26, 0.16); }
-.k-btn--primary:hover { background: var(--k-amber-deep); box-shadow: 0 9px 22px rgba(18, 23, 26, 0.22); transform: translateY(-1px); }
+.k-btn--primary { background: var(--k-amber); color: var(--k-ink); }
+.k-btn--primary:hover { background: #ffd452; }
 /* Reset `.k button` má vyššiu špecificitu než samotná modifikačná trieda. */
 .k button.k-btn--primary { background: var(--k-amber); border: 1.5px solid transparent; }
 .k button.k-btn--primary:hover { background: var(--k-amber-deep); }
@@ -3477,6 +3477,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   font-weight: 600;
   color: var(--k-ink);
   text-align: left;
+  /* Bez prechodu skákal rám aj plocha pri prejdení. */
+  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease), color 200ms var(--k-ease);
 }
 .k .kh-select__btn:hover { border-color: rgba(18, 23, 26, 0.45); }
 .kh-select__btn[aria-expanded="true"] {
@@ -4366,7 +4368,12 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 
 /* --- 2 · Hlavné tlačidlo: hover bez stmavnutia -------------------------
    Jantár stmavený na #8a6600 je olivový a vyzerá ako chyba. Tlačidlo si
-   farbu drží; reaguje nadvihnutím a tenkým rámom v sivej z loga. */
+   farbu drží, len o odtieň zosvetlí.
+
+   Nadvihnutie ani tieň tu už nie sú. Tieň `0 10px 24px -10px` kreslil pod
+   tlačidlom tmavý pásik, ktorý zadávateľ opakovane odmietol; kvôli zápisu
+   `.k button.k-btn--primary:hover` mal navyše vyššiu silu než neskoršie
+   pravidlo, ktoré ho rušilo, takže sa nedal prebiť — musel ísť odtiaľto. */
 .k .k-btn--primary:hover,
 .k .k-btn--primary:focus-visible,
 .k button.k-btn--primary:hover,
@@ -4374,11 +4381,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kv-header .k-btn--primary:hover,
 .k-btn--primary:hover,
 .k-btn--primary:focus-visible {
-  background: var(--k-amber);
-  border-color: var(--k-logo-grey);
+  background: #ffd452;
+  border-color: #ffd452;
   color: var(--k-ink);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px -10px rgba(18, 23, 26, 0.55);
+  transform: none;
+  box-shadow: none;
 }
 
 /* Čipy rozmerov: rovnaké gesto, aby web reagoval všade rovnako. */
@@ -5176,9 +5183,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k .kh-select__btn:hover,
 .kv-icon-btn:hover,
 .kh-dock .k-btn:hover {
-  transform: translateY(-2px);
+  transform: none;
   border-color: var(--k-logo-grey, #455a64);
-  box-shadow: 0 8px 18px -12px rgba(18, 23, 26, .5);
+  box-shadow: none;
 }
 
 /* Plocha si drží svoju farbu — žiadne prefarbovanie pod kurzorom. */
@@ -7601,6 +7608,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
   text-decoration: none;
   transition: background 180ms var(--k-ease), color 180ms var(--k-ease);
 }
+/* Plocha aj text idú prechodom, nie skokom. */
+.k .kh-size__cfg { transition: background-color 200ms var(--k-ease), border-color 200ms var(--k-ease), color 200ms var(--k-ease); }
 .k .kh-size__cfg:hover { background: var(--k-amber); color: var(--k-ink); }
 .k .kh-size__cfg:focus-visible { outline: 2px solid var(--k-ink); outline-offset: -2px; }
 
@@ -7715,6 +7724,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   text-decoration-color: rgba(18, 23, 26, 0.22);
   font-variant-numeric: tabular-nums;
 }
+.kh-odd__odkaz { transition: color 200ms var(--k-ease), text-decoration-color 200ms var(--k-ease); }
 .kh-odd__odkaz:hover { color: var(--k-amber-deep); text-decoration-color: currentColor; }
 
 /* ==========================================================================
@@ -10866,7 +10876,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
   min-height: 56px;
   padding-inline: clamp(24px, 2.4vw, 32px);
   font-size: 15px;
-  box-shadow: 0 5px 16px rgba(18, 23, 26, 0.16);
 }
 .k .kh-duo__akcia .k-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
 
@@ -11328,18 +11337,19 @@ footer.kf { background: var(--k-ink); color: #fff; }
     margin: 0;
     z-index: 2;
   }
-  /* Prilepený pás s cenovou ponukou stojí nad obsahom. Posledný riadok
-     úvodnej obrazovky — čipy alebo hodnotenie na Google — pod ním končil
-     odseknutý o šesť pixelov. Odsadenie nesie sekcia, nie jej vnútro:
-     vnútro je zarovnané na spodok, takže padding na ňom obsah nezdvihne. */
-  /* Úvodná obrazovka sa na telefóne meria od spodku hlavičky po vrch
-     prilepeného pásu, nie po spodok okna. Predtým merala celé okno, obsah sa
-     zarovnal na jeho spodok a posledný riadok — čipy alebo hodnotenie na
-     Google — skončil o šesť pixelov pod pásom. */
+  /* Úvodná obrazovka siaha na telefóne od spodku hlavičky až po spodok okna.
+     Predtým končila nad prilepeným pásom a pod ňou presvitala biela plocha
+     ďalšej sekcie — vyzeralo to ako nedotiahnutý okraj.
+
+     Fotografia teda ide až dolu a prilepený pás leží na nej. Aby posledný
+     riadok obsahu — čipy alebo hodnotenie na Google — pod pásom nezmizol,
+     nesie vnútro odsadenie práve o výšku pásu a ešte kúsok navyše. Výšku
+     pásu meria skript do premennej `--kv-dok`, takže sedí aj vtedy, keď sa
+     pás zalomí do dvoch riadkov. */
   .k .kh-hero {
-    min-height: max(440px, calc(100svh - var(--kv-hlava, var(--kv-hlava-zaloha, 65px)) - var(--kv-dok, 74px) - 34px));
+    min-height: max(440px, calc(100svh - var(--kv-hlava, var(--kv-hlava-zaloha, 65px))));
   }
-  .k .kh-hero__inner { padding-bottom: clamp(16px, 3.6vw, 24px); }
+  .k .kh-hero__inner { padding-bottom: calc(var(--kv-dok, 74px) + 20px); }
 
   /* Obsah sa musí do tej výšky zmestiť, inak ho `overflow: hidden` oreže —
      presne to sa dialo hodnoteniu na Google. Odstupy v bloku sú tesnejšie,
@@ -12420,6 +12430,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-kat__karta {
   background: var(--k-white);
   box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  /* Bez tohto tieň pri prejdení skočil. Príchod musí byť v zozname, inak ho
+     táto skratka prepíše — to je tá istá pasca ako pri karte materiálu. */
+  transition: var(--k-prichod), border-color 240ms var(--k-ease), box-shadow 320ms var(--k-ease);
 }
 .k .kh-kat__karta:hover {
   box-shadow: 0 2px 4px rgba(18, 23, 26, 0.05), 0 16px 36px rgba(18, 23, 26, 0.1);
@@ -12446,3 +12459,10 @@ footer.kf { background: var(--k-ink); color: #fff; }
        stovke prvkov znamenalo stovku prepočtov v jednom snímku.
    Na mape realizácií, kde je prvkov najviac, klesol počet dlhých snímkov
    z 66 na 11. */
+
+
+/* --- Odkaz v obsahu mení farbu prechodom -----------------------------------
+   Kontrola prešla jedenásť stránok a našla pätnásť odkazov, ktorým sa farba
+   pri prejdení menila skokom. Toto je najslabšie pravidlo v súbore, takže
+   tlačidlá ani karty, ktoré majú vlastný zápis, neovplyvní. */
+.k a { transition: var(--k-prichod), color 200ms var(--k-ease); }
