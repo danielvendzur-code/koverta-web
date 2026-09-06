@@ -11272,3 +11272,198 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-hero__actions .k-btn { min-height: 56px; padding-inline: clamp(22px, 2.2vw, 32px); font-size: 15px; }
 }
 .k .kh-hero__actions .k-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
+
+
+/* ==========================================================================
+   VRSTVA 108 · Úvodná obrazovka na telefóne a pás čísel
+   ==========================================================================
+   Zadávateľ na telefóne opísal tri veci: omrvinková navigácia visela
+   v strede obrazovky namiesto hore, hodnotenie na Google bolo dole odseknuté
+   a pás štyroch čísel zabral pol obrazovky.
+
+   Omrvinky idú na vrch. Sú prvým prvkom v úvodnom bloku, ktorý je zarovnaný
+   na spodok — preto sa vytiahnu nad neho a pripnú k hornej hrane obrazovky.
+   Obsah nižšie tým nikam neposkočí, lebo blok si ich miesto neberie.
+
+   Spodok úvodnej obrazovky ráta s prilepeným pásom s cenovou ponukou. Bez
+   toho posledný riadok — hodnotenie na Google — končil pod ním. */
+@media (max-width: 899px) {
+  /* Omrvinky sa vytiahnu z bloku a pripnú k hornej hrane celej úvodnej
+     obrazovky — nie k bloku s textom, ten je zarovnaný na spodok. Odsadenie
+     zľava a sprava je to isté, aké má obsah stránky. */
+  .k .kh-hero { position: relative; }
+  /* Obal obsahu je `.k-wrap`, ktorý má `position: relative` — omrvinky by sa
+     teda pripli k nemu, a ten je zarovnaný na spodok. Na telefóne mu polohu
+     vypneme, aby ich držala celá úvodná obrazovka. */
+  .k .kh-hero__inner { position: static; }
+  .k .kh-hero__box > .kh-crumbs {
+    position: absolute;
+    top: clamp(16px, 4vw, 26px);
+    left: var(--k-gut);
+    right: var(--k-gut);
+    margin: 0;
+    z-index: 2;
+  }
+  /* Prilepený pás s cenovou ponukou stojí nad obsahom. Posledný riadok
+     úvodnej obrazovky — čipy alebo hodnotenie na Google — pod ním končil
+     odseknutý o šesť pixelov. Odsadenie nesie sekcia, nie jej vnútro:
+     vnútro je zarovnané na spodok, takže padding na ňom obsah nezdvihne. */
+  /* Úvodná obrazovka sa na telefóne meria od spodku hlavičky po vrch
+     prilepeného pásu, nie po spodok okna. Predtým merala celé okno, obsah sa
+     zarovnal na jeho spodok a posledný riadok — čipy alebo hodnotenie na
+     Google — skončil o šesť pixelov pod pásom. */
+  .k .kh-hero {
+    min-height: max(440px, calc(100svh - var(--kv-hlava, var(--kv-hlava-zaloha, 65px)) - var(--kv-dok, 74px) - 34px));
+  }
+  .k .kh-hero__inner { padding-bottom: clamp(16px, 3.6vw, 24px); }
+
+  /* Obsah sa musí do tej výšky zmestiť, inak ho `overflow: hidden` oreže —
+     presne to sa dialo hodnoteniu na Google. Odstupy v bloku sú tesnejšie,
+     úvodná veta o kúsok menšia a tlačidlá nižšie. Text ostáva rovnaký, len
+     dýcha menej — na telefóne je to lepšie než odseknutý posledný riadok. */
+  .k .kh-hero__box { gap: 10px; }
+  .k .kh-hero__lead { font-size: clamp(14.5px, 4vw, 16px); line-height: 1.55; }
+  .k .kh-hero__actions { gap: 8px; }
+  .k .kh-hero__actions .k-btn { min-height: 50px; }
+  .k .kh-hero__trust { margin-top: 4px; }
+}
+
+/* --- 108b · Pás čísel na telefóne v dvoch stĺpcoch ------------------------
+   Štyri čísla pod sebou aj s vysvetľujúcou vetou zabrali na telefóne celú
+   obrazovku. Číslo a to, čo znamená, stačia — veta pod nimi je detail, ktorý
+   na malej obrazovke berie viac miesta, než dá informácie. Dva stĺpce vedľa
+   seba, veta sa skryje; na tablete a vyššie ostáva všetko. */
+@media (max-width: 619px) {
+  .k .kh-fakty { padding-block: clamp(26px, 6vw, 36px); }
+  .k .kh-fakty__rad {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(18px, 5vw, 26px) clamp(14px, 4vw, 20px);
+  }
+  .k .kh-fakty__pod { display: none; }
+  .k .kh-fakty__cislo { font-size: clamp(26px, 8.5vw, 34px); }
+  .k .kh-fakty__co { font-size: 13px; line-height: 1.4; }
+}
+
+
+/* ==========================================================================
+   VRSTVA 109 · Fotografia sa pod kurzorom nehýbe
+   ==========================================================================
+   Zadávateľ: fotkou nehýbať pri prejdení myšou; hýbať sa smie celá karta
+   alebo celá časť, nie obraz v nej. Doteraz sa každá fotografia pod kurzorom
+   o pár percent zväčšila — na karte kategórie, materiálu, montáže, Soltecu,
+   na náhľade mapy aj na typoradách. Bol to pohyb navyše, ktorý obraz orezal
+   a nič nepovedal.
+
+   Zväčšenie je preč. Karta ako celok sa naďalej nadvihne o dva pixely a tieň
+   pod ňou zosilnie — to je pohyb celku, ktorý zostáva. Rovnako zostáva
+   pomalé usadenie fotografie pri príchode sekcie: to nie je hover.
+
+   Cieľová hodnota je `none`, teda presne to, čo má fotografia v pokoji aj po
+   dobehnutí príchodu. Prechod na fotografii ostáva zapísaný, takže ak by
+   niektorá staršia vrstva ešte niečo pridala, dojde to plynulo. */
+.k .kh-pick__scene:hover img,
+.k .kh-cfg__item:hover .kh-cfg__thumb img,
+.k .kh-cfg__thumb:hover img,
+.k .kh-cat__card:hover .kh-cat__media img,
+.k .kh-cat__card:focus-visible .kh-cat__media img,
+.k .kh-cat__item:hover .kh-cat__media img,
+.k .kh-work__item:hover .kh-work__media img,
+.k .kh-mat__card:hover .kh-mat__media img,
+.k .kh-mat__card:hover .kh-mat__media video,
+.k .kh-soltec__card:hover .kh-soltec__media img,
+.k .kh-soltec__media:hover img,
+.k .kh-duo:hover .kh-duo__foto img,
+.k .kh-mapa__nahlad:hover img,
+.k .kh-rady__kus:hover .kh-rady__foto img,
+.k .kh-rady__foto:hover img { transform: none; }
+
+
+/* ==========================================================================
+   VRSTVA 110 · Otázky sa otvárajú plynulo a nič pritom neuteká
+   ==========================================================================
+   Preklikávanie zoznamu otázok poskakovalo. Mali na tom podiel dve veci a
+   obe sú preč.
+
+   Prvá: otvorená otázka dostávala vnútorné odsadenie zľava aj sprava, aby
+   z nej bola biela karta. Text otázky sa tým pri každom kliknutí posunul
+   o dva a pol centimetra doprava a pri zatvorení naspäť. Karta sa odteraz
+   rozťahuje von — o to isté, o čo pribudlo odsadenie, ubudne z okraja. Text
+   ostáva presne tam, kde bol, a hýbe sa len biela plocha pod ním.
+
+   Druhá: `<details>` vysunie odpoveď naraz. Výšku odpovede preto vedie
+   skript a spolu s ňou drží kliknutý riadok na mieste, aj keď sa nad ním
+   zatvára predošlá otázka. Tu je k tomu potrebné len orezanie — bez neho by
+   text počas prechodu vytŕčal z výšky, ktorú mu skript práve meria.
+
+   Zvyšok je ustálenie prechodov, ktoré doteraz preskakovali: plocha karty,
+   tieň, odsadenie aj kruh so znamienkom idú rovnakým časom. */
+.k .kh-faq__list {
+  --k-faq-vsun: clamp(18px, 1.8vw, 26px);
+  --k-faq-medzera: 16px;
+  --k-faq-cislo: 38px;
+}
+@media (max-width: 599px) {
+  .k .kh-faq__list { --k-faq-medzera: 12px; --k-faq-cislo: 30px; }
+}
+
+/* Číslo otázky malo šírku v `em` a odpoveď pod ním tiež — lenže každé z iného
+   písma, takže odpoveď začínala o šesť pixelov vedľa otázky. Stĺpec s číslom
+   je odteraz jedno číslo v pixeloch a odsadenie odpovede z neho vychádza:
+   odpoveď stojí presne pod prvým písmenom otázky. */
+.k .kh-faq__item > summary { gap: var(--k-faq-medzera); }
+.k .kh-faq__item > summary::before { width: var(--k-faq-cislo); }
+.k .kh-faq__item > summary ~ * {
+  padding-left: calc(var(--k-faq-cislo) + var(--k-faq-medzera));
+}
+
+.k .kh-faq__item {
+  transition:
+    margin 380ms var(--k-ease-out),
+    background-color 380ms var(--k-ease),
+    box-shadow 380ms var(--k-ease),
+    border-color 240ms var(--k-ease);
+}
+.k .kh-faq__item > summary {
+  transition: padding 380ms var(--k-ease-out), color 240ms var(--k-ease);
+}
+
+/* Karta rastie von z riadku, nie dovnútra textu. Osemnásťpixelové odsadenie
+   zľava tu ostalo po jantárovom páse, ktorý vzala vrstva 106 — bez pásu už
+   posúva otázku bezdôvodne. */
+.k .kh-faq__item[open] {
+  margin-inline: calc(-1 * var(--k-faq-vsun));
+  padding-inline: 0;
+}
+.k .kh-faq__item[open] > summary { padding-inline: var(--k-faq-vsun); }
+.k .kh-faq__item[open] > summary ~ * {
+  padding-left: calc(var(--k-faq-cislo) + var(--k-faq-medzera) + var(--k-faq-vsun));
+  padding-right: calc(42px + var(--k-faq-vsun));
+}
+@media (max-width: 599px) {
+  .k .kh-faq__item[open] > summary ~ * { padding-right: var(--k-faq-vsun); }
+}
+
+/* Odpoveď má počas prechodu vedenú výšku — musí sa orezať. */
+.k .kh-faq__item > summary ~ * { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-faq__item,
+  .k .kh-faq__item > summary { transition: none; }
+}
+
+
+/* ==========================================================================
+   VRSTVA 111 · Úvodný pás sa naozaj usadí
+   ==========================================================================
+   Obsah úvodného pásu — nadpis, veta, tlačidlá aj riadok s hodnotením — mal
+   po celý čas posun o 26 pixelov nadol. Pravidlo, ktoré ten posun zadáva
+   (`.k-js .kh-hero__box > .k-rise`), má tri triedy, rovnako ako pravidlo,
+   ktoré posun po príchode ruší (`.k-js .k-rise.is-in`) — a stojí v štýle
+   nižšie, takže vyhrávalo. Príchod tak bol len stmievaním a spodný riadok
+   pásu, ktorý sa má z posunu vrátiť, ostal o tých 26 pixelov nižšie, než mal
+   byť. Na telefóne to bolo najviac vidieť: pás má orezanie a hodnoty pod
+   číslami z neho vypadli.
+
+   Toto pravidlo posun po príchode ruší tak, ako má. Sila je vyššia, poradie
+   posledné — po dobehnutí stojí obsah presne tam, kde ho počíta rozloženie. */
+.k-js .kh-hero__box > .k-rise.is-in { transform: none; }

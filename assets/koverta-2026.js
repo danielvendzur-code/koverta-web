@@ -68,10 +68,12 @@
           }
         });
       },
-      /* Odkrytie sa spustí, len čo prvok vojde spodnou hranou do okna.
-         Skôr by pohyb prebehol mimo obrazovky, neskôr by sa začínal až
-         v strede — a to zadávateľ vytkol. */
-      { rootMargin: '0px 0px 14% 0px', threshold: 0 }
+      /* Kladné dolné okrajové pásmo spúšťalo odkrytie ešte predtým, než prvok
+         vôbec vošiel do okna — pohyb prebehol mimo obrazovky a na telefóne
+         nebolo vidieť vôbec nič. Pásmo je preto záporné: prvok sa musí
+         dostať dvanásť percent výšky okna nad jeho spodnú hranu, teda už je
+         na obrazovke, a až potom sa rozbehne. */
+      { rootMargin: '0px 0px -12% 0px', threshold: 0 }
     );
 
     items.forEach((el) => io.observe(el));
@@ -1401,17 +1403,109 @@
 
   /* --- 4 · FAQ ------------------------------------------------------------ */
 
+  /* Otázky sa otvárajú a zatvárajú plynulo ---------------------------------
+     `<details>` prepína obsah okamžite. Odpoveď skočila von, riadky pod ňou
+     odleteli nadol a keď sa pritom zatvárala otázka nad tou, na ktorú človek
+     klikol, ušla mu spod kurzora aj tá — preklikávanie zoznamu poskakovalo.
+     Prepnutie preto riadi skript a robí tri veci:
+
+     1. Výšku odpovede prejde od nuly po jej skutočnú mieru a naspäť, takže sa
+        obsah vysunie namiesto toho, aby sa objavil.
+     2. Zatvorenie predošlej otázky beží v tom istom čase ako otvorenie novej,
+        nie po ňom. Zoznam sa hýbe raz, nie dvakrát.
+     3. Ak sa zatvára niečo nad kliknutým riadkom, drží ten riadok po celý
+        prechod na mieste: stránka sa doscrolluje presne o toľko, o koľko sa
+        obsah nad ním zmenšil. Otázka, na ktorú človek klikol, tak ostane pod
+        kurzorom.
+
+     Bez skriptu aj pri obmedzenom pohybe ostáva pôvodné správanie `<details>`:
+     klik otvorí, klik zatvorí, len bez prechodu. */
+
+  const FAQ_CAS = 420;
+  const FAQ_KRIVKA = 'cubic-bezier(.22,.61,.36,1)';
+
+  function faqTelo(d) {
+    const s = d.querySelector(':scope > summary');
+    return s ? s.nextElementSibling : null;
+  }
+
+  /* Beh, ktorý práve prebieha, sa zruší — inak by sa dva prechody na tom
+     istom prvku pobili o výšku. */
+  function faqStop(t) {
+    if (t && t.__kBeh) {
+      t.__kBeh.onfinish = null;
+      t.__kBeh.cancel();
+      t.__kBeh = null;
+    }
+  }
+
+  function faqOtvor(d, hybat) {
+    const t = faqTelo(d);
+    d.open = true;
+    if (!t || !hybat || typeof t.animate !== 'function') return;
+    faqStop(t);
+    const ciel = t.scrollHeight;
+    const beh = t.animate(
+      [{ height: '0px', opacity: 0 }, { height: ciel + 'px', opacity: 1 }],
+      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
+    );
+    t.__kBeh = beh;
+    beh.onfinish = () => { t.__kBeh = null; };
+  }
+
+  function faqZavri(d, hybat) {
+    const t = faqTelo(d);
+    if (!t || !hybat || typeof t.animate !== 'function') { d.open = false; return; }
+    faqStop(t);
+    const od = t.getBoundingClientRect().height || t.scrollHeight;
+    const beh = t.animate(
+      [{ height: od + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
+    );
+    t.__kBeh = beh;
+    beh.onfinish = () => { t.__kBeh = null; d.open = false; };
+  }
+
+  /* Riadok ostane na mieste, aj keď sa nad ním obsah zmenší. Meria sa každý
+     snímok pred vykreslením, takže na obrazovke nie je vidieť žiadny posun. */
+  function faqDrz(prvok) {
+    const ciel = prvok.getBoundingClientRect().top;
+    const koniec = performance.now() + FAQ_CAS + 80;
+    const krok = () => {
+      const rozdiel = prvok.getBoundingClientRect().top - ciel;
+      if (Math.abs(rozdiel) > 0.5) window.scrollBy(0, rozdiel);
+      if (performance.now() < koniec) requestAnimationFrame(krok);
+    };
+    requestAnimationFrame(krok);
+  }
+
   function initFaq(root) {
+    const tichy = window.matchMedia('(prefers-reduced-motion: reduce)');
     root.querySelectorAll('[data-k-faq]').forEach((list) => {
       const items = [...list.querySelectorAll('details')];
-      items.forEach((d) =>
-        d.addEventListener('toggle', () => {
-          if (!d.open) return;
-          items.forEach((other) => {
-            if (other !== d) other.open = false;
-          });
-        })
-      );
+      items.forEach((d) => {
+        const sum = d.querySelector(':scope > summary');
+        if (!sum || !faqTelo(d)) return;
+        sum.addEventListener('click', (e) => {
+          e.preventDefault();
+          const hybat = !tichy.matches;
+          const bolo = d.open;
+          /* Otvorené otázky, ktoré v zozname stoja nad touto. Len kvôli nim
+             sa oplatí riadok držať — čo sa zatvára pod ním, jeho polohu
+             nezmení. */
+          const nad = items.filter(
+            (x) => x !== d && x.open &&
+              (x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING)
+          );
+          if (bolo) {
+            faqZavri(d, hybat);
+          } else {
+            items.forEach((x) => { if (x !== d && x.open) faqZavri(x, hybat); });
+            faqOtvor(d, hybat);
+            if (hybat && nad.length) faqDrz(sum);
+          }
+        });
+      });
     });
   }
 
