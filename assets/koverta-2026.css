@@ -11467,3 +11467,552 @@ footer.kf { background: var(--k-ink); color: #fff; }
    Toto pravidlo posun po príchode ruší tak, ako má. Sila je vyššia, poradie
    posledné — po dobehnutí stojí obsah presne tam, kde ho počíta rozloženie. */
 .k-js .kh-hero__box > .k-rise.is-in { transform: none; }
+
+
+/* ==========================================================================
+   VRSTVA 112 · Zvyšné sekcie z dizajnového návrhu (1c, 1d, 1f, 1g, 1h)
+   ==========================================================================
+   Päť blokov, ktoré v návrhu ostali nedokreslené. Reč je tá istá ako v
+   predošlých vrstvách: veľká plocha, jedno číslo, jedna hodnota, pätka
+   zarovnaná na spodnú hranu. Žiadne tabuľky a žiadne odrážky.
+
+   1c  .kh-skl    prehľad skladby ako mäkké riadky-karty, jeden tmavý
+   1d  .kh-modul  moduly kuchyne s pásom dĺžky + tmavý blok pod mriežkou
+   1f  .kh-kat--sirka  ležaté karty kategórií, tlačidlá v jednej línii
+   1g  .kh-zost   výkres rezu, kóty, fotografia a tmavý panel vrstiev
+   1h  .kh-typ    rozmerový prehľad typorád namiesto tabuľky
+   -------------------------------------------------------------------------- */
+
+/* --- spoločné drobnosti --------------------------------------------------- */
+.k .kh-pojem {
+  margin: 0 0 6px;
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-hodnota {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--k-ink);
+}
+
+/* Pás dĺžky. Dráha je vlasová linka, výplň jantár; šírku výplne nesie
+   premenná --k-dlzka, aby bola hodnota v obsahu, nie v štýle. */
+.k .kh-pas {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.k .kh-pas__draha {
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-hair);
+}
+.k .kh-pas__vypln {
+  display: block;
+  width: var(--k-dlzka, 100%);
+  height: 4px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  /* Pás sa pri príchode dokreslí zľava — je to jediná vec v karte, ktorá
+     hovorí o dĺžke, tak nech ju je vidieť vznikať. */
+  transform-origin: 0 50%;
+  transition: transform 900ms var(--k-ease-out) 200ms;
+}
+.k-js .k-rise .kh-pas__vypln { transform: scaleX(0); }
+.k-js .k-rise.is-in .kh-pas__vypln { transform: scaleX(1); }
+.k .kh-pas__kota {
+  flex: 0 0 auto;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--k-amber-deep);
+}
+
+
+/* --- 1c · Prehľad skladby ------------------------------------------------- */
+/* Riadky sú kostené, takže pod nimi musí byť biela — inak medzi nimi nie je
+   vidieť medzeru a osem kariet splynie do jednej plochy. */
+.k .k-biela { background: var(--k-white); }
+
+.k .kh-skl__hlava {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
+  gap: 0 clamp(20px, 2.2vw, 32px);
+  padding: 0 clamp(20px, 2.2vw, 32px) 14px;
+}
+.k .kh-skl__hlava span {
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-skl__hlava span:last-child { text-align: right; }
+
+.k .kh-skl__zoznam {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: kv-skladba;
+}
+.k .kh-skl__riadok {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(14px, 2.2vw, 32px);
+  padding: clamp(20px, 1.8vw, 26px) clamp(20px, 2.2vw, 32px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+  counter-increment: kv-skladba;
+}
+.k .kh-skl__cast {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.3vw, 18px);
+  min-width: 0;
+}
+.k .kh-skl__cislo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--k-ink);
+}
+.k .kh-skl__nazov {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(18px, 1.4vw, 20px);
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: -0.018em;
+  color: var(--k-ink);
+}
+.k .kh-skl__zcoho {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #464C50;
+}
+.k .kh-skl__kedy {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: right;
+  color: var(--k-amber-deep);
+}
+
+/* Jeden riadok je tmavý. Nie je to zvýraznenie navyše — je to tá vrstva,
+   ktorú treba doriešiť najskôr, lebo po betonáži sa už nedá dopĺňať. */
+.k .kh-skl__riadok--dolezite {
+  padding-block: clamp(24px, 2.4vw, 34px);
+  background: var(--k-ink);
+  box-shadow: 0 4px 8px rgba(18, 23, 26, 0.05), 0 28px 72px rgba(18, 23, 26, 0.14);
+}
+.k .kh-skl__riadok--dolezite .kh-skl__nazov { font-size: clamp(19px, 1.5vw, 22px); color: #fff; }
+.k .kh-skl__riadok--dolezite .kh-skl__zcoho { color: #fff; }
+.k .kh-skl__riadok--dolezite .kh-skl__kedy { color: var(--k-amber); }
+
+
+/* --- 1d · Moduly kuchyne -------------------------------------------------- */
+.k .kh-modul__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 1.8vw, 24px);
+  align-items: stretch;
+}
+.k .kh-modul__karta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+}
+.k .kh-modul__vykres {
+  height: clamp(170px, 15vw, 220px);
+  padding: clamp(14px, 1.2vw, 16px);
+  margin: 0;
+  background: var(--k-white);
+}
+.k .kh-modul__vykres img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.k .kh-modul__telo {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: 0 clamp(20px, 2.1vw, 30px) clamp(22px, 2.1vw, 30px);
+}
+.k .kh-modul__telo .kh-pas { margin-bottom: 22px; }
+.k .kh-modul__nazov {
+  margin: 0 0 12px;
+  font-family: var(--k-head);
+  font-size: clamp(21px, 1.7vw, 24px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+}
+.k .kh-modul__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.66;
+  color: #464C50;
+}
+
+/* Tmavý blok pod mriežkou — zostava sa neskladá z katalógu, skladá sa
+   z terasy, ktorú človek má. */
+.k .kh-modul__mieru {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 60px);
+  margin-top: clamp(16px, 1.8vw, 24px);
+  padding: clamp(26px, 3.4vw, 44px) clamp(20px, 3.6vw, 48px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-ink);
+}
+.k .kh-modul__mieru .k-eyebrow { margin: 0 0 18px; color: var(--k-amber); }
+.k .kh-modul__mieru .k-eyebrow::before { content: none; }
+.k .kh-modul__nadpis {
+  margin: 0 0 14px;
+  font-family: var(--k-head);
+  font-size: clamp(24px, 2.5vw, 32px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.k .kh-modul__mieru p:last-of-type {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 16px;
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.78);
+}
+.k .kh-modul__mieru .k-btn { justify-self: end; }
+
+
+/* --- 1f · Ležaté karty kategórií ------------------------------------------ */
+.k .kh-cat__grid--sirka {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 1.8vw, 24px);
+  align-items: stretch;
+}
+.k .kh-cat__grid--sirka > * { min-width: 0; }
+.k .kh-cat__grid--sirka .kh-cat__card {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+}
+.k .kh-cat__grid--sirka .kh-cat__media {
+  position: relative;
+  min-height: clamp(200px, 22vw, 320px);
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.k .kh-cat__grid--sirka .kh-cat__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.k .kh-cat__grid--sirka .kh-cat__body {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 2.6vw, 34px) clamp(20px, 2.6vw, 34px) clamp(22px, 2.4vw, 32px);
+}
+.k .kh-cat__grid--sirka .kh-cat__znacka {
+  margin: 0 0 14px;
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-cat__grid--sirka .kh-cat__body .k-h3 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 1.9vw, 26px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+.k .kh-cat__grid--sirka .kh-cat__body .k-h3::after { content: none; }
+.k .kh-cat__grid--sirka .kh-cat__body .k-copy {
+  margin: 0 0 28px;
+  font-size: 15px;
+  line-height: 1.66;
+  color: #464C50;
+}
+/* Tlačidlá skončia v jednej línii aj pri rôzne dlhom texte. */
+.k .kh-cat__grid--sirka .kh-cat__actions {
+  display: block;
+  margin-top: auto;
+  opacity: 1;
+  transform: none;
+}
+/* Karta je odkaz, takže tlačidlo je len značka `span` — vyzerá a správa sa
+   ako tmavá pilulka, ale klikacia je celá karta. */
+.k .kh-cat__grid--sirka .kh-cat__card:hover .k-btn--ink { background: #000; }
+
+/* Nepárny počet kategórií by nechal v mriežke dieru. Posledná karta si
+   v takom prípade vezme obe polia a fotografii ubudne šírka, aby text
+   nezostal roztiahnutý cez pol obrazovky. */
+.k .kh-cat__grid--sirka > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.k .kh-cat__grid--sirka > *:last-child:nth-child(odd) .kh-cat__card {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+}
+/* V širokej karte by veta prebehla cez celú obrazovku a stratila by sa. */
+.k .kh-cat__grid--sirka > *:last-child:nth-child(odd) .kh-cat__body .k-copy { max-width: 56ch; }
+
+
+/* --- 1g · Zostava a rozvody ----------------------------------------------- */
+.k .kh-zost {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(16px, 1.8vw, 24px);
+  align-items: stretch;
+}
+.k .kh-zost__ram {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: clamp(20px, 3vw, 40px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+}
+.k .kh-zost__ram img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Rám je rovnako vysoký ako pravý stĺpec — bez tohto by pod výkresom ostala
+     prázdna plocha a kóty by viseli v strede. Odstup je najmenší možný, zvyšok
+     výšky si vezme `margin-top: auto` na kótach. */
+  margin-bottom: clamp(22px, 2.4vw, 32px);
+}
+.k .kh-zost__koty {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 1.8vw, 24px);
+  margin-top: auto;
+  padding-top: clamp(18px, 2vw, 26px);
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-zost__stlpec { display: flex; flex-direction: column; gap: clamp(16px, 1.8vw, 24px); }
+.k .kh-zost__foto {
+  position: relative;
+  height: clamp(200px, 22vw, 300px);
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-ink);
+}
+.k .kh-zost__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.k .kh-zost__kut {
+  position: absolute;
+  top: clamp(14px, 1.4vw, 20px);
+  left: clamp(14px, 1.4vw, 20px);
+  width: clamp(34px, 3.1vw, 44px);
+  height: clamp(34px, 3.1vw, 44px);
+  border: 2px solid var(--k-amber);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: var(--k-r-sm);
+  pointer-events: none;
+}
+.k .kh-zost__panel {
+  flex: 1 1 auto;
+  padding: clamp(22px, 2.4vw, 32px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-ink);
+}
+.k .kh-zost__panel .k-eyebrow { margin: 0 0 24px; color: var(--k-amber); }
+.k .kh-zost__panel .k-eyebrow::before { content: none; }
+.k .kh-zost__vrstvy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-zost__vrstva { display: flex; align-items: baseline; gap: 16px; }
+.k .kh-zost__cislo {
+  flex: 0 0 auto;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-amber);
+}
+.k .kh-zost__co { font-size: 15px; line-height: 1.5; color: #fff; }
+.k .kh-zost__panel .k-link { margin-top: 28px; color: var(--k-amber); }
+.k .kh-zost__panel .k-link:hover { color: #ffd452; }
+
+
+/* --- 1h · Rozmerový prehľad typorád --------------------------------------- */
+.k .kh-typ {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-typ__riadok {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 4fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(14px, 2.2vw, 32px);
+  padding: clamp(22px, 2vw, 28px) clamp(20px, 2.2vw, 32px);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.k .kh-typ__model {
+  margin: 0 0 4px;
+  font-family: var(--k-head);
+  font-size: clamp(22px, 1.9vw, 26px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--k-ink);
+}
+.k .kh-typ__lamela {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #464C50;
+}
+.k .kh-typ__udaj {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--k-ink);
+}
+.k .kh-typ__kotva {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #464C50;
+}
+.k .kh-typ__riadok--prvy {
+  padding-block: clamp(24px, 2.4vw, 34px);
+  background: var(--k-ink);
+  box-shadow: 0 4px 8px rgba(18, 23, 26, 0.05), 0 28px 72px rgba(18, 23, 26, 0.14);
+}
+.k .kh-typ__riadok--prvy .kh-pojem { color: var(--k-amber); }
+.k .kh-typ__riadok--prvy .kh-typ__model { font-size: clamp(24px, 2.2vw, 30px); color: #fff; }
+.k .kh-typ__riadok--prvy .kh-typ__lamela,
+.k .kh-typ__riadok--prvy .kh-typ__udaj,
+.k .kh-typ__riadok--prvy .kh-typ__kotva { color: rgba(255, 255, 255, 0.82); }
+.k .kh-typ__riadok--prvy .kh-pas__draha { background: rgba(255, 255, 255, 0.24); }
+.k .kh-typ__riadok--prvy .kh-pas__kota { color: var(--k-amber); }
+
+.k .kh-typ__pata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(20px, 2.6vw, 40px);
+  margin-top: clamp(28px, 3.4vw, 48px);
+}
+.k .kh-typ__pata p {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #464C50;
+}
+
+
+/* --- telefón -------------------------------------------------------------- */
+@media (max-width: 999px) {
+  .k .kh-modul__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-zost { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-modul__mieru { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-modul__mieru .k-btn { justify-self: start; }
+}
+@media (max-width: 767px) {
+  .k .kh-cat__grid--sirka { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-cat__grid--sirka .kh-cat__card,
+  /* Široká posledná karta má na telefóne rovnakú silu pravidla ako mriežka,
+     takže sa musí zrušiť menom, nie všeobecne. */
+  .k .kh-cat__grid--sirka > *:last-child:nth-child(odd) .kh-cat__card { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-cat__grid--sirka .kh-cat__media { min-height: 200px; }
+  .k .kh-cat__grid--sirka .kh-cat__actions .k-btn { width: 100%; }
+}
+@media (max-width: 719px) {
+  .k .kh-modul__grid { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-modul__mieru .k-btn { width: 100%; }
+
+  /* Riadok skladby prestane byť riadkom a stane sa kartou: číslo a názov
+     hore, pod nimi text a napravo dole termín. Tri stĺpce na 390 px by
+     nechali na text šesť znakov. */
+  .k .kh-skl__hlava { display: none; }
+  .k .kh-skl__riadok {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    padding: 22px 20px;
+  }
+  .k .kh-skl__riadok--dolezite { padding-block: 26px; }
+  .k .kh-skl__nazov { font-size: 19px; line-height: 1.22; }
+  .k .kh-skl__zcoho { font-size: 15px; }
+  .k .kh-skl__kedy { font-size: 13px; line-height: 1.4; text-align: left; }
+
+  .k .kh-zost__koty { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Typorada na telefóne: model a pás nad sebou, hodnoty v dvojiciach. */
+  .k .kh-typ__riadok {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+    padding: 24px 20px;
+  }
+  .k .kh-typ__riadok--prvy { padding-block: 26px; }
+  .k .kh-typ__riadok > *:first-child,
+  .k .kh-typ__riadok > *:last-child { grid-column: 1 / -1; }
+  .k .kh-typ__model { font-size: 24px; }
+  /* Dva stĺpce hodnôt majú na 390 px po 155 px. Pätnásť pixelov by rozmer
+     zalomilo tak, že by „m“ ostalo samo na riadku. */
+  .k .kh-typ__udaj { font-size: 14px; line-height: 1.5; }
+  .k .kh-typ__riadok .kh-pojem { font-size: 10.5px; letter-spacing: 0.12em; }
+  .k .kh-typ__pata .k-btn { width: 100%; }
+}
