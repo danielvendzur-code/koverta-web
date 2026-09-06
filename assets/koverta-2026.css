@@ -10802,7 +10802,10 @@ footer.kf { background: var(--k-ink); color: #fff; }
   min-width: 0;
   width: 100%;
   aspect-ratio: auto;
-  min-height: clamp(300px, 46vw, 760px);
+  /* Spodná hranica drží fotografiu čitateľnú aj pri krátkom texte, ale už
+     nediktuje výšku celého pásu — pri 46 vw bola vyššia než stĺpec s textom
+     a výzva sa tým vytlačila pod okraj obrazovky. */
+  min-height: clamp(280px, 34vw, 560px);
   overflow: hidden;
   border-radius: var(--k-r-sm);
   background: var(--k-ink);
@@ -10842,7 +10845,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   letter-spacing: -0.034em;
 }
 .k .kh-duo__telo > .k-copy {
-  margin: 0 0 clamp(28px, 3vw, 44px);
+  margin: 0 0 clamp(24px, 2.3vw, 34px);
   max-width: 46ch;
   font-size: clamp(16px, 1.3vw, 18px);
   line-height: 1.64;
@@ -10853,7 +10856,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    vodorovná. Číslo je veľké, popis pod ním drobný a tučný. */
 .k .kh-duo__fakty {
   display: flex;
-  margin: 0 0 clamp(28px, 3vw, 44px);
+  margin: 0 0 clamp(24px, 2.3vw, 34px);
   border-top: 1px solid var(--k-hair);
   border-bottom: 1px solid var(--k-hair);
 }
@@ -11064,6 +11067,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   color: var(--k-grey);
 }
 .k .kh-duo__akcia { margin: var(--k-s5) 0 0; }
+/* Fakty majú vlastný odstup zospodu. Keby k nemu tlačidlo pridalo ešte svoj
+   vrchný, ostala by medzi číslami a výzvou diera na dva odstupy. */
+.k .kh-duo__fakty + .kh-duo__akcia { margin-top: 0; }
 .k .kh-duo__akcia .k-btn { min-height: 52px; padding-inline: clamp(20px, 2vw, 30px); }
 
 
@@ -12258,14 +12264,17 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 
 /* --- Odtiene ako paleta, nie ako riadok drobností -------------------------
-   Sedem odtieňov stálo v jednom riadku ako zoznam s malými štvorčekmi;
-   dlhší názov sa zalomil a celý riadok sa rozsypal. Odtieň je pritom to
-   jediné, čo tu má byť vidieť — dostáva teda plochu. Vzorkovník má sedem
-   rovnakých dlaždíc, pod každou názov a číslo RAL. */
+   Odtiene stáli v jednom riadku ako zoznam s malými štvorčekmi; dlhší názov
+   sa zalomil a celý riadok sa rozsypal. Odtieň je pritom to jediné, čo tu má
+   byť vidieť — dostáva teda plochu. Vzorkovník má osem rovnakých dlaždíc,
+   pod každou názov a číslo RAL. Je to zoznam, lebo je to výpočet vzoriek. */
 .k .kh-odtiene {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: clamp(10px, 1.2vw, 16px);
+  margin: clamp(16px, 1.8vw, 24px) 0 0;
+  padding: 0;
+  list-style: none;
 }
 .k .kh-odtien {
   display: flex;
@@ -12329,6 +12338,52 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (max-width: 719px) {
   .k .kh-odtiene { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .k .kh-odtien i { aspect-ratio: 3 / 2; }
+}
+
+/* Mikroštruktúra. Katalóg pri každom z ôsmich odtieňov píše „mikroštruktúra“
+   — je to jemne zrnitý povrch, na ktorom nie sú vidieť odtlačky. Plochá
+   výplň to nepovie; zrnenie áno. Je to dva prekryté rastre s krokom, ktorý
+   nie je násobkom toho druhého, takže sa vzor viditeľne neopakuje. */
+.k .kh-odtien i::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.055) 0.5px, transparent 0.6px),
+    radial-gradient(rgba(18, 23, 26, 0.06) 0.5px, transparent 0.6px);
+  background-size: 3px 3px, 4px 4px;
+  background-position: 0 0, 1px 2px;
+}
+
+/* Pás nad vzorkovníkom hovorí, ktorá časť palety je v cene. Bez neho
+   zákazník nevie, či si osem dlaždíc priplatí, alebo nie. */
+.k .kh-farby__pas {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: clamp(22px, 2.6vw, 34px) 0 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--k-hair);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+.k .kh-farby__pas > span {
+  padding: 5px 12px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  font-family: var(--k-head);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--k-ink);
+}
+/* Tri fakty pod vzorkovníkom sú pokračovanie tej istej sekcie, nie nová —
+   preto len odsadenie, žiadna ďalšia deliaca čiara. */
+.k .kh-farby__navyse { margin-top: clamp(30px, 3.4vw, 46px); }
+@media (max-width: 719px) {
+  .k .kh-farby__pas { font-size: 14px; }
 }
 
 
@@ -12632,3 +12687,202 @@ footer.kf { background: var(--k-ink); color: #fff; }
   color: var(--k-amber-deep);
 }
 .k .kh-skl__riadok--dolezite .kh-skl__cislo { color: var(--k-amber); }
+
+
+/* ==========================================================================
+   VRSTVA 117 · Štyri ročné obdobia na bioklimatickej pergole
+   ==========================================================================
+   Stránke chýbala odpoveď na prvú otázku zákazníka: prečo otočné lamely a nie
+   pevná strecha. Starý web to riešil prepínačom Jar / Leto / Jeseň / Zima.
+   Prepínač skryje tri zo štyroch dôvodov za klik, tak sú tu všetky štyri
+   vedľa seba. Karta je fotografia a pod ňou tri riadky textu — nič viac. */
+.k .kh-rok__citat {
+  margin: var(--k-s4) 0 0;
+  padding-left: 16px;
+  border-left: 3px solid var(--k-amber);
+  font-family: var(--k-head);
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.k .kh-rok__citat span {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--k-body, inherit);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--k-grey-soft);
+}
+
+.k .kh-rok__rad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+  margin: clamp(26px, 3vw, 40px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.k .kh-rok__kus {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  border: 1px solid var(--k-hair);
+  overflow: hidden;
+  /* Karta sa pri prejdení zdvihne celá — fotografia vnútri sa nehýbe. */
+  transition: var(--k-prichod), border-color 260ms var(--k-ease), transform 320ms var(--k-ease-out), box-shadow 320ms var(--k-ease);
+}
+.k .kh-rok__kus:hover {
+  transform: translateY(-4px);
+  border-color: rgba(18, 23, 26, 0.16);
+  box-shadow: 0 4px 10px rgba(18, 23, 26, 0.04), 0 22px 48px rgba(18, 23, 26, 0.10);
+}
+.k .kh-rok__foto {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--k-bone-deep, #ece9e4);
+}
+.k .kh-rok__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.k .kh-rok__telo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: clamp(18px, 1.8vw, 24px);
+}
+.k .kh-rok__obdobie {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-rok__nazov {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--k-ink);
+  text-wrap: balance;
+}
+.k .kh-rok__text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.58;
+  color: #464C50;
+}
+
+/* Šesť vlastností pod kartami. Na starom webe to bol rad ikon bez textu;
+   ikona sama nepovie nič, tak je pri každej jedna veta. */
+.k .kh-rok__spodok { margin-top: clamp(26px, 3vw, 40px); }
+.k .kh-rok__vlastnosti {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px);
+  margin: 0;
+  padding: clamp(20px, 2vw, 26px) 0;
+  border-top: 1px solid var(--k-hair);
+  border-bottom: 1px solid var(--k-hair);
+  list-style: none;
+}
+.k .kh-rok__vlastnost {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--k-ink);
+}
+.k .kh-rok__vlastnost::before { content: none; }
+.k .kh-rok__ikona {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: -1px;
+  color: var(--k-amber-deep);
+}
+
+@media (max-width: 1099px) {
+  .k .kh-rok__rad { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-rok__vlastnosti { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 18px; }
+}
+@media (max-width: 599px) {
+  .k .kh-rok__rad { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-rok__vlastnosti { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (hover: none) {
+  .k .kh-rok__kus:hover { transform: none; box-shadow: none; }
+}
+
+
+/* ==========================================================================
+   VRSTVA 118 · Ako čítať čísla typoradov
+   ==========================================================================
+   Tabuľka typoradov je presná, ale kto nevie, čo znamená „lamela 200/28"
+   alebo „profil 170/120", prečíta z nej len rad čísel. Tri nákresy v reze
+   pomenujú, ktorý rozmer je ktorý — a až potom má tabuľka zmysel. */
+.k .kh-cit {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 32px);
+  margin: 0 0 clamp(28px, 3vw, 44px);
+  padding: clamp(20px, 2.2vw, 30px) 0;
+  border-top: 1px solid var(--k-hair);
+  border-bottom: 1px solid var(--k-hair);
+  list-style: none;
+}
+.k .kh-cit__kus {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(12px, 1.4vw, 18px);
+  min-width: 0;
+}
+.k .kh-cit__kus::before { content: none; }
+.k .kh-cit__nakres {
+  flex: 0 0 auto;
+  width: clamp(96px, 8vw, 120px);
+  height: auto;
+}
+.k .kh-cit__popis {
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--k-grey-soft);
+  font-variant-numeric: tabular-nums;
+}
+.k .kh-cit__tvar { fill: rgba(18, 23, 26, 0.10); }
+.k .kh-cit__tvar--zvyraz { fill: var(--k-amber); }
+.k .kh-cit__kota { stroke: rgba(18, 23, 26, 0.42); stroke-width: 1.3; fill: none; stroke-linecap: round; }
+.k .kh-cit__voda { stroke: var(--k-ink); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.k .kh-cit__meno {
+  margin: 0 0 5px;
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.25vw, 17px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--k-grey-soft);
+}
+.k .kh-cit__meno strong {
+  font-weight: 600;
+  color: var(--k-ink);
+  font-variant-numeric: tabular-nums;
+}
+.k .kh-cit__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.56;
+  color: #464C50;
+}
+@media (max-width: 899px) {
+  .k .kh-cit { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+}
