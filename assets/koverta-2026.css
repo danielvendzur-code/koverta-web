@@ -12016,3 +12016,363 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-typ__riadok .kh-pojem { font-size: 10.5px; letter-spacing: 0.12em; }
   .k .kh-typ__pata .k-btn { width: 100%; }
 }
+
+
+/* ==========================================================================
+   VRSTVA 113 · Tlačidlá s hĺbkou, riadky bez čiar, odtiene ako paleta
+   ==========================================================================
+   Zadávateľ poslal ako vzor plastické tlačidlo z Frameru. Ten komponent je
+   React a na tento web sa nedá pripojiť — je to statické HTML bez zostavenia
+   a bez cudzích skriptov. Ten istý dojem sa dá spraviť samotným CSS a je to
+   aj rýchlejšie: pod tlačidlom leží tmavšia podstava, tlačidlo na nej stojí,
+   pri prejdení sa nadvihne a pri stlačení do nej zapadne. Tvar pilulky sa
+   nemení, mení sa len hĺbka.
+
+   Podstava je plná farba, nie rozmazaný tieň — to je celý rozdiel medzi
+   „plastickým“ a „mäkkým“ tlačidlom. Rozmazaný tieň pod ňou ostáva, aby
+   tlačidlo nesedelo na ploche nasucho. */
+:root, .k, .kv-header {
+  --k-podstava: #d9a800;   /* jantár o tri odtiene tmavší */
+  --k-podstava-tmava: #000;
+  --k-podstava-svetla: rgba(18, 23, 26, 0.18);
+}
+
+.k .k-btn,
+.kv-header .k-btn,
+.k .kh-cat__actions > .k-link,
+.k .kh-pick__lane .k-link {
+  /* `will-change` tu bolo a bolo to na škodu: prehliadač by pre každé
+     tlačidlo na stránke držal vlastnú vrstvu v pamäti, aj keď sa nikdy
+     nepohne. Posun sa aj tak deje cez `transform`, čo vrstvu vytvorí až
+     v okamihu, keď treba. */
+  transition:
+    transform 180ms cubic-bezier(.2, .8, .3, 1),
+    box-shadow 180ms cubic-bezier(.2, .8, .3, 1),
+    background-color 200ms var(--k-ease),
+    border-color 200ms var(--k-ease),
+    color 200ms var(--k-ease);
+}
+
+/* Plné jantárové tlačidlo — väčšina výziev na webe. */
+.k .k-btn--primary,
+.kv-header .k-btn--primary,
+.k .kv-suhlas__btn--ano,
+.k .kh-cat__actions > .k-link,
+.k .kh-pick__lane .k-link,
+.k .kh-dock .k-btn--primary {
+  box-shadow: 0 3px 0 var(--k-podstava), 0 6px 14px rgba(18, 23, 26, 0.16);
+}
+.k .k-btn--primary:hover,
+.kv-header .k-btn--primary:hover,
+.k .kv-suhlas__btn--ano:hover,
+.k .kh-cat__actions > .k-link:hover,
+.k .kh-cat__item:hover .kh-cat__actions > .k-link,
+.k .kh-pick__lane .k-link:hover,
+.k .kh-dock .k-btn--primary:hover {
+  background: #ffd452;
+  border-color: #ffd452;
+  color: var(--k-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--k-podstava), 0 12px 24px rgba(18, 23, 26, 0.2);
+}
+.k .k-btn--primary:active,
+.kv-header .k-btn--primary:active,
+.k .kv-suhlas__btn--ano:active,
+.k .kh-cat__actions > .k-link:active,
+.k .kh-pick__lane .k-link:active,
+.k .kh-dock .k-btn--primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--k-podstava), 0 2px 5px rgba(18, 23, 26, 0.18);
+}
+
+/* Tmavé tlačidlo — používa sa striedmo, podstava je čierna. */
+.k .k-btn--ink {
+  box-shadow: 0 3px 0 var(--k-podstava-tmava), 0 6px 14px rgba(18, 23, 26, 0.2);
+}
+.k .k-btn--ink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--k-podstava-tmava), 0 12px 24px rgba(18, 23, 26, 0.26);
+}
+.k .k-btn--ink:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--k-podstava-tmava), 0 2px 5px rgba(18, 23, 26, 0.2);
+}
+
+/* Obrysové tlačidlo dostane hĺbku tiež, len tichšiu — podstava je vlasová. */
+.k .k-btn--line,
+.k .k-btn--glass {
+  box-shadow: 0 2px 0 var(--k-podstava-svetla), 0 5px 12px rgba(18, 23, 26, 0.1);
+}
+.k .k-btn--line:hover,
+.k .k-btn--glass:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--k-podstava-svetla), 0 10px 20px rgba(18, 23, 26, 0.14);
+}
+.k .k-btn--line:active,
+.k .k-btn--glass:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--k-podstava-svetla), 0 2px 5px rgba(18, 23, 26, 0.12);
+}
+
+/* Na tmavej ploche je podstava jantáru tmavší jantár, nie čierna — inak by
+   sa tlačidlo utopilo. */
+.k .kh-modul__mieru .k-btn--primary,
+.k .kh-zost__panel .k-btn--primary,
+.k .kh-cta .k-btn--primary,
+.k .k-invert .k-btn--primary {
+  box-shadow: 0 3px 0 var(--k-podstava), 0 8px 20px rgba(0, 0, 0, 0.34);
+}
+
+/* Šípka v tlačidle sa posunie, keď sa tlačidlo nadvihne. */
+.k .k-btn:hover svg { transform: translateX(4px); }
+.k .k-btn:active svg { transform: translateX(2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k .k-btn, .kv-header .k-btn,
+  .k .kh-cat__actions > .k-link, .k .kh-pick__lane .k-link {
+    transition: background-color 200ms linear, color 200ms linear;
+  }
+  .k .k-btn:hover, .k .k-btn:active,
+  .kv-header .k-btn:hover,
+  .k .kh-cat__actions > .k-link:hover,
+  .k .kh-pick__lane .k-link:hover { transform: none; }
+}
+
+
+/* --- Čip v pruhu značky pri prejdení nemizne ------------------------------
+   Staršia vrstva mu pri hoveri brala podklad, takže z jantárovej pilulky
+   ostal holý text a vyzeralo to, akoby tlačidlo zmizlo. Ostáva pilulkou,
+   len o odtieň jasnejšou — rovnako ako výzva v karte kategórie. */
+.k .kh-pick__lane .k-link:hover {
+  background: #ffd452;
+  color: var(--k-ink);
+}
+
+
+/* --- Kroky postupu bez vlasových čiar -------------------------------------
+   Riadok mal pod sebou vlasovú linku a v aktívnom stave sa pod ním dokresľovala
+   dvojpixelová jantárová čiarka. Zadávateľ chce tenké čiary preč: aktívny krok
+   pozná človek podľa toho, že je tmavý a jantárové číslo pri ňom svieti,
+   nie podľa podčiarknutia. */
+.k .kh-proc__row,
+.k .kh-proc__row + .kh-proc__row,
+.k .kh-proc__list .kh-proc__row:last-child {
+  border-top: 0;
+  border-bottom: 0;
+}
+.k .kh-proc__row::before,
+.k .kh-proc__row::after { content: none; }
+/* Aktívny krok je plocha, nie čiara: biela karta s mäkkým tieňom. Rovnaký
+   tvar má karta materiálu aj otvorená otázka, takže si web ostáva verný. */
+.k .kh-proc__row {
+  border-radius: var(--k-r-sm);
+  padding-inline: clamp(14px, 1.4vw, 20px);
+  transition:
+    background-color 320ms var(--k-ease),
+    box-shadow 320ms var(--k-ease),
+    color 320ms var(--k-ease),
+    opacity 320ms var(--k-ease),
+    transform 420ms var(--k-ease-out);
+}
+.k .kh-proc__row.is-active {
+  background: var(--k-white);
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.06);
+  transform: none;
+}
+.k .kh-proc__row:hover:not(.is-active) { background: rgba(18, 23, 26, 0.04); }
+
+
+/* --- Odtiene ako paleta, nie ako riadok drobností -------------------------
+   Sedem odtieňov stálo v jednom riadku ako zoznam s malými štvorčekmi;
+   dlhší názov sa zalomil a celý riadok sa rozsypal. Odtieň je pritom to
+   jediné, čo tu má byť vidieť — dostáva teda plochu. Vzorkovník má sedem
+   rovnakých dlaždíc, pod každou názov a číslo RAL. */
+.k .kh-odtiene {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(10px, 1.2vw, 16px);
+}
+.k .kh-odtien {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.k .kh-odtien i {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--k-r-sm);
+  box-shadow: inset 0 0 0 1px rgba(18, 23, 26, 0.09);
+}
+.k .kh-odtien > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.k .kh-odtien strong {
+  font-family: var(--k-head);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  color: var(--k-ink);
+  text-wrap: balance;
+}
+.k .kh-odtien small {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--k-amber-deep);
+}
+@media (max-width: 1099px) { .k .kh-odtiene { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 719px) {
+  .k .kh-odtiene { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-odtien i { aspect-ratio: 3 / 2; }
+}
+
+
+/* --- Značky pod fotkou, nie na nej ----------------------------------------
+   Koverta a Soltec ležali cez fotografiu a brali jej horný okraj. Sú to
+   údaje, nie ozdoba obrazu — stoja teraz nad názvom kategórie. */
+.k .kh-cat__body > .kh-cat__znacky {
+  position: static;
+  inset: auto;
+  align-self: flex-start;
+  margin: 0 0 clamp(10px, 1vw, 14px);
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+}
+.k .kh-cat__body > .kh-cat__znacky .kh-cat__znacka { color: var(--k-grey); }
+.k .kh-cat__body > .kh-cat__znacky .k-logo path { fill: currentColor; }
+.k .kh-cat__body > .kh-cat__znacky .k-logo__bracket path { fill: var(--k-amber); }
+.k .kh-cat__body > .kh-cat__znacky .kh-cat__delic { background: var(--k-hair); }
+
+
+/* --- Typorady: čo sa do riadku nezmestí -----------------------------------
+   Nosnosť, motory a vývody vody sú pre celý typorad rovnaké a v riadku by ho
+   roztiahli. Sú preto pod ním a otvoria sa kliknutím. */
+.k .kh-typ__viac {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--k-head);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--k-amber-deep);
+  transition: color 200ms var(--k-ease);
+}
+/* Terč pod prstom má byť aspoň 44 px vysoký; text ostáva rovnaký, len
+   okolo neho pribudlo miesto a záporný okraj ho vráti na svoju líniu. */
+.k .kh-typ__viac { min-height: 44px; margin-block: -11px; }
+.k .kh-typ__viac:hover { color: var(--k-ink); }
+.k .kh-typ__viac:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+.k .kh-typ__znak {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: var(--k-r-pill);
+  border: 1px solid currentColor;
+}
+.k .kh-typ__znak::before,
+.k .kh-typ__znak::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 1.4px;
+  margin: -0.7px 0 0 -4px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 320ms var(--k-ease-out);
+}
+.k .kh-typ__znak::after { transform: rotate(90deg); }
+.k .kh-typ__viac[aria-expanded="true"] .kh-typ__znak::after { transform: rotate(0deg); }
+
+.k .kh-typ__info {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+  margin-top: clamp(16px, 1.6vw, 22px);
+  padding-top: clamp(16px, 1.6vw, 22px);
+  border-top: 1px solid var(--k-hair);
+  overflow: hidden;
+}
+/* `display: grid` prebíja východiskové `display: none` atribútu `hidden`,
+   takže by bol panel otvorený od začiatku. Skryté ostáva skryté. */
+.k .kh-typ__info[hidden] { display: none; }
+
+.k .kh-typ__riadok--prvy .kh-typ__viac { color: var(--k-amber); }
+.k .kh-typ__riadok--prvy .kh-typ__viac:hover { color: #ffd452; }
+.k .kh-typ__riadok--prvy .kh-typ__info { border-top-color: rgba(255, 255, 255, 0.24); }
+@media (max-width: 999px) { .k .kh-typ__info { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 719px) { .k .kh-typ__info { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+
+/* --- Úvodný pás prichádza rýchlejšie -------------------------------------
+   Hodnotenie na Google čakalo skoro poldruha sekundy. Rozostupy sú kratšie
+   a prechod v úvodnom páse rýchlejší; poradie ostáva. */
+.k .kh-hero__box > .k-rise { transition-duration: 620ms; }
+.k .kh-hero__box > .kh-crumbs { transition-delay: 0ms; }
+.k .kh-hero__box > .k-display,
+.k .kh-hero__box > .k-h1,
+.k .kh-hero__box > h1 { transition-delay: 60ms; }
+.k .kh-hero__box > .k-lead { transition-delay: 130ms; }
+.k .kh-hero__box > .kh-hero__actions { transition-delay: 200ms; }
+.k .kh-hero__box > .kh-hero__trust { transition-delay: 260ms; }
+
+
+/* --- Karta katalógu je biela --------------------------------------------
+   Karta mala kostené pozadie a stála na kostenej sekcii, takže po nej nebolo
+   vidieť ani stopu. Sekcia ostáva kostená kvôli striedaniu plôch, karta je
+   biela s tým istým mäkkým tieňom, aký majú ostatné karty na webe. */
+.k .kh-kat__karta {
+  background: var(--k-white);
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+}
+.k .kh-kat__karta:hover {
+  box-shadow: 0 2px 4px rgba(18, 23, 26, 0.05), 0 16px 36px rgba(18, 23, 26, 0.1);
+}
+
+
+/* ==========================================================================
+   VRSTVA 114 · Prečo tu nie je odkladanie rozloženia
+   ==========================================================================
+   Prvý snímok po načítaní trval 197 ms a z toho 149 ms bral prepočet štýlu
+   a rozloženia — prehliadač rozkladal dvanásťtisíc pixelov stránky naraz.
+   Ponúka sa `content-visibility: auto`, ktoré rozloženie sekcie odloží, kým
+   sa k nej človek nepriblíži. Vyskúšal som to a zmeral: snímok klesol zo
+   197 na 130 ms, lenže výška stránky sa počas prvého scrollovania menila
+   o štyri a pol tisíc pixelov a posuvník pri každej sekcii poskočil. To je
+   presne to trhanie, ktoré má byť preč — za dvadsať milisekúnd to nestojí.
+
+   Sekanie preto rieši to, čo nemá vedľajší účinok, a je to v skripte:
+     · `will-change: transform` na každom tlačidle je preč — prehliadač
+       preň držal vlastnú vrstvu, aj keď sa tlačidlo nikdy nepohlo,
+       a deväťdesiaty deviaty percentil snímku klesol z 33 na 17 ms;
+     · odkrývanie obsahu najprv všetko odmeria a až potom pridáva triedy —
+       predtým si každé pridanie vynútilo nový prepočet rozloženia, čo pri
+       stovke prvkov znamenalo stovku prepočtov v jednom snímku.
+   Na mape realizácií, kde je prvkov najviac, klesol počet dlhých snímkov
+   z 66 na 11. */

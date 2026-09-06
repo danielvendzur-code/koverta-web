@@ -78,6 +78,36 @@
 
     items.forEach((el) => io.observe(el));
 
+    /* Čo je pri otvorení stránky v okne, prichádza hneď — nie až keď človek
+       scrollne. Pozorovateľ má zámerne záporné dolné pásmo, aby sa obsah
+       nerozbiehal mimo obrazovky; úvodný pás však siaha až po spodnú hranu
+       okna, takže doň nikdy nespadol a hodnotenie na Google, čipy pod
+       tlačidlami ani drobné údaje sa neobjavili, kým človek nescrolloval.
+       Dva snímky sú tu naschvál: prvý vykreslí východiskový stav, druhý
+       pridá triedu, takže prechod naozaj prebehne a nepreskočí. */
+    /* Najprv sa všetko odmeria, až potom sa pridávajú triedy. Keby sa to
+       striedalo, každé pridanie triedy by zneplatnilo štýl a nasledujúce
+       meranie by si vynútilo nový prepočet rozloženia — pri stovke prvkov
+       je to stovka prepočtov v jednom snímku a presne to bolo na stránke
+       vidieť ako zaseknutie pri otvorení. */
+    const hnedVOkne = () => {
+      const h = window.innerHeight;
+      const prisli = [];
+      items.forEach((el) => {
+        if (el.classList.contains('is-in')) return;
+        if (el.getBoundingClientRect().top < h) prisli.push(el);
+      });
+      prisli.forEach((el) => {
+        el.classList.add('is-in');
+        io.unobserve(el);
+      });
+    };
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(hnedVOkne));
+    } else {
+      window.setTimeout(hnedVOkne, 60);
+    }
+
     /* Poistka. Predtým po 1,5 s odkryla úplne všetko vrátane sekcií hlboko
        pod ohybom — kým sa k nim návštevník doscrolloval, boli dávno odkryté
        a neanimovalo sa nič. To bola príčina, prečo na webe nebolo vidieť
@@ -96,25 +126,47 @@
        sa potom neodkryje vôbec. Toto beží pri každom scrollovaní a odkryje
        čokoľvek, čo je v okne alebo nad ním; pozorovateľ tak rieši pekný
        nábeh, toto rieši istotu, že sa obsah ukáže vždy. */
+    /* Zoznam sa cestou skracuje. Predtým sa pri každom snímku scrollovania
+       prešlo všetkých tristopätnásť prvkov mapy realizácií a na každom sa
+       zisťovala poloha — to je tristo vynútených prepočtov rozloženia
+       v jednom snímku a bolo to na tej stránke cítiť. Odkryté prvky zo
+       zoznamu vypadnú, takže práce ubúda, až kým neostane nula. */
+    let zvysne = [...items];
     let caka = false;
     const tvrdyBod = () => {
       caka = false;
+      if (!zvysne.length) return;
       const h = window.innerHeight;
-      items.forEach((el) => {
+      /* Meranie a zápis oddelene — inak si každý zápis vynúti nový prepočet
+         rozloženia a scrollovanie sa začne sekať. */
+      const prisli = [];
+      const ostava = [];
+      zvysne.forEach((el) => {
         if (el.classList.contains('is-in')) return;
-        const r = el.getBoundingClientRect();
         /* Všetko od spodnej hrany okna nahor. Odkrytie je jednosmerné, takže
            prvok, ktorý pri rýchlom scrollovaní preletel oknom skôr, než sa
            pozorovateľ ozval, sa tu dorovná — a pri ceste späť hore je hotový,
            nie v polovici prechodu. */
-        if (r.top < h * 0.9) el.classList.add('is-in');
+        if (el.getBoundingClientRect().top < h * 0.9) prisli.push(el);
+        else ostava.push(el);
       });
+      zvysne = ostava;
+      prisli.forEach((el) => el.classList.add('is-in'));
     };
+    /* Poistka nemusí bežať pri každom snímku — pozorovateľ rieši pekný
+       nábeh, toto je len istota. Stopäťdesiat milisekúnd je pod hranicou,
+       kde by si toho niekto všimol, a scrollovaniu to nechá pokoj. */
+    let kedy = 0;
     const naplanuj = () => {
-      if (caka) return;
+      if (caka || !zvysne.length) return;
+      const teraz = performance.now();
+      const odklad = Math.max(0, 150 - (teraz - kedy));
       caka = true;
-      if (window.requestAnimationFrame) window.requestAnimationFrame(tvrdyBod);
-      else window.setTimeout(tvrdyBod, 60);
+      kedy = teraz + odklad;
+      window.setTimeout(() => {
+        if (window.requestAnimationFrame) window.requestAnimationFrame(tvrdyBod);
+        else tvrdyBod();
+      }, odklad);
     };
     window.addEventListener('scroll', naplanuj, { passive: true });
     window.addEventListener('resize', naplanuj);
@@ -1509,6 +1561,46 @@
     });
   }
 
+  /* --- 4b · Typorady: čo sa do riadku nezmestí ---------------------------
+     Riadok povie model, profil a rozmer. Na rozhodnutie to nestačí — chýba
+     nosnosť strechy, koľko je motorov a kadiaľ ide voda. Tie údaje sú
+     rovnaké pre celý typorad a v riadku by ho roztiahli na dve obrazovky,
+     tak sú pod ním a otvoria sa kliknutím. Výšku vedie ten istý postup ako
+     pri otázkach, takže sa obsah vysunie a nevyskočí. */
+  function initTyp(root) {
+    const tichy = window.matchMedia('(prefers-reduced-motion: reduce)');
+    root.querySelectorAll('[data-k-typ] .kh-typ__viac').forEach((tlacidlo) => {
+      const telo = document.getElementById(tlacidlo.getAttribute('aria-controls'));
+      if (!telo) return;
+      tlacidlo.addEventListener('click', () => {
+        const hybat = !tichy.matches && typeof telo.animate === 'function';
+        const otvorene = tlacidlo.getAttribute('aria-expanded') === 'true';
+        tlacidlo.setAttribute('aria-expanded', otvorene ? 'false' : 'true');
+        faqStop(telo);
+        if (otvorene) {
+          if (!hybat) { telo.hidden = true; return; }
+          const od = telo.getBoundingClientRect().height;
+          const beh = telo.animate(
+            [{ height: od + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+            { duration: FAQ_CAS, easing: FAQ_KRIVKA }
+          );
+          telo.__kBeh = beh;
+          beh.onfinish = () => { telo.__kBeh = null; telo.hidden = true; };
+        } else {
+          telo.hidden = false;
+          if (!hybat) return;
+          const ciel = telo.scrollHeight;
+          const beh = telo.animate(
+            [{ height: '0px', opacity: 0 }, { height: ciel + 'px', opacity: 1 }],
+            { duration: FAQ_CAS, easing: FAQ_KRIVKA }
+          );
+          telo.__kBeh = beh;
+          beh.onfinish = () => { telo.__kBeh = null; };
+        }
+      });
+    });
+  }
+
   /* --- 5 · hlavička ------------------------------------------------------- */
 
   /* --- Tri realizácie sa cestou zmenia na tri recenzie --------------------
@@ -2560,7 +2652,7 @@
      video v úvode a lišta súhlasu. Zvyšok sa rozdelí do snímkov po ôsmich
      milisekundách, takže žiadny z nich nezmešká svoj termín. */
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
-  const POTOM = [initRail, initFilters, initFaq, initProcess, initShots,
+  const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
                  initDopyt, initMapa, initLupa, initVrstvy, initSlucka];
 
