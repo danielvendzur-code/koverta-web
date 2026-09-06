@@ -11978,6 +11978,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   line-height: 1.55;
   color: var(--k-ink);
 }
+/* Pás dĺžky sedí pod rozmermi v tom istom stĺpci — je to obrázok toho
+   čísla nad ním, nie samostatný údaj. */
+.k .kh-typ__riadok .kh-pas { margin-top: 14px; }
 .k .kh-typ__kotva {
   margin: 14px 0 0;
   font-size: 14px;
@@ -12158,6 +12161,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   transition: transform 320ms var(--k-ease-out), opacity 320ms var(--k-ease);
 }
 .k-btn__slovo-b { transform: translateY(115%); opacity: 0; }
+/* Text druhej kópie vypisuje pseudoprvok — v obsahu stránky tak nápis
+   nestojí dvakrát a nekopíruje sa zdvojený. */
+.k-btn__slovo-b::before { content: attr(data-slovo); }
 .k-btn:hover .k-btn__slovo-a,
 .k-link:hover .k-btn__slovo-a,
 .kh-cat__item:hover .k-btn__slovo-a { transform: translateY(-115%); opacity: 0; }
@@ -12544,3 +12550,85 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-cat__item:hover .k-btn__slovo-a { transform: translateY(-240%); }
 /* Orezanie by odrezalo aj obrys pri prechode klávesnicou — obrys ide dovnútra. */
 .k-btn:focus-visible { outline-offset: -3px; }
+
+
+/* ==========================================================================
+   VRSTVA 116 · Karta radu: údaje namiesto odrážok
+   ==========================================================================
+   Karta mala meno radu drobným písmom, vetu na kostenom prúžku s linkou pod
+   sebou, tri odrážky s jantárovými bodkami a na konci sivý obdĺžnik s vetou
+   „Kedy ju zvoliť". Štyri rôzne spôsoby, ako povedať štyri veci — a ani jeden
+   z nich nie je reč, ktorou hovorí zvyšok webu.
+
+   Karta má odteraz to isté, čo karta materiálu a prehľad typorád: meno,
+   vetu a pod vlasovou linkou trojicu údajov popisok → hodnota. Odrážky sú
+   preč, bodky tiež. Odporúčanie na konci nesie jantárová značka zľava, nie
+   sivá plocha. */
+.k .kh-rady__nazov {
+  align-items: baseline;
+  margin-bottom: clamp(10px, 1vw, 14px);
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.028em;
+}
+.k .kh-rady__nazov span {
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.k .kh-rady__veta {
+  margin-bottom: clamp(18px, 1.8vw, 26px);
+  font-size: 15px;
+  line-height: 1.66;
+  color: #464C50;
+}
+
+.k .kh-rady__udaje {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px);
+  margin: 0 0 clamp(18px, 1.8vw, 24px);
+  padding-top: clamp(16px, 1.6vw, 22px);
+  border-top: 1px solid var(--k-hair);
+}
+
+/* Odporúčanie: jantárová značka zľava, žiadna plocha. */
+.k .kh-rady__kedy {
+  display: block;
+  padding: 0 0 0 clamp(14px, 1.4vw, 18px);
+  border-left: 3px solid var(--k-amber);
+  border-radius: 0;
+  background: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--k-ink);
+}
+.k .kh-rady__kedy > span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+@media (max-width: 519px) {
+  .k .kh-rady__udaje { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+
+/* --- Číslo vrstvy nie je bodka ---------------------------------------------
+   Poradové číslo stálo v jantárovom koliesku. Zadávateľ koliesko odmietol:
+   pripomína odrážku a odrážky na tomto webe nie sú. Číslo ostáva — poradie
+   je tu informácia, nie ozdoba — ale je to len číslo, tak ako v paneli
+   vrstiev pri výkrese. */
+.k .kh-skl__cislo {
+  width: auto;
+  height: auto;
+  min-width: 2.1em;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-amber-deep);
+}
+.k .kh-skl__riadok--dolezite .kh-skl__cislo { color: var(--k-amber); }

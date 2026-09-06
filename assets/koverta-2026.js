@@ -1656,7 +1656,9 @@
       const bb = document.createElement('span');
       bb.className = 'k-btn__slovo-b';
       bb.setAttribute('aria-hidden', 'true');
-      bb.textContent = text;
+      /* Druhá kópia nesie text v atribúte a vypisuje ho pseudoprvok. Tak sa
+         nápis nezdvojí ani pri kopírovaní, ani pre vyhľadávače. */
+      bb.setAttribute('data-slovo', text);
       obal.appendChild(a);
       obal.appendChild(bb);
       uzol.parentNode.replaceChild(obal, uzol);
