@@ -10735,73 +10735,142 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 
 /* ==========================================================================
-   VRSTVA 103 · Sekcia „fotografia a text" podľa referencie
+   VRSTVA 103 · Sekcia „fotografia a text" podľa dizajnového návrhu
    ==========================================================================
-   Zadávateľ ukázal Brustor a Schüco. Obidve stránky majú v tomto mieste to
-   isté a nič viac: veľkú fotografiu, veľký nadpis, jednu-dve pilulky, jeden
-   poriadne vysadený odsek a veľké tlačidlo s rámom. Žiadny zoznam odrážok,
-   žiadna tabuľka pojmov.
+   Prekreslené podľa odovzdaného návrhu (artboard 1a). Fotografia na polovicu
+   šírky bez odsadenia, na nej jantárový L-kút. Vpravo popisok, veľký nadpis
+   s podčiarknutým posledným slovom, jeden vysadený odsek, dva veľké fakty
+   medzi vlasovými linkami a tmavé tlačidlo.
 
-   Náš blok mal nadpis, drobný sivý odsek a pod ním štyri odrážky — a presne
-   tie odrážky z toho robili poznámkový blok. Odrážky sú preč; to, čo bolo
-   v nich, hovorí odsek vetou. Fakt, ktorý má byť vidieť na prvý pohľad,
-   nesie pilulka.
+   Mierka je to podstatné: nadpis 62 px, odsek 18 / 1,64 na 46 znakov, číslo
+   faktu 40 px. Preto tá sekcia konečne vyzerá ako od značky a nie ako text
+   pod obrázkom. */
 
-   Mierka je to hlavné: nadpis väčší, odsek 18 px s riadkovaním 1,62 a
-   šírkou 44 znakov, medzi blokmi vzduch. */
+.k .kh-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .k .kh-duo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
 
-.k .kh-duo__telo { gap: 0; }
-.k .kh-duo__telo .k-eyebrow { margin-bottom: var(--k-s4); }
+.k .kh-duo__foto {
+  position: relative;
+  margin: 0;
+  align-self: stretch;
+  /* Bunka mriežky sa bez tohto nezmenší pod obsah a staršia vrstva jej navyše
+     dávala pomer 4 : 3 — fotografia potom prerástla svoj stĺpec o 282 px
+     a preliezla cez text. */
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: auto;
+  min-height: clamp(300px, 46vw, 760px);
+  overflow: hidden;
+  border-radius: var(--k-r-sm);
+  background: var(--k-ink);
+}
+.k .kh-duo__foto img { width: 100%; height: 100%; object-fit: cover; }
+/* L-kút: dva ťahy jantárovej linky v rohu fotografie. Je to jediná ozdoba
+   v celej sekcii a drží ju pri značke. */
+.k .kh-duo__kut {
+  position: absolute;
+  top: clamp(16px, 1.8vw, 26px);
+  left: clamp(16px, 1.8vw, 26px);
+  width: clamp(34px, 3.8vw, 54px);
+  height: clamp(34px, 3.8vw, 54px);
+  border: 2px solid var(--k-amber);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: var(--k-r-sm);
+  pointer-events: none;
+}
+
+.k .kh-duo__telo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+  padding: clamp(40px, 4vw, 0px) 0;
+}
+@media (min-width: 900px) {
+  .k .kh-duo__telo { padding: 0 clamp(34px, 6vw, 100px); }
+}
+.k .kh-duo__telo .k-eyebrow { margin: 0 0 clamp(18px, 1.8vw, 26px); }
 .k .kh-duo__telo .k-h2 {
+  margin: 0 0 clamp(20px, 2.1vw, 30px);
   max-width: 15ch;
-  margin: 0 0 var(--k-s4);
-  font-size: clamp(30px, 3.2vw, 46px);
-  line-height: 1.06;
-  letter-spacing: -0.03em;
+  font-size: clamp(34px, 4.3vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -0.034em;
 }
 .k .kh-duo__telo > .k-copy {
-  margin: 0;
+  margin: 0 0 clamp(28px, 3vw, 44px);
   max-width: 46ch;
-  font-size: clamp(16px, 1.35vw, 18.5px);
-  line-height: 1.62;
-  color: var(--k-grey);
+  font-size: clamp(16px, 1.3vw, 18px);
+  line-height: 1.64;
+  color: #464C50;
 }
 
-/* Pilulka nesie číslo alebo jedno slovo, ktoré má byť vidieť skôr než odsek.
-   Sú najviac dve — tri už nikto neprečíta ako fakty, ale ako ozdobu. */
-.k .kh-duo__znaky {
+/* Dva fakty vedľa seba, medzi nimi zvislá vlasová linka a nad aj pod nimi
+   vodorovná. Číslo je veľké, popis pod ním drobný a tučný. */
+.k .kh-duo__fakty {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: var(--k-s5) 0 0;
+  margin: 0 0 clamp(28px, 3vw, 44px);
+  border-top: 1px solid var(--k-hair);
+  border-bottom: 1px solid var(--k-hair);
 }
-.k .kh-duo__chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  padding: 10px 16px;
-  border: 1px solid var(--k-hair);
-  border-radius: 999px;
-  background: var(--k-white);
-  font-size: 13.5px;
-  line-height: 1.2;
-  color: var(--k-grey-soft);
-  white-space: nowrap;
+.k .kh-duo__fakt { flex: 1 1 0; min-width: 0; padding: clamp(18px, 1.9vw, 26px) clamp(16px, 1.9vw, 28px) clamp(18px, 1.9vw, 26px) 0; }
+.k .kh-duo__fakt + .kh-duo__fakt {
+  padding: clamp(18px, 1.9vw, 26px) 0 clamp(18px, 1.9vw, 26px) clamp(16px, 1.9vw, 28px);
+  border-left: 1px solid var(--k-hair);
 }
-.k .kh-duo__chip strong {
+.k .kh-duo__cislo {
+  margin: 0 0 8px;
   font-family: var(--k-head);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: clamp(28px, 2.9vw, 40px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
   color: var(--k-ink);
 }
+.k .kh-duo__popis {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #464C50;
+}
 
-/* Tlačidlo je veľké a s rámom — je to jediná akcia v celej sekcii. */
-.k .kh-duo__akcia { margin: var(--k-s6) 0 0; }
+.k .kh-duo__akcia { margin: 0; }
 .k .kh-duo__akcia .k-btn {
   min-height: 56px;
-  padding-inline: clamp(24px, 2.4vw, 34px);
+  padding-inline: clamp(24px, 2.4vw, 32px);
   font-size: 15px;
+  box-shadow: 0 5px 16px rgba(18, 23, 26, 0.16);
+}
+.k .kh-duo__akcia .k-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
+
+/* Podčiarknuté slovo v nadpise — jantárová linka pod poslednými slovami,
+   dokresľuje sa až keď sekcia príde do pohľadu. */
+.k .kh-duo__telo .k-mark {
+  display: inline-block;
+  padding-bottom: 6px;
+  background: linear-gradient(var(--k-amber), var(--k-amber)) 0 100% / 0 3px no-repeat;
+  transition: background-size 760ms var(--k-ease-out) 260ms;
+}
+.k .kh-duo__telo.is-in .k-mark,
+.k .kh-duo .k-h2.is-in .k-mark,
+.k .kh-duo__telo .k-h2.is-in .k-mark { background-size: 78% 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-duo__telo .k-mark { transition: none; background-size: 78% 3px; }
+}
+
+@media (max-width: 899px) {
+  .k .kh-duo__foto { min-height: 300px; }
+  .k .kh-duo__telo { padding: clamp(32px, 8vw, 44px) 0 0; }
+  .k .kh-duo__akcia .k-btn { width: 100%; min-height: 54px; }
 }
 
 /* --- 103b · Trojstĺpcový prehľad ako prehľad, nie ako odsek --------------
@@ -10961,3 +11030,245 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-duo__akcia { margin: var(--k-s5) 0 0; }
 .k .kh-duo__akcia .k-btn { min-height: 52px; padding-inline: clamp(20px, 2vw, 30px); }
+
+
+/* ==========================================================================
+   VRSTVA 104 · Úvodná obrazovka sa musí zmestiť do okna
+   ==========================================================================
+   Na notebooku s oknom 720 px vysokým končil pás faktov pod úvodným textom
+   39 px pod spodnou hranou — nebolo ho vidieť. Príčina bola v nadpise: mal
+   mieru 11,5 znaku, takže „Strecha, ktorá sa otáča podľa počasia" sa lámalo
+   na štyri riadky a zabralo 265 px.
+
+   Miera je širšia: rovnaký nadpis má tri riadky namiesto štyroch a ušetrí
+   šesťdesiat pixelov. Hlavička je zároveň o kúsok nižšia, takže obsah začína
+   vyššie. Meranie po zmene je v komentári nižšie. */
+.k .kh-hero h1,
+.k .kh-hero .k-display { max-width: 15.5ch; }
+
+/* Hlavička: lišta s kontaktmi aj hlavný riadok o kúsok nižšie. Sedemnásť
+   pixelov navyše pre obsah, ktorý pod ňou začína. */
+.kv-topbar { font-size: 12.5px; }
+.kv-topbar .k-wrap { min-height: 34px; }
+@media (min-width: 1024px) {
+  .kv-bar .k-wrap { min-height: 68px; }
+}
+
+/* Odstupy vnútri úvodnej obrazovky o niečo tesnejšie — text ostáva rovnako
+   veľký, len medzi blokmi je menej vzduchu. */
+.k .kh-hero__box { gap: clamp(13px, 1.15vw, 18px); }
+.k .kh-hero__trust { margin-top: clamp(10px, 1vw, 16px); }
+
+
+/* ==========================================================================
+   VRSTVA 105 · Karty materiálu podľa návrhu (artboard 1b)
+   ==========================================================================
+   Karta je biela plocha s mäkkým tieňom, nie orámovaná škatuľa. Fotografia
+   hore, pod ňou nadpis, jeden odsek — a na spodku pätka s dvoma údajmi.
+
+   Pätka je to podstatné: je pripnutá k spodnej hrane (`margin-top: auto`),
+   takže pri rôzne dlhom texte sedia spodné hrany všetkých kariet v riadku
+   v jednej línii. Odrážky to nevedeli, tie sa len sypali pod seba.
+
+   Čísla na fotografiách sú preč — zadávateľ ich nechcel a na fotografii
+   výrobku nemá poradové číslo čo robiť. S nimi odišiel aj tmavý závoj pri
+   spodnej hrane, ktorý bol len ich podkladom. */
+.k .kh-mat__card {
+  border: 0;
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  transition: box-shadow 320ms var(--k-ease), transform 320ms var(--k-ease-out);
+}
+.k .kh-mat__card:hover {
+  border: 0;
+  box-shadow: 0 2px 4px rgba(18, 23, 26, 0.05), 0 16px 36px rgba(18, 23, 26, 0.10);
+  transform: translateY(-2px);
+}
+.k .kh-mat__media { aspect-ratio: 4 / 3; }
+.k .kh-mat__media::after { content: none; }
+
+.k .kh-mat__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding: clamp(24px, 2.3vw, 32px) clamp(20px, 2.1vw, 30px) clamp(22px, 2.1vw, 30px);
+}
+.k .kh-mat__title {
+  margin: 0 0 12px;
+  font-size: clamp(21px, 1.75vw, 24px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+.k .kh-mat__text {
+  margin: 0 0 clamp(22px, 2.2vw, 30px);
+  font-size: 15px;
+  line-height: 1.66;
+  color: #464C50;
+}
+
+/* Pätka: dva údaje vedľa seba, pripnuté na spodok karty. */
+.k .kh-mat__pata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+  margin: auto 0 0;
+  padding-top: clamp(16px, 1.6vw, 22px);
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-mat__pojem {
+  margin: 0 0 6px;
+  font-family: var(--k-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--k-amber-deep);
+}
+.k .kh-mat__hodnota {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--k-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-mat__card, .k .kh-mat__card:hover { transform: none; transition: none; }
+}
+
+
+/* ==========================================================================
+   VRSTVA 106 · Otvorená otázka v rovnakom jazyku ako zvyšok webu
+   ==========================================================================
+   Zatvorený riadok je v poriadku — vlasová linka, číslo, otázka, znamienko.
+   Otvorený vyzeral ako z iného webu: otázka aj číslo zožltli, zľava pribudol
+   trojpixelový jantárový pás a odpoveď ostala svetlosivá na bielej ploche.
+
+   Otvorený riadok je odteraz biela karta s tým istým mäkkým tieňom, aký majú
+   karty materiálu. Otázka ostáva tmavá — nemení sa jej farba, len znamienko
+   plus sa zmení na mínus a zožltne. Odpoveď je tmavšia a zarovnaná pod
+   otázku, nie pod číslo. */
+.k .kh-faq__item[open] {
+  border: 0;
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+}
+/* Jantárový pás zľava preč — na otvorenie stačí biela plocha a znamienko. */
+.k .kh-faq__item[open]::before { content: none; }
+/* Otázka nemení farbu. Zožltne len znamienko, to je celé. */
+.k .kh-faq__item[open] > summary,
+.k .kh-faq__item[open] > summary::before { color: var(--k-ink); }
+.k .kh-faq__item[open] > summary:hover { color: var(--k-amber-deep); }
+
+.k .kh-faq__item[open] > summary { padding-inline: clamp(18px, 1.8vw, 26px); }
+.k .kh-faq__item[open] .kh-faq__odp,
+.k .kh-faq__item[open] > div,
+.k .kh-faq__item[open] > p {
+  font-size: 15px;
+  line-height: 1.66;
+  color: #464C50;
+}
+
+
+/* ==========================================================================
+   VRSTVA 107 · Pohyb, ktorý je konečne vidieť
+   ==========================================================================
+   Reč pohybu ostáva tá istá — obsah pripláva zdola, fotografia sa odkryje
+   maskou. Bola len taká tichá, že si jej nikto nevšimol. Dráha ide z 22 na
+   32 px, čas z 820 na 900 ms a rozostup kariet zo 90 na 110 ms, takže riadok
+   kariet naozaj pricestuje po jednej a nie naraz.
+
+   Pribudli tri veci, ktoré predtým nemali žiadny nábeh: pätka karty, dvojica
+   faktov v sekcii s fotografiou a tlačidlo pod ňou. Bez nich karta doletela
+   hotová a spodná polovica sekcie sa objavila bez pohybu.
+
+   Nič sa nezväčšuje, nič sa neodráža, nič neuletí zboku. Pri obmedzenom
+   pohybe sa nehýbe nič — pravidlo je na konci vrstvy. */
+
+.k-rise { transition: opacity 900ms var(--k-ease-out), transform 900ms var(--k-ease-out); }
+.k-js .k-rise { transform: translateY(32px); }
+
+/* Rozostup v mriežke kariet. Po štvrtej sa už nepredlžuje, aby posledná
+   karta nemeškala o pol sekundy. */
+.k .kh-cat__grid > *:nth-child(2),
+.k .kh-mat__grid > *:nth-child(2),
+.k .kh-rady > *:nth-child(2),
+.k .kh-vcene__rad > *:nth-child(2),
+.k .kh-fakty__rad > *:nth-child(2) { transition-delay: 110ms; }
+.k .kh-cat__grid > *:nth-child(3),
+.k .kh-mat__grid > *:nth-child(3),
+.k .kh-vcene__rad > *:nth-child(3),
+.k .kh-fakty__rad > *:nth-child(3) { transition-delay: 220ms; }
+.k .kh-cat__grid > *:nth-child(n + 4),
+.k .kh-mat__grid > *:nth-child(n + 4),
+.k .kh-vcene__rad > *:nth-child(n + 4),
+.k .kh-fakty__rad > *:nth-child(n + 4) { transition-delay: 330ms; }
+
+/* Vnútro karty: nadpis, odsek a pätka prídu tesne za kartou, aby karta
+   nedoletela hotová ako obrázok. Je to jeden pohyb rozdelený na tri kroky,
+   nie tri rôzne animácie. */
+.k-js .k .kh-mat__card .kh-mat__label,
+.k-js .k .kh-mat__card .kh-mat__title,
+.k-js .k .kh-mat__card .kh-mat__text,
+.k-js .k .kh-mat__card .kh-mat__pata {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 640ms var(--k-ease-out), transform 640ms var(--k-ease-out);
+}
+.k-js .k .kh-mat__card.is-in .kh-mat__label { transition-delay: 140ms; }
+.k-js .k .kh-mat__card.is-in .kh-mat__title { transition-delay: 210ms; }
+.k-js .k .kh-mat__card.is-in .kh-mat__text  { transition-delay: 280ms; }
+.k-js .k .kh-mat__card.is-in .kh-mat__pata  { transition-delay: 350ms; }
+.k-js .k .kh-mat__card.is-in .kh-mat__label,
+.k-js .k .kh-mat__card.is-in .kh-mat__title,
+.k-js .k .kh-mat__card.is-in .kh-mat__text,
+.k-js .k .kh-mat__card.is-in .kh-mat__pata { opacity: 1; transform: none; }
+
+/* Fakty v sekcii s fotografiou: dva stĺpce prídu za sebou, linka medzi nimi
+   sa dokreslí zhora nadol. Je to tá istá myšlienka ako podčiarknutie slova
+   v nadpise — kresba, nie posun. */
+.k-js .k .kh-duo__fakt { opacity: 0; transform: translateY(16px); transition: opacity 700ms var(--k-ease-out), transform 700ms var(--k-ease-out); }
+.k-js .k .kh-duo__fakty.is-in .kh-duo__fakt { opacity: 1; transform: none; }
+.k-js .k .kh-duo__fakty.is-in .kh-duo__fakt:nth-child(2) { transition-delay: 120ms; }
+.k-js .k .kh-duo__fakt + .kh-duo__fakt { border-left-color: transparent; transition: opacity 700ms var(--k-ease-out), transform 700ms var(--k-ease-out), border-left-color 600ms var(--k-ease) 200ms; }
+.k-js .k .kh-duo__fakty.is-in .kh-duo__fakt + .kh-duo__fakt { border-left-color: var(--k-hair); }
+
+/* Tlačidlo pod faktami dorazí posledné — je to koniec vety, nie jej stred. */
+.k-js .k .kh-duo__akcia { opacity: 0; transform: translateY(18px); transition: opacity 700ms var(--k-ease-out) 120ms, transform 700ms var(--k-ease-out) 120ms; }
+.k-js .k .kh-duo__akcia.is-in { opacity: 1; transform: none; }
+
+/* Tlačidlá a odkazy: šípka sa pohne ďalej než predtým, aby bolo vidieť, že
+   reaguje. */
+.k .k-btn svg { transition: transform 300ms var(--k-ease-out); }
+.k .k-btn:hover svg { transform: translateX(4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-js .k .kh-mat__card .kh-mat__label,
+  .k-js .k .kh-mat__card .kh-mat__title,
+  .k-js .k .kh-mat__card .kh-mat__text,
+  .k-js .k .kh-mat__card .kh-mat__pata,
+  .k-js .k .kh-duo__fakt,
+  .k-js .k .kh-duo__akcia {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .k-js .k .kh-duo__fakt + .kh-duo__fakt { border-left-color: var(--k-hair); }
+  .k .k-btn svg, .k .k-btn:hover svg { transition: none; transform: none; }
+}
+
+/* --- 107b · Tlačidlá v úvodnej obrazovke v mierke návrhu -----------------
+   Rovnaká pilulka ako v obsahových sekciách: výška 56, šípka 18 px. Úvodná
+   obrazovka sa nemení inak — len tlačidlá prestali byť menšie než tie, ku
+   ktorým vedú. */
+@media (min-width: 620px) {
+  .k .kh-hero__actions .k-btn { min-height: 56px; padding-inline: clamp(22px, 2.2vw, 32px); font-size: 15px; }
+}
+.k .kh-hero__actions .k-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
