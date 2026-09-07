@@ -2075,19 +2075,23 @@
               } else {
                 boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z', '-z'], SHAFT);
               }
-              /* Skrutky. Na stĺpe aj na C profile ich vidno a bez nich vyzerá
-                 konštrukcia ako odliatok z jedného kusa. */
+              /* Skrutky. Sedia hore, kde stĺp dosadá na obvodový profil —
+                 nie na jeho hranách. Na každej z dvoch protiľahlých strán sú
+                 dve vedľa seba. Stĺp na okraji prístrešku má tú dvojicu tesne
+                 pri sebe, stĺp v poli ju má rozloženú po šírke líca. */
               if (BIO.bolts) {
-                const br = Math.max(5, Math.round(Math.min(pd, pw) * 0.055));
-                const hlava = shade(frame, -0.34);
-                [H - Math.round(H * 0.06), H - Math.round(H * 0.16)].forEach((bz) => {
-                  [[px + pd * 0.28, py, [0, -1, 0]], [px + pd * 0.72, py, [0, -1, 0]],
-                   [px + pd * 0.28, py + pw, [0, 1, 0]], [px + pd * 0.72, py + pw, [0, 1, 0]]
-                  ].forEach((b) => {
-                    const n = b[2], o = n[1] * 3;
-                    quad([[b[0] - br, b[1] + o, bz - br], [b[0] + br, b[1] + o, bz - br],
-                          [b[0] + br, b[1] + o, bz + br], [b[0] - br, b[1] + o, bz + br]],
-                         hlava, { normal: n, raw: true, edge: false, bias: 4e4 });
+                const br = Math.max(5, Math.round(Math.min(pd, pw) * 0.06));
+                const hlava = shade(frame, -0.38);
+                const zH = H + lift - Math.round(Math.min(pd, pw) * 0.55);
+                const kraj = xi === 0 || xi === xs.length - 1;
+                const roztec = kraj ? Math.min(pd, pw) * 0.22 : pd * 0.30;
+                const stred = px + pd / 2;
+                [[py, [0, -1, 0], -3], [py + pw, [0, 1, 0], 3]].forEach((f) => {
+                  [-1, 1].forEach((sd) => {
+                    const bx = stred + sd * roztec / 2;
+                    quad([[bx - br, f[0] + f[2], zH - br], [bx + br, f[0] + f[2], zH - br],
+                          [bx + br, f[0] + f[2], zH + br], [bx - br, f[0] + f[2], zH + br]],
+                         hlava, { normal: f[1], raw: true, edge: false, bias: 4e4 });
                   });
                 });
               }
@@ -2699,33 +2703,38 @@
                  obvodový C rám        74 × 220 mm, líce 18 mm pod lemovaním
                  väznice               2× C 58 × 180 mm chrbtami k sebe
                  trapéz                vlna 36 mm, krycia šírka 1 072 mm
-                 spojovacie pätky      120 × 85 × 140 mm
 
-               Lemovanie, stĺp aj pôdorysný rozmer majú spoločné vonkajšie
-               líce — stĺp preto nikdy netrčí von z fasády. */
+               Na odkvapovej strane stojí lemovanie 142 mm ďalej von než stĺpy —
+               v modeli je štvorstĺpová varianta na tom konci presne o toľko
+               zatiahnutá dnu. Za tou medzerou sa schová žľab. */
             const LEM_CELO = 190, LEM_BOK = 240, LEM_H = 254, LEM_T = 15, LEM_LIP = 16;
             const RAM_W = 74, RAM_H = 220, OFF = 18;
             const VAZ_W = 58, VAZ_H = 180;
             const TRAP_H = 36, TRAP_KRYT = 1072;
+            const GUT = BIO.gutter ? 142 : 0;               // vysunutie čelného lemovania
             const zinok = model().rimSoffitHex || '#c2c7cb';
             const zBot = H, zTop = zBot + LEM_H;
             const ramBot = zBot - 2, ramTop = ramBot + RAM_H;
             const trapBot = ramTop, trapTop = trapBot + TRAP_H;
 
-            /* --- lemovanie: otočené L, vonkajšie líce v rovine pôdorysu --- */
-            const lemRun = (axis, outer, dir, a, b, sirka) => {
+            /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelný so
+               zadným cez celú šírku. Čelný a zadný sa kladú cez bočné, takže
+               spoj v rohu nie je spredu vidieť. --- */
+            const lemL = (axis, outer, dir, a, b, sirka) => {
               const put = (u0, u1, z, dz) => {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT);
                 else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT);
               };
-              put(outer, outer + LEM_T * dir, zBot, LEM_H);
-              put(outer, outer + sirka * dir, zTop - LEM_T, LEM_T);
-              put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);
+              put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
+              put(outer, outer + sirka * dir, zTop - LEM_T, LEM_T);            // horné rameno
+              put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
             };
-            lemRun('y', 0, 1, 0, L, LEM_BOK);
-            lemRun('y', W, -1, 0, L, LEM_BOK);
-            lemRun('x', 0, 1, 0, W, LEM_CELO);
-            lemRun('x', L, -1, 0, W, LEM_CELO);
+            const celoX0 = 0, celoX1 = L + GUT;
+            lemL('y', 0, 1, celoX0, celoX1, LEM_BOK);        // bočné, cez celú hĺbku
+            lemL('y', W, -1, celoX0, celoX1, LEM_BOK);
+            // čelné a zadné idú cez bočné a o kúsok ich presahujú
+            lemL('x', celoX0, 1, -LEM_T, W + LEM_T, LEM_CELO);
+            lemL('x', celoX1, -1, -LEM_T, W + LEM_T, LEM_CELO);
 
             /* --- obvodový C rám, pozink, otvorený dovnútra --- */
             const fl = 10, web = 5;
@@ -2748,35 +2757,23 @@
             const inX0 = OFF + RAM_W, inX1 = L - OFF - RAM_W;
             const inY0 = OFF + RAM_W, inY1 = W - OFF - RAM_W;
 
-            /* --- väznice: dvojica C profilov chrbtami k sebe. Medzi nimi
-               ostáva vlas medzery, aby sa dalo prečítať, že sú dva. --- */
+            /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
+               v strede dvojice a pásnice idú od nich von. Tým je profil naozaj
+               C a nie hranol s prilepenými pásikmi. --- */
             const poli = Math.max(2, Math.round(L / 1400));
+            const vfl = 9, vweb = 5;
             for (let i = 1; i < poli; i++) {
               const cx = OFF + ((L - 2 * OFF) * i) / poli;
-              const vfl = 9;
               [-1, 1].forEach((sd) => {
-                const x = sd < 0 ? cx - VAZ_W - 3 : cx + 3;
-                boxFaces(x, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, VAZ_H, shade(zinok, -0.12), ['-y', '+y'], SHAFT);
-                boxFaces(x, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl, shade(zinok, 0.10), ['-y', '+y'], SHAFT);
-                boxFaces(x, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl, zinok, ['-y', '+y'], SHAFT);
+                const wx = sd < 0 ? cx - vweb : cx;                    // stojina pri strede
+                const fx = sd < 0 ? cx - VAZ_W : cx;                   // pásnice smerom von
+                boxFaces(wx, inY0, ramTop - VAZ_H, vweb, inY1 - inY0, VAZ_H,
+                         shade(zinok, -0.14), ['-y', '+y'], SHAFT);
+                boxFaces(fx, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl,
+                         shade(zinok, 0.10), ['-y', '+y'], SHAFT);
+                boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
+                         zinok, ['-y', '+y'], SHAFT);
               });
-              /* Švík v strede podhľadu väznice. Dva C profily stoja chrbtami
-                 k sebe, takže sa naozaj dotýkajú a medzera medzi nimi nie je —
-                 ale bez tej čiary sa dvojica číta ako jeden hranol. */
-              quad([[cx - 2, inY0, ramTop - VAZ_H], [cx + 2, inY0, ramTop - VAZ_H],
-                    [cx + 2, inY1, ramTop - VAZ_H], [cx - 2, inY1, ramTop - VAZ_H]],
-                   'rgba(20,22,24,.55)', { normal: [0, 0, -1], raw: true, edge: false, bias: 6e4 });
-              // skrutky, ktoré tú dvojicu držia pri sebe
-              if (BIO.bolts) {
-                const br = 7;
-                for (let k = 0; k < 4; k++) {
-                  const y = inY0 + ((inY1 - inY0) * (k + 0.5)) / 4;
-                  [inY0 - 1, inY1 + 1].forEach(() => {});
-                  quad([[cx - br, y - br, ramTop - VAZ_H * 0.5], [cx + br, y - br, ramTop - VAZ_H * 0.5],
-                        [cx + br, y + br, ramTop - VAZ_H * 0.5], [cx - br, y + br, ramTop - VAZ_H * 0.5]],
-                       shade(zinok, -0.45), { normal: [0, 0, -1], raw: true, edge: false, bias: 4e4 });
-                }
-              }
             }
 
             /* --- trapéz: vlna po hĺbke, spodok sivý (izolačná rohož) --- */
@@ -2799,37 +2796,21 @@
               }
             }
 
-            /* --- odkvap. Na odkvapovej hrane zdola nevidno pozink, ale žľab,
-               a ten je vo farbe prístrešku, lebo je z toho istého lakovaného
-               plechu ako lemovanie. Visí pod C rámom za lemovaním. --- */
+            /* --- odkvap. Hranatý žľab visí na líci čelného C profilu, v tej
+               medzere, kvôli ktorej je čelné lemovanie vysunuté. Je vo farbe
+               prístrešku, lebo je z toho istého lakovaného plechu. --- */
             if (BIO.gutter) {
-              const gw = LEM_CELO - LEM_T - 20;                 // šírka žľabu
-              const gx0 = L - LEM_T - gw, gx1 = L - LEM_T;
-              const gh = 130, gz = zBot;                        // horná hrana pod rámom
-              const N = 8;
-              for (let i = 0; i < N; i++) {
-                const t0 = i / N, t1 = (i + 1) / N;
-                const a0 = Math.PI * t0, a1 = Math.PI * t1;
-                const xa = gx0 + gw * (1 - Math.cos(a0)) / 2, za = gz - gh * Math.sin(a0);
-                const xb = gx0 + gw * (1 - Math.cos(a1)) / 2, zb = gz - gh * Math.sin(a1);
-                const nx = -Math.cos((a0 + a1) / 2), nz = -Math.sin((a0 + a1) / 2);
-                quad([[xa, 0, za], [xb, 0, zb], [xb, W, zb], [xa, W, za]],
-                     shade(frame, 0.06 + nz * 0.10), { normal: [nx, 0, nz], cull: true });
-              }
-              // čelá žľabu
-              [[0, -1], [W, 1]].forEach((e) => {
-                const pts = [];
-                for (let i = 0; i <= N; i++) {
-                  const t = e[1] > 0 ? i / N : 1 - i / N;
-                  const ang = Math.PI * t;
-                  pts.push([gx0 + gw * (1 - Math.cos(ang)) / 2, e[0], gz - gh * Math.sin(ang)]);
-                }
-                quad(pts, shade(frame, -0.14), { normal: [0, e[1], 0], cull: true });
-              });
+              const gx0 = L, gw = GUT - LEM_T - 12, gh = 150;
+              const gz1 = zBot, gz0 = gz1 - gh;
+              const gt = 12;
+              const tmavsi = shade(frame, -0.08);
+              boxFaces(gx0, 0, gz0, gt, W, gh, tmavsi, ['-y', '+y'], SHAFT);              // zadná stena žľabu
+              boxFaces(gx0 + gw - gt, 0, gz0, gt, W, gh, shade(frame, 0.06), ['-y', '+y'], SHAFT); // predná
+              boxFaces(gx0, 0, gz0, gw, W, gt, shade(frame, -0.14), ['-y', '+y'], SHAFT);  // dno
 
-              /* Zvod: z konca žľabu kolmo dole, koleno 45° dozadu a po čele
-                 rohového stĺpa na zem. Prichádza k nemu spredu. */
-              const rz = 40, yc = W - postW() / 2;
+              /* Zvod vychádza zo žľabu, nie zo stĺpa: kolmo dole spod dna,
+                 potom koleno 45° dozadu a po čele rohového stĺpa na zem. */
+              const rz = 38, yc = W - postW() / 2;
               const rura = (ax, az, bx, bz) => {
                 const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
                 if (len < 1) return;
@@ -2842,16 +2823,16 @@
                                          az + uz * t + vz * Math.cos(ang) * rz];
                   const m = (a + b) / 2;
                   quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                       shade(frame, 0.14 + Math.sin(m) * 0.12),
+                       shade(frame, 0.12 + Math.sin(m) * 0.12),
                        { normal: [vx * Math.cos(m), Math.sin(m), vz * Math.cos(m)], cull: true });
                 }
               };
-              const gcx = (gx0 + gx1) / 2;
-              const xCelo = L + rz;
-              const zK = gz - gh - 60;
-              rura(gcx, gz - gh + 10, gcx, zK);
-              rura(gcx, zK, xCelo, zK - (xCelo - gcx));
-              rura(xCelo, zK - (xCelo - gcx), xCelo, 0);
+              const gcx = gx0 + gw / 2;                 // os výpustu v strede žľabu
+              const xCelo = L + rz;                     // os zvodu na čele stĺpa
+              const zK = gz0 - 90;
+              rura(gcx, gz0 + gt, gcx, zK);
+              rura(gcx, zK, xCelo, zK - Math.abs(gcx - xCelo));
+              rura(xCelo, zK - Math.abs(gcx - xCelo), xCelo, 0);
             }
           };
 
