@@ -32,8 +32,10 @@ Formát `.ebm` je jednoduchý binárny mesh. Hlavička je 8× uint32:
 | 24 | offset UV (2 × float32) |
 | 28 | offset indexov (uint32) |
 
-Parser je v `../../archiv-expivi` nie je — je to týchto pár riadkov, dá sa
-napísať znova za minútu.
+Parser je `../archiv-expivi/ebm.py`, meranie stĺpov
+`../archiv-expivi/meranie-stlpov.py`. Odmerané výsledky sú v
+`stlpy-odmerane.json` (surové, po katalógoch) a `stlpy-tabulka.json`
+(po veľkostiach).
 
 ## Odmerané diely (katalóg 13412, prístrešok 6 × 6 m)
 
@@ -71,11 +73,29 @@ stĺpa na zem.
 `wallBack`, `minHeight`. Na úrovni stránky `gutter`, `bolts`, `roundPosts`,
 `basePlates`, `sideOpts`, `sideMat`, `sideLabel`, `sideLocative`.
 
+## Polohy stĺpov
+
+Odmerané zo 67 exportov a uložené v modeli ako `postRows`. Kľúč je hĺbka
+prístrešku a počet stĺpov na strane; hodnota je zoznam polôh pozdĺž hĺbky.
+
+| hĺbka | 4 stĺpy | 6 stĺpov |
+| --- | --- | --- |
+| 5 200 | 150, 5 062 | v exportoch nie je |
+| 5 600 | 156, 5 468 | 1 142, 2 792, 4 442 |
+| 6 000 | 156, 5 868 | 1 242, 2 992, 4 742 |
+
+Šesťstĺpová varianta má **všetky tri rady vtiahnuté dnu** a strecha na oboch
+koncoch prečnieva. Z rovnomerného delenia by to nikdy nevyšlo, preto sa
+polohy neprepočítavajú — berú sa tak, ako sú odmerané. Kde pre danú hĺbku
+tabuľka nič nemá, ostáva pôvodný výpočet.
+
+Prierez stĺpa je naprieč všetkými katalógmi rovnaký: 150 × 150 mm pri
+štyroch stĺpoch, 110 × 190 mm pri šiestich, kde 190 je rozmer pozdĺž hĺbky.
+Staršie katalógy (šírky 2,5 – 3,0 m a 3,8 m) majú inú generáciu dielov —
+240 × 240 alebo 100 × 100 — tie zatiaľ konfigurátor nepoužíva.
+
 ## Čo ešte nie je hotové
 
-- Polohy stĺpov sa počítajú, nie sú odmerané. V exportoch jednotlivých
-  katalógov sú skutočné polohy — dá sa z nich urobiť tabuľka a riadiť
-  konfigurátor ňou namiesto výpočtu.
 - Steny sa kreslia z lamiel v engine, nie podľa odmeraných panelov.
 - Záhradné prístrešky používajú rovnaké diely ako prístrešky pre autá;
   overiť, či to tak je aj v skutočnosti.

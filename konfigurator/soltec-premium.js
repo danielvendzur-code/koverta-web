@@ -968,6 +968,14 @@
         /* left edges, so the end posts finish flush with the ends of the roof */
         const postXs = () => {
           const L = lengthMM(), lay = postLayout(), ps = postD(), span = L - ps;
+          /* Odmerané polohy stĺpov z modelu Koverta v Expivi. Kde ich pre danú
+             hĺbku a variantu máme, berú sa tak, ako sú — dopočítaná rozteč by
+             tam bola vymyslená. Šesťstĺpová varianta má napríklad všetky tri
+             rady vtiahnuté dnu a strecha na oboch koncoch prečnieva, čo by z
+             rovnomerného delenia nikdy nevyšlo. */
+          const rady = model().postRows && model().postRows[String(L)];
+          const merane = rady && rady[String(lay.n)];
+          if (merane) return merane.map((v) => Math.round(Math.min(Math.max(v, 0), span)));
           if (lay.n <= 2) return [0, span];
           /* Both "+ lopa" drawings stand the middle pair at the box's inner
              wall - P5 and P6 are the box's inner corners - so the store closes
@@ -2828,7 +2836,12 @@
                 }
               };
               const gcx = gx0 + gw / 2;                 // os výpustu v strede žľabu
-              const xCelo = L + rz;                     // os zvodu na čele stĺpa
+              /* Zvod dosadá na čelo posledného radu stĺpov. Pri šesťstĺpovej
+                 variante ten rad nestojí na hrane, ale vtiahnutý dnu, a zvod
+                 by inak visel vo vzduchu tam, kde stĺp nie je. */
+              const rada = postXs();
+              const xStlp = rada.length ? rada[rada.length - 1] + postD() : L;
+              const xCelo = xStlp + rz;
               const zK = gz0 - 90;
               rura(gcx, gz0 + gt, gcx, zK);
               rura(gcx, zK, xCelo, zK - Math.abs(gcx - xCelo));
