@@ -2808,44 +2808,94 @@
                medzere, kvôli ktorej je čelné lemovanie vysunuté. Je vo farbe
                prístrešku, lebo je z toho istého lakovaného plechu. --- */
             if (BIO.gutter) {
-              const gx0 = L, gw = GUT - LEM_T - 12, gh = 150;
-              const gz1 = zBot, gz0 = gz1 - gh;
-              const gt = 12;
-              const tmavsi = shade(frame, -0.08);
-              boxFaces(gx0, 0, gz0, gt, W, gh, tmavsi, ['-y', '+y'], SHAFT);              // zadná stena žľabu
-              boxFaces(gx0 + gw - gt, 0, gz0, gt, W, gh, shade(frame, 0.06), ['-y', '+y'], SHAFT); // predná
-              boxFaces(gx0, 0, gz0, gw, W, gt, shade(frame, -0.14), ['-y', '+y'], SHAFT);  // dno
+              /* Odkvap. V Expivi modeloch žľab ani zvod nie sú — v žiadnom zo
+                 70 exportov nie je diel, ktorý by nimi bol — takže sa skladajú
+                 podľa fotografií realizácií. Rozmery, ktoré sa dali odmerať,
+                 sa držia: medzera za čelným lemovaním je 142 mm a zvod dosadá
+                 na čelo posledného radu stĺpov, nech je ten rad kdekoľvek.
 
-              /* Zvod vychádza zo žľabu, nie zo stĺpa: kolmo dole spod dna,
-                 potom koleno 45° dozadu a po čele rohového stĺpa na zem. */
-              const rz = 38, yc = W - postW() / 2;
-              const rura = (ax, az, bx, bz) => {
+                 Žľab je polkruhový s návalkom na prednej hrane, vo farbe
+                 prístrešku. Zvod naň nadväzuje výpustným hrdlom, dvoma
+                 kolenami a končí vyhnutou pätkou; na stĺpe ho držia objímky. */
+              const R = Math.round((GUT - LEM_T - 26) / 2);   // polomer žľabu
+              const cx = L + LEM_T + R + 8;                   // os žľabu
+              const cz = zBot - 14;                           // horná hrana žľabu
+              const gh = shade(frame, 0.02);
+              const N = 14;
+              const bod = (t) => [cx - Math.cos(t) * R, cz - Math.sin(t) * R];
+
+              // vnútro aj vonkajšok polkruhu, aby žľab nebol len škrupina
+              for (let i = 0; i < N; i++) {
+                const t0 = (Math.PI * i) / N, t1 = (Math.PI * (i + 1)) / N;
+                const p = bod(t0), q = bod(t1);
+                const m = (t0 + t1) / 2;
+                const nx = -Math.cos(m), nz = -Math.sin(m);
+                quad([[p[0], 0, p[1]], [q[0], 0, q[1]], [q[0], W, q[1]], [p[0], W, p[1]]],
+                     shade(gh, -0.10 + Math.sin(m) * 0.16), { normal: [nx, 0, nz], cull: true });
+                const ip = bod(t0), iq = bod(t1), d = 9;
+                quad([[ip[0] - nx * d, W, ip[1] - nz * d], [iq[0] - nx * d, W, iq[1] - nz * d],
+                      [iq[0] - nx * d, 0, iq[1] - nz * d], [ip[0] - nx * d, 0, ip[1] - nz * d]],
+                     shade(gh, -0.26), { normal: [-nx, 0, -nz], cull: true });
+              }
+              // návalok na prednej hrane a zahnutá zadná hrana
+              [[bod(0), 1], [bod(Math.PI), -1]].forEach((e) => {
+                const P = e[0];
+                boxFaces(P[0] - 7, 0, P[1] - 4, 14, W, 16, shade(gh, 0.12), ['-y', '+y'], SHAFT);
+              });
+              // čelá žľabu
+              [[0, -1], [W, 1]].forEach((e) => {
+                const pts = [];
+                for (let i = 0; i <= N; i++) {
+                  const t = e[1] > 0 ? (Math.PI * i) / N : Math.PI - (Math.PI * i) / N;
+                  const P = bod(t);
+                  pts.push([P[0], e[0], P[1]]);
+                }
+                quad(pts, shade(gh, -0.18), { normal: [0, e[1], 0], cull: true });
+              });
+
+              /* Zvod. Rúra sa kreslí ako mnohouholníkový hranol; hrdlá a
+                 objímky sú tá istá rúra s väčším polomerom a krátkou dĺžkou,
+                 takže spoje nie sú škáry, ale skutočné presahy. */
+              const rz = 39;
+              const rada = postXs();
+              const xStlp = rada.length ? rada[rada.length - 1] + postD() : L;
+              const yc = W - postW() / 2;
+              const rura = (ax, az, bx, bz, r, hex) => {
                 const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
-                if (len < 1) return;
+                if (len < 0.5) return;
                 const ux = dx / len, uz = dz / len, vx = -uz, vz = ux;
-                const M = 10;
+                const M = 12;
                 for (let i = 0; i < M; i++) {
                   const a = (Math.PI * 2 * i) / M, b = (Math.PI * 2 * (i + 1)) / M;
-                  const P = (t, ang) => [ax + ux * t + vx * Math.cos(ang) * rz,
-                                         yc + Math.sin(ang) * rz,
-                                         az + uz * t + vz * Math.cos(ang) * rz];
+                  const P = (t, ang) => [ax + ux * t + vx * Math.cos(ang) * r,
+                                         yc + Math.sin(ang) * r,
+                                         az + uz * t + vz * Math.cos(ang) * r];
                   const m = (a + b) / 2;
                   quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                       shade(frame, 0.12 + Math.sin(m) * 0.12),
+                       shade(hex, 0.10 + Math.sin(m) * 0.13),
                        { normal: [vx * Math.cos(m), Math.sin(m), vz * Math.cos(m)], cull: true });
                 }
               };
-              const gcx = gx0 + gw / 2;                 // os výpustu v strede žľabu
-              /* Zvod dosadá na čelo posledného radu stĺpov. Pri šesťstĺpovej
-                 variante ten rad nestojí na hrane, ale vtiahnutý dnu, a zvod
-                 by inak visel vo vzduchu tam, kde stĺp nie je. */
-              const rada = postXs();
-              const xStlp = rada.length ? rada[rada.length - 1] + postD() : L;
-              const xCelo = xStlp + rz;
-              const zK = gz0 - 90;
-              rura(gcx, gz0 + gt, gcx, zK);
-              rura(gcx, zK, xCelo, zK - Math.abs(gcx - xCelo));
-              rura(xCelo, zK - Math.abs(gcx - xCelo), xCelo, 0);
+              const zvodHex = shade(frame, 0.06);
+              const xCelo = xStlp + rz + 4;              // os zvodu tesne na čele stĺpa
+              const zHrdlo = cz - R;                     // dno žľabu
+              const odsad = Math.abs(cx - xCelo);
+              const zKoleno = zHrdlo - 120;
+              const zPo = zKoleno - odsad;               // koniec kolena, 45°
+
+              rura(cx, zHrdlo + 12, cx, zHrdlo - 34, rz * 1.22, zvodHex);   // výpustné hrdlo
+              rura(cx, zHrdlo, cx, zKoleno, rz, zvodHex);                   // zvislý kus
+              rura(cx, zKoleno, xCelo, zPo, rz, zvodHex);                   // koleno 45°
+              rura(cx, zKoleno + 16, xCelo, zPo + 16, rz * 1.18, shade(zvodHex, -0.08)); // objímka kolena
+              rura(xCelo, zPo, xCelo, 150, rz, zvodHex);                    // po stĺpe dole
+              rura(xCelo, zPo - 14, xCelo, zPo - 52, rz * 1.18, shade(zvodHex, -0.08));
+              // objímky na stĺpe
+              [0.34, 0.72].forEach((t) => {
+                const z = 150 + (zPo - 150) * t;
+                rura(xCelo, z - 16, xCelo, z + 16, rz * 1.24, shade(frame, -0.16));
+              });
+              // vyhnutá pätka na spodku
+              rura(xCelo, 150, xCelo - 70, 60, rz, zvodHex);
             }
           };
 
