@@ -1,9 +1,11 @@
 # Prompt pre Claude Design — Koverta
 
-Skopíruj text medzi čiarami do Claude Design. Sú tam štyri zadania:
-**A — Naša ponuka**, **B — Konfigurátor**, **C — Ako to prebieha** a
-**D — Rozmery, ktoré vieme dodať**. Môžeš ich poslať naraz alebo každé zvlášť;
-spoločná časť „Značka a jazyk" platí pre všetky.
+Skopíruj text medzi čiarami do Claude Design. Je tam osem zadaní:
+**A — Naša ponuka**, **B — Konfigurátor**, **C — Ako to prebieha**,
+**D — Rozmery, ktoré vieme dodať**, **E — Rozbaľovacie menu**,
+**F — Vzorkovník odtieňov**, **G — Typorady** a **H — Pás čísel**.
+Môžeš ich poslať naraz alebo každé zvlášť; spoločná časť „Značka a jazyk"
+platí pre všetky.
 
 ---------------------------------------------------------------------------
 
@@ -45,15 +47,26 @@ Toto je hlavný rozcestník úvodnej stránky. Zákazník tu má za 5 sekúnd po
 
 Obsah, ktorý sekcia musí uniesť (7 kategórií):
 
-| Kategória | Značka | Kľúčový údaj | Cena od |
-|---|---|---|---|
-| Prístrešky pre autá | Koverta + Soltec | 1 – 3 autá, šírka do 8 m | od 4 497 € |
-| Carport Soltec | Soltec | F170 / F240, dĺžka do 9,2 m | — |
-| Záhradné prístrešky | Koverta | rozpon 3 – 8 m | od 4 297 € |
-| Bioklimatické pergoly | Soltec | lamely 0 – 135°, modul do 45 m² | — |
-| Pevné prestrešenia | Soltec | ISO panel 30 mm alebo sklo | — |
-| Tienenie | Soltec | ZIP roleta, panely, brisoleje | — |
-| Vonkajšie kuchyne | Soltec | nerez a hliník, modulová zostava | — |
+| Kategória | Značka | Kľúčový údaj |
+|---|---|---|
+| Prístrešky pre autá | Koverta + Soltec | 1 – 3 autá, šírka do 8 m |
+| Carport Soltec | Soltec | F170 / F240, dĺžka do 9,2 m |
+| Záhradné prístrešky | Koverta | rozpon 3 – 8 m |
+| Bioklimatické pergoly | Soltec | lamely 0 – 135°, modul do 45 m² |
+| Pevné prestrešenia | Soltec | ISO panel 30 mm alebo sklo |
+| Tienenie | Soltec | ZIP roleta, panely, brisoleje |
+| Vonkajšie kuchyne | Soltec | nerez a hliník, modulová zostava |
+
+Ôsma dlaždica nie je kategória, ale vstup do krátkeho výberu („Neviete, čo
+z toho?"). Ceny sa v sekcii **neuvádzajú** — pri jednej značke cena a pri
+ostatných „na dopyt" pôsobilo nedokončene.
+
+**Prvé kolo sme už postavili a zadávateľ ho odmietol.** Rozloženie bolo:
+veľká dlaždica 2 × 2, široká 2 × 1 s fotkou vľavo a textom vpravo, päť
+dlaždíc 1 × 1 a jantárová dlaždica navyše. Problém: dlaždice v hornom rade
+majú fotografie tesne pri sebe, takže tri rôzne konštrukcie splývajú do
+jedného pásu a oko nevie, kde jedna končí. Toto je hlavná vec, ktorú má
+nový návrh vyriešiť.
 
 Zadanie:
 
@@ -61,6 +74,8 @@ Zadanie:
    artboardy (desktop 1440 × ~1100). Nech sa naozaj líšia — nie tri odtiene
    toho istého gridu. Napríklad: mriežka rovnocenných kariet / dve veľké
    dlaždice + päť menších / vodorovný rytmus so striedaním fotky a textu.
+   Aspoň jeden variant nech **nemá dve fotografie priamo vedľa seba** —
+   práve to zadávateľ na prvom kole vytkol.
 2. Ku každému variantu artboard **mobil 390 × ~1400**.
 3. V každom variante musí byť jasne vidieť: fotografia produktu, názov
    kategórie, značka (Koverta / Soltec — nie obe pri každej), jeden technický
@@ -172,6 +187,101 @@ Zadanie:
 6. Na mobile sa nesmie vodorovne rolovať. Ak sa rozmery nezmestia, musia sa
    zalomiť alebo skryť pod rozbalenie.
 
+## E — rozbaľovacie menu v hlavičke
+
+Hlavička má päť položiek: **Pre autá**, **Pre dom a záhradu**, **Realizácie**,
+**3D konfigurátor**, **Kontakt**. Prvé tri rozbaľujú panel cez celú šírku.
+
+Obsah panela „Pre autá":
+
+| Stĺpec | Položka | Popis |
+|---|---|---|
+| Koverta | Prístrešky pre autá | Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby. |
+| Soltec | Carport Soltec | Prémiový hliníkový systém s čistou architektúrou. |
+
+Panel „Pre dom a záhradu" má štyri až päť položiek (záhradné prístrešky,
+prestrešenie terasy, bioklimatické pergoly, tienenie, vonkajšie kuchyne),
+rozdelené rovnako na značku Koverta a Soltec.
+
+Zadanie:
+
+1. **Tri varianty** panela, desktop 1440. Ku každému aj stav zavretej
+   hlavičky a mobilnú zásuvku 390.
+2. Panel **nesmie obsahovať tlačidlo výzvy**. Zadávateľ ho odmietol —
+   z menu sa nemá predávať, menu má viesť. Sivý pás naspodku panela je preč.
+3. Značku pri stĺpci nesie logo, nie napísané meno (obe logá dodáme).
+4. Každá položka má miniatúru. Navrhni pomer strán a veľkosť tak, aby
+   panel s piatimi položkami nebol vyšší než pol obrazovky na notebooku.
+5. Rieš aj stav, keď je v stĺpci **jediná položka** — panel nesmie vyzerať
+   prázdny.
+6. Hlavička je nad fotografiou aj nad bielou plochou. Napíš, čo sa mení.
+
+## F — vzorkovník odtieňov
+
+Osem odtieňov je v cene, zvyšok palety RAL na objednávku. Súčasné riešenie
+(farebný štvorec + názov + kód pod ním) zadávateľ odmietol.
+
+Odtiene, ktoré musia byť vidieť:
+
+| Názov | Kód | Farba |
+|---|---|---|
+| Antracitová sivá | RAL 7016 | `#383E42` |
+| Biely hliník | RAL 9006 | `#A5A8A6` |
+| Sivý hliník | RAL 9007 | `#8F8F8C` |
+| Dopravná biela | RAL 9016 | `#F1F0EA` |
+| Sivobiela | RAL 9002 | `#D7D5CB` |
+| Perlová biela | RAL 1013 | `#E3D9C6` |
+| Čokoládová hnedá | RAL 8017 | `#45322E` |
+| Tmavá sivá DB | RAL DB703 | `#4A4B4C` |
+
+Všetky sú v mikroštruktúre — matný, jemne zrnitý povrch, nie lesk.
+
+Zadanie:
+
+1. **Tri varianty**, desktop 1440 a mobil 390.
+2. Štyri z ôsmich odtieňov sú takmer biele a vedľa seba splývajú. Vyrieš to —
+   podkladom, poradím, veľkosťou plochy alebo niečím iným.
+3. Musí byť jasné, ktoré odtiene **sú v cene** a že zvyšok palety RAL
+   sa objednáva zvlášť.
+4. Aspoň jeden variant nech ukáže odtieň **na konštrukcii**, nie len ako
+   plochu — fotografiu dodáme.
+5. Nepoužívaj lesk, tieň ani gradient na vzorke: mikroštruktúra je matná
+   a vzorka má byť pravdivá.
+
+## G — typorady
+
+Carporty a prestrešenia Soltec majú dva typorady. Rad **F** je vodorovný
+kváder s ISO panelom, rad **SL** je subtílnejší a počíta s uzamykateľným
+boxom. Ku každému radu patria dva modely (170 a 240 podľa výšky profilu)
+a tabuľka parametrov: rám a stĺp v mm, max. šírka, max. dĺžka pri štyroch
+a pri šiestich stĺpoch, kotvenie, zaťaženie v kg/m².
+
+Zadanie:
+
+1. **Dva varianty**, desktop 1440 a mobil 390.
+2. Zákazník si má za pár sekúnd vybrať rad a až potom porovnávať čísla.
+   Tabuľka so šiestimi stĺpcami je dnes prvé, čo uvidí — otoč to.
+3. Hodnoty ako „6,0 m na 4 stĺpoch / 9,15 m na 6 stĺpoch" sú dvojriadkové.
+   Navrhni zápis, pri ktorom je jasné, čo ku ktorému modelu patrí.
+4. Na mobile sa **nesmie rolovať do strán**.
+5. Rozdiel medzi radmi F a SL musí byť čitateľný aj bez tabuľky — jednou
+   vetou a jedným obrázkom.
+
+## H — pás čísel
+
+Pod úvodnou obrazovkou je pás s tromi až šiestimi údajmi: veľká hodnota
+(napríklad „EN 13561", „trieda 3", „do 45 m²"), pod ňou dve slová, čo to je,
+a pod tým jedna vysvetľujúca veta. Používa sa na piatich podstránkach.
+
+Zadanie:
+
+1. **Dva varianty**, desktop 1440 a mobil 390.
+2. Musí fungovať pri **troch aj pri šiestich** položkách bez toho, aby sa
+   rozsypal alebo aby vznikol prázdny riadok.
+3. Hodnota je druhá úroveň, nie prvá — nadpis sekcie nad ňou musí ostať
+   silnejší.
+4. Žiadne ikony v kolieskach a žiadne čísla vo vyplnených bodkách.
+
 ## Ako to odovzdať
 
 Jeden canvas, artboardy vedľa seba, popísané: `A1 desktop`, `A1 mobil`,
@@ -182,6 +292,6 @@ lepší. Bez lorem ipsum — použi skutočné slovenské texty vyššie.
 
 ## Čo s výsledkom
 
-Keď si vyberieš variant, pošli mi číslo artboardu (napr. „A2, B1, C3 a D1")
-a ja to prepíšem do webu v existujúcom dizajnovom systéme — bez nových CSS
-vrstiev. Stačí číslo; nemusíš nič popisovať.
+Keď si vyberieš variant, pošli mi číslo artboardu (napr. „A2, B1, C3, D1,
+E2, F1, G2 a H1") a ja to prepíšem do webu v existujúcom dizajnovom systéme —
+bez nových CSS vrstiev. Stačí číslo; nemusíš nič popisovať.

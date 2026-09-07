@@ -5969,6 +5969,34 @@ html { background: var(--k-ink); }
 .kh-tab td { padding-inline: 0; padding-right: clamp(18px, 2vw, 34px); }
 .kh-tab tbody tr:hover td,
 .kh-tab tbody tr:hover th { background: none; }
+/* Bez liniek sa pri dvojriadkových bunkách nedalo prečítať, čo patrí ku
+   ktorému modelu — druhý riadok „max. dĺžky" vyzeral ako údaj nasledujúceho
+   radu. Každý záznam má teraz vlasovú linku nad sebou. */
+.kh-tab tbody tr + tr > th,
+.kh-tab tbody tr + tr > td { border-top: 1px solid var(--k-hair); }
+/* Typorady sa nemiešajú. Každý rad má svoje záhlavie a hrubšiu linku nad
+   ním, takže je na prvý pohľad vidieť, kde jeden rad končí. */
+.kh-tab tbody + tbody > tr:first-child > th,
+.kh-tab tbody + tbody > tr:first-child > td { border-top: 2px solid rgba(18, 23, 26, 0.22); }
+.kh-tab__skupina th {
+  padding-top: clamp(16px, 1.6vw, 22px);
+  padding-bottom: 6px;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+  white-space: normal;
+}
+.kh-tab__skupina th span {
+  display: inline;
+  margin-left: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--k-grey-soft);
+}
 .kh-tab tbody th { padding-block: clamp(15px, 1.4vw, 19px); }
 .kh-tab caption { padding-bottom: clamp(14px, 1.4vw, 20px); max-width: 78ch; }
 
@@ -6075,6 +6103,11 @@ html { background: var(--k-ink); }
     padding: clamp(16px, 4vw, 22px) 0;
     border-top: 1px solid var(--k-hair);
   }
+  .kh-tab tbody + tbody > tr:first-child { border-top: 2px solid rgba(18, 23, 26, 0.22); }
+  .kh-tab__skupina { padding-bottom: 0; }
+  .kh-tab__skupina th { margin-bottom: 0; padding: 0; }
+  .kh-tab tbody tr + tr > th,
+  .kh-tab tbody tr + tr > td { border-top: 0; }
   .kh-tab tbody th,
   .kh-tab tbody td { display: block; padding: 0; border: 0; }
   .kh-tab tbody th { margin-bottom: 8px; white-space: normal; }
@@ -13016,6 +13049,89 @@ footer.kf { background: var(--k-ink); color: #fff; }
    nadpisu — kto chce konfigurátor otvoriť, nemusí čítať, ako funguje. Biela
    karta ho oddelí od kostnej plochy stránky; okraj je vlasový, tieň žiadny.
    Čísla krokov sú tiché a stoja vedľa názvu, nie v kolieskach. */
+/* --- ZOSTAVA A ROZVODY (vonkajšie kuchyne) --------------------------------
+   Tabuľka s tromi stĺpcami miešala dve rôzne veci: z čoho je kuchyňa a čo
+   treba stihnúť pred betónovaním. Sú to dva zoznamy vedľa seba. Blok
+   s prípravou nesie jantárovú zvislú linku a to, čo sa nedá dorobiť neskôr,
+   má štítok — je to jediná informácia, kvôli ktorej sa vracia reklamácia.
+   ------------------------------------------------------------------------ */
+.k .kh-zost {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 28px);
+  margin-top: clamp(20px, 2.2vw, 30px);
+}
+.k .kh-zost__blok {
+  padding: clamp(22px, 2.4vw, 34px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r);
+  background: var(--k-white);
+}
+.k .kh-zost__blok--pred { border-left: 3px solid var(--k-amber); }
+.k .kh-zost__titul {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(19px, 1.9vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+.k .kh-zost__uvod {
+  margin: 8px 0 clamp(14px, 1.6vw, 20px);
+  max-width: 46ch;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #5A6165;
+}
+.k .kh-zost__zoznam { margin: 0; padding: 0; list-style: none; }
+.k .kh-zost__kus {
+  padding: clamp(13px, 1.4vw, 17px) 0;
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-zost__kus::before { content: none; }
+.k .kh-zost__nazov {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.k .kh-zost__vlajka {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-amber);
+  font-family: var(--k-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-ink);
+  white-space: nowrap;
+}
+.k .kh-zost__text { margin: 5px 0 0; font-size: 14.5px; line-height: 1.55; }
+.k .kh-zost__kedy {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--k-amber-deep);
+}
+.k .kh-zost__pozn {
+  margin: clamp(14px, 1.6vw, 20px) 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--k-grey-soft);
+}
+@media (max-width: 899px) {
+  .k .kh-zost { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* --- VÝBER RIEŠENIA -------------------------------------------------------
    Štyri otázky namiesto dlaždice, ktorá viedla rovno na formulár. Panel je
    biela karta s vlasovým okrajom — rovnaká ako karta konfigurátora, takže

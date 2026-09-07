@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788773037795">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788773562156">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -357,62 +357,65 @@
       </div>
     </header>
 
-    <div class="kh-tab k-rise" data-k-delay="1">
-      <div class="kh-tab__scroll">
-        <table>
-          <caption>Čo do zostavy patrí a čo z toho treba vyriešiť ešte pred tým, než sa robí podlaha.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Časť</th>
-              <th scope="col">Z čoho</th>
-              <th scope="col">Kedy sa rieši</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Korpusy</th>
-              <td data-popis="Z čoho">Hliník s práškovým lakom v odtieni z palety RAL</td>
-              <td data-popis="Kedy sa rieši">Pri návrhu — určujú šírku celej linky</td>
-            </tr>
-            <tr>
-              <th scope="row">Pracovná doska</th>
-              <td data-popis="Z čoho">Nerez, kameň alebo pohľadový betón</td>
-              <td data-popis="Kedy sa rieši">Pri návrhu — určuje hĺbku a výšku linky</td>
-            </tr>
-            <tr>
-              <th scope="row">Front</th>
-              <td data-popis="Z čoho">Hliníkové lamely, drevo alebo drevodekor</td>
-              <td data-popis="Kedy sa rieši">Kedykoľvek — zladí sa s prístreškom alebo fasádou</td>
-            </tr>
-            <tr>
-              <th scope="row">Elektrina</th>
-              <td data-popis="Z čoho">Samostatný okruh, zásuvky v korpuse</td>
-              <td data-popis="Kedy sa rieši"><strong>Pred betónovaním</strong> — chránička do podlahy</td>
-            </tr>
-            <tr>
-              <th scope="row">Voda a odpad</th>
-              <td data-popis="Z čoho">Prívod, drez, odtok do kanalizácie alebo vsaku</td>
-              <td data-popis="Kedy sa rieši"><strong>Pred betónovaním</strong> — vrátane spádu odpadu</td>
-            </tr>
-            <tr>
-              <th scope="row">Plyn</th>
-              <td data-popis="Z čoho">Prípojka ku grilu alebo fľaša v skrinke</td>
-              <td data-popis="Kedy sa rieši">Pri návrhu — ovplyvní, kde bude gril stáť</td>
-            </tr>
-            <tr>
-              <th scope="row">Zastrešenie</th>
-              <td data-popis="Z čoho">Prístrešok, prestrešenie terasy alebo pergola</td>
-              <td data-popis="Kedy sa rieši">Ideálne súčasne — kuchyňu vieme zavesiť na konštrukciu</td>
-            </tr>
-            <tr>
-              <th scope="row">Osvetlenie</th>
-              <td data-popis="Z čoho">LED nad pracovnou doskou, prípadne v podhľade</td>
-              <td data-popis="Kedy sa rieši">S elektrinou — dodatočne to znamená viditeľné vedenie</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="kh-tab__note">Hotová terasa nie je prekážka — rozvody vedieme v sokli alebo po stene. Pošlite fotku a povieme vám viac.</p>
+    <!-- Tabuľka s tromi stĺpcami miešala dve rôzne veci: z čoho je kuchyňa
+         a čo treba stihnúť pred betónovaním. Sú to dva zoznamy vedľa seba;
+         to, čo sa nedá dorobiť neskôr, je označené. -->
+    <div class="kh-zost">
+      <section class="kh-zost__blok k-rise">
+        <h3 class="kh-zost__titul">Z čoho sa skladá</h3>
+        <p class="kh-zost__uvod">Materiály a rozmery. Rozhoduje sa pri návrhu a dá sa to meniť až do výroby.</p>
+        <ul class="kh-zost__zoznam">
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Korpusy</p>
+          <p class="kh-zost__text">Hliník s práškovým lakom v odtieni z palety RAL.</p>
+          <p class="kh-zost__kedy">Určujú šírku celej linky</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Pracovná doska</p>
+          <p class="kh-zost__text">Nerez, kameň alebo pohľadový betón.</p>
+          <p class="kh-zost__kedy">Určuje hĺbku a výšku linky</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Front</p>
+          <p class="kh-zost__text">Hliníkové lamely, drevo alebo drevodekor.</p>
+          <p class="kh-zost__kedy">Zladí sa s prístreškom alebo fasádou</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Osvetlenie</p>
+          <p class="kh-zost__text">LED nad pracovnou doskou, prípadne v podhľade.</p>
+          <p class="kh-zost__kedy">Ťahá sa spolu s elektrinou</p>
+        </li>
+        </ul>
+      </section>
+
+      <section class="kh-zost__blok kh-zost__blok--pred k-rise" data-k-delay="1">
+        <h3 class="kh-zost__titul">Rozvody a príprava</h3>
+        <p class="kh-zost__uvod">Inštalácie sa najlacnejšie ťahajú vtedy, keď je terasa ešte rozkopaná.</p>
+        <ul class="kh-zost__zoznam">
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Elektrina<span class="kh-zost__vlajka">pred betónovaním</span></p>
+          <p class="kh-zost__text">Samostatný okruh a zásuvky priamo v korpuse.</p>
+          <p class="kh-zost__kedy">Chránička musí ísť do podlahy</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Voda a odpad<span class="kh-zost__vlajka">pred betónovaním</span></p>
+          <p class="kh-zost__text">Prívod, drez a odtok do kanalizácie alebo vsaku.</p>
+          <p class="kh-zost__kedy">Vrátane spádu odpadu</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Plyn</p>
+          <p class="kh-zost__text">Prípojka ku grilu alebo fľaša v skrinke.</p>
+          <p class="kh-zost__kedy">Ovplyvní, kde bude gril stáť</p>
+        </li>
+        <li class="kh-zost__kus">
+          <p class="kh-zost__nazov">Zastrešenie</p>
+          <p class="kh-zost__text">Prístrešok, prestrešenie terasy alebo pergola.</p>
+          <p class="kh-zost__kedy">Kuchyňu vieme zavesiť na konštrukciu</p>
+        </li>
+        </ul>
+      </section>
+    </div>
+    <p class="kh-zost__pozn">Hotová terasa nie je prekážka — rozvody vedieme v sokli alebo po stene. Pošlite fotku a povieme vám viac.</p>
     </div>
   </div>
 </section>
@@ -821,7 +824,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788773037795" defer></script>
+<script src="../assets/koverta-2026.js?v=1788773562156" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
