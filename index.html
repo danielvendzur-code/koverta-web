@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788772433966">
+<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788773037795">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -485,15 +485,52 @@
         </a>
       </li>
       <li class="kh-ponuka__kus kh-ponuka__kus--vstup k-rise" data-k-delay="4">
-        <a class="kh-ponuka__karta" href="#ponuka">
+        <a class="kh-ponuka__karta" href="#ponuka" data-k-kviz-otvor>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__nazov">Neviete, čo z toho?</span>
-            <span class="kh-ponuka__udaj">Napíšte nám rozmer pozemku a pošleme návrh riešenia.</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Nezáväzný dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__udaj">Štyri otázky a povieme vám, ktoré riešenie sa na vaše miesto hodí.</span>
+            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Spustiť výber <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
           </span>
         </a>
       </li>
     </ul>
+
+    <!-- Výber riešenia. Bez skriptu sa neotvorí a dlaždica vedie na formulár,
+         takže sa nikto nedostane do slepej uličky. -->
+    <div class="kh-kviz" id="vyber" data-k-kviz hidden>
+      <div class="kh-kviz__panel" role="group" aria-labelledby="kvizOtazka">
+        <div class="kh-kviz__vrch">
+          <p class="kh-kviz__krok"><span data-k-kviz-cislo>1</span>&#8202;/&#8202;<span data-k-kviz-spolu>4</span></p>
+          <button class="kh-kviz__zavri" type="button" data-k-kviz-zavri aria-label="Zavrieť výber">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <span class="kh-kviz__pas" aria-hidden="true"><span data-k-kviz-pas></span></span>
+
+        <div class="kh-kviz__telo" data-k-kviz-telo>
+          <h3 class="kh-kviz__otazka" id="kvizOtazka" data-k-kviz-otazka>&nbsp;</h3>
+          <div class="kh-kviz__volby" data-k-kviz-volby></div>
+        </div>
+
+        <div class="kh-kviz__vysledok" data-k-kviz-vysledok hidden>
+          <p class="kh-kviz__label">Odporúčame</p>
+          <div class="kh-kviz__znacka" data-k-kviz-znacka></div>
+          <h3 class="kh-kviz__nazov" data-k-kviz-nazov></h3>
+          <p class="kh-kviz__preco" data-k-kviz-preco></p>
+          <p class="kh-kviz__doplnok" data-k-kviz-doplnok hidden></p>
+          <div class="kh-kviz__akcie">
+            <a class="k-btn k-btn--ink" data-k-kviz-odkaz href="#">Zobraziť riešenie <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a class="k-btn k-btn--line" href="#ponuka">Nezáväzný dopyt</a>
+          </div>
+        </div>
+
+        <div class="kh-kviz__pata">
+          <button class="kh-kviz__spat" type="button" data-k-kviz-spat hidden>Späť</button>
+          <button class="kh-kviz__spat" type="button" data-k-kviz-znova hidden>Začať odznova</button>
+          <p class="kh-kviz__pozn">Nie je to záväzné a nič sa neodosiela.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1324,7 +1361,7 @@
   </div>
 </footer>
 
-<script src="./assets/koverta-2026.js?v=1788772433966" defer></script>
+<script src="./assets/koverta-2026.js?v=1788773037795" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

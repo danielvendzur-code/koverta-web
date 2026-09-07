@@ -13016,6 +13016,157 @@ footer.kf { background: var(--k-ink); color: #fff; }
    nadpisu — kto chce konfigurátor otvoriť, nemusí čítať, ako funguje. Biela
    karta ho oddelí od kostnej plochy stránky; okraj je vlasový, tieň žiadny.
    Čísla krokov sú tiché a stoja vedľa názvu, nie v kolieskach. */
+/* --- VÝBER RIEŠENIA -------------------------------------------------------
+   Štyri otázky namiesto dlaždice, ktorá viedla rovno na formulár. Panel je
+   biela karta s vlasovým okrajom — rovnaká ako karta konfigurátora, takže
+   v páse ponuky nepôsobí ako cudzí prvok. Odpovede sa nikam neodosielajú.
+   ------------------------------------------------------------------------ */
+.k .kh-kviz { margin-top: clamp(16px, 2vw, 28px); }
+.k .kh-kviz__panel {
+  padding: clamp(22px, 2.8vw, 40px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r);
+  background: var(--k-white);
+}
+.k .kh-kviz__vrch { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.k .kh-kviz__krok {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+  font-variant-numeric: tabular-nums;
+}
+.k .kh-kviz__zavri {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--k-hair);
+  border-radius: 999px;
+  background: var(--k-white);
+  color: var(--k-ink);
+  cursor: pointer;
+  transition: border-color 200ms var(--k-ease);
+}
+.k .kh-kviz__zavri:hover { border-color: var(--k-ink); }
+.k .kh-kviz__zavri svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+.k .kh-kviz__pas {
+  display: block;
+  height: 2px;
+  margin: clamp(14px, 1.6vw, 20px) 0 clamp(18px, 2.2vw, 28px);
+  background: var(--k-hair);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.k .kh-kviz__pas > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--k-amber);
+  transition: width 320ms var(--k-ease-out);
+}
+
+.k .kh-kviz__otazka {
+  margin: 0 0 clamp(14px, 1.8vw, 22px);
+  font-family: var(--k-head);
+  font-size: clamp(21px, 2.3vw, 30px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.k .kh-kviz__volby { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.k .kh-kviz__volba {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms var(--k-ease);
+}
+.k .kh-kviz__volba:hover { border-color: var(--k-ink); }
+.k .kh-kviz__volba:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+.k .kh-kviz__volba[aria-pressed="true"] { border-color: var(--k-ink); box-shadow: inset 0 -3px 0 var(--k-amber); }
+.k .kh-kviz__volba strong {
+  font-family: var(--k-head);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.k .kh-kviz__volba span { font-size: 13px; line-height: 1.45; color: #5A6165; }
+
+.k .kh-kviz__vysledok { display: grid; gap: 8px; justify-items: start; }
+/* `display` z komponentu prebíja atribút hidden — panel by inak ukazoval
+   výsledok už pri prvej otázke. */
+.k .kh-kviz [hidden] { display: none; }
+.k .kh-kviz__label {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-kviz__znacka { line-height: 0; }
+.k .kh-kviz__znacka img { display: block; width: auto; height: 17px; }
+.k .kh-kviz__nazov {
+  margin: 2px 0 0;
+  font-family: var(--k-head);
+  font-size: clamp(23px, 2.6vw, 34px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+.k .kh-kviz__preco { margin: 0; max-width: 62ch; font-size: 15.5px; line-height: 1.6; }
+.k .kh-kviz__doplnok {
+  margin: 2px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--k-amber-deep);
+}
+.k .kh-kviz__akcie { display: flex; flex-wrap: wrap; gap: 10px; margin-top: clamp(8px, 1.2vw, 14px); }
+
+.k .kh-kviz__pata {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: clamp(16px, 2vw, 24px);
+  padding-top: clamp(12px, 1.4vw, 16px);
+  border-top: 1px solid var(--k-hair);
+}
+.k .kh-kviz__spat {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--k-head);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--k-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.k .kh-kviz__pozn { margin: 0 0 0 auto; font-size: 13px; color: #5A6165; }
+
+@media (max-width: 619px) {
+  .k .kh-kviz__volby { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-kviz__pozn { margin-left: 0; width: 100%; }
+  .k .kh-kviz__akcie .k-btn { flex: 1 1 auto; justify-content: center; }
+}
+
 .k .kh-kfg__karta-pas {
   padding: clamp(28px, 3.4vw, 56px);
   border: 1px solid var(--k-hair);
