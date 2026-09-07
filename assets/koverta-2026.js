@@ -294,9 +294,12 @@
         { sel: '.kh-rev__nav',   od: 0.46, do: 0.68 }
       ]
     },
+    /* Kroky sa vypĺňajú po jednom. Pri prekrytých úsekoch boli naraz dve
+       čísla do polovice a nedalo sa prečítať, na ktorom kroku človek je —
+       úseky sú preto kratšie než ich odstup, takže sa nikdy neprekrývajú. */
     kroky: {
       draha: 0.52,
-      stopy: [ { sel: 'li > span', od: 0.08, do: 0.50, krok: 0.15 } ]
+      stopy: [ { sel: 'li > span', od: 0.10, do: 0.24, krok: 0.20 } ]
     },
     /* Fotografia sa v ráme posúva po celý čas, čo je rám na obrazovke —
        preto spojitá dráha od spodnej po hornú hranu okna. */

@@ -8031,6 +8031,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Hodnotenie z Google stojí vedľa v tej istej výške, ale ostáva čipom —
    je to odkaz, takže potrebuje plochu, na ktorú sa dá kliknúť. */
 .k .kh-hero__trust .kh-hero__rating { margin-left: clamp(4px, 1vw, 14px); }
+/* Keď v rade nič pred hodnotením nestojí, odstup zľava by ho posunul
+   o 14 px mimo osi nadpisu. */
+.k .kh-hero__trust > .kh-hero__rating:first-child { margin-left: 0; }
 @media (max-width: 599px) {
   .k .kh-hero__chip { padding-right: 14px; margin-right: 14px; }
   .k .kh-hero__chip strong { font-size: 16px; }
@@ -8039,7 +8042,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    im preto zúži odstup aj písmo — druhý riadok pod výzvou vyzerá ako zvyšok,
    ktorý sa nezmestil. */
 @media (max-width: 400px) {
-  .k .kh-hero__trust { flex-wrap: nowrap; }
+  .k .kh-hero__trust:not(:has(.kh-hero__rating)) { flex-wrap: nowrap; }
   .k .kh-hero__chip {
     min-width: 0;
     padding-right: 10px;
@@ -12184,12 +12187,13 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Text druhej kópie vypisuje pseudoprvok — v obsahu stránky tak nápis
    nestojí dvakrát a nekopíruje sa zdvojený. */
 .k-btn__slovo-b::before { content: attr(data-slovo); }
+/* Nápis sa vymieňa len vtedy, keď je kurzor priamo na tlačidle alebo na
+   čipe. Keď visel aj na celej karte, čip sa hýbal aj pri prejdení
+   fotografie — a to je pohyb, o ktorý nikto nežiadal. */
 .k-btn:hover .k-btn__slovo-a,
-.k-link:hover .k-btn__slovo-a,
-.kh-cat__item:hover .k-btn__slovo-a { transform: translateY(-115%); opacity: 0; }
+.k-link:hover .k-btn__slovo-a { transform: translateY(-115%); opacity: 0; }
 .k-btn:hover .k-btn__slovo-b,
-.k-link:hover .k-btn__slovo-b,
-.kh-cat__item:hover .k-btn__slovo-b { transform: translateY(0); opacity: 1; }
+.k-link:hover .k-btn__slovo-b { transform: translateY(0); opacity: 1; }
 
 /* Šípka ide za textom. */
 .k .k-btn:hover svg,
@@ -12615,8 +12619,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k-btn__slovo { overflow: visible; padding-block: 0; margin-block: 0; }
 .k-btn__slovo-b { transform: translateY(240%); }
 .k-btn:hover .k-btn__slovo-a,
-.k-link:hover .k-btn__slovo-a,
-.kh-cat__item:hover .k-btn__slovo-a { transform: translateY(-240%); }
+.k-link:hover .k-btn__slovo-a { transform: translateY(-240%); }
 /* Orezanie by odrezalo aj obrys pri prechode klávesnicou — obrys ide dovnútra. */
 .k-btn:focus-visible { outline-offset: -3px; }
 
@@ -13050,3 +13053,5 @@ footer.kf { background: var(--k-ink); color: #fff; }
   font-variant-numeric: tabular-nums;
 }
 .k .kh-cat__cena::after { background: var(--k-amber); }
+
+
