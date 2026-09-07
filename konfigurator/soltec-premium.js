@@ -1406,7 +1406,11 @@
              2 % in the current 2026 canopy material. Their P1/P5/P3 water exits
              sit along one long side, so the integrated F plane drains across the
              width. SL keeps its established, visibly sloping long-axis logic. */
-          const fallPct = Number(model().fallPct) || 2;
+          /* Nula je platný spád — prístrešok Koverta má rovinu vpredu aj vzadu
+             v rovnakej výške. `|| 2` by ju ticho prepísal na dve percentá, tak
+             sa nula musí prepustiť. Soltec pole nemá, tam ostávajú 2 %. */
+          const fallRaw = Number(model().fallPct);
+          const fallPct = Number.isFinite(fallRaw) ? fallRaw : 2;
           const integratedFall = panelRoof && /^F(?:170|240)$/i.test(String(state.model));
           const fall = Math.round((integratedFall ? W : L) * (fallPct / 100));
           /* F keeps one horizontal frame/post datum. SL has a visibly sloping
