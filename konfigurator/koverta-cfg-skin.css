@@ -965,3 +965,64 @@ body { background: var(--k-white); color: var(--k-ink); }
     min-height: 44px;
   }
 }
+
+/* ==========================================================================
+   Rozmer na mieru
+   ==========================================================================
+   Cenník má hotové veľkosti a posuvník po nich skáče. Kto potrebuje iný
+   rozmer, ho tu napíše — panel sa otvorí až po kliknutí, aby v kroku
+   s rozmerom nestál nikomu v ceste.
+   ========================================================================== */
+
+#SoltecPremium [data-kv-custom] { margin-top: 1.4rem; }
+
+#SoltecPremium .kv-custom {
+  margin-top: 1.2rem;
+  padding: 1.6rem;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bone);
+}
+
+#SoltecPremium .kv-custom__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+#SoltecPremium .kv-custom label {
+  display: grid;
+  gap: .5rem;
+  color: var(--k-muted);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+#SoltecPremium .kv-custom__note { margin-top: 1rem; }
+
+#SoltecPremium .kv-custom input,
+#SoltecPremium .kv-custom textarea {
+  width: 100%;
+  padding: .9rem 1.1rem;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-xs);
+  background: var(--k-white);
+  color: var(--k-ink);
+  font: inherit;
+  font-weight: 500;
+}
+
+#SoltecPremium .kv-custom textarea { resize: vertical; }
+
+#SoltecPremium .kv-custom input:focus-visible,
+#SoltecPremium .kv-custom textarea:focus-visible {
+  outline: 2px solid var(--k-amber);
+  outline-offset: 1px;
+}
+
+#SoltecPremium .kv-custom .button { margin-top: 1.2rem; }
+
+@media (max-width: 640px) {
+  #SoltecPremium .kv-custom__row { grid-template-columns: 1fr; }
+}
