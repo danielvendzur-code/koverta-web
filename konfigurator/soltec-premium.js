@@ -2025,7 +2025,40 @@
                 boxFaces(px - over, py - over, 0, post + over * 2, post + over * 2, pth,
                          '#c9ccce', ['-z'], SHAFT);
               }
-              boxFaces(px, py, 0, post, post, H + lift, frame, ['+z', '-z'], SHAFT);
+              /* Soltec je hliníkový profil s ostrou hranou. Koverta je oceľový
+                 jakl — štvorcový prierez, ale hrany zaoblené, a na modeli to
+                 vidno hneď. Kreslí sa ako hranol s dvanásťuholníkovým prierezom:
+                 štyri rovné líca a v každom rohu dva krátke úkosy, čo v tejto
+                 mierke zaoblenie prečíta. */
+              if (BIO.roundPosts) {
+                const r = Math.max(6, Math.round(post * 0.16));
+                const zTopP = H + lift;
+                /* Obrys sa obchádza proti smeru hodinových ručičiek: rovné líce,
+                   oblúk v rohu, rovné líce. Predtým sa body kládli po rohoch
+                   nezávisle, obrys sa krížil sám so sebou a na boku stĺpa z toho
+                   vznikli nezmyselné fazety. */
+                const SEG = 3;
+                const cs = [];
+                [[px + r, py + r, Math.PI, 1.5 * Math.PI],
+                 [px + post - r, py + r, 1.5 * Math.PI, 2 * Math.PI],
+                 [px + post - r, py + post - r, 0, 0.5 * Math.PI],
+                 [px + r, py + post - r, 0.5 * Math.PI, Math.PI]].forEach((c) => {
+                  for (let k = 0; k <= SEG; k++) {
+                    const t = c[2] + (c[3] - c[2]) * (k / SEG);
+                    cs.push([c[0] + Math.cos(t) * r, c[1] + Math.sin(t) * r]);
+                  }
+                });
+                const n = cs.length;
+                for (let i = 0; i < n; i++) {
+                  const a = cs[i], b = cs[(i + 1) % n];
+                  const nx = b[1] - a[1], ny = a[0] - b[0];
+                  const ln = Math.hypot(nx, ny) || 1;
+                  quad([[a[0], a[1], 0], [b[0], b[1], 0], [b[0], b[1], zTopP], [a[0], a[1], zTopP]],
+                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false });
+                }
+              } else {
+                boxFaces(px, py, 0, post, post, H + lift, frame, ['+z', '-z'], SHAFT);
+              }
             }));
           }
 
@@ -2033,58 +2066,6 @@
              hrane a odtiaľ do zvodu pri rohovom stĺpe. Žľab beží po celej
              hrane schovaný za lemovaním, takže zdola z neho vidno pozinkovaný
              pás; zvod ide dole popri stĺpe vo farbe konštrukcie. */
-          /* Odkvap. Strecha má spád po dĺžke, takže voda tečie k nižšej hrane
-             — tu je to predná, x = L. Žľab visí zvonku na líci prievlaku, nie
-             v ňom a nie v stĺpe, a z boku ho kryje lemovací plech. Lemovanie
-             obieha celý prístrešok, ale práve na tejto strane stojí o kus
-             ďalej od konštrukcie, lebo musí obísť žľab. Voda ide žľabom do
-             boku a tam ju zvod cez 45° koleno stiahne k stĺpu a po ňom na zem.
-
-             Spodok prievlaku je na nižšej hrane vždy na H — spád dvíha len ten
-             druhý koniec — takže sa všetko vie zavesiť pod neho bez ohľadu na
-             to, aký spád je nastavený. */
-          if (BIO.gutter && panelRoof) {
-            const gd = Math.max(70, Math.round(beam * 0.42));   // hĺbka žľabu
-            const gh = Math.max(70, Math.round(beam * 0.40));   // výška žľabu
-            const ovh = gd + Math.max(14, Math.round(beam * 0.06));
-            const lem = Math.max(10, Math.round(beam * 0.05));  // presah pod žľab
-            const zinok = model().rimSoffitHex || shade(frame, 0.30);
-            const gTop = H;                                     // spodok prievlaku
-            const lipTop = H + beam;                            // hore lícuje s rámom
-            const lipBottom = gTop - gh - lem;
-            // žľab visí zvonku na líci prievlaku
-            boxFaces(L, 0, gTop - gh, gd, W, gh, zinok, ['-x', '+z'], SHAFT);
-            // lemovací plech ho zboku zakrýva; hore lícuje s rámom, dolu ho presahuje
-            boxFaces(L, 0, lipBottom, ovh, W, lipTop - lipBottom, frame, ['-x'], SHAFT);
-
-            /* Zvod. Slabší profil než stĺp, vo farbe konštrukcie. Beží po
-               pravom boku: z konca žľabu kolenom pod 45° späť k stĺpu a odtiaľ
-               zvisle na zem. */
-            const r = Math.max(22, Math.round(post * 0.20));
-            const yc = W + r;                                   // tesne za bokom
-            const pipe = (ax, az, bx, bz) => {
-              const dx = bx - ax, dz = bz - az;
-              const len = Math.hypot(dx, dz);
-              if (len < 1) return;
-              const ux = dx / len, uz = dz / len;
-              const vx = -uz, vz = ux;
-              const P = (t, sd, q) => [ax + ux * t + vx * sd, yc + q, az + uz * t + vz * sd];
-              quad([P(0,-r,-r), P(len,-r,-r), P(len,-r,r), P(0,-r,r)], shade(frame, -0.06),
-                   { normal: [-vx, 0, -vz], cull: true });
-              quad([P(0,r,r), P(len,r,r), P(len,r,-r), P(0,r,-r)], shade(frame, 0.06),
-                   { normal: [vx, 0, vz], cull: true });
-              quad([P(0,-r,r), P(len,-r,r), P(len,r,r), P(0,r,r)], shade(frame, 0.02),
-                   { normal: [0, 1, 0], cull: true });
-              quad([P(0,r,-r), P(len,r,-r), P(len,-r,-r), P(0,-r,-r)], shade(frame, -0.10),
-                   { normal: [0, -1, 0], cull: true });
-            };
-            const xOut = L + Math.round(ovh * 0.52);            // os zvodu pri žľabe
-            const xPost = L - Math.round(post * 0.5);           // os zvodu pri stĺpe
-            const zElbow = lipBottom - (xOut - xPost);          // 45°: pokles = odsadenie
-            pipe(xOut, lipBottom, xPost, zElbow);
-            pipe(xPost, zElbow, xPost, 0);
-          }
-
           /* Konzola pod previsom. Kde ubudol rad stĺpov, strecha na tom konci
              prečnieva a na fotkách realizácií ju drží trojuholníkový plech
              medzi stĺpom a spodkom rámu. Bez neho previs visí vo vzduchu. */
@@ -2663,7 +2644,181 @@
             web([[x1,y0,B(x1)],[x1,y1,B(x1)],[x1,y1,T(x1)],[x1,y0,T(x1)]], [1,0,0]);
             web([[ix1,iy0,B(ix1)],[ix1,iy0,T(ix1)],[ix1,iy1,T(ix1)],[ix1,iy1,B(ix1)]], [-1,0,0]);
           };
-          if (panelRoof) {
+          /* ==================================================== strecha Koverta
+             Rozmery sú odmerané priamo z modelu Koverta v Expivi (katalóg
+             13412, prístrešok 6 × 6 m), nie odhadnuté:
+
+               lemovací plech   240 mm dovnútra × 254 mm nadol, plech ~1,5 mm,
+                                dole zahnutý späť o 16 mm — otočené L
+               obvodový rám     C profil 74 × 220 mm, pozink
+               väznice          dva C profily 58 × 180 mm chrbtami k sebe
+               trapéz           výška vlny 36 mm, krycia šírka 1 072 mm
+
+             Lemovanie je samostatný diel, nie plášť rámu: stojí o kus vedľa
+             neho a preto medzi tmavým lemovaním a strieborným rámom vidno
+             škáru. Na odkvapovej strane stojí ešte ďalej, aby sa zaň zmestil
+             žľab — inde je odsadenie rovnaké. */
+          const drawKovertaRoof = () => {
+            const LEM_W = 240, LEM_H = 254, LEM_T = 15, LEM_LIP = 16;
+            const RAM_W = 74, RAM_H = 220;                 // C profil obvodu
+            const VAZ_W = 58, VAZ_H = 180;                 // jedno C väznice
+            const TRAP_H = 36, TRAP_KRYT = 1072;
+            const OFF = 18;                                // rám odsadený od lemovania
+            const GUT = model().gutterGap || 140;          // odsadenie na odkvapovej strane
+            const zinok = model().rimSoffitHex || '#c2c7cb';
+            const zBot = H;                                // spodok lemovania
+            const zTop = zBot + LEM_H;
+            const ramBot = zBot - 2, ramTop = ramBot + RAM_H;
+            const trapBot = ramTop, trapTop = trapBot + TRAP_H;
+
+            /* --- lemovanie: štyri rovné behy, v rohoch sa prekrývajú, presne
+               ako sú v modeli rozdelené aj v Expivi (dva cez celú šírku, dva
+               cez celú hĺbku) --- */
+            const lemRun = (axis, outer, dir, a, b) => {
+              const t = LEM_T;
+              const put = (u0, u1, z, dz) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT);
+              };
+              put(outer, outer + t * dir, zBot, LEM_H);                       // zvislé rameno
+              put(outer, outer + LEM_W * dir, zTop - t, t);                   // horné rameno
+              put(outer + t * dir, outer + (t + LEM_LIP) * dir, zBot, t);     // spodný zahyb
+            };
+            const lemX0 = -OFF, lemX1 = L + GUT, lemY0 = -OFF, lemY1 = W + OFF;
+            lemRun('y', lemY0, 1, lemX0, lemX1);
+            lemRun('y', lemY1, -1, lemX0, lemX1);
+            lemRun('x', lemX0, 1, lemY0, lemY1);
+            lemRun('x', lemX1, -1, lemY0, lemY1);
+
+            /* --- obvodový C rám, pozink. Otvorená strana céčka mieri dovnútra
+               prístrešku, takže zvonku je vidieť stojinu a zdola pásnicu. --- */
+            const cRun = (axis, outer, dir, a, b) => {
+              const fl = Math.max(4, Math.round(RAM_H * 0.045));
+              const web = Math.max(4, Math.round(RAM_W * 0.06));
+              const put = (u0, u1, z, dz, hex) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, hex, [], SHAFT);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, hex, [], SHAFT);
+              };
+              put(outer, outer + web * dir, ramBot, RAM_H, shade(zinok, -0.14));      // stojina
+              put(outer, outer + RAM_W * dir, ramTop - fl, fl, shade(zinok, 0.10));   // horná pásnica
+              put(outer, outer + RAM_W * dir, ramBot, fl, zinok);                     // dolná pásnica
+              /* Céčko je otvorené dovnútra. Stojina stojí vzadu v tieni, čo je
+                 presne to, čím sa profil na pohľad prezradí ako C a nie ako
+                 plný obdĺžnik. */
+              put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl,
+                  'rgba(18,20,22,.20)');
+            };
+            cRun('y', 0, 1, 0, L);
+            cRun('y', W, -1, 0, L);
+            cRun('x', 0, 1, RAM_W, W - RAM_W);
+            cRun('x', L, -1, RAM_W, W - RAM_W);
+
+            /* --- väznice: dvojica C profilov chrbtami k sebe cez celú šírku --- */
+            /* V modeli 6 × 6 m má Expivi päť dvojíc väzníc, teda rozteč okolo
+               1,4 m. Jedna väznica cez šesťmetrový prístrešok by trapéz
+               neuniesla ani na pohľad. */
+            const poli = Math.max(2, Math.round(L / 1400));
+            for (let i = 1; i < poli; i++) {
+              const cx = (L * i) / poli;
+              const fl = Math.max(4, Math.round(VAZ_H * 0.05));
+              [-1, 1].forEach((sd) => {
+                const a = cx + (sd < 0 ? -VAZ_W : 0);
+                boxFaces(a, RAM_W, ramTop - VAZ_H, VAZ_W, W - 2 * RAM_W, VAZ_H, zinok, ['-y', '+y'], SHAFT);
+                boxFaces(a, RAM_W, ramTop - fl, VAZ_W, W - 2 * RAM_W, fl, shade(zinok, 0.06), ['-y', '+y'], SHAFT);
+                boxFaces(a, RAM_W, ramTop - VAZ_H, VAZ_W, W - 2 * RAM_W, fl, shade(zinok, -0.06), ['-y', '+y'], SHAFT);
+              });
+            }
+
+            /* --- trapéz. Vlna beží po hĺbke, teda po spáde; krycia šírka je
+               1 072 mm, tak sa plech delí po nej. Spodok je vždy sivý — nesie
+               izolačnú rohož — vrch ide vo zvolenom odtieni. --- */
+            const spodHex = model().trapezSoffitHex || '#8f9295';
+            const vrchHex = model().trapezTopHex || frame;
+            const tabule = Math.max(1, Math.round((W - 2 * RAM_W) / TRAP_KRYT));
+            const tw = (W - 2 * RAM_W) / tabule;
+            for (let i = 0; i < tabule; i++) {
+              const ya = RAM_W + tw * i, yb = ya + tw;
+              boxFaces(RAM_W, ya, trapBot, L - 2 * RAM_W, yb - ya, TRAP_H, vrchHex, ['-z'], SHAFT);
+              // spodné líce zvlášť, aby malo vlastný sivý tón
+              quad([[RAM_W, ya, trapBot], [L - RAM_W, ya, trapBot],
+                    [L - RAM_W, yb, trapBot], [RAM_W, yb, trapBot]], spodHex,
+                   { normal: [0, 0, -1], cull: true });
+              // vlna: pruhy pri konštantnom y, teda pozdĺž spádu
+              const vln = Math.max(3, Math.round(tw / 205));
+              for (let k = 0; k < vln; k++) {
+                const va = ya + (tw * k) / vln, vb = va + (tw / vln) * 0.46;
+                quad([[RAM_W, va, trapBot], [L - RAM_W, va, trapBot],
+                      [L - RAM_W, vb, trapBot], [RAM_W, vb, trapBot]],
+                     'rgba(12,14,16,.20)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                quad([[RAM_W, va, trapTop], [L - RAM_W, va, trapTop],
+                      [L - RAM_W, vb, trapTop], [RAM_W, vb, trapTop]],
+                     'rgba(255,255,255,.10)', { normal: [0, 0, 1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+              }
+            }
+
+            /* --- odkvap: kruhový žľab v medzere za lemovaním na nižšej hrane,
+               a zvod, ktorý ide z boku 45° kolenom k stĺpu a po ňom na zem --- */
+            if (BIO.gutter) {
+              /* Žľab vyplní medzeru medzi rámom a lemovaním takmer celú —
+                 preto tá medzera vôbec je. Zdola z neho vidno oblý spodok.
+                 Na strane zvodu mierne presahuje za bok, aby zvod visel priamo
+                 pod ním a nie vedľa neho: v Expivi modeli odkvap ani zvod
+                 nie sú vôbec, takže sa to skladá podľa fotografií realizácií. */
+              const R = Math.round((GUT - 20) / 2);
+              const cx = L + GUT / 2, cz = zBot + R;
+              const rz = Math.max(26, Math.round(R * 0.62));
+              const yA = 0, yB = W + 2 * rz;          // presah na strane zvodu
+              const N = 12;
+              const kruh = (t) => [Math.cos(t) * R, Math.sin(t) * R];
+              for (let i = 0; i < N; i++) {
+                const a = (Math.PI * 2 * i) / N, b = (Math.PI * 2 * (i + 1)) / N;
+                const p = kruh(a), q = kruh(b);
+                const nx = Math.cos((a + b) / 2), nz = Math.sin((a + b) / 2);
+                quad([[cx + p[0], yA, cz + p[1]], [cx + q[0], yA, cz + q[1]],
+                      [cx + q[0], yB, cz + q[1]], [cx + p[0], yB, cz + p[1]]],
+                     shade(zinok, nz * 0.14), { normal: [nx, 0, nz], cull: true });
+              }
+              // čelá žľabu, aby nebol na koncoch otvorená rúra
+              [[yA, -1], [yB, 1]].forEach((e) => {
+                const pts = [];
+                for (let i = 0; i < N; i++) {
+                  const t = (Math.PI * 2 * i) / N, p = kruh(e[1] > 0 ? t : -t);
+                  pts.push([cx + p[0], e[0], cz + p[1]]);
+                }
+                quad(pts, shade(zinok, -0.10), { normal: [0, e[1], 0], cull: true });
+              });
+
+              /* Zvod: kolmo dole spod konca žľabu, potom koleno 45° k stĺpu a
+                 po stĺpe na zem. Beží v tej istej rovine ako presah žľabu,
+                 takže na napojení nie je škára. */
+              const yc = W + rz;
+              const rura = (ax, az, bx, bz) => {
+                const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
+                if (len < 1) return;
+                const ux = dx / len, uz = dz / len, vx = -uz, vz = ux;
+                const M = 10;
+                for (let i = 0; i < M; i++) {
+                  const a = (Math.PI * 2 * i) / M, b = (Math.PI * 2 * (i + 1)) / M;
+                  const P = (t, ang) => [ax + ux * t + vx * Math.cos(ang) * rz,
+                                         yc + Math.sin(ang) * rz,
+                                         az + uz * t + vz * Math.cos(ang) * rz];
+                  const m = (a + b) / 2;
+                  quad([P(0, a), P(len, a), P(len, b), P(0, b)],
+                       shade(frame, Math.sin(m) * 0.12),
+                       { normal: [vx * Math.cos(m), Math.sin(m), vz * Math.cos(m)], cull: true });
+                }
+              };
+              const xPost = L - Math.round(post * 0.5);
+              const zKoleno = cz - R - Math.round(R * 0.6);
+              rura(cx, cz, cx, zKoleno);                                  // výpust zo žľabu
+              rura(cx, zKoleno, xPost, zKoleno - (cx - xPost));           // koleno 45°
+              rura(xPost, zKoleno - (cx - xPost), xPost, 0);              // po stĺpe na zem
+            }
+          };
+
+          if (panelRoof && model().roofKit === 'koverta') {
+            drawKovertaRoof();
+          } else if (panelRoof) {
             const x0 = 0, x1 = L, y0 = 0, y1 = W;
             const fw = post;                           // frame 170/120 on a 120 post: flush
             const inX0 = x0 + fw, inX1 = x1 - fw, inY0 = y0 + fw, inY1 = y1 - fw;
