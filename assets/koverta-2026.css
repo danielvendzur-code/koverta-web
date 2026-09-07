@@ -524,7 +524,10 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 }
 .kv-bar.is-stuck { box-shadow: var(--k-shadow-sm); background: rgba(255, 255, 255, 0.97); }
 .kv-bar__in { position: relative; display: flex; align-items: center; gap: 20px; min-height: 76px; }
-.kv-bar.is-stuck .kv-bar__in { min-height: 64px; transition: min-height 260ms var(--k-ease); }
+/* Lišta pri prilepení nemenila len tieň, ale aj výšku (76 → 64 px). Hlavička
+   je v toku, takže sa o ten rozdiel posunul celý úvodný pás aj s textom —
+   pri najmenšom posunutí kolieskom text poskočil. Výška ostáva rovnaká,
+   mení sa len podklad a tieň. */
 
 .kv-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
 .k-logo { display: block; width: auto; height: clamp(24px, 2.1vw, 30px); }
@@ -9674,6 +9677,24 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-hero__box > .kh-hero__trust { margin-bottom: 0; }
 .k .kh-hero__box > *:last-child { margin-bottom: 0; }
 
+/* Zadávateľ: nadpis úplne hore, veta, výzvy aj hodnotenie od spodku. Pás bol
+   zvislo vycentrovaný ako jeden blok — na notebooku ostávalo pod hodnotením
+   186 px prázdna a na telefóne 95, takže hodnotenie „plávalo" vysoko nad
+   spodnou hranou. Obsah teraz vyplní výšku pásu: nadpis drží vrch, zvyšok
+   sadá na spodok a medzera medzi nimi je to, čo ostane. Platí to na
+   všetkých šírkach, aby mal úvod na podstránkach rovnaký tvar ako doma. */
+.k .kh-hero { justify-content: flex-start; }
+.k .kh-hero__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 auto;
+}
+.k .kh-hero__box { flex: 1 1 auto; }
+.k .kh-hero__box > .k-lead { margin-top: auto; }
+/* Keď je vety niekoľko riadkov a okno nízke, `margin-top: auto` sa zmenší
+   na nulu a blok sa jednoducho zloží pod nadpis — nič sa neoreže. */
+
 
 /* --- 92c · Fotografia sa pri hoveri nesmie zhoršiť -----------------------
    Filter jasu na fotke pri hoveri je preč: obraz má ostať taký, aký je, a
@@ -12875,6 +12896,22 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: var(--k-hair);
 }
 
+/* Očko nad nadpisom malo v týchto dvoch sekciách nulový odstup, takže sa
+   „Ponuka" a „Aké riešenie potrebujete?" dotýkali. Inde na webe je medzi
+   nimi 17 px pri 1440 — rovnaká hodnota platí aj tu. */
+.k .kh-ponuka__hlava .k-eyebrow,
+.k .kh-kfg__uvod .k-eyebrow { margin-bottom: clamp(14px, 1.2vw, 20px); }
+
+/* Legenda značiek: v dvojici logo + popis bolo 10 px a medzi dvojicami 18.
+   Rozdiel bol taký malý, že sa štyri kusy čítali ako jeden riadok. Vnútri
+   dvojice je odstup menší, medzi dvojicami výrazne väčší. */
+.k .kh-ponuka__legenda { gap: 10px clamp(22px, 2.2vw, 32px); }
+/* Medzera z mriežky platí rovnako medzi logom a jeho popisom aj medzi
+   dvojicami. Logo si ju preto záporným okrajom stiahne — vnútri dvojice
+   ostane okolo 12 px, medzi dvojicami plných 32. */
+.k .kh-ponuka__legenda > .kh-znacka { margin-right: clamp(-20px, -1.4vw, -10px); }
+.k .kh-ponuka__legenda > span:not([class]) { margin-right: 0; }
+
 .k .kh-ponuka__mriezka {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -12918,7 +12955,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   flex: 0 0 auto;
   padding: clamp(16px, 1.6vw, 22px);
 }
-.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 2px; }
 .k .kh-ponuka__nazov {
   font-family: var(--k-head);
   font-size: clamp(18px, 1.5vw, 21px);
@@ -13369,8 +13406,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-kfg__telo {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 14px 16px 16px;
+  gap: 10px;
+  padding: 15px 16px 16px;
 }
 .k .kh-kfg__nazov {
   font-family: var(--k-head);

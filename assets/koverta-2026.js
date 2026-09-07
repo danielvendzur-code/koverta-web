@@ -1653,26 +1653,46 @@
     const spustac = root.querySelector('[data-k-kviz-otvor]');
     if (!spustac) return;
 
+    /* Prvá otázka je, čo človek rieši — nie kde to stojí. Podľa nej sa
+       vetví zvyšok: kto rieši tienenie, nedostane otázku na počet áut a kto
+       rieši kuchyňu, nedostane otázku na typ strechy. Otázka sa zobrazí len
+       vtedy, keď dáva zmysel (`ked`). */
     const OTAZKY = [
-      { id: 'miesto', text: 'Kde má konštrukcia stáť?', volby: [
-        { v: 'auto', t: 'Pri dome alebo garáži', p: 'auto zaparkované pri fasáde' },
-        { v: 'auto-volne', t: 'Na voľnom mieste v záhrade', p: 'samostatne stojaci prístrešok' },
-        { v: 'terasa', t: 'Nad terasou', p: 'sedenie, jedálenský stôl, gril' },
-        { v: 'vstup', t: 'Nad vstupom alebo menšou plochou', p: 'dvere, schody, technika' }
+      { id: 'ciel', text: 'Čo riešite?', volby: [
+        { v: 'auto', t: 'Zastrešiť auto', p: 'prístrešok alebo carport' },
+        { v: 'terasa', t: 'Zastrešiť terasu alebo sedenie', p: 'pevná strecha alebo lamely' },
+        { v: 'tienenie', t: 'Tieniť pred slnkom a pohľadmi', p: 'ZIP rolety, panely, brisoleje' },
+        { v: 'kuchyna', t: 'Vonkajšiu kuchyňu alebo gril', p: 'hliníková linka do exteriéru' },
+        { v: 'vstup', t: 'Prestrešiť vstup alebo menšiu plochu', p: 'dvere, schody, technika' }
       ] },
-      { id: 'rozsah', text: 'Čo má prekryť?', volby: [
-        { v: '1auto', t: 'Jedno auto' },
-        { v: '2auta', t: 'Dve autá' },
-        { v: '3auta', t: 'Tri a viac áut' },
-        { v: 'terasa-mala', t: 'Terasu do 20 m²' },
-        { v: 'terasa-velka', t: 'Terasu nad 20 m²' }
+      { id: 'auta', ked: (o) => o.ciel === 'auto', text: 'Koľko áut má byť pod strechou?', volby: [
+        { v: '1', t: 'Jedno auto' },
+        { v: '2', t: 'Dve autá' },
+        { v: '3', t: 'Tri a viac' },
+        { v: 'box', t: 'Auto a k tomu uzamykateľný sklad' }
       ] },
-      { id: 'strecha', text: 'Čo od strechy čakáte?', volby: [
+      { id: 'plocha', ked: (o) => o.ciel === 'terasa', text: 'Aká veľká je plocha?', volby: [
+        { v: 'mala', t: 'Do 20 m²', p: 'stôl pre štyroch' },
+        { v: 'stredna', t: '20 až 40 m²', p: 'sedenie aj jedálenský stôl' },
+        { v: 'velka', t: 'Nad 40 m²', p: 'skladá sa z modulov' }
+      ] },
+      { id: 'tien', ked: (o) => o.ciel === 'tienenie', text: 'Odkiaľ vám prekáža slnko?', volby: [
+        { v: 'bok', t: 'Zboku, nízke slnko a vietor', p: 'ZIP roleta alebo panel' },
+        { v: 'hore', t: 'Zhora, spálená terasa', p: 'lamely alebo pevná strecha' },
+        { v: 'pohlady', t: 'Skôr mi prekážajú pohľady', p: 'brisoleje alebo lamelová stena' }
+      ] },
+      { id: 'kuchyna', ked: (o) => o.ciel === 'kuchyna', text: 'Kde má kuchyňa stáť?', volby: [
+        { v: 'pod', t: 'Pod hotovým prístreškom', p: 'zastrešenie už stojí' },
+        { v: 'spolu', t: 'Spolu s novým zastrešením', p: 'rieši sa naraz' },
+        { v: 'volne', t: 'Voľne na terase', p: 'zatiaľ bez strechy' }
+      ] },
+      { id: 'strecha', ked: (o) => o.ciel === 'auto' || o.ciel === 'terasa',
+        text: 'Čo od strechy čakáte?', volby: [
         { v: 'pevna', t: 'Pevnú strechu po celý rok', p: 'dážď, sneh, krupobitie' },
         { v: 'lamely', t: 'Otvárateľné lamely', p: 'tieň, keď treba, obloha, keď netreba' },
-        { v: 'tienenie', t: 'Tienenie z boku', p: 'nízke slnko, vietor, pohľady' }
+        { v: 'svetlo', t: 'Čo najviac svetla', p: 'sklo alebo priehľadná výplň' }
       ] },
-      { id: 'rozpocet', text: 'V akej hladine sa pohybujete?', volby: [
+      { id: 'hladina', text: 'V akej hladine sa pohybujete?', volby: [
         { v: 'nizsi', t: 'Skôr úsporne', p: 'vlastná oceľová výroba' },
         { v: 'vyssi', t: 'Skôr prémiovo', p: 'celohliníkový systém bez údržby' },
         { v: 'neviem', t: 'Zatiaľ neviem', p: 'poradíme pri zameraní' }
@@ -1683,7 +1703,7 @@
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
         preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha s odkvapom skrytým vnútri konštrukcie.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        preco: 'Celohliníkový systém F170 alebo F240. Bez údržby, dĺžka do 9,2 m, čistá architektúra bez viditeľného kotvenia.' },
+        preco: 'Celohliníkový systém F170 alebo F240. Bez údržby, dĺžka do 9,2 m, rad SL počíta aj s uzamykateľným boxom.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
@@ -1691,7 +1711,9 @@
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
-        preco: 'ZIP rolety, panely a brisoleje. Dajú sa doplniť aj k hotovej konštrukcii.' }
+        preco: 'ZIP rolety, lamelové panely a brisoleje. Dajú sa doplniť aj k hotovej konštrukcii.' },
+      kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
+        preco: 'Hliníkové korpusy s práškovým lakom, doska z nerezu, kameňa alebo betónu. Zostava sa skladá z modulov.' }
     };
 
     const ZNACKY = {
@@ -1699,25 +1721,34 @@
       soltec: '<img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async">'
     };
 
-    /* Rozhodovanie. Poradie pravidiel je poradie dôležitosti: čo človek od
-       strechy chce, je viac než to, kde stojí. */
-    const vyhodnot = (o) => {
-      if (o.strecha === 'tienenie') return { hlavne: 'tienenie', doplnok: null };
-      const auto = o.miesto === 'auto' || o.miesto === 'auto-volne' ||
-                   o.rozsah === '1auto' || o.rozsah === '2auta' || o.rozsah === '3auta';
-      if (auto) {
+    /* Rozhodovanie. Vetví sa podľa toho, čo človek rieši; hladina ceny
+       rozhoduje až medzi vlastnou výrobou a hliníkovým systémom. */
+    const vyhodnot = function (o) {
+      if (o.ciel === 'tienenie') {
+        return { hlavne: 'tienenie', doplnok: o.tien === 'hore'
+          ? 'Ak má tieň držať aj v daždi, pozrite sa aj na bioklimatickú pergolu — lamely sa dajú zavrieť do vodotesnej strechy.'
+          : null };
+      }
+      if (o.ciel === 'kuchyna') {
+        return { hlavne: 'kuchyna', doplnok: o.kuchyna === 'volne'
+          ? 'Kuchyňu vieme zavesiť na konštrukciu prístrešku alebo pergoly — vyjde to lacnejšie, než ju zastrešovať dodatočne.'
+          : 'Elektrinu, vodu a odpad treba vyriešiť ešte pred betónovaním podlahy.' };
+      }
+      if (o.ciel === 'vstup') return { hlavne: 'pevne', doplnok: null };
+      if (o.ciel === 'auto') {
         /* Nad autom nedáva zmysel lamelová strecha: pri veľkom snehu sa
            lamely majú otvoriť, takže by auto ostalo nekryté. */
-        const prem = o.rozpocet === 'vyssi' || o.strecha === 'lamely';
-        return { hlavne: prem ? 'carport' : 'auta',
-                 doplnok: o.strecha === 'lamely'
-                   ? 'Nad parkovaním odporúčame pevnú strechu — lamely sa pri veľkom snehu majú otvoriť.'
-                   : null };
+        var premium = o.hladina === 'vyssi' || o.strecha === 'lamely' || o.auta === 'box';
+        return { hlavne: premium ? 'carport' : 'auta',
+          doplnok: o.strecha === 'lamely'
+            ? 'Nad parkovaním odporúčame pevnú strechu — lamely sa pri veľkom snehu majú otvoriť.'
+            : (o.auta === 'box' ? 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.' : null) };
       }
-      if (o.miesto === 'vstup') return { hlavne: 'pevne', doplnok: null };
+      /* terasa */
       if (o.strecha === 'lamely') return { hlavne: 'bio', doplnok: null };
-      return { hlavne: o.rozpocet === 'vyssi' ? 'pevne' : 'zahradne',
-               doplnok: 'Ak k tomu chcete aj bočnú clonu, dopĺňa sa ZIP roleta alebo panel.' };
+      if (o.strecha === 'svetlo') return { hlavne: 'pevne', doplnok: 'Sklenená výplň je v rade G; ISO panel je tmavší, ale lepšie tieni.' };
+      return { hlavne: o.hladina === 'vyssi' || o.plocha === 'velka' ? 'pevne' : 'zahradne',
+        doplnok: 'Bočnú clonu proti vetru a nízkemu slnku vieme doplniť ZIP roletou aj neskôr.' };
     };
 
     const telo = panel.querySelector('[data-k-kviz-telo]');
@@ -1734,16 +1765,22 @@
 
     let krok = 0;
     const odpovede = {};
-    spolu.textContent = OTAZKY.length;
+
+    /* Zoznam otázok, ktoré pri doterajších odpovediach dávajú zmysel.
+       Prepočítava sa po každej odpovedi — vetvenie tým nemá vlastný stav. */
+    const platne = () => OTAZKY.filter((o) => !o.ked || o.ked(odpovede));
 
     const vykresli = () => {
-      const o = OTAZKY[krok];
+      const zoz = platne();
+      if (krok >= zoz.length) { ukazVysledok(); return; }
+      const o = zoz[krok];
       telo.hidden = false;
       vysledok.hidden = true;
       znova.hidden = true;
       spat.hidden = krok === 0;
       cislo.textContent = krok + 1;
-      pas.style.width = ((krok / OTAZKY.length) * 100).toFixed(1) + '%';
+      spolu.textContent = zoz.length;
+      pas.style.width = ((krok / zoz.length) * 100).toFixed(1) + '%';
       otazka.textContent = o.text;
       volby.textContent = '';
       o.volby.forEach((v) => {
@@ -1755,9 +1792,14 @@
         if (v.p) b.querySelector('span').textContent = v.p;
         if (odpovede[o.id] === v.v) b.setAttribute('aria-pressed', 'true');
         b.addEventListener('click', () => {
+          /* Zmena prvej odpovede zahodí tie, ktoré k nej patrili — inak by
+             sa do výsledku dostal počet áut pri kuchyni. */
+          if (o.id === 'ciel' && odpovede.ciel && odpovede.ciel !== v.v) {
+            Object.keys(odpovede).forEach((k) => { if (k !== 'ciel') delete odpovede[k]; });
+          }
           odpovede[o.id] = v.v;
-          if (krok < OTAZKY.length - 1) { krok++; vykresli(); }
-          else ukazVysledok();
+          krok += 1;
+          vykresli();
         });
         volby.appendChild(b);
       });
@@ -1773,7 +1815,7 @@
       spat.hidden = true;
       znova.hidden = false;
       pas.style.width = '100%';
-      cislo.textContent = OTAZKY.length;
+      cislo.textContent = spolu.textContent;
       panel.querySelector('[data-k-kviz-znacka]').innerHTML = ZNACKY[d.znacka];
       panel.querySelector('[data-k-kviz-nazov]').textContent = d.nazov;
       panel.querySelector('[data-k-kviz-preco]').textContent = d.preco;
