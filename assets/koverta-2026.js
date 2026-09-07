@@ -2004,10 +2004,21 @@
         if (b) { b.disabled = false; b.classList.remove('je-odosielane'); }
       };
 
-      const ukaz = () => {
+      /* Shopify prijíma z kontaktného formulára len textové polia — vlastný
+         formulár na koverta.sk nemá ani `enctype="multipart/form-data"`, ani
+         pole na súbor. Prílohy teda odídu z prehliadača, ale k firme nedôjdu.
+         Pole na fotky ostáva (majiteľ ho chce), ale zákazníkovi po odoslaní
+         povieme pravdu a dáme mu odkaz, ktorým fotky doručí. Riadok sa ukáže
+         len vtedy, keď naozaj nejaký súbor vybral. */
+      const fotky = dakujem.querySelector('[data-k-fotky]');
+      const maSubory = () => [...f.querySelectorAll('input[type="file"]')]
+        .some((i) => i.files && i.files.length);
+
+      const ukaz = (boliSubory) => {
         f.hidden = true;
         if (hlava) hlava.hidden = true;
         if (chyba) chyba.hidden = true;
+        if (fotky) fotky.hidden = !boliSubory;
         dakujem.hidden = false;
         zameraj(dakujem);
       };
@@ -2029,6 +2040,7 @@
         const b = tlacidlo();
         if (b) { b.disabled = true; b.classList.add('je-odosielane'); }
 
+        const subory = maSubory();
         const stop = ('AbortController' in window) ? new AbortController() : null;
         const cakac = window.setTimeout(() => { if (stop) stop.abort(); }, 20000);
 
@@ -2040,7 +2052,7 @@
         }).then(() => {
           window.clearTimeout(cakac);
           uvolni();
-          ukaz();
+          ukaz(subory);
         }).catch(() => {
           window.clearTimeout(cakac);
           zlyhalo();

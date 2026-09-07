@@ -714,7 +714,7 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 }
 
 .kh-hero__inner { width: 100%; padding-block: clamp(30px, 4.5vh, 54px); color: var(--k-white); }
-.kh-hero__box { display: flex; flex-direction: column; gap: clamp(13px, 1.25vw, 18px); max-width: 720px; }
+.kh-hero__box { display: flex; flex-direction: column; gap: clamp(13px, 1.25vw, 18px); max-width: 719px; }
 .kh-hero__eyebrow { color: rgba(255, 255, 255, 0.84); }
 .kh-hero h1 { max-width: 10.6ch; color: var(--k-white); text-shadow: 0 2px 30px rgba(0, 0, 0, 0.32); }
 .kh-hero__lead { color: rgba(255, 255, 255, 0.94); max-width: 49ch; text-shadow: 0 1px 16px rgba(0, 0, 0, 0.22); }
@@ -1101,7 +1101,7 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639px) {
   .kh-work__filter-set { display: grid; gap: 14px; width: 100%; }
   .kh-work__filter-block { min-width: 0; }
   .kh-work__filters {
@@ -1154,7 +1154,7 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   padding-block: clamp(56px, 6vw, 96px) clamp(42px, 4.6vw, 70px);
   border-bottom: 1px solid var(--k-hair-invert);
 }
-.kf__lead > div { display: grid; gap: 12px; max-width: 760px; }
+.kf__lead > div { display: grid; gap: 12px; max-width: 759px; }
 .kf__lead .k-eyebrow { color: var(--k-amber); }
 .kf__lead .k-btn { border-radius: var(--k-r-sm); }
 .kf__lead h2 {
@@ -1193,12 +1193,12 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 .kf__bottom nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px 22px; }
 .kf__bottom a:hover { color: #fff; }
 
-@media (max-width: 900px) {
+@media (max-width: 899px) {
   .kf__lead { align-items: flex-start; flex-direction: column; }
   .kf__grid { grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(140px, 1fr)); }
   .kf__brand { grid-column: 1 / -1; }
 }
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .kf__lead .k-btn { width: 100%; }
   .kf__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kf__brand,
@@ -1541,7 +1541,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
    ========================================================================== */
 
 /* Hero: jedna jasná ponuka, jedno hodnotenie, žiadne duplicitné proof chips. */
-.kh-hero__box { max-width: 760px; gap: clamp(14px, 1.35vw, 20px); }
+.kh-hero__box { max-width: 759px; gap: clamp(14px, 1.35vw, 20px); }
 .kh-hero h1 { max-width: 11.5ch; }
 .kh-hero__accent { display: block; color: #fff; }
 .kh-hero__lead {
@@ -1962,7 +1962,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 /* --- KONTAKT: užší pás, silnejší tmavý panel ----------------------------
    Formulár sa rozťahoval cez celú šírku stránky a pôsobil ako tabuľka.
    Sekcia dostáva vlastnú, užšiu mieru a tmavý panel viac priestoru. */
-.kh-cta > .k-wrap { max-width: 1120px; }
+.kh-cta > .k-wrap { max-width: 1119px; }
 @media (min-width: 1000px) { .kh-cta__grid { grid-template-columns: minmax(0, 6.4fr) minmax(0, 5.6fr); } }
 .kh-cta__card { border-radius: var(--k-r) 0 0 var(--k-r); }
 .kh-cta__aside { border-radius: 0 var(--k-r) var(--k-r) 0; }
@@ -2694,14 +2694,14 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cfg__badge .k-brand--soltec-img { height: 13px; }
 
 .kh-cfg__foot { margin-top: clamp(18px, 2vw, 28px); }
-@media (max-width: 700px) { .kh-cfg__list { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 699px) { .kh-cfg__list { grid-template-columns: minmax(0, 1fr); } }
 
 /* --- HERO: text ako jeden blok -----------------------------------------
    Nadpis, odsek a tlačidlá pôsobili ako tri nezávislé vrstvy na fotke.
    Text má teraz vlastný jemný závoj, užšiu mieru a tesnejší rytmus, takže
    sa číta ako jeden odstavec a nie ako titulky poprelietavané cez auto. */
 .kh-hero__box {
-  max-width: 660px;
+  max-width: 659px;
   padding: clamp(22px, 2.4vw, 34px) clamp(22px, 2.6vw, 38px);
   border-radius: var(--k-r-lg);
   background: linear-gradient(105deg, rgba(9, 12, 14, 0.62) 0%, rgba(9, 12, 14, 0.34) 68%, rgba(9, 12, 14, 0) 100%);
@@ -3621,7 +3621,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    Sekcie majú menej stĺpcov, ovládanie je vždy viditeľné a hlavné CTA
    ostáva po ruke.
    ===================================================================== */
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .k-h2 { font-size: clamp(24px, 6.6vw, 30px); }
   .kh-hero .k-display { font-size: clamp(31px, 9vw, 42px); }
   .kh-hero__box { padding: 18px 18px 22px; }
@@ -3690,7 +3690,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   border-top: 1px solid var(--k-hair);
   background: rgba(255, 255, 255, 0.96);
 }
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr); }
   body { padding-bottom: 74px; }
 }
@@ -3798,7 +3798,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   padding: 0;
   border-radius: 0;
   background: none;
-  max-width: 620px;
+  max-width: 619px;
 }
 .kh-hero__scrim {
   background:
@@ -3856,7 +3856,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-hero__bg img { animation: none; }
   .kh-hero__cue span { animation: none; }
 }
-@media (max-width: 760px) { .kh-hero__cue { display: none; } }
+@media (max-width: 759px) { .kh-hero__cue { display: none; } }
 
 /* Hierarchia v hero: nadpis dostane viac priestoru, odsek je čitateľnejší
    a náznak scrollu ustúpi k ľavému okraju, aby nesúperil s fotkou. */
@@ -4728,7 +4728,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    Nadpisy sekcií klesli na 10,5 px a odkaz na telefónne číslo bol vysoký
    14 px. Na mobile je to text, ktorý sa nedá prečítať, a cieľ, ktorý sa
    nedá trafiť palcom — pritom telefonát je hlavná akcia celého webu. */
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .k .k-eyebrow,
   .k .kh-mat__label,
   .k .kh-work__cap,
@@ -5261,7 +5261,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    ďalšie mimo týchto dvoch obalov, tak reset platí pre celý dokument. */
 *, *::before, *::after { box-sizing: border-box; }
 
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   /* Hero: text zaberal 416 zo 660 px a z prístrešku ostal pruh. Fotka ani
      text sa nemenia — obsah sa presunie na spodok, takže nad ním ostane
      súvislý kus obrazu.
@@ -5480,7 +5480,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kf .kf__bottom a,
 .kf .kf__bottom span { font-size: 13px; }
 
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .k .kh-work__cap strong { font-size: 15px; }
   .k .kh-mat__list li { font-size: 15px; }
 }
@@ -5624,7 +5624,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    v mobilnej vrstve vzala späť spodné odsadenie z `.k-band`, takže pod
    posledným pruhom ostal 40–60 px vysoký biely pás — presne to, čo bolo
    na fotografii vidieť. Pruh siaha po spodok sekcie. */
-@media (max-width: 760px) {
+@media (max-width: 759px) {
 }
 
 /* Fotografia v páse bola orezaná na 16 : 9 zo zdroja v pomere 4 : 3 — z
@@ -6312,7 +6312,7 @@ html { background: var(--k-ink); }
    obrazovke sa preto každý riadok rozloží pod seba: názov, potom hodnoty
    s vlastným popiskom prevzatým z hlavičky. Hlavička sa skryje, lebo ju
    nesie každý riadok sám. */
-@media (max-width: 767px) {
+@media (max-width: 759px) {
   .kh-tab__scroll { overflow-x: visible; }
   .kh-tab table { min-width: 0; display: block; border-top: 0; }
   /* `display: block` na tabuľke zbaví popisok šírky a ten sa potom láme
@@ -7278,7 +7278,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    a všetkých päť krokov stojí pod sebou ako karty, každá s vlastnou
    fotografiou. Na širokej obrazovke sa nič nemení: tam je zoznam vľavo
    a panely sa prelínajú v jednej bunke, ako doteraz. */
-@media (max-width: 899.98px) {
+@media (max-width: 899px) {
   .k .kh-proc__list { display: none; }
 
   /* Panely sa už neprekrývajú v jednej bunke — každý má vlastný riadok. */
@@ -7380,7 +7380,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    nechal sivý pás. Trojica si preto drží vlastnú výšku a na telefóne stojí
    v tej istej kompozícii ako na širokej obrazovke (jedna veľká, dve menšie),
    len chce menej miesta než tri rovnaké vedľa seba. */
-@media (max-width: 899.98px) {
+@media (max-width: 899px) {
   .kh-proc__media--trio { aspect-ratio: auto; }
 }
 @media (max-width: 699px) {
@@ -7393,7 +7393,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    vedľa textu — päť kariet pod sebou by inak malo takmer tri tisíc pixelov.
    Pod 680 px sa fotka vracia nad text, lebo užší stĺpec by text zalomil
    na dve slová v riadku. */
-@media (min-width: 680px) and (max-width: 899.98px) {
+@media (min-width: 680px) and (max-width: 899px) {
   .k .kh-proc__panel { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: stretch; }
   .k .kh-proc__panel .kh-proc__media { aspect-ratio: auto; min-height: 190px; }
   .k .kh-proc__panel .kh-proc__media--trio { aspect-ratio: auto; min-height: 0; align-self: center; }
@@ -8187,7 +8187,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    z druhého riadka popiskov nebolo vidieť nič. Úvod si teraz odráta presne
    toľko, koľko pás zaberá; výšku meria skript, 74 px je záloha pre prípad,
    že skript nebeží. */
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .k .kh-hero__inner {
     padding-bottom: calc(var(--kv-dok, 74px) + 18px);
   }
@@ -8213,7 +8213,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    stĺpec, hodnota zvyšok šírky.
    ========================================================================== */
 
-@media (max-width: 640px) {
+@media (max-width: 639px) {
   .k .kh-work__filters {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
@@ -8233,7 +8233,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-work__filters--brand { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 759px) {
   .k .kh-tab:has(thead th:nth-child(4)) tbody tr {
     padding: clamp(15px, 3.6vw, 20px) clamp(14px, 3.6vw, 18px);
   }
@@ -8279,7 +8279,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 /* Na najužších displejoch by úzky stĺpec popisku lámal „MAX. ŠÍRKA“ na dva
    riadky pri každej hodnote — tam je čitateľnejší popisok nad hodnotou. */
-@media (max-width: 359.98px) {
+@media (max-width: 359px) {
   .k .kh-tab:has(thead th:nth-child(4)) tbody td { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -8457,7 +8457,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 /* Na telefóne ide šírka nad ceny a tri dĺžky si rozdelia riadok. Cena je
    pod dĺžkou, takže sa aj v tretine obrazovky zmestí bez lámania. */
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .k .kh-size__rad { grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px 0; }
   .k .kh-size__dlzky { gap: 6px; }
   .k .kh-size__grid--matica .kh-size__chip { padding: 7px 8px 8px; text-align: center; }
@@ -8465,6 +8465,51 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-size__grid--matica .kh-size__chip small { font-size: 11px; }
   .k .kh-size__grid--matica .kh-size__cfg { padding: 0 9px; font-size: 10.5px; }
 }
+
+/* Matica rozmerov mala deväť riadkov šírky a sama zaberala 2 571 px —
+   pätinu celej podstránky. Prvé štyri šírky ostávajú otvorené, zvyšok je za
+   jedným riadkom. Je to <details>, takže to funguje aj bez skriptu a dá sa
+   otvoriť klávesnicou; žiadny rozmer sa nestratil. */
+.k .kh-size__viac { border-top: 1px solid var(--k-hair); }
+.k .kh-size__viac > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--k-amber-deep);
+  transition: color 220ms var(--k-ease);
+}
+.k .kh-size__viac > summary::-webkit-details-marker { display: none; }
+.k .kh-size__viac > summary:hover { color: var(--k-ink); }
+.k .kh-size__viac > summary:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 3px; }
+/* Znamienko je tá istá kresba ako pri otázkach: plus, ktoré sa po otvorení
+   zmení na mínus. Nič sa neotáča. */
+.k .kh-size__znak {
+  position: relative;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+.k .kh-size__znak::before,
+.k .kh-size__znak::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1.6px;
+  background: currentColor;
+  transition: transform 260ms var(--k-ease);
+}
+.k .kh-size__znak::after { transform: rotate(90deg); }
+.k .kh-size__viac[open] .kh-size__znak::after { transform: rotate(0deg); }
+.k .kh-size__zvysok { display: grid; }
+.k .kh-size__zvysok .kh-size__rad:first-child { border-top: 0; padding-top: 0; }
 
 /* Jediný rozmer (prístrešok pre tri autá) nepotrebuje mriežku cez celú
    šírku — ostáva ako jedna pilulka. */
@@ -8475,7 +8520,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Hlavička skupiny rozmerov: na telefóne názov na svojom riadku a údaje pod
    ním. Kým stáli vedľa seba, „od 4 497 €“ sa lámalo na dva riadky a euro
    ostávalo samo. */
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .k .kh-size__label {
     display: flex;
     flex-wrap: wrap;
@@ -8535,7 +8580,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   line-height: 1.5;
   color: var(--k-muted);
 }
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .kh-vyb { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
 }
 
@@ -8630,7 +8675,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   text-transform: uppercase;
   color: var(--k-amber-deep);
 }
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .kh-ref__zoznam { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
 }
 
@@ -8642,7 +8687,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    stránku — a väčšina to nespraví. Formulár je teraz hneď za úvodom a úvod
    je nižší, takže je vidieť takmer okamžite. */
 .kh-hero--kratky { min-height: max(360px, min(52svh, 520px)); }
-@media (max-width: 760px) {
+@media (max-width: 759px) {
   .kh-hero--kratky { min-height: max(320px, min(58svh, 480px)); }
 }
 /* Úvod kontaktu nepotrebuje tri údaje pod tlačidlom — sú v ňom už hore
@@ -8685,6 +8730,25 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .kh-dakujem--chyba .kh-dakujem__znak svg { stroke: var(--k-ink); }
 .kh-dakujem--chyba .kh-dakujem__spoj { font-weight: 600; }
+
+/* Riadok o fotkách sa ukáže len vtedy, keď zákazník naozaj nejaké vybral.
+   Je to výzva, nie poznámka pod čiarou — fotka je pri prístreškoch to
+   najužitočnejšie, čo vieme dostať. */
+.kh-dakujem__fotky {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--k-amber);
+  background: rgba(255, 204, 0, 0.10);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--k-ink);
+}
+.kh-dakujem__fotky a {
+  display: inline-block;
+  margin-top: 4px;
+  font-weight: 700;
+  color: var(--k-ink);
+}
 
 .kh-dakujem__nadpis {
   margin: 0;
@@ -9025,7 +9089,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* Na telefóne je mapa nad kartou a značky sú menšie, aby sa neprekrývali. */
-@media (max-width: 620px) {
+@media (max-width: 619px) {
   .kh-mapa__terc { width: 13px; height: 13px; }
   /* Na úzkej mape by sa názvy obcí prekrývali. Ostáva len ten vybraný —
      kartu pod mapou aj tak vedie názov obce veľkým písmom. */
@@ -11281,16 +11345,17 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-vcene__rad > *:nth-child(n + 4),
 .k .kh-fakty__rad > *:nth-child(n + 4) { transition-delay: 330ms; }
 
-/* Vnútro karty: nadpis, odsek a pätka prídu tesne za kartou, aby karta
-   nedoletela hotová ako obrázok. Je to jeden pohyb rozdelený na tri kroky,
-   nie tri rôzne animácie. */
+/* Vnútro karty sa neposúva. Karta dorazí ako celok — to je ten pohyb —
+   a jej text sa v nej už len rozsvieti. Predtým sa posúval aj on, o 14 px
+   a s vlastným oneskorením, takže po malom scrollnutí text vnútri hotovej
+   karty ešte poskočil. Zadávateľ to opísal presne: „texty sa trocha posunuli
+   a akoby skočili". Pohybuje sa blok, nie jeho vnútro. */
 .k-js .k .kh-mat__card .kh-mat__label,
 .k-js .k .kh-mat__card .kh-mat__title,
 .k-js .k .kh-mat__card .kh-mat__text,
 .k-js .k .kh-mat__card .kh-mat__pata {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 640ms var(--k-ease-out), transform 640ms var(--k-ease-out);
+  transition: opacity 640ms var(--k-ease-out);
 }
 .k-js .k .kh-mat__card.is-in .kh-mat__label { transition-delay: 140ms; }
 .k-js .k .kh-mat__card.is-in .kh-mat__title { transition-delay: 210ms; }
@@ -11299,20 +11364,20 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k-js .k .kh-mat__card.is-in .kh-mat__label,
 .k-js .k .kh-mat__card.is-in .kh-mat__title,
 .k-js .k .kh-mat__card.is-in .kh-mat__text,
-.k-js .k .kh-mat__card.is-in .kh-mat__pata { opacity: 1; transform: none; }
+.k-js .k .kh-mat__card.is-in .kh-mat__pata { opacity: 1; }
 
 /* Fakty v sekcii s fotografiou: dva stĺpce prídu za sebou, linka medzi nimi
    sa dokreslí zhora nadol. Je to tá istá myšlienka ako podčiarknutie slova
    v nadpise — kresba, nie posun. */
-.k-js .k .kh-duo__fakt { opacity: 0; transform: translateY(16px); transition: opacity 700ms var(--k-ease-out), transform 700ms var(--k-ease-out); }
-.k-js .k .kh-duo__fakty.is-in .kh-duo__fakt { opacity: 1; transform: none; }
+.k-js .k .kh-duo__fakt { opacity: 0; transition: opacity 700ms var(--k-ease-out); }
+.k-js .k .kh-duo__fakty.is-in .kh-duo__fakt { opacity: 1; }
 .k-js .k .kh-duo__fakty.is-in .kh-duo__fakt:nth-child(2) { transition-delay: 120ms; }
-.k-js .k .kh-duo__fakt + .kh-duo__fakt { border-left-color: transparent; transition: opacity 700ms var(--k-ease-out), transform 700ms var(--k-ease-out), border-left-color 600ms var(--k-ease) 200ms; }
+.k-js .k .kh-duo__fakt + .kh-duo__fakt { border-left-color: transparent; transition: opacity 700ms var(--k-ease-out), border-left-color 600ms var(--k-ease) 200ms; }
 .k-js .k .kh-duo__fakty.is-in .kh-duo__fakt + .kh-duo__fakt { border-left-color: var(--k-hair); }
 
 /* Tlačidlo pod faktami dorazí posledné — je to koniec vety, nie jej stred. */
-.k-js .k .kh-duo__akcia { opacity: 0; transform: translateY(18px); transition: opacity 700ms var(--k-ease-out) 120ms, transform 700ms var(--k-ease-out) 120ms; }
-.k-js .k .kh-duo__akcia.is-in { opacity: 1; transform: none; }
+.k-js .k .kh-duo__akcia { opacity: 0; transition: opacity 700ms var(--k-ease-out) 120ms; }
+.k-js .k .kh-duo__akcia.is-in { opacity: 1; }
 
 /* Tlačidlá a odkazy: šípka sa pohne ďalej než predtým, aby bolo vidieť, že
    reaguje. */
@@ -12050,7 +12115,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-modul__mieru { grid-template-columns: minmax(0, 1fr); }
   .k .kh-modul__mieru .k-btn { justify-self: start; }
 }
-@media (max-width: 767px) {
+@media (max-width: 759px) {
   .k .kh-cat__grid--sirka { grid-template-columns: minmax(0, 1fr); }
   .k .kh-cat__grid--sirka .kh-cat__card,
   /* Široká posledná karta má na telefóne rovnakú silu pravidla ako mriežka,

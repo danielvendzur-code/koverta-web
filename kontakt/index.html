@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788747186379">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788758910265">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -413,7 +413,7 @@
           <label class="kh-field kh-field--subor">
             <span>Fotky miesta <small>nepovinné</small></span>
             <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
-            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene. Po odoslaní vám ukážeme, kam ich poslať.</small>
           </label>
 
           <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="../obchodne-podmienky/">obchodnými podmienkami</a> a so <a href="../ochrana-sukromia/">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
@@ -432,6 +432,8 @@
             <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne — aj keď si nakoniec vyberiete inak.</span></li>
             <li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, rozmiestnením stĺpov a termínom montáže.</span></li>
           </ol>
+          <p class="kh-dakujem__fotky" data-k-fotky hidden>Fotky, ktoré ste vybrali, pošlite prosím e-mailom — formulár ich k nám neprenesie.
+            <a href="mailto:obchod@koverta.sk?subject=Fotky%20k%20dopytu">Poslať fotky na obchod@koverta.sk</a></p>
           <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
           <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
@@ -645,7 +647,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788747186379" defer></script>
+<script src="../assets/koverta-2026.js?v=1788758910265" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
