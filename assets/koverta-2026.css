@@ -806,7 +806,7 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   .kh-hero__box { gap: 13px; }
   .kh-hero__lead { font-size: 15px; line-height: 1.5; }
   .kh-hero__actions { gap: 8px; }
-  .kh-hero__actions .k-btn { min-height: 48px; padding-inline: 18px; }
+  .kh-hero__actions .k-btn { padding-inline: 18px; }
   .kh-hero__trust { gap: 6px; }
   .kh-hero__chip { display: none; }
   .kh-fact { padding: 18px 20px; }
@@ -820,7 +820,6 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
    dve rovnaké karty vedľa seba.
    -------------------------------------------------------------------------- */
 
-.kh-pick { padding-bottom: 0; }
 .kh-pick__head { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; margin-bottom: clamp(32px, 3.4vw, 52px); }
 .kh-pick__head .k-h2 { max-width: 20ch; }
 .kh-pick__head .k-lead { max-width: 60ch; }
@@ -2089,7 +2088,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 
 .kh-cfg__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 6px; }
-.kh-cfg__cta .k-btn { min-height: 54px; padding-inline: 26px; }
+.kh-cfg__cta .k-btn { padding-inline: 26px; }
 
 .kh-cfg__stage {
   position: relative;
@@ -2114,7 +2113,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 .k-btn--glass:hover { border-color: #fff; background: #fff; color: var(--k-ink); }
 .kh-hero__actions .k-btn--glass { background: rgba(9, 12, 14, 0.34); }
-.kh-hero__actions .k-btn { min-height: 54px; padding-inline: 26px; font-size: 15px; }
+.kh-hero__actions .k-btn { padding-inline: 26px; font-size: 15px; }
 
 /* --- KATEGÓRIE: štyri veľké plochy 2 × 2 --------------------------------
    Zadanie: štyri sekcie, hore prístrešky pre autá a pre terasu, dole doplnky.
@@ -2396,12 +2395,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: var(--k-r);
   background: var(--k-white);
-  border: 1px solid var(--k-hair-soft);
-  transition: border-color 300ms var(--k-ease), box-shadow 420ms var(--k-ease);
 }
-.kh-mat__card:hover { border-color: transparent; box-shadow: var(--k-shadow-sm); }
 
 .kh-mat__media { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: var(--k-bone-deep); }
 .kh-mat__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--k-ease-out); }
@@ -2458,6 +2453,10 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k .k-btn,
 .k-btn { border-radius: var(--k-r-pill); font-weight: 700; }
 .k .k-btn:not(.kv-bar__cta),
+/* Jediná výška tlačidla na celom webe. Pravidlá pre úvodný pás,
+   konfigurátor a dvojice ju len opakovali alebo prepisovali na 52 a 56 —
+   výsledkom boli tri rôzne výšky vedľa seba. Lišty (kv-bar, dock) majú
+   vlastnú, nižšiu; sú to prvky okna, nie obsahu. */
 .k-btn:not(.kv-bar__cta) { min-height: 54px; }
 .kv-bar__cta { min-height: 46px; }
 .kh-hero__actions .k-btn,
@@ -2535,10 +2534,11 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    obrazovku. Pás dostal menšie odsadenie a nadpisy o stupeň nižšiu škálu —
    obsah tým nič nestráca, len prestane byť roztiahnutý.
    ===================================================================== */
-:root {
-  --k-band: clamp(58px, 5.6vw, 96px);
-  --k-band-tight: clamp(42px, 4vw, 68px);
-}
+/* Pozn.: tu stálo predefinovanie --k-band a --k-band-tight na :root. Sekcie
+   sú vnútri .k, kde sú tie isté tokeny nastavené bližšie, takže tieto dva
+   riadky nikdy nič nezmenili — a chýbajúci účinok sa potom doháňal
+   odsadením po jednotlivých komponentoch. Rytmus pásov riadi jediné miesto,
+   blok tokenov na začiatku súboru. */
 .k-h2 { font-size: clamp(27px, 2.8vw, 42px); }
 .k-head { margin-bottom: clamp(20px, 2.2vw, 32px); }
 .k-lead { font-size: clamp(15px, 1.15vw, 17px); }
@@ -2756,7 +2756,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-hero__inner { align-items: center; }
 
 /* --- DVE ZNAČKY: zmestiť sa na jednu obrazovku -------------------------- */
-.kh-pick { padding-bottom: 0; }
 .kh-pick__scene { aspect-ratio: 16 / 9; }
 @media (min-width: 900px) { .kh-pick__scene { aspect-ratio: 16 / 10; } }
 .kh-pick__lane {
@@ -2802,7 +2801,10 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 
 /* Posledné doladenie výšky — sekcia dvoch značiek presahovala obrazovku o kúsok. */
 .kh-pick .kh-pick__head { margin-bottom: clamp(16px, 1.6vw, 24px); }
-.kh-pick { padding-top: clamp(44px, 4.2vw, 72px); }
+/* Pás dvoch značiek stál v troch pravidlách a nechával spodok na nule —
+   obsah sa tak dotýkal spodnej hrany. Jedno pravidlo a rovnaký stupeň
+   škály ako ostatné podporné pásy. */
+.kh-pick { padding-block: var(--k-band-tight); }
 .kh-pick__lane { padding-block: clamp(20px, 2.2vw, 32px); }
 
 /* --- MATERIÁL: silnejšia karta ----------------------------------------
@@ -2957,7 +2959,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cta__steps li { padding-block: 12px; }
 .kh-cta__row { padding-block: 14px; }
 
-.kh-cfg { padding-block: clamp(48px, 4.6vw, 76px); }
+.kh-cfg { padding-block: var(--k-band-tight); }
 .kh-cfg__steps li { padding-block: 11px; }
 .kh-cfg__thumb { aspect-ratio: 3 / 2; }
 
@@ -2979,7 +2981,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 /* Vlasové linky boli na 11 % krytia prakticky neviditeľné — okraje kariet
    (najmä pri recenziách) splývali s podkladom. Platí na celý web. */
 :root {
-  --k-hair: rgba(18, 23, 26, 0.16);
   --k-hair-soft: rgba(18, 23, 26, 0.09);
   --k-hair-invert: rgba(255, 255, 255, 0.2);
 }
@@ -3621,7 +3622,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    ostáva po ruke.
    ===================================================================== */
 @media (max-width: 760px) {
-  :root { --k-band: clamp(40px, 9vw, 56px); }
   .k-h2 { font-size: clamp(24px, 6.6vw, 30px); }
   .kh-hero .k-display { font-size: clamp(31px, 9vw, 42px); }
   .kh-hero__box { padding: 18px 18px 22px; }
@@ -3713,7 +3713,10 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-cta__aside-head { padding-bottom: 16px; }
 .kh-cta__aside-head h3 { font-size: clamp(22px, 2vw, 30px); }
 .kh-cta__row { padding-block: 12px; }
-.kh-mat { padding-block: clamp(42px, 4vw, 66px); }
+/* Podporné pásy (materiál, fakty, konfigurátor) majú spoločný, kratší
+   stupeň škály. Predtým mal každý vlastné číslo a medzery medzi sekciami
+   sa striedali 179 / 242 px podľa toho, aký pás bol vedľa. */
+.kh-mat { padding-block: var(--k-band-tight); }
 .kh-mat__media { aspect-ratio: 3 / 2; }
 .kh-mat__body { padding: clamp(15px, 1.5vw, 20px); gap: 8px; }
 .kh-mat__list li { padding: 9px 0 9px 22px; font-size: 13px; }
@@ -4258,7 +4261,7 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   border: 0;
 }
 
-.kh-fakty { padding-block: clamp(34px, 5vw, 58px); border-bottom: 1px solid var(--k-hair); }
+.kh-fakty { padding-block: var(--k-band-tight); border-bottom: 1px solid var(--k-hair); }
 
 .kh-fakty__rad {
   display: grid;
@@ -5286,7 +5289,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-hero__bg { top: -13%; bottom: auto; height: 126%; }
   .kh-hero__box { gap: 11px; }
   .kh-hero__actions { margin-top: 2px; }
-  .kh-hero__actions .k-btn { min-height: 48px; }
   .kh-hero__trust { margin: 6px 0 0; }
 
   /* Text pod 12 px: popisky realizácií, dátum recenzie a nadpisy v menu. */
@@ -5623,7 +5625,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    posledným pruhom ostal 40–60 px vysoký biely pás — presne to, čo bolo
    na fotografii vidieť. Pruh siaha po spodok sekcie. */
 @media (max-width: 760px) {
-  .k .kh-pick { padding-bottom: 0; }
 }
 
 /* Fotografia v páse bola orezaná na 16 : 9 zo zdroja v pomere 4 : 3 — z
@@ -7922,13 +7923,15 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Karta piateho kroku sa počas preletu vytráca — fotografie z nej odchádzajú
    a ona sa za nimi zavrie. Bez toho by na obrazovke ostávala biela karta
    s prázdnymi rámčekmi po fotografiách, čo vyzerá ako chyba. Hodnotu píše
-   skript, ktorý prelet riadi; pri ceste hore sa karta rovnako vráti. */
-.k .kh-proc__panels .kh-proc__panel:has(.kh-proc__media--trio),
+   skript, ktorý prelet riadi; pri ceste hore sa karta rovnako vráti.
+
+   Pravidlo malo pôvodne aj druhý selektor bez `.is-active`. Ten prebil
+   základné skrytie panelov, takže piaty krok bol viditeľný pri každom kroku
+   a v zozname svietil napríklad krok 3, kým vpravo stála karta 5. */
 .k .kh-proc__panels.is-stacked > .kh-proc__panel.is-active:has(.kh-proc__media--trio) {
   opacity: calc(1 - var(--k-odlet, 0));
 }
 @media (max-width: 999px) {
-  .k .kh-proc__panels .kh-proc__panel:has(.kh-proc__media--trio),
   .k .kh-proc__panels.is-stacked > .kh-proc__panel.is-active:has(.kh-proc__media--trio) { opacity: 1; }
 }
 
@@ -10244,15 +10247,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
    jednu stavbu: fotografia vedie, nad ňou drobný verzálkový názov oblasti,
    pod ním silný nadpis a až potom výpočet s bodkami. Karta má vlastný rám,
    ktorý pri prejdení myšou zosilnie — je to hmatateľný predmet, nie odsek. */
-.k .kh-mat__card {
-  border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-sm);
-  background: var(--k-white);
-  overflow: hidden;
-  transition: var(--k-prichod), border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
-}
-.k .kh-mat__card:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
-
 .k .kh-mat__body {
   display: flex;
   flex-direction: column;
@@ -10323,6 +10317,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-radius: var(--k-r-sm);
   background: var(--k-white);
   overflow: hidden;
+  box-shadow: var(--k-shadow-sm);
   transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
 }
 .kh-rady__kus:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
@@ -10648,6 +10643,14 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-mat__grid:has(> :last-child:nth-child(3)) > :last-child .kh-mat__media { aspect-ratio: 16 / 10; }
 }
 
+/* Jediná definícia karty materiálu. Predtým ich bolo v tomto súbore päť
+   a každá si prepisovala rám aj tieň tej predošlej — výsledkom bola karta
+   bez rámu s trvalým tieňom, kým karta katalógu, radu a ročného obdobia
+   mali vlasový rám. Teraz majú všetky štyri to isté: vlasový rám a mäkký
+   tieň zo `--k-shadow-sm`.
+
+   Príchod musí byť v zozname prechodov ako prvý, inak ho skratka prepíše
+   a karta sa objaví skokom — stalo sa to už raz, na 52 kartách naraz. */
 .k .kh-mat__card {
   display: flex;
   flex-direction: column;
@@ -10661,9 +10664,9 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-radius: var(--k-r-sm);
   background: var(--k-white);
   overflow: hidden;
-  transition: border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
+  box-shadow: var(--k-shadow-sm);
+  transition: var(--k-prichod), border-color 260ms var(--k-ease), box-shadow 320ms var(--k-ease);
 }
-.k .kh-mat__card:hover { border-color: rgba(18, 23, 26, 0.24); box-shadow: var(--k-shadow-sm); }
 
 /* Fotografia: hore, cez celú šírku karty, bez vlastného zaoblenia a odstupu.
    Pomer 4 : 3 drží všetky fotografie rovnako vysoké, nech je zdroj akýkoľvek. */
@@ -10911,7 +10914,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 .k .kh-duo__akcia { margin: 0; }
 .k .kh-duo__akcia .k-btn {
-  min-height: 56px;
   padding-inline: clamp(24px, 2.4vw, 32px);
   font-size: 15px;
 }
@@ -10935,7 +10937,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (max-width: 899px) {
   .k .kh-duo__foto { min-height: 300px; }
   .k .kh-duo__telo { padding: clamp(32px, 8vw, 44px) 0 0; }
-  .k .kh-duo__akcia .k-btn { width: 100%; min-height: 54px; }
+  .k .kh-duo__akcia .k-btn { width: 100%; }
 }
 
 /* --- 103b · Trojstĺpcový prehľad ako prehľad, nie ako odsek --------------
@@ -11097,7 +11099,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Fakty majú vlastný odstup zospodu. Keby k nemu tlačidlo pridalo ešte svoj
    vrchný, ostala by medzi číslami a výzvou diera na dva odstupy. */
 .k .kh-duo__fakty + .kh-duo__akcia { margin-top: 0; }
-.k .kh-duo__akcia .k-btn { min-height: 52px; padding-inline: clamp(20px, 2vw, 30px); }
+.k .kh-duo__akcia .k-btn { padding-inline: clamp(20px, 2vw, 30px); }
 
 
 /* ==========================================================================
@@ -11143,21 +11145,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
    Čísla na fotografiách sú preč — zadávateľ ich nechcel a na fotografii
    výrobku nemá poradové číslo čo robiť. S nimi odišiel aj tmavý závoj pri
    spodnej hrane, ktorý bol len ich podkladom. */
-.k .kh-mat__card {
-  border: 0;
-  border-radius: var(--k-r-sm);
-  background: var(--k-white);
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
-  /* Príchod musí byť v zozname, inak ho táto skratka prepíše a karta sa
-     objaví skokom — presne to sa dialo na 52 kartách materiálu. */
-  transition: var(--k-prichod), box-shadow 320ms var(--k-ease);
-}
 /* Karta sa pri prejdení nenadvihuje. Posun by šiel po tej istej vlastnosti
    ako príchod, teda aj jeho časom — a dvojpixelový zdvih trvajúci šesťsto
    milisekúnd vyzerá ako chyba. Zosilnie tieň, a to stačí. */
 .k .kh-mat__card:hover {
-  border: 0;
+  border-color: rgba(18, 23, 26, 0.22);
   box-shadow: 0 2px 4px rgba(18, 23, 26, 0.05), 0 16px 36px rgba(18, 23, 26, 0.10);
 }
 .k .kh-mat__media { aspect-ratio: 4 / 3; }
@@ -11236,7 +11228,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border: 0;
   border-radius: var(--k-r-sm);
   background: var(--k-white);
-  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  box-shadow: var(--k-shadow-sm);
 }
 /* Jantárový pás zľava preč — na otvorenie stačí biela plocha a znamienko. */
 .k .kh-faq__item[open]::before { content: none; }
@@ -11347,7 +11339,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    obrazovka sa nemení inak — len tlačidlá prestali byť menšie než tie, ku
    ktorým vedú. */
 @media (min-width: 620px) {
-  .k .kh-hero__actions .k-btn { min-height: 56px; padding-inline: clamp(22px, 2.2vw, 32px); font-size: 15px; }
+  .k .kh-hero__actions .k-btn { padding-inline: clamp(22px, 2.2vw, 32px); font-size: 15px; }
 }
 .k .kh-hero__actions .k-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
 
@@ -11408,7 +11400,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-hero__box > .kh-hero__actions { margin-bottom: 16px; }
   .k .kh-hero__lead { font-size: clamp(14.5px, 4vw, 16px); line-height: 1.55; }
   .k .kh-hero__actions { gap: 8px; }
-  .k .kh-hero__actions .k-btn { min-height: 50px; }
   .k .kh-hero__trust { margin-top: 0; }
 }
 
@@ -11737,7 +11728,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   overflow: hidden;
   border-radius: var(--k-r-sm);
   background: var(--k-white);
-  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  box-shadow: var(--k-shadow-sm);
 }
 .k .kh-modul__vykres {
   height: clamp(170px, 15vw, 220px);
@@ -11987,6 +11978,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   align-items: center;
   gap: clamp(14px, 2.2vw, 32px);
   padding: clamp(22px, 2vw, 28px) clamp(20px, 2.2vw, 32px);
+  border: 1px solid var(--k-hair);
   border-radius: var(--k-r-sm);
   background: var(--k-white);
 }
@@ -12022,6 +12014,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-typ__riadok--prvy {
   padding-block: clamp(24px, 2.4vw, 34px);
+  border-color: transparent;
   background: var(--k-ink);
   box-shadow: 0 4px 8px rgba(18, 23, 26, 0.05), 0 28px 72px rgba(18, 23, 26, 0.14);
 }
@@ -12274,19 +12267,22 @@ footer.kf { background: var(--k-ink); color: #fff; }
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: var(--k-r-pill);
-  background: transparent;
   font-style: normal;
   font-family: var(--k-head);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--k-grey);
   opacity: 1;
-  transition: background-color 280ms var(--k-ease), color 280ms var(--k-ease);
+  transition: color 280ms var(--k-ease);
 }
-.k .kh-proc__row.is-active em { background: var(--k-amber); color: var(--k-ink); }
+/* Aktívny krok značí farba čísla, nie vyplnené koliesko. Číslo v bodke je
+   jediný tvar, ktorý sa na tomto webe nikde inde nepoužíva — pôsobil ako
+   prvok z iného webu a zadávateľ ho odmietol dvakrát. Štvorec 34 × 34 tu
+   ostáva ako miesto pre číslo, aby názvy krokov stáli pod sebou. */
+.k .kh-proc__row.is-active em { color: var(--k-amber-deep); }
 .k .kh-proc__row strong { color: var(--k-grey); transition: color 280ms var(--k-ease); }
 .k .kh-proc__row.is-active strong { color: var(--k-ink); }
 
@@ -12532,7 +12528,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
    biela s tým istým mäkkým tieňom, aký majú ostatné karty na webe. */
 .k .kh-kat__karta {
   background: var(--k-white);
-  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  box-shadow: var(--k-shadow-sm);
   /* Bez tohto tieň pri prejdení skočil. Príchod musí byť v zozname, inak ho
      táto skratka prepíše — to je tá istá pasca ako pri karte materiálu. */
   transition: var(--k-prichod), border-color 240ms var(--k-ease), box-shadow 320ms var(--k-ease);
@@ -12604,7 +12600,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border: 1px solid var(--k-hair);
   color: var(--k-ink);
   backdrop-filter: none;
-  box-shadow: 0 1px 2px rgba(18, 23, 26, 0.04), 0 6px 16px rgba(18, 23, 26, 0.05);
+  box-shadow: var(--k-shadow-sm);
 }
 .k .kh-google .kh-hero__rating:hover { border-color: rgba(18, 23, 26, 0.26); }
 .k .kh-google .kh-hero__rating strong { color: var(--k-ink); }
@@ -12759,6 +12755,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: var(--k-white);
   border: 1px solid var(--k-hair);
   overflow: hidden;
+  box-shadow: var(--k-shadow-sm);
   /* Karta sa pri prejdení zdvihne celá — fotografia vnútri sa nehýbe. */
   transition: var(--k-prichod), border-color 260ms var(--k-ease), transform 320ms var(--k-ease-out), box-shadow 320ms var(--k-ease);
 }
