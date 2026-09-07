@@ -2949,7 +2949,7 @@
       /* Kým je zásuvka otvorená, tabulátor sa v nej točí dokola. Bez toho
          prešiel za posledný odkaz do stránky pod prekrytím — kurzor zmizol
          za tmavým sklom a Escape už nemal čo zavrieť. */
-      const OSTRE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const OSTRE = 'a[href], button:not([disabled]), summary, input, select, textarea, [tabindex]:not([tabindex="-1"])';
       const drz = (e) => {
         if (e.key !== 'Tab' || !drawer.classList.contains('is-open')) return;
         const body = [].slice.call(drawer.querySelectorAll(OSTRE))
@@ -2967,9 +2967,9 @@
         openBtn.setAttribute('aria-expanded', String(open));
         uspi(!open);
         document.documentElement.style.overflow = open ? 'hidden' : '';
-        /* Lepivý pás s ponukou prekrýval spodok otvoreného menu — tlačidlo
-           v menu bolo spolovice pod ním a dve rovnaké výzvy pod sebou pôsobili
-           ako chyba. Kým je menu otvorené, pás odchádza; menu má vlastnú. */
+        /* Lepivý pás s ponukou prekrýval spodok otvoreného menu — posledná
+           položka aj telefónne číslo boli spolovice pod ním. Kým je menu
+           otvorené, pás odchádza; po zavretí sa vráti. */
         document.documentElement.classList.toggle('ma-otvorene-menu', open);
         if (open) {
           const first = drawer.querySelector('a, button');

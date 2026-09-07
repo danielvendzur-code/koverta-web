@@ -577,6 +577,7 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  white-space: nowrap;
   padding: 12px 10px;
   font-size: 13.5px;
   font-weight: 600;
@@ -589,9 +590,26 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 .kv-nav__link svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.2; opacity: 0.5; transition: transform 260ms var(--k-ease), opacity 200ms var(--k-ease); }
 .kv-nav__link:hover { color: var(--k-grey); }
 .kv-nav__link:hover svg { opacity: 0.85; }
-.kv-nav__link::after { display: none; }
+/* Otvorená a aktuálna položka nesie jantárové podčiarknutie pod názvom.
+   Predtým sa menila len farba písma na tmavú jantárovú — na bielom podklade
+   to bol rozdiel, ktorý sa dal prehliadnuť. */
+.kv-nav__link::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--k-amber);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 240ms var(--k-ease-out);
+}
+.kv-nav__item.is-open > .kv-nav__link::after,
+.kv-nav__link[aria-current="page"]::after { transform: none; }
 .kv-nav__item.is-open > .kv-nav__link,
-.kv-nav__link[aria-current="page"] { color: #a77a00; }
+.kv-nav__link[aria-current="page"] { color: var(--k-ink); }
 .kv-nav__item.is-open > .kv-nav__link svg { transform: rotate(180deg); opacity: 1; }
 
 .kv-bar__side { display: flex; align-items: center; gap: 10px; margin-left: auto; }
@@ -608,13 +626,41 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
 .kv-icon-btn:hover { border-color: var(--k-ink); background: var(--k-bone); }
 .kv-bar__cta { min-height: 46px; padding: 0 22px; font-size: 14.5px; }
 
+/* Vpravo v lište stojí telefón, nie výzva. Menu má viesť, nie predávať —
+   a horný servisný pás s číslom odscrolluje preč, takže po prilepení lišty
+   by inak kontakt zmizol. Číslo sa ukazuje len tam, kde je vidieť aj
+   navigáciu; pod 1024 px je v hlavičke hamburger a číslo ostáva v zásuvke. */
+.kv-bar__tel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 12px;
+  font-family: var(--k-head);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--k-ink);
+  white-space: nowrap;
+  transition: color 200ms var(--k-ease);
+}
+.kv-bar__tel svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.9; }
+.kv-bar__tel:hover { color: #a77a00; }
+/* Pri 1024 px sa do riadku zmestí značka, päť položiek aj číslo — ale len
+   tak-tak, popisy v ponuke sa lámali na dva riadky. Číslo preto ustupuje
+   skôr; pod 1120 px je v hlavičke hamburger alebo aspoň voľnejšia ponuka. */
+@media (max-width: 1119px) { .kv-bar__tel { display: none; } }
+
 /* mega menu */
 /* Panel visí na celej navigácii, nie na jednej položke — pri prvej položke
    by vycentrovaný panel prečnieval mimo obrazovky. */
 .kv-mega {
   position: absolute;
-  top: calc(100% + 14px);
-  left: 0;
+  top: calc(100% + 12px);
+  /* Lišta je `.k-wrap` s vnútorným odsadením, takže `left: 0` je okraj okna,
+     nie okraj obsahu — panel začínal o 60 px vľavo od loga. Karta odskočí
+     o svoje vlastné odsadenie, aby fotografie stáli presne pod logom. */
+  left: calc(var(--k-gut) - 24px);
   width: min(1080px, 100%);
   padding: 22px;
   border: 1px solid var(--k-hair);
@@ -667,12 +713,98 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   }
   .kv-scrim.is-open { opacity: 1; visibility: visible; transition-delay: 0s; }
 }
-.kv-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-.kv-drawer__group + .kv-drawer__group { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--k-hair); }
-.kv-drawer__group > p { margin: 0 0 12px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--k-grey); }
-.kv-drawer__group a { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--k-hair-soft); }
-.kv-drawer__group a svg { width: 16px; height: 16px; fill: none; stroke: var(--k-hair); stroke-width: 2; }
-.kv-drawer__cta { display: grid; gap: 10px; margin-top: 26px; }
+.kv-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.kv-drawer__zavri {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 4px 8px 10px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--k-ink);
+  background: none;
+  border: 0;
+}
+.kv-drawer__zavri svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* Zásuvka bola jeden dlhý zoznam trinástich odkazov — na telefóne sa v ňom
+   nedalo nič nájsť a značka pri položke chýbala úplne. Sekcie sa teraz
+   rozbaľujú, otvorená ukáže tie isté fotografie ako panel na počítači.
+   `details` to zvládne bez skriptu, takže menu funguje aj keď JavaScript
+   ešte nedobehol. */
+.kv-drawer__sk { border-top: 1px solid var(--k-hair); }
+.kv-drawer__sk > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 0;
+  font-family: var(--k-head);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+  cursor: pointer;
+  list-style: none;
+}
+.kv-drawer__sk > summary::-webkit-details-marker { display: none; }
+.kv-drawer__plus { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: var(--k-grey); stroke-width: 2; transition: transform 220ms var(--k-ease); }
+.kv-drawer__sk[open] > summary { padding-bottom: 13px; box-shadow: inset 0 -2px 0 var(--k-amber); }
+.kv-drawer__sk[open] .kv-drawer__plus { transform: rotate(180deg); }
+
+.kv-drawer__rad { display: grid; gap: 4px; margin: 0 0 14px; padding: 0; list-style: none; }
+.kv-drawer__rad > li { margin: 0; }
+.kv-drawer__rad > li::before { content: none; display: none; }
+.kv-drawer__rad a {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 7px;
+  margin: 0 -7px;
+  border-radius: var(--k-r-xs);
+  color: var(--k-ink);
+  transition: background-color 180ms var(--k-ease);
+}
+.kv-drawer__rad a:hover,
+.kv-drawer__rad a:focus-visible { background: var(--k-bone); }
+.kv-drawer__foto {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  background: var(--k-bone-deep);
+}
+.kv-drawer__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.kv-drawer__telo { display: grid; gap: 6px; min-width: 0; }
+.kv-drawer__rad strong { font-family: var(--k-head); font-size: 15.5px; font-weight: 700; line-height: 1.25; letter-spacing: -0.015em; }
+.kv-drawer__rad--text a { grid-template-columns: minmax(0, 1fr); padding: 11px 7px; }
+
+.kv-drawer__odkaz {
+  display: block;
+  padding: 15px 0;
+  border-top: 1px solid var(--k-hair);
+  font-family: var(--k-head);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+}
+.kv-drawer__tel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--k-hair);
+  font-family: var(--k-head);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--k-ink);
+}
+.kv-drawer__tel svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.9; }
 
 /* ==========================================================================
    HOMEPAGE
@@ -2441,23 +2573,65 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .k-head { margin-bottom: clamp(20px, 2.2vw, 32px); }
 .k-lead { font-size: clamp(15px, 1.15vw, 17px); }
 
-/* --- MEGA MENU: položky s miniatúrou ------------------------------------
-   Textový zoznam nedával predstavu, ako produkt vyzerá, a veľká fotka vpravo
-   panel len rozťahovala. Každá položka má teraz vlastnú miniatúru a nadpis
-   stĺpca nesie značkový odznak. */
-.kv-mega { padding: clamp(22px, 2vw, 30px) clamp(22px, 2.2vw, 34px) 0; }
-.kv-mega__cols { display: grid; gap: clamp(24px, 2.6vw, 48px); grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 860px) { .kv-mega__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* --- MEGA MENU: rad fotografií podstránok (návrh E1) --------------------
+   Panel bol dvojstĺpcový zoznam — vľavo Koverta, vpravo Soltec — s malou
+   miniatúrou a popiskom pri každom riadku. Rozdeľoval ponuku podľa výrobcu,
+   hoci zákazník hľadá typ prístrešku; pri „Pre autá“ mal každý stĺpec jednu
+   položku a panel pôsobil nedonačítane.
+   Teraz je to jeden rad kariet: fotka 16:9, pod ňou logo značky a názov.
+   Žiadne stĺpce, žiadne popisy, žiadna výzva — z menu sa nepredáva, menu
+   vedie. Karta je široká 224 px, takže päť položiek zaberie ~215 px výšky:
+   otvorené menu aj s hlavičkou drží pod tretinou notebookovej obrazovky. */
+.kv-mega { padding: clamp(18px, 1.8vw, 24px); }
 
-.kv-mega__col { min-width: 0; }
-.kv-mega__brand {
+/* Hlavička je mimo `.k`, takže si zoznam musí vynulovať odrážky sám. */
+.kv-mega__rad {
   display: flex;
-  align-items: center;
-  margin: 0 0 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--k-hair);
+  flex-wrap: wrap;
+  gap: clamp(12px, 1.2vw, 18px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.kv-mega__brand .k-logo { height: 20px; }
+.kv-mega__rad > li { margin: 0; min-width: 0; flex: 1 1 176px; max-width: 224px; }
+.kv-mega__rad > li::before { content: none; display: none; }
+
+.kv-mega__rad a {
+  display: grid;
+  gap: 10px;
+  padding: 8px;
+  margin: -8px;
+  border-radius: var(--k-r-sm);
+  text-decoration: none;
+  color: var(--k-ink);
+  transition: background-color 200ms var(--k-ease);
+}
+.kv-mega__rad a:hover,
+.kv-mega__rad a:focus-visible { background: var(--k-bone); }
+
+.kv-mega__foto {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--k-r-xs);
+  background: var(--k-bone-deep);
+}
+.kv-mega__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Značku nesie logo, nie napísané meno. Obe logá sú tmavé kresby na
+   priehľadnom podklade, líšia sa len pomerom strán — preto sa im dáva
+   rovnaká výška a šírka sa dopočíta. */
+.kv-mega__znacka { display: block; height: 14px; }
+.kv-mega__znacka img { display: block; width: auto; height: 100%; }
+
+.kv-mega__rad strong {
+  font-family: var(--k-head);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
 .k-brand--soltec {
   font-family: var(--k-head);
   font-size: 16px;
@@ -2468,39 +2642,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 .k-brand--soltec-img { height: 20px; width: auto; display: block; }
 
-/* Hlavička je mimo .k, takže pravidlá zoznamu sa nesmú scopovať pod .k. */
-.kv-mega__col ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.kv-mega__col li { margin: 0; }
-.kv-mega__col li::before { display: none; content: none; }
-.kv-mega__col a {
-  display: grid;
-  grid-template-columns: 68px minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-  padding: 8px;
-  border-radius: var(--k-r-sm);
-  text-decoration: none;
-  transition: background-color 220ms var(--k-ease);
-}
-.kv-mega__col a:hover,
-.kv-mega__col a:focus-visible { background: var(--k-bone); }
-
-.kv-mega__thumb {
-  display: block;
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--k-r-xs);
-  background: var(--k-bone-deep);
-}
-.kv-mega__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.kv-mega__text { display: grid; gap: 2px; min-width: 0; }
-.kv-mega__text strong { font-size: 14.5px; font-weight: 700; color: var(--k-ink); line-height: 1.25; }
-.kv-mega__text span { font-size: 12.5px; line-height: 1.4; color: var(--k-muted); }
-
-
-/* Panel nesmie prerásť šírku lišty — inak sa druhý stĺpec odreže. */
-.kv-mega { width: min(1080px, calc(100vw - 32px)); max-width: 100%; }
+/* Panel nesmie prerásť šírku lišty — inak sa posledná karta odreže. */
+.kv-mega { width: min(1180px, calc(100vw - 32px)); max-width: 100%; }
 
 /* ========================================================================
    PONUKA: dlaždice, ktoré predávajú
@@ -3101,7 +3244,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-pick__lane:not(.is-premium) .k-brand--soltec-img { filter: brightness(0) invert(1); }
 
 /* veľkosti podľa miesta */
-.kv-mega__brand .k-brand--soltec-img { height: 19px; }
 .kh-work__cap .k-brand--soltec-img { height: 11px; }
 .kh-mat__tab .k-brand--soltec-img { height: 16px; }
 .kh-pick__wordmark { display: block; }
@@ -3493,9 +3635,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-faq__intro,
   .kh-faq__list { border-radius: var(--k-r); }
 
-  /* Menu: dva stĺpce značiek pod sebou. */
+  /* Menu: panel na celú šírku obsahu. */
   .kv-mega { width: 100%; }
-  .kv-mega__cols { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Lepivé CTA na mobile — hlavná akcia je vždy na dosah palca. */
@@ -5114,7 +5255,6 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .k .kh-work__cap strong,
   .k .kh-rev__name small,
   .k .kh-proc__step-of,
-  .kv-drawer__group p,
   .kv-drawer__head .k-eyebrow,
   .kh-cta__row small,
   .kh-rev__award span { font-size: 12.5px; }
@@ -8376,11 +8516,10 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (min-width: 900px) {
   .kv-mega {
     width: max-content;
-    max-width: min(1080px, calc(100vw - 32px));
+    max-width: min(1180px, calc(100vw - 2 * var(--k-gut) + 48px));
   }
-  .kv-mega__cols { grid-template-columns: repeat(2, minmax(230px, 1fr)); align-items: start; }
-  .kv-mega__col ul { min-width: 0; }
-  .kv-mega__col a { padding-right: clamp(18px, 2vw, 30px); }
+  .kv-mega__rad { flex-wrap: nowrap; }
+  .kv-mega__rad > li { flex: 0 1 224px; }
   /* Pätka s tlačidlom je riadok, nie pás — pri dvoch položkách zaberala
      rovnako veľa miesta ako celá ponuka nad ňou. */
 }
@@ -9260,6 +9399,23 @@ footer.kf { background: var(--k-ink); color: #fff; }
   }
   .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(7)) > :last-child {
     grid-column: span 2;
+  }
+  /* Päť záberov v štvorstĺpcovej mriežke nechalo pod prvým riadkom tri
+     prázdne políčka. Šesťstĺpcová pomocná mriežka to rozdelí na tri a dve:
+     prvý riadok po tretine, druhý po polovici. */
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(5)) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(5)) > * {
+    grid-column: span 2;
+  }
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(5)) > :nth-child(n + 4) {
+    grid-column: span 3;
+  }
+  /* Dlaždice v druhom riadku sú dvakrát širšie; pri pomere 4:3 by boli aj
+     o polovicu vyššie než prvý riadok. */
+  .k .kh-cat__grid:not(:has(.kh-cat__card)):has(> :last-child:nth-child(5)) > :nth-child(n + 4) .kh-cat__media {
+    aspect-ratio: 16 / 9;
   }
 }
 
@@ -13719,6 +13875,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-kfg__typ { min-width: 0; }
 .k .kh-kfg__typ::before { content: none; }
+/* Prvý typ leží cez obe polia. Konfigurovateľné typy sú tri — štvrté pole
+   by ostalo prázdne a mriežka by vyzerala ako nedokončená. Zároveň to dáva
+   prístrešku pre auto váhu, ktorú v ponuke naozaj má. */
+.k .kh-kfg__typ--siroky { grid-column: 1 / -1; }
+.k .kh-kfg__typ--siroky .kh-kfg__karta { aspect-ratio: 21 / 9; }
 /* Typ je celá fotografia s menom v spodnej hrane, nie orámovaná škatuľka
    s popiskom pod ňou. Na tmavom páse tak štyri dlaždice čítať ako obraz,
    nie ako tabuľka; meno drží čitateľnosť mäkký prechod, nie plná plocha. */
@@ -13731,18 +13892,24 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: rgba(255, 255, 255, 0.06);
   text-decoration: none;
   color: var(--k-white);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  transition: box-shadow 200ms var(--k-ease);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: box-shadow 200ms var(--k-ease), transform 260ms var(--k-ease-out);
 }
-.k .kh-kfg__karta:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42); }
+/* Hýbe sa karta, nie fotografia — fotka ostáva presne tam, kde stojí. */
+.k .kh-kfg__karta:hover {
+  transform: translateY(-3px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
 .k .kh-kfg__karta:focus-visible { outline: 2px solid var(--k-amber); outline-offset: 3px; }
 .k .kh-kfg__foto { display: block; width: 100%; height: 100%; }
 .k .kh-kfg__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Meno musí byť čitateľné aj na oblohe aj na tmavej konštrukcii, preto je
+   spodný prechod hustejší a začína vyššie ako predtým. */
 .k .kh-kfg__karta::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(9, 12, 14, 0.86) 0%, rgba(9, 12, 14, 0.36) 34%, rgba(9, 12, 14, 0) 62%);
+  background: linear-gradient(to top, rgba(7, 10, 12, 0.92) 0%, rgba(7, 10, 12, 0.64) 26%, rgba(7, 10, 12, 0.18) 54%, rgba(7, 10, 12, 0) 78%);
   pointer-events: none;
 }
 .k .kh-kfg__nazov {
@@ -13750,29 +13917,44 @@ footer.kf { background: var(--k-ink); color: #fff; }
   inset: auto 0 0 0;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
-  padding: 0 clamp(13px, 1.2vw, 17px) clamp(13px, 1.2vw, 16px);
+  gap: 12px;
+  padding: 0 clamp(14px, 1.3vw, 18px) clamp(13px, 1.2vw, 17px);
+}
+.k .kh-kfg__meno { display: block; min-width: 0; }
+.k .kh-kfg__meno strong {
+  display: block;
   font-family: var(--k-head);
-  font-size: clamp(15px, 1.25vw, 17px);
-  font-weight: 600;
+  font-size: clamp(15px, 1.3vw, 18px);
+  font-weight: 700;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
-/* Šípka v krúžku hovorí, že dlaždica vedie ďalej. Pri prejdení sa posunie —
-   nič iné sa nemení. */
+/* Pod menom stojí to, čo sa v konfigurátore naozaj vyberá — nie sľub. */
+.k .kh-kfg__detail {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.78);
+}
+/* Šípka v krúžku hovorí, že dlaždica vedie ďalej. Krúžok je plný biely —
+   priesvitný pôsobil na svetlej fotografii ako nedokreslený. Pri prejdení
+   sa šípka posunie, nič iné sa nemení. */
 .k .kh-kfg__sipka {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  background: var(--k-white);
+  color: var(--k-ink);
 }
 .k .kh-kfg__sipka svg {
   width: 15px;
@@ -13784,6 +13966,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-kfg__karta:hover .kh-kfg__sipka svg { transform: translateX(3px); }
 @media (hover: none) {
+  .k .kh-kfg__karta:hover { transform: none; }
   .k .kh-kfg__karta:hover .kh-kfg__sipka svg { transform: none; }
 }
 
@@ -13809,4 +13992,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-kfg__zoznam strong { margin-top: 0; }
   .k .kh-kfg__vyzva { width: 100%; }
   .k .kh-kfg__vyzva .k-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* Dve dlaždice vedľa seba majú na telefóne 166 px — meno sa zlomí na dva
+     riadky a na šípku ostane 30 px. Typy idú preto pod seba a široká
+     dlaždica sa z pásu 21:9 vracia na 16:9, aby nebola len prúžkom. */
+  .k .kh-kfg__typy { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-kfg__typ--siroky .kh-kfg__karta { aspect-ratio: 16 / 9; }
+  .k .kh-kfg__karta { aspect-ratio: 16 / 9; }
 }
