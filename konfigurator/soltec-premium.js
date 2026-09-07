@@ -2029,20 +2029,56 @@
              hrane a odtiaľ do zvodu pri rohovom stĺpe. Žľab beží po celej
              hrane schovaný za lemovaním, takže zdola z neho vidno pozinkovaný
              pás; zvod ide dole popri stĺpe vo farbe konštrukcie. */
+          /* Odkvap. Strecha má spád po dĺžke, takže voda tečie k nižšej hrane
+             — tu je to predná, x = L. Žľab visí zvonku na líci prievlaku, nie
+             v ňom a nie v stĺpe, a z boku ho kryje lemovací plech. Lemovanie
+             obieha celý prístrešok, ale práve na tejto strane stojí o kus
+             ďalej od konštrukcie, lebo musí obísť žľab. Voda ide žľabom do
+             boku a tam ju zvod cez 45° koleno stiahne k stĺpu a po ňom na zem.
+
+             Spodok prievlaku je na nižšej hrane vždy na H — spád dvíha len ten
+             druhý koniec — takže sa všetko vie zavesiť pod neho bez ohľadu na
+             to, aký spád je nastavený. */
           if (BIO.gutter && panelRoof) {
-            /* Spodok rámu na nižšej hrane je pri x = L vždy na H — spád dvíha
-               len ten druhý koniec — takže sa žľab vie zavesiť rovno pod neho
-               bez ohľadu na to, aký spád je nastavený. */
-            const gh = Math.round(beam * 0.30);            // výška žľabu
-            const gd = Math.round(post * 0.66);            // hĺbka žľabu
+            const gd = Math.max(70, Math.round(beam * 0.42));   // hĺbka žľabu
+            const gh = Math.max(70, Math.round(beam * 0.40));   // výška žľabu
+            const ovh = gd + Math.max(14, Math.round(beam * 0.06));
+            const lem = Math.max(10, Math.round(beam * 0.05));  // presah pod žľab
             const zinok = model().rimSoffitHex || shade(frame, 0.30);
-            boxFaces(L - post - gd, 0, H - gh, gd, W, gh, zinok, ['+z'], SHAFT);
-            /* Zvod. Na fotkách realizácií ide po boku rohového stĺpa na tej
-               strane, kam voda odteká, a končí až na zemi. Je vo farbe
-               konštrukcie, lebo je to lakovaný plech, nie pozink. */
-            const zp = Math.round(post * 0.44);
-            boxFaces(L - post + Math.round((post - zp) / 2), W, 0, zp, zp, H - gh,
-                     frame, ['+z', '-z'], SHAFT);
+            const gTop = H;                                     // spodok prievlaku
+            const lipTop = H + beam;                            // hore lícuje s rámom
+            const lipBottom = gTop - gh - lem;
+            // žľab visí zvonku na líci prievlaku
+            boxFaces(L, 0, gTop - gh, gd, W, gh, zinok, ['-x', '+z'], SHAFT);
+            // lemovací plech ho zboku zakrýva; hore lícuje s rámom, dolu ho presahuje
+            boxFaces(L, 0, lipBottom, ovh, W, lipTop - lipBottom, frame, ['-x'], SHAFT);
+
+            /* Zvod. Slabší profil než stĺp, vo farbe konštrukcie. Beží po
+               pravom boku: z konca žľabu kolenom pod 45° späť k stĺpu a odtiaľ
+               zvisle na zem. */
+            const r = Math.max(22, Math.round(post * 0.20));
+            const yc = W + r;                                   // tesne za bokom
+            const pipe = (ax, az, bx, bz) => {
+              const dx = bx - ax, dz = bz - az;
+              const len = Math.hypot(dx, dz);
+              if (len < 1) return;
+              const ux = dx / len, uz = dz / len;
+              const vx = -uz, vz = ux;
+              const P = (t, sd, q) => [ax + ux * t + vx * sd, yc + q, az + uz * t + vz * sd];
+              quad([P(0,-r,-r), P(len,-r,-r), P(len,-r,r), P(0,-r,r)], shade(frame, -0.06),
+                   { normal: [-vx, 0, -vz], cull: true });
+              quad([P(0,r,r), P(len,r,r), P(len,r,-r), P(0,r,-r)], shade(frame, 0.06),
+                   { normal: [vx, 0, vz], cull: true });
+              quad([P(0,-r,r), P(len,-r,r), P(len,r,r), P(0,r,r)], shade(frame, 0.02),
+                   { normal: [0, 1, 0], cull: true });
+              quad([P(0,r,-r), P(len,r,-r), P(len,-r,-r), P(0,-r,-r)], shade(frame, -0.10),
+                   { normal: [0, -1, 0], cull: true });
+            };
+            const xOut = L + Math.round(ovh * 0.52);            // os zvodu pri žľabe
+            const xPost = L - Math.round(post * 0.5);           // os zvodu pri stĺpe
+            const zElbow = lipBottom - (xOut - xPost);          // 45°: pokles = odsadenie
+            pipe(xOut, lipBottom, xPost, zElbow);
+            pipe(xPost, zElbow, xPost, 0);
           }
 
           /* Konzola pod previsom. Kde ubudol rad stĺpov, strecha na tom konci
