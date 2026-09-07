@@ -95,6 +95,11 @@
       const prisli = [];
       items.forEach((el) => {
         if (el.classList.contains('is-in')) return;
+        /* Úvodný pás príde vždy, bez ohľadu na to, kde v ňom prvok stojí.
+           Údaje pod výzvami sedia pri spodnej hrane pásu a na nízkom okne
+           spadli pod ohyb — objavili sa až po scrollnutí, čo je pri prvej
+           obrazovke chyba. */
+        if (el.closest('.kh-hero')) { prisli.push(el); return; }
         if (el.getBoundingClientRect().top < h) prisli.push(el);
       });
       prisli.forEach((el) => {
@@ -1686,7 +1691,15 @@
         { v: 'spolu', t: 'Spolu s novým zastrešením', p: 'rieši sa naraz' },
         { v: 'volne', t: 'Voľne na terase', p: 'zatiaľ bez strechy' }
       ] },
-      { id: 'strecha', ked: (o) => o.ciel === 'auto' || o.ciel === 'terasa',
+      /* Strecha sa pýta inak nad autom a inak nad terasou. Otvárateľné
+         lamely nad parkovaním nedávajú zmysel — pri snehu sa majú otvoriť —,
+         takže sa tam ani neponúkajú. */
+      { id: 'strechaAuto', ked: (o) => o.ciel === 'auto', text: 'Aká má byť strecha?', volby: [
+        { v: 'pevna', t: 'Pevná a nepriehľadná', p: 'oceľ alebo hliník, plný tieň' },
+        { v: 'svetlo', t: 'Presvetlená', p: 'sklo alebo svetlopriepustná výplň' },
+        { v: 'bok', t: 'Aj bočné krytie', p: 'vietor, sneh zboku, pohľady susedov' }
+      ] },
+      { id: 'strecha', ked: (o) => o.ciel === 'terasa',
         text: 'Čo od strechy čakáte?', volby: [
         { v: 'pevna', t: 'Pevnú strechu po celý rok', p: 'dážď, sneh, krupobitie' },
         { v: 'lamely', t: 'Otvárateľné lamely', p: 'tieň, keď treba, obloha, keď netreba' },
@@ -1736,13 +1749,14 @@
       }
       if (o.ciel === 'vstup') return { hlavne: 'pevne', doplnok: null };
       if (o.ciel === 'auto') {
-        /* Nad autom nedáva zmysel lamelová strecha: pri veľkom snehu sa
-           lamely majú otvoriť, takže by auto ostalo nekryté. */
-        var premium = o.hladina === 'vyssi' || o.strecha === 'lamely' || o.auta === 'box';
-        return { hlavne: premium ? 'carport' : 'auta',
-          doplnok: o.strecha === 'lamely'
-            ? 'Nad parkovaním odporúčame pevnú strechu — lamely sa pri veľkom snehu majú otvoriť.'
-            : (o.auta === 'box' ? 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.' : null) };
+        /* Uzamykateľný box aj presvetlená strecha sú výbava hliníkového
+           systému, preto vedú na carport; inak rozhoduje cenová hladina. */
+        var premium = o.hladina === 'vyssi' || o.auta === 'box' || o.strechaAuto === 'svetlo';
+        var pozn = null;
+        if (o.auta === 'box') pozn = 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.';
+        else if (o.strechaAuto === 'bok') pozn = 'Bok zakryje lamelová stena alebo ZIP roleta — dá sa doplniť aj neskôr.';
+        else if (o.strechaAuto === 'svetlo') pozn = 'Presvetlenú strechu rieši hliníkový systém so sklom alebo so svetlopriepustnou výplňou.';
+        return { hlavne: premium ? 'carport' : 'auta', doplnok: pozn };
       }
       /* terasa */
       if (o.strecha === 'lamely') return { hlavne: 'bio', doplnok: null };

@@ -5471,8 +5471,8 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
       linear-gradient(var(--k-ink), var(--k-ink)),
       linear-gradient(rgba(18, 23, 26, 0.16), rgba(18, 23, 26, 0.16));
     background-repeat: no-repeat;
-    background-position: 0 100%, 0 0;
-    background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
+    background-position: 0 0, 0 0;
+    background-size: calc(var(--k-p, 1) * 100%) 100%, 100% 100%;
     -webkit-background-clip: text;
             background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -9669,7 +9669,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-hero__box > .k-eyebrow { margin-bottom: clamp(10px, 1vw, 14px); }
 .k .kh-hero__box > .k-display,
 .k .kh-hero__box > .k-h1,
-.k .kh-hero__box > h1 { margin-bottom: clamp(20px, 2.4vw, 34px); }
+.k .kh-hero__box > h1 { margin-bottom: clamp(26px, 3.6vw, 54px); }
 /* Nadpis smie stáť ďalej — je to samostatné gesto. Veta a tlačidlá pod ním
    patria k sebe a čítajú sa ako jedna vec, tak sú tesne. */
 .k .kh-hero__box > .k-lead { margin-bottom: clamp(16px, 1.6vw, 22px); }
@@ -9690,8 +9690,15 @@ footer.kf { background: var(--k-ink); color: #fff; }
   align-items: stretch;
   flex: 1 1 auto;
 }
-.k .kh-hero__box { flex: 1 1 auto; }
-.k .kh-hero__box > .k-lead { margin-top: auto; }
+/* Celý blok sadá nadol ako jeden celok. Nadpis nie je hore pri hlavičke —
+   je len o niečo ďalej od vety pod ním než veta od výziev, takže je vidieť,
+   že je to samostatné gesto, ale drží sa zvyšku.
+
+   Zarovnanie nesie `justify-content`, nie automatický okraj na prvom prvku:
+   drobčeková navigácia je na telefóne mimo toku (absolútna), takže by
+   automatický okraj na nej nič neposunul a nadpis by ostal hore — a prekryl
+   by ju. Takto sa posúva všetko, čo v toku naozaj je. */
+.k .kh-hero__box { flex: 1 1 auto; justify-content: flex-end; }
 /* Keď je vety niekoľko riadkov a okno nízke, `margin-top: auto` sa zmenší
    na nulu a blok sa jednoducho zloží pod nadpis — nič sa neoreže. */
 
@@ -12852,15 +12859,26 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
    Karta má vlasový okraj a žiadny tieň, tak ako celý zvyšok webu. Pri
    prejdení sa nič neposúva ani nezväčšuje; stmavne okraj a text výzvy. */
-/* Hlavička sekcie stojí pod sebou: očko, nadpis, jedna veta. Predtým to bol
-   trojstĺpec a pri dlhšom nadpise sa veta lepila na okraj. */
-.k .kh-ponuka__hlava { margin-bottom: clamp(26px, 3vw, 40px); }
-.k .kh-ponuka__hlava .k-h2 { max-width: 18ch; }
-.k .kh-ponuka__hlava .k-copy {
-  margin: clamp(12px, 1.4vw, 18px) 0 0;
-  max-width: 56ch;
+.k .kh-ponuka__hlava {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(18px, 2.4vw, 40px);
+  margin-bottom: clamp(26px, 3vw, 40px);
 }
-.k .kh-ponuka__hlava .k-eyebrow { margin-bottom: clamp(14px, 1.2vw, 20px); }
+.k .kh-ponuka__titul { min-width: 0; }
+.k .kh-ponuka__legenda {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #464C50;
+}
+.k .kh-ponuka__legenda > span:not([class]) { margin-right: 8px; }
 
 /* Značka pri karte je skutočné logo, nie napísané meno. Dva odznaky
    s rôznym pozadím (plný a obrysový) robili z dvoch rovnocenných značiek
@@ -12901,182 +12919,157 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-ponuka__legenda > .kh-znacka { margin-right: clamp(-20px, -1.4vw, -10px); }
 .k .kh-ponuka__legenda > span:not([class]) { margin-right: 0; }
 
-/* --- PONUKA: vodorovný rytmus (artboard A1) --------------------------------
-   Mriežka dlaždíc mala fotografie tesne pri sebe a tri konštrukcie splývali
-   do jedného pásu. Riadky idú preto pod sebou a strana fotografie sa strieda,
-   takže dva obrazy nikdy nestoja bok po boku. Tri najpredávanejšie kategórie
-   majú vyššiu fotografiu a plnú výzvu, zvyšok obrysovú — poradie čítania robí
-   veľkosť, nie farba.
-   ------------------------------------------------------------------------ */
-.k .kh-ponuka__rytmus {
+/* Medzi dlaždicami bolo 16 px a fotografie siahali po okraj karty, takže
+   dva obrazy delilo len tých 16 px a tri konštrukcie v rade splývali.
+   Medzera je väčšia a fotografia je navyše zapustená v bielej karte —
+   medzi susednými fotografiami je tak okolo 60 px bielej plochy. */
+.k .kh-ponuka__mriezka {
   display: grid;
-  gap: clamp(12px, 1.4vw, 18px);
-  margin: clamp(26px, 3vw, 44px) 0 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 300px;
+  gap: clamp(18px, 1.9vw, 26px);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-.k .kh-ponuka__riadok { min-width: 0; }
-.k .kh-ponuka__riadok::before { content: none; }
+.k .kh-ponuka__kus { min-width: 0; }
+.k .kh-ponuka__kus::before { content: none; }
+.k .kh-ponuka__kus--hlavna { grid-column: span 2; grid-row: span 2; }
+.k .kh-ponuka__kus--siroka { grid-column: span 2; }
 
-.k .kh-ponuka__kus {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) minmax(0, 210px) auto;
-  align-items: center;
-  gap: clamp(20px, 2.4vw, 40px);
-  padding: clamp(14px, 1.4vw, 18px);
+.k .kh-ponuka__karta {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: clamp(10px, 1vw, 14px);
   border: 1px solid var(--k-hair);
   border-radius: var(--k-r);
   background: var(--k-white);
+  overflow: hidden;
   text-decoration: none;
   color: var(--k-ink);
-  transition: border-color 180ms var(--k-ease);
+  transition: border-color 160ms var(--k-ease), color 160ms var(--k-ease);
 }
-.k .kh-ponuka__kus:hover { border-color: rgba(18, 23, 26, 0.24); }
-.k .kh-ponuka__kus:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
-/* Obrátený riadok: fotografia ide na koniec mriežky, poradie v HTML ostáva
-   také, aké má byť pre čítačku aj pre klávesnicu. */
-.k .kh-ponuka__riadok--obratene .kh-ponuka__kus {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 210px) auto 300px;
-}
-.k .kh-ponuka__riadok--obratene .kh-ponuka__telo { grid-column: 1; }
-.k .kh-ponuka__riadok--obratene .kh-ponuka__udaje { grid-column: 2; }
-.k .kh-ponuka__riadok--obratene .kh-ponuka__akcia { grid-column: 3; justify-self: start; }
-.k .kh-ponuka__riadok--obratene .kh-ponuka__foto { grid-column: 4; grid-row: 1; }
+.k .kh-ponuka__karta:hover { border-color: rgba(18, 23, 26, 0.22); }
+.k .kh-ponuka__karta:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
 
 .k .kh-ponuka__foto {
   display: block;
-  aspect-ratio: 16 / 10;
-  border-radius: calc(var(--k-r) - 8px);
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: calc(var(--k-r) - 10px);
   overflow: hidden;
   background: var(--k-bone-deep, #ece9e4);
 }
-.k .kh-ponuka__riadok--hlavny .kh-ponuka__kus { grid-template-columns: 360px minmax(0, 1fr) minmax(0, 210px) auto; }
-.k .kh-ponuka__riadok--hlavny.kh-ponuka__riadok--obratene .kh-ponuka__kus { grid-template-columns: minmax(0, 1fr) minmax(0, 210px) auto 360px; }
-.k .kh-ponuka__riadok--hlavny .kh-ponuka__foto { aspect-ratio: 16 / 11; }
 .k .kh-ponuka__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
-
-.k .kh-ponuka__telo { display: grid; gap: 8px; min-width: 0; }
-.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.k .kh-ponuka__telo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: clamp(12px, 1.2vw, 16px) clamp(6px, 0.6vw, 9px) clamp(4px, 0.5vw, 7px);
+}
+.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 2px; }
 .k .kh-ponuka__nazov {
   font-family: var(--k-head);
-  font-size: clamp(21px, 2vw, 27px);
-  font-weight: 700;
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -0.028em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
-.k .kh-ponuka__riadok--hlavny .kh-ponuka__nazov { font-size: clamp(24px, 2.5vw, 34px); }
-.k .kh-ponuka__popis { max-width: 44ch; font-size: 14.5px; line-height: 1.55; color: #5A6165; }
-
-.k .kh-ponuka__udaje { display: grid; gap: 3px; min-width: 0; }
-.k .kh-ponuka__pojem {
-  font-family: var(--k-head);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--k-amber-deep);
+.k .kh-ponuka__udaj {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #464C50;
 }
-.k .kh-ponuka__hodnota {
-  font-family: var(--k-head);
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-}
-.k .kh-ponuka__cena { margin-top: 3px; font-size: 14px; color: #5A6165; }
-.k .kh-ponuka__akcia { justify-self: end; }
-.k .kh-ponuka__kus:hover .kh-ponuka__akcia svg { transform: translateX(4px); }
-
-/* Vstup do krátkeho výberu: tmavý pás na konci rytmu, aby sa nepomýlil
-   s kategóriou. */
-.k .kh-ponuka__vstup {
+.k .kh-ponuka__pata {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 18px clamp(24px, 3vw, 48px);
-  margin-top: clamp(12px, 1.4vw, 18px);
-  padding: clamp(22px, 2.6vw, 34px) clamp(20px, 2.4vw, 34px);
-  border-radius: var(--k-r);
-  background: var(--k-ink);
-  color: var(--k-white);
+  gap: 6px 14px;
+  margin-top: auto;
+  padding-top: 10px;
 }
-.k .kh-ponuka__vstup-nadpis {
-  margin: 0;
+/* Cena je podčiarknutá jantárovou, nie zvýraznená plochou — číslo má byť
+   vidieť, nie svietiť. */
+.k .kh-ponuka__akcia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--k-head);
-  font-size: clamp(20px, 2vw, 26px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--k-amber-deep);
 }
-.k .kh-ponuka__vstup-veta {
-  margin: 6px 0 0;
-  max-width: 62ch;
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.72);
+.k .kh-ponuka__akcia svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 160ms var(--k-ease-out);
 }
+.k .kh-ponuka__karta:hover .kh-ponuka__akcia svg { transform: translateX(3px); }
+
+/* Hlavná karta nesie väčší nadpis a väčšie číslo — je to jediné miesto
+   v mriežke, kde sa mierka mení. */
+.k .kh-ponuka__kus--hlavna .kh-ponuka__nazov { font-size: clamp(26px, 2.6vw, 36px); font-weight: 700; letter-spacing: -0.03em; }
+.k .kh-ponuka__kus--hlavna .kh-ponuka__udaj { font-size: 15.5px; }
+.k .kh-ponuka__kus--hlavna .kh-ponuka__akcia { font-size: 15px; }
+.k .kh-ponuka__kus--hlavna .kh-ponuka__telo { padding: clamp(20px, 2vw, 28px); }
+
+/* Široká karta má fotografiu vľavo a text vpravo. */
+.k .kh-ponuka__kus--siroka .kh-ponuka__karta { flex-direction: row; }
+.k .kh-ponuka__kus--siroka .kh-ponuka__foto { flex: 0 0 44%; }
+/* Široká karta: text stojí ako blok v strede, výzva hneď pod ním. Bez toho
+   by ju `margin-top: auto` odtlačilo na spodnú hranu a medzi údajom a cenou
+   by ostala diera cez pol karty. */
+.k .kh-ponuka__kus--siroka .kh-ponuka__telo { flex: 1 1 auto; justify-content: center; }
+.k .kh-ponuka__kus--siroka .kh-ponuka__pata { margin-top: 6px; }
+.k .kh-ponuka__kus--siroka .kh-ponuka__nazov { font-size: clamp(21px, 2vw, 28px); }
+
+/* Vstupná dlaždica: jantárová plocha bez fotografie a bez okraja. */
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta {
+  border-color: transparent;
+  background: var(--k-amber);
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta:hover { border-color: transparent; background: #f2c200; }
+.k .kh-ponuka__kus--vstup .kh-ponuka__telo { justify-content: center; height: 100%; }
+.k .kh-ponuka__kus--vstup .kh-ponuka__nazov { font-size: clamp(20px, 1.8vw, 24px); font-weight: 700; }
+.k .kh-ponuka__kus--vstup .kh-ponuka__udaj,
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia { color: var(--k-ink); }
 
 @media (max-width: 1279px) {
-  .k .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny .kh-ponuka__kus { grid-template-columns: 260px minmax(0, 1fr) minmax(0, 190px); row-gap: 14px; }
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny.kh-ponuka__riadok--obratene .kh-ponuka__kus { grid-template-columns: minmax(0, 1fr) minmax(0, 190px) 260px; }
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__foto { grid-column: 3; }
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__akcia { grid-column: 1; justify-self: start; }
-  .k .kh-ponuka__akcia { grid-column: 2 / -1; justify-self: start; }
+  .k .kh-ponuka__mriezka { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(288px, auto); }
+  .k .kh-ponuka__kus--hlavna { grid-column: span 2; grid-row: span 2; }
+  .k .kh-ponuka__kus--siroka { grid-column: span 2; }
 }
-@media (max-width: 899px) {
-  .k .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny.kh-ponuka__riadok--obratene .kh-ponuka__kus {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__foto { grid-column: 1; grid-row: 1 / 4; }
-  .k .kh-ponuka__telo,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__telo { grid-column: 2; }
-  .k .kh-ponuka__udaje,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__udaje { grid-column: 2; }
-  .k .kh-ponuka__akcia,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__akcia { grid-column: 2; justify-self: start; }
+@media (max-width: 759px) {
+  /* Na telefóne nemá riadok pevnú výšku — dlhší údaj („ISO panel 30 mm alebo
+     sklo") by sa inak orezal o kartu. Minimum drží rytmus, zvyšok dorastie. */
+  .k .kh-ponuka__mriezka { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(250px, auto); gap: 12px; }
+  .k .kh-ponuka__kus--hlavna,
+  .k .kh-ponuka__kus--siroka { grid-column: span 2; grid-row: auto; }
+  .k .kh-ponuka__kus--hlavna { min-height: 380px; }
+  .k .kh-ponuka__kus--siroka .kh-ponuka__foto { flex: 0 0 38%; }
+  .k .kh-ponuka__kus--hlavna .kh-ponuka__karta,
+  .k .kh-ponuka__kus--siroka .kh-ponuka__karta { height: 100%; }
+  .k .kh-ponuka__legenda { font-size: 12.5px; }
 }
-@media (max-width: 619px) {
-  .k .kh-ponuka__kus {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-    padding: 12px 12px 16px;
-  }
-  .k .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__kus,
-  .k .kh-ponuka__riadok--hlavny.kh-ponuka__riadok--obratene .kh-ponuka__kus { grid-template-columns: minmax(0, 1fr); }
-  .k .kh-ponuka__foto,
-  .k .kh-ponuka__telo,
-  .k .kh-ponuka__udaje,
-  .k .kh-ponuka__akcia,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__foto,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__telo,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__udaje,
-  .k .kh-ponuka__riadok--obratene .kh-ponuka__akcia { grid-column: 1; grid-row: auto; }
-  .k .kh-ponuka__akcia { justify-self: stretch; text-align: center; }
-  .k .kh-ponuka__akcia.k-btn { justify-content: center; }
-  /* Vedľajšie kategórie sú na telefóne kompaktný riadok s náhľadom —
-     inak by sedem fotografií cez celú šírku spravilo z ponuky nekonečný pás. */
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__kus {
-    grid-template-columns: 92px minmax(0, 1fr);
-    align-items: center;
-  }
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__foto { aspect-ratio: 1 / 1; }
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__telo,
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__udaje { grid-column: 2; }
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__popis,
-  .k .kh-ponuka__riadok:not(.kh-ponuka__riadok--hlavny) .kh-ponuka__akcia { display: none; }
-  .k .kh-ponuka__vstup { flex-direction: column; align-items: stretch; }
-  .k .kh-ponuka__vstup .k-btn { justify-content: center; }
+@media (hover: none) {
+  .k .kh-ponuka__karta:hover .kh-ponuka__akcia svg { transform: none; }
 }
 
+
+/* ==========================================================================
+   KONFIGURÁTOR · biela karta na kostnej ploche (návrh, artboard 1d)
+   ==========================================================================
+   Pás mal doteraz výzvu až pod tromi krokmi, teda nízko. Tu sedí hneď vedľa
+   nadpisu — kto chce konfigurátor otvoriť, nemusí čítať, ako funguje. Biela
+   karta ho oddelí od kostnej plochy stránky; okraj je vlasový, tieň žiadny.
+   Čísla krokov sú tiché a stoja vedľa názvu, nie v kolieskach. */
 /* --- ZOSTAVA A ROZVODY (vonkajšie kuchyne) --------------------------------
    Tabuľka s tromi stĺpcami miešala dve rôzne veci: z čoho je kuchyňa a čo
    treba stihnúť pred betónovaním. Sú to dva zoznamy vedľa seba. Blok
@@ -13378,8 +13371,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
       linear-gradient(#fff, #fff),
       linear-gradient(rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.30));
     background-repeat: no-repeat;
-    background-position: 0 100%, 0 0;
-    background-size: 100% calc(var(--k-p, 1) * 100%), 100% 100%;
+    background-position: 0 0, 0 0;
+    background-size: calc(var(--k-p, 1) * 100%) 100%, 100% 100%;
     -webkit-background-clip: text;
             background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -13438,29 +13431,30 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-kfg__typ { min-width: 0; }
 .k .kh-kfg__typ::before { content: none; }
+/* Fotografia siaha po okraj karty. Rám okolo rámu (svetlý okraj karty
+   a k tomu druhý zaoblený okraj obrazu) pôsobil na tmavom podklade
+   ako dvojitá linka. Karta má jediný okraj a fotografia sa oň orezáva. */
 .k .kh-kfg__karta {
   display: block;
-  padding: 14px 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--k-r-sm);
   background: rgba(255, 255, 255, 0.04);
   text-decoration: none;
   color: var(--k-white);
   transition: border-color 180ms var(--k-ease), background-color 180ms var(--k-ease);
 }
-.k .kh-kfg__karta:hover { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.07); }
+.k .kh-kfg__karta:hover { border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.07); }
 .k .kh-kfg__karta:focus-visible { outline: 2px solid var(--k-amber); outline-offset: 2px; }
 .k .kh-kfg__foto {
   display: block;
-  aspect-ratio: 4 / 3;
-  border-radius: calc(var(--k-r-sm) - 6px);
-  overflow: hidden;
+  aspect-ratio: 16 / 10;
   background: rgba(255, 255, 255, 0.06);
 }
 .k .kh-kfg__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .k .kh-kfg__nazov {
   display: block;
-  margin-top: 12px;
+  padding: 13px 16px 15px;
   font-family: var(--k-head);
   font-size: 16.5px;
   font-weight: 600;
