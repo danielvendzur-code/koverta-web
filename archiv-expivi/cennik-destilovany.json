@@ -1,0 +1,1155 @@
+{
+ "pristresok": {
+  "4.2x6": {
+   "expivi": 13334,
+   "base": {
+    "4": 6197,
+    "6": 6797
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "wpc": 1404,
+    "hlinik": 1956
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": false
+  },
+  "6x6": {
+   "expivi": 13412,
+   "base": {
+    "6": 8697,
+    "4": 8097
+   },
+   "wallSide": {
+    "hlinik": 1956,
+    "drevo": 1140,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "hlinik": 2196,
+    "drevo": 1422,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.6x6": {
+   "expivi": 13457,
+   "base": {
+    "4": 7697,
+    "6": 8297
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1950,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "5.2x6": {
+   "expivi": 13598,
+   "base": {
+    "4": 7097,
+    "6": 7697
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "4x6": {
+   "expivi": 13670,
+   "base": {
+    "4": 5997,
+    "6": 6597
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": false
+  },
+  "3.5x6": {
+   "expivi": 13676,
+   "base": {
+    "4": 5497,
+    "6": 6097
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "rearPost": false
+  },
+  "3.2x6": {
+   "expivi": 13688,
+   "base": {
+    "4": 4997,
+    "6": 5597
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": false
+  },
+  "2.5x6": {
+   "expivi": 13691,
+   "base": {
+    "4": 4697,
+    "6": 5297
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 540,
+    "hlinik": 894,
+    "wpc": 624
+   },
+   "rearPost": false
+  },
+  "6x5.6": {
+   "expivi": 13727,
+   "base": {
+    "4": 7897,
+    "6": 8497
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.6x5.6": {
+   "expivi": 13748,
+   "base": {
+    "4": 7497,
+    "6": 8097
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "5.2x5.6": {
+   "expivi": 13751,
+   "base": {
+    "4": 6897,
+    "6": 7497
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "4.2x5.6": {
+   "expivi": 13754,
+   "base": {
+    "4": 5997,
+    "6": 6597
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "4x5.6": {
+   "expivi": 13778,
+   "base": {
+    "4": 5797,
+    "6": 6397
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": false
+  },
+  "3.5x5.6": {
+   "expivi": 13781,
+   "base": {
+    "4": 5297,
+    "6": 5897
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "rearPost": false
+  },
+  "3.2x5.6": {
+   "expivi": 13787,
+   "base": {
+    "4": 4897,
+    "6": 5497
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": false
+  },
+  "2.5x5.6": {
+   "expivi": 13799,
+   "base": {
+    "4": 4597,
+    "6": 5197
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 540,
+    "hlinik": 894,
+    "wpc": 624
+   },
+   "rearPost": false
+  },
+  "6x5.2": {
+   "expivi": 13835,
+   "base": {
+    "4": 7697,
+    "6": 8297
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.6x5.2": {
+   "expivi": 13850,
+   "base": {
+    "4": 7297,
+    "6": 7897
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "5.2x5.2": {
+   "expivi": 13853,
+   "base": {
+    "4": 6697,
+    "6": 7297
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "5x5.2": {
+   "expivi": 13856,
+   "base": {
+    "4": 6497,
+    "6": 7097
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "4.2x5.2": {
+   "expivi": 13859,
+   "base": {
+    "4": 5797,
+    "6": 6397
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "4x5.2": {
+   "expivi": 13865,
+   "base": {
+    "4": 5597,
+    "6": 6197
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "3.5x5.2": {
+   "expivi": 13874,
+   "base": {
+    "4": 5097,
+    "6": 5697
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "rearPost": false
+  },
+  "3.2x5.2": {
+   "expivi": 13877,
+   "base": {
+    "4": 4797,
+    "6": 5397
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": false
+  },
+  "2.5x5.2": {
+   "expivi": 13883,
+   "base": {
+    "4": 4497,
+    "6": 5097
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 540,
+    "hlinik": 894,
+    "wpc": 624
+   },
+   "rearPost": false
+  },
+  "5.8x6": {
+   "expivi": 13922,
+   "base": {
+    "4": 7897,
+    "6": 8497
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.8x5.6": {
+   "expivi": 13925,
+   "base": {
+    "4": 7697,
+    "6": 8297
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.8x5.2": {
+   "expivi": 13928,
+   "base": {
+    "4": 7497,
+    "6": 8097
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "2.8x6": {
+   "expivi": 14042,
+   "base": {
+    "4": 4797,
+    "6": 5397
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "rearPost": false
+  },
+  "2.8x5.6": {
+   "expivi": 14045,
+   "base": {
+    "4": 4697,
+    "6": 5297
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "rearPost": false
+  },
+  "2.8x5.2": {
+   "expivi": 14057,
+   "base": {
+    "4": 4597,
+    "6": 5197
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "rearPost": false
+  },
+  "7x6": {
+   "expivi": 14069,
+   "base": {
+    "4": 11397.0
+   },
+   "wallSide": {
+    "hlinik": 1956,
+    "wpc": 1404,
+    "drevo": 1140
+   },
+   "wallBack": {
+    "hlinik": 2322,
+    "drevo": 1464,
+    "wpc": 1818
+   },
+   "rearPost": true,
+   "baseSource": "eshop"
+  },
+  "7x5.2": {
+   "expivi": 14192,
+   "base": {
+    "4": 10797.0
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "wpc": 1260,
+    "hlinik": 1740
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true,
+   "baseSource": "eshop"
+  },
+  "7x5.6": {
+   "expivi": 14198,
+   "base": {
+    "4": 11097.0
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "wpc": 1314,
+    "hlinik": 1836
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true,
+   "baseSource": "eshop"
+  },
+  "3.8x5.6": {
+   "expivi": 20915,
+   "base": {
+    "4": 5497,
+    "6": 6097
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "3.8x5.2": {
+   "expivi": 20955,
+   "base": {
+    "4": 5297,
+    "6": 5897
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "3.8x6": {
+   "expivi": 20956,
+   "base": {
+    "4": 5697,
+    "6": 6297
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "4.5x5.2": {
+   "expivi": 20963,
+   "base": {
+    "4": 5997,
+    "6": 6597
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "4.5x5.6": {
+   "expivi": 20964,
+   "base": {
+    "4": 6197,
+    "6": 6797
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "4.5x6": {
+   "expivi": 20997,
+   "base": {
+    "4": 6397,
+    "6": 6997
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1056,
+    "hlinik": 1554,
+    "wpc": 1212
+   },
+   "rearPost": true
+  },
+  "5x5.6": {
+   "expivi": 21183,
+   "base": {
+    "4": 6697,
+    "6": 7297
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "5x6": {
+   "expivi": 21185,
+   "base": {
+    "4": 6897,
+    "6": 7497
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1326,
+    "hlinik": 1974,
+    "wpc": 1536
+   },
+   "rearPost": true
+  },
+  "6.2x5.2": {
+   "expivi": 21423,
+   "base": {
+    "4": 7997,
+    "6": 8597
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "6.2x5.6": {
+   "expivi": 21444,
+   "base": {
+    "4": 8197,
+    "6": 8797
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "6.2x6": {
+   "expivi": 21459,
+   "base": {
+    "4": 8397,
+    "6": 8997
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1422,
+    "hlinik": 2196,
+    "wpc": 1680
+   },
+   "rearPost": true
+  },
+  "5.4x5.2": {
+   "expivi": 21462,
+   "base": {
+    "4": 7097,
+    "6": 7697
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "5.4x5.6": {
+   "expivi": 21465,
+   "base": {
+    "4": 7297,
+    "6": 7897
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "5.4x6": {
+   "expivi": 21466,
+   "base": {
+    "4": 7497,
+    "6": 8097
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1950,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1368,
+    "hlinik": 2070,
+    "wpc": 1608
+   },
+   "rearPost": true
+  },
+  "3x5.2": {
+   "expivi": 21727,
+   "base": {
+    "4": 4697,
+    "6": 5297
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": true
+  },
+  "3x5.6": {
+   "expivi": 21728,
+   "base": {
+    "4": 4797,
+    "6": 5397
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": true
+  },
+  "3x6": {
+   "expivi": 21729,
+   "base": {
+    "4": 4897,
+    "6": 5497
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 576,
+    "hlinik": 1032,
+    "wpc": 708
+   },
+   "rearPost": true
+  },
+  "6.6x5.2": {
+   "expivi": 21730,
+   "base": {
+    "6": 10297
+   },
+   "wallSide": {
+    "drevo": 1056,
+    "hlinik": 1740,
+    "wpc": 1260
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true
+  },
+  "6.6x5.6": {
+   "expivi": 21731,
+   "base": {
+    "6": 10597
+   },
+   "wallSide": {
+    "drevo": 1080,
+    "hlinik": 1836,
+    "wpc": 1314
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true
+  },
+  "6.6x6": {
+   "expivi": 21732,
+   "base": {
+    "6": 10897
+   },
+   "wallSide": {
+    "drevo": 1140,
+    "hlinik": 1956,
+    "wpc": 1404
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true
+  }
+ },
+ "zahradny": {
+  "3x3": {
+   "expivi": 14264,
+   "base": {
+    "trapez": 4297,
+    "panel": 4522
+   },
+   "wallSide": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "wallBack": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "rearPost": false
+  },
+  "3x4": {
+   "expivi": 14345,
+   "base": {
+    "panel": 4997,
+    "trapez": 4697
+   },
+   "wallSide": {
+    "drevo": 594,
+    "wpc": 768,
+    "hlinik": 1092
+   },
+   "wallBack": {
+    "wpc": 660,
+    "drevo": 552,
+    "hlinik": 936
+   },
+   "rearPost": false
+  },
+  "4x3": {
+   "expivi": 14354,
+   "base": {
+    "panel": 5097,
+    "trapez": 4797
+   },
+   "wallSide": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "wallBack": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "rearPost": false
+  },
+  "4x4": {
+   "expivi": 14375,
+   "base": {
+    "trapez": 5197,
+    "panel": 5597
+   },
+   "wallSide": {
+    "drevo": 594,
+    "wpc": 768,
+    "hlinik": 1092
+   },
+   "wallBack": {
+    "wpc": 768,
+    "drevo": 594,
+    "hlinik": 1092
+   },
+   "rearPost": false
+  },
+  "5x3": {
+   "expivi": 14504,
+   "base": {
+    "panel": 5672,
+    "trapez": 5297
+   },
+   "wallSide": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "wallBack": {
+    "drevo": 996,
+    "hlinik": 1668,
+    "wpc": 1224
+   },
+   "rearPost": true
+  },
+  "5x4": {
+   "expivi": 14510,
+   "base": {
+    "panel": 6297,
+    "trapez": 5797
+   },
+   "wallSide": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "wallBack": {
+    "drevo": 996,
+    "hlinik": 1668,
+    "wpc": 1224
+   },
+   "rearPost": true
+  },
+  "6x3": {
+   "expivi": 14627,
+   "base": {
+    "panel": 6547,
+    "trapez": 6097
+   },
+   "wallSide": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "wallBack": {
+    "drevo": 1068,
+    "hlinik": 1896,
+    "wpc": 1344
+   },
+   "rearPost": true
+  },
+  "6x4": {
+   "expivi": 14636,
+   "base": {
+    "panel": 7197,
+    "trapez": 6797
+   },
+   "wallSide": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "wallBack": {
+    "drevo": 1068,
+    "hlinik": 1896,
+    "wpc": 1344
+   },
+   "rearPost": true
+  },
+  "7x3": {
+   "expivi": 14822,
+   "base": {
+    "panel": 7622,
+    "trapez": 7097
+   },
+   "wallSide": {
+    "drevo": 552,
+    "hlinik": 936,
+    "wpc": 660
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true
+  },
+  "7x4": {
+   "expivi": 14831,
+   "base": {
+    "panel": 8497,
+    "trapez": 7797
+   },
+   "wallSide": {
+    "drevo": 594,
+    "hlinik": 1092,
+    "wpc": 768
+   },
+   "wallBack": {
+    "drevo": 1464,
+    "hlinik": 2322,
+    "wpc": 1818
+   },
+   "rearPost": true
+  }
+ }
+}

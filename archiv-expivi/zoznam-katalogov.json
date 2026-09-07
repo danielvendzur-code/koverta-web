@@ -1,0 +1,4085 @@
+[
+ {
+  "type": "catalogues",
+  "id": 25057,
+  "attributes": {
+   "id": 25057,
+   "uuid": "63031F88-2E72-44A3-B418-F336475E4B36",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 8.0 x 4.0 m new",
+   "description": null,
+   "url_name": "zahradny-pristresok-8-0-x-4-0-m-new",
+   "sku": "",
+   "active": false,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2025-04-14 14:33:49",
+   "updated_at": "2025-04-14 14:36:40",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-8-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 8.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 25056,
+  "attributes": {
+   "id": 25056,
+   "uuid": "0B5A8D44-7499-430B-953F-DD9E762E1B1B",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 8.0 x 3.0 m new",
+   "description": null,
+   "url_name": "zahradny-pristresok-8-0-x-3-0-m-new",
+   "sku": "",
+   "active": false,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2025-04-14 14:30:38",
+   "updated_at": "2025-04-14 14:36:43",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-8-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 8.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21732,
+  "attributes": {
+   "id": 21732,
+   "uuid": "A5D91B4B-7202-4E72-969D-274A8AF70B11",
+   "type": "configurable",
+   "name": "Pristresok 6.6 x 6.0",
+   "description": "",
+   "url_name": "pristresok-6-6-x-6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "29cd629eea79a327a8333d219a69a63b"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:05:17",
+   "updated_at": "2026-02-18 11:25:27",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-6-x-6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 6.6 x 6.0"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21731,
+  "attributes": {
+   "id": 21731,
+   "uuid": "EE3EF7DF-F0F1-446F-9064-71A587358B9C",
+   "type": "configurable",
+   "name": "Pristresok 6.6 x 5.6",
+   "description": "",
+   "url_name": "pristresok-6-6-x-5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 4,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "f9fad8296c8de83dd225be90b2d22799"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:04:30",
+   "updated_at": "2026-02-04 17:09:54",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-6-x-5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 6.6 x 5.6"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21730,
+  "attributes": {
+   "id": 21730,
+   "uuid": "198EB7C4-C1A7-4DBC-A6CC-70741F04E01C",
+   "type": "configurable",
+   "name": "Pristresok 6.6 x 5.2",
+   "description": "",
+   "url_name": "pristresok-6-6-x-5-2",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 9,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "2b051cbaf770405b432107208c094925"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:04:07",
+   "updated_at": "2026-02-05 15:49:31",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-6-x-5-2",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 6.6 x 5.2"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21729,
+  "attributes": {
+   "id": 21729,
+   "uuid": "B4D69C1F-7BDC-4C36-B43F-9688BDAD7F74",
+   "type": "configurable",
+   "name": "Pristresok 3.0 x 6.0",
+   "description": "",
+   "url_name": "pristresok-3-0-x-6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "59a223bc2ce5d617cfdfdec28e71a378"
+      },
+      "en-US": {
+       "v2": "a37e46744cd4f276cc127ced496187be"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:03:19",
+   "updated_at": "2026-09-07 10:09:53",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-0-x-6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 3.0 x 6.0"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21728,
+  "attributes": {
+   "id": 21728,
+   "uuid": "E15B467B-35FE-404C-B770-B60FC43E5F04",
+   "type": "configurable",
+   "name": "Pristresok 3.0 x 5.6",
+   "description": "",
+   "url_name": "pristresok-3-0-x-5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "6c1e1282ff08e1b1149c72de1f19a6b8"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:00:40",
+   "updated_at": "2026-02-07 07:59:19",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-0-x-5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 3.0 x 5.6"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21727,
+  "attributes": {
+   "id": 21727,
+   "uuid": "71753FC1-44FF-41D9-B34F-50FC468A774D",
+   "type": "configurable",
+   "name": "Pristresok 3.0 x 5.2",
+   "description": "",
+   "url_name": "pristresok-3-0-x-5-2",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 6,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "ea33f1a458be4692c5c2fc67f4cc5214"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-12-14 20:00:21",
+   "updated_at": "2026-02-15 14:21:34",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-0-x-5-2",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 3.0 x 5.2"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21466,
+  "attributes": {
+   "id": 21466,
+   "uuid": "14120018-A38F-4854-A9CB-4EF9A9F447C3",
+   "type": "configurable",
+   "name": "Prístrešok 5.4 x 6.0",
+   "description": "",
+   "url_name": "pristresok-5-4-x-6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 3,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "en-US": {
+       "v2": "d2f2c475e62f38ef8e3399b9c3174384"
+      },
+      "sk-SK": {
+       "v2": "d4b4d44d433697184cd95261a28134bc"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-26 17:06:03",
+   "updated_at": "2026-02-07 16:25:24",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-4-x-6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.4 x 6.0"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21465,
+  "attributes": {
+   "id": 21465,
+   "uuid": "E90FF9E6-4EBF-43C7-9CE1-46C4765900ED",
+   "type": "configurable",
+   "name": "Prístrešok 5.4 x 5.6",
+   "description": "",
+   "url_name": "pristresok-5-4-x-5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "208fb6d2ffbef04f4b790bd881dc208f"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-26 16:38:33",
+   "updated_at": "2026-07-06 20:13:08",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-4-x-5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.4 x 5.6"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21462,
+  "attributes": {
+   "id": 21462,
+   "uuid": "41854CF0-7781-4093-9196-B2CA75ED75B5",
+   "type": "configurable",
+   "name": "Pristresok 5.4 x 5.2",
+   "description": "",
+   "url_name": "pristresok-5-4-x-5-2",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "e838762fe746139500731f5bb107e04a"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-25 12:47:51",
+   "updated_at": "2026-04-04 14:31:08",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-4-x-5-2",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 5.4 x 5.2"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21459,
+  "attributes": {
+   "id": 21459,
+   "uuid": "3EEFBE52-732C-4223-8619-B37D78E9E888",
+   "type": "configurable",
+   "name": "Prístrešok 6.2 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-6-2-x-6-0-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 4,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "1aa6ee2af4a894e37df04d0a575a34a8"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-24 19:02:09",
+   "updated_at": "2026-02-06 11:23:59",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-2-x-6-0-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.2 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21444,
+  "attributes": {
+   "id": 21444,
+   "uuid": "5D973B07-4E17-48F5-8994-F32A65A55CA3",
+   "type": "configurable",
+   "name": "Prístrešok 6.2 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-6-2-x-5-6-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "f9a320a7f6d97bdabab69b6354d022a0"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-23 15:28:06",
+   "updated_at": "2026-02-06 10:02:44",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-2-x-5-6-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.2 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21423,
+  "attributes": {
+   "id": 21423,
+   "uuid": "C47C5EA4-1162-4C53-A517-F22DAD973618",
+   "type": "configurable",
+   "name": "Prístrešok 6.2 x 5.2 m",
+   "description": null,
+   "url_name": "pristresok-6-2-x-5-2-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 3,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "21e00fbd535a5fd370836f82ced2cefe"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-10-23 14:22:31",
+   "updated_at": "2026-02-08 18:44:28",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-2-x-5-2-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.2 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21185,
+  "attributes": {
+   "id": 21185,
+   "uuid": "5EA5DB50-5EF3-4F5B-AC40-764D21A1B97E",
+   "type": "configurable",
+   "name": "Prístrešok 5.0 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-5-0x6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "9608acf2a80d269dadcc775065879bd4"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-09-20 12:59:19",
+   "updated_at": "2026-02-14 08:19:23",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-0x6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.0 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 21183,
+  "attributes": {
+   "id": 21183,
+   "uuid": "8317759E-9E57-4FBD-9D48-31407AD105E4",
+   "type": "configurable",
+   "name": "Prístrešok 5.0 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-5-0x5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "graph_active": 4,
+    "scene_graph_revision": 0,
+    "scene_rev_id": 1,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "d56452ed3a4df89b84cd8ae83374517b"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-09-20 11:50:02",
+   "updated_at": "2026-03-03 17:15:09",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-0x5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.0 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20997,
+  "attributes": {
+   "id": 20997,
+   "uuid": "45C63F9E-B0DC-4260-BF25-518C23583DB8",
+   "type": "configurable",
+   "name": "Prístrešok 4.5 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-4-5x6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "f0ade250e8f60a5861067d594d17a943"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-23 10:41:06",
+   "updated_at": "2026-05-20 15:17:22",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-5x6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.5 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20964,
+  "attributes": {
+   "id": 20964,
+   "uuid": "F22820EB-1FA8-4935-8C34-F7865AF58E16",
+   "type": "configurable",
+   "name": "Prístrešok 4.5 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-4-5x5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "32f76c0541f93ff6b3ae30fe87b55332"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-17 18:22:42",
+   "updated_at": "2026-02-08 13:47:45",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-5x5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.5 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20963,
+  "attributes": {
+   "id": 20963,
+   "uuid": "D1CB7187-F829-4E2F-A1A1-CE766725CC94",
+   "type": "configurable",
+   "name": "Prístrešok 4.5 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-4-5x5-2",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "f755f4ea08175c4acc94164f43c298cb"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-17 17:40:37",
+   "updated_at": "2026-05-16 18:27:10",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-5x5-2",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.5 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20956,
+  "attributes": {
+   "id": 20956,
+   "uuid": "2908D640-2A58-4A86-9D90-1AAD5CB09265",
+   "type": "configurable",
+   "name": "Prístrešok 3.8 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-3-8x6-0",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "ffd344a81d98319ee741f889ed95d926"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-16 17:41:42",
+   "updated_at": "2026-02-15 19:54:03",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-8x6-0",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.8 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20955,
+  "attributes": {
+   "id": 20955,
+   "uuid": "72BB4D10-FF1B-491A-85C5-9DE43EE58A63",
+   "type": "configurable",
+   "name": "Prístrešok 3.8 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-3-8x5-2",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 13,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 2,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "8bcd0ff76e2159ed6580b07eb31fe985"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-16 14:29:20",
+   "updated_at": "2026-02-15 10:55:58",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-8x5-2",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.8 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20915,
+  "attributes": {
+   "id": 20915,
+   "uuid": "A22255F6-94E9-42AE-A5E7-80F7BCAC4F30",
+   "type": "configurable",
+   "name": "Prístrešok 3.8 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-3-8x5-6",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "graph_active": 21,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 23,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-08-09 12:48:41",
+   "updated_at": "2026-02-03 13:04:05",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-8x5-6",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.8 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 20304,
+  "attributes": {
+   "id": 20304,
+   "uuid": "F6AEC16D-A1C0-4B35-9426-CF8DFEE784CF",
+   "type": "configurable",
+   "name": "Pristresok 6x6 test MV",
+   "description": null,
+   "url_name": "pristresok-6x6-test-mv",
+   "sku": "",
+   "active": false,
+   "position": 0,
+   "meta": {
+    "graph_active": 1,
+    "graph_latest": 2
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2023-03-31 09:15:56",
+   "updated_at": "2023-07-27 11:55:20",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6x6-test-mv",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Pristresok 6x6 test MV"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14870,
+  "attributes": {
+   "id": 14870,
+   "uuid": "F09A0049-2D34-4CC0-8464-02EE6D1D69D7",
+   "type": "configurable",
+   "name": "Skuska",
+   "description": null,
+   "url_name": "skuska",
+   "sku": "",
+   "active": false,
+   "position": 0,
+   "meta": {
+    "graph_active": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "scene_rev_id": 1
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-16 07:36:59",
+   "updated_at": "2023-07-27 13:36:07",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "skuska",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Skuska"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14831,
+  "attributes": {
+   "id": 14831,
+   "uuid": "776919CE-2100-47FE-8AA5-0BB9967787CA",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 7.0 x 4.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-7-0-x-4-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "c8f6d13a8c502b49b12f40de1e6c3f41"
+      }
+     },
+     "garaze": {
+      "en-US": {
+       "v2": "2fec15caa76f5ee3f736be4c29830f15"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-15 14:02:21",
+   "updated_at": "2026-04-03 10:24:15",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-7-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 7.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14822,
+  "attributes": {
+   "id": 14822,
+   "uuid": "07387597-2CCA-4CBD-86B4-5C1C0EC069A3",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 7.0 x 3.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-7-0-x-3-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 1,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "a184f27cf36929c80ff303f32e581d43"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-15 11:46:38",
+   "updated_at": "2026-06-30 16:59:18",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-7-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 7.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14636,
+  "attributes": {
+   "id": 14636,
+   "uuid": "2B422F7D-506C-4F00-93D0-44F6D8558AF7",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 6.0 x 4.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-6-0-x-4-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 9,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "63b3dd8557f56325d52d81d1ea5fbc2f"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-14 10:09:19",
+   "updated_at": "2026-03-15 11:30:52",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-6-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 6.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14627,
+  "attributes": {
+   "id": 14627,
+   "uuid": "A15128B8-0A51-4C86-9B44-96817EE88506",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 6.0 x 3.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-6-0-x-3-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 7,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "d886eb60448e652f2e65bfb9cbef71e2"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-14 09:12:20",
+   "updated_at": "2026-02-16 15:19:55",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-6-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 6.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14510,
+  "attributes": {
+   "id": 14510,
+   "uuid": "B8B16292-FC44-4811-A5BF-ADBAD953E7E9",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 5.0 x 4.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-5-0-x-4-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 10,
+    "scene_rev_id": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "c70e757c4b2757c3d0b55dfc332d3186"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-11 10:02:20",
+   "updated_at": "2026-04-14 07:53:37",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-5-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 5.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14504,
+  "attributes": {
+   "id": 14504,
+   "uuid": "9330F1D7-68E4-4762-A8C6-640429FCB7EC",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 5.0 x 3.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-5-0-x-3-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "1482de0a372612306509a2c3678b901a"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-11 09:27:24",
+   "updated_at": "2026-03-03 17:16:44",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-5-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 5.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14375,
+  "attributes": {
+   "id": 14375,
+   "uuid": "82C54465-7729-4A79-B8CD-D05BD4994188",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 4.0 x 4.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-4-0-x-4-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 5,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "76498bb43acea7c8e5e97c57c9b62812"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-09 14:33:46",
+   "updated_at": "2026-03-05 12:07:03",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-4-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 4.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14354,
+  "attributes": {
+   "id": 14354,
+   "uuid": "D4A3F583-1C66-4BF7-AA2D-78BCFFB332DD",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 4.0 x 3.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-4-0-x-3-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "0139262521f5d8425a7ae6f236ed3c10"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-09 11:51:03",
+   "updated_at": "2026-02-12 22:35:28",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-4-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 4.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14345,
+  "attributes": {
+   "id": 14345,
+   "uuid": "E5CC91D6-D090-4C55-9826-54BB8DA14275",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 3.0 x 4.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-3-0-x-4-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 5,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "80556a92381067cdd5d25624aafb085e"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-09 07:51:55",
+   "updated_at": "2026-04-23 06:44:30",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-3-0-x-4-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 3.0 x 4.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14264,
+  "attributes": {
+   "id": 14264,
+   "uuid": "6A8C3B9C-7A93-4D70-B0F0-7A69C6FA66F6",
+   "type": "configurable",
+   "name": "Záhradný prístrešok 3.0 x 3.0 m new",
+   "description": "",
+   "url_name": "zahradny-pristresok-3-0-x-3-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "ba1fe83c2a8dc1447a1a69eac36862da"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-08 12:47:44",
+   "updated_at": "2026-01-29 12:30:25",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "zahradny-pristresok-3-0-x-3-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Záhradný prístrešok 3.0 x 3.0 m new"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14198,
+  "attributes": {
+   "id": 14198,
+   "uuid": "00434A4B-DAEF-4B8B-AD34-3075807EA606",
+   "type": "configurable",
+   "name": "Prístrešok 7.0 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-7-0-x-5-6-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 6,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "367fa6356f919ab8193bd1dbcf61a9a2"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-07 14:09:21",
+   "updated_at": "2026-02-20 18:54:03",
+   "price": 11097,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-7-0-x-5-6-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 7.0 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14192,
+  "attributes": {
+   "id": 14192,
+   "uuid": "1AB04A72-5B7B-4BEA-B091-FE38F8605C78",
+   "type": "configurable",
+   "name": "Prístrešok 7.0 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-7-0-x-5-2-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 1,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "b31457484a5576d33dd9779a191e1a2e"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-07 13:04:34",
+   "updated_at": "2026-02-09 18:41:35",
+   "price": 10797,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-7-0-x-5-2-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 7.0 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14069,
+  "attributes": {
+   "id": 14069,
+   "uuid": "171290B3-FC92-4194-B6A8-168C76D780DE",
+   "type": "configurable",
+   "name": "Prístrešok 7.0 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-7-0-x-6-0-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 10,
+    "scene_rev_id": 8,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "fc39666e4899ff1770c439222848fa23"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-03 11:13:49",
+   "updated_at": "2026-02-04 12:35:50",
+   "price": 11397,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-7-0-x-6-0-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 7.0 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14057,
+  "attributes": {
+   "id": 14057,
+   "uuid": "F4B2D424-7E36-4B98-B5A1-1EFAF7DA8E31",
+   "type": "configurable",
+   "name": "Prístrešok 2.8 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-2-8-x-5-6-m-1",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 3,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "8477a763150c6a03d8fef24a647df8a3"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-03 08:57:38",
+   "updated_at": "2026-02-27 11:15:34",
+   "price": 0,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-8-x-5-6-m-1",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.8 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14045,
+  "attributes": {
+   "id": 14045,
+   "uuid": "F27A3EA7-EE6B-4468-BBE2-4B5311794F6B",
+   "type": "configurable",
+   "name": "Prístrešok 2.8 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-2-8-x-5-6-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 6,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "en-US": {
+       "v2": "59f8577ac90d59d4de6f6e0cf01c87d5"
+      },
+      "sk-SK": {
+       "v2": "5e486b586fe4851e1b3f4a0a6f42610b"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-03 08:24:30",
+   "updated_at": "2026-06-11 06:44:30",
+   "price": 0,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-8-x-5-6-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.8 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 14042,
+  "attributes": {
+   "id": 14042,
+   "uuid": "47E7CF7F-2999-4612-812F-A002C478E585",
+   "type": "configurable",
+   "name": "Prístrešok 2.8 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-2-8-x-6-0-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 7,
+    "scene_rev_id": 10,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "d152349942454643982aeb9683ad7968"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-02-03 07:25:45",
+   "updated_at": "2026-03-11 17:25:03",
+   "price": 0,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-8-x-6-0-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.8 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13928,
+  "attributes": {
+   "id": 13928,
+   "uuid": "0D29D67E-8039-46A0-B773-58D257F0719E",
+   "type": "configurable",
+   "name": "Prístrešok 5.8 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-5-8-x-5-2-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 5,
+    "scene_rev_id": 1,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "c50210123309cd34b5a765adb99ed035"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-31 15:00:55",
+   "updated_at": "2026-02-24 19:02:45",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-8-x-5-2-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.8 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13925,
+  "attributes": {
+   "id": 13925,
+   "uuid": "552EE5FF-BF17-4766-853D-C7FFB6798807",
+   "type": "configurable",
+   "name": "Prístrešok 5.8 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-5-8-x-5-6-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 6,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "653fe7c5a5b141d3b2e90920ed3159dd"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-31 14:20:56",
+   "updated_at": "2026-02-07 16:29:50",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-8-x-5-6-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.8 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13922,
+  "attributes": {
+   "id": 13922,
+   "uuid": "FF4BAD11-8DCC-4952-AE00-FF6D73A7CFF5",
+   "type": "configurable",
+   "name": "Prístrešok 5.8 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-5-8-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 8,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "576470f36af18168d905326860a90278"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-31 13:24:46",
+   "updated_at": "2026-02-06 11:10:54",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-8-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.8 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13883,
+  "attributes": {
+   "id": 13883,
+   "uuid": "EE8DDB21-B2BA-462E-AEFA-E085280FD78F",
+   "type": "configurable",
+   "name": "Prístrešok 2.5 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-2-5-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 1,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "c99354fd5570241e4c9192e47e1a80ff"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-28 10:58:06",
+   "updated_at": "2026-02-20 13:38:37",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-5-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.5 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13877,
+  "attributes": {
+   "id": 13877,
+   "uuid": "7C39FD96-036A-41D6-9774-4A6508C13E76",
+   "type": "configurable",
+   "name": "Prístrešok 3.2 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-3-2-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 1,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "2c6ad2420099bd3860e01fb4d2727f38"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-28 09:40:44",
+   "updated_at": "2026-02-04 11:50:06",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-2-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.2 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13874,
+  "attributes": {
+   "id": 13874,
+   "uuid": "62C6DECB-F0FF-4242-A828-852661460A49",
+   "type": "configurable",
+   "name": "Prístrešok 3.5 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-3-5-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "beb2c1ac0369c38252dfd6935e730597"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-28 08:49:27",
+   "updated_at": "2026-02-07 20:31:10",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-5-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.5 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13865,
+  "attributes": {
+   "id": 13865,
+   "uuid": "6C2ED94A-3C8B-40D8-BAC5-449191E594FB",
+   "type": "configurable",
+   "name": "Prístrešok 4.0 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-4-0-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "1a493953489dc342ce71578126c57e7f"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-27 14:34:24",
+   "updated_at": "2026-02-25 16:09:40",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-0-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.0 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13859,
+  "attributes": {
+   "id": 13859,
+   "uuid": "AFAA536E-4CE5-4E58-ABD2-E428091FCBC2",
+   "type": "configurable",
+   "name": "Prístrešok 4.2 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-4-2-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "9bffcb7d3a3936723200e06da503da4b"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-27 14:08:22",
+   "updated_at": "2026-07-30 00:37:04",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-2-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.2 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13856,
+  "attributes": {
+   "id": 13856,
+   "uuid": "C706BED0-66A1-4502-B0F8-8AB7BB2DC17F",
+   "type": "configurable",
+   "name": "Prístrešok 5.0 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-5-0-x-5-2-m",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 3,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "38829f4a5857623244e23c95150042cb"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-27 13:40:04",
+   "updated_at": "2026-02-18 13:48:37",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-0-x-5-2-m",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.0 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13853,
+  "attributes": {
+   "id": 13853,
+   "uuid": "3500F417-FB0E-44AB-926D-05169532DD1C",
+   "type": "configurable",
+   "name": "Prístrešok 5.2 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-5-2-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "240199d7f1b5e2a2a682bca9f6770f11"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-27 13:04:53",
+   "updated_at": "2026-02-18 21:05:20",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-2-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.2 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13850,
+  "attributes": {
+   "id": 13850,
+   "uuid": "31DD0C38-B14B-4FDB-ADBA-E90362340350",
+   "type": "configurable",
+   "name": "Prístrešok 5.6 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-5-6-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 6,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "cb82bc7febd847fdf0b21f1abfe39dd4"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-27 11:52:28",
+   "updated_at": "2026-04-03 21:09:54",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-6-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.6 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13835,
+  "attributes": {
+   "id": 13835,
+   "uuid": "F4BAA476-E7A5-434E-99E6-E11F5678BC58",
+   "type": "configurable",
+   "name": "Prístrešok 6.0 x 5.2 m",
+   "description": "",
+   "url_name": "pristresok-6-0-x-5-2-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 4,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "46422203624794abae7b4b5182a9b8fa"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-26 14:01:13",
+   "updated_at": "2026-02-08 19:01:00",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-0-x-5-2-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.0 x 5.2 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13799,
+  "attributes": {
+   "id": 13799,
+   "uuid": "415FD132-7007-4F53-9B49-2F5BC5EC4330",
+   "type": "configurable",
+   "name": "Prístrešok 2.5 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-2-5-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 6,
+    "scene_rev_id": 3,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "0ae93e3ee6fddebfc559ea0c9f855848"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-25 10:29:06",
+   "updated_at": "2026-01-27 09:34:02",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-5-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.5 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13787,
+  "attributes": {
+   "id": 13787,
+   "uuid": "1F58CB29-A864-4A97-A5F1-55691351B5F0",
+   "type": "configurable",
+   "name": "Prístrešok 3.2 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-3-2-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 7,
+    "scene_rev_id": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "03ee4edc9f304cf16d885acae0745ab2"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-25 09:27:57",
+   "updated_at": "2026-01-26 09:20:19",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-2-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.2 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13781,
+  "attributes": {
+   "id": 13781,
+   "uuid": "29DDABA5-B4C5-4374-8C78-D3EBE2B64087",
+   "type": "configurable",
+   "name": "Prístrešok 3.5 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-3-5-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 8,
+    "scene_rev_id": 2,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "e896fee22ed60c3a2836ab72277fc5ff"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-25 08:15:13",
+   "updated_at": "2026-02-03 15:09:28",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-5-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.5 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13778,
+  "attributes": {
+   "id": 13778,
+   "uuid": "F9182C84-8A9A-41BB-B61A-9EBF7C09213B",
+   "type": "configurable",
+   "name": "Prístrešok 4.0 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-4-0-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 8,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "425b1fa866413a8d85f16d20591be153"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-25 07:19:47",
+   "updated_at": "2026-05-15 19:57:22",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-0-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.0 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13754,
+  "attributes": {
+   "id": 13754,
+   "uuid": "E57CEFDB-3905-4456-ABD6-F9C94ED8CAFC",
+   "type": "configurable",
+   "name": "Prístrešok 4.2 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-4-2-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 7,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "8d5db8bd81e1db150e2481ad07b0c753"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-24 14:10:56",
+   "updated_at": "2026-02-16 17:17:51",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-2-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.2 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13751,
+  "attributes": {
+   "id": 13751,
+   "uuid": "AA5DAA2D-7E7B-496A-A880-2EAF1EEB92A0",
+   "type": "configurable",
+   "name": "Prístrešok 5.2 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-5-2-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 9,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "en-US": {
+       "v2": "25054144a0a46d170f2c65a6f93cbf9b"
+      },
+      "sk-SK": {
+       "v2": "67f5f0a460689526ab55ab73aae47290"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-24 12:19:41",
+   "updated_at": "2026-02-21 10:36:23",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-2-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.2 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13748,
+  "attributes": {
+   "id": 13748,
+   "uuid": "73B9A863-997B-408C-87E5-536BA9A5E310",
+   "type": "configurable",
+   "name": "Prístrešok 5.6 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-5-6-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 17,
+    "scene_rev_id": 4,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "ee27df38a88701d502d5bcc1ac86532d"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-24 11:31:59",
+   "updated_at": "2026-02-20 22:07:47",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-6-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.6 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13727,
+  "attributes": {
+   "id": 13727,
+   "uuid": "E015BAA9-9653-443E-AFFC-835B421D6CA7",
+   "type": "configurable",
+   "name": "Prístrešok 6.0 x 5.6 m",
+   "description": "",
+   "url_name": "pristresok-6-0-x-5-6-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 7,
+    "scene_rev_id": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "cac4292956129d62e2d6422317fe8e12"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-24 09:25:00",
+   "updated_at": "2026-02-21 11:06:48",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-0-x-5-6-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.0 x 5.6 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13691,
+  "attributes": {
+   "id": 13691,
+   "uuid": "589A0B0C-2C7D-48E4-9D37-A68789FF87A7",
+   "type": "configurable",
+   "name": "Prístrešok 2.5 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-2-5-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 8,
+    "scene_rev_id": 6,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "5f6dc1af8c96f45ed4a5e35308f5798c"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-21 13:57:16",
+   "updated_at": "2026-01-24 09:48:49",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-2-5-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 2.5 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13688,
+  "attributes": {
+   "id": 13688,
+   "uuid": "67A96969-7CB8-4B2A-A62C-6C674DB0BEF7",
+   "type": "configurable",
+   "name": "Prístrešok 3.2 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-3-2-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 12,
+    "scene_rev_id": 13,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "7d4c83afba7220b911cec875d51cc638"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-21 11:49:07",
+   "updated_at": "2026-01-30 14:45:34",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-2-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.2 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13676,
+  "attributes": {
+   "id": 13676,
+   "uuid": "710ACB8B-1DA2-4B1E-9FD2-02FB26C351CB",
+   "type": "configurable",
+   "name": "Prístrešok 3.5 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-3-5-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 8,
+    "scene_rev_id": 9,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "04293bf3780a4bf3bcb4339efbd0801f"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-21 09:38:49",
+   "updated_at": "2026-01-23 20:04:55",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-3-5-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 3.5 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13670,
+  "attributes": {
+   "id": 13670,
+   "uuid": "CFCC3F4C-2293-4391-A63D-7EE1BF49E0B7",
+   "type": "configurable",
+   "name": "Prístrešok 4.0 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-4-0-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 8,
+    "scene_rev_id": 5,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "9767d85419be884f1d9d779e8a696264"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-21 08:44:34",
+   "updated_at": "2026-01-23 17:26:31",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-4-0-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.0 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13598,
+  "attributes": {
+   "id": 13598,
+   "uuid": "B26D382B-EE8B-49F0-88E0-AF09805DEDC8",
+   "type": "configurable",
+   "name": "Prístrešok 5.2 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-5-2-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 22,
+    "scene_rev_id": 6,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "865d8bec1bc0758d83560333d1659f56"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-20 08:13:24",
+   "updated_at": "2026-03-02 14:33:43",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-2-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.2 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13457,
+  "attributes": {
+   "id": 13457,
+   "uuid": "99CC3C77-80A6-4E5C-93D5-CECDBEA57973",
+   "type": "configurable",
+   "name": "Prístrešok 5.6 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-5-6-x-6-0-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 10,
+    "scene_rev_id": 12,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "f435cd7192d08e8a231339cacb3daed8"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-12 10:59:12",
+   "updated_at": "2026-02-10 17:48:42",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-5-6-x-6-0-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 5.6 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13412,
+  "attributes": {
+   "id": 13412,
+   "uuid": "E58302BD-B04B-401D-804C-7E02CF2ED83C",
+   "type": "configurable",
+   "name": "Prístrešok 6.0 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-6-0-x-6-0-m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 18,
+    "scene_rev_id": 10,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "d4a1922f17374fea590d0d0078412439"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-11 14:48:53",
+   "updated_at": "2026-01-23 19:34:49",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": null,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": null,
+   "slug_or_id": "pristresok-6-0-x-6-0-m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 6.0 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 13334,
+  "attributes": {
+   "id": 13334,
+   "uuid": "C6DEDA69-8403-40D6-838E-2C7CDE18C104",
+   "type": "configurable",
+   "name": "Prístrešok 4.2 x 6.0 m",
+   "description": "",
+   "url_name": "pristresok-4-2x6-0m-new",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "graph_active": 40,
+    "scene_rev_id": 21,
+    "scene_graph_revision": 0,
+    "graph_latest": 0,
+    "catalogBrowser": false,
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "allowSubProductRotation": true,
+    "scene_settings": {
+     "renderer_type": "threejs"
+    },
+    "bootstrap_data_hash": {
+     "$_default_$": {
+      "sk-SK": {
+       "v2": "81f98f2ae05d54b0a76dccadf26de4af"
+      }
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2022-01-10 10:08:54",
+   "updated_at": "2026-04-28 19:53:23",
+   "price": null,
+   "thumbnail": null,
+   "thumbnail_media_id": 207397,
+   "purchase_type": "offer",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": "https://data.expivi.net/teams/811/media/file_61dd7898725b2/Pristresok_4,2x6.0m.jpg",
+   "slug_or_id": "pristresok-4-2x6-0m-new",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok 4.2 x 6.0 m"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 3798,
+  "attributes": {
+   "id": 3798,
+   "uuid": "40F4F815-1F6F-4147-875D-3B2B13774084",
+   "type": "configurable",
+   "name": "Bike Box 5",
+   "description": "",
+   "url_name": "bike-box-5",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 4,
+    "graph_latest": 0,
+    "scene_rev_id": 1,
+    "catalogBrowser": false,
+    "scene_graph_revision": 1
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2020-05-01 08:42:36",
+   "updated_at": "2023-08-14 16:16:27",
+   "price": 2298,
+   "thumbnail": null,
+   "thumbnail_media_id": 206149,
+   "purchase_type": "buy",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": "https://data.expivi.net/teams/811/media/file_5eabe22467b8e/Bikebox5.jpg",
+   "slug_or_id": "bike-box-5",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Bike Box 5"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 3682,
+  "attributes": {
+   "id": 3682,
+   "uuid": "40C423E4-C643-4E15-B715-13C925F7E32B",
+   "type": "configurable",
+   "name": "Prístrešok nad dvere",
+   "description": "",
+   "url_name": "pristresok-nad-dvere",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 2,
+    "graph_latest": 0,
+    "scene_rev_id": 7,
+    "catalogBrowser": false,
+    "scene_graph_revision": 0
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2020-04-17 14:20:09",
+   "updated_at": "2026-01-23 15:26:49",
+   "price": 3198,
+   "thumbnail": null,
+   "thumbnail_media_id": 206115,
+   "purchase_type": "buy",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": "https://data.expivi.net/teams/811/media/file_5e99b2cc98839/pristresky_nad dvere.jpg",
+   "slug_or_id": "pristresok-nad-dvere",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Prístrešok nad dvere"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 3651,
+  "attributes": {
+   "id": 3651,
+   "uuid": "ADB4288D-3F90-42AC-8D4C-BD75DA1A70F2",
+   "type": "configurable",
+   "name": "Bike Box 3",
+   "description": "",
+   "url_name": "bike-box-3",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 3,
+    "graph_latest": 0,
+    "scene_rev_id": 4,
+    "catalogBrowser": false,
+    "scene_graph_revision": 0,
+    "bootstrap_data_hash": {
+     "maleprojekty": {
+      "en-US": "fe53706e395b1e2c9c94d8acfc3f507e"
+     }
+    }
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2020-04-14 17:57:57",
+   "updated_at": "2023-11-06 10:45:38",
+   "price": 1898,
+   "thumbnail": null,
+   "thumbnail_media_id": 206105,
+   "purchase_type": "buy",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": "https://data.expivi.net/teams/811/media/file_5e96120ae99ef/Bikebox3.jpg",
+   "slug_or_id": "bike-box-3",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Bike Box 3"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ },
+ {
+  "type": "catalogues",
+  "id": 3413,
+  "attributes": {
+   "id": 3413,
+   "uuid": "37F99D29-92AB-41D5-9888-6A96E8E9DCC9",
+   "type": "configurable",
+   "name": "Bike Box 4",
+   "description": "",
+   "url_name": "bike-box-4",
+   "sku": "",
+   "active": true,
+   "position": 0,
+   "meta": {
+    "cellWidth": 1,
+    "cellHeight": 1,
+    "graph_active": 16,
+    "graph_latest": 0,
+    "scene_rev_id": 6,
+    "catalogBrowser": false,
+    "scene_graph_revision": 0
+   },
+   "user_id": 863,
+   "team_id": 811,
+   "created_at": "2020-03-10 04:53:27",
+   "updated_at": "2023-08-14 16:15:25",
+   "price": 2098,
+   "thumbnail": null,
+   "thumbnail_media_id": 206040,
+   "purchase_type": "buy",
+   "uses_intermediate_cart": false,
+   "offer_price_visibility": true,
+   "highlighted": false,
+   "thumbnail_url": "https://data.expivi.net/teams/811/media/file_5e998af429062/Bikebox4.jpg",
+   "slug_or_id": "bike-box-4",
+   "is_babylon_product": false,
+   "visible_in_frame": true,
+   "translations": {
+    "$locale": "en-US",
+    "name": {
+     "en-US": "Bike Box 4"
+    },
+    "description": {}
+   },
+   "trial": false
+  }
+ }
+]
