@@ -1,7 +1,9 @@
 # Prompt pre Claude Design — Koverta
 
-Skopíruj text medzi čiarami do Claude Design. Sú tam dve zadania: **A — Naša ponuka**
-a **B — Konfigurátor**. Môžeš ich poslať naraz alebo každé zvlášť.
+Skopíruj text medzi čiarami do Claude Design. Sú tam štyri zadania:
+**A — Naša ponuka**, **B — Konfigurátor**, **C — Ako to prebieha** a
+**D — Rozmery, ktoré vieme dodať**. Môžeš ich poslať naraz alebo každé zvlášť;
+spoločná časť „Značka a jazyk" platí pre všetky.
 
 ---------------------------------------------------------------------------
 
@@ -95,6 +97,81 @@ Zadanie:
 4. Pás nesmie byť vyšší než jedna obrazovka na notebooku 1440 × 900 vrátane
    hlavnej výzvy — výzva musí byť vidieť bez rolovania.
 
+## C — sekcia „Ako to prebieha"
+
+Päť krokov od dopytu po hotový prístrešok. Sekcia má zákazníka upokojiť: má
+vidieť, že to je zabehnutý postup, nie dobrodružstvo.
+
+Nadpis: **Od prvého kontaktu po hotový prístrešok**. Pod ním jedna veta:
+*Zameranie aj návrh sú zadarmo a nezáväzné. Presnú cenu potvrdíme až po
+obhliadke miesta.*
+
+Kroky aj s textom, ktorý k nim patrí:
+
+| # | Krok | Text |
+|---|---|---|
+| 01 | Návrh alebo konfigurátor | Poviete nám, čo chcete zastrešiť — alebo si zostavu rovno vyskladáte v 3D konfigurátore a pošlete nám ju. |
+| 02 | Bezplatné zameranie | Prídeme k vám, odmeriame priestor a overíme podklad. Potom dostanete presnú cenovú ponuku. |
+| 03 | Výroba konštrukcie | Konštrukciu vyrobíme podľa odsúhlaseného návrhu, vo farbe z RAL palety a s výbavou, na ktorej sme sa dohodli. |
+| 04 | Podklad a pätky | Pätky vykopeme a vybetónujeme ako doplnkovú službu. Máte platňu alebo dlažbu? Kotvíme priamo do nej. |
+| 05 | Montáž a odovzdanie | Dovezieme, osadíme, ukotvíme. Bežný prístrešok stojí za jeden deň. |
+
+Ku každému kroku máme fotografiu z reálnej montáže.
+
+Zadanie:
+
+1. **Tri varianty**, desktop 1440 × ~900 a mobil 390 × ~1400 ku každému.
+2. Číslo kroku **nesmie byť vo vyplnenom koliesku ani v bodke**. Hľadáme
+   pokojnejší spôsob, ako ho ukázať — veľké tiché číslo, značka na osi,
+   poradie napísané slovom.
+3. Musí byť na prvý pohľad jasné, **na ktorom kroku sa zákazník práve
+   nachádza** a koľko ich ešte ostáva. Zvýraznenie aktívneho kroku rieš
+   typografiou a polohou, nie farebnou výplňou pod textom.
+4. **Do fotografií nepíš text.** Popis kroku patrí vedľa fotografie alebo pod
+   ňu, nie do nej.
+5. Navrhni aj **prechod medzi krokmi**: čo sa stane s fotografiou a s textom,
+   keď sa krok zmení. Krátko to popíš pod artboardom (smer, dĺžka, čo sa
+   hýbe a čo stojí). Nemá to preblikávať ani poskakovať.
+6. Jeden variant nech je taký, ktorý funguje **bez interakcie** — všetkých päť
+   krokov naraz pod sebou. Používame ho tam, kde nechceme zdržovať.
+
+## D — sekcia „Rozmery, ktoré vieme dodať"
+
+Katalógové veľkosti prístreškov. Zákazník si tu má nájsť svoj rozmer alebo
+zistiť, že mu žiadny nesedí a treba mieru.
+
+Rozsah, ktorý sekcia musí uniesť na jednej podstránke:
+
+- **Pre jedno auto** — 27 rozmerov, od 4 497 €
+- **Pre dve autá** — 27 rozmerov, od 6 497 €
+- **Pre tri autá** — 1 rozmer, od 12 490 €
+
+Na inej podstránke je to jedna skupina s 12 rozmermi od 4 297 €. Rozmery sú
+dvojice šírka × dĺžka (napríklad 2,5 × 5,2 m; 2,8 × 5,6 m). Ku každému rozmeru
+patrí cena od a odkaz „3D" na vyskladanie v konfigurátore e-shopu.
+
+Pod tabuľkou je veta, ktorú treba zachovať: *Toto sú hotové veľkosti
+z katalógu. Ak vám žiadna presne nesedí, konštrukciu urobíme na mieru — rozmer
+je vec výroby, nie výberu z tabuľky.*
+
+Zadanie:
+
+1. **Dva varianty**, desktop 1440 a mobil 390. Výška podľa potreby, ale
+   napíš k nej, koľko miesta zaberie v rozbalenom stave.
+2. Päťdesiatpäť rozmerov nesmie byť **stena štítkov**. Navrhni, ako sa
+   zákazník dostane k svojmu rozmeru rýchlo — zoskupenie podľa šírky,
+   rozbalenie po skupinách, filter, dva-tri kroky výberu. Rozhodni sa
+   a zdôvodni to.
+3. Sekcia musí byť použiteľná aj vtedy, keď je v skupine **jediný rozmer** —
+   nesmie vtedy vyzerať rozbité.
+4. Cena od patrí ku každému rozmeru. Musí byť čitateľná, ale nesmie
+   prekričať samotný rozmer — hlavná informácia je veľkosť.
+5. Odkaz „3D" je druhoradá akcia. Navrhni, ako ju pripojiť k rozmeru tak, aby
+   nezaberala rovnakú váhu ako samotný rozmer a dala sa trafiť aj prstom
+   (minimálne 44 × 44 px).
+6. Na mobile sa nesmie vodorovne rolovať. Ak sa rozmery nezmestia, musia sa
+   zalomiť alebo skryť pod rozbalenie.
+
 ## Ako to odovzdať
 
 Jeden canvas, artboardy vedľa seba, popísané: `A1 desktop`, `A1 mobil`,
@@ -105,5 +182,6 @@ lepší. Bez lorem ipsum — použi skutočné slovenské texty vyššie.
 
 ## Čo s výsledkom
 
-Keď si vyberieš variant, pošli mi číslo artboardu (napr. „A2 a B1") a ja to
-prepíšem do webu v existujúcom dizajnovom systéme — bez nových CSS vrstiev.
+Keď si vyberieš variant, pošli mi číslo artboardu (napr. „A2, B1, C3 a D1")
+a ja to prepíšem do webu v existujúcom dizajnovom systéme — bez nových CSS
+vrstiev. Stačí číslo; nemusíš nič popisovať.

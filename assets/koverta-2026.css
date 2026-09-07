@@ -361,6 +361,18 @@
 .k-btn--line { border-color: var(--k-hair); color: var(--k-ink); background: var(--k-white); }
 .k-btn--line:hover { border-color: var(--k-ink); box-shadow: var(--k-shadow-sm); }
 
+/* Druhoradá veľkosť. Používa sa vnútri kariet, kde by tlačidlo v plnej
+   výške (54 px) prekričalo hlavnú výzvu sekcie. Tvar, rez aj farba ostávajú
+   rovnaké — mení sa len výška a odsadenie, takže je to stále to isté
+   tlačidlo, nie druhý štýl. */
+.k-btn--maly {
+  min-height: 40px;
+  padding: 0 16px;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.k-btn--maly svg { width: 15px; height: 15px; }
+
 /* na fotke — priehľadné s rozmazaným podkladom, aby text ostal čitateľný */
 .k-btn--glass {
   border-color: rgba(255, 255, 255, 0.42);
@@ -2345,12 +2357,13 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
    CTA sa nemá na každej sekcii tváriť inak. */
 .k .k-btn,
 .k-btn { border-radius: var(--k-r-pill); font-weight: 700; }
-.k .k-btn:not(.kv-bar__cta),
+.k .k-btn:not(.kv-bar__cta):not(.k-btn--maly),
 /* Jediná výška tlačidla na celom webe. Pravidlá pre úvodný pás,
    konfigurátor a dvojice ju len opakovali alebo prepisovali na 52 a 56 —
    výsledkom boli tri rôzne výšky vedľa seba. Lišty (kv-bar, dock) majú
-   vlastnú, nižšiu; sú to prvky okna, nie obsahu. */
-.k-btn:not(.kv-bar__cta) { min-height: 54px; }
+   vlastnú, nižšiu; sú to prvky okna, nie obsahu. Druhá povolená výnimka je
+   `.k-btn--maly` vnútri kariet — tá je vypísaná pri variantoch tlačidla. */
+.k-btn:not(.kv-bar__cta):not(.k-btn--maly) { min-height: 54px; }
 .kv-bar__cta { min-height: 46px; }
 .kh-hero__actions .k-btn,
 .kf .k-btn,
@@ -12917,21 +12930,28 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-ponuka__legenda > span:not([class]) { margin-right: 8px; }
 
-/* Štítok značky. Plný = vlastná výroba, obrysový = hliníkový systém. */
-.kh-znacka {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: var(--k-r-pill);
-  font-family: var(--k-head);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
+/* Značka pri karte je skutočné logo, nie napísané meno. Dva odznaky
+   s rôznym pozadím (plný a obrysový) robili z dvoch rovnocenných značiek
+   dve rôzne váhy; logá stoja vedľa seba ako partneri. Výšky sú zladené
+   opticky — slovná značka Soltec je o pixel nižšia než kresba Koverty,
+   inak by pôsobila väčšia. Podklad je vždy biele telo karty, takže sa
+   nič neprefarbuje. */
+/* Pevná výška riadku, aby sa kartám s rôznou značkou zhodoval nielen
+   vrch, ale aj názov a výzva pod ním. */
+.kh-znacka { display: inline-flex; align-items: center; height: 15px; line-height: 0; }
+.kh-znacka img { display: block; width: auto; }
+.kh-znacka--koverta img { height: 15px; }
+.kh-znacka--soltec img { height: 14px; }
+/* Dve značky pri jednej karte oddelí vlasová čiara, nie medzera — inak
+   sa čítajú ako jedno dlhé logo. */
+.kh-znacka + .kh-znacka::before {
+  content: "";
+  align-self: center;
+  width: 1px;
+  height: 14px;
+  margin-right: 10px;
+  background: var(--k-hair);
 }
-.kh-znacka--koverta { background: var(--k-ink); color: #fff; }
-.kh-znacka--soltec { box-shadow: inset 0 0 0 1px rgba(18, 23, 26, 0.25); color: var(--k-ink); }
 
 .k .kh-ponuka__mriezka {
   display: grid;
@@ -12976,7 +12996,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   flex: 0 0 auto;
   padding: clamp(16px, 1.6vw, 22px);
 }
-.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; gap: 6px; }
+.k .kh-ponuka__znacky { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .k .kh-ponuka__nazov {
   font-family: var(--k-head);
   font-size: clamp(18px, 1.5vw, 21px);
@@ -13199,29 +13219,36 @@ footer.kf { background: var(--k-ink); color: #fff; }
   letter-spacing: -0.02em;
   text-wrap: balance;
 }
+/* Výzva v karte: biele tlačidlo s vlasovým okrajom, o niečo nižšie než
+   hlavné „Otvoriť konfigurátor". Text s šípkou splýval s popiskom karty
+   a nebolo vidieť, že sa dá kliknúť. Karta je celá odkaz, takže je to
+   span — vzhľad má ale rovnaký ako každé druhoradé tlačidlo na webe. */
 .k .kh-kfg__akcia {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   margin-top: auto;
-  padding-top: 6px;
-  font-family: var(--k-head);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--k-amber-deep);
+  align-self: flex-start;
 }
-.k .kh-kfg__akcia svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  transition: transform 160ms var(--k-ease-out);
-}
+/* Bez tieňa — tlačidlá na webe tieň nemajú ani v pokoji, ani pri hoveri.
+   Mení sa len okraj, aby bolo vidieť, že karta je aktívna. */
+.k .kh-kfg__karta:hover .kh-kfg__akcia { border-color: var(--k-ink); }
 .k .kh-kfg__karta:hover .kh-kfg__akcia svg { transform: translateX(3px); }
 
-@media (max-width: 1023px) {
-  .k .kh-kfg__spodok { grid-template-columns: minmax(0, 1fr); }
+/* Štyri typy vedľa seba potrebujú okolo 200 px na kartu, aby sa výzva
+   zmestila aj s odsadením. Vedľa 300 px stĺpca s krokmi to vyjde až od
+   1400 px; nižšie by tlačidlo z karty vyliezalo. Namiesto zúženia kariet
+   sa preto kroky presunú nad ne do vodorovného radu — typy tak dostanú
+   celú šírku a ostanú štyri vedľa seba aj na 1366 px notebooku. */
+@media (max-width: 1399px) {
+  .k .kh-kfg__spodok {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(22px, 2.4vw, 34px);
+  }
+  .k .kh-kfg__zoznam { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(18px, 2vw, 32px); }
+  .k .kh-kfg__zoznam li,
+  .k .kh-kfg__zoznam li:first-child { border-top: 1px solid var(--k-hair); padding: 14px 0 0; }
+  .k .kh-kfg__cena { margin-top: 14px; }
+}
+/* Pod 1100 px by štyri karty klesli pod 200 px — vtedy dvojica. */
+@media (max-width: 1099px) {
   .k .kh-kfg__typy { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 619px) {
@@ -13230,6 +13257,19 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-kfg__vyzva .k-btn { flex: 1 1 auto; justify-content: center; }
   .k .kh-kfg__cislo { font-size: 30px; }
   .k .kh-kfg__zoznam li { grid-template-columns: 44px minmax(0, 1fr); font-size: 15px; }
+}
+/* Na telefóne mali karty v dvoch stĺpcoch pri 320 px šírku 103 px — logo
+   Koverty aj tlačidlo z nich vyliezali. Karta sa preto otočí naležato:
+   fotka vľavo, text a výzva vpravo, jedna pod druhou. Štyri riadky sú
+   navyše nižšie než dva riadky zvislých kariet. */
+@media (max-width: 519px) {
+  .k .kh-kfg__karta-pas { padding: 20px 16px; }
+  .k .kh-kfg__typy { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .k .kh-kfg__karta { flex-direction: row; align-items: stretch; }
+  .k .kh-kfg__foto { flex: 0 0 32%; aspect-ratio: auto; min-height: 100%; }
+  .k .kh-kfg__telo { flex: 1 1 auto; min-width: 0; padding: 13px 14px; }
+  .k .kh-kfg__akcia { gap: 6px; padding: 0 12px; font-size: 12.5px; }
+  .k .kh-kfg__akcia svg { width: 13px; height: 13px; }
 }
 @media (hover: none) {
   .k .kh-kfg__karta:hover .kh-kfg__akcia svg { transform: none; }
