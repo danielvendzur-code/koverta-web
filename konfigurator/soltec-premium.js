@@ -2767,7 +2767,7 @@
               const R = Math.round((GUT - 20) / 2);
               const cx = L + GUT / 2, cz = zBot + R;
               const rz = Math.max(26, Math.round(R * 0.62));
-              const yA = 0, yB = W + 2 * rz;          // presah na strane zvodu
+              const yA = 0, yB = W;
               const N = 12;
               const kruh = (t) => [Math.cos(t) * R, Math.sin(t) * R];
               for (let i = 0; i < N; i++) {
@@ -2788,10 +2788,10 @@
                 quad(pts, shade(zinok, -0.10), { normal: [0, e[1], 0], cull: true });
               });
 
-              /* Zvod: kolmo dole spod konca žľabu, potom koleno 45° k stĺpu a
-                 po stĺpe na zem. Beží v tej istej rovine ako presah žľabu,
-                 takže na napojení nie je škára. */
-              const yc = W + rz;
+              /* Zvod: kolmo dole zo žľabu, potom koleno 45° dozadu k stĺpu a po
+                 ňom na zem. K stĺpu prichádza spredu, nie zboku — beží v jeho
+                 osi a dosadne na jeho čelo. */
+              const yc = W - post / 2;
               const rura = (ax, az, bx, bz) => {
                 const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
                 if (len < 1) return;
@@ -2803,16 +2803,20 @@
                                          yc + Math.sin(ang) * rz,
                                          az + uz * t + vz * Math.cos(ang) * rz];
                   const m = (a + b) / 2;
+                  /* Zvod je z toho istého lakovaného plechu ako stĺp, takže by
+                     mal presne jeho odtieň — a na modeli by pri ňom zanikol.
+                     Dostáva o chlp svetlejší tón, aby ho oko na čele stĺpa
+                     našlo; je to kresliarske rozhodnutie, nie iný výrobok. */
                   quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                       shade(frame, Math.sin(m) * 0.12),
+                       shade(frame, 0.14 + Math.sin(m) * 0.12),
                        { normal: [vx * Math.cos(m), Math.sin(m), vz * Math.cos(m)], cull: true });
                 }
               };
-              const xPost = L - Math.round(post * 0.5);
+              const xCelo = L + rz;                       // os zvodu na čele stĺpa
               const zKoleno = cz - R - Math.round(R * 0.6);
               rura(cx, cz, cx, zKoleno);                                  // výpust zo žľabu
-              rura(cx, zKoleno, xPost, zKoleno - (cx - xPost));           // koleno 45°
-              rura(xPost, zKoleno - (cx - xPost), xPost, 0);              // po stĺpe na zem
+              rura(cx, zKoleno, xCelo, zKoleno - (cx - xCelo));           // koleno 45°
+              rura(xCelo, zKoleno - (cx - xCelo), xCelo, 0);              // po čele stĺpa na zem
             }
           };
 
