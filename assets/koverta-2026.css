@@ -5669,30 +5669,22 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .is-headline .k-line__in { display: block; transform-origin: left bottom; }
 .is-headline .k-pismeno {
   display: inline-block;
-  animation: kPismeno 720ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: kPismeno 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: calc(var(--k-line-delay, 0ms) + var(--k-i, 0) * 16ms);
 }
-/* Písmeno nevychádza kolmo hore, ale s miernym náklonom dopredu, ktorý sa
-   v poslednej tretine vyrovná. Je to ten istý pohyb, len má zotrvačnosť —
-   oko ho číta ako hmotu, nie ako posun textu. Rozostup ostáva šestnásť
-   milisekúnd, takže nadpis nie je o nič pomalší. */
 @keyframes kPismeno {
-  from { transform: translate3d(0, 112%, 0) skewY(2.4deg); }
-  62%  { transform: translate3d(0, -1.5%, 0) skewY(-0.3deg); }
+  from { transform: translate3d(0, 108%, 0); }
   to   { transform: none; }
 }
 
 /* Jantár v druhom riadku sa zapáli až keď riadok dosadne. Je to jediný
-   farebný moment v hero a stojí za to, aby prišiel sám, nie s pohybom.
-   Zapálenie má krátky dosvit, ktorý sa vzápätí stratí — bez neho to bola
-   len výmena farby v jednom snímku. */
+   farebný moment v hero a stojí za to, aby prišiel sám, nie s pohybom. */
 .is-headline .kh-hero__accent {
-  animation: kAccentIn 900ms cubic-bezier(0.22, 1, 0.36, 1) 820ms backwards;
+  animation: kAccentIn 620ms var(--k-ease) 900ms backwards;
 }
 @keyframes kAccentIn {
-  from { color: #fff; text-shadow: 0 2px 30px rgba(0, 0, 0, 0.32); }
-  46%  { color: var(--k-amber); text-shadow: 0 0 24px rgba(255, 204, 0, 0.42), 0 2px 30px rgba(0, 0, 0, 0.32); }
-  to   { color: var(--k-amber); text-shadow: 0 2px 30px rgba(0, 0, 0, 0.32); }
+  from { color: #fff; }
+  to   { color: var(--k-amber); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -9682,28 +9674,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-hero__box > .kh-hero__trust { margin-bottom: 0; }
 .k .kh-hero__box > *:last-child { margin-bottom: 0; }
 
-/* Zadávateľ: hodnotenie na Google patrí dole, veta aj výzvy nižšie, nadpis
-   ostáva tam, kde je. Pás bol zvislo vycentrovaný, takže čokoľvek pod
-   nadpisom ho posúvalo hore. Obsah preto vypĺňa celú výšku pásu: nadpis drží
-   odsadenie zhora (rovnaké, aké mu dávalo centrovanie), hodnotenie sadá na
-   spodok a medzera medzi výzvami a hodnotením je to, čo ostane. Na telefóne
-   sa nič nemení — tam je pás zarovnaný nadol už teraz. */
-@media (min-width: 760px) {
-  .k .kh-hero__inner {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex: 1 1 auto;
-  }
-  .k .kh-hero__box {
-    flex: 1 1 auto;
-    padding-top: clamp(22px, 16vh, 190px);
-    padding-bottom: clamp(24px, 9vh, 92px);
-  }
-  /* Veta, výzvy a hodnotenie idú dole ako jeden blok — medzi sebou majú
-     rytmus zo stupnice vyššie, spolu sadajú k spodku pásu. */
-  .k .kh-hero__box > .k-lead { margin-top: auto; }
-}
 
 /* --- 92c · Fotografia sa pri hoveri nesmie zhoršiť -----------------------
    Filter jasu na fotke pri hoveri je preč: obraz má ostať taký, aký je, a
