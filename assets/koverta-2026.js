@@ -299,7 +299,7 @@
        úseky sú preto kratšie než ich odstup, takže sa nikdy neprekrývajú. */
     kroky: {
       draha: 0.52,
-      stopy: [ { sel: 'li > span', od: 0.10, do: 0.24, krok: 0.20 } ]
+      stopy: [ { sel: '.kh-kfg__cislo', od: 0.08, do: 0.26, krok: 0.22 } ]
     },
     /* Fotografia sa v ráme posúva po celý čas, čo je rám na obrazovke —
        preto spojitá dráha od spodnej po hornú hranu okna. */
@@ -1632,42 +1632,6 @@
     });
   }
 
-  /* --- 4c · Výmena nápisu na výzvach --------------------------------------
-     Pri prejdení má nápis odísť hore a zospodu prísť ten istý znova. Na to
-     treba dve kópie textu nad sebou — a keďže výziev je na webe vyše sto,
-     nemá zmysel prepisovať ich v HTML. Skript nájde v tlačidle prvý textový
-     uzol a obalí ho dvojicou; druhá kópia je pre čítačku skrytá, aby nápis
-     neprečítala dvakrát. Šípka ani iné značky sa nedotknú. */
-  function initTlacidla(root) {
-    const ciele = root.querySelectorAll(
-      '.k-btn, .kh-cat__actions > .k-link, .kh-pick__lane .k-link'
-    );
-    ciele.forEach((el) => {
-      if (el.querySelector('.k-btn__slovo')) return;
-      /* Prvý textový uzol s obsahom. Tlačidlá majú za textom ešte svg, to
-         ostáva mimo. */
-      const uzol = [...el.childNodes].find(
-        (n) => n.nodeType === 3 && n.textContent.trim().length
-      );
-      if (!uzol) return;
-      const text = uzol.textContent.trim();
-      const obal = document.createElement('span');
-      obal.className = 'k-btn__slovo';
-      const a = document.createElement('span');
-      a.className = 'k-btn__slovo-a';
-      a.textContent = text;
-      const bb = document.createElement('span');
-      bb.className = 'k-btn__slovo-b';
-      bb.setAttribute('aria-hidden', 'true');
-      /* Druhá kópia nesie text v atribúte a vypisuje ho pseudoprvok. Tak sa
-         nápis nezdvojí ani pri kopírovaní, ani pre vyhľadávače. */
-      bb.setAttribute('data-slovo', text);
-      obal.appendChild(a);
-      obal.appendChild(bb);
-      uzol.parentNode.replaceChild(obal, uzol);
-    });
-  }
-
   /* --- 5 · hlavička ------------------------------------------------------- */
 
   /* --- Tri realizácie sa cestou zmenia na tri recenzie --------------------
@@ -2813,7 +2777,6 @@
     ulohy.push(() => spusti(initDok, dok));
     /* Výzvy sú aj v hlavičke a v lepivom pruhu, teda mimo [data-k-root] —
        výmena nápisu sa preto zapína na úrovni dokumentu. */
-    ulohy.push(() => spusti(initTlacidla, dok));
     if (ulohy.length) davkuj(ulohy);
   }
 
