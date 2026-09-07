@@ -58,6 +58,11 @@
 <link rel="preconnect" href="https://koverta.sk" crossorigin>
 <link rel="dns-prefetch" href="https://koverta.sk">
 <link rel="canonical" href="https://danielvendzur-code.github.io/koverta-web/pevne-prestresenia/">
+<!-- NÁHĽAD · Táto adresa je náhľad nového webu, ostrá doména je koverta.sk.
+     Kým to platí, stránka sa nesmie dostať do vyhľadávačov a súperiť s
+     koverta.sk o tie isté výrazy. PRED SPUSTENÍM tento riadok zmazať —
+     celý postup je v MIGRACIA.md v koreni repozitára. -->
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#12171a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Koverta">
@@ -81,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788744971134">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788745839654">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -591,7 +596,7 @@
       <div class="k-rise" data-k-delay="2"><p class="k-copy">Katalóg je od výrobcu Soltec, v pôvodnom jazyku. Čokoľvek z neho radi vysvetlíme po slovensky.</p></div>
     </header>
     <div class="kh-kat__grid">
-      <a class="kh-kat__karta k-rise" data-k-delay="1" href="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/en-soltec-canopies-catalogue-2025-01.pdf?v=1788744971134" target="_blank" rel="noopener">
+      <a class="kh-kat__karta k-rise" data-k-delay="1" href="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/en-soltec-canopies-catalogue-2025-01.pdf?v=1788745839654" target="_blank" rel="noopener">
         <span class="kh-kat__ikona" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.6h7.4L19 8.2V21a.6.6 0 0 1-.6.6H6a.6.6 0 0 1-.6-.6V3.2A.6.6 0 0 1 6 2.6Z" stroke-linejoin="round"/><path d="M13.2 2.8v5.6h5.6" stroke-linejoin="round"/><path d="M12 11.4v6m0 0 2.4-2.4M12 17.4 9.6 15" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="kh-kat__telo">
           <strong class="kh-kat__nazov">Prístrešky a prestrešenia Soltec</strong>
@@ -688,8 +693,8 @@
         </form>
         <div class="kh-dakujem" data-k-dakujem hidden>
           <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
-          <h3 class="kh-dakujem__nadpis">Ďakujeme, dopyt je odoslaný</h3>
-          <p class="kh-dakujem__text">Máme ho u seba aj s fotkami, ak ste ich pripojili. Takto to bude pokračovať:</p>
+          <h3 class="kh-dakujem__nadpis">Dopyt sme odoslali</h3>
+          <p class="kh-dakujem__text">Ozveme sa vám do 24 hodín. Ak sa dovtedy nikto neozve, radšej zavolajte — mohlo sa stať, že dopyt k nám nedošiel. Takto to bude pokračovať:</p>
           <ol class="kh-dakujem__kroky">
             <li><strong>Ozveme sa do 24 hodín</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
             <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne — aj keď si nakoniec vyberiete inak.</span></li>
@@ -697,6 +702,13 @@
           </ol>
           <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
           <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="kh-dakujem kh-dakujem--chyba" data-k-chyba hidden>
+          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v6" stroke-linecap="round"/><path d="M12 17.2v.1" stroke-linecap="round"/></svg></p>
+          <h3 class="kh-dakujem__nadpis">Odoslanie sa nepodarilo potvrdiť</h3>
+          <p class="kh-dakujem__text">Server nám nevrátil odpoveď, takže nevieme povedať, či dopyt prešiel. Nečakajte na nás — ozvite sa priamo, vybavíme to hneď:</p>
+          <p class="kh-dakujem__spoj"><a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
+          <button class="k-link" type="button" data-k-spat>Skúsiť odoslať znova <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
 
       </div>
@@ -790,7 +802,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788744971134" defer></script>
+<script src="../assets/koverta-2026.js?v=1788745839654" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

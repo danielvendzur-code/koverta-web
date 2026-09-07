@@ -8673,6 +8673,16 @@ footer.kf { background: var(--k-ink); color: #fff; }
   stroke: var(--k-ink);
   stroke-width: 2.4;
 }
+/* Stav, keď sa odoslanie nepodarilo potvrdiť. Značka nie je jantárová fajka
+   — fajka by aj tu čítala ako „hotovo“. Je to tichý kruh s výkričníkom
+   v rovnakej veľkosti, takže sa panel nikam neposunie. */
+.kh-dakujem--chyba .kh-dakujem__znak {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--k-ink);
+}
+.kh-dakujem--chyba .kh-dakujem__znak svg { stroke: var(--k-ink); }
+.kh-dakujem--chyba .kh-dakujem__spoj { font-weight: 600; }
+
 .kh-dakujem__nadpis {
   margin: 0;
   font-family: var(--k-head);

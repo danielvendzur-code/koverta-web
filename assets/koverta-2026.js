@@ -1945,72 +1945,123 @@
      sa objaví poďakovanie s postupom.
 
      Keby skript nebežal, formulár sa odošle tak ako predtým. Nič sa nestratí. */
+  /* --- Dopyt: nikdy nesľúbiť to, čo sa nedá overiť -----------------------
+     Formulár posiela na koverta.sk, teda na iný pôvod, než z ktorého beží
+     stránka. Stav odpovede sa preto prečítať nedá.
+
+     Predtým tu bol skrytý rám a šesťsekundová poistka, ktorá po uplynutí
+     ukázala poďakovanie aj vtedy, keď odoslanie zlyhalo. Rám je na to
+     nepoužiteľný: pri výpadku siete doň prehliadač vloží vlastnú chybovú
+     stránku a ohlási `load` presne tak, ako pri úspechu. Overené meraním —
+     oba prípady sa správali rovnako, takže zákazník videl poďakovanie aj
+     vtedy, keď dopyt nikam nedošiel.
+
+     Namiesto rámu ide odoslanie cez `fetch` v režime `no-cors`. Stav
+     odpovede je aj tak neviditeľný, ale rozdiel, na ktorom záleží, sa
+     zachytiť dá: keď požiadavka k serveru nedôjde, sľub sa odmietne. Typ
+     `multipart/form-data` je v tomto režime povolený, takže prílohy idú
+     s dopytom ako predtým.
+
+     Poďakovanie preto netvrdí, že dopyt máme u seba — len že sme ho odoslali
+     a čo má nasledovať. Keď odoslanie zlyhá alebo trvá dlhšie než dvadsať
+     sekúnd, ukáže sa stav chyby s telefónom, nie poďakovanie.
+
+     Bez skriptu ostáva formulár obyčajným POSTom na koverta.sk a odpoveď
+     vykreslí server sám. */
   function initDopyt(root) {
     const formulare = root.querySelectorAll('form[data-k-dopyt]');
     if (!formulare.length) return;
-    const doc = root.ownerDocument || document;
+    if (typeof window.fetch !== 'function' || typeof window.FormData !== 'function') return;
 
     formulare.forEach((f) => {
       if (f.dataset.kReady === 'true') return;
       f.dataset.kReady = 'true';
       const dakujem = f.parentElement.querySelector('[data-k-dakujem]');
       if (!dakujem) return;
-
-      const menoRamu = 'kv-odoslanie-' + Math.random().toString(36).slice(2, 8);
-      const ram = doc.createElement('iframe');
-      ram.name = menoRamu;
-      ram.title = 'Odoslanie dopytu';
-      ram.setAttribute('aria-hidden', 'true');
-      ram.tabIndex = -1;
-      ram.style.cssText = 'position:absolute;width:0;height:0;border:0;left:-9999px';
-      f.parentElement.appendChild(ram);
-      f.target = menoRamu;
-
-      let odoslane = false;
-      let cakac = 0;
+      const chyba = f.parentElement.querySelector('[data-k-chyba]');
 
       /* Nadpis sekcie („Napíšte nám…“) aj jeho výzva by nad poďakovaním
          pôsobili, akoby sa nič neodoslalo — na ten čas odchádzajú tiež. */
       const hlava = f.parentElement.querySelector('.kh-cta__head');
+      const tlacidlo = () => f.querySelector('[type="submit"]');
+      let bezi = false;
 
-      const ukaz = () => {
-        if (!odoslane) return;
-        window.clearTimeout(cakac);
-        f.hidden = true;
-        if (hlava) hlava.hidden = true;
-        dakujem.hidden = false;
-        const nadpis = dakujem.querySelector('.kh-dakujem__nadpis');
+      const zameraj = (panel) => {
+        const nadpis = panel.querySelector('.kh-dakujem__nadpis');
         if (nadpis) {
           nadpis.setAttribute('tabindex', '-1');
           nadpis.focus({ preventScroll: true });
         }
-        const r = dakujem.getBoundingClientRect();
+        const r = panel.getBoundingClientRect();
         if (r.top < 0 || r.bottom > window.innerHeight) {
-          dakujem.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'center' });
+          panel.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'center' });
         }
       };
 
-      ram.addEventListener('load', () => { if (odoslane) ukaz(); });
+      const uvolni = () => {
+        bezi = false;
+        const b = tlacidlo();
+        if (b) { b.disabled = false; b.classList.remove('je-odosielane'); }
+      };
 
-      f.addEventListener('submit', () => {
-        odoslane = true;
-        const btn = f.querySelector('[type="submit"]');
-        if (btn) { btn.disabled = true; btn.classList.add('je-odosielane'); }
-        /* Poistka: keby rám neohlásil načítanie (blokovaný tretí subjekt),
-           poďakovanie sa ukáže aj tak — dopyt je odoslaný a zákazník nemá
-           ostať pozerať na zamrznuté tlačidlo. */
-        cakac = window.setTimeout(ukaz, 6000);
+      const ukaz = () => {
+        f.hidden = true;
+        if (hlava) hlava.hidden = true;
+        if (chyba) chyba.hidden = true;
+        dakujem.hidden = false;
+        zameraj(dakujem);
+      };
+
+      /* Stav chyby. Formulár ostáva na stránke aj s vyplnenými poľami, aby
+         sa dal odoslať znova bez prepisovania. */
+      const zlyhalo = () => {
+        uvolni();
+        if (!chyba) return;
+        chyba.hidden = false;
+        zameraj(chyba);
+      };
+
+      f.addEventListener('submit', (e) => {
+        if (bezi) { e.preventDefault(); return; }
+        e.preventDefault();
+        bezi = true;
+        if (chyba) chyba.hidden = true;
+        const b = tlacidlo();
+        if (b) { b.disabled = true; b.classList.add('je-odosielane'); }
+
+        const stop = ('AbortController' in window) ? new AbortController() : null;
+        const cakac = window.setTimeout(() => { if (stop) stop.abort(); }, 20000);
+
+        fetch(f.action, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: new FormData(f),
+          signal: stop ? stop.signal : undefined
+        }).then(() => {
+          window.clearTimeout(cakac);
+          uvolni();
+          ukaz();
+        }).catch(() => {
+          window.clearTimeout(cakac);
+          zlyhalo();
+        });
+      });
+
+      const spat = chyba && chyba.querySelector('[data-k-spat]');
+      if (spat) spat.addEventListener('click', () => {
+        chyba.hidden = true;
+        f.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
+        const prve = f.querySelector('input:not([type="hidden"]), textarea, select');
+        if (prve) prve.focus({ preventScroll: true });
       });
 
       const znova = dakujem.querySelector('[data-k-znova]');
       if (znova) znova.addEventListener('click', () => {
-        odoslane = false;
         dakujem.hidden = true;
         if (hlava) hlava.hidden = false;
         f.hidden = false;
         f.reset();
-        const btn = f.querySelector('[type="submit"]');
-        if (btn) { btn.disabled = false; btn.classList.remove('je-odosielane'); }
+        uvolni();
         f.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
       });
     });
