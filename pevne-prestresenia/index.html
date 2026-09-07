@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788786760520">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788800565610">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -357,61 +357,59 @@
       </div>
     </header>
 
-    <div class="kh-tab k-rise" data-k-delay="1">
-      <div class="kh-tab__scroll">
-        <table>
-          <caption>Najväčšie rozmery jedného modulu. Výška do 3 m (rad F 2,8 m po spodnú hranu rámu).</caption>
-          <thead>
-            <tr>
-              <th scope="col">Model</th>
-              <th scope="col">Profil / stĺp</th>
-              <th scope="col">4 stĺpy</th>
-              <th scope="col">6 stĺpov</th>
-              <th scope="col">Strecha</th>
-              <th scope="col">Zaťaženie</th>
-            </tr>
-          </thead>
+    <!-- Najprv rad, potom model, tabuľka až nakoniec (artboard G1). Prvé, čo
+         zákazník vidí, nie je tabuľka so šiestimi stĺpcami, ale dve karty
+         s fotografiou a jednou vetou — rozdiel medzi radmi sa tak dá pochopiť
+         bez čísel. Parametre pod nimi patria len vybranému radu. -->
+    <div class="kh-typ2 k-rise" data-k-typ2>
+      <div class="kh-typ2__rady" role="tablist" aria-label="Typorady">
+        <button class="kh-typ2__rad is-active" type="button" data-k-typ2-rad>
+          <span class="kh-typ2__foto"><img src="../assets/soltec-canopy-f170-real.jpg" width="2000" height="1239" alt="Prestrešenie Soltec radu F s ISO panelom" loading="lazy" decoding="async"></span>
+          <span class="kh-typ2__nazov">Rad F<em>vybraný</em></span>
+          <span class="kh-typ2__veta">Vodorovný kváder s ISO panelom — jedna rovná plocha bez viditeľného spádu. Spád 2 % je schovaný v ráme.</span>
+        </button>
+        <button class="kh-typ2__rad" type="button" data-k-typ2-rad>
+          <span class="kh-typ2__foto"><img src="../assets/soltec-canopy-glassport-pool.jpg" width="2000" height="1333" alt="Prestrešenie Soltec radu G so sklenenou strechou" loading="lazy" decoding="async"></span>
+          <span class="kh-typ2__nazov">Rad G<em>vybraný</em></span>
+          <span class="kh-typ2__veta">Strecha vyzerá vodorovne a znesie viac — je stavaná pod sklo, ISO panel alebo zelenú strechu.</span>
+        </button>
+      </div>
+
+      <div class="kh-typ2__panel" data-k-typ2-panel>
+        <table class="kh-typ2__tab">
+          <caption>Rad F — parametre</caption>
+          <thead><tr><td></td><th scope="col"><strong>F170</strong><span>nižší profil, bežné rozpony</span></th><th scope="col"><strong>F240</strong><span>vyšší profil, väčšie šírky</span></th></tr></thead>
           <tbody>
-            <tr class="kh-tab__skupina"><th scope="colgroup" colspan="6">Rad F<span>ISO panel, plná strecha</span></th></tr>
-            <tr>
-              <th scope="row">F170<small>profil 17</small></th>
-              <td data-popis="Profil / stĺp">170 / 120 mm · stĺp 120 / 120 mm</td>
-              <td data-popis="4 stĺpy">3 × 6 m</td>
-              <td data-popis="6 stĺpov">3 × 9,15 m</td>
-              <td data-popis="Strecha">ISO panel 3 cm</td>
-              <td data-popis="Zaťaženie">140 kg/m²</td>
-              </tr>
-            <tr>
-              <th scope="row">F240<small>profil 24</small></th>
-              <td data-popis="Profil / stĺp">240 / 150 mm · stĺp 150 / 150 mm</td>
-              <td data-popis="4 stĺpy">6 × 6 m</td>
-              <td data-popis="6 stĺpov">6 × 9,15 m</td>
-              <td data-popis="Strecha">ISO panel 3 cm</td>
-              <td data-popis="Zaťaženie">140 kg/m²</td>
-              </tr>
-          </tbody>
-          <tbody>
-            <tr class="kh-tab__skupina"><th scope="colgroup" colspan="6">Rad G<span>sklo, panel alebo zelená strecha</span></th></tr>
-            <tr>
-              <th scope="row">G170<small>profil 17</small></th>
-              <td data-popis="Profil / stĺp">170 / 120 mm · stĺp 120 / 120 mm</td>
-              <td data-popis="4 stĺpy">3 × 5 m</td>
-              <td data-popis="6 stĺpov">3 × 9 m</td>
-              <td data-popis="Strecha">sklo, ISO panel alebo zeleň</td>
-              <td data-popis="Zaťaženie">do 240 kg/m²</td>
-              </tr>
-            <tr>
-              <th scope="row">G240<small>profil 24</small></th>
-              <td data-popis="Profil / stĺp">240 / 150 mm · stĺp 150 / 150 mm</td>
-              <td data-popis="4 stĺpy">3 × 7 m</td>
-              <td data-popis="6 stĺpov">3 × 9 m</td>
-              <td data-popis="Strecha">sklo, ISO panel alebo zeleň</td>
-              <td data-popis="Zaťaženie">do 240 kg/m²</td>
-              </tr>
+            <tr><th scope="row">Rám</th><td data-popis="Rám"><b>170 × 120 mm</b></td><td data-popis="Rám"><b>240 × 150 mm</b></td></tr>
+            <tr><th scope="row">Stĺp</th><td data-popis="Stĺp"><b>120 × 120 mm</b></td><td data-popis="Stĺp"><b>150 × 150 mm</b></td></tr>
+            <tr><th scope="row">Max. šírka</th><td data-popis="Max. šírka"><b>3,0 m</b></td><td data-popis="Max. šírka"><b>6,0 m</b></td></tr>
+            <tr><th scope="row">Výška</th><td data-popis="Výška"><b>2,8 m</b></td><td data-popis="Výška"><b>2,8 m</b></td></tr>
+            <tr><th scope="row">Max. dĺžka</th><td data-popis="Max. dĺžka"><b>6,0 m</b> <i>na 4 stĺpoch</i><br><b>9,15 m</b> <i>na 6 stĺpoch</i></td><td data-popis="Max. dĺžka"><b>6,0 m</b> <i>na 4 stĺpoch</i><br><b>9,15 m</b> <i>na 6 stĺpoch</i></td></tr>
+            <tr><th scope="row">Strecha</th><td data-popis="Strecha"><b>ISO panel 3 cm</b></td><td data-popis="Strecha"><b>ISO panel 3 cm</b></td></tr>
+            <tr><th scope="row">Kotvenie</th><td data-popis="Kotvenie"><b>betónová pätka</b> <i>alebo platňa</i></td><td data-popis="Kotvenie"><b>betónová pätka</b> <i>alebo platňa</i></td></tr>
+            <tr><th scope="row">Zaťaženie</th><td data-popis="Zaťaženie"><b>140 kg/m²</b></td><td data-popis="Zaťaženie"><b>140 kg/m²</b></td></tr>
           </tbody>
         </table>
       </div>
-      <p class="kh-tab__note">Odvodnenie v stĺpoch, dva alebo tri vývody podľa dĺžky. Číslo pre vašu snehovú oblasť dáme k ponuke.</p>
+
+      <div class="kh-typ2__panel" hidden data-k-typ2-panel>
+        <table class="kh-typ2__tab">
+          <caption>Rad G — parametre</caption>
+          <thead><tr><td></td><th scope="col"><strong>G170</strong><span>nižší profil</span></th><th scope="col"><strong>G240</strong><span>vyšší profil</span></th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Rám</th><td data-popis="Rám"><b>170 × 120 mm</b></td><td data-popis="Rám"><b>240 × 150 mm</b></td></tr>
+            <tr><th scope="row">Stĺp</th><td data-popis="Stĺp"><b>120 × 120 mm</b></td><td data-popis="Stĺp"><b>150 × 150 mm</b></td></tr>
+            <tr><th scope="row">Max. šírka</th><td data-popis="Max. šírka"><b>3,0 m</b></td><td data-popis="Max. šírka"><b>3,0 m</b></td></tr>
+            <tr><th scope="row">Výška</th><td data-popis="Výška"><b>3,0 m</b></td><td data-popis="Výška"><b>3,0 m</b></td></tr>
+            <tr><th scope="row">Max. dĺžka</th><td data-popis="Max. dĺžka"><b>5,0 m</b> <i>na 4 stĺpoch</i><br><b>9,0 m</b> <i>na 6 stĺpoch</i></td><td data-popis="Max. dĺžka"><b>7,0 m</b> <i>na 4 stĺpoch</i><br><b>9,0 m</b> <i>na 6 stĺpoch</i></td></tr>
+            <tr><th scope="row">Strecha</th><td data-popis="Strecha"><b>sklo, ISO panel alebo zeleň</b></td><td data-popis="Strecha"><b>sklo, ISO panel alebo zeleň</b></td></tr>
+            <tr><th scope="row">Kotvenie</th><td data-popis="Kotvenie"><b>betónová pätka</b> <i>alebo platňa</i></td><td data-popis="Kotvenie"><b>betónová pätka</b> <i>alebo platňa</i></td></tr>
+            <tr><th scope="row">Zaťaženie</th><td data-popis="Zaťaženie"><b>240 kg/m²</b></td><td data-popis="Zaťaženie"><b>240 kg/m²</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="kh-typ2__pozn">Kotvenie sa dodáva pozinkované, na želanie lakované v odtieni konštrukcie alebo z nehrdzavejúcej ocele. Väčšie plochy sa skladajú z modulov vedľa seba.</p>
     </div>
   </div>
 </section>
@@ -800,7 +798,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788786760520" defer></script>
+<script src="../assets/koverta-2026.js?v=1788800565610" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

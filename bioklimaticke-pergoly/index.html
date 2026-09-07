@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788786760520">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788800565610">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -591,17 +591,39 @@
       </div>
     </header>
 
-    <p class="kh-farby__pas k-rise"><span>V cene pergoly</span> osem štandardných odtieňov Soltec, všetky v mikroštruktúre</p>
-    <ul class="kh-odtiene k-rise" data-k-delay="1">
-      <li class="kh-odtien"><i style="background:#383E42" aria-hidden="true"></i><span><strong>Antracitová sivá</strong><small>RAL 7016</small></span></li>
-      <li class="kh-odtien"><i style="background:#A5A8A6" aria-hidden="true"></i><span><strong>Biely hliník</strong><small>RAL 9006</small></span></li>
-      <li class="kh-odtien"><i style="background:#8F8F8C" aria-hidden="true"></i><span><strong>Sivý hliník</strong><small>RAL 9007</small></span></li>
-      <li class="kh-odtien"><i style="background:#F1F0EA" aria-hidden="true"></i><span><strong>Dopravná biela</strong><small>RAL 9016</small></span></li>
-      <li class="kh-odtien"><i style="background:#D7D5CB" aria-hidden="true"></i><span><strong>Sivobiela</strong><small>RAL 9002</small></span></li>
-      <li class="kh-odtien"><i style="background:#E3D9C6" aria-hidden="true"></i><span><strong>Perlová biela</strong><small>RAL 1013</small></span></li>
-      <li class="kh-odtien"><i style="background:#45322E" aria-hidden="true"></i><span><strong>Čokoládová hnedá</strong><small>RAL 8017</small></span></li>
-      <li class="kh-odtien"><i style="background:#4A4B4C" aria-hidden="true"></i><span><strong>Tmavá sivá DB</strong><small>RAL DB703</small></span></li>
-    </ul>
+    <!-- Vzorkovník podľa artboardu F1: bodky na grafitovom páse, zoradené
+         od najtmavšieho po najsvetlejší. Štyri takmer biele odtiene sú tak
+         od seba oddelené tmavým pozadím a čítajú sa ako postupný krok
+         svetlosti, nie ako jedna splývajúca plocha. -->
+    <div class="kh-vzor k-rise">
+      <p class="kh-vzor__label">V cene konštrukcie — zoradené od najtmavšieho</p>
+      <ul class="kh-odtiene">
+        <li class="kh-odtien"><i style="background:#45322E" aria-hidden="true"></i><span><strong>Čokoládová hnedá</strong><small>RAL 8017</small></span></li>
+        <li class="kh-odtien"><i style="background:#383E42" aria-hidden="true"></i><span><strong>Antracitová sivá</strong><small>RAL 7016</small></span></li>
+        <li class="kh-odtien"><i style="background:#4A4B4C" aria-hidden="true"></i><span><strong>Tmavá sivá DB</strong><small>RAL DB703</small></span></li>
+        <li class="kh-odtien"><i style="background:#8F8F8C" aria-hidden="true"></i><span><strong>Sivý hliník</strong><small>RAL 9007</small></span></li>
+        <li class="kh-odtien"><i style="background:#A5A8A6" aria-hidden="true"></i><span><strong>Biely hliník</strong><small>RAL 9006</small></span></li>
+        <li class="kh-odtien"><i style="background:#D7D5CB" aria-hidden="true"></i><span><strong>Sivobiela</strong><small>RAL 9002</small></span></li>
+        <li class="kh-odtien"><i style="background:#E3D9C6" aria-hidden="true"></i><span><strong>Perlová biela</strong><small>RAL 1013</small></span></li>
+        <li class="kh-odtien"><i style="background:#F1F0EA" aria-hidden="true"></i><span><strong>Dopravná biela</strong><small>RAL 9016</small></span></li>
+      </ul>
+    </div>
+
+    <div class="kh-vzor__fotky">
+      <figure class="kh-vzor__foto k-rise">
+        <img src="../assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Tmavý odtieň hliníkovej konštrukcie Soltec na hotovej stavbe" loading="lazy" decoding="async">
+        <figcaption>Tmavý odtieň na hotovej konštrukcii — pohltí svetlo a stavba pôsobí nižšie.</figcaption>
+      </figure>
+      <figure class="kh-vzor__foto k-rise" data-k-delay="1">
+        <img src="../assets/soltec-bio-render-15.jpg" width="1920" height="1280" alt="Svetlý odtieň hliníkovej pergoly Soltec pri dome" loading="lazy" decoding="async">
+        <figcaption>Svetlý odtieň na tej istej konštrukcii. Rozdiel je vidieť až na stavbe, nie na obrazovke — pri zameraní ukážeme lakované vzorkovníky.</figcaption>
+      </figure>
+    </div>
+
+    <div class="kh-vzor__pata k-rise">
+      <p>Týchto osem odtieňov je v cene konštrukcie. Ktorýkoľvek iný odtieň z palety RAL dodáme na objednávku — cenu a termín potvrdíme v ponuke.</p>
+      <a class="k-btn k-btn--line k-btn--maly" href="#ponuka">Odtiene na objednávku <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
 
     <ul class="kh-fakty__rad kh-farby__navyse">
       <li class="kh-fakty__polozka k-rise">
@@ -637,7 +659,7 @@
     <header class="k-head k-head--split">
       <div class="k-head__title">
         <p class="k-eyebrow k-rise">Výbava</p>
-        <h2 id="vybavaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Boky, sklo a svetlo sa dajú dopĺňať aj neskôr</h2>
+        <h2 id="vybavaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Boky, sklo a svetlo patria do návrhu hneď na začiatku</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
         <p class="k-copy">Doplnky sa vešajú do drážok v ráme — pridáte ich aj o pár rokov. Povedzte nám dopredu, čo môže pribudnúť.</p>
@@ -731,7 +753,7 @@
 <div class="kh-duo__telo">
 <p class="k-eyebrow k-rise">Bioklimatické pergoly · Soltec</p>
 <h2 id="duoPergola" class="k-h2 k-rise" data-k-headline data-k-delay="1">Slnko, tieň aj dážď <span class="k-mark">na jedno tlačidlo</span></h2>
-<p class="k-copy k-rise" data-k-delay="2">Otočné lamely s odvodom vody vedeným v konštrukcii. Väčšie plochy sa skladajú z viacerých modulov. ZIP rolety, sklo aj LED sa vešajú do drážok v ráme, takže sa dajú doplniť aj neskôr.</p>
+<p class="k-copy k-rise" data-k-delay="2">Otočné lamely s odvodom vody vedeným v konštrukcii. Väčšie plochy sa skladajú z viacerých modulov. ZIP rolety, sklo aj LED sa vešajú do drážok v ráme. Objednávajú sa spolu s pergolou zo Slovinska, takže jedna dodávka a jedna montáž vyjdú výrazne lacnejšie než dokupovanie po častiach — oplatí sa rozhodnúť pri návrhu.</p>
 <div class="kh-duo__fakty k-rise" data-k-delay="3"><div class="kh-duo__fakt"><p class="kh-duo__cislo">0 – 135°</p><p class="kh-duo__popis">natočenie lamiel</p></div><div class="kh-duo__fakt"><p class="kh-duo__cislo">45 m²</p><p class="kh-duo__popis">najväčší jeden modul</p></div></div>
 <p class="kh-duo__akcia k-rise" data-k-delay="4"><a class="k-btn k-btn--ink" href="#ponuka">Nezáväzná cenová ponuka <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
 </div>
@@ -1252,7 +1274,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788786760520" defer></script>
+<script src="../assets/koverta-2026.js?v=1788800565610" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

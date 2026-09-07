@@ -1724,7 +1724,7 @@
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
-        preco: 'ZIP rolety, lamelové panely a brisoleje. Dajú sa doplniť aj k hotovej konštrukcii.' },
+        preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou — jedna dodávka zo Slovinska a jedna montáž.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
         preco: 'Hliníkové korpusy s práškovým lakom, doska z nerezu, kameňa alebo betónu. Zostava sa skladá z modulov.' }
     };
@@ -1754,7 +1754,7 @@
         var premium = o.hladina === 'vyssi' || o.auta === 'box' || o.strechaAuto === 'svetlo';
         var pozn = null;
         if (o.auta === 'box') pozn = 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.';
-        else if (o.strechaAuto === 'bok') pozn = 'Bok zakryje lamelová stena alebo ZIP roleta — dá sa doplniť aj neskôr.';
+        else if (o.strechaAuto === 'bok') pozn = 'Bok zakryje lamelová stena alebo ZIP roleta. Zahrňte ju rovno do návrhu — dodatočná objednávka zo Slovinska je samostatná dodávka aj montáž.';
         else if (o.strechaAuto === 'svetlo') pozn = 'Presvetlenú strechu rieši hliníkový systém so sklom alebo so svetlopriepustnou výplňou.';
         return { hlavne: premium ? 'carport' : 'auta', doplnok: pozn };
       }
@@ -1762,7 +1762,7 @@
       if (o.strecha === 'lamely') return { hlavne: 'bio', doplnok: null };
       if (o.strecha === 'svetlo') return { hlavne: 'pevne', doplnok: 'Sklenená výplň je v rade G; ISO panel je tmavší, ale lepšie tieni.' };
       return { hlavne: o.hladina === 'vyssi' || o.plocha === 'velka' ? 'pevne' : 'zahradne',
-        doplnok: 'Bočnú clonu proti vetru a nízkemu slnku vieme doplniť ZIP roletou aj neskôr.' };
+        doplnok: 'Proti vetru a nízkemu slnku pomôže bočná ZIP roleta. Oplatí sa objednať ju spolu s konštrukciou, nie dodatočne.' };
     };
 
     const telo = panel.querySelector('[data-k-kviz-telo]');
@@ -1859,6 +1859,44 @@
       spustac.focus();
     });
     panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri.click(); });
+  }
+
+
+  /* --- 4e · Typorady: najprv rad, potom čísla -----------------------------
+     Tabuľka so šiestimi stĺpcami bola prvé, čo zákazník uvidel, a rozdiel
+     medzi radmi z nej nevyčítal. Rady sú dve karty s fotografiou; parametre
+     pod nimi patria len vybranému radu. Bez skriptu sú vidieť oba panely
+     pod sebou a nič sa nestratí. */
+  function initTyp2(root) {
+    root.querySelectorAll('[data-k-typ2]').forEach((scope) => {
+      const rady = [].slice.call(scope.querySelectorAll('[data-k-typ2-rad]'));
+      const panely = [].slice.call(scope.querySelectorAll('[data-k-typ2-panel]'));
+      if (rady.length !== panely.length || !rady.length) return;
+
+      const zvol = (i) => {
+        rady.forEach((r, j) => {
+          const on = j === i;
+          r.classList.toggle('is-active', on);
+          r.setAttribute('aria-selected', on ? 'true' : 'false');
+          r.tabIndex = on ? 0 : -1;
+        });
+        panely.forEach((p, j) => { p.hidden = j !== i; });
+      };
+
+      rady.forEach((r, i) => {
+        r.setAttribute('role', 'tab');
+        r.addEventListener('click', () => zvol(i));
+        r.addEventListener('keydown', (e) => {
+          const mapa = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+          if (!mapa[e.key]) return;
+          e.preventDefault();
+          const dalsi = (i + mapa[e.key] + rady.length) % rady.length;
+          zvol(dalsi);
+          rady[dalsi].focus();
+        });
+      });
+      zvol(0);
+    });
   }
 
   /* --- 5 · hlavička ------------------------------------------------------- */
@@ -2977,7 +3015,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz];
+                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initTyp2];
 
   const davkuj = (ulohy) => {
     let i = 0;
