@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788783000482">
+<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788783552797">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -398,102 +398,136 @@
 <section class="k-band kh-ponuka" id="riesenia" aria-labelledby="catTitle">
   <div class="k-wrap">
     <header class="kh-ponuka__hlava">
-      <div class="kh-ponuka__titul">
-        <p class="k-eyebrow k-rise">Ponuka</p>
-        <h2 id="catTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Aké riešenie potrebujete?</h2>
-      </div>
-      <p class="kh-ponuka__legenda k-rise" data-k-delay="2">
-        <span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span> <span>vlastná oceľová výroba</span>
-        <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span> <span>prémiový hliníkový systém</span>
-      </p>
+      <p class="k-eyebrow k-rise">Ponuka</p>
+      <h2 id="catTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Aké riešenie potrebujete</h2>
+      <p class="k-copy k-rise" data-k-delay="2">Sedem kategórií. Vlastná oceľová výroba Koverta a prémiový hliníkový systém Soltec.</p>
     </header>
 
-    <ul class="kh-ponuka__mriezka">
-      <li class="kh-ponuka__kus kh-ponuka__kus--hlavna k-rise" data-k-delay="1">
-        <a class="kh-ponuka__karta" href="./pristresky-pre-auta/">
+    <!-- Vodorovný rytmus so striedaním strany fotografie (artboard A1).
+         Dve fotografie nikdy nestoja bok po boku — to bol na mriežke
+         najväčší problém: tri konštrukcie splývali do jedného pásu. -->
+    <ul class="kh-ponuka__rytmus">
+      <li class="kh-ponuka__riadok k-rise kh-ponuka__riadok--hlavny" data-k-delay="1">
+        <a class="kh-ponuka__kus" href="./pristresky-pre-auta/">
           <span class="kh-ponuka__foto"><img src="./assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Prístrešok Koverta pre auto pri rodinnom dome" loading="lazy" decoding="async"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Prístrešky pre autá</span>
-            <span class="kh-ponuka__udaj">1 – 3 autá, šírka do 8 m</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Vybrať prístrešok <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-        </a>
-      </li>
-      <li class="kh-ponuka__kus kh-ponuka__kus--siroka k-rise" data-k-delay="2">
-        <a class="kh-ponuka__karta" href="./bioklimaticke-pergoly/">
-          <span class="kh-ponuka__foto"><img src="./assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola Soltec s otočnými lamelami" loading="lazy" decoding="async"></span>
-          <span class="kh-ponuka__telo">
-            <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
-            <span class="kh-ponuka__nazov">Bioklimatické pergoly</span>
-            <span class="kh-ponuka__udaj">lamely 0 – 135°, modul do 45 m²</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__popis">Oceľ z vlastnej výroby aj hliníkový Soltec. Kotvenie do betónu alebo do spevnenej plochy.</span>
           </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">1 – 3 autá</span>
+            <span class="kh-ponuka__hodnota">šírka do 8 m</span>
+            <span class="kh-ponuka__cena">od 4 497 €</span>
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--primary k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </a>
       </li>
-      <li class="kh-ponuka__kus k-rise" data-k-delay="3">
-        <a class="kh-ponuka__karta" href="./zahradne-pristresky/">
-          <span class="kh-ponuka__foto"><img src="https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=1200" width="1200" height="900" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"></span>
-          <span class="kh-ponuka__telo">
-            <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span></span>
-            <span class="kh-ponuka__nazov">Záhradné prístrešky</span>
-            <span class="kh-ponuka__udaj">rozpon 3 – 8 m</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-        </a>
-      </li>
-      <li class="kh-ponuka__kus k-rise" data-k-delay="4">
-        <a class="kh-ponuka__karta" href="./carport-soltec/">
+      <li class="kh-ponuka__riadok k-rise kh-ponuka__riadok--obratene" data-k-delay="2">
+        <a class="kh-ponuka__kus" href="./carport-soltec/">
           <span class="kh-ponuka__foto"><img src="./assets/soltec-carport-plavecky-03.jpg" width="2200" height="1650" alt="Hliníkový carport Soltec" loading="lazy" decoding="async"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Carport Soltec</span>
-            <span class="kh-ponuka__udaj">F170 / F240, dĺžka do 9,2 m</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__popis">Hliníkový systém s čistou architektúrou a skrytým odvodom vody.</span>
           </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">F170 / F240</span>
+            <span class="kh-ponuka__hodnota">dĺžka do 9,2 m</span>
+            
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--line k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </a>
       </li>
-      <li class="kh-ponuka__kus k-rise" data-k-delay="1">
-        <a class="kh-ponuka__karta" href="./pevne-prestresenia/">
+      <li class="kh-ponuka__riadok k-rise kh-ponuka__riadok--hlavny" data-k-delay="3">
+        <a class="kh-ponuka__kus" href="./zahradne-pristresky/">
+          <span class="kh-ponuka__foto"><img src="https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=1200" width="1200" height="900" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"></span>
+          <span class="kh-ponuka__telo">
+            <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span></span>
+            <span class="kh-ponuka__nazov">Záhradné prístrešky</span>
+            <span class="kh-ponuka__popis">Oceľová konštrukcia na terasu, sedenie alebo techniku. Rozpon podľa miesta.</span>
+          </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">rozpon</span>
+            <span class="kh-ponuka__hodnota">3 – 8 m</span>
+            <span class="kh-ponuka__cena">od 4 297 €</span>
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--primary k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </li>
+      <li class="kh-ponuka__riadok k-rise kh-ponuka__riadok--hlavny kh-ponuka__riadok--obratene" data-k-delay="4">
+        <a class="kh-ponuka__kus" href="./bioklimaticke-pergoly/">
+          <span class="kh-ponuka__foto"><img src="./assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola Soltec s otočnými lamelami" loading="lazy" decoding="async"></span>
+          <span class="kh-ponuka__telo">
+            <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
+            <span class="kh-ponuka__nazov">Bioklimatické pergoly</span>
+            <span class="kh-ponuka__popis">Otočné lamely regulujú slnko aj dážď. Terasa použiteľná celý rok.</span>
+          </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">lamely 0 – 135°</span>
+            <span class="kh-ponuka__hodnota">modul do 45 m²</span>
+            
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--primary k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </li>
+      <li class="kh-ponuka__riadok k-rise" data-k-delay="4">
+        <a class="kh-ponuka__kus" href="./pevne-prestresenia/">
           <span class="kh-ponuka__foto"><img src="./assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Pevné prestrešenie terasy s hliníkovým rámom" loading="lazy" decoding="async"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Pevné prestrešenia</span>
-            <span class="kh-ponuka__udaj">ISO panel 30 mm alebo sklo</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__popis">Zastrešenie terasy bez pohyblivých častí. Panel alebo presvetlené sklo.</span>
           </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">strecha</span>
+            <span class="kh-ponuka__hodnota">ISO panel 30 mm alebo sklo</span>
+            
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--line k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </a>
       </li>
-      <li class="kh-ponuka__kus k-rise" data-k-delay="2">
-        <a class="kh-ponuka__karta" href="./tienenie/">
+      <li class="kh-ponuka__riadok k-rise kh-ponuka__riadok--obratene" data-k-delay="4">
+        <a class="kh-ponuka__kus" href="./tienenie/">
           <span class="kh-ponuka__foto"><img src="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1200" width="1200" height="900" alt="ZIP roleta na terase" loading="lazy" decoding="async"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Tienenie</span>
-            <span class="kh-ponuka__udaj">ZIP roleta, panely, brisoleje</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__popis">Bočné doplnenie pergoly aj samostatné tienenie okien.</span>
           </span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">výplň</span>
+            <span class="kh-ponuka__hodnota">ZIP roleta, panely, brisoleje</span>
+            
+          </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--line k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </a>
       </li>
-      <li class="kh-ponuka__kus k-rise" data-k-delay="3">
-        <a class="kh-ponuka__karta" href="./outdoor-kuchyne/">
+      <li class="kh-ponuka__riadok k-rise" data-k-delay="4">
+        <a class="kh-ponuka__kus" href="./outdoor-kuchyne/">
           <span class="kh-ponuka__foto"><img src="https://koverta.sk/cdn/shop/files/Graz_Showroom_horizontal_1.png?width=1200" width="1200" height="900" alt="Vonkajšia kuchyňa z nerezu a hliníka" loading="lazy" decoding="async"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Vonkajšie kuchyne</span>
-            <span class="kh-ponuka__udaj">nerez a hliník, modulová zostava</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+            <span class="kh-ponuka__popis">Modulová zostava pod pergolu — varenie, drez, úložný priestor.</span>
           </span>
-        </a>
-      </li>
-      <li class="kh-ponuka__kus kh-ponuka__kus--vstup k-rise" data-k-delay="4">
-        <a class="kh-ponuka__karta" href="#ponuka" data-k-kviz-otvor>
-          <span class="kh-ponuka__telo">
-            <span class="kh-ponuka__nazov">Neviete, čo z toho?</span>
-            <span class="kh-ponuka__udaj">Pár otázok a povieme vám, ktoré riešenie sa na vaše miesto hodí.</span>
-            <span class="kh-ponuka__pata"><span class="kh-ponuka__akcia">Spustiť výber <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+          <span class="kh-ponuka__udaje">
+            <span class="kh-ponuka__pojem">materiál</span>
+            <span class="kh-ponuka__hodnota">nerez a hliník, modulová zostava</span>
+            
           </span>
+          <span class="kh-ponuka__akcia k-btn k-btn--line k-btn--maly">Zobraziť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </a>
       </li>
     </ul>
+
+    <div class="kh-ponuka__vstup k-rise">
+      <div class="kh-ponuka__vstup-text">
+        <p class="kh-ponuka__vstup-nadpis">Neviete, čo z toho?</p>
+        <p class="kh-ponuka__vstup-veta">Pár otázok — čo riešite, aké miesto máte a čo od strechy čakáte. Na konci dostanete konkrétne riešenie aj so značkou.</p>
+      </div>
+      <a class="k-btn k-btn--primary" href="#ponuka" data-k-kviz-otvor>Krátky výber <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
 
     <!-- Výber riešenia. Bez skriptu sa neotvorí a dlaždica vedie na formulár,
          takže sa nikto nedostane do slepej uličky. -->
@@ -539,72 +573,54 @@
      oddelí konfigurátor od zvyšku stránky a hlavná výzva sedí hneď vedľa
      nadpisu, teda vysoko nad zlomom. Kroky nemajú čísla v kolieskach —
      číslo je tiché a stojí vedľa názvu. -->
-<section class="k-band kh-kfg" id="konfigurator" aria-labelledby="cfgTitle">
+<section class="k-band kh-kfg k-invert" id="konfigurator" aria-labelledby="cfgTitle">
   <div class="k-wrap">
-    <div class="kh-kfg__karta-pas">
-      <div class="kh-kfg__vrch">
-        <div class="kh-kfg__uvod">
-          <p class="k-eyebrow k-rise">Konfigurátor</p>
-          <h2 id="cfgTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Poskladajte si zostavu a pošlite nám ju</h2>
-          <p class="k-copy k-rise" data-k-delay="2">V 3D konfigurátore nastavíte typ, rozmer a výbavu. Zostava príde k nám spolu s vaším dopytom.</p>
-        </div>
+    <div class="kh-kfg__grid">
+      <div class="kh-kfg__uvod">
+        <p class="k-eyebrow k-rise">Konfigurátor</p>
+        <h2 id="cfgTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Poskladajte si zostavu v 3D</h2>
+        <p class="k-copy k-rise" data-k-delay="2">Vyberiete typ, nastavíte rozmer a výbavu, zostavu nám pošlete s dopytom — my na ňu odpovieme cenou.</p>
+
+        <ol class="kh-kfg__zoznam k-rise" data-k-delay="2" data-k-scrub="kroky">
+            <li><span class="kh-kfg__cislo">01</span><strong>Vybrať typ</strong><span>Prístrešok, carport, terasa alebo pergola.</span></li>
+            <li><span class="kh-kfg__cislo">02</span><strong>Nastaviť zostavu</strong><span>Rozmer, farba z RAL palety, výbava.</span></li>
+            <li><span class="kh-kfg__cislo">03</span><strong>Poslať dopyt</strong><span>Zostava príde k nám aj s vašimi rozmermi.</span></li>
+        </ol>
+
         <div class="kh-kfg__vyzva k-rise" data-k-delay="3">
-          <a class="k-btn k-btn--primary" href="./konfigurator/?page=bio">Otvoriť konfigurátor <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-          <p class="kh-kfg__pozn">Zadarmo, bez registrácie.</p>
+          <a class="k-btn k-btn--primary" href="./konfigurator/?page=bio">Otvoriť konfigurátor <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <p class="kh-kfg__pozn">Zadarmo a bez registrácie.<br>Výstupom je orientačná cena.</p>
         </div>
+        <p class="kh-kfg__cena k-rise" data-k-delay="3">Orientačná cena platí pre zvolenú zostavu vrátane dopravy a montáže. Betónové pätky sú doplnková služba.</p>
       </div>
 
-      <div class="kh-kfg__spodok">
-        <div class="kh-kfg__kroky k-rise" data-k-delay="1" data-k-scrub="kroky">
-          <ol class="kh-kfg__zoznam">
-            <li><span class="kh-kfg__cislo">01</span><span>Vybrať typ</span></li>
-            <li><span class="kh-kfg__cislo">02</span><span>Nastaviť rozmer, farbu a výbavu</span></li>
-            <li><span class="kh-kfg__cislo">03</span><span>Poslať dopyt</span></li>
-          </ol>
-          <p class="kh-kfg__cena">Vrátime orientačnú cenu zvolenej zostavy vrátane dopravy a montáže. Betónové pätky sú doplnková služba.</p>
-        </div>
-
+      <div class="kh-kfg__typy-obal">
+        <p class="kh-kfg__label k-rise">Štyri konfigurovateľné typy</p>
         <ul class="kh-kfg__typy">
-        <li class="kh-kfg__typ k-rise" data-k-delay="1">
-          <a class="kh-kfg__karta" href="./konfigurator/?page=carport">
-            <span class="kh-kfg__foto"><img src="./assets/soltec-carport-toth-nitra.jpg" width="2400" height="1800" alt="Prístrešok Koverta pre dve autá" loading="lazy" decoding="async"></span>
-            <span class="kh-kfg__telo">
-              <span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+          <li class="kh-kfg__typ k-rise" data-k-delay="1">
+            <a class="kh-kfg__karta" href="./konfigurator/?page=carport">
+              <span class="kh-kfg__foto"><img src="./assets/soltec-carport-toth-nitra.jpg" width="2400" height="1800" alt="Prístrešok Koverta pre dve autá" loading="lazy" decoding="async"></span>
               <span class="kh-kfg__nazov">Prístrešok Koverta</span>
-              <span class="k-btn k-btn--line k-btn--maly kh-kfg__akcia">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            </span>
-          </a>
-        </li>
-        <li class="kh-kfg__typ k-rise" data-k-delay="2">
-          <a class="kh-kfg__karta" href="./konfigurator/?page=carport">
-            <span class="kh-kfg__foto"><img src="./assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Hliníkový carport Soltec" loading="lazy" decoding="async"></span>
-            <span class="kh-kfg__telo">
-              <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            </a>
+          </li>
+          <li class="kh-kfg__typ k-rise" data-k-delay="2">
+            <a class="kh-kfg__karta" href="./konfigurator/?page=carport">
+              <span class="kh-kfg__foto"><img src="./assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Hliníkový carport Soltec" loading="lazy" decoding="async"></span>
               <span class="kh-kfg__nazov">Carport Soltec</span>
-              <span class="k-btn k-btn--line k-btn--maly kh-kfg__akcia">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            </span>
-          </a>
-        </li>
-        <li class="kh-kfg__typ k-rise" data-k-delay="3">
-          <a class="kh-kfg__karta" href="./konfigurator/?page=canopy">
-            <span class="kh-kfg__foto"><img src="./assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Hliníkové prestrešenie terasy" loading="lazy" decoding="async"></span>
-            <span class="kh-kfg__telo">
-              <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            </a>
+          </li>
+          <li class="kh-kfg__typ k-rise" data-k-delay="3">
+            <a class="kh-kfg__karta" href="./konfigurator/?page=canopy">
+              <span class="kh-kfg__foto"><img src="./assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Hliníkové prestrešenie terasy" loading="lazy" decoding="async"></span>
               <span class="kh-kfg__nazov">Prestrešenie terasy</span>
-              <span class="k-btn k-btn--line k-btn--maly kh-kfg__akcia">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            </span>
-          </a>
-        </li>
-        <li class="kh-kfg__typ k-rise" data-k-delay="4">
-          <a class="kh-kfg__karta" href="./konfigurator/?page=bio">
-            <span class="kh-kfg__foto"><img src="./assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola s otočnými lamelami" loading="lazy" decoding="async"></span>
-            <span class="kh-kfg__telo">
-              <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            </a>
+          </li>
+          <li class="kh-kfg__typ k-rise" data-k-delay="4">
+            <a class="kh-kfg__karta" href="./konfigurator/?page=bio">
+              <span class="kh-kfg__foto"><img src="./assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola s otočnými lamelami" loading="lazy" decoding="async"></span>
               <span class="kh-kfg__nazov">Bioklimatická pergola</span>
-              <span class="k-btn k-btn--line k-btn--maly kh-kfg__akcia">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            </span>
-          </a>
-        </li>
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -1361,7 +1377,7 @@
   </div>
 </footer>
 
-<script src="./assets/koverta-2026.js?v=1788783000482" defer></script>
+<script src="./assets/koverta-2026.js?v=1788783552797" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
