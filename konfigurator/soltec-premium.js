@@ -945,14 +945,39 @@
         /* Stĺp nemusí byť štvorec. Odmerané z modelu Koverta v Expivi:
            4-stĺpová varianta stojí na 150 × 150 mm, 6-stĺpová na 110 × 190 mm,
            kde 190 je rozmer pozdĺž hĺbky. Soltec pole nemá a ostáva štvorcový. */
-        const postD = () => Number(model().postD) || postSize();   // pozdĺž hĺbky
-        const postW = () => Number(model().postW) || postSize();   // cez šírku
+        /* Koverta: koľko stĺpov prístrešok má, aký majú prierez, kde stoja
+           rady a kde ležia väznice — to všetko vyplýva zo šírky, nie z otázky
+           na zákazníka. Pásma sú odmerané zo všetkých exportov Expivi: do
+           6,2 m stojí na štyroch stĺpoch v rohoch a nesú ho tri väznice, od
+           6,6 m na šiestich (rohy + stredný rad) a väzníc je päť. Soltec
+           žiadne pásma nemá a ide ďalej po svojom. */
+        const kvBand = () => {
+          const g = model().kvGeom;
+          if (!Array.isArray(g) || !g.length) return null;
+          const w = widthMM();
+          for (const b of g) if (w <= b.max) return b;
+          return g[g.length - 1];
+        };
+        const kvPoDlzke = () => {
+          const b = kvBand();
+          return (b && b.poDlzke && b.poDlzke[String(lengthMM())]) || null;
+        };
+        const postD = () => {
+          const b = kvBand();
+          return Number(b && b.postD) || Number(model().postD) || postSize();   // pozdĺž hĺbky
+        };
+        const postW = () => {
+          const b = kvBand();
+          return Number(b && b.postW) || Number(model().postW) || postSize();   // cez šírku
+        };
         const postLayout = () => {
           const L = lengthMM();
           const m = model();
           /* Soltec odvodzuje počet stĺpov z dĺžky a zaťaženia. Koverta ho
              predáva ako voľbu — 4-stĺpová a 6-stĺpová varianta majú v cenníku
              vlastnú cenu — takže si ho model povie rovno. */
+          const b = kvBand();
+          if (b && b.postsPerSide) return { n: Math.max(2, b.postsPerSide), oh: 0 };
           if (m.postsPerSide) return { n: Math.max(2, m.postsPerSide), oh: 0 };
           const four = m.post4 || 6000;
           let n = L <= four ? 2 : 3;
@@ -1006,6 +1031,10 @@
              tam bola vymyslená. Šesťstĺpová varianta má napríklad všetky tri
              rady vtiahnuté dnu a strecha na oboch koncoch prečnieva, čo by z
              rovnomerného delenia nikdy nevyšlo. */
+          const pasmo = kvPoDlzke();
+          if (pasmo && Array.isArray(pasmo.rows) && pasmo.rows.length) {
+            return pasmo.rows.map((v) => Math.round(Math.min(Math.max(v, 0), span)));
+          }
           const rady = model().postRows && model().postRows[String(L)];
           const merane = rady && rady[String(lay.n)];
           if (merane) return merane.map((v) => Math.round(Math.min(Math.max(v, 0), span)));
@@ -2863,7 +2892,9 @@
             const ramBot = zBot, ramTop = ramBot + RAM_H;
             /* Trapéz musí sadnúť pod horné rameno lemovania, nie doň — inak
                sa jeho plech s lemovaním prekrýva a presvitá cezeň. */
-            const trapTop = zTop - LEM_ARM, trapBot = trapTop - TRAP_H;
+            /* Plech leží pod horným ramenom lemovania — s medzerou, inak sa
+               ich líca prekrývajú a plech cezeň presvitá. */
+            const trapTop = zTop - LEM_ARM - 3, trapBot = trapTop - TRAP_H;
 
             /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelné cez
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
@@ -2981,7 +3012,7 @@
                delia rozpätie medzi osami stĺpov na štyri rovnaké diely. Keď
                dĺžka v tabuľke nie je (rozmer na mieru), dopočítajú sa presne
                tým istým pravidlom. */
-            const podl = (REF.poDlzke || {})[String(L)];
+            const podl = kvPoDlzke();
             const osi = podl && Array.isArray(podl.vaznice) && podl.vaznice.length
               ? podl.vaznice
               : (() => {
@@ -3062,13 +3093,21 @@
               boxFaces(tx0, ya, trapBot, tx1 - tx0, yb - ya, TRAP_H, vrchHex, ['-z'], SHAFT);
               quad([[tx0, ya, trapBot], [tx1, ya, trapBot], [tx1, yb, trapBot], [tx0, yb, trapBot]],
                    spodHex, { normal: [0, 0, -1], cull: true });
+              /* Ryhy sa kreslia s prednosťou pred okolím (bias), takže hore
+                 nesmú siahať pod lemovanie — inak ho prerazia a plech cezeň
+                 presvitá. Zhora idú len po odkrytú časť strechy, zdola po
+                 celej ploche, lebo tam lemovanie nie je. */
+              const rx0v = tx0 + LEM_CELO, rx1v = tx1 - LEM_CELO;
               const vln = Math.max(3, Math.round(tw / 205));
               for (let k = 0; k < vln; k++) {
                 const va = ya + (tw * k) / vln, vb = va + (tw / vln) * 0.46;
                 quad([[tx0, va, trapBot], [tx1, va, trapBot], [tx1, vb, trapBot], [tx0, vb, trapBot]],
                      'rgba(12,14,16,.30)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
-                quad([[tx0, va, trapTop], [tx1, va, trapTop], [tx1, vb, trapTop], [tx0, vb, trapTop]],
-                     'rgba(255,255,255,.14)', { normal: [0, 0, 1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                const ha = Math.max(va, LEM_BOK), hb = Math.min(vb, W - LEM_BOK);
+                if (hb > ha && rx1v > rx0v) {
+                  quad([[rx0v, ha, trapTop], [rx1v, ha, trapTop], [rx1v, hb, trapTop], [rx0v, hb, trapTop]],
+                       'rgba(255,255,255,.14)', { normal: [0, 0, 1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                }
               }
             }
 
@@ -3081,9 +3120,17 @@
                  modelov niet dielu, ktorý by nimi bol. Skladajú sa preto
                  podľa fotografií realizácií, ale sadnú do odmeranej kapsy:
                  medzi líce rámu (L − 159) a vnútro čelného lemovania. */
-              const R = 68;                          // polomer žľabu, Ø 136
-              const cx = L - RAM_ODK + 12 + R;       // os žľabu v kapse
-              const cz = ramTop - 22;                // horná hrana žľabu
+              const R = 62;                          // polomer žľabu, Ø 124
+              /* Žľab visí pod odkvapovou hranou a kus von, nie v kapse za
+                 lemovaním — tam ho nebolo vidieť z jediného uhla a odkvap na
+                 modeli chýbal. Takto je pod ním odkvapová hrana plechu a voda
+                 z nej padá doň, presne ako na realizáciách. */
+              const cx = L + 8;                      // os žľabu, mierne von
+              const cz = zBot - 8;                   // horná hrana žľabu
+              /* Žľab pokračuje kus za oba boky prístreška — inak by voda z
+                 rohov tiekla vedľa. */
+              const ODK_PRE = 70;
+              const gy0 = -ODK_PRE, gy1 = W + ODK_PRE;
               const gh = shade(frame, 0.02);
               const N = 22;
               const bod = (t) => [cx - Math.cos(t) * R, cz - Math.sin(t) * R];
@@ -3097,19 +3144,40 @@
                 /* Žľab je otvorená škrupina. Keď sa jeho plochy zahadzovali
                    podľa normály, pri niektorých uhloch pohľadu nezostala ani
                    jedna a žľab zmizol. Kreslia sa preto obojstranne. */
-                quad([[p[0], LEM_T, p[1]], [q[0], LEM_T, q[1]], [q[0], W - LEM_T, q[1]], [p[0], W - LEM_T, p[1]]],
+                quad([[p[0], gy0, p[1]], [q[0], gy0, q[1]], [q[0], gy1, q[1]], [p[0], gy1, p[1]]],
                      shade(gh, -0.10 + Math.sin(m) * 0.16), { normal: [nx, 0, nz], arris: false });
                 const d = 8;
-                quad([[p[0] - nx * d, W - LEM_T, p[1] - nz * d], [q[0] - nx * d, W - LEM_T, q[1] - nz * d],
-                      [q[0] - nx * d, LEM_T, q[1] - nz * d], [p[0] - nx * d, LEM_T, p[1] - nz * d]],
+                quad([[p[0] - nx * d, gy1, p[1] - nz * d], [q[0] - nx * d, gy1, q[1] - nz * d],
+                      [q[0] - nx * d, gy0, q[1] - nz * d], [p[0] - nx * d, gy0, p[1] - nz * d]],
                      shade(gh, -0.26), { normal: [-nx, 0, -nz], arris: false });
               }
               // návalok na oboch hranách žľabu
               [bod(0), bod(Math.PI)].forEach((P) => {
-                boxFaces(P[0] - 6, LEM_T, P[1] - 3, 12, W - 2 * LEM_T, 13, shade(gh, 0.12), ['-y', '+y'], SHAFT);
+                boxFaces(P[0] - 6, gy0, P[1] - 3, 12, gy1 - gy0, 13, shade(gh, 0.12), ['-y', '+y'], SHAFT);
               });
+              /* Háky. Žľab nevisí vo vzduchu — nesie ho plochý hák prehnutý
+                 cez bowl, priskrutkovaný do čelného lemovania. Rozstup je ten
+                 istý ako pri skrutkách lemovania, teda zhruba po metri, a hák
+                 je vždy na oboch koncoch. */
+              const hakN = Math.max(2, Math.round((gy1 - gy0) / 1000) + 1);
+              for (let i = 0; i < hakN; i++) {
+                const hy = gy0 + ((gy1 - gy0) * i) / (hakN - 1) - 3;
+                const hyc = Math.min(Math.max(hy, gy0), gy1 - 6);
+                for (let j = 0; j < N; j++) {
+                  const t0 = (Math.PI * j) / N, t1 = (Math.PI * (j + 1)) / N;
+                  const a0 = bod(t0), a1 = bod(t1);
+                  const mm2 = (t0 + t1) / 2;
+                  const ex = -Math.cos(mm2) * 9, ez = -Math.sin(mm2) * 9;
+                  quad([[a0[0] + ex, hyc, a0[1] + ez], [a1[0] + ex, hyc, a1[1] + ez],
+                        [a1[0] + ex, hyc + 6, a1[1] + ez], [a0[0] + ex, hyc + 6, a0[1] + ez]],
+                       shade(gh, -0.30), { normal: [-Math.cos(mm2), 0, -Math.sin(mm2)], arris: false });
+                }
+                /* Rameno háku ide od čelného lemovania von ponad žľab. */
+                const hx0 = L - LEM_T;
+                boxFaces(hx0, hyc, cz - 4, (cx + R + 9) - hx0, 6, 8, shade(gh, -0.22), [], SHAFT);
+              }
               // čelá žľabu
-              [[LEM_T, -1], [W - LEM_T, 1]].forEach((e) => {
+              [[gy0, -1], [gy1, 1]].forEach((e) => {
                 const pts = [];
                 for (let i = 0; i <= N; i++) {
                   const t = e[1] > 0 ? (Math.PI * i) / N : Math.PI - (Math.PI * i) / N;

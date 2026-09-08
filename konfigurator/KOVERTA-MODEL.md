@@ -61,38 +61,80 @@ nikdy netrčí z fasády. Výnimka je odkvapová strana, kde lemovanie stojí
 
 ## Čo v Expivi modeli nie je
 
-Odkvap ani zvod. Sú poskladané podľa fotografií realizácií a podľa toho, čo
-k nim povedal zákazník: hranatý žľab visí na líci čelného C profilu vo farbe
-prístrešku, zvod vychádza z neho, kolenom 45° ide dozadu a po čele rohového
-stĺpa na zem.
+Odkvap ani zvod. V žiadnom zo 70 exportov niet dielu, ktorý by nimi bol —
+v Expivi je odkvap samostatná voliteľná skupina bez geometrie. Sú preto
+poskladané podľa fotografií realizácií: polkruhový žľab Ø 124 visí na hákoch
+zhruba po metri pod odkvapovou hranou a **pokračuje kus za oba boky**, zvod
+z neho vychádza a po rohovom stĺpe ide na zem. Farba je farba prístrešku,
+nie pozink.
+
+Kým žľab sedel v kapse za lemovaním (do 2026-09), nebolo ho vidieť z
+jediného uhla — visí preto pod lemovaním a mierne von.
 
 ## Polia modelu, ktoré túto cestu zapínajú
 
 `roofKit: 'koverta'`, `postD`, `postW`, `plate`, `rimSoffitHex`,
-`trapezSoffitHex`, `trapezTopHex`, `postsPerSide`, `snap`, `wallSide`,
+`trapezSoffitHex`, `trapezTopHex`, `kvGeom`, `snap`, `wallSide`,
 `wallBack`, `minHeight`. Na úrovni stránky `gutter`, `bolts`, `roundPosts`,
 `basePlates`, `sideOpts`, `sideMat`, `sideLabel`, `sideLocative`.
 
-## Polohy stĺpov
+## Počet a rozmiestnenie stĺpov a väzníc
 
-Odmerané zo 67 exportov a uložené v modeli ako `postRows`. Kľúč je hĺbka
-prístrešku a počet stĺpov na strane; hodnota je zoznam polôh pozdĺž hĺbky.
+**Nie je to voľba zákazníka.** Vyplýva to zo šírky prístreška a konfigurátor
+si to určí sám. Cenník to hovorí sám za seba: štvorstĺpová matica v Expivi
+končí na 6,2 m a od 6,6 m je publikovaná už len šesťstĺpová.
 
-| hĺbka | 4 stĺpy | 6 stĺpov |
+| šírka | stĺpy | väznice | prierez stĺpa |
+| --- | --- | --- | --- |
+| 2 500 – 6 200 | 4 (v rohoch) | 3 | 150 × 150 |
+| 6 600 – 7 000 | 6 (rohy + stredný rad) | 5 | 110 × 190 |
+
+V dátach stránky je to pole `kvGeom` — zoznam pásiem `{max, postsPerSide,
+postD, postW, poDlzke}`. V engine ho číta `kvBand()` a z neho berú polohy
+`postD()`, `postW()`, `postLayout()`, `postXs()` aj osi väzníc. Soltec pole
+`kvGeom` nemá, takže ide ďalej po svojom.
+
+Osi sú vztiahnuté k obvodovému rámu, teda 158 mm dnu od vonkajšej hrany
+strechy; `rows` je predné líce stĺpa, `vaznice` sú osi dvojíc C.
+
+| hĺbka | rady 4 stĺpov | väznice pri 4 stĺpoch |
 | --- | --- | --- |
-| 5 200 | 150, 5 062 | v exportoch nie je |
-| 5 600 | 156, 5 468 | 1 142, 2 792, 4 442 |
-| 6 000 | 156, 5 868 | 1 242, 2 992, 4 742 |
+| 5 200 | 0, 4 910 | 1 286 / 2 529 / 3 772 |
+| 5 600 | 0, 5 310 | 1 391 / 2 729 / 4 067 |
+| 6 000 | 0, 5 710 | 1 491 / 2 929 / 4 367 |
 
-Šesťstĺpová varianta má **všetky tri rady vtiahnuté dnu** a strecha na oboch
-koncoch prečnieva. Z rovnomerného delenia by to nikdy nevyšlo, preto sa
-polohy neprepočítavajú — berú sa tak, ako sú odmerané. Kde pre danú hĺbku
-tabuľka nič nemá, ostáva pôvodný výpočet.
+| hĺbka | rady 6 stĺpov | väznice pri 6 stĺpoch |
+| --- | --- | --- |
+| 5 200 | 0, 2 418, 4 870 | 838 / 1 675 / 2 513 / 3 351 / 4 188 |
+| 5 600 | 0, 2 618, 5 270 | 904 / 1 809 / 2 713 / 3 617 / 4 522 |
+| 6 000 | 0, 2 818, 5 670 | 971 / 1 942 / 2 913 / 3 884 / 4 855 |
 
-Prierez stĺpa je naprieč všetkými katalógmi rovnaký: 150 × 150 mm pri
-štyroch stĺpoch, 110 × 190 mm pri šiestich, kde 190 je rozmer pozdĺž hĺbky.
-Staršie katalógy (šírky 2,5 – 3,0 m a 3,8 m) majú inú generáciu dielov —
-240 × 240 alebo 100 × 100 — tie zatiaľ konfigurátor nepoužíva.
+### Ako sú tie čísla odmerané
+
+Skript `mer4.py` (v pracovnom adresári relácie) prejde všetkých 66 exportov
+prístreškov, pre každý si podľa názvu katalógu určí, ktorá os je šírka,
+ktorá hĺbka a ktorá výška — novšie katalógy majú inú orientáciu než staršie —
+a zaradí diely podľa prierezu.
+
+Kľúč k čítaniu výsledkov: katalóg, ktorý má otázku „Typ prístrešku", obsahuje
+meshe **oboch variánt naraz**. Namerané osi väzníc sú preto ich zjednotenie:
+pri hĺbke 5 600 vyjde päť osí, z toho `{1 391, 2 729, 4 067}` patrí
+štvorstĺpovej a `{1 089, 2 729, 4 369}` šesťstĺpovej — stredná je spoločná.
+Pri hĺbke 5 200 obe sady splývajú, tam sú osi len tri.
+
+Katalógy 6,6 × … a 7,0 × … otázku „Typ prístrešku" **nemajú** — tam je
+geometria jediná, a tá má päť väzníc a šesť stĺpov. Presne to je ten
+prístrešok pre tri autá z fotky: stĺpy inde a väzníc viac.
+
+Dve chyby priamo v Expivi, ktoré netreba hľadať znova:
+- katalóg 14198 (7,0 × 5,6) má v exporte geometriu 5,2 m;
+- katalógy s hĺbkou 5 200 majú v exporte len štyri zo šiestich stĺpov
+  šesťstĺpovej varianty — chýbajúci rad je zrkadlom toho, ktorý tam je.
+
+Novšie katalógy (šírky 3,0 / 3,8 / 4,5 / 5,4 / 6,2 / 6,6 m) sú iná generácia
+dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
+generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník; z novšej sa
+preberajú len polohy radov a osi väzníc pre šírky od 6,6 m.
 
 ## Čo ešte nie je hotové
 
@@ -106,7 +148,8 @@ Konfigurátor kreslí jeden skutočný výrobok, nie dopočítaný rozmer:
 **katalóg Expivi 13670 „Pristresok 4.0 x 6.0", štvorstĺpová varianta.**
 Všetky čísla nižšie sú odmerané z `.ebm` meshov toho exportu
 (`archiv-expivi/exporty-modelov.json` → `zips/13670.zip`), nie odhadnuté.
-Uložené sú v `models.K4.kvRef` v dátovom bloku stránky.
+Uložené sú v `models.K.kvRef` v dátovom bloku stránky; to, čo sa mení
+rozmerom, je vedľa v `kvGeom`.
 
 Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
 **y = šírka**, odkvapová hrana na `x = L`. Prepočet: `x = 6000 − (Y + 3512)`,
@@ -127,14 +170,12 @@ Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
 | lamely steny | 20 × 100, rozteč 140, z 298…2 218, líce 15 mm pod obrysom |
 
 Šesťstĺpová varianta má v tom istom exporte stĺpy 110 × 190 v osiach
-1 322 / 3 072 / 4 822 a väznice presne nad nimi. V konfigurátore zatiaľ nie
-je — prístrešok sa predáva ako jeden výrobok.
+1 322 / 3 072 / 4 822. V konfigurátore sa nedá vybrať — nasadí sa sama od
+šírky 6,6 m, a to v rozmiestnení z novších katalógov (rohy + stred), lebo
+tam je jediná publikovaná. Viď „Počet a rozmiestnenie stĺpov a väzníc".
 
-**Žľab ani zvod v exportoch nie sú** — v žiadnom zo 70 modelov niet dielu,
-ktorý by nimi bol. Skladajú sa podľa fotografií realizácií, ale sadajú do
-odmeranej kapsy: 159 mm previsu za rámom na odkvapovej hrane. Žľab (Ø 136)
-visí hore pod lemovaním, takže ho zboku nevidno; zvod z neho padá rovno
-dole bez kolena a vidieť ho začne až pod lemovaním.
+**Žľab ani zvod v exportoch nie sú** — podrobne vyššie v „Čo v Expivi modeli
+nie je".
 
 Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
 realizácie nie je — kreslí sa len doska.
