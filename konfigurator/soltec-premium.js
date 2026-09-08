@@ -673,6 +673,10 @@
         /* Voliteľné prevedenia, ktoré nemenia tvar konštrukcie: kotvenie,
            odkvap a podobne. Soltec ich nemá, takže pole ostáva prázdne. */
         const PICKS = Array.isArray(BIO.picks) ? BIO.picks : [];
+        /* Voľba, ktorá mení rozmerovú mriežku aj geometriu (počet stĺpov),
+           patrí ku kroku s veľkosťou, nie medzi doplnky. */
+        const PICKS_ROZMER = PICKS.filter((g) => g.krok === 'rozmer');
+        const PICKS_DOPLNKY = PICKS.filter((g) => g.krok !== 'rozmer');
         /* Odkvap kreslíme, keď ho stránka má a zákazník ho neodopol. */
         const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';
         const RAIL = ONE_MODEL ? [
@@ -3172,11 +3176,29 @@
               const zPata = 400;                    // spodok zvislej časti
               const RP = 190;                       // polomer vyhnutej pätky
 
-              const zx = cx + zvodVon;
+              /* Kam rúra dosadne. Pri štvorstĺpovej variante stojí stĺp priamo
+                 pod odkvapovou hranou, tak rúra padá rovno. Pri šesťstĺpovej
+                 je posledný rad zatiahnutý dovnútra a strecha nad ním
+                 prečnieva — vtedy musí rúra spod hrany prejsť k stĺpu jedným
+                 plynulým oblúkom, presne ako na fotke prístrešku pri dome. */
+              const xLicStlp = xStlp + postD();
+              const zx = Math.min(cx + zvodVon, xLicStlp + rz + 14);
+              const posun = (cx + zvodVon) - zx;
               // výpustné hrdlo pod dnom žľabu, ešte za lemovaním
-              tuba([[cx, yZvod, zHrdlo + 14], [zx, yZvod, zHrdlo - 70]], rz * 1.10, shade(zvodHex, -0.07));
-              // zvislá rúra až k pätke
-              tuba([[zx, yZvod, zHrdlo], [zx, yZvod, zPata]], rz, zvodHex);
+              tuba([[cx, yZvod, zHrdlo + 14], [cx, yZvod, zHrdlo - 70]], rz * 1.10, shade(zvodHex, -0.07));
+              if (posun > 40) {
+                const RS = Math.max(posun * 0.9, 260);
+                const krk = [];
+                for (let i = 0; i <= 10; i++) {
+                  const t = i / 10;
+                  const u = t * t * (3 - 2 * t);          // hladký prechod, nie koleno
+                  krk.push([cx + zvodVon - posun * u, yZvod, zHrdlo - 30 - RS * t]);
+                }
+                tuba(krk, rz, zvodHex);
+                tuba([[zx, yZvod, zHrdlo - 30 - RS], [zx, yZvod, zPata]], rz, zvodHex);
+              } else {
+                tuba([[cx, yZvod, zHrdlo], [zx, yZvod, zPata]], rz, zvodHex);
+              }
               // vyhnutá pätka: jediný ohyb na celej rúre
               const pata = [];
               for (let i = 0; i <= 10; i++) {
@@ -3189,14 +3211,18 @@
                  krátky plochý pásik ku stĺpu — nič, čo by od rúry odstávalo.
                  Kreslí sa preto tesná obruč a tenký pásik presne po medzeru
                  medzi lícom stĺpa a rúrou. */
-              const xLic = xStlp + postD();          // vonkajšie líce stĺpa
-              const medzera = Math.max(6, cx - rz - xLic);
+              const medzera = zx - rz - xLicStlp;
               [0.30, 0.78].forEach((t) => {
                 const z = zPata + (zBot - 320 - zPata) * t;
                 // objímka: úzky prstenec tesne na rúre
-                tuba([[cx, yZvod - 14, z], [cx, yZvod + 14, z]], rz * 1.06, shade(frame, -0.30));
-                // pásik od líca stĺpa k objímke
-                boxFaces(xLic, yZvod - 8, z - 4, medzera + 6, 16, 8, shade(frame, -0.22), [], SHAFT);
+                tuba([[zx, yZvod - 14, z], [zx, yZvod + 14, z]], rz * 1.06, shade(frame, -0.30));
+                /* Pásik ku stĺpu má zmysel len vtedy, keď je stĺp hneď pri
+                   rúre. Kým sa kreslil vždy, pri šesťstĺpovej variante viedol
+                   vyše metra cez prázdno. */
+                if (medzera >= -20 && medzera < 90) {
+                  boxFaces(xLicStlp, yZvod - 8, z - 4, Math.max(6, medzera) + 6, 16, 8,
+                           shade(frame, -0.22), [], SHAFT);
+                }
               });
             }
           };
@@ -3945,6 +3971,20 @@
           return row.join('');
         };
 
+        /* Rozmerové voľby (počet stĺpov) sa kreslia rovnakými čipmi ako
+           doplnky, ale sedia v kroku s veľkosťou — menia cenník aj model. */
+        const buildSizePicks = () => {
+          const host = q('[data-sp-picks-size]');
+          if (!host || !PICKS_ROZMER.length) return;
+          host.innerHTML = PICKS_ROZMER.map((g) => {
+            const ai = g.opts.findIndex((o) => o.id === state.picks[g.id]);
+            return `<div class="sp-add is-plain"><div class="sp-add__head"><div class="sp-add__t">${g.title}<small>${g.note || ''}</small></div></div>`
+              + `<div class="sp-add__body">`
+              + addChips('Prevedenie', g.opts.map((o) => ({ t: o.t, s: o.s || '' })), ai < 0 ? 0 : ai, 'pick:' + g.id)
+              + `</div></div>`;
+          }).join('');
+        };
+
         const buildAddons = () => {
           const host = q('[data-sp-addons]');
           if (!host) return;
@@ -4099,7 +4139,7 @@
           /* Prevedenia. Prístrešok má jeden tvar, mení sa na ňom rozmer,
              farba, steny — a tieto voľby. Sú to prepínače, nie vypínače,
              takže tu nesedia v rozbaľovacej karte, ale ako riadok čipov. */
-          PICKS.forEach((g) => {
+          PICKS_DOPLNKY.forEach((g) => {
             const ai = g.opts.findIndex((o) => o.id === state.picks[g.id]);
             if (state.picks[g.id] !== (g.opts[0] && g.opts[0].id)) count++;
             html.push(`<div class="sp-add is-plain"><div class="sp-add__head"><div class="sp-add__t">${g.title}<small>${g.note || ''}</small></div></div>`
@@ -4326,6 +4366,12 @@
             ? `Profil ${m.profile}, lamela ${m.louver}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`
             : `Profil ${m.profile}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`;
           syncSliders();
+          /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
+          PICKS_ROZMER.forEach((g) => {
+            const o = g.opts.find((x) => x.model === state.model);
+            if (o) state.picks[g.id] = o.id;
+          });
+          buildSizePicks();
           const hint = q('[data-sp-posts-hint]');
           const lay = postLayout();
           if (lay.n > 2) {
@@ -4502,7 +4548,17 @@
             else if (opt === 'anch') state.anchor = ['galv', 'coated', 'inox'][i];
             else if (opt.indexOf('pick:') === 0) {
               const g = PICKS.find((x) => x.id === opt.slice(5));
-              if (g && g.opts[i]) state.picks[g.id] = g.opts[i].id;
+              const o = g && g.opts[i];
+              if (o) {
+                state.picks[g.id] = o.id;
+                /* Voľba počtu stĺpov je iný model: má vlastný cenník, vlastné
+                   rady stĺpov aj väznice. Rozmer sa prenesie a orežе sa na to,
+                   čo nový cenník publikuje. */
+                if (o.model && BIO.models[o.model] && o.model !== state.model) {
+                  state.model = o.model;
+                  clampIdx();
+                }
+              }
             }
           } else if (t.dataset.spAddSensor) {
             const k = t.dataset.spAddSensor;
