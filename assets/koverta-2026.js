@@ -1737,7 +1737,7 @@
         foto: './assets/koverta-pristresok-garaz.jpg',
         preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha s odkvapom skrytým vnútri konštrukcie.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        foto: './assets/soltec-carport-toth-nitra-clean.jpg',
+        foto: './assets/soltec-carport-sl240-real.jpg',
         preco: 'Hliníkový systém SL 170 alebo SL 240 s 3 cm ISO panelom. Rozmery a návrhové zaťaženie sa vyberajú podľa konkrétnej zostavy; k dispozícii je aj integrovaný uzamykateľný box.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
