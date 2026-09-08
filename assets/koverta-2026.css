@@ -14253,3 +14253,17 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .k-photo-crop--tienenie {
   object-position: 50% 42%;
 }
+
+/* Bioklimatické ročné obdobia sú záložky, nie scroll-driven proces.
+   Procesový komponent je inde sticky, preto ho tu explicitne vypíname. */
+@media (min-width: 900px) {
+  .k .kh-rok .kh-proc__grid[data-k-process="bez-scrollu"] {
+    position: static;
+    top: auto;
+  }
+  .k .kh-rok .kh-proc__grid[data-k-process="bez-scrollu"] .kh-proc__aside {
+    position: static;
+    top: auto;
+  }
+  .k .kh-rok .kh-proc__draha { display: none !important; }
+}
