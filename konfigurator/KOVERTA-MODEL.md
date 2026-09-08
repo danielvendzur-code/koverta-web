@@ -47,7 +47,7 @@ Model je v centimetroch, tu prepočítané na milimetre.
 | stĺp 6-stĺpovej varianty | 110 × 190 (190 pozdĺž hĺbky) |
 | kotevná pätka | 250 × 250 |
 | lemovanie na čelách | 190 dovnútra × 257 nadol |
-| lemovanie na bokoch | 240 dovnútra × 254 nadol |
+| lemovanie na bokoch | 240 dovnútra × 254 nadol — **kreslí sa 190**, viď nižšie |
 | obvodový C rám | 74 × 220, líce 18 pod lemovaním |
 | väznica | C 58 × 180, vždy dve chrbtami k sebe |
 | trapéz | vlna 36, krycia šírka 1 072 |
@@ -139,6 +139,15 @@ dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
 generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník; z novšej sa
 preberajú len polohy radov a osi väzníc pre šírky od 6,6 m.
 
+## Lemovanie má na všetkých stranách rovnakú šírku
+
+Export Expivi má na čelách 190 mm a na bokoch 240 mm — overené na katalógoch
+13670, 13688 aj 13412, všade rovnako. Podľa výrobcu je to v jeho modeli
+nezrovnalosť: lemovanie je zo všetkých štyroch strán rovnaké, aby zhora
+tvorilo pravidelný rám. Kreslí sa preto 190 na všetky štyri strany.
+Odmeraná hodnota z exportu ostáva zapísaná v dátach ako `lemBokExport`,
+aby sa nestratila.
+
 ## Test prekrytia
 
 `konfigurator/test/prekrytie.js` overí, či plech strechy neprerazí cez
@@ -191,7 +200,7 @@ Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
 | diel | odmerané |
 |---|---|
 | pôdorys (obrys lemovania) | 4 000 × 6 000 mm |
-| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky 240 cez celú hĺbku; **čelné kusy ležia na bočných**, presah je presne roh |
+| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky v exporte 240 cez celú hĺbku; **čelné kusy ležia na bočných**, presah je presne roh |
 | obvodový rám | **dvojica** C 74 × 220 chrbtami k sebe, spolu 150 mm — rovnako hrubý ako stĺp; z 2 398…2 618; vonkajšie líce bokov za zvislým ramenom lemovania, 15 mm od zadného čela, **159 od odkvapového** |
 | väznice | 3 dvojice C 58 × 180 chrbtami k sebe, z 2 438…2 618, osi 1 490 / 2 928 / 4 366 od zadného čela, beh y 30…3 970 |
 | trapéz | hrúbka 36, z 2 621…2 656, krycia šírka 1 072 (presah 254), x 15…5 915, y 46…3 982 |

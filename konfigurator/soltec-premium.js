@@ -3205,10 +3205,10 @@
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
               const vsunStlp = Number(model().postInset) || 0;
-              /* Rúra beží po vonkajšom rohu stĺpa: kúsok prekrýva jeho líce,
-                 takže je na čom držať príchytku, a kúsok prečnieva von, takže
-                 ju vidieť aj zboku — presne ako na fotkách. */
-              const yZvod = vsunStlp + 30 - rz;
+              /* Rúra beží po líci stĺpa, nie vedľa neho. Kým sedela odsadená na
+                 vonkajšom rohu, visela na modeli ako samostatná tyč vedľa
+                 stĺpa; na fotkách realizácií ide po jeho čele, v jeho osi. */
+              const yZvod = vsunStlp + postW() / 2;
               const tuba = (pts, r, hex) => {
                 const M = 20;
                 for (let s = 0; s < pts.length - 1; s++) {
@@ -3275,7 +3275,7 @@
                 const z = zPata + (zKoleno - 120 - zPata) * t;
                 tuba([[xRura, yZvod - 13, z], [xRura, yZvod + 13, z]], rz * 1.09, shade(frame, -0.42));
                 if (medzera > -rz && medzera < 80) {
-                  boxFaces(xLicStlp - 8, vsunStlp - 6, z - 5, Math.max(6, medzera) + 16, 22, 10,
+                  boxFaces(xLicStlp - 8, yZvod - 11, z - 5, Math.max(6, medzera) + 16, 22, 10,
                            shade(frame, -0.38), [], SHAFT);
                 }
               });
