@@ -12369,6 +12369,28 @@ footer.kf { background: var(--k-ink); color: #fff; }
    číslu patrí.
    ------------------------------------------------------------------------ */
 .k .kh-typ2 { margin-top: clamp(22px, 2.6vw, 34px); }
+.k .kh-typ2__nav {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 24px;
+  margin: 0 0 14px;
+}
+.k .kh-typ2__nav-label {
+  font-family: var(--k-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--k-amber-deep);
+}
+.k .kh-typ2__nav-text {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--k-grey-soft);
+  text-align: right;
+}
+
 .k .kh-typ2__rady {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12383,11 +12405,15 @@ footer.kf { background: var(--k-ink); color: #fff; }
   background: var(--k-white);
   text-align: left;
   cursor: pointer;
-  opacity: 0.62;
-  transition: opacity 200ms var(--k-ease), border-color 200ms var(--k-ease);
+  opacity: 1;
+  transition: border-color 180ms var(--k-ease), box-shadow 180ms var(--k-ease), background-color 180ms var(--k-ease);
 }
-.k .kh-typ2__rad:hover { opacity: 0.86; border-color: rgba(18, 23, 26, 0.24); }
-.k .kh-typ2__rad.is-active { opacity: 1; border-color: rgba(18, 23, 26, 0.28); }
+.k .kh-typ2__rad:hover { border-color: rgba(18, 23, 26, 0.32); background: #faf9f6; }
+.k .kh-typ2__rad.is-active {
+  border-color: var(--k-ink);
+  box-shadow: inset 0 3px 0 var(--k-amber);
+  background: var(--k-white);
+}
 .k .kh-typ2__rad:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
 .k .kh-typ2__foto {
   display: block;
@@ -12420,6 +12446,29 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-typ2__rad.is-active .kh-typ2__nazov em { opacity: 1; }
 .k .kh-typ2__veta { padding: 0 4px 4px; font-size: 14.5px; line-height: 1.55; color: #5A6165; }
+
+
+.k .kh-typ2__akcia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  margin: 2px 4px 1px;
+  padding: 8px 12px;
+  border-radius: var(--k-r-pill);
+  background: var(--k-bone-deep, #ece9e4);
+  font-family: var(--k-head);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1;
+  color: var(--k-ink);
+}
+.k .kh-typ2__akcia-on { display: none; }
+.k .kh-typ2__rad.is-active .kh-typ2__akcia {
+  background: var(--k-amber);
+}
+.k .kh-typ2__rad.is-active .kh-typ2__akcia-off { display: none; }
+.k .kh-typ2__rad.is-active .kh-typ2__akcia-on { display: inline; }
 
 .k .kh-typ2__panel {
   margin-top: clamp(16px, 1.8vw, 26px);
@@ -12500,6 +12549,8 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 @media (max-width: 759px) {
+  .k .kh-typ2__nav { display: block; }
+  .k .kh-typ2__nav-text { display: block; margin-top: 5px; text-align: left; }
   .k .kh-typ2__rady { grid-template-columns: minmax(0, 1fr); }
   /* Na telefóne sa tabuľka rozloží na dvojice popis – hodnota pod sebou,
      model po modeli. Do strán sa nikdy nerol uje. */
