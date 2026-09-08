@@ -61,15 +61,18 @@ nikdy netrčí z fasády. Výnimka je odkvapová strana, kde lemovanie stojí
 
 ## Čo v Expivi modeli nie je
 
-Odkvap ani zvod. V žiadnom zo 70 exportov niet dielu, ktorý by nimi bol —
-v Expivi je odkvap samostatná voliteľná skupina bez geometrie. Sú preto
-poskladané podľa fotografií realizácií: polkruhový žľab Ø 124 visí na hákoch
-zhruba po metri pod odkvapovou hranou a **pokračuje kus za oba boky**, zvod
-z neho vychádza a po rohovom stĺpe ide na zem. Farba je farba prístrešku,
-nie pozink.
+Odkvap ani zvod. V žiadnom zo 70 exportov niet dielu, ktorý by nimi bol — v
+Expivi je odkvap samostatná voliteľná skupina bez geometrie.
 
-Kým žľab sedel v kapse za lemovaním (do 2026-09), nebolo ho vidieť z
-jediného uhla — visí preto pod lemovaním a mierne von.
+**Ako to vyzerá na realizáciách** (rendery Koverty v `archiv-expivi`, ktoré
+prišli s katalógmi): pod odkvapovou hranou **nevisí žiadny žľab**. Spodná
+hrana lemovania ide po celej dĺžke čistá. Obvodový rám je na tej strane
+zatiahnutý 159 mm dnu a v tej kapse za lemovaním žľab sedí — zvonku ho
+nevidno. Vidieť z neho iba **zvod**: spod lemovania vyjde pri rohovom stĺpe,
+kolenom sa vráti k jeho licu a po ňom ide na zem, kde končí vyhnutou pätkou.
+
+Tak je to aj nakreslené. Zavesený polkruhový žľab na hákoch, ktorý tu bol
+istý čas, na žiadnej fotke Koverty nie je — bola to chyba a je preč.
 
 ## Polia modelu, ktoré túto cestu zapínajú
 
@@ -135,6 +138,36 @@ Novšie katalógy (šírky 3,0 / 3,8 / 4,5 / 5,4 / 6,2 / 6,6 m) sú iná generá
 dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
 generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník; z novšej sa
 preberajú len polohy radov a osi väzníc pre šírky od 6,6 m.
+
+## Test prekrytia
+
+`konfigurator/test/prekrytie.js` overí, či plech strechy neprerazí cez
+lemovanie. Túto triedu chýb od oka spoľahlivo nenájdeš: plech prerazí len
+pri niektorých uhloch a len o pár pixelov, ale na modeli to je vidieť ako
+„trapéz pretŕča cez lemovanie". Test zafarbí strechu a lemovanie kontrastne,
+scénu vykreslí do plátna a v bodoch, kde má byť lemovanie, prečíta skutočnú
+farbu pixela — 180 pohľadov × ~270 bodov, tri veľkosti.
+
+```
+npx http-server . -p 8901 -s &
+PLAYWRIGHT_PATH=/opt/node22/lib/node_modules/playwright node konfigurator/test/prekrytie.js
+```
+
+Engine na to nesie `window.SP_TEST` (kamera, prekreslenie, prepočet bodu na
+plátno). Nič nekreslí ani nemení.
+
+Prečo plech prerážal a čo to spravilo:
+
+* **Veľké plochy plechu sa nesmú obťahovať.** Obťah ide 0,35 px za obrys
+  plochy a pri plochom pohľade, keď je rameno lemovania zúžené na pár
+  pixelov, ho ten pretiahnutý okraj prekryje. Lícna aj spodná plocha plechu
+  sa preto kreslia bez obťahu a vcelku, nie po tabuliach — škáry medzi
+  tabuľami sú samostatné čiary.
+* **Lícna plocha ide len po odkryté pole.** Pod ramenami lemovania nie je čo
+  vidieť, takže tam vrchná plocha nie je a niet čomu prerážať.
+* **Vnútorná hrana horného ramena lemovania má krátky zahyb nadol.** Bez neho
+  tam bola len škára a pri plochom pohľade cez ňu bolo vidieť pod strechu —
+  pozdĺž hrany svietil svetlý pruh.
 
 ## Čo ešte nie je hotové
 
