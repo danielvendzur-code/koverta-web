@@ -3103,8 +3103,13 @@
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
                trapézu. */
             const ty0 = LEM_T, ty1 = W - LEM_T;
-            const tabule = Math.max(1, Math.round((ty1 - ty0) / TRAP_KRYT));
-            const tw = (ty1 - ty0) / tabule;
+            /* Tabuľa trapézu má odmeranú kryciu šírku 1 072 mm a tá sa
+               neťahá. Kým sa šírka delila na rovnaké diely, vychádzali pri
+               úzkych prístreškoch tabule široké aj meter a štvrť — plech,
+               ktorý sa nevyrába. Kladie sa ich toľko, koľko treba, a
+               posledná sa oreže, presne ako na streche. */
+            const tabule = Math.max(1, Math.ceil((ty1 - ty0) / TRAP_KRYT));
+            const tabulaY = (i) => [ty0 + TRAP_KRYT * i, Math.min(ty1, ty0 + TRAP_KRYT * (i + 1))];
             /* Lícna plocha plechu sa kreslí len tam, kde je naozaj odkrytá.
                Kým sa kreslila cez celú tabuľu, siahala pod ramená lemovania a
                v rohu spod nich vyliezala — plech cez lemovanie pretŕčal. Pod
@@ -3116,8 +3121,8 @@
             /* Telo plechu po tabuliach — bez lícnej a bez spodnej plochy, tie
                idú vcelku nižšie. */
             for (let i = 0; i < tabule; i++) {
-              const ya = ty0 + tw * i;
-              boxFaces(tx0, ya, trapBot, tx1 - tx0, tw, TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
+              const tp = tabulaY(i);
+              boxFaces(tx0, tp[0], trapBot, tx1 - tx0, tp[1] - tp[0], TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
             }
             /* Veľké plochy plechu sa nesmú obťahovať. Obťah ide 0,35 px za
                obrys plochy a pri plochom pohľade, keď je rameno lemovania
@@ -3133,12 +3138,15 @@
               quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
                    vrchHex, { normal: [0, 0, 1], cull: true, edge: false });
             }
-            /* Ryhy vlny. Zhora len po odkryté pole, zdola po celej ploche. */
-            const vln = Math.max(3, Math.round(tw / 205));
-            for (let i = 0; i < tabule; i++) {
-              const ya = ty0 + tw * i;
-              for (let k = 0; k < vln; k++) {
-                const va = ya + (tw * k) / vln, vb = va + (tw / vln) * 0.46;
+            /* Ryhy vlny. Rozteč je daná tabuľou, nie šírkou prístrešku, takže
+               vlna beží cez celú strechu rovnako a na spoji tabúľ nepreskočí.
+               Zhora idú len po odkryté pole, zdola po celej ploche. */
+            const vlnNaTabulu = Math.max(3, Math.round(TRAP_KRYT / 205));
+            const vlnRoztec = TRAP_KRYT / vlnNaTabulu;
+            const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec);
+            {
+              for (let k = 0; k < vlnPocet; k++) {
+                const va = ty0 + vlnRoztec * k, vb = Math.min(ty1, va + vlnRoztec * 0.46);
                 quad([[tx0, va, trapBot], [tx1, va, trapBot], [tx1, vb, trapBot], [tx0, vb, trapBot]],
                      'rgba(12,14,16,.30)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
                 const ha = Math.max(va, vy0), hb = Math.min(vb, vy1);
@@ -3152,7 +3160,7 @@
                škáru. Kreslí sa až po odkrytom poli, takže na lemovanie
                nedosiahne. */
             for (let i = 1; i < tabule; i++) {
-              const ys = ty0 + tw * i;
+              const ys = ty0 + TRAP_KRYT * i;
               if (ys <= vy0 || ys >= vy1 || vx1 <= vx0) continue;
               quad([[vx0, ys - 3, trapTop], [vx1, ys - 3, trapTop], [vx1, ys + 3, trapTop], [vx0, ys + 3, trapTop]],
                    'rgba(10,12,14,.28)', { normal: [0, 0, 1], raw: true, edge: false, fit: false });
