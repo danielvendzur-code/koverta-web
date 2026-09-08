@@ -1831,7 +1831,7 @@
              triedení schovala pod diel, na ktorom mala ležať. `os` hovorí, z
              ktorej plochy hlava trčí, `sgn` ktorým smerom. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
-            const r = R || 11, sd = sgn || 1, h = dlzka || 7;
+            const r = R || 9, sd = sgn || 1, h = dlzka || 7;
             const P = (t, a) => {
               const c = Math.cos(a) * r, d = Math.sin(a) * r;
               if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
@@ -1845,14 +1845,14 @@
               const b = (Math.PI * 2 * (i + 1)) / 6 + Math.PI / 6;
               cap.push(P(h, a));
               quad([P(0, a), P(h, a), P(h, b), P(0, b)], shade(hex, -0.10),
-                   { normal: n, cull: false, arris: false, bias: ON_SKIN });
+                   { normal: n, cull: false, bias: ON_SKIN });
             }
-            quad(cap, hex, { normal: n, arris: false, bias: ON_SKIN });
+            quad(cap, hex, { normal: n, bias: ON_SKIN });
           };
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
             const zin = model().rimSoffitHex || '#c2c7cb';
-            skrutkuj(cx0, cy0, cz0, 'z', zin, 11, -1, 7);
+            skrutkuj(cx0, cy0, cz0, 'z', zin, 9, -1, 7);
           };
 
 
@@ -2940,7 +2940,7 @@
                väznice, druhé na stojinu obvodového rámu, a v každom sú dve
                skrutky — štyri na uholník. Na každom konci väznice sú dva, po
                jednom na každej strane dvojice C profilov. */
-            const UHOL_T = REF.uholT || 10;      // hrúbka plechu
+            const UHOL_T = REF.uholT || 8;       // hrúbka plechu
             const UHOL_L = REF.uholL || 95;      // dĺžka ramena
             const UHOL_H = REF.uholH || 150;     // výška uholníka
             /* Uholník sedí presne v strede výšky profilu, na ktorý je
@@ -2949,20 +2949,23 @@
             const zRam = (ramBot + ramTop) / 2;  // stred obvodového rámu
             const uholnik = (px, sx, py, sy, zc) => {
               const z0 = zc - UHOL_H / 2;
+              /* Uholník má rovnakú farbu ako profil, na ktorom leží, takže ho
+                 od neho odlíši len priznaná hrana — kreslí sa preto s obťahom,
+                 nie ako splynutý kus. */
               const ax0 = Math.min(px, px + sx * UHOL_T);
               const ay0 = Math.min(py, py + sy * UHOL_L);
-              boxFaces(ax0, ay0, z0, UHOL_T, UHOL_L, UHOL_H, spojHex, [], SHAFT);
+              boxFaces(ax0, ay0, z0, UHOL_T, UHOL_L, UHOL_H, spojHex);
               const bx0 = Math.min(px, px + sx * UHOL_L);
               const by0 = Math.min(py, py + sy * UHOL_T);
-              boxFaces(bx0, by0, z0, UHOL_L, UHOL_T, UHOL_H, spojHex, [], SHAFT);
+              boxFaces(bx0, by0, z0, UHOL_L, UHOL_T, UHOL_H, spojHex);
               /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
               const roz = UHOL_H * 0.26;
               const stredR = py + sy * UHOL_L * 0.55;
               const xLic = px + sx * UHOL_T;
-              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 9, sx));
+              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 8, sx));
               const stredO = px + sx * UHOL_L * 0.55;
               const yLic = py + sy * UHOL_T;
-              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 9, sy));
+              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 8, sy));
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -3037,8 +3040,10 @@
             const tx0 = TRAP_ZAD, tx1 = L - TRAP_ODK;
             const spodHex = model().trapezSoffitHex || '#8f9295';
             const vrchHex = model().trapezTopHex || frame;
-            const ty0 = REF.trapOd != null ? REF.trapOd : LEM_T + 30;
-            const ty1 = REF.trapPo != null ? REF.trapPo : W - LEM_T - 30;
+            /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
+               nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
+               trapézu. */
+            const ty0 = LEM_T, ty1 = W - LEM_T;
             const tabule = Math.max(1, Math.round((ty1 - ty0) / TRAP_KRYT));
             const tw = (ty1 - ty0) / tabule;
             for (let i = 0; i < tabule; i++) {
