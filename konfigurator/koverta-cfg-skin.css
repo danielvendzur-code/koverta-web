@@ -1026,3 +1026,25 @@ body { background: var(--k-white); color: var(--k-ink); }
 @media (max-width: 640px) {
   #SoltecPremium .kv-custom__row { grid-template-columns: 1fr; }
 }
+
+/* Jeden pás záložiek pre obe značky. Koverta a Soltec sú dva rady toho
+   istého konfigurátora, nie dve stránky, tak stoja vedľa seba a rozdeľuje
+   ich len menovka skupiny. */
+.kv-tabs { align-items: center; }
+.kv-tabs__grp {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding-inline-end: .6rem;
+}
+.kv-tabs__grp + .kv-tabs__grp { border-inline-start: 1px solid rgba(18, 23, 26, 0.16); padding-inline-start: .9rem; }
+.kv-tabs__lab {
+  font-size: .74rem;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: rgba(18, 23, 26, 0.52);
+  padding-inline-end: .15rem;
+}
+@media (max-width: 989px) {
+  .kv-tabs__grp { flex: 0 0 auto; }
+}

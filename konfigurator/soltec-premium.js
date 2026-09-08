@@ -636,7 +636,7 @@
           const tab = event.target.closest('[data-sp-cfg-tab]');
           if (!tab) return;
           cfgSectionEl.querySelectorAll('[data-sp-cfg-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
-          const go = root.querySelector(tab.dataset.spCfgTab === 'quote' ? '[data-sp-goto="5"]' : '[data-sp-goto="1"]');
+          const go = root.querySelector(tab.dataset.spCfgTab === 'quote' ? '[data-sp-goto="' + (STEPS - 1) + '"]' : '[data-sp-goto="1"]');
           if (go) go.click();
         });
       }
@@ -667,37 +667,61 @@
       if (refNode) { try { REF = JSON.parse(refNode.textContent); } catch (error) { REF = null; } }
 
       if (cfgRoot && BIO) {
+        /* Kroky. Prístrešok Koverta má jeden tvar a jeden model, takže úvodný
+           krok s výberom riešenia odpadá a sprievodca má o jeden krok menej. */
+        const ONE_MODEL = Boolean(BIO.singleModel);
+        /* Voliteľné prevedenia, ktoré nemenia tvar konštrukcie: kotvenie,
+           odkvap a podobne. Soltec ich nemá, takže pole ostáva prázdne. */
+        const PICKS = Array.isArray(BIO.picks) ? BIO.picks : [];
+        /* Odkvap kreslíme, keď ho stránka má a zákazník ho neodopol. */
+        const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';
+        const RAIL = ONE_MODEL ? [
+          ['1', 'Rozmer', 'Rozmer'],
+          ['2', 'Strecha a farby', 'Strecha'],
+          ['3', 'Boky', 'Boky'],
+          ['4', 'Doplnky', 'Doplnky'],
+          ['5', 'Súhrn', 'Súhrn']
+        ] : [
+          ['1', 'Riešenie', 'Riešenie'],
+          ['2', 'Rozmer', 'Rozmer'],
+          ['3', 'Strecha a farby', 'Strecha'],
+          ['4', 'Boky', 'Boky'],
+          ['5', 'Doplnky', 'Doplnky'],
+          ['6', 'Súhrn', 'Súhrn']
+        ];
+        const STEPS = RAIL.length;
+        const STEP_NAMES = RAIL.map((r) => r[1]);
+        const STEP_MAP = ONE_MODEL
+          ? { 1: 0, 2: 0, 3: 1, 4: 3, 5: 2, 6: 4, 7: 5 }
+          : { 1: 1, 2: 1, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
+
         /* Standalone GitHub Pages builds made before the guided-flow redesign
            still contain the original seven small steps. Upgrade that markup in
            place so the same production script can serve Shopify and the public
            customer link without maintaining two configurators. */
         const normalizeLegacySteps = () => {
           const rail = cfgRoot.querySelector('.sp-rail');
-          if (!rail || rail.querySelectorAll('[data-sp-goto]').length === 6) return;
-          rail.innerHTML = [
-            ['1', 'Riešenie', 'Riešenie'],
-            ['2', 'Rozmer', 'Rozmer'],
-            ['3', 'Strecha a farby', 'Strecha'],
-            ['4', 'Boky', 'Boky'],
-            ['5', 'Doplnky', 'Doplnky'],
-            ['6', 'Súhrn', 'Súhrn']
-          ].map(([n, title, label], i) => `<button type="button" data-sp-goto="${n}" aria-current="${i === 0}" title="${title}"><i>${n}</i><span>${label}</span></button>`).join('');
+          if (!rail || rail.querySelectorAll('[data-sp-goto]').length === STEPS) return;
+          rail.innerHTML = RAIL
+            .map(([n, title, label], i) => `<button type="button" data-sp-goto="${n}" aria-current="${i === 0}" title="${title}"><i>${n}</i><span>${label}</span></button>`).join('');
           /* Doplnky mali vlastný panel (6), ale delili krok s výberom bokov —
              boli až pod celým zoznamom výplní. Dostávajú vlastný krok. */
-          const stepMap = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
           cfgRoot.querySelectorAll('.sp-step[data-sp-stepno]').forEach((panel) => {
             const oldStep = Number(panel.dataset.spStepno);
-            const nextStep = stepMap[oldStep];
-            if (!nextStep) return;
+            const nextStep = STEP_MAP[oldStep];
+            /* Prístrešok Koverta je jeden výrobok v jednom tvare, takže kroky
+               s výberom riešenia a modelu nemajú čo ponúknuť — zmiznú celé,
+               nie sú len skryté. */
+            if (!nextStep) { if (ONE_MODEL) panel.remove(); return; }
             panel.dataset.spStepno = String(nextStep);
             const badge = panel.querySelector('.sp-step__n');
-            if (badge && oldStep === 2) badge.remove();
+            if (badge && !ONE_MODEL && oldStep === 2) badge.remove();
             else if (badge) badge.textContent = String(nextStep);
           });
           const cap = cfgRoot.querySelector('[data-sp-stepcap]');
           const name = cfgRoot.querySelector('[data-sp-stepname]');
-          if (cap) cap.textContent = 'Krok 1 z 5';
-          if (name) name.textContent = 'Riešenie';
+          if (cap) cap.textContent = 'Krok 1 z ' + STEPS;
+          if (name) name.textContent = STEP_NAMES[0];
         };
         normalizeLegacySteps();
 
@@ -734,7 +758,10 @@
            doska. Kreslí sa preto po jednej lamele ako telesu a medzera ostáva
            prázdna; plnou plochou s nakreslenými čiarami by sa stena zavrela
            a spoza nej by prestalo byť vidieť. */
-        const KV_SLAT = { pitch: 150, fill: 0.70, depth: 38 };
+        /* Odmerané z modelu Koverta v Expivi: lamela 100 mm vysoká a 20 mm
+           hrubá, rozteč 140 mm, teda 40 mm medzera. Stena beží od 298 mm nad
+           zemou po 2 218 mm a jej líce sedí 15 mm pod vonkajším lícom rámu. */
+        const KV_SLAT = { pitch: 140, vyska: 100, hrubka: 20, od: 298, po: 2218, zapust: 15 };
         const KV_TONE = { drevo: '#a8763f', wpc: '#7c6a5c' };
         /* the tone of the board at a given height, the same on every face */
         const boardTone = (k, hex) => {
@@ -838,7 +865,9 @@
           boxColor: null,          // null = the box follows the frame
           ceiling: 'none',
           ledSet: { on: false, type: 'warm', len: 1, qty: 2 },
-          sensors: { wind: false, rain: false, temp: false, snow: false, presence: false }
+          sensors: { wind: false, rain: false, temp: false, snow: false, presence: false },
+          /* Predvolené prevedenie je prvá možnosť každej skupiny. */
+          picks: PICKS.reduce((acc, g) => { acc[g.id] = g.opts[0] && g.opts[0].id; return acc; }, {})
         };
 
         const model = () => BIO.models[state.model];
@@ -1344,6 +1373,16 @@
             if (total === null) open = true;
             lines.push({ k: `Vonkajšie kotvenie × ${postCount()}`, v: total, sum: total || 0 });
           }
+          /* Voľby, ktoré prístrešok naozaj ponúka — kotvenie, odkvap. Tie s
+             cenou vstupujú do súčtu, tie bez nej idú do súhrnu ako položka na
+             nacenenie, aby si zákazník nemyslel, že sú zadarmo. */
+          PICKS.forEach((g) => {
+            const o = g.opts.find((x) => x.id === state.picks[g.id]) || g.opts[0];
+            if (!o || o.tichy) return;
+            const v = Number.isFinite(o.cena) ? o.cena : null;
+            if (v === null) open = true;
+            lines.push({ k: `${g.title}: ${o.t}`, v, sum: v || 0 });
+          });
           if (!state.frameColor.std) lines.push({ k: 'Príplatok za farbu konštrukcie', v: BIO.surcharge.frame, sum: BIO.surcharge.frame });
           if (!state.louverColor.std) lines.push({ k: 'Príplatok za farbu lamiel', v: BIO.surcharge.louver, sum: BIO.surcharge.louver });
           return { lines, total: lines.reduce((a, l) => a + l.sum, 0), open };
@@ -2272,18 +2311,22 @@
                  useknutá lamela. Drevo dostáva svoju kresbu, hliník ide v
                  odtieni konštrukcie, WPC v kompozitnom hnedosivom tóne. */
               const slats = (t0, t1, zA, zB, depth, mat) => {
-                const run = zB - zA;
-                if (run < 60) return;
-                const n = Math.max(2, Math.min(60, Math.round(run / KV_SLAT.pitch)));
-                const pitch = run / n;
-                const th = Math.max(18, pitch * KV_SLAT.fill);
-                const d = Math.min(KV_SLAT.depth, Math.max(16, gw * 0.72));
-                for (let i = 0; i < n; i++) {
-                  const a = zA + pitch * i;
+                /* Rozteč aj výška lamely sú odmerané, nie dopočítané z výšky
+                   poľa: v modeli je lamiel štrnásť od 298 mm po 2 218 mm bez
+                   ohľadu na to, aký vysoký je prístrešok. Keď sa doň celý ten
+                   rad nezmestí, oreže sa zhora — tak, ako sa oreže aj na
+                   stavbe. */
+                const od = Math.max(zA, KV_SLAT.od);
+                const po = Math.min(zB, KV_SLAT.po);
+                if (po - od < KV_SLAT.vyska) return;
+                const d = Math.min(KV_SLAT.hrubka, Math.max(12, gw * 0.62));
+                const n = Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                for (let i = 0; i < Math.min(n, 40); i++) {
+                  const a = od + KV_SLAT.pitch * i;
                   const tone = mat === 'drevo' ? boardTone(i, KV_TONE.drevo)
                     : mat === 'wpc' ? boardTone(i * 7, KV_TONE.wpc)
                     : shade(sideHex, 0.10 + (i % 2 ? 0.03 : 0));
-                  memb(t0, t1, a, a + th, depth - d / 2, depth + d / 2, tone, [], SHAFT);
+                  memb(t0, t1, a, a + KV_SLAT.vyska, depth - d / 2, depth + d / 2, tone, [], SHAFT);
                 }
               };
 
@@ -2719,7 +2762,10 @@
             const RAM_W = 74, RAM_H = 220, OFF = 18;
             const VAZ_W = 58, VAZ_H = 180;
             const TRAP_H = 36, TRAP_KRYT = 1072;
-            const GUT = BIO.gutter ? 142 : 0;               // vysunutie čelného lemovania
+            /* Odkvap je v Expivi samostatná voľba (skupina ODKVAP), takže
+               ho vie zákazník aj odopnúť. Bez neho čelné lemovanie nemá čo
+               skrývať a sadne na líce ako ostatné. */
+            const GUT = maOdkvap() ? 142 : 0;               // vysunutie čelného lemovania
             const zinok = model().rimSoffitHex || '#c2c7cb';
             const zBot = H, zTop = zBot + LEM_H;
             const ramBot = zBot - 2, ramTop = ramBot + RAM_H;
@@ -2807,7 +2853,7 @@
             /* --- odkvap. Hranatý žľab visí na líci čelného C profilu, v tej
                medzere, kvôli ktorej je čelné lemovanie vysunuté. Je vo farbe
                prístrešku, lebo je z toho istého lakovaného plechu. --- */
-            if (BIO.gutter) {
+            if (maOdkvap()) {
               /* Odkvap. V Expivi modeloch žľab ani zvod nie sú — v žiadnom zo
                  70 exportov nie je diel, ktorý by nimi bol — takže sa skladajú
                  podľa fotografií realizácií. Rozmery, ktoré sa dali odmerať,
@@ -2853,49 +2899,96 @@
                 quad(pts, shade(gh, -0.18), { normal: [0, e[1], 0], cull: true });
               });
 
-              /* Zvod. Rúra sa kreslí ako mnohouholníkový hranol; hrdlá a
-                 objímky sú tá istá rúra s väčším polomerom a krátkou dĺžkou,
-                 takže spoje nie sú škáry, ale skutočné presahy. */
-              const rz = 39;
-              const rada = postXs();
-              const xStlp = rada.length ? rada[rada.length - 1] + postD() : L;
-              const yc = W - postW() / 2;
-              const rura = (ax, az, bx, bz, r, hex) => {
-                const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz);
-                if (len < 0.5) return;
-                const ux = dx / len, uz = dz / len, vx = -uz, vz = ux;
-                const M = 12;
-                for (let i = 0; i < M; i++) {
-                  const a = (Math.PI * 2 * i) / M, b = (Math.PI * 2 * (i + 1)) / M;
-                  const P = (t, ang) => [ax + ux * t + vx * Math.cos(ang) * r,
-                                         yc + Math.sin(ang) * r,
-                                         az + uz * t + vz * Math.cos(ang) * r];
-                  const m = (a + b) / 2;
-                  quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                       shade(hex, 0.10 + Math.sin(m) * 0.13),
-                       { normal: [vx * Math.cos(m), Math.sin(m), vz * Math.cos(m)], cull: true });
+              /* Zvod. Na fotkách realizácií vychádza spod strešnej hrany
+                 jedným plynulým oblúkom, potom ide rovno dole vedľa stĺpa a
+                 dole sa raz vyhne do pätky. Dva ohyby na celej rúre, nie
+                 reťaz kolien. Rúra stojí voľne vedľa stĺpa, nie nalepená naň
+                 — drží ju dvojica objímok. Je zo zinkového plechu, teda
+                 svetlejšia než lakovaná konštrukcia. */
+              const rz = 48;                       // rúra Ø 96 mm
+              /* Rúra ako mnohouholníkový hranol pozdĺž lomenej čiary. Oblúk
+                 sa zadá ako hustá postupnosť bodov, takže ohyb vyjde hladký
+                 a nie ako niekoľko kolien za sebou. */
+              const tuba = (pts, r, hex) => {
+                const M = 18;
+                for (let s = 0; s < pts.length - 1; s++) {
+                  const A = pts[s], B = pts[s + 1];
+                  let ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2];
+                  const len = Math.hypot(ux, uy, uz);
+                  if (len < 0.4) continue;
+                  ux /= len; uy /= len; uz /= len;
+                  let ax = 0, ay = 0, az = 1;
+                  if (Math.abs(uz) > 0.9) { ax = 1; az = 0; }
+                  let vx = uy * az - uz * ay, vy = uz * ax - ux * az, vz = ux * ay - uy * ax;
+                  const vl = Math.hypot(vx, vy, vz) || 1;
+                  vx /= vl; vy /= vl; vz /= vl;
+                  const wx = uy * vz - uz * vy, wy = uz * vx - ux * vz, wz = ux * vy - uy * vx;
+                  for (let i = 0; i < M; i++) {
+                    const a = (Math.PI * 2 * i) / M, b = (Math.PI * 2 * (i + 1)) / M;
+                    const P = (t, ang) => [
+                      A[0] + ux * t + (vx * Math.cos(ang) + wx * Math.sin(ang)) * r,
+                      A[1] + uy * t + (vy * Math.cos(ang) + wy * Math.sin(ang)) * r,
+                      A[2] + uz * t + (vz * Math.cos(ang) + wz * Math.sin(ang)) * r,
+                    ];
+                    const m = (a + b) / 2;
+                    const nx = vx * Math.cos(m) + wx * Math.sin(m);
+                    const ny = vy * Math.cos(m) + wy * Math.sin(m);
+                    const nz = vz * Math.cos(m) + wz * Math.sin(m);
+                    /* Rúra je valec, takže po jej obvode musí byť vidieť
+                       plynulý prechod od svetla k tieňu. Bez neho vyzerá
+                       ako plochý pás. */
+                    const lam = nx * 0.42 + ny * 0.50 + nz * 0.76;
+                    quad([P(0, a), P(len, a), P(len, b), P(0, b)],
+                         shade(hex, -0.16 + Math.max(0, lam) * 0.44),
+                         { normal: [nx, ny, nz], cull: true, edge: false });
+                  }
                 }
               };
-              const zvodHex = shade(frame, 0.06);
-              const xCelo = xStlp + rz + 4;              // os zvodu tesne na čele stĺpa
-              const zHrdlo = cz - R;                     // dno žľabu
-              const odsad = Math.abs(cx - xCelo);
-              const zKoleno = zHrdlo - 120;
-              const zPo = zKoleno - odsad;               // koniec kolena, 45°
+              /* Oblúk v rovine y–z: zo smeru sy do smeru sz, polomer R. */
+              const oblukYZ = (y0, z0, R, sy, sz, dielov) => {
+                const out = [];
+                for (let i = 0; i <= dielov; i++) {
+                  const t = (Math.PI / 2) * (i / dielov);
+                  out.push([cx, y0 + sy * R * Math.sin(t), z0 + sz * R * (1 - Math.cos(t))]);
+                }
+                return out;
+              };
 
-              rura(cx, zHrdlo + 12, cx, zHrdlo - 34, rz * 1.22, zvodHex);   // výpustné hrdlo
-              rura(cx, zHrdlo, cx, zKoleno, rz, zvodHex);                   // zvislý kus
-              rura(cx, zKoleno, xCelo, zPo, rz, zvodHex);                   // koleno 45°
-              rura(cx, zKoleno + 16, xCelo, zPo + 16, rz * 1.18, shade(zvodHex, -0.08)); // objímka kolena
-              rura(xCelo, zPo, xCelo, 150, rz, zvodHex);                    // po stĺpe dole
-              rura(xCelo, zPo - 14, xCelo, zPo - 52, rz * 1.18, shade(zvodHex, -0.08));
-              // objímky na stĺpe
-              [0.34, 0.72].forEach((t) => {
-                const z = 150 + (zPo - 150) * t;
-                rura(xCelo, z - 16, xCelo, z + 16, rz * 1.24, shade(frame, -0.16));
+              const zvodHex = shade(frame, 0.46);   // zinkový plech, svetlejší než rám
+              const zHrdlo = cz - R;                // dno žľabu
+              const yVypust = W - 90;               // výpust je ešte pod strechou
+              const yZvod = W + rz + 130;           // rúra stojí voľne vedľa stĺpa, nie na ňom
+              const RO = yZvod - yVypust;           // polomer horného oblúka
+              const zVypust = zHrdlo - 24;
+              const zRovno = zVypust - RO;          // odkiaľ ide rúra zvisle
+              const zPata = 400;                    // spodok zvislej časti
+              const RP = 190;                       // polomer vyhnutej pätky
+
+              // horný oblúk: spod strešnej hrany von a nadol, jediným ťahom
+              tuba(oblukYZ(yVypust, zVypust, RO, 1, -1, 14), rz, zvodHex);
+              // zvislá rúra popri stĺpe
+              tuba([[cx, yZvod, zRovno + 10], [cx, yZvod, zPata]], rz, zvodHex);
+              // hrdlo pod oblúkom, kde sa rúra nasúva do rúry
+              tuba([[cx, yZvod, zRovno + 26], [cx, yZvod, zRovno - 68]], rz * 1.10, shade(zvodHex, -0.07));
+              // vyhnutá pätka: druhý a posledný ohyb
+              const pata = [];
+              for (let i = 0; i <= 10; i++) {
+                const t = (Math.PI / 2) * 0.80 * (i / 10);
+                pata.push([cx, yZvod + RP * (1 - Math.cos(t)), zPata - RP * Math.sin(t)]);
+              }
+              tuba(pata, rz, zvodHex);
+
+              /* Objímky. Krátky pásik od boku stĺpa k rúre a okolo rúry
+                 obruč — presne tak, ako rúru drží na stavbe príchytka. */
+              const yStlp = W;                      // vonkajšie líce stĺpa
+              [0.26, 0.80].forEach((t) => {
+                const z = zPata + (zRovno - zPata) * t;
+                // obruč okolo rúry
+                tuba([[cx, yZvod - rz - 7, z], [cx, yZvod + rz + 7, z]], rz * 1.16, shade(frame, -0.14));
+                // pásik od boku stĺpa k rúre
+                boxFaces(cx - 22, yStlp - 8, z - 11, 44, yZvod - rz - yStlp + 14, 22,
+                         shade(frame, -0.06), [], SHAFT);
               });
-              // vyhnutá pätka na spodku
-              rura(xCelo, 150, xCelo - 70, 60, rz, zvodHex);
             }
           };
 
@@ -3369,6 +3462,8 @@
         const q = (sel) => cfgRoot.querySelector(sel);
         const buildModels = () => {
           const host = q('[data-sp-models]');
+          /* Pri jedinom modeli krok s výberom modelu na stránke nie je. */
+          if (!host) return;
           host.textContent = '';
           BIO.order.forEach((key) => {
             const m = BIO.models[key];
@@ -3792,6 +3887,19 @@
               ).join('') + '</div>');
           }
 
+          /* Prevedenia. Prístrešok má jeden tvar, mení sa na ňom rozmer,
+             farba, steny — a tieto voľby. Sú to prepínače, nie vypínače,
+             takže tu nesedia v rozbaľovacej karte, ale ako riadok čipov. */
+          PICKS.forEach((g) => {
+            const ai = g.opts.findIndex((o) => o.id === state.picks[g.id]);
+            if (state.picks[g.id] !== (g.opts[0] && g.opts[0].id)) count++;
+            html.push(`<div class="sp-add is-plain"><div class="sp-add__head"><div class="sp-add__t">${g.title}<small>${g.note || ''}</small></div></div>`
+              + `<div class="sp-add__body">`
+              + addChips('Prevedenie', g.opts.map((o) => ({ t: o.t, s: o.s || (Number.isFinite(o.cena) ? money.format(o.cena) + ' €' : '') })),
+                         ai < 0 ? 0 : ai, 'pick:' + g.id)
+              + `</div></div>`);
+          });
+
           host.innerHTML = html.join('');
           const boxColorHost = host.querySelector('[data-sp-box-colors]');
           if (boxColorHost) buildColors(boxColorHost, state.boxColor || state.frameColor, 'spBoxColor');
@@ -4000,8 +4108,12 @@
           cfgRoot.querySelectorAll('[data-sp-model]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spModel === state.model)));
           cfgRoot.querySelectorAll('[data-sp-place]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spPlace === state.placement)));
           syncLouver();
-          q('[data-sp-model-val]').textContent = m.label;
-          q('[data-sp-model-note]').textContent = m.louver
+          /* Pri jedinom modeli krok s jeho výberom neexistuje; popis dielov
+             sa vypisuje pod rozmerom, tak sa oba ciele hľadajú opatrne. */
+          const modelVal = q('[data-sp-model-val]');
+          if (modelVal) modelVal.textContent = m.label;
+          const modelNote = q('[data-sp-model-note]');
+          if (modelNote) modelNote.textContent = m.louver
             ? `Profil ${m.profile}, lamela ${m.louver}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`
             : `Profil ${m.profile}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`;
           syncSliders();
@@ -4179,6 +4291,10 @@
             else if (opt === 'ledt') state.ledSet.type = ['warm', 'neutral', 'rgb'][i];
             else if (opt === 'ledl') state.ledSet.len = i;
             else if (opt === 'anch') state.anchor = ['galv', 'coated', 'inox'][i];
+            else if (opt.indexOf('pick:') === 0) {
+              const g = PICKS.find((x) => x.id === opt.slice(5));
+              if (g && g.opts[i]) state.picks[g.id] = g.opts[i].id;
+            }
           } else if (t.dataset.spAddSensor) {
             const k = t.dataset.spAddSensor;
             state.sensors[k] = !state.sensors[k];
@@ -4285,9 +4401,7 @@
           scheduleRender();
         });
 
-        const STEPS = 6;
         let step = 1;
-        const STEP_NAMES = ['Riešenie', 'Rozmer', 'Strecha a farby', 'Boky', 'Doplnky', 'Súhrn'];
         const showStep = (n, silent) => {
           step = Math.max(1, Math.min(STEPS, n));
           cfgRoot.querySelectorAll('[data-sp-stepno]').forEach((el) => { el.hidden = Number(el.dataset.spStepno) !== step; });
