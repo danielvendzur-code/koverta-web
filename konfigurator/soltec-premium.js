@@ -2948,28 +2948,72 @@
                farbenie. Inú farbu smie mať len podhľad trapézu, lebo to je
                iný materiál. */
             const C_WEB = zinok, C_HORE = zinok, C_DOLE = zinok, C_DUTINA = zinok;
-            const cRun = (axis, outer, dir, a, b) => {
-              const put = (u0, u1, z, dz, hex) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, hex, [], SHAFT);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, hex, [], SHAFT);
-              };
-              put(outer, outer + web * dir, ramBot, RAM_H, C_WEB);
-              put(outer, outer + RAM_W * dir, ramTop - fl, fl, C_HORE);
-              put(outer, outer + RAM_W * dir, ramBot, fl, C_DOLE);
-              put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl, C_DUTINA);
+            /* --- C profil ako skutočný prierez -------------------------
+               Kým sa profil skladal zo štyroch kvádrov, vyzeral z každého
+               uhla ako plná doska — nebolo na ňom vidieť ani pásnicu, ani
+               stojinu, ani zahyb. Kreslí sa preto zo svojho rezu: dvojica C
+               chrbtami k sebe je jeden uzavretý profil s dvomi žľabmi po
+               stranách, hornou a spodnou pásnicou cez celú šírku a zahybmi na
+               koncoch pásnic. Spodok tak ostáva čistý (bez škáry v strede,
+               ako to má obvodový rám) a v boku je vidieť otvorený žľab.
+
+               Rez sa zadáva v rovine kolmej na beh: `a` je naprieč profilom,
+               `z` je výška. Stena sa vytiahne po behu, čelá sa poskladajú z
+               obdĺžnikov — nekonvexný polygon by maliarske delenie rozbilo. */
+            const C_LIP = 18;                      // zahyb na konci pásnice
+            const cRez = (par, vys, hr) => {
+              const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              return [
+                [0, 0], [par, 0], [par, t + lip], [par - t, t + lip], [par - t, t],
+                [m + t, t], [m + t, vys - t], [par - t, vys - t],
+                [par - t, vys - t - lip], [par, vys - t - lip], [par, vys], [0, vys],
+                [0, vys - t - lip], [t, vys - t - lip], [t, vys - t],
+                [m - t, vys - t], [m - t, t], [t, t], [t, t + lip], [0, t + lip]
+              ];
             };
-            /* Dvojica: vonkajšie C otvorené dnu, vnútorné otvorené von, stojiny
-               sa dotýkajú v strede. */
-            const cPar = (axis, outer, dir, a, b) => {
-              cRun(axis, outer, dir, a, b);
-              cRun(axis, outer + RAM_PAR * dir, -dir, a, b);
-              /* Obvodový rám má zdola čistý spodok — škáru medzi profilmi majú
-                 len priečne väznice. */
+            const cCela = (par, vys, hr) => {
+              const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              return [
+                [0, 0, par, t], [0, vys - t, par, t], [m - t, t, 2 * t, vys - 2 * t],
+                [0, t, t, lip], [par - t, t, t, lip],
+                [0, vys - t - lip, t, lip], [par - t, vys - t - lip, t, lip]
+              ];
             };
-            cPar('y', RAM_VSUN, 1, RAM_ZAD, rx1);
-            cPar('y', W - RAM_VSUN, -1, RAM_ZAD, rx1);
-            cPar('x', RAM_ZAD, 1, ry0, ry1);
-            cPar('x', rx1, -1, ry0, ry1);
+            /* axis 'x': profil má rez naprieč X a beží po Y. axis 'y': rez
+               naprieč Y, beh po X. `a0` je začiatok rezu naprieč, `z0` spodok,
+               `u0..u1` beh. */
+            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara) => {
+              const t = hrubka || 6;
+              const rez = cRez(par, vys, t);
+              const P = (a, z, u) => (axis === 'x' ? [a0 + a, u, z0 + z] : [u, a0 + a, z0 + z]);
+              for (let i = 0; i < rez.length; i++) {
+                const A = rez[i], B = rez[(i + 1) % rez.length];
+                let da = B[0] - A[0], dz = B[1] - A[1];
+                const dl = Math.hypot(da, dz) || 1; da /= dl; dz /= dl;
+                const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
+                quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
+                     hex, { normal: n, cull: true, arris: false });
+              }
+              cCela(par, vys, t).forEach((r) => {
+                const [ca, cz, cw, ch] = r;
+                [[u0, -1], [u1, 1]].forEach((e) => {
+                  const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
+                  quad(e[1] > 0 ? pts : pts.slice().reverse(), hex,
+                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false });
+                });
+              });
+              /* Škáru medzi dvojicou profilov má zdola vidieť len väznica —
+                 obvodový rám má spodok čistý. */
+              if (spara) {
+                const m = par / 2, sw = 3;
+                const q = [P(m - sw, 0, u0), P(m + sw, 0, u0), P(m + sw, 0, u1), P(m - sw, 0, u1)];
+                quad(q, 'rgba(10,12,14,.45)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+              }
+            };
+            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD, rx1, C_WEB);
+            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD, rx1, C_WEB);
+            cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
+            cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -3038,35 +3082,21 @@
                   const c1 = (rada.length ? rada[rada.length - 1] : L - postD()) + postD() / 2;
                   return [1, 2, 3].map((i) => Math.round(c0 + ((c1 - c0) * i) / 4));
                 })();
-            const vfl = 9, vweb = 5;
             const vaznePary = [];
             osi.forEach((os) => {
               vaznePary.push(os);
-              [-1, 1].forEach((sd) => {
-                const wx = sd < 0 ? os - vweb : os;                    // stojina pri strede
-                const fx = sd < 0 ? os - VAZ_W : os;                   // pásnice smerom von
-                boxFaces(wx, inY0, ramTop - VAZ_H, vweb, inY1 - inY0, VAZ_H,
-                         C_WEB, ['-y', '+y'], SHAFT);   // tá istá farba ako rám
-                boxFaces(fx, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl,
-                         C_HORE, ['-y', '+y'], SHAFT);
-                boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
-                         C_DOLE, ['-y', '+y'], SHAFT);
-              });
-              /* Dvojica C je zoskrutkovaná cez chrbty — dve skrutky na mieste
-                 spoja, jedna hore a jedna dole, a to z bočných strán profilu,
-                 nie zospodu. */
-              // tá istá škára zdola aj medzi dvojicou väzníc
-              quad([[os - 3, inY0, ramTop - VAZ_H], [os + 3, inY0, ramTop - VAZ_H],
-                    [os + 3, inY1, ramTop - VAZ_H], [os - 3, inY1, ramTop - VAZ_H]],
-                   'rgba(18,20,22,.34)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+              /* Väznica je tá istá dvojica C chrbtami k sebe ako obvodový rám,
+                 len nižšia — kreslí sa z rovnakého rezu. Škáru medzi profilmi
+                 má zdola vidieť, obvodový rám nie. */
+              cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true);
               /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
               const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
               for (let i = 0; i <= stanic; i++) {
                 const y = inY0 + 40 + ((inY1 - inY0 - 80) * i) / stanic;
                 [-1, 1].forEach((sd) => {
                   const x = os + sd * (VAZ_W + 1);
-                  skrutka(x, y, ramTop - vfl - 26, 'x', 0, sd);
-                  skrutka(x, y, ramTop - VAZ_H + vfl + 26, 'x', 0, sd);
+                  skrutka(x, y, ramTop - 40, 'x', 0, sd);
+                  skrutka(x, y, ramTop - VAZ_H + 40, 'x', 0, sd);
                 });
               }
             });
@@ -3209,40 +3239,78 @@
                  vonkajšom rohu, visela na modeli ako samostatná tyč vedľa
                  stĺpa; na fotkách realizácií ide po jeho čele, v jeho osi. */
               const yZvod = vsunStlp + postW() / 2;
-              const tuba = (pts, r, hex) => {
-                const M = 20;
-                for (let s = 0; s < pts.length - 1; s++) {
-                  const A = pts[s], B = pts[s + 1];
-                  let ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2];
-                  const len = Math.hypot(ux, uy, uz);
-                  if (len < 0.4) continue;
-                  ux /= len; uy /= len; uz /= len;
-                  let ax = 0, ay = 0, az = 1;
-                  if (Math.abs(uz) > 0.9) { ax = 1; az = 0; }
-                  let vx = uy * az - uz * ay, vy = uz * ax - ux * az, vz = ux * ay - uy * ax;
-                  const vl = Math.hypot(vx, vy, vz) || 1;
-                  vx /= vl; vy /= vl; vz /= vl;
-                  const wx = uy * vz - uz * vy, wy = uz * vx - ux * vz, wz = ux * vy - uy * vx;
-                  for (let i = 0; i < M; i++) {
-                    const a = (Math.PI * 2 * i) / M, b2 = (Math.PI * 2 * (i + 1)) / M;
-                    const P = (t, ang) => [
-                      A[0] + ux * t + (vx * Math.cos(ang) + wx * Math.sin(ang)) * r,
-                      A[1] + uy * t + (vy * Math.cos(ang) + wy * Math.sin(ang)) * r,
-                      A[2] + uz * t + (vz * Math.cos(ang) + wz * Math.sin(ang)) * r,
-                    ];
-                    const m2 = (a + b2) / 2;
-                    const nx = vx * Math.cos(m2) + wx * Math.sin(m2);
-                    const ny = vy * Math.cos(m2) + wy * Math.sin(m2);
-                    const nz = vz * Math.cos(m2) + wz * Math.sin(m2);
+              /* Rúra ako jeden súvislý ťah. Kým sa každý úsek kreslil ako
+                 samostatný valec, na ohyboch sa konce nestretli a medzi nimi
+                 ostávala klinová diera — „miesta, kde nič nie je". Teraz sa
+                 v každom bode dráhy vyrobí jeden prstenec, ktorého rovina
+                 polí uhol medzi prichádzajúcim a odchádzajúcim smerom, a
+                 plášť ide od prstenca k prstencu. Referenčný vektor sa
+                 prenáša pozdĺž dráhy, takže sa plášť po ceste nekrúti. */
+              const tuba = (pts, r, hex, otvor) => {
+                const M = 24;
+                const P = pts.filter((q, i) => i === 0 ||
+                  Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1], q[2] - pts[i - 1][2]) > 0.4);
+                if (P.length < 2) return;
+                const smer = [];
+                for (let i = 0; i < P.length - 1; i++) {
+                  const d = [P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1], P[i + 1][2] - P[i][2]];
+                  const dl = Math.hypot(d[0], d[1], d[2]) || 1;
+                  smer.push([d[0] / dl, d[1] / dl, d[2] / dl]);
+                }
+                // os prstenca v každom bode: priemer susedných smerov
+                const osi = P.map((q, i) => {
+                  const a = smer[Math.max(0, i - 1)], b = smer[Math.min(smer.length - 1, i)];
+                  const v = [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+                  const vl = Math.hypot(v[0], v[1], v[2]) || 1;
+                  return [v[0] / vl, v[1] / vl, v[2] / vl];
+                });
+                // referenčný vektor prenášaný pozdĺž dráhy
+                let ref = Math.abs(osi[0][2]) > 0.9 ? [1, 0, 0] : [0, 0, 1];
+                const prstence = osi.map((u) => {
+                  const d = ref[0] * u[0] + ref[1] * u[1] + ref[2] * u[2];
+                  let v = [ref[0] - u[0] * d, ref[1] - u[1] * d, ref[2] - u[2] * d];
+                  const vl = Math.hypot(v[0], v[1], v[2]) || 1;
+                  v = [v[0] / vl, v[1] / vl, v[2] / vl];
+                  ref = v;
+                  const w = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+                  return { v: v, w: w };
+                });
+                /* Prstenec v ohybe leží v šikmej rovine, tak musí byť o niečo
+                   širší, inak by sa rúra v kolene stiahla. */
+                const bod = (i, ang) => {
+                  const q = P[i], f = prstence[i], u = osi[i];
+                  const sm = smer[Math.min(smer.length - 1, i)];
+                  const cos = Math.max(0.35, u[0] * sm[0] + u[1] * sm[1] + u[2] * sm[2]);
+                  const rr = r / cos;
+                  const nx = f.v[0] * Math.cos(ang) + f.w[0] * Math.sin(ang);
+                  const ny = f.v[1] * Math.cos(ang) + f.w[1] * Math.sin(ang);
+                  const nz = f.v[2] * Math.cos(ang) + f.w[2] * Math.sin(ang);
+                  return { p: [q[0] + nx * rr, q[1] + ny * rr, q[2] + nz * rr], n: [nx, ny, nz] };
+                };
+                for (let i = 0; i < P.length - 1; i++) {
+                  for (let k = 0; k < M; k++) {
+                    const a = (Math.PI * 2 * k) / M, b2 = (Math.PI * 2 * (k + 1)) / M;
+                    const A = bod(i, a), B = bod(i, b2), C = bod(i + 1, b2), D = bod(i + 1, a);
+                    const m2 = (a + b2) / 2, f = prstence[i];
+                    const nx = f.v[0] * Math.cos(m2) + f.w[0] * Math.sin(m2);
+                    const ny = f.v[1] * Math.cos(m2) + f.w[1] * Math.sin(m2);
+                    const nz = f.v[2] * Math.cos(m2) + f.w[2] * Math.sin(m2);
                     /* Rúra má farbu konštrukcie, takže od stĺpa ju odlíši len
                        tvar: po obvode musí ísť plynulý prechod od svetla k
                        tieňu. arris:false zaistí, že medzi pásmi plášťa
                        nesvieti podklad. */
                     const lam = nx * 0.42 + ny * 0.50 + nz * 0.76;
-                    quad([P(0, a), P(len, a), P(len, b2), P(0, b2)],
-                         shade(hex, -0.17 + Math.max(0, lam) * 0.36),
+                    quad([A.p, D.p, C.p, B.p], shade(hex, -0.17 + Math.max(0, lam) * 0.36),
                          { normal: [nx, ny, nz], cull: true, arris: false });
                   }
+                }
+                /* Ústie: bez neho je na konci rúry vidieť dovnútra na nič. */
+                if (otvor !== false) {
+                  const kon = P.length - 1;
+                  const kruh = [];
+                  for (let k = 0; k < M; k++) kruh.push(bod(kon, (Math.PI * 2 * k) / M).p);
+                  const u = osi[kon];
+                  quad(kruh, shade(hex, -0.52), { normal: u, cull: false, arris: false });
                 }
               };
               const zvodHex = frame;
@@ -3254,18 +3322,23 @@
               const zPata = 150;                      // spodok zvislej časti
               const RP = 130;                         // polomer vyhnutej pätky
 
-              // hrdlo: spod lemovania vyjde kúsok širšia rúra
-              tuba([[xVytok, yZvod, zBot + 40], [xVytok, yZvod, zBot - 24]], rz * 1.12, shade(zvodHex, -0.07));
-              // koleno k licu stĺpa a zvislý beh na zem
-              tuba([[xVytok, yZvod, zBot - 18], [xRura, yZvod, zKoleno]], rz, zvodHex);
-              tuba([[xRura, yZvod, zKoleno + 2], [xRura, yZvod, zPata]], rz, zvodHex);
-              // vyhnutá pätka: jediný ohyb na spodku
-              const pata = [];
+              /* Celý zvod je jedna dráha — od výtoku pod lemovaním, kolenom
+                 k licu stĺpa, po ňom dole a vyhnutou pätkou von. Kým to boli
+                 štyri samostatné valce, na každom ohybe ostávala medzi nimi
+                 diera. */
+              const draha = [
+                [xVytok, yZvod, zBot + 60],
+                [xVytok, yZvod, zBot - 16],
+                [xRura, yZvod, zKoleno]
+              ];
               for (let i = 0; i <= 8; i++) {
                 const t = (Math.PI / 2) * 0.82 * (i / 8);
-                pata.push([xRura + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
+                draha.push([xRura + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
               }
-              tuba(pata, rz, zvodHex);
+              tuba(draha, rz, zvodHex);
+              // hrdlo: kúsok širšej rúry tam, kde zvod vychádza spod lemovania
+              tuba([[xVytok, yZvod, zBot + 30], [xVytok, yZvod, zBot - 26]], rz * 1.14,
+                   shade(zvodHex, -0.07), false);
 
               /* Príchytky. Na stavbe je to úzka objímka okolo rúry a pod ňou
                  krátky plochý pásik ku stĺpu. Pásik vedie po tom kúsku, kde sa
@@ -4084,7 +4157,11 @@
              z prázdnej rozbalenej skupiny vybratý doplnok. Skupiny preto
              posielajú v `picked`, čo naozaj prispieva. */
           const row = (key, on, title, note, body, off, picked) => {
-            if (picked === undefined ? on : picked) count++;
+            /* `picked` smie prísť aj ako počet — skupina doplnkov hlásila
+               jedna, aj keď z nej bolo vybraté troje, a odznak potom tvrdil
+               „1 vybraté" nad tromi položkami v súhrne. */
+            if (typeof picked === 'number') count += picked;
+            else if (picked === undefined ? on : picked) count++;
             html.push(`<div class="sp-add${off ? ' is-off' : ''}"><div class="sp-add__head"><div class="sp-add__t">${title}<small>${note}</small></div>`
               + `<label class="sp-switch"><input type="checkbox" data-sp-add-on="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}><span></span></label></div>`
               + `<div class="sp-add__body"${on ? '' : ' hidden'}>${on ? body() : ''}</div></div>`);
@@ -4197,7 +4274,9 @@
                   + `<output>${q}</output>`
                   + `<button type="button" data-sp-x="${it.id}" data-sp-xd="1" aria-label="Viac: ${it.label}">+</button>`
                   + '</div></div>';
-              }).join('') + '</div>', false, chosen.length > 0);
+              }).join('') + '</div>', false,
+              /* Soltec ostáva na pôvodnom počítaní po skupinách. */
+              BIO.singleModel ? chosen.reduce((a, it) => a + (state.extras[it.id] || 0), 0) : chosen.length > 0);
           });
 
           // anchoring
