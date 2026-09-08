@@ -2164,14 +2164,18 @@
                                  vodo ? cy0 : cy0 + sd * roz, zH - th);
                   });
                 };
-                // platne pozdĺž hĺbky (skrutkujú sa do bočného rámu)
-                plat(px - hp, py, hp, pw);
-                plat(px + pd, py, hp, pw);
-                // pri rohovom stĺpe ešte platňa cez šírku, do čelného rámu
+                /* Rohový stĺp má dve platne na dvoch susedných stranách: jednu
+                   pozdĺž bočného rámu, jednu cez šírku do čelného. Obe mieria
+                   dovnútra prístrešku, nie von — vonku by nemali čo držať.
+                   Stĺp v poli má dve oproti sebe, pozdĺž bočného rámu. */
+                const kBoku = py < W / 2;
                 if (okraj) {
-                  const kBoku = py < W / 2;
-                  if (kBoku) plat(px, py + pw, pd, hp);
-                  else plat(px, py - hp, pd, hp);
+                  const dnu = xi === 0 ? 1 : -1;              // smerom do poľa
+                  if (dnu > 0) plat(px + pd, py, hp, pw); else plat(px - hp, py, hp, pw);
+                  if (kBoku) plat(px, py + pw, pd, hp); else plat(px, py - hp, pd, hp);
+                } else {
+                  plat(px - hp, py, hp, pw);
+                  plat(px + pd, py, hp, pw);
                 }
               }
             }));
@@ -2841,26 +2845,38 @@
             const rx1 = L - RAM_ODK, rx0 = RAM_ZAD + RAM_PAR;
             const ry0 = RAM_VSUN + RAM_PAR, ry1 = W - RAM_VSUN - RAM_PAR;
             const fl = 10, web = 5;
+            /* Jedna paleta pre všetky pozinkované profily — obvodový rám aj
+               priečne väznice sú z toho istého plechu, tak nesmú mať každý
+               vlastný odtieň. Hĺbku im dáva svetlo a geometria, nie farbenie. */
+            const C_WEB = shade(zinok, -0.14);      // stojina
+            const C_HORE = shade(zinok, 0.10);      // horná pásnica
+            const C_DOLE = shade(zinok, -0.06);     // spodná pásnica
+            const C_DUTINA = shade(zinok, -0.26);   // vnútro profilu
             const cRun = (axis, outer, dir, a, b) => {
               const put = (u0, u1, z, dz, hex) => {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, hex, [], SHAFT);
                 else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, hex, [], SHAFT);
               };
-              put(outer, outer + web * dir, ramBot, RAM_H, shade(zinok, -0.14));
-              put(outer, outer + RAM_W * dir, ramTop - fl, fl, shade(zinok, 0.10));
-              /* Spodná pásnica je zdola proti presvetlenému trapézu tmavšia —
-                 na fotkách podhľadu je rám vždy o odtieň hlbší než plech. */
-              put(outer, outer + RAM_W * dir, ramBot, fl, shade(zinok, -0.22));
-              /* Vnútro C profilu je ten istý pozink, len v tieni. Kým to bola
-                 priesvitná čierna, presvitalo to zdola ako čierny pás. */
-              put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl,
-                  shade(zinok, -0.30));
+              put(outer, outer + web * dir, ramBot, RAM_H, C_WEB);
+              put(outer, outer + RAM_W * dir, ramTop - fl, fl, C_HORE);
+              put(outer, outer + RAM_W * dir, ramBot, fl, C_DOLE);
+              put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl, C_DUTINA);
             };
             /* Dvojica: vonkajšie C otvorené dnu, vnútorné otvorené von, stojiny
                sa dotýkajú v strede. */
             const cPar = (axis, outer, dir, a, b) => {
               cRun(axis, outer, dir, a, b);
               cRun(axis, outer + RAM_PAR * dir, -dir, a, b);
+              /* Zdola musí byť medzi tými dvomi profilmi vidieť škáru — je to
+                 dvojica priskrutkovaná chrbtami k sebe, nie jeden široký kus. */
+              const u = outer + (RAM_PAR / 2) * dir, t = 3;
+              if (axis === 'x') {
+                quad([[u - t, a, ramBot], [u + t, a, ramBot], [u + t, b, ramBot], [u - t, b, ramBot]],
+                     shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+              } else {
+                quad([[a, u - t, ramBot], [b, u - t, ramBot], [b, u + t, ramBot], [a, u + t, ramBot]],
+                     shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+              }
             };
             cPar('y', RAM_VSUN, 1, RAM_ZAD, rx1);
             cPar('y', W - RAM_VSUN, -1, RAM_ZAD, rx1);
@@ -2940,19 +2956,20 @@
               [-1, 1].forEach((sd) => {
                 const wx = sd < 0 ? os - vweb : os;                    // stojina pri strede
                 const fx = sd < 0 ? os - VAZ_W : os;                   // pásnice smerom von
-                /* Väznice sú z toho istého pozinku ako rám, ale zdola sú
-                   proti presvetlenému trapézu výrazne tmavšie — na fotkách
-                   podhľadu je to to, čo strope dáva hĺbku. */
                 boxFaces(wx, inY0, ramTop - VAZ_H, vweb, inY1 - inY0, VAZ_H,
-                         shade(zinok, -0.34), ['-y', '+y'], SHAFT);
+                         C_WEB, ['-y', '+y'], SHAFT);
                 boxFaces(fx, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl,
-                         shade(zinok, -0.06), ['-y', '+y'], SHAFT);
+                         C_HORE, ['-y', '+y'], SHAFT);
                 boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
-                         shade(zinok, -0.20), ['-y', '+y'], SHAFT);
+                         C_DOLE, ['-y', '+y'], SHAFT);
               });
               /* Dvojica C je zoskrutkovaná cez chrbty — dve skrutky na mieste
                  spoja, jedna hore a jedna dole, a to z bočných strán profilu,
                  nie zospodu. */
+              // tá istá škára zdola aj medzi dvojicou väzníc
+              quad([[os - 3, inY0, ramTop - VAZ_H], [os + 3, inY0, ramTop - VAZ_H],
+                    [os + 3, inY1, ramTop - VAZ_H], [os - 3, inY1, ramTop - VAZ_H]],
+                   shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
               /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
               const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
               for (let i = 0; i <= stanic; i++) {
