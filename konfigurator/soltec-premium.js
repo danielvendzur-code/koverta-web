@@ -1852,7 +1852,7 @@
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
             const zin = model().rimSoffitHex || '#c2c7cb';
-            skrutkuj(cx0, cy0, cz0, 'z', shade(zin, -0.34), 11, -1, 7);
+            skrutkuj(cx0, cy0, cz0, 'z', shade(zin, -0.14), 11, -1, 7);
           };
 
 
@@ -2843,6 +2843,10 @@
             const REF = model().kvRef || {};
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
+            /* Horné rameno lemovania je plech, ktorý leží na trapéze. Kým malo
+               rovnakú hrúbku ako zvislé rameno, trapéz doň zapadal a presvital
+               cezeň; tenšie rameno ho pustí takmer na odmeranú výšku. */
+            const LEM_ARM = 4;
             const RAM_W = REF.ramW || 74, RAM_H = REF.ramH || 220;
             const RAM_BOK = REF.ramBok || 18;        // odsadenie rámu od boku
             const RAM_ZAD = REF.ramZad || 15;        // od zadného čela
@@ -2855,7 +2859,7 @@
             const ramBot = zBot, ramTop = ramBot + RAM_H;
             /* Trapéz musí sadnúť pod horné rameno lemovania, nie doň — inak
                sa jeho plech s lemovaním prekrýva a presvitá cezeň. */
-            const trapTop = zTop - LEM_T, trapBot = trapTop - TRAP_H;
+            const trapTop = zTop - LEM_ARM, trapBot = trapTop - TRAP_H;
 
             /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelné cez
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
@@ -2867,7 +2871,7 @@
                 else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
-              put(outer, outer + sirka * dir, zTop - LEM_T, LEM_T);            // horné rameno
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM);        // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
             };
             lemL('y', 0, 1, 0, L, LEM_BOK);                  // bočné, cez celú hĺbku
@@ -2926,7 +2930,9 @@
                sa stretá bočný a čelný C profil, a na koncoch väzníc. Sú vo
                farbe C profilov, lebo sú z toho istého pozinku. --- */
             const spojHex = shade(zinok, -0.34);
-            const skrutHex = shade(zinok, -0.52);
+            /* Skrutky sú z toho istého pozinku ako C profily — strieborné,
+               len o odtieň hlbšie, aby na profile boli vidieť. */
+            const skrutHex = shade(zinok, -0.14);
             /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
                položený na líci dielu, nie ako guľa; v tejto mierke je to
                presne to, čo je na spoji vidieť. */
@@ -2938,9 +2944,12 @@
                skrutky — štyri na uholník. Na každom konci väznice sú dva, po
                jednom na každej strane dvojice C profilov. */
             const UHOL_T = REF.uholT || 10;      // hrúbka plechu
-            const UHOL_L = REF.uholL || 90;      // dĺžka ramena
+            const UHOL_L = REF.uholL || 170;     // dĺžka ramena
             const UHOL_H = REF.uholH || 70;      // výška uholníka
-            const zSpoj = ramTop - 32 - UHOL_H / 2;
+            /* Uholník sedí presne v strede výšky profilu, na ktorý je
+               priskrutkovaný — väznica má svoj stred inde než obvodový rám. */
+            const zVaz = ramTop - VAZ_H / 2;     // stred priečnej väznice
+            const zRam = (ramBot + ramTop) / 2;  // stred obvodového rámu
             const uholnik = (px, sx, py, sy, zc) => {
               const z0 = zc - UHOL_H / 2;
               const ax0 = Math.min(px, px + sx * UHOL_T);
@@ -3008,16 +3017,18 @@
                dvojice C profilov — teda štyri na väznicu. */
             vaznePary.forEach((os) => {
               [[ry0, 1], [ry1, -1]].forEach((bo) => {
-                uholnik(os - VAZ_W, -1, bo[0], bo[1], zSpoj);
-                uholnik(os + VAZ_W, 1, bo[0], bo[1], zSpoj);
+                uholnik(os - VAZ_W, -1, bo[0], bo[1], zVaz);
+                uholnik(os + VAZ_W, 1, bo[0], bo[1], zVaz);
               });
             });
 
-            /* Rohy: uholník spája stojinu čelného a bočného rámu, dva na roh. */
+            /* Rohy: uholník spája stojinu čelného a bočného rámu. Dva na roh,
+               vedľa seba po dĺžke, v strede výšky rámu — rovnako ako na
+               väzniciach, nie nad sebou. */
             [[RAM_ZAD + RAM_PAR, 1], [rx1 - RAM_PAR, -1]].forEach((ce) => {
               [[ry0, 1], [ry1, -1]].forEach((bo) => {
-                uholnik(ce[0], ce[1], bo[0], bo[1], zSpoj);
-                uholnik(ce[0], ce[1], bo[0], bo[1], zSpoj - UHOL_H - 14);
+                uholnik(ce[0], ce[1], bo[0], bo[1], zRam);
+                uholnik(ce[0] + ce[1] * (UHOL_L + 40), ce[1], bo[0], bo[1], zRam);
               });
             });
             /* Pod rohom je ešte jedna skrutka zospodu, presne v strede rohu. */
@@ -3044,9 +3055,9 @@
               for (let k = 0; k < vln; k++) {
                 const va = ya + (tw * k) / vln, vb = va + (tw / vln) * 0.46;
                 quad([[tx0, va, trapBot], [tx1, va, trapBot], [tx1, vb, trapBot], [tx0, vb, trapBot]],
-                     'rgba(12,14,16,.20)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                     'rgba(12,14,16,.30)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
                 quad([[tx0, va, trapTop], [tx1, va, trapTop], [tx1, vb, trapTop], [tx0, vb, trapTop]],
-                     'rgba(255,255,255,.10)', { normal: [0, 0, 1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                     'rgba(255,255,255,.14)', { normal: [0, 0, 1], raw: true, edge: false, fit: false, bias: ON_SKIN });
               }
             }
 
@@ -3072,12 +3083,15 @@
                 const p = bod(t0), q = bod(t1);
                 const m = (t0 + t1) / 2;
                 const nx = -Math.cos(m), nz = -Math.sin(m);
+                /* Žľab je otvorená škrupina. Keď sa jeho plochy zahadzovali
+                   podľa normály, pri niektorých uhloch pohľadu nezostala ani
+                   jedna a žľab zmizol. Kreslia sa preto obojstranne. */
                 quad([[p[0], LEM_T, p[1]], [q[0], LEM_T, q[1]], [q[0], W - LEM_T, q[1]], [p[0], W - LEM_T, p[1]]],
-                     shade(gh, -0.10 + Math.sin(m) * 0.16), { normal: [nx, 0, nz], cull: true, arris: false });
+                     shade(gh, -0.10 + Math.sin(m) * 0.16), { normal: [nx, 0, nz], arris: false });
                 const d = 8;
                 quad([[p[0] - nx * d, W - LEM_T, p[1] - nz * d], [q[0] - nx * d, W - LEM_T, q[1] - nz * d],
                       [q[0] - nx * d, LEM_T, q[1] - nz * d], [p[0] - nx * d, LEM_T, p[1] - nz * d]],
-                     shade(gh, -0.26), { normal: [-nx, 0, -nz], cull: true, arris: false });
+                     shade(gh, -0.26), { normal: [-nx, 0, -nz], arris: false });
               }
               // návalok na oboch hranách žľabu
               [bod(0), bod(Math.PI)].forEach((P) => {
@@ -3091,7 +3105,7 @@
                   const P = bod(t);
                   pts.push([P[0], e[0], P[1]]);
                 }
-                quad(pts, shade(gh, -0.18), { normal: [0, e[1], 0], cull: true });
+                quad(pts, shade(gh, -0.18), { normal: [0, e[1], 0] });
               });
 
               /* Zvod. Vyteká zo dna žľabu a ide rovno dole — žiadne koleno
