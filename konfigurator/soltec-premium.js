@@ -681,7 +681,7 @@
         const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';
         const RAIL = ONE_MODEL ? [
           ['1', 'Rozmer', 'Rozmer'],
-          ['2', 'Strecha a farby', 'Strecha'],
+          ['2', 'Farba', 'Farba'],
           ['3', 'Boky', 'Boky'],
           ['4', 'Doplnky', 'Doplnky'],
           ['5', 'Súhrn', 'Súhrn']
@@ -3200,7 +3200,16 @@
                  stĺp a z niektorých uhlov by zmizol. Sedí o kus dovnútra, tak
                  aby z neho aj v bočnom pohľade ostal kus mimo obrysu stĺpa —
                  a stále pod žľabom. */
-              const yZvod = RAM_PAR + 18;
+              /* Rúra patrí na roh stĺpa, nie medzi stĺpy. Kým sedela o pol
+                 metra dnu, visela v pohľade zboku vo vzduchu a príchytky sa
+                 nemali čoho chytiť. Teraz beží po vonkajšom rohu: kúsok
+                 prekrýva líce stĺpa, takže je na čom držať, a kúsok prečnieva
+                 von, takže ju vidieť aj spredu. */
+              const vsunStlp = Number(model().postInset) || 0;
+              /* Toľko rúry musí ostať mimo obrysu stĺpa, aby ju z rohového
+                 pohľadu stĺp neprekryl celú — pri menšom odsadení z nej bolo
+                 vidieť len vyhnutú pätku. */
+              const yZvod = vsunStlp + 10 - rz;
               const tuba = (pts, r, hex) => {
                 const M = 24;
                 for (let s = 0; s < pts.length - 1; s++) {
@@ -3280,16 +3289,19 @@
                  Kreslí sa preto tesná obruč a tenký pásik presne po medzeru
                  medzi lícom stĺpa a rúrou. */
               const medzera = zx - rz - xLicStlp;
-              [0.30, 0.78].forEach((t) => {
+              /* Tri príchytky, nie dve, a tmavšie než rúra — dve svetlé sa na
+                 tmavej konštrukcii stratili a rúra pôsobila, že visí voľne. */
+              [0.14, 0.50, 0.86].forEach((t) => {
                 const z = zPata + (zBot - 320 - zPata) * t;
                 // objímka: úzky prstenec tesne na rúre
-                tuba([[zx, yZvod - 14, z], [zx, yZvod + 14, z]], rz * 1.06, shade(frame, -0.30));
+                tuba([[zx, yZvod - 15, z], [zx, yZvod + 15, z]], rz * 1.08, shade(frame, -0.42));
                 /* Pásik ku stĺpu má zmysel len vtedy, keď je stĺp hneď pri
                    rúre. Kým sa kreslil vždy, pri šesťstĺpovej variante viedol
-                   vyše metra cez prázdno. */
+                   vyše metra cez prázdno. Vedie po tom kúsku, kde sa rúra a
+                   stĺp prekrývajú — inak by nedosadol ani na jeden z nich. */
                 if (medzera >= -20 && medzera < 90) {
-                  boxFaces(xLicStlp, yZvod - 8, z - 4, Math.max(6, medzera) + 6, 16, 8,
-                           shade(frame, -0.22), [], SHAFT);
+                  boxFaces(xLicStlp - 8, vsunStlp - 10, z - 5, Math.max(6, medzera) + 16, 24, 10,
+                           shade(frame, -0.38), [], SHAFT);
                 }
               });
             }
@@ -3879,7 +3891,11 @@
             }
           }
           if (!wrap || !host) return;
-          const available = model().roof === 'panel' && model().glazed !== true;
+          /* Koverta kryje strechu trapézovým plechom vo farbe konštrukcie, nie
+             sendvičovým ISO panelom — voľba vrchu a spodku panela sem nepatrí
+             a ponúkala odtiene, ktoré Koverta nerobí. */
+          const available = model().roof === 'panel' && model().glazed !== true
+            && model().roofKit !== 'koverta';
           wrap.hidden = !available;
           if (!available) { host.textContent = ''; return; }
           const chosen = ROOF_FINISHES[state.roofFinish] || ROOF_FINISHES[0];
@@ -3937,6 +3953,21 @@
         };
 
         const buildSideOpts = () => {
+          /* Pôdorys v kroku „Vyberte stranu" mal pevný pomer 3 : 2, takže
+             prístrešok 2,5 × 5,2 m sa kreslil ako široký obdĺžnik a strany
+             dlhé 5 200 mm boli tie krátke. Pomer teraz sedí s rozmerom a v
+             ploche stojí, o aký rozmer ide. Vodorovná os pôdorysu je hĺbka —
+             ohraničujú ju tlačidlá Zadná a Predná, ktoré merajú šírku; Ľavá a
+             Pravá sú zvislé hrany dlhé cez hĺbku. */
+          const plan = cfgRoot.querySelector('.sp-sides__plan');
+          if (plan && model().kvGeom) {
+            /* Pomer sa orezáva: pri 2,5 × 6 m by bol pôdorys dvaapolkrát vyšší
+               než širší a zabral by celý krok. Orientáciu ukáže aj zmiernený
+               pomer, presné rozmery stoja v ploche. */
+            const pomer = Math.min(1.35, Math.max(0.74, widthMM() / lengthMM()));
+            plan.style.aspectRatio = String(pomer);
+            plan.textContent = `${mm(widthMM())} × ${mm(lengthMM())}`;
+          }
           const host = q('[data-sp-side-opts]');
           const side = state.activeSide;
           host.textContent = '';
@@ -3993,6 +4024,18 @@
              it kept the markup's 3 000 while every carport and canopy model
              carries maxHeight 2800 - the configurator would draw, and price, a
              structure taller than the model is made in. */
+          /* Prístrešok Koverta sa vyrába v jednej výške — Expivi pri ňom
+             otázku na výšku vôbec nemá, stĺp je vo všetkých 66 exportoch
+             2 398 mm. Posuvník by teda ponúkal voľbu, ktorá neexistuje a
+             cenu nemení; namiesto neho stojí v kroku odmeraný údaj. */
+          const fixH = Number(m.fixedHeight) || 0;
+          const hBox = h.closest('.sp-field');
+          if (fixH) {
+            state.height = fixH;
+            if (hBox) hBox.hidden = true;
+          } else if (hBox) {
+            hBox.hidden = false;
+          }
           const hMax = Number(m.maxHeight) || Number(h.max) || 3000;
           /* Spodný koniec výšky si model tiež nesie: oceľový prístrešok
              Koverta sa nerobí nižší než 2 200 mm, hliníkový Soltec ide inde. */
@@ -4221,7 +4264,18 @@
           const boxColorHost = host.querySelector('[data-sp-box-colors]');
           if (boxColorHost) buildColors(boxColorHost, state.boxColor || state.frameColor, 'spBoxColor');
           const badge = q('[data-sp-add-count]');
-          if (badge) badge.textContent = count ? `${count} vybraté` : 'žiadne';
+          /* „žiadne" hovorilo nepravdu: krok nesie aj kotvenie a odkvap, ktoré
+             zvolené vždy sú. Keď zákazník nepridal žiadny doplnok, ukáže sa
+             prvé prevedenie z krokových volieb, nie prázdno. */
+          if (badge) {
+            let text = count ? `${count} vybraté` : 'žiadne';
+            if (!count && PICKS_DOPLNKY.length) {
+              const g0 = PICKS_DOPLNKY[0];
+              const o0 = g0.opts.find((o) => o.id === state.picks[g0.id]) || g0.opts[0];
+              if (o0) text = o0.t;
+            }
+            badge.textContent = text;
+          }
         };
 
         /* Run the roof to a position rather than snapping to it. The travel
@@ -4430,9 +4484,12 @@
           const modelVal = q('[data-sp-model-val]');
           if (modelVal) modelVal.textContent = m.label;
           const modelNote = q('[data-sp-model-note]');
-          if (modelNote) modelNote.textContent = m.louver
+          if (modelNote) modelNote.textContent = (m.louver
             ? `Profil ${m.profile}, lamela ${m.louver}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`
-            : `Profil ${m.profile}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`;
+            : `Profil ${m.profile}, stĺpy ${m.post}. Najväčší rozmer ${area1.format(m.maxW / 1000)} × ${area1.format(m.maxL / 1000)} m.`)
+            /* Keď výška nie je voľba, musí byť aspoň napísaná — inak zákazník
+               nevie, ako vysoko pod prístreškom prejde. */
+            + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
           PICKS_ROZMER.forEach((g) => {
@@ -4664,9 +4721,11 @@
               model().roof === 'panel'
                 ? `Konštrukcia ${state.frameColor.name} (${state.frameColor.ral}).`
                 : `Konštrukcia ${state.frameColor.name} (${state.frameColor.ral}), lamely ${state.louverColor.name} (${state.louverColor.ral}).`,
-              model().roof === 'panel' && model().glazed !== true
+              model().roof === 'panel' && model().glazed !== true && model().roofKit !== 'koverta'
                 ? `Strešný ISO panel: vrch ${ROOF_FINISHES[state.roofFinish].top}, spodná strana ${ROOF_FINISHES[state.roofFinish].bottom}.` : '',
-              `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ' — '}${placement().label}.`,
+              /* Prístrešok Koverta sa neumiestňuje voľbou — krok s riešením
+                 nemá, tak by veta tvrdila niečo, čo zákazník nevybral. */
+              ONE_MODEL ? '' : `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ' — '}${placement().label}.`,
               chosen.length ? `Strany — ${chosen.join('; ')}.` : 'Všetky strany otvorené.',
               state.box.on && boxPrice() ? `Zadný box: ${mm(boxPrice().w)} × ${mm(boxPrice().d)}, ${boxFinishLabel()}, ${(state.boxColor || state.frameColor).name} (${(state.boxColor || state.frameColor).ral}).` : '',
               state.ceiling !== 'none' && ceilingOptions().length
@@ -4676,6 +4735,12 @@
               sensorsOn.length ? `Senzory: ${sensorsOn.map((k) => sensorLabel[k] || k).join(', ')}.` : '',
               state.anchor !== 'none' ? `Vonkajšie kotvenie: ${anchorLabel[state.anchor] || state.anchor}.` : '',
               picked.length ? `Ďalšie doplnky: ${picked.join('; ')}.` : '',
+              /* Kotvenie a odkvap zákazník vyberá, ale do dopytu sa nedostali —
+                 obchodník tak nevedel, čo si na stránke naklikal. */
+              ...PICKS.map((g) => {
+                const o = g.opts.find((x) => x.id === state.picks[g.id]) || g.opts[0];
+                return o ? `${g.title}: ${o.t}.` : '';
+              }),
               `Orientačná cena z konfigurátora: ${open ? 'od ' : ''}${money.format(total)} € ${BIO.priceNote || 'bez DPH'}.`
             ].filter(Boolean).join('\n');
             if (message) {
@@ -4691,6 +4756,21 @@
             }
             const target = root.querySelector('#sp-dopyt');
             if (target) target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+            return;
+          } else if (t.hasAttribute('data-kv-custom')) {
+            /* Tlačidlo „Potrebujem rozmer na mieru" doteraz nerobilo nič —
+               nepočúval ho nikto. Teraz zapíše požiadavku do dopytu a odošle
+               ho tou istou cestou ako „Chcem presnú ponuku", takže obchodník
+               vidí aj rozmer, od ktorého zákazník vychádzal. */
+            const message = root.querySelector('textarea[name="contact[body]"]');
+            if (message) {
+              const note = 'Potrebujem rozmer na mieru — katalógový najbližšie zodpovedá '
+                + `${mm(widthMM())} × ${mm(lengthMM())} mm.`;
+              message.value = message.value.trim() ? `${message.value.trim()}\n${note}` : note;
+              message.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            const qb = cfgRoot.querySelector('[data-sp-cfg-quote]');
+            if (qb) qb.click();
             return;
           } else if (t.dataset.spLoadIdx) {
             state.load = Number(t.dataset.spLoadIdx);

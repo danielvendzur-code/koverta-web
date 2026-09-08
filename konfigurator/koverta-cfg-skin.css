@@ -1048,3 +1048,23 @@ body { background: var(--k-white); color: var(--k-ink); }
 @media (max-width: 989px) {
   .kv-tabs__grp { flex: 0 0 auto; }
 }
+
+/* Odkaz na rozmer na mieru je vedľajšia cesta, nie druhé hlavné tlačidlo.
+   Ako plné žlté tlačidlo súperil s „Chcem presnú ponuku" o pozornosť. */
+#SoltecPremium .kv-linkbtn {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: .25em;
+  cursor: pointer;
+}
+#SoltecPremium .kv-linkbtn::before,
+#SoltecPremium .kv-linkbtn::after { content: none; }
+#SoltecPremium .kv-linkbtn:hover { transform: none; text-decoration-thickness: 2px; }
