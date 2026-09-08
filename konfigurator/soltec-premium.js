@@ -2922,8 +2922,10 @@
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
                k lemovaniu. */
-            const inY0 = REF.vazOd != null ? REF.vazOd : ry0 + RAM_W;
-            const inY1 = REF.vazPo != null ? REF.vazPo : ry1 - RAM_W;
+            /* Väznice sú odsadené od bočnej hrany, nie na pevnej súradnici —
+               inak by pri užšom prístrešku trčali von. */
+            const VAZ_VSUN = REF.vazVsun != null ? REF.vazVsun : 30;
+            const inY0 = VAZ_VSUN, inY1 = W - VAZ_VSUN;
 
             /* --- spojovací kov. V exporte je 24 kusov spojok: v rohoch, kde
                sa stretá bočný a čelný C profil, a na koncoch väzníc. Sú vo
@@ -2971,13 +2973,18 @@
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
                v strede dvojice a pásnice idú od nich von. Osi sú odmerané, nie
                dopočítané — v modeli nie sú rozdelené rovnomerne. */
-            const osi = Array.isArray(REF.vaznice) && REF.vaznice.length
-              ? REF.vaznice
+            /* Osi väzníc sú odmerané pre každú katalógovú dĺžku — v modeloch
+               delia rozpätie medzi osami stĺpov na štyri rovnaké diely. Keď
+               dĺžka v tabuľke nie je (rozmer na mieru), dopočítajú sa presne
+               tým istým pravidlom. */
+            const podl = (REF.poDlzke || {})[String(L)];
+            const osi = podl && Array.isArray(podl.vaznice) && podl.vaznice.length
+              ? podl.vaznice
               : (() => {
-                  const n = Math.max(2, Math.round(L / 1450));
-                  const out = [];
-                  for (let i = 1; i < n; i++) out.push((L * i) / n);
-                  return out;
+                  const rada = postXs();
+                  const c0 = (rada.length ? rada[0] : 0) + postD() / 2;
+                  const c1 = (rada.length ? rada[rada.length - 1] : L - postD()) + postD() / 2;
+                  return [1, 2, 3].map((i) => Math.round(c0 + ((c1 - c0) * i) / 4));
                 })();
             const vfl = 9, vweb = 5;
             const vaznePary = [];
