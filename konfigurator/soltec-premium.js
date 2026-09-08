@@ -1838,8 +1838,10 @@
             }
             quad(cap, hex, { normal: n, arris: false, bias: ON_SKIN });
           };
+          /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
-            skrutkuj(cx0, cy0, cz0, 'z', shade(frame, -0.46), 11, -1, 7);
+            const zin = model().rimSoffitHex || '#c2c7cb';
+            skrutkuj(cx0, cy0, cz0, 'z', shade(zin, -0.34), 11, -1, 7);
           };
 
 
@@ -2909,14 +2911,9 @@
             const inY0 = REF.vazOd != null ? REF.vazOd : ry0 + RAM_W;
             const inY1 = REF.vazPo != null ? REF.vazPo : ry1 - RAM_W;
 
-            /* --- spojovací kov. V exporte je 24 kusov jedného dielu
-               120 × 85 × 140 mm: štyri v rohoch, kde sa stretá bočný a čelný
-               C profil, a po dvoch na každom konci každej väznice — jeden na
-               každé C dvojice. Je vo farbe C profilov a drží ho skrutkovaný
-               spoj: dve skrutky do jedného profilu, dve do druhého. --- */
-            const SPOJ_D = REF.spojD || 85;    // pozdĺž hĺbky
-            const SPOJ_W = REF.spojW || 120;   // cez šírku
-            const SPOJ_H = REF.spojH || 140;
+            /* --- spojovací kov. V exporte je 24 kusov spojok: v rohoch, kde
+               sa stretá bočný a čelný C profil, a na koncoch väzníc. Sú vo
+               farbe C profilov, lebo sú z toho istého pozinku. --- */
             const spojHex = shade(zinok, -0.34);
             const skrutHex = shade(zinok, -0.52);
             /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
@@ -2924,25 +2921,32 @@
                presne to, čo je na spoji vidieť. */
             const skrutka = (cx0, cy0, cz0, os, R, sgn) =>
               skrutkuj(cx0, cy0, cz0, os, skrutHex, R || 11, os === 'z' ? -1 : (sgn || 1), 7);
-            /* Spojka na konci väznice alebo v rohu. Lapuje vnútorné líce
-               bočného rámu a odtiaľ vybieha dovnútra prístrešku, takže z nej
-               je vidieť len malý kus. Dve skrutky idú do bočného rámu (líce
-               kolmé na šírku), dve do väznice alebo čelného rámu (líce kolmé
-               na hĺbku). */
-            const spojka = (x0, ySide) => {
-              const von = ySide === 0;                       // pri ktorom boku
-              const lic = von ? ry0 : ry1;                   // vnútorné líce rámu
-              const y0 = von ? lic - 25 : lic + 25 - SPOJ_W;
-              const z0 = ramTop - 32 - SPOJ_H;
-              boxFaces(x0, y0, z0, SPOJ_D, SPOJ_W, SPOJ_H, spojHex, [], SHAFT);
-              // dve do bočného rámu
-              [0.30, 0.70].forEach((t) => {
-                skrutka(x0 + SPOJ_D * t, lic + (von ? -1 : 1), z0 + SPOJ_H * 0.50, 'y', 0, von ? -1 : 1);
+            /* Spojka je uholník: plochý plech asi 10 mm hrubý, ohnutý o 90°
+               presne v strede, širší ako vyšší. Jedno rameno dosadá na stojinu
+               väznice, druhé na stojinu obvodového rámu, a v každom sú dve
+               skrutky — štyri na uholník. Na každom konci väznice sú dva, po
+               jednom na každej strane dvojice C profilov. */
+            const UHOL_T = REF.uholT || 10;      // hrúbka plechu
+            const UHOL_L = REF.uholL || 90;      // dĺžka ramena
+            const UHOL_H = REF.uholH || 70;      // výška uholníka
+            const zSpoj = ramTop - 32 - UHOL_H / 2;
+            const uholnik = (px, sx, py, sy, zc) => {
+              const z0 = zc - UHOL_H / 2;
+              const ax0 = Math.min(px, px + sx * UHOL_T);
+              const ay0 = Math.min(py, py + sy * UHOL_L);
+              boxFaces(ax0, ay0, z0, UHOL_T, UHOL_L, UHOL_H, spojHex, [], SHAFT);
+              const bx0 = Math.min(px, px + sx * UHOL_L);
+              const by0 = Math.min(py, py + sy * UHOL_T);
+              boxFaces(bx0, by0, z0, UHOL_L, UHOL_T, UHOL_H, spojHex, [], SHAFT);
+              // dve skrutky do väznice (líce kolmé na hĺbku)
+              const xLic = px + sx * UHOL_T;
+              [0.36, 0.78].forEach((t) => {
+                skrutka(xLic, py + sy * UHOL_L * t, zc, 'x', 9, sx);
               });
-              // dve do väznice alebo čelného rámu
-              [0.32, 0.68].forEach((t) => {
-                skrutka(x0 - 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x', 0, -1);
-                skrutka(x0 + SPOJ_D + 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x', 0, 1);
+              // dve skrutky do obvodového rámu (líce kolmé na šírku)
+              const yLic = py + sy * UHOL_T;
+              [0.36, 0.78].forEach((t) => {
+                skrutka(px + sx * UHOL_L * t, yLic, zc, 'y', 9, sy);
               });
             };
 
@@ -2989,18 +2993,22 @@
                 });
               }
             });
-            /* Koniec každej väznice sedí na bočnom ráme na tej istej spojke
-               ako rohy — po jednej na každé C dvojice. */
+            /* Koniec každej väznice: dva uholníky, po jednom na každej strane
+               dvojice C profilov — teda štyri na väznicu. */
             vaznePary.forEach((os) => {
-              [0, 1].forEach((sd) => {
-                spojka(os - SPOJ_D - 2, sd);
-                spojka(os + 2, sd);
+              [[ry0, 1], [ry1, -1]].forEach((bo) => {
+                uholnik(os - VAZ_W, -1, bo[0], bo[1], zSpoj);
+                uholnik(os + VAZ_W, 1, bo[0], bo[1], zSpoj);
               });
             });
 
-            // rohy — spojka leží na styku bočného a čelného profilu
-            [[rx0 + 3, 0], [rx0 + 3, 1], [rx1 - 3 - SPOJ_D, 0], [rx1 - 3 - SPOJ_D, 1]]
-              .forEach((r) => spojka(r[0], r[1]));
+            /* Rohy: uholník spája stojinu čelného a bočného rámu, dva na roh. */
+            [[RAM_ZAD + RAM_PAR, 1], [rx1 - RAM_PAR, -1]].forEach((ce) => {
+              [[ry0, 1], [ry1, -1]].forEach((bo) => {
+                uholnik(ce[0], ce[1], bo[0], bo[1], zSpoj);
+                uholnik(ce[0], ce[1], bo[0], bo[1], zSpoj - UHOL_H - 14);
+              });
+            });
             /* Pod rohom je ešte jedna skrutka zospodu, presne v strede rohu. */
             [[rx0 + RAM_W / 2, ry0 + RAM_W / 2], [rx0 + RAM_W / 2, ry1 - RAM_W / 2],
              [rx1 - RAM_W / 2, ry0 + RAM_W / 2], [rx1 - RAM_W / 2, ry1 - RAM_W / 2]]
