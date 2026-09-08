@@ -2966,6 +2966,24 @@
     const items = [...header.querySelectorAll('[data-k-mega-item]')];
     let hoverTimer;
 
+    /* Fotografie v desktopovom mega menu nemajú dôvod sťahovať sa pri prvom
+       vykreslení stránky. HTML si ich URL drží v data atribútoch a src sa
+       doplní až v okamihu, keď návštevník konkrétne menu naozaj otvorí. */
+    const nacitajMenuFotky = (item) => {
+      item.querySelectorAll('.kv-mega img[data-k-menu-src]').forEach((img) => {
+        const src = img.getAttribute('data-k-menu-src');
+        const srcset = img.getAttribute('data-k-menu-srcset');
+        if (src) {
+          img.setAttribute('src', src);
+          img.removeAttribute('data-k-menu-src');
+        }
+        if (srcset) {
+          img.setAttribute('srcset', srcset);
+          img.removeAttribute('data-k-menu-srcset');
+        }
+      });
+    };
+
     const closeAll = (except) => {
       items.forEach((item) => {
         if (item === except) return;
@@ -2982,6 +3000,7 @@
       const open = () => {
         clearTimeout(hoverTimer);
         closeAll(item);
+        nacitajMenuFotky(item);
         item.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
       };
