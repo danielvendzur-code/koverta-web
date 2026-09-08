@@ -578,7 +578,12 @@
         const draha = document.createElement('div');
         draha.className = 'kh-proc__draha';
         draha.setAttribute('aria-hidden', 'true');
-        obal.appendChild(draha);
+        /* Dráha musí ležať hneď za prilepenou mriežkou, nie na konci obalu.
+           Pri ročných obdobiach nasleduje po mriežke ešte pás vlastností —
+           keď dráha visela až za ním, mriežka sa prilepila a ten pás sa jej
+           podscrolloval rovno pod text. Takto sa najprv odscrolluje dráha
+           a až potom prichádza zvyšok sekcie. */
+        obal.insertBefore(draha, scope.nextSibling);
       }
 
       const stack = panels[0] && panels[0].parentElement;
@@ -1681,10 +1686,20 @@
         { v: 'stredna', t: '20 až 40 m²', p: 'sedenie aj jedálenský stôl' },
         { v: 'velka', t: 'Nad 40 m²', p: 'skladá sa z modulov' }
       ] },
+      { id: 'kde', ked: (o) => o.ciel === 'tienenie', text: 'Kam sa má tienenie osadiť?', volby: [
+        { v: 'hotove', t: 'Na hotovú konštrukciu', p: 'prístrešok alebo pergola už stojí' },
+        { v: 'nove', t: 'Spolu s novým zastrešením', p: 'rieši sa naraz, jedna montáž' },
+        { v: 'fasada', t: 'Na fasádu alebo okno', p: 'bez konštrukcie nad hlavou' }
+      ] },
       { id: 'tien', ked: (o) => o.ciel === 'tienenie', text: 'Odkiaľ vám prekáža slnko?', volby: [
         { v: 'bok', t: 'Zboku, nízke slnko a vietor', p: 'ZIP roleta alebo panel' },
         { v: 'hore', t: 'Zhora, spálená terasa', p: 'lamely alebo pevná strecha' },
         { v: 'pohlady', t: 'Skôr mi prekážajú pohľady', p: 'brisoleje alebo lamelová stena' }
+      ] },
+      { id: 'vybava', ked: (o) => o.ciel === 'kuchyna', text: 'Čo v nej chcete mať?', volby: [
+        { v: 'gril', t: 'Gril alebo varnú dosku', p: 'jeden modul stačí' },
+        { v: 'drez', t: 'Aj drez a odkladaciu plochu', p: 'voda a odpad do podlahy' },
+        { v: 'linka', t: 'Celú linku aj s chladničkou', p: 'zásuvky, elektrina, viac modulov' }
       ] },
       { id: 'kuchyna', ked: (o) => o.ciel === 'kuchyna', text: 'Kde má kuchyňa stáť?', volby: [
         { v: 'pod', t: 'Pod hotovým prístreškom', p: 'zastrešenie už stojí' },
@@ -1705,6 +1720,16 @@
         { v: 'lamely', t: 'Otvárateľné lamely', p: 'tieň, keď treba, obloha, keď netreba' },
         { v: 'svetlo', t: 'Čo najviac svetla', p: 'sklo alebo priehľadná výplň' }
       ] },
+      { id: 'coVstup', ked: (o) => o.ciel === 'vstup', text: 'Čo má prestrešenie kryť?', volby: [
+        { v: 'dvere', t: 'Vstupné dvere', p: 'aby sa dalo odomykať v suchu' },
+        { v: 'schody', t: 'Schody a chodník', p: 'v zime menej šmyku a snehu' },
+        { v: 'technika', t: 'Techniku pri dome', p: 'tepelné čerpadlo, klíma, sklad' }
+      ] },
+      { id: 'strechaVstup', ked: (o) => o.ciel === 'vstup', text: 'Aká má byť strecha?', volby: [
+        { v: 'pevna', t: 'Pevná a nepriehľadná', p: 'plný tieň aj v lete' },
+        { v: 'svetlo', t: 'Presvetlená', p: 'sklo, aby pod ňou nebola tma' },
+        { v: 'neviem', t: 'Poraďte mi', p: 'rozhodne sa pri zameraní' }
+      ] },
       { id: 'hladina', text: 'V akej hladine sa pohybujete?', volby: [
         { v: 'nizsi', t: 'Skôr úsporne', p: 'vlastná oceľová výroba' },
         { v: 'vyssi', t: 'Skôr prémiovo', p: 'celohliníkový systém bez údržby' },
@@ -1714,18 +1739,25 @@
 
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
+        foto: './assets/koverta-pristresok-garaz.jpg',
         preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha s odkvapom skrytým vnútri konštrukcie.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        preco: 'Celohliníkový systém F170 alebo F240. Bez údržby, dĺžka do 9,2 m, rad SL počíta aj s uzamykateľným boxom.' },
+        foto: './assets/soltec-carport-sl240-real.jpg',
+        preco: 'Celohliníkový systém SL 170 alebo SL 240. Bez údržby, dĺžka do 8,5 m, uzamykateľný box pod tou istou strechou.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
+        foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
+        foto: './assets/soltec-bio-hero-2026.jpg',
         preco: 'Otočné lamely 0 – 135°: tieň, prevetranie alebo zavretá strecha podľa počasia. Modul do 45 m².' },
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
+        foto: './assets/soltec-canopy-hero.jpg',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
+        foto: './assets/soltec-accessory-zip.jpg',
         preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou — jedna dodávka zo Slovinska a jedna montáž.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
+        foto: './assets/soltec-kuchyna-terasa.jpg',
         preco: 'Hliníkové korpusy s práškovým lakom, doska z nerezu, kameňa alebo betónu. Zostava sa skladá z modulov.' }
     };
 
@@ -1738,16 +1770,25 @@
        rozhoduje až medzi vlastnou výrobou a hliníkovým systémom. */
     const vyhodnot = function (o) {
       if (o.ciel === 'tienenie') {
-        return { hlavne: 'tienenie', doplnok: o.tien === 'hore'
-          ? 'Ak má tieň držať aj v daždi, pozrite sa aj na bioklimatickú pergolu — lamely sa dajú zavrieť do vodotesnej strechy.'
-          : null };
+        if (o.tien === 'hore' && o.kde !== 'fasada') {
+          return { hlavne: 'bio', doplnok: 'Tieň zhora drží strecha, nie roleta. Lamely sa navyše dajú zavrieť do vodotesnej plochy, keď začne pršať.' };
+        }
+        return { hlavne: 'tienenie', doplnok: o.kde === 'hotove'
+          ? 'Do hotovej konštrukcie sa ZIP roleta dá osadiť, ak má profil na to miesto — pošlite nám fotografiu, povieme to hneď.'
+          : (o.kde === 'nove' ? 'Objednajte tienenie spolu s konštrukciou: jedna dodávka zo Slovinska a jedna montáž namiesto dvoch.' : null) };
       }
       if (o.ciel === 'kuchyna') {
-        return { hlavne: 'kuchyna', doplnok: o.kuchyna === 'volne'
-          ? 'Kuchyňu vieme zavesiť na konštrukciu prístrešku alebo pergoly — vyjde to lacnejšie, než ju zastrešovať dodatočne.'
-          : 'Elektrinu, vodu a odpad treba vyriešiť ešte pred betónovaním podlahy.' };
+        var pozn2 = 'Elektrinu, vodu a odpad treba vyriešiť ešte pred betónovaním podlahy.';
+        if (o.kuchyna === 'volne') pozn2 = 'Kuchyňu vieme zavesiť na konštrukciu prístrešku alebo pergoly — vyjde to lacnejšie, než ju zastrešovať dodatočne.';
+        else if (o.vybava === 'gril') pozn2 = 'Na samotný gril stačí jeden modul — elektrina do stĺpa a hotovo.';
+        else if (o.vybava === 'linka') pozn2 = 'Pri celej linke treba vodu, odpad aj zásuvky pod podlahou — rozvody rieši projekt pred betónovaním.';
+        return { hlavne: 'kuchyna', doplnok: pozn2 };
       }
-      if (o.ciel === 'vstup') return { hlavne: 'pevne', doplnok: null };
+      if (o.ciel === 'vstup') {
+        return { hlavne: 'pevne', doplnok: o.strechaVstup === 'svetlo'
+          ? 'Presvetlenú strechu nesie rad G so sklom — pod vstupom tak neostane tma.'
+          : (o.coVstup === 'technika' ? 'Nad technikou sa oplatí doplniť aj bočnú stenu: kryje pred vetrom a schová jednotku z pohľadu.' : null) };
+      }
       if (o.ciel === 'auto') {
         /* Uzamykateľný box aj presvetlená strecha sú výbava hliníkového
            systému, preto vedú na carport; inak rozhoduje cenová hladina. */
@@ -1784,17 +1825,45 @@
        Prepočítava sa po každej odpovedi — vetvenie tým nemá vlastný stav. */
     const platne = () => OTAZKY.filter((o) => !o.ked || o.ked(odpovede));
 
+    /* Kým nie je zodpovedaná prvá otázka, `platne()` vráti len ju a cenovú
+       hladinu — počítadlo by ukázalo „1 / 2" a po prvom kliknutí by skočilo
+       na „2 / 4". Dĺžka sa preto berie z najdlhšej vetvy; každá vetva má
+       rovnaký počet krokov, takže číslo cestou neposkočí. */
+    const KROKOV = OTAZKY[0].volby.reduce(function (m, v) {
+      return Math.max(m, OTAZKY.filter(function (o) { return !o.ked || o.ked({ ciel: v.v }); }).length);
+    }, 1);
+
+    /* Panel pri prepnutí otázky menil výšku skokom. Pred prekreslením si
+       výšku zapamätá, po ňom na ňu dosadne a odtiaľ doplynie na novú. */
+    const prepni = (fn) => {
+      const pred = panel.getBoundingClientRect().height;
+      fn();
+      if (REDUCED.matches) return;
+      const po = panel.getBoundingClientRect().height;
+      telo.classList.remove('je-nova');
+      void telo.offsetWidth;
+      telo.classList.add('je-nova');
+      if (Math.abs(po - pred) < 2) return;
+      panel.style.height = pred + 'px';
+      requestAnimationFrame(() => {
+        panel.style.transition = 'height 320ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+        panel.style.height = po + 'px';
+      });
+      window.setTimeout(() => { panel.style.transition = ''; panel.style.height = ''; }, 380);
+    };
+
     const vykresli = () => {
       const zoz = platne();
       if (krok >= zoz.length) { ukazVysledok(); return; }
       const o = zoz[krok];
+      const dlzka = odpovede.ciel ? zoz.length : KROKOV;
       telo.hidden = false;
       vysledok.hidden = true;
       znova.hidden = true;
       spat.hidden = krok === 0;
       cislo.textContent = krok + 1;
-      spolu.textContent = zoz.length;
-      pas.style.width = ((krok / zoz.length) * 100).toFixed(1) + '%';
+      spolu.textContent = dlzka;
+      pas.style.width = ((krok / dlzka) * 100).toFixed(1) + '%';
       otazka.textContent = o.text;
       volby.textContent = '';
       o.volby.forEach((v) => {
@@ -1811,9 +1880,11 @@
           if (o.id === 'ciel' && odpovede.ciel && odpovede.ciel !== v.v) {
             Object.keys(odpovede).forEach((k) => { if (k !== 'ciel') delete odpovede[k]; });
           }
-          odpovede[o.id] = v.v;
-          krok += 1;
-          vykresli();
+          prepni(() => {
+            odpovede[o.id] = v.v;
+            krok += 1;
+            vykresli();
+          });
         });
         volby.appendChild(b);
       });
@@ -1824,12 +1895,20 @@
     const ukazVysledok = () => {
       const r = vyhodnot(odpovede);
       const d = RIESENIA[r.hlavne];
+      /* Tlačidlá poslednej otázky sa zahodia — nemá zmysel držať ich
+         v skrytom kontajneri. */
+      volby.textContent = '';
       telo.hidden = true;
       vysledok.hidden = false;
       spat.hidden = true;
       znova.hidden = false;
       pas.style.width = '100%';
       cislo.textContent = spolu.textContent;
+      const obr = panel.querySelector('[data-k-kviz-foto] img');
+      if (obr) {
+        obr.src = d.foto;
+        obr.alt = d.nazov;
+      }
       panel.querySelector('[data-k-kviz-znacka]').innerHTML = ZNACKY[d.znacka];
       panel.querySelector('[data-k-kviz-nazov]').textContent = d.nazov;
       panel.querySelector('[data-k-kviz-preco]').textContent = d.preco;
@@ -1851,8 +1930,8 @@
     };
 
     spustac.addEventListener('click', (e) => { e.preventDefault(); otvor(); });
-    spat.addEventListener('click', () => { if (krok > 0) { krok--; vykresli(); } });
-    znova.addEventListener('click', () => { krok = 0; Object.keys(odpovede).forEach((k) => delete odpovede[k]); vykresli(); });
+    spat.addEventListener('click', () => { if (krok > 0) prepni(() => { krok--; vykresli(); }); });
+    znova.addEventListener('click', () => prepni(() => { krok = 0; Object.keys(odpovede).forEach((k) => delete odpovede[k]); vykresli(); }));
     zavri.addEventListener('click', () => {
       panel.hidden = true;
       panel.dataset.kOtvorene = 'false';
@@ -2850,6 +2929,11 @@
         const vyska = vyskaListy;
         const hranica = vyskaHlavicky + 40;
         bar.classList.toggle('is-stuck', y > 12);
+        /* Telefón v lište má zmysel až vtedy, keď servisný pás s tým istým
+           číslom odscrolluje preč. Kým je pás vidieť, číslo v lište by bolo
+           to isté číslo dvakrát pod sebou. */
+        const pas = header.querySelector('.kv-topbar');
+        bar.classList.toggle('ma-schovany-pas', !pas || y >= pas.offsetHeight - 2);
 
         if (y <= hranica) {
           /* pri vrchu stránky je lišta na svojom mieste v toku */

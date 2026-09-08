@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788803316651">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=1788846952174">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -374,6 +374,20 @@
             <button class="kh-proc__row" type="button" data-k-step-row><em>Jeseň</em><strong>Dážď na terase neprekáža</strong></button>
             <button class="kh-proc__row" type="button" data-k-step-row><em>Zima</em><strong>Sezóna sa dá predĺžiť</strong></button>
         </div>
+
+        <!-- Rez strechou: sedem lamiel, ktoré sa naklonia podľa zvoleného
+             obdobia. Text hovorí, čo pergola v tom období robí; tento obrázok
+             hovorí, ako to robí. -->
+        <figure class="kh-lamely">
+          <figcaption class="kh-lamely__hlava">Ako stoja lamely</figcaption>
+          <svg class="kh-lamely__rez" viewBox="0 0 278 132" role="img" aria-label="Rez pergolou: strecha z otočných lamiel a bočné výplne"><rect class="kh-lamely__ram" x="1" y="1" width="276" height="64" rx="8"/><g class="kh-lamely__pole"><rect class="kh-lamely__l" x="20" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="54" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="88" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="122" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="156" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="190" y="30" width="34" height="8" rx="4"/><rect class="kh-lamely__l" x="224" y="30" width="34" height="8" rx="4"/></g><rect class="kh-lamely__bok" x="4" y="66" width="10" height="60" rx="5"/><rect class="kh-lamely__bok" x="264" y="66" width="10" height="60" rx="5"/><path class="kh-lamely__zem" d="M2 129h274"/></svg>
+          <p class="kh-lamely__popis">
+            <span>Privreté, asi 45° — slnko prejde, vietor sa rozbije.</span>
+            <span>Takmer zatvorené — súvislý tieň, teplo odchádza hore.</span>
+            <span>Zatvorené — strecha je vodotesná, voda ide prievlakom do stĺpa.</span>
+            <span>Zatvorené aj boky — pri veľkom snehu sa lamely otvoria.</span>
+          </p>
+        </figure>
       </div>
 
       <div class="kh-proc__panels k-reveal">
@@ -627,22 +641,22 @@
     </div>
 
     <ul class="kh-fakty__rad kh-farby__navyse">
-      <li class="kh-fakty__polozka k-rise">
+      <li class="kh-fakty__polozka k-rise" tabindex="0">
         <span class="kh-fakty__cislo">RAL 1000 – 9023</span>
         <span class="kh-fakty__co">Zvyšok palety na objednávku</span>
         <span class="kh-fakty__pod">Ktorýkoľvek odtieň zo vzorkovníka RAL. Lakovanie lamiel a lakovanie konštrukcie sa počítajú zvlášť — sumu uvedieme v ponuke.</span>
       </li>
-      <li class="kh-fakty__polozka k-rise" data-k-delay="1">
+      <li class="kh-fakty__polozka k-rise" data-k-delay="1" tabindex="0">
         <span class="kh-fakty__cislo">matná / mikro</span>
         <span class="kh-fakty__co">Štruktúru si volíte tiež</span>
         <span class="kh-fakty__pod">Pri odtieni mimo osmičky si vyberáte aj povrch: hladký matný, alebo mikroštruktúra, na ktorej nie sú vidieť odtlačky.</span>
       </li>
-      <li class="kh-fakty__polozka k-rise" data-k-delay="2">
+      <li class="kh-fakty__polozka k-rise" data-k-delay="2" tabindex="0">
         <span class="kh-fakty__cislo">EN 12206‑1</span>
         <span class="kh-fakty__co">Norma na lakovanie hliníka</span>
         <span class="kh-fakty__pod">Prášková úprava podľa tejto normy a smerníc GSB AL 631, alebo rovnocenného certifikovaného systému.</span>
       </li>
-      <li class="kh-fakty__polozka k-rise" data-k-delay="3">
+      <li class="kh-fakty__polozka k-rise" data-k-delay="3" tabindex="0">
         <span class="kh-fakty__cislo">dvojfarebne</span>
         <span class="kh-fakty__co">Rám v jednom, lamely v druhom</span>
         <span class="kh-fakty__pod">Dvojfarebné vyhotovenie je bežná objednávka — tmavý rám so svetlými lamelami alebo naopak.</span>
@@ -1275,7 +1289,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=1788803316651" defer></script>
+<script src="../assets/koverta-2026.js?v=1788846952174" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

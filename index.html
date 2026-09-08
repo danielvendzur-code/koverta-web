@@ -86,7 +86,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788803316651">
+<link rel="stylesheet" href="./assets/koverta-2026.css?v=1788846952174">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -404,10 +404,21 @@
         <p class="k-eyebrow k-rise">Ponuka</p>
         <h2 id="catTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Aké riešenie potrebujete?</h2>
       </div>
-      <p class="kh-ponuka__legenda k-rise" data-k-delay="2">
-        <span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span> <span>vlastná oceľová výroba</span>
-        <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span> <span>prémiový hliníkový systém</span>
-      </p>
+      <!-- Dve značky ako dve karty, nie ako riadok drobného textu. Rola je
+           vidieť vždy, konkrétny rozdiel sa vysunie pri prejdení alebo po
+           tabulátore — na dotyku ostáva vidieť celý. -->
+      <ul class="kh-znacky k-rise" data-k-delay="2">
+        <li class="kh-znacky__kus" tabindex="0">
+          <span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+          <span class="kh-znacky__rola">vlastná oceľová výroba</span>
+          <span class="kh-znacky__viac">Oceľové stĺpy s hliníkovým obkladom a práškovým lakom z palety RAL. Katalógové rozmery majú cenu v e-shope, atypické robíme na mieru.</span>
+        </li>
+        <li class="kh-znacky__kus" tabindex="0">
+          <span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+          <span class="kh-znacky__rola">prémiový hliníkový systém</span>
+          <span class="kh-znacky__viac">Celohliníkový systém zo Slovinska. Otočné lamely, sklo, ZIP rolety aj osvetlenie sadnú do tej istej konštrukcie — volíme ich v návrhu.</span>
+        </li>
+      </ul>
     </header>
 
     <ul class="kh-ponuka__mriezka">
@@ -515,6 +526,7 @@
         </div>
 
         <div class="kh-kviz__vysledok" data-k-kviz-vysledok hidden>
+          <span class="kh-kviz__foto" data-k-kviz-foto><img src="./assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="" loading="lazy" decoding="async"></span>
           <p class="kh-kviz__label">Odporúčame</p>
           <div class="kh-kviz__znacka" data-k-kviz-znacka></div>
           <h3 class="kh-kviz__nazov" data-k-kviz-nazov></h3>
@@ -563,6 +575,10 @@
       </div>
 
       <div class="kh-kfg__typy-obal">
+        <!-- Typy zodpovedajú stránkam konfigurátora: ?page=carport, ?page=canopy
+             a ?page=bio. Keď v konfigurátore pribudne prístrešok Koverta,
+             pridá sa sem štvrtá dlaždica (bez triedy --siroky, aby vznikla
+             mriežka 2 × 2) a v tomto popise sa „Tri" zmení na „Štyri". -->
         <p class="kh-kfg__label k-rise">Tri konfigurovateľné typy</p>
         <ul class="kh-kfg__typy">
           <li class="kh-kfg__typ kh-kfg__typ--siroky k-rise" data-k-delay="1">
@@ -610,16 +626,16 @@
   </div>
 
   <div class="kh-pick__panorama">
-    <a class="kh-pick__scene k-rise" data-k-delay="2" href="./pristresky-pre-auta/" aria-label="Prístrešky pre autá od Koverty">
+    <a class="kh-pick__scene" href="./pristresky-pre-auta/" aria-label="Prístrešky pre autá od Koverty">
       <img src="https://koverta.sk/cdn/shop/files/03.jpg?width=1600" alt="Čierny hliníkový prístrešok Koverta s bočnou lamelovou výplňou" loading="lazy" decoding="async">
     </a>
-    <a class="kh-pick__scene k-rise" data-k-delay="3" href="./bioklimaticke-pergoly/" aria-label="Bioklimatické pergoly SOLTEC">
+    <a class="kh-pick__scene" href="./bioklimaticke-pergoly/" aria-label="Bioklimatické pergoly SOLTEC">
       <img src="./assets/soltec-bio-render-15.jpg" width="1920" height="1280" alt="Biela hliníková pergola Soltec pri modernom dome s bazénom" loading="lazy" decoding="async">
     </a>
   </div>
 
   <div class="kh-pick__lanes">
-    <a class="kh-pick__lane k-rise" href="./pristresky-pre-auta/">
+    <a class="kh-pick__lane" href="./pristresky-pre-auta/">
       <span class="kh-pick__mark"><svg
   class="k-logo k-logo--mono"
   viewBox="196 406 524 85"
@@ -644,7 +660,7 @@
       </span>
     </a>
 
-    <a class="kh-pick__lane is-premium k-rise" data-k-delay="1" href="./bioklimaticke-pergoly/">
+    <a class="kh-pick__lane is-premium" href="./bioklimaticke-pergoly/">
       <span class="kh-pick__mark"><span class="kh-pick__wordmark"><img class="k-brand k-brand--soltec-img" src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
       <span class="kh-pick__lane-rule"></span>
       <p>Dodávame a montujeme prémiový hliníkový systém. Otočné lamely, sklo, ZIP rolety a osvetlenie v jednom návrhu.</p>
@@ -1348,7 +1364,7 @@
   </div>
 </footer>
 
-<script src="./assets/koverta-2026.js?v=1788803316651" defer></script>
+<script src="./assets/koverta-2026.js?v=1788846952174" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
