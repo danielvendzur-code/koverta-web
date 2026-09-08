@@ -1814,6 +1814,17 @@
             put('+x', [[X,y,z],[X,Y,z],[X,Y,Z],[X,y,Z]], [1,0,0]);
           };
 
+          /* Skrutka zdola: šesťhran kľúč 19 položený na spodnom líci platne. */
+          const skrutkaHlavy = (cx0, cy0, cz0) => {
+            const r = 9.5, pts = [];
+            for (let i = 0; i < 6; i++) {
+              const a = (Math.PI * 2 * i) / 6 + Math.PI / 6;
+              pts.push([cx0 + Math.cos(a) * r, cy0 + Math.sin(a) * r, cz0]);
+            }
+            quad(pts, shade(frame, -0.62), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: 5e4 });
+          };
+
+
           /* Cast shadow: the roof footprint dropped to the ground and pushed
              along the light. The throw is compressed so it grounds the model
              without pulling the framing off the structure. */
@@ -2043,7 +2054,11 @@
           const plc = placement();
           if (!plc.noPosts) {
             const pd = postD(), pw = postW();
-            const ys = [0, W - pw];
+            /* Koverta: stĺp aj obvodový rám sedia rovnako hlboko pod obrysom,
+               teda tesne za zvislým ramenom lemovania. Bez toho by stĺp z
+               lemovania vykúkal — alebo naopak rám spred neho. */
+            const vsun = Number(model().postInset) || 0;
+            const ys = [vsun, W - pw - vsun];
             xs.forEach((px, xi) => ys.forEach((py) => {
               if (walls.indexOf('rear') > -1 && py === 0) return;
               if (walls.indexOf('front') > -1 && py === 1) return;
@@ -2126,21 +2141,38 @@
                  nie na jeho hranách. Na každej z dvoch protiľahlých strán sú
                  dve vedľa seba. Stĺp na okraji prístrešku má tú dvojicu tesne
                  pri sebe, stĺp v poli ju má rozloženú po šírke líca. */
-              if (BIO.bolts) {
-                const br = Math.max(5, Math.round(Math.min(pd, pw) * 0.06));
-                const hlava = shade(frame, -0.38);
-                const zH = H + lift - Math.round(Math.min(pd, pw) * 0.55);
-                const kraj = xi === 0 || xi === xs.length - 1;
-                const roztec = kraj ? Math.min(pd, pw) * 0.22 : pd * 0.30;
-                const stred = px + pd / 2;
-                [[py, [0, -1, 0], -3], [py + pw, [0, 1, 0], 3]].forEach((f) => {
+              /* Hlava stĺpa. Dole má stĺp kotevnú pätku, hore to isté: platňu
+                 privarenú k stĺpu, ktorá dosadá pod spodnú pásnicu C profilu
+                 a je k nej pritiahnutá dvomi skrutkami. Rohový stĺp má platne
+                 na dvoch susedných stranách — jedna sa skrutkuje do bočného
+                 rámu, druhá do čelného; stĺp v poli ich má oproti sebe.
+                 Skrutky idú zdola cez pásnicu, takže zhora ich vidieť nie je. */
+              if (BIO.headPlates) {
+                const zH = H + lift;
+                const hp = Math.round(Math.min(pd, pw) * 0.78);   // vyloženie platne
+                const th = 10;
+                const hlava = shade(frame, -0.34);
+                const okraj = xi === 0 || xi === xs.length - 1;
+                /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
+                const plat = (x0, y0, dx, dy) => {
+                  boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
+                  const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
+                  const roz = Math.min(dx, dy) * 0.46;
+                  const vodo = dx > dy;
                   [-1, 1].forEach((sd) => {
-                    const bx = stred + sd * roztec / 2;
-                    quad([[bx - br, f[0] + f[2], zH - br], [bx + br, f[0] + f[2], zH - br],
-                          [bx + br, f[0] + f[2], zH + br], [bx - br, f[0] + f[2], zH + br]],
-                         hlava, { normal: f[1], raw: true, edge: false, bias: 4e4 });
+                    skrutkaHlavy(vodo ? cx0 + sd * roz : cx0,
+                                 vodo ? cy0 : cy0 + sd * roz, zH - th);
                   });
-                });
+                };
+                // platne pozdĺž hĺbky (skrutkujú sa do bočného rámu)
+                plat(px - hp, py, hp, pw);
+                plat(px + pd, py, hp, pw);
+                // pri rohovom stĺpe ešte platňa cez šírku, do čelného rámu
+                if (okraj) {
+                  const kBoku = py < W / 2;
+                  if (kBoku) plat(px, py + pw, pd, hp);
+                  else plat(px, py - hp, pd, hp);
+                }
               }
             }));
           }
@@ -2798,10 +2830,16 @@
             lemL('x', 0, 1, 0, W, LEM_CELO);                 // čelné, cez celú šírku
             lemL('x', L, -1, 0, W, LEM_CELO);
 
-            /* --- obvodový C rám, pozink, otvorený dovnútra. Nesedí na obryse:
-               po bokoch je 18 mm dnu, na zadnom čele 15 a na odkvapovom 159. */
-            const rx0 = RAM_ZAD, rx1 = L - RAM_ODK;
-            const ry0 = RAM_BOK, ry1 = W - RAM_BOK;
+            /* --- obvodový rám. Nie je to jeden C profil, ale dvojica
+               zoskrutkovaná chrbtami k sebe, presne ako priečne väznice —
+               preto je rám rovnako hrubý ako stĺp (2 × 74 = 148 ≈ 150) a stĺp
+               spod neho nevyčnieva. Vonkajšie líce bočného rámu sedí s lícom
+               stĺpa; čelá sú zatiahnuté 15 mm od zadku a 159 od odkvapu, aby
+               na odkvapovej strane ostala kapsa na žľab. */
+            const RAM_PAR = REF.ramPar || 150;              // šírka dvojice
+            const RAM_VSUN = LEM_T;                        // za zvislým ramenom lemovania
+            const rx1 = L - RAM_ODK, rx0 = RAM_ZAD + RAM_PAR;
+            const ry0 = RAM_VSUN + RAM_PAR, ry1 = W - RAM_VSUN - RAM_PAR;
             const fl = 10, web = 5;
             const cRun = (axis, outer, dir, a, b) => {
               const put = (u0, u1, z, dz, hex) => {
@@ -2810,16 +2848,24 @@
               };
               put(outer, outer + web * dir, ramBot, RAM_H, shade(zinok, -0.14));
               put(outer, outer + RAM_W * dir, ramTop - fl, fl, shade(zinok, 0.10));
-              put(outer, outer + RAM_W * dir, ramBot, fl, zinok);
+              /* Spodná pásnica je zdola proti presvetlenému trapézu tmavšia —
+                 na fotkách podhľadu je rám vždy o odtieň hlbší než plech. */
+              put(outer, outer + RAM_W * dir, ramBot, fl, shade(zinok, -0.22));
               /* Vnútro C profilu je ten istý pozink, len v tieni. Kým to bola
                  priesvitná čierna, presvitalo to zdola ako čierny pás. */
               put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl,
                   shade(zinok, -0.30));
             };
-            cRun('y', ry0, 1, rx0, rx1);
-            cRun('y', ry1, -1, rx0, rx1);
-            cRun('x', rx0, 1, ry0 + RAM_W, ry1 - RAM_W);
-            cRun('x', rx1, -1, ry0 + RAM_W, ry1 - RAM_W);
+            /* Dvojica: vonkajšie C otvorené dnu, vnútorné otvorené von, stojiny
+               sa dotýkajú v strede. */
+            const cPar = (axis, outer, dir, a, b) => {
+              cRun(axis, outer, dir, a, b);
+              cRun(axis, outer + RAM_PAR * dir, -dir, a, b);
+            };
+            cPar('y', RAM_VSUN, 1, RAM_ZAD, rx1);
+            cPar('y', W - RAM_VSUN, -1, RAM_ZAD, rx1);
+            cPar('x', RAM_ZAD, 1, ry0, ry1);
+            cPar('x', rx1, -1, ry0, ry1);
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -2850,25 +2896,30 @@
                 else if (os === 'y') pts.push([cx0 + c, cy0, cz0 + d]);
                 else pts.push([cx0 + c, cy0 + d, cz0]);
               }
-              const n = os === 'x' ? [Math.sign(cx0) || 1, 0, 0]
-                : os === 'y' ? [0, 1, 0] : [0, 0, -1];
+              const n = os === 'x' ? [1, 0, 0] : os === 'y' ? [0, 1, 0] : [0, 0, -1];
               quad(pts, skrutHex, { normal: n, raw: true, edge: false, fit: false, bias: ON_SKIN });
             };
-            /* Spojka na konci väznice alebo v rohu: kus plechu položený na
-               vnútornom líci bočného rámu a k nemu dve a dve skrutky. */
+            /* Spojka na konci väznice alebo v rohu. Lapuje vnútorné líce
+               bočného rámu a odtiaľ vybieha dovnútra prístrešku, takže z nej
+               je vidieť len malý kus. Dve skrutky idú do bočného rámu (líce
+               kolmé na šírku), dve do väznice alebo čelného rámu (líce kolmé
+               na hĺbku). */
             const spojka = (x0, ySide) => {
               const von = ySide === 0;                       // pri ktorom boku
-              const y0 = von ? ry0 + 3 : ry1 - 3 - SPOJ_W;
+              const lic = von ? ry0 : ry1;                   // vnútorné líce rámu
+              const y0 = von ? lic - 25 : lic + 25 - SPOJ_W;
               const z0 = ramTop - 32 - SPOJ_H;
               boxFaces(x0, y0, z0, SPOJ_D, SPOJ_W, SPOJ_H, spojHex, [], SHAFT);
-              // dve skrutky do bočného profilu, dve do priečneho / čelného
-              const yl = von ? y0 + 4 : y0 + SPOJ_W - 4;
-              const sx = von ? -1 : 1;
+              // dve do bočného rámu
               [0.30, 0.70].forEach((t) => {
-                skrutka(x0 + SPOJ_D * t, yl, z0 + SPOJ_H * 0.30, 'y');
-                skrutka(x0 + SPOJ_D * t, yl, z0 + SPOJ_H * 0.72, 'y');
+                skrutka(x0 + SPOJ_D * t, lic + (von ? -1 : 1), z0 + SPOJ_H * 0.50, 'y');
               });
-              return sx;
+              // dve do väznice alebo čelného rámu
+              const xl = x0 + (von ? SPOJ_D + 1 : SPOJ_D + 1);
+              [0.32, 0.68].forEach((t) => {
+                skrutka(x0 - 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x');
+                skrutka(xl, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x');
+              });
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -2902,9 +2953,10 @@
               /* Dvojica C je zoskrutkovaná cez chrbty — dve skrutky na mieste
                  spoja, jedna hore a jedna dole, a to z bočných strán profilu,
                  nie zospodu. */
-              const stanic = Math.max(2, Math.round((inY1 - inY0) / 900));
-              for (let i = 1; i < stanic; i++) {
-                const y = inY0 + ((inY1 - inY0) * i) / stanic;
+              /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
+              const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
+              for (let i = 0; i <= stanic; i++) {
+                const y = inY0 + 40 + ((inY1 - inY0 - 80) * i) / stanic;
                 [-1, 1].forEach((sd) => {
                   const x = sd < 0 ? os - VAZ_W - 1 : os + VAZ_W + 1;
                   skrutka(x, y, ramTop - vfl - 22, 'x');
