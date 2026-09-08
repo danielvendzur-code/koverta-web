@@ -1730,11 +1730,6 @@
         { v: 'svetlo', t: 'Presvetlená', p: 'sklo, aby pod ňou nebola tma' },
         { v: 'neviem', t: 'Poraďte mi', p: 'rozhodne sa pri zameraní' }
       ] },
-      { id: 'hladina', text: 'V akej hladine sa pohybujete?', volby: [
-        { v: 'nizsi', t: 'Skôr úsporne', p: 'vlastná oceľová výroba' },
-        { v: 'vyssi', t: 'Skôr prémiovo', p: 'celohliníkový systém bez údržby' },
-        { v: 'neviem', t: 'Zatiaľ neviem', p: 'poradíme pri zameraní' }
-      ] }
     ];
 
     const RIESENIA = {
@@ -1742,23 +1737,23 @@
         foto: './assets/koverta-pristresok-garaz.jpg',
         preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha s odkvapom skrytým vnútri konštrukcie.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        foto: './assets/soltec-carport-sl240-real.jpg',
-        preco: 'Celohliníkový systém SL 170 alebo SL 240. Bez údržby, dĺžka do 8,5 m, uzamykateľný box pod tou istou strechou.' },
+        foto: './assets/soltec-carport-toth-nitra-clean.jpg',
+        preco: 'Hliníkový systém SL 170 alebo SL 240 s 3 cm ISO panelom. Rozmery a návrhové zaťaženie sa vyberajú podľa konkrétnej zostavy; k dispozícii je aj integrovaný uzamykateľný box.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
         foto: './assets/soltec-bio-hero-2026.jpg',
-        preco: 'Otočné lamely 0 – 135°: tieň, prevetranie alebo zavretá strecha podľa počasia. Modul do 45 m².' },
+        preco: 'Otočné hliníkové lamely umožnia regulovať tieň a vetranie; po zatvorení tvoria vodotesnú strechu. Soltec má šesť typoradov SL 170/28 až SL 240/60.' },
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
         foto: './assets/soltec-canopy-hero.jpg',
-        preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
+        preco: 'Pevné hliníkové prestrešenie s 30 mm ISO panelom, laminovaným kaleným sklom alebo zelenou strechou podľa zvoleného radu a konfigurácie.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
         foto: './assets/soltec-accessory-zip.jpg',
-        preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou — jedna dodávka zo Slovinska a jedna montáž.' },
+        preco: 'ZIP roleta K130, posuvné panely H50, pevné steny FW25/FI30, sklenené panely G1/G2 alebo brisoleje E300. Vhodnosť pre existujúcu konštrukciu treba overiť podľa profilu a rozmeru.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
         foto: './assets/soltec-kuchyna-terasa.jpg',
-        preco: 'Hliníkové korpusy s práškovým lakom, doska z nerezu, kameňa alebo betónu. Zostava sa skladá z modulov.' }
+        preco: 'Modulová vonkajšia kuchyňa Soltec. Konkrétnu zostavu, pracovnú dosku, spotrebiče a rozvody treba vybrať podľa aktuálneho katalógu a miesta montáže.' }
     };
 
     const ZNACKY = {
@@ -1775,7 +1770,7 @@
         }
         return { hlavne: 'tienenie', doplnok: o.kde === 'hotove'
           ? 'Do hotovej konštrukcie sa ZIP roleta dá osadiť, ak má profil na to miesto — pošlite nám fotografiu, povieme to hneď.'
-          : (o.kde === 'nove' ? 'Objednajte tienenie spolu s konštrukciou: jedna dodávka zo Slovinska a jedna montáž namiesto dvoch.' : null) };
+          : (o.kde === 'nove' ? 'Pri novej konštrukcii je praktické navrhnúť tienenie naraz; pri existujúcej najprv overíme kompatibilitu.' : null) };
       }
       if (o.ciel === 'kuchyna') {
         var pozn2 = 'Elektrinu, vodu a odpad treba vyriešiť ešte pred betónovaním podlahy.';
@@ -1792,17 +1787,17 @@
       if (o.ciel === 'auto') {
         /* Uzamykateľný box aj presvetlená strecha sú výbava hliníkového
            systému, preto vedú na carport; inak rozhoduje cenová hladina. */
-        var premium = o.hladina === 'vyssi' || o.auta === 'box' || o.strechaAuto === 'svetlo';
+        var premium = o.auta === 'box' || o.strechaAuto === 'svetlo';
         var pozn = null;
         if (o.auta === 'box') pozn = 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.';
-        else if (o.strechaAuto === 'bok') pozn = 'Bok zakryje lamelová stena alebo ZIP roleta. Zahrňte ju rovno do návrhu — dodatočná objednávka zo Slovinska je samostatná dodávka aj montáž.';
+        else if (o.strechaAuto === 'bok') pozn = 'Bok môže zakryť ZIP roleta, panel alebo pevná výplň. Pri existujúcej konštrukcii najprv overíme kompatibilitu profilu a rozmeru.';
         else if (o.strechaAuto === 'svetlo') pozn = 'Presvetlenú strechu rieši hliníkový systém so sklom alebo so svetlopriepustnou výplňou.';
         return { hlavne: premium ? 'carport' : 'auta', doplnok: pozn };
       }
       /* terasa */
       if (o.strecha === 'lamely') return { hlavne: 'bio', doplnok: null };
       if (o.strecha === 'svetlo') return { hlavne: 'pevne', doplnok: 'Sklenená výplň je v rade G; ISO panel je tmavší, ale lepšie tieni.' };
-      return { hlavne: o.hladina === 'vyssi' || o.plocha === 'velka' ? 'pevne' : 'zahradne',
+      return { hlavne: o.plocha === 'velka' ? 'pevne' : 'zahradne',
         doplnok: 'Proti vetru a nízkemu slnku pomôže bočná ZIP roleta. Oplatí sa objednať ju spolu s konštrukciou, nie dodatočne.' };
     };
 
