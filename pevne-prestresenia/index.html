@@ -364,20 +364,26 @@
          s fotografiou a jednou vetou — rozdiel medzi radmi sa tak dá pochopiť
          bez čísel. Parametre pod nimi patria len vybranému radu. -->
     <div class="kh-typ2 k-rise" data-k-typ2>
+      <div class="kh-typ2__nav">
+        <span class="kh-typ2__nav-label">Vyberte rad</span>
+        <span class="kh-typ2__nav-text">Kliknite na rad. Obsah a parametre pod kartami sa prepínajú podľa výberu.</span>
+      </div>
       <div class="kh-typ2__rady" role="tablist" aria-label="Typorady">
-        <button class="kh-typ2__rad is-active" type="button" data-k-typ2-rad>
+        <button class="kh-typ2__rad is-active" type="button" data-k-typ2-rad id="canopy-tab-f" aria-controls="canopy-panel-f">
           <span class="kh-typ2__foto"><img src="../assets/soltec-canopy-f170-real.jpg" width="2000" height="1239" alt="Prestrešenie Soltec radu F s ISO panelom" loading="lazy" decoding="async"></span>
           <span class="kh-typ2__nazov">Rad F<em>vybraný</em></span>
           <span class="kh-typ2__veta">Vodorovný kváder s ISO panelom — jedna rovná plocha bez viditeľného spádu. Spád 2 % je schovaný v ráme.</span>
+          <span class="kh-typ2__akcia"><span class="kh-typ2__akcia-off">Zobraziť parametre</span><span class="kh-typ2__akcia-on">Parametre sú zobrazené</span><span aria-hidden="true">→</span></span>
         </button>
-        <button class="kh-typ2__rad" type="button" data-k-typ2-rad>
+        <button class="kh-typ2__rad" type="button" data-k-typ2-rad id="canopy-tab-g" aria-controls="canopy-panel-g">
           <span class="kh-typ2__foto"><img src="../assets/soltec-canopy-glassport-pool.jpg" width="2000" height="1333" alt="Prestrešenie Soltec radu G so sklenenou strechou" loading="lazy" decoding="async"></span>
           <span class="kh-typ2__nazov">Rad G<em>vybraný</em></span>
           <span class="kh-typ2__veta">Strecha vyzerá vodorovne a znesie viac — je stavaná pod sklo, ISO panel alebo zelenú strechu.</span>
+          <span class="kh-typ2__akcia"><span class="kh-typ2__akcia-off">Zobraziť parametre</span><span class="kh-typ2__akcia-on">Parametre sú zobrazené</span><span aria-hidden="true">→</span></span>
         </button>
       </div>
 
-      <div class="kh-typ2__panel" data-k-typ2-panel>
+      <div class="kh-typ2__panel" data-k-typ2-panel id="canopy-panel-f" role="tabpanel" aria-labelledby="canopy-tab-f">
         <table class="kh-typ2__tab">
           <caption>Rad F — parametre</caption>
           <thead><tr><td></td><th scope="col"><strong>F170</strong><span>nižší profil, bežné rozpony</span></th><th scope="col"><strong>F240</strong><span>vyšší profil, väčšie šírky</span></th></tr></thead>
@@ -394,7 +400,7 @@
         </table>
       </div>
 
-      <div class="kh-typ2__panel" hidden data-k-typ2-panel>
+      <div class="kh-typ2__panel" hidden data-k-typ2-panel id="canopy-panel-g" role="tabpanel" aria-labelledby="canopy-tab-g">
         <table class="kh-typ2__tab">
           <caption>Rad G — parametre</caption>
           <thead><tr><td></td><th scope="col"><strong>G170</strong><span>nižší profil</span></th><th scope="col"><strong>G240</strong><span>vyšší profil</span></th></tr></thead>
