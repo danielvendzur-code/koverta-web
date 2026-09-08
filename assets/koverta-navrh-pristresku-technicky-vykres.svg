@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="t d">
+<title id="t">Technický návrh oceľového prístrešku Koverta</title>
+<desc id="d">Čistý architektonický výkres prístrešku pre dve autá s rozmerovými kótami, stĺpmi, strechou a betónovými pätkami.</desc>
+<rect width="1200" height="760" fill="#f4f2ed"/>
+<g fill="none" stroke="#172126" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M220 500V245L965 190v310"/>
+  <path d="M220 245L965 190 1040 235 294 294z" fill="#fff"/>
+  <path d="M294 294v206M1040 235v265"/>
+  <path d="M215 500h835"/>
+  <path d="M220 500l-35 46h105l4-46M965 500l-35 46h105l5-46"/>
+  <path d="M294 500l-28 38h84l3-38M1040 500l-27 38h82"/>
+</g>
+<g stroke="#ffcc00" stroke-width="4" fill="none" stroke-linecap="round">
+  <path d="M205 610h850"/>
+  <path d="M205 594v32M1055 594v32"/>
+  <path d="M148 500V240"/>
+  <path d="M132 500h32M132 240h32"/>
+  <path d="M260 155h748"/>
+  <path d="M260 139v32M1008 139v32"/>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" fill="#172126">
+  <text x="630" y="650" font-size="30" text-anchor="middle" font-weight="700">šírka podľa priestoru</text>
+  <text x="110" y="380" font-size="27" text-anchor="middle" transform="rotate(-90 110 380)" font-weight="700">svetlá výška</text>
+  <text x="635" y="122" font-size="27" text-anchor="middle" font-weight="700">strecha + integrované odvodnenie</text>
+  <text x="72" y="72" font-size="22" font-weight="700" letter-spacing="3">NÁVRH / KÓTOVANIE</text>
+  <text x="72" y="105" font-size="18" fill="#667176">rozmery sa upravia po zameraní</text>
+</g>
+<g fill="#ffcc00">
+  <rect x="72" y="137" width="115" height="5" rx="2.5"/>
+</g>
+</svg>
