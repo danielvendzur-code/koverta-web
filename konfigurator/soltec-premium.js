@@ -3177,8 +3177,11 @@
             {
               for (let k = 0; k < vlnPocet; k++) {
                 const va = ty0 + vlnRoztec * k, vb = Math.min(ty1, va + vlnRoztec * 0.46);
+                /* Podhľad je zvnútra jemný — na realizáciách je vlna trapézu
+                   zdola sotva znateľná, nie pruhovaná. Silné pruhy z neho
+                   robili žalúziu. */
                 quad([[tx0, va, trapBot], [tx1, va, trapBot], [tx1, vb, trapBot], [tx0, vb, trapBot]],
-                     'rgba(12,14,16,.30)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+                     'rgba(24,28,32,.13)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
                 const ha = Math.max(va, vy0), hb = Math.min(vb, vy1);
                 if (hb > ha && vx1 > vx0) {
                   quad([[vx0, ha, trapTop], [vx1, ha, trapTop], [vx1, hb, trapTop], [vx0, hb, trapTop]],
@@ -3186,6 +3189,30 @@
                 }
               }
             }
+            /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
+               k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
+               diely na podhľade vyzerali nalepené na plochu, nie zapustené
+               medzi ňu. Kreslí sa ako úzky pruh na rovine podhľadu. */
+            const tien = (y0, y1) => {
+              if (y1 <= y0) return;
+              quad([[tx0, y0, trapBot], [tx1, y0, trapBot], [tx1, y1, trapBot], [tx0, y1, trapBot]],
+                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+            };
+            const tienX = (x0, x1) => {
+              if (x1 <= x0) return;
+              quad([[x0, ty0, trapBot], [x1, ty0, trapBot], [x1, ty1, trapBot], [x0, ty1, trapBot]],
+                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+            };
+            const TIEN = 55;
+            osi.forEach((os) => {
+              tien(Math.max(ty0, os - VAZ_W - TIEN), os - VAZ_W);
+              tien(os + VAZ_W, Math.min(ty1, os + VAZ_W + TIEN));
+            });
+            tien(ry0, Math.min(ty1, ry0 + TIEN));
+            tien(Math.max(ty0, ry1 - TIEN), ry1);
+            tienX(rx0, Math.min(tx1, rx0 + TIEN));
+            tienX(Math.max(tx0, rx1 - RAM_PAR - TIEN), rx1 - RAM_PAR);
+
             /* Presah tabúľ: na streche ho vidieť ako tenkú čiaru, nie ako
                škáru. Kreslí sa až po odkrytom poli, takže na lemovanie
                nedosiahne. */
