@@ -2811,8 +2811,10 @@
               put(outer, outer + web * dir, ramBot, RAM_H, shade(zinok, -0.14));
               put(outer, outer + RAM_W * dir, ramTop - fl, fl, shade(zinok, 0.10));
               put(outer, outer + RAM_W * dir, ramBot, fl, zinok);
+              /* Vnútro C profilu je ten istý pozink, len v tieni. Kým to bola
+                 priesvitná čierna, presvitalo to zdola ako čierny pás. */
               put(outer + web * dir, outer + RAM_W * dir, ramBot + fl, RAM_H - 2 * fl,
-                  'rgba(18,20,22,.20)');
+                  shade(zinok, -0.30));
             };
             cRun('y', ry0, 1, rx0, rx1);
             cRun('y', ry1, -1, rx0, rx1);
@@ -2824,6 +2826,50 @@
                k lemovaniu. */
             const inY0 = REF.vazOd != null ? REF.vazOd : ry0 + RAM_W;
             const inY1 = REF.vazPo != null ? REF.vazPo : ry1 - RAM_W;
+
+            /* --- spojovací kov. V exporte je 24 kusov jedného dielu
+               120 × 85 × 140 mm: štyri v rohoch, kde sa stretá bočný a čelný
+               C profil, a po dvoch na každom konci každej väznice — jeden na
+               každé C dvojice. Je vo farbe C profilov a drží ho skrutkovaný
+               spoj: dve skrutky do jedného profilu, dve do druhého. --- */
+            const SPOJ_D = REF.spojD || 85;    // pozdĺž hĺbky
+            const SPOJ_W = REF.spojW || 120;   // cez šírku
+            const SPOJ_H = REF.spojH || 140;
+            const spojHex = shade(zinok, -0.34);
+            const skrutHex = shade(zinok, -0.52);
+            /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
+               položený na líci dielu, nie ako guľa; v tejto mierke je to
+               presne to, čo je na spoji vidieť. */
+            const skrutka = (cx0, cy0, cz0, os, R) => {
+              const r = R || 9.5;
+              const pts = [];
+              for (let i = 0; i < 6; i++) {
+                const a = (Math.PI * 2 * i) / 6 + Math.PI / 6;
+                const c = Math.cos(a) * r, d = Math.sin(a) * r;
+                if (os === 'x') pts.push([cx0, cy0 + c, cz0 + d]);
+                else if (os === 'y') pts.push([cx0 + c, cy0, cz0 + d]);
+                else pts.push([cx0 + c, cy0 + d, cz0]);
+              }
+              const n = os === 'x' ? [Math.sign(cx0) || 1, 0, 0]
+                : os === 'y' ? [0, 1, 0] : [0, 0, -1];
+              quad(pts, skrutHex, { normal: n, raw: true, edge: false, fit: false, bias: ON_SKIN });
+            };
+            /* Spojka na konci väznice alebo v rohu: kus plechu položený na
+               vnútornom líci bočného rámu a k nemu dve a dve skrutky. */
+            const spojka = (x0, ySide) => {
+              const von = ySide === 0;                       // pri ktorom boku
+              const y0 = von ? ry0 + 3 : ry1 - 3 - SPOJ_W;
+              const z0 = ramTop - 32 - SPOJ_H;
+              boxFaces(x0, y0, z0, SPOJ_D, SPOJ_W, SPOJ_H, spojHex, [], SHAFT);
+              // dve skrutky do bočného profilu, dve do priečneho / čelného
+              const yl = von ? y0 + 4 : y0 + SPOJ_W - 4;
+              const sx = von ? -1 : 1;
+              [0.30, 0.70].forEach((t) => {
+                skrutka(x0 + SPOJ_D * t, yl, z0 + SPOJ_H * 0.30, 'y');
+                skrutka(x0 + SPOJ_D * t, yl, z0 + SPOJ_H * 0.72, 'y');
+              });
+              return sx;
+            };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
                v strede dvojice a pásnice idú od nich von. Osi sú odmerané, nie
@@ -2837,7 +2883,9 @@
                   return out;
                 })();
             const vfl = 9, vweb = 5;
+            const vaznePary = [];
             osi.forEach((os) => {
+              vaznePary.push(os);
               [-1, 1].forEach((sd) => {
                 const wx = sd < 0 ? os - vweb : os;                    // stojina pri strede
                 const fx = sd < 0 ? os - VAZ_W : os;                   // pásnice smerom von
@@ -2851,7 +2899,35 @@
                 boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
                          shade(zinok, -0.20), ['-y', '+y'], SHAFT);
               });
+              /* Dvojica C je zoskrutkovaná cez chrbty — dve skrutky na mieste
+                 spoja, jedna hore a jedna dole, a to z bočných strán profilu,
+                 nie zospodu. */
+              const stanic = Math.max(2, Math.round((inY1 - inY0) / 900));
+              for (let i = 1; i < stanic; i++) {
+                const y = inY0 + ((inY1 - inY0) * i) / stanic;
+                [-1, 1].forEach((sd) => {
+                  const x = sd < 0 ? os - VAZ_W - 1 : os + VAZ_W + 1;
+                  skrutka(x, y, ramTop - vfl - 22, 'x');
+                  skrutka(x, y, ramTop - VAZ_H + vfl + 22, 'x');
+                });
+              }
             });
+            /* Koniec každej väznice sedí na bočnom ráme na tej istej spojke
+               ako rohy — po jednej na každé C dvojice. */
+            vaznePary.forEach((os) => {
+              [0, 1].forEach((sd) => {
+                spojka(os - SPOJ_D - 2, sd);
+                spojka(os + 2, sd);
+              });
+            });
+
+            // rohy — spojka leží na styku bočného a čelného profilu
+            [[rx0 + 3, 0], [rx0 + 3, 1], [rx1 - 3 - SPOJ_D, 0], [rx1 - 3 - SPOJ_D, 1]]
+              .forEach((r) => spojka(r[0], r[1]));
+            /* Pod rohom je ešte jedna skrutka zospodu, presne v strede rohu. */
+            [[rx0 + RAM_W / 2, ry0 + RAM_W / 2], [rx0 + RAM_W / 2, ry1 - RAM_W / 2],
+             [rx1 - RAM_W / 2, ry0 + RAM_W / 2], [rx1 - RAM_W / 2, ry1 - RAM_W / 2]]
+              .forEach((c) => skrutka(c[0], c[1], ramBot, 'z', 10));
 
             /* --- trapéz: vlna po šírke, spodok sivý (izolačná rohož). Plech
                siaha pod lemovanie na oboch čelách, takže zhora nikde nezostane
