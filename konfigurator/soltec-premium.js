@@ -1815,13 +1815,31 @@
           };
 
           /* Skrutka zdola: šesťhran kľúč 19 položený na spodnom líci platne. */
-          const skrutkaHlavy = (cx0, cy0, cz0) => {
-            const r = 9.5, pts = [];
+          /* Skrutka M12, kľúč 19. Kreslí sa ako krátky šesťhranný hranol,
+             ktorý z dielu naozaj vytŕča — nálepka na líci sa pri maliarskom
+             triedení schovala pod diel, na ktorom mala ležať. `os` hovorí, z
+             ktorej plochy hlava trčí, `sgn` ktorým smerom. */
+          const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
+            const r = R || 11, sd = sgn || 1, h = dlzka || 7;
+            const P = (t, a) => {
+              const c = Math.cos(a) * r, d = Math.sin(a) * r;
+              if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
+              if (os === 'y') return [cx0 + c, cy0 + sd * t, cz0 + d];
+              return [cx0 + c, cy0 + d, cz0 + sd * t];
+            };
+            const n = os === 'x' ? [sd, 0, 0] : os === 'y' ? [0, sd, 0] : [0, 0, sd];
+            const cap = [];
             for (let i = 0; i < 6; i++) {
               const a = (Math.PI * 2 * i) / 6 + Math.PI / 6;
-              pts.push([cx0 + Math.cos(a) * r, cy0 + Math.sin(a) * r, cz0]);
+              const b = (Math.PI * 2 * (i + 1)) / 6 + Math.PI / 6;
+              cap.push(P(h, a));
+              quad([P(0, a), P(h, a), P(h, b), P(0, b)], shade(hex, -0.10),
+                   { normal: n, cull: false, arris: false, bias: ON_SKIN });
             }
-            quad(pts, shade(frame, -0.62), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: 5e4 });
+            quad(cap, hex, { normal: n, arris: false, bias: ON_SKIN });
+          };
+          const skrutkaHlavy = (cx0, cy0, cz0) => {
+            skrutkuj(cx0, cy0, cz0, 'z', shade(frame, -0.46), 11, -1, 7);
           };
 
 
@@ -2115,7 +2133,7 @@
                    oblúk v rohu, rovné líce. Predtým sa body kládli po rohoch
                    nezávisle, obrys sa krížil sám so sebou a na boku stĺpa z toho
                    vznikli nezmyselné fazety. */
-                const SEG = 3;
+                const SEG = 5;
                 const cs = [];
                 [[px + r, py + r, Math.PI, 1.5 * Math.PI],
                  [px + pd - r, py + r, 1.5 * Math.PI, 2 * Math.PI],
@@ -2149,19 +2167,24 @@
                  Skrutky idú zdola cez pásnicu, takže zhora ich vidieť nie je. */
               if (BIO.headPlates) {
                 const zH = H + lift;
-                const hp = Math.round(Math.min(pd, pw) * 0.78);   // vyloženie platne
-                const th = 10;
-                const hlava = shade(frame, -0.34);
+                /* Platňa je len taká, aby sa na ňu zmestili dve skrutky —
+                   nie doska cez celý bok stĺpa. Kľúč 19 znamená hlavu asi
+                   19 mm cez ploché, takže na dve skrutky vedľa seba stačí
+                   pás asi 110 × 58 mm. */
+                const hp = 58;                                    // vyloženie platne
+                const sir = 110;                                  // dĺžka platne
+                const th = 8;
+                const hlava = shade(frame, -0.30);
                 const okraj = xi === 0 || xi === xs.length - 1;
                 /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
                 const plat = (x0, y0, dx, dy) => {
                   boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
                   const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
-                  const roz = Math.min(dx, dy) * 0.46;
                   const vodo = dx > dy;
+                  const roz = (vodo ? dx : dy) * 0.30;
                   [-1, 1].forEach((sd) => {
                     skrutkaHlavy(vodo ? cx0 + sd * roz : cx0,
-                                 vodo ? cy0 : cy0 + sd * roz, zH - th);
+                                 vodo ? cy0 : cy0 + sd * roz, zH - th - 1);
                   });
                 };
                 /* Rohový stĺp má dve platne na dvoch susedných stranách: jednu
@@ -2169,13 +2192,16 @@
                    dovnútra prístrešku, nie von — vonku by nemali čo držať.
                    Stĺp v poli má dve oproti sebe, pozdĺž bočného rámu. */
                 const kBoku = py < W / 2;
+                const cy = py + pw / 2, cx = px + pd / 2;
                 if (okraj) {
                   const dnu = xi === 0 ? 1 : -1;              // smerom do poľa
-                  if (dnu > 0) plat(px + pd, py, hp, pw); else plat(px - hp, py, hp, pw);
-                  if (kBoku) plat(px, py + pw, pd, hp); else plat(px, py - hp, pd, hp);
+                  if (dnu > 0) plat(px + pd, cy - sir / 2, hp, sir);
+                  else plat(px - hp, cy - sir / 2, hp, sir);
+                  if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
+                  else plat(cx - sir / 2, py - hp, sir, hp);
                 } else {
-                  plat(px - hp, py, hp, pw);
-                  plat(px + pd, py, hp, pw);
+                  plat(px - hp, cy - sir / 2, hp, sir);
+                  plat(px + pd, cy - sir / 2, hp, sir);
                 }
               }
             }));
@@ -2814,7 +2840,9 @@
             const zinok = model().rimSoffitHex || '#c2c7cb';
             const zBot = H, zTop = zBot + LEM_H;
             const ramBot = zBot, ramTop = ramBot + RAM_H;
-            const trapBot = ramTop + 3, trapTop = trapBot + TRAP_H;
+            /* Trapéz musí sadnúť pod horné rameno lemovania, nie doň — inak
+               sa jeho plech s lemovaním prekrýva a presvitá cezeň. */
+            const trapTop = zTop - LEM_T, trapBot = trapTop - TRAP_H;
 
             /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelné cez
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
@@ -2867,16 +2895,8 @@
             const cPar = (axis, outer, dir, a, b) => {
               cRun(axis, outer, dir, a, b);
               cRun(axis, outer + RAM_PAR * dir, -dir, a, b);
-              /* Zdola musí byť medzi tými dvomi profilmi vidieť škáru — je to
-                 dvojica priskrutkovaná chrbtami k sebe, nie jeden široký kus. */
-              const u = outer + (RAM_PAR / 2) * dir, t = 3;
-              if (axis === 'x') {
-                quad([[u - t, a, ramBot], [u + t, a, ramBot], [u + t, b, ramBot], [u - t, b, ramBot]],
-                     shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
-              } else {
-                quad([[a, u - t, ramBot], [b, u - t, ramBot], [b, u + t, ramBot], [a, u + t, ramBot]],
-                     shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
-              }
+              /* Obvodový rám má zdola čistý spodok — škáru medzi profilmi majú
+                 len priečne väznice. */
             };
             cPar('y', RAM_VSUN, 1, RAM_ZAD, rx1);
             cPar('y', W - RAM_VSUN, -1, RAM_ZAD, rx1);
@@ -2902,19 +2922,8 @@
             /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
                položený na líci dielu, nie ako guľa; v tejto mierke je to
                presne to, čo je na spoji vidieť. */
-            const skrutka = (cx0, cy0, cz0, os, R) => {
-              const r = R || 9.5;
-              const pts = [];
-              for (let i = 0; i < 6; i++) {
-                const a = (Math.PI * 2 * i) / 6 + Math.PI / 6;
-                const c = Math.cos(a) * r, d = Math.sin(a) * r;
-                if (os === 'x') pts.push([cx0, cy0 + c, cz0 + d]);
-                else if (os === 'y') pts.push([cx0 + c, cy0, cz0 + d]);
-                else pts.push([cx0 + c, cy0 + d, cz0]);
-              }
-              const n = os === 'x' ? [1, 0, 0] : os === 'y' ? [0, 1, 0] : [0, 0, -1];
-              quad(pts, skrutHex, { normal: n, raw: true, edge: false, fit: false, bias: ON_SKIN });
-            };
+            const skrutka = (cx0, cy0, cz0, os, R, sgn) =>
+              skrutkuj(cx0, cy0, cz0, os, skrutHex, R || 11, os === 'z' ? -1 : (sgn || 1), 7);
             /* Spojka na konci väznice alebo v rohu. Lapuje vnútorné líce
                bočného rámu a odtiaľ vybieha dovnútra prístrešku, takže z nej
                je vidieť len malý kus. Dve skrutky idú do bočného rámu (líce
@@ -2928,13 +2937,12 @@
               boxFaces(x0, y0, z0, SPOJ_D, SPOJ_W, SPOJ_H, spojHex, [], SHAFT);
               // dve do bočného rámu
               [0.30, 0.70].forEach((t) => {
-                skrutka(x0 + SPOJ_D * t, lic + (von ? -1 : 1), z0 + SPOJ_H * 0.50, 'y');
+                skrutka(x0 + SPOJ_D * t, lic + (von ? -1 : 1), z0 + SPOJ_H * 0.50, 'y', 0, von ? -1 : 1);
               });
               // dve do väznice alebo čelného rámu
-              const xl = x0 + (von ? SPOJ_D + 1 : SPOJ_D + 1);
               [0.32, 0.68].forEach((t) => {
-                skrutka(x0 - 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x');
-                skrutka(xl, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x');
+                skrutka(x0 - 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x', 0, -1);
+                skrutka(x0 + SPOJ_D + 1, y0 + SPOJ_W * t, z0 + SPOJ_H * 0.50, 'x', 0, 1);
               });
             };
 
@@ -2975,9 +2983,9 @@
               for (let i = 0; i <= stanic; i++) {
                 const y = inY0 + 40 + ((inY1 - inY0 - 80) * i) / stanic;
                 [-1, 1].forEach((sd) => {
-                  const x = sd < 0 ? os - VAZ_W - 1 : os + VAZ_W + 1;
-                  skrutka(x, y, ramTop - vfl - 22, 'x');
-                  skrutka(x, y, ramTop - VAZ_H + vfl + 22, 'x');
+                  const x = os + sd * (VAZ_W + 1);
+                  skrutka(x, y, ramTop - vfl - 26, 'x', 0, sd);
+                  skrutka(x, y, ramTop - VAZ_H + vfl + 26, 'x', 0, sd);
                 });
               }
             });
@@ -3036,7 +3044,7 @@
               const cx = L - RAM_ODK + 12 + R;       // os žľabu v kapse
               const cz = ramTop - 22;                // horná hrana žľabu
               const gh = shade(frame, 0.02);
-              const N = 16;
+              const N = 22;
               const bod = (t) => [cx - Math.cos(t) * R, cz - Math.sin(t) * R];
 
               // vnútro aj vonkajšok polkruhu, aby žľab nebol len škrupina
@@ -3072,13 +3080,14 @@
                  milimetrov je schovaných za lemovaním; vidieť ho začne až
                  pod ním. Dole je jediný ohyb: vyhnutá pätka. */
               const rz = 48;                          // rúra Ø 96 mm
+              const zvodVon = 22;                     // odstup od líca stĺpa
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               /* Zvod stojí pri rohovom stĺpe na odkvapovej hrane, v osi
                  stĺpa — tak, ako je na fotkách realizácií. */
               const yZvod = Math.max(LEM_T + rz + 10, postW() / 2);
               const tuba = (pts, r, hex) => {
-                const M = 18;
+                const M = 24;
                 for (let s = 0; s < pts.length - 1; s++) {
                   const A = pts[s], B = pts[s + 1];
                   let ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2];
@@ -3102,12 +3111,13 @@
                     const nx = vx * Math.cos(m) + wx * Math.sin(m);
                     const ny = vy * Math.cos(m) + wy * Math.sin(m);
                     const nz = vz * Math.cos(m) + wz * Math.sin(m);
-                    /* Valec tieni sám renderer podľa normály (litFill), tak
-                       sa tu pridáva len jemné dokreslenie; arris:false zaistí,
-                       že medzi pásmi plášťa nesvieti podklad. */
+                    /* Rúra má farbu konštrukcie, takže od stĺpa ju odlíši len
+                       tvar: po obvode musí ísť plynulý prechod od svetla k
+                       tieňu. arris:false zaistí, že medzi pásmi plášťa
+                       nesvieti podklad. */
                     const lam = nx * 0.42 + ny * 0.50 + nz * 0.76;
                     quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                         shade(hex, -0.05 + Math.max(0, lam) * 0.11),
+                         shade(hex, -0.17 + Math.max(0, lam) * 0.36),
                          { normal: [nx, ny, nz], cull: true, arris: false });
                   }
                 }
@@ -3119,15 +3129,16 @@
               const zPata = 400;                    // spodok zvislej časti
               const RP = 190;                       // polomer vyhnutej pätky
 
+              const zx = cx + zvodVon;
               // výpustné hrdlo pod dnom žľabu, ešte za lemovaním
-              tuba([[cx, yZvod, zHrdlo + 14], [cx, yZvod, zHrdlo - 60]], rz * 1.10, shade(zvodHex, -0.07));
+              tuba([[cx, yZvod, zHrdlo + 14], [zx, yZvod, zHrdlo - 70]], rz * 1.10, shade(zvodHex, -0.07));
               // zvislá rúra až k pätke
-              tuba([[cx, yZvod, zHrdlo], [cx, yZvod, zPata]], rz, zvodHex);
+              tuba([[zx, yZvod, zHrdlo], [zx, yZvod, zPata]], rz, zvodHex);
               // vyhnutá pätka: jediný ohyb na celej rúre
               const pata = [];
               for (let i = 0; i <= 10; i++) {
                 const t = (Math.PI / 2) * 0.80 * (i / 10);
-                pata.push([cx + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
+                pata.push([zx + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
               }
               tuba(pata, rz, zvodHex);
 
@@ -3582,13 +3593,13 @@
 
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           bspPaintOrder(faces).forEach((f) => {
-            const pts = f.p.map((q) => (q.x * scale + ox).toFixed(1) + ',' + (q.y * scale + oy).toFixed(1)).join(' ');
+            const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
                background between them. Stroking each face in its own colour
                closes it; the corner still reads, because the two sides are
                genuinely lit differently. */
-            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '1'; a['stroke-linejoin'] = 'round'; }
+            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
             if (f.seamless) a['shape-rendering'] = 'crispEdges';
             g.appendChild(svgEl('polygon', a));
           });
