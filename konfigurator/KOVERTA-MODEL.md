@@ -116,11 +116,14 @@ Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
 |---|---|
 | pôdorys (obrys lemovania) | 4 000 × 6 000 mm |
 | lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky 240 cez celú hĺbku; **čelné kusy ležia na bočných**, presah je presne roh |
-| obvodový C rám | 74 × 220, z 2 398…2 618; 18 mm od boku, 15 od zadného čela, **159 od odkvapového** |
+| obvodový rám | **dvojica** C 74 × 220 chrbtami k sebe, spolu 150 mm — rovnako hrubý ako stĺp; z 2 398…2 618; vonkajšie líce bokov za zvislým ramenom lemovania, 15 mm od zadného čela, **159 od odkvapového** |
 | väznice | 3 dvojice C 58 × 180 chrbtami k sebe, z 2 438…2 618, osi 1 490 / 2 928 / 4 366 od zadného čela, beh y 30…3 970 |
 | trapéz | hrúbka 36, z 2 621…2 656, krycia šírka 1 072 (presah 254), x 15…5 915, y 46…3 982 |
 | stĺp | **150 × 150 štvorec**, výška 2 398, rady x = 0 a 5 709 |
 | kotevná doska | 250 × 250, lícuje s bokom pôdorysu |
+| platňa hlavy stĺpa | 110 × 58 × 8 pod spodnou pásnicou rámu, dve skrutky zdola; rohový stĺp má dve platne na dvoch susedných stranách, obe dovnútra poľa |
+| spojka | uholník: plech 10 mm ohnutý o 90° v strede, rameno 170, výška 70; dve skrutky do každého ramena. Na konci väznice dva (po jednom na každej strane dvojice C), v rohu dva vedľa seba po dĺžke. Sedí v strede výšky profilu, na ktorý je skrutkovaný |
+| skrutka | M12, kľúč 19 — šesťhranná hlava, ktorá z dielu vytŕča; farba C profilov (pozink), nie prístrešku |
 | lamely steny | 20 × 100, rozteč 140, z 298…2 218, líce 15 mm pod obrysom |
 
 Šesťstĺpová varianta má v tom istom exporte stĺpy 110 × 190 v osiach
@@ -135,3 +138,17 @@ dole bez kolena a vidieť ho začne až pod lemovaním.
 
 Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
 realizácie nie je — kreslí sa len doska.
+
+Dva rozdiely medzi odmeraným exportom a tým, čo kreslíme, a prečo:
+
+* **Obvodový rám je dvojica C profilov, nie jeden.** V exporte je na bok
+  jeden C 74 mm, ale stĺp má 150 a zdola by spoza rámu vyčnieval o 58 mm.
+  Podľa výrobcu je rám rovnako hrubý ako stĺp, takže sú to dva C profily
+  chrbtami k sebe (2 × 74 ≈ 150) — rovnako ako priečne väznice. Škáru medzi
+  nimi majú zdola vidieť len väznice; obvodový rám má čistý spodok.
+* **Spojka je uholník, nie kváder.** Export má 24 kusov dielu s obrysom
+  120 × 85 × 140; ten obrys je obálka ohnutého plechu, nie plný blok.
+
+Horné rameno lemovania sa kreslí 4 mm hrubé, nie 15 ako zvislé — je to
+plech, ktorý leží na trapéze. Pri 15 mm doň trapéz zapadal a strecha
+vyzerala zhora ako vaňa.
