@@ -2934,13 +2934,16 @@
                     const nx = vx * Math.cos(m) + wx * Math.sin(m);
                     const ny = vy * Math.cos(m) + wy * Math.sin(m);
                     const nz = vz * Math.cos(m) + wz * Math.sin(m);
-                    /* Rúra je valec, takže po jej obvode musí byť vidieť
-                       plynulý prechod od svetla k tieňu. Bez neho vyzerá
-                       ako plochý pás. */
+                    /* Valec tieni sám renderer podľa normály (litFill), tak
+                       sa tu pridáva len jemné dokreslenie, aby plášť nebol
+                       plochý. Plné tienenie navrch by rúru presvietilo. */
                     const lam = nx * 0.42 + ny * 0.50 + nz * 0.76;
                     quad([P(0, a), P(len, a), P(len, b), P(0, b)],
-                         shade(hex, -0.16 + Math.max(0, lam) * 0.44),
-                         { normal: [nx, ny, nz], cull: true, edge: false });
+                         shade(hex, -0.05 + Math.max(0, lam) * 0.11),
+                         /* arris:false obtiahne plôšku jej vlastnou farbou,
+                            takže susedné pásy valca na seba sadnú a medzi
+                            nimi nesvieti podklad. */
+                         { normal: [nx, ny, nz], cull: true, arris: false });
                   }
                 }
               };
@@ -2954,7 +2957,7 @@
                 return out;
               };
 
-              const zvodHex = shade(frame, 0.46);   // zinkový plech, svetlejší než rám
+              const zvodHex = shade(frame, 0.44);   // zinkový plech, svetlejší než rám
               const zHrdlo = cz - R;                // dno žľabu
               const yVypust = W - 90;               // výpust je ešte pod strechou
               const yZvod = W + rz + 130;           // rúra stojí voľne vedľa stĺpa, nie na ňom
