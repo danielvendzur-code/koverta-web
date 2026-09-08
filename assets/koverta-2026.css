@@ -14236,3 +14236,20 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-kfg__typ--siroky .kh-kfg__karta { aspect-ratio: 16 / 9; }
   .k .kh-kfg__karta { aspect-ratio: 16 / 9; }
 }
+
+
+/* Unified editorial photo treatment: subtle only. Technical drawings, renders,
+   diagrams and logos are intentionally excluded so labels/details remain exact. */
+.k .kh-ponuka__foto > img,
+.k .kh-kfg__foto > img,
+.k .kh-pick__scene > img,
+.k .kh-work__media > img,
+.k .kh-cat__media > img,
+.k .kh-duo__foto > img,
+.k .kh-proc__media > img,
+.k .kh-mat__media > img {
+  filter: saturate(.94) contrast(1.025) brightness(.995);
+}
+.k .k-photo-crop--tienenie {
+  object-position: 50% 42%;
+}
