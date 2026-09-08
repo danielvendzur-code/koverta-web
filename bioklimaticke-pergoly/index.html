@@ -345,10 +345,83 @@
 </section>
 
 <!-- ===================================================== ŠTYRI OBDOBIA -->
-<!-- Toto je jediná vec, ktorú bioklimatická pergola vie a pevná strecha nie:
-     tá istá strecha sa správa inak v apríli, v júli a v decembri. Na starom
-     webe to bol prepínač ročných období; tu sú štyri karty vedľa seba, nech
-     to zákazník vidí naraz a nemusí nič preklikať. -->
+<!-- Ročné obdobia sa menia kliknutím aj scrollom. Zámerne bez SVG rezu lamiel. -->
+<section class="k-band k-biela kh-rok" aria-labelledby="rokTitle">
+  <div class="k-rules" aria-hidden="true"></div>
+  <div class="k-wrap">
+    <header class="k-head k-head--split">
+      <div class="k-head__title">
+        <p class="k-eyebrow k-rise">Prečo bioklimatická</p>
+        <h2 id="rokTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Jedna strecha, štyri ročné obdobia</h2>
+      </div>
+      <div class="k-rise" data-k-delay="2">
+        <p class="k-copy">Pevná strecha vie jedno: tieň. Otočné lamely vedia tieň, prievan, dážď aj otvorené nebo — a prepnete medzi nimi za pár sekúnd.</p>
+        <p class="kh-rok__citat">„Je to ako sedieť pod stromom.“ <span>tak to opisujú zákazníci</span></p>
+      </div>
+    </header>
+
+    <!-- Ročné obdobia ako záložky, nie štyri karty pod sebou — presne ako
+         „Ako to prebieha": obdobie sa mení klikom aj rolovaním. -->
+    <div class="kh-proc__grid" data-k-process>
+      <div class="kh-proc__aside">
+        <div class="kh-proc__list k-rise">
+            <button class="kh-proc__row" type="button" data-k-step-row><em>Jar</em><strong>Prvé teplo, ešte studený vietor</strong></button>
+            <button class="kh-proc__row" type="button" data-k-step-row><em>Leto</em><strong>Poludnie bez horúčavy</strong></button>
+            <button class="kh-proc__row" type="button" data-k-step-row><em>Jeseň</em><strong>Dážď na terase neprekáža</strong></button>
+            <button class="kh-proc__row" type="button" data-k-step-row><em>Zima</em><strong>Sezóna sa dá predĺžiť</strong></button>
+        </div>
+      </div>
+
+      <div class="kh-proc__panels k-reveal">
+          <article class="kh-proc__panel" data-k-step>
+            <span class="kh-proc__media"><img src="../assets/soltec-bio-spring-2024.jpg" width="1600" height="1150" alt="Bioklimatická pergola Soltec na jar, lamely privreté proti vetru" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__body">
+              <span class="kh-proc__num">Jar</span>
+              <h3 class="k-h3">Prvé teplo, ešte studený vietor</h3>
+              <p class="k-copy">Lamely privriete tak, aby slnko pustili a vietor rozbili. Bočná ZIP roleta zastaví prievan a terasa je použiteľná o mesiac skôr.</p>
+            </span>
+          </article>
+          <article class="kh-proc__panel" data-k-step>
+            <span class="kh-proc__media"><img src="../assets/soltec-bio-summer-2024.jpg" width="1600" height="1150" alt="Bioklimatická pergola Soltec v lete, zatvorené lamely držia tieň" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__body">
+              <span class="kh-proc__num">Leto</span>
+              <h3 class="k-h3">Poludnie bez horúčavy</h3>
+              <p class="k-copy">Zatvorené lamely držia súvislý tieň. Teplý vzduch pod nimi neostáva stáť — pootočením lamiel ho pustíte hore a von.</p>
+            </span>
+          </article>
+          <article class="kh-proc__panel" data-k-step>
+            <span class="kh-proc__media"><img src="../assets/soltec-bio-fall-2024.jpg" width="1600" height="1150" alt="Bioklimatická pergola Soltec na jeseň, zatvorená strecha odvádza dážď" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__body">
+              <span class="kh-proc__num">Jeseň</span>
+              <h3 class="k-h3">Dážď na terase neprekáža</h3>
+              <p class="k-copy">Zatvorené lamely tvoria vodotesnú strechu a voda odtečie prievlakom do stĺpa. So snímačom dažďa sa zatvoria samy, aj keď nie ste doma.</p>
+            </span>
+          </article>
+          <article class="kh-proc__panel" data-k-step>
+            <span class="kh-proc__media"><img src="../assets/soltec-bio-winter-2024.jpg" width="1600" height="1150" alt="Bioklimatická pergola Soltec v zime so zavretými bočnými stenami" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__body">
+              <span class="kh-proc__num">Zima</span>
+              <h3 class="k-h3">Sezóna sa dá predĺžiť</h3>
+              <p class="k-copy">Sklenené alebo ZIP steny uzavrú boky, infraohrievač v ráme hreje smerom dole. Pri veľkom snehu sa lamely otvoria, aby sneh prepadol.</p>
+            </span>
+          </article>
+      </div>
+    </div>
+
+    <div class="kh-rok__spodok">
+      <ul class="kh-rok__vlastnosti k-rise" data-k-delay="1">
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.4M12 19v2.4M4.4 12H2M22 12h-2.4M6.3 6.3 4.6 4.6M19.4 19.4l-1.7-1.7M17.7 6.3l1.7-1.7M4.6 19.4l1.7-1.7" stroke-linecap="round"/></svg><span>Tieň na povel</span></li>
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h11.5a3 3 0 1 0-3-3M3 12.5h15a3 3 0 1 1-3 3M3 17h8.5" stroke-linecap="round"/></svg><span>Vzduch prúdi ďalej</span></li>
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13.5 14.2V5a2 2 0 1 0-4 0v9.2a4 4 0 1 0 4 0Z"/><path d="M11.5 8.5v6.4" stroke-linecap="round"/></svg><span>Teplota sa dá držať</span></li>
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7.5 15.5a4.5 4.5 0 0 1 .6-8.96 5.5 5.5 0 0 1 10.5 1.6A3.7 3.7 0 0 1 18 15.5"/><path d="M9 18.4l-.9 2.1M13 18.4l-.9 2.1M17 18.4l-.9 2.1" stroke-linecap="round"/></svg><span>Dážď odtečie vnútri</span></li>
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-linecap="round"/></svg><span>Sneh prepadne lamelami</span></li>
+        <li class="kh-rok__vlastnost"><svg class="kh-rok__ikona" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2.8 4.6 5.6v6c0 4.3 3 8.1 7.4 9.6 4.4-1.5 7.4-5.3 7.4-9.6v-6L12 2.8Z"/><path d="M9.2 12.2l2 2 3.6-4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Trieda 3 vo vetre</span></li>
+      </ul>
+      <p class="kh-tab__note k-rise" data-k-delay="2">Štyri obrázky sú vizualizácie výrobcu — tá istá pergola v štyroch ročných obdobiach. Skutočné montáže sú nižšie v galérii.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ===================================================== Z ČOHO JE TO -->
 <section class="k-band k-bone kh-mat" aria-labelledby="galTitle">
   <div class="k-rules" aria-hidden="true"></div>
