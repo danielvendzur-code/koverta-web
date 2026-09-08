@@ -4692,7 +4692,10 @@
             const sensorsOn = Object.keys(state.sensors).filter((k) => state.sensors[k]);
             const anchorLabel = { galv: 'galvanizované', coated: 'galvanizované + náter', inox: 'nerez' };
             const summary = [
-              `Mám záujem o ${product} ${model().label}.`,
+              /* Pri jedinom modeli je jeho názov a názov výrobku to isté —
+                 „oceľový prístrešok Koverta Prístrešok Koverta" bola veta,
+                 ktorú dostal obchodník v každom dopyte. */
+              ONE_MODEL ? `Mám záujem o ${product}.` : `Mám záujem o ${product} ${model().label}.`,
               `Rozmer ${mm(widthMM())} × ${mm(lengthMM())}, výška ${mm(state.height)}.`,
               model().roof === 'panel'
                 ? `Konštrukcia ${state.frameColor.name} (${state.frameColor.ral}).`
