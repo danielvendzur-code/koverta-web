@@ -1229,6 +1229,14 @@
           state.lengthValue = Math.round(Math.max(m.lengths[0], Math.min(rawLength, m.lengths[m.lengths.length - 1])));
           if (snap) state.lengthValue = snapTo(m.lengths, state.lengthValue);
           state.length = dimensionBandIndex(m.lengths, state.lengthValue);
+          /* Cenník nemusí byť obdĺžnik. F170 má najdlhšie dĺžky publikované
+             len pre užšie šírky, takže pri tých dĺžkach sa šírka zastaví tam,
+             kde cenník končí — inak by sa siahlo do prázdnej bunky. */
+          const cap = Array.isArray(m.maxWidthAt) ? m.maxWidthAt[state.length] : null;
+          if (cap && m.widths && m.widths.length && state.widthValue > cap) {
+            state.widthValue = snap ? snapTo(m.widths, cap) : cap;
+            state.width = dimensionBandIndex(m.widths, state.widthValue);
+          }
           const ll = m.loads || m.gridLoads;
           state.load = ll ? Math.max(0, Math.min(state.load, ll.length - 1)) : 0;
         };
@@ -1242,8 +1250,11 @@
             : (m.gridLoads
                 ? m.prices[String(m.gridLoads[state.load])][state.length][state.width]
                 : m.prices[state.length][state.width]);
-          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : ''), v: base, sum: base });
-          let open = false;
+          /* Bunka, ktorú cenník nepublikuje, sa neúčtuje ako nula — ide do
+             súhrnu ako položka na nacenenie. */
+          const baseOk = Number.isFinite(base);
+          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : ''), v: baseOk ? base : null, sum: baseOk ? base : 0 });
+          let open = !baseOk;
           for (const side of ['front', 'rear', 'left', 'right']) {
             const kind = state.sides[side];
             if (kind === 'open') continue;
