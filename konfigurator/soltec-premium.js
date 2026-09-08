@@ -2819,7 +2819,11 @@
             cRun('x', rx0, 1, ry0 + RAM_W, ry1 - RAM_W);
             cRun('x', rx1, -1, ry0 + RAM_W, ry1 - RAM_W);
 
-            const inY0 = ry0 + RAM_W, inY1 = ry1 - RAM_W;
+            /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
+               po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
+               k lemovaniu. */
+            const inY0 = REF.vazOd != null ? REF.vazOd : ry0 + RAM_W;
+            const inY1 = REF.vazPo != null ? REF.vazPo : ry1 - RAM_W;
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
                v strede dvojice a pásnice idú od nich von. Osi sú odmerané, nie
@@ -2837,12 +2841,15 @@
               [-1, 1].forEach((sd) => {
                 const wx = sd < 0 ? os - vweb : os;                    // stojina pri strede
                 const fx = sd < 0 ? os - VAZ_W : os;                   // pásnice smerom von
+                /* Väznice sú z toho istého pozinku ako rám, ale zdola sú
+                   proti presvetlenému trapézu výrazne tmavšie — na fotkách
+                   podhľadu je to to, čo strope dáva hĺbku. */
                 boxFaces(wx, inY0, ramTop - VAZ_H, vweb, inY1 - inY0, VAZ_H,
-                         shade(zinok, -0.14), ['-y', '+y'], SHAFT);
+                         shade(zinok, -0.34), ['-y', '+y'], SHAFT);
                 boxFaces(fx, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl,
-                         shade(zinok, 0.10), ['-y', '+y'], SHAFT);
+                         shade(zinok, -0.06), ['-y', '+y'], SHAFT);
                 boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
-                         zinok, ['-y', '+y'], SHAFT);
+                         shade(zinok, -0.20), ['-y', '+y'], SHAFT);
               });
             });
 
@@ -2852,7 +2859,8 @@
             const tx0 = TRAP_ZAD, tx1 = L - TRAP_ODK;
             const spodHex = model().trapezSoffitHex || '#8f9295';
             const vrchHex = model().trapezTopHex || frame;
-            const ty0 = LEM_T + 30, ty1 = W - LEM_T - 30;
+            const ty0 = REF.trapOd != null ? REF.trapOd : LEM_T + 30;
+            const ty1 = REF.trapPo != null ? REF.trapPo : W - LEM_T - 30;
             const tabule = Math.max(1, Math.round((ty1 - ty0) / TRAP_KRYT));
             const tw = (ty1 - ty0) / tabule;
             for (let i = 0; i < tabule; i++) {

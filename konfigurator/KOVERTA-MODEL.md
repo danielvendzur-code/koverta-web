@@ -99,3 +99,39 @@ Staršie katalógy (šírky 2,5 – 3,0 m a 3,8 m) majú inú generáciu dielov 
 - Steny sa kreslia z lamiel v engine, nie podľa odmeraných panelov.
 - Záhradné prístrešky používajú rovnaké diely ako prístrešky pre autá;
   overiť, či to tak je aj v skutočnosti.
+
+## Referenčný prístrešok (od 2026-09)
+
+Konfigurátor kreslí jeden skutočný výrobok, nie dopočítaný rozmer:
+**katalóg Expivi 13670 „Pristresok 4.0 x 6.0", štvorstĺpová varianta.**
+Všetky čísla nižšie sú odmerané z `.ebm` meshov toho exportu
+(`archiv-expivi/exporty-modelov.json` → `zips/13670.zip`), nie odhadnuté.
+Uložené sú v `models.K4.kvRef` v dátovom bloku stránky.
+
+Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
+**y = šírka**, odkvapová hrana na `x = L`. Prepočet: `x = 6000 − (Y + 3512)`,
+`y = X + 2000`.
+
+| diel | odmerané |
+|---|---|
+| pôdorys (obrys lemovania) | 4 000 × 6 000 mm |
+| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky 240 cez celú hĺbku; **čelné kusy ležia na bočných**, presah je presne roh |
+| obvodový C rám | 74 × 220, z 2 398…2 618; 18 mm od boku, 15 od zadného čela, **159 od odkvapového** |
+| väznice | 3 dvojice C 58 × 180 chrbtami k sebe, z 2 438…2 618, osi 1 490 / 2 928 / 4 366 od zadného čela, beh y 30…3 970 |
+| trapéz | hrúbka 36, z 2 621…2 656, krycia šírka 1 072 (presah 254), x 15…5 915, y 46…3 982 |
+| stĺp | **150 × 150 štvorec**, výška 2 398, rady x = 0 a 5 709 |
+| kotevná doska | 250 × 250, lícuje s bokom pôdorysu |
+| lamely steny | 20 × 100, rozteč 140, z 298…2 218, líce 15 mm pod obrysom |
+
+Šesťstĺpová varianta má v tom istom exporte stĺpy 110 × 190 v osiach
+1 322 / 3 072 / 4 822 a väznice presne nad nimi. V konfigurátore zatiaľ nie
+je — prístrešok sa predáva ako jeden výrobok.
+
+**Žľab ani zvod v exportoch nie sú** — v žiadnom zo 70 modelov niet dielu,
+ktorý by nimi bol. Skladajú sa podľa fotografií realizácií, ale sadajú do
+odmeranej kapsy: 159 mm previsu za rámom na odkvapovej hrane. Žľab (Ø 136)
+visí hore pod lemovaním, takže ho zboku nevidno; zvod z neho padá rovno
+dole bez kolena a vidieť ho začne až pod lemovaním.
+
+Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
+realizácie nie je — kreslí sa len doska.
