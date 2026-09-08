@@ -1852,7 +1852,7 @@
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
             const zin = model().rimSoffitHex || '#c2c7cb';
-            skrutkuj(cx0, cy0, cz0, 'z', shade(zin, -0.14), 11, -1, 7);
+            skrutkuj(cx0, cy0, cz0, 'z', zin, 11, -1, 7);
           };
 
 
@@ -2890,13 +2890,12 @@
             const rx1 = L - RAM_ODK, rx0 = RAM_ZAD + RAM_PAR;
             const ry0 = RAM_VSUN + RAM_PAR, ry1 = W - RAM_VSUN - RAM_PAR;
             const fl = 10, web = 5;
-            /* Jedna paleta pre všetky pozinkované profily — obvodový rám aj
-               priečne väznice sú z toho istého plechu, tak nesmú mať každý
-               vlastný odtieň. Hĺbku im dáva svetlo a geometria, nie farbenie. */
-            const C_WEB = shade(zinok, -0.14);      // stojina
-            const C_HORE = shade(zinok, 0.10);      // horná pásnica
-            const C_DOLE = shade(zinok, -0.06);     // spodná pásnica
-            const C_DUTINA = shade(zinok, -0.26);   // vnútro profilu
+            /* Všetky pozinkované diely majú jednu a tú istú farbu — obvodový
+               rám, väznice, uholníky aj skrutky sú z toho istého plechu.
+               Rozdiel medzi lícami robí svetlo (litFill podľa normály), nie
+               farbenie. Inú farbu smie mať len podhľad trapézu, lebo to je
+               iný materiál. */
+            const C_WEB = zinok, C_HORE = zinok, C_DOLE = zinok, C_DUTINA = zinok;
             const cRun = (axis, outer, dir, a, b) => {
               const put = (u0, u1, z, dz, hex) => {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, hex, [], SHAFT);
@@ -2929,10 +2928,8 @@
             /* --- spojovací kov. V exporte je 24 kusov spojok: v rohoch, kde
                sa stretá bočný a čelný C profil, a na koncoch väzníc. Sú vo
                farbe C profilov, lebo sú z toho istého pozinku. --- */
-            const spojHex = shade(zinok, -0.34);
-            /* Skrutky sú z toho istého pozinku ako C profily — strieborné,
-               len o odtieň hlbšie, aby na profile boli vidieť. */
-            const skrutHex = shade(zinok, -0.14);
+            const spojHex = zinok;
+            const skrutHex = zinok;
             /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
                položený na líci dielu, nie ako guľa; v tejto mierke je to
                presne to, čo je na spoji vidieť. */
@@ -2944,8 +2941,8 @@
                skrutky — štyri na uholník. Na každom konci väznice sú dva, po
                jednom na každej strane dvojice C profilov. */
             const UHOL_T = REF.uholT || 10;      // hrúbka plechu
-            const UHOL_L = REF.uholL || 170;     // dĺžka ramena
-            const UHOL_H = REF.uholH || 70;      // výška uholníka
+            const UHOL_L = REF.uholL || 95;      // dĺžka ramena
+            const UHOL_H = REF.uholH || 150;     // výška uholníka
             /* Uholník sedí presne v strede výšky profilu, na ktorý je
                priskrutkovaný — väznica má svoj stred inde než obvodový rám. */
             const zVaz = ramTop - VAZ_H / 2;     // stred priečnej väznice
@@ -2958,16 +2955,14 @@
               const bx0 = Math.min(px, px + sx * UHOL_L);
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_L, UHOL_T, UHOL_H, spojHex, [], SHAFT);
-              // dve skrutky do väznice (líce kolmé na hĺbku)
+              /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
+              const roz = UHOL_H * 0.26;
+              const stredR = py + sy * UHOL_L * 0.55;
               const xLic = px + sx * UHOL_T;
-              [0.36, 0.78].forEach((t) => {
-                skrutka(xLic, py + sy * UHOL_L * t, zc, 'x', 9, sx);
-              });
-              // dve skrutky do obvodového rámu (líce kolmé na šírku)
+              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 9, sx));
+              const stredO = px + sx * UHOL_L * 0.55;
               const yLic = py + sy * UHOL_T;
-              [0.36, 0.78].forEach((t) => {
-                skrutka(px + sx * UHOL_L * t, yLic, zc, 'y', 9, sy);
-              });
+              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 9, sy));
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -2989,7 +2984,7 @@
                 const wx = sd < 0 ? os - vweb : os;                    // stojina pri strede
                 const fx = sd < 0 ? os - VAZ_W : os;                   // pásnice smerom von
                 boxFaces(wx, inY0, ramTop - VAZ_H, vweb, inY1 - inY0, VAZ_H,
-                         C_WEB, ['-y', '+y'], SHAFT);
+                         C_WEB, ['-y', '+y'], SHAFT);   // tá istá farba ako rám
                 boxFaces(fx, inY0, ramTop - vfl, VAZ_W, inY1 - inY0, vfl,
                          C_HORE, ['-y', '+y'], SHAFT);
                 boxFaces(fx, inY0, ramTop - VAZ_H, VAZ_W, inY1 - inY0, vfl,
@@ -3001,7 +2996,7 @@
               // tá istá škára zdola aj medzi dvojicou väzníc
               quad([[os - 3, inY0, ramTop - VAZ_H], [os + 3, inY0, ramTop - VAZ_H],
                     [os + 3, inY1, ramTop - VAZ_H], [os - 3, inY1, ramTop - VAZ_H]],
-                   shade(zinok, -0.46), { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
+                   'rgba(18,20,22,.34)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, bias: ON_SKIN });
               /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
               const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
               for (let i = 0; i <= stanic; i++) {
@@ -3116,9 +3111,12 @@
               const zvodVon = 22;                     // odstup od líca stĺpa
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
-              /* Zvod stojí pri rohovom stĺpe na odkvapovej hrane, v osi
-                 stĺpa — tak, ako je na fotkách realizácií. */
-              const yZvod = Math.max(LEM_T + rz + 10, postW() / 2);
+              /* Zvod stojí pri rohovom stĺpe na odkvapovej hrane. Nesmie byť
+                 presne v jeho osi: pri pohľade zboku by sa celý schoval za
+                 stĺp a z niektorých uhlov by zmizol. Sedí o kus dovnútra, tak
+                 aby z neho aj v bočnom pohľade ostal kus mimo obrysu stĺpa —
+                 a stále pod žľabom. */
+              const yZvod = RAM_PAR + 18;
               const tuba = (pts, r, hex) => {
                 const M = 24;
                 for (let s = 0; s < pts.length - 1; s++) {
