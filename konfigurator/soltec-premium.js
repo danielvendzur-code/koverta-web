@@ -3335,7 +3335,7 @@
               /* Zdola je vlna obrátená — hrebeň je dutina, takže tam je tieň
                  a v drážke naopak svetlo. Na realizáciách je zdola sotva
                  znateľná, preto je tento kontrast ešte menší. */
-              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.075)');
+              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.05)');
             }
             /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
                k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
