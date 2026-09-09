@@ -3320,20 +3320,16 @@
               const bx0 = Math.min(px, px + sx * UHOL_LX);
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
-              /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
-              /* Na rendri sú v ramene štyri skrutky v štvorci, nie dve nad
-                 sebou. */
+              /* Dve skrutky na každom ramene, nad sebou — spolu štyri
+                 na uholník. Poloha po dĺžke ramena je v jeho strede; žiadny
+                 nový technický rozmer sa tým nezavádza. */
               const roz = UHOL_H * 0.26;
               const xLic = px + sx * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const r = py + sy * UHOL_LY * t;
-                [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
-              });
+              const r = py + sy * UHOL_LY * 0.5;
+              [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
               const yLic = py + sy * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const o = px + sx * UHOL_LX * t;
-                [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
-              });
+              const o = px + sx * UHOL_LX * 0.5;
+              [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
