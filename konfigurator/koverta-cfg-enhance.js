@@ -434,6 +434,23 @@
     });
   }
 
+  function wireKovertaSnapshotSemantics() {
+    if (!isKovertaPage() || !window.SP_TEST || typeof window.SP_TEST.snapshot !== 'function') return;
+    if (window.SP_TEST.kvPricingWrapped) return;
+    var baseSnapshot = window.SP_TEST.snapshot;
+    window.SP_TEST.snapshot = function () {
+      var snap = baseSnapshot();
+      if (!snap || snap.page !== 'koverta' || !snap.price || !snap.price.open) return snap;
+      var subtotal = snap.price.total;
+      snap.price = Object.assign({}, snap.price, {
+        catalogueSubtotal: subtotal,
+        total: null
+      });
+      return snap;
+    };
+    window.SP_TEST.kvPricingWrapped = true;
+  }
+
   function wireReset() {
     if (!isKovertaPage()) return;
     var root = document.querySelector(ROOT_SEL);
@@ -452,6 +469,7 @@
 
   function wireKovertaPricing() {
     if (!isKovertaPage()) return;
+    wireKovertaSnapshotSemantics();
     wireReset();
     syncPlacementQuoteState();
   }
