@@ -156,3 +156,51 @@ jobs:
           name: agent-02-focused-render-qa
           path: qa-artifacts
           if-no-files-found: error
+
+
+  agent01-render-compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Load current Agent 01 renderer without merging
+        run: |
+          git fetch --no-tags origin agent/01-koverta-visual
+          AGENT01_SHA="$(git rev-parse FETCH_HEAD)"
+          echo "AGENT01_SHA=$AGENT01_SHA" | tee -a "$GITHUB_ENV"
+          git show "$AGENT01_SHA:konfigurator/soltec-premium.js" > konfigurator/soltec-premium.js
+          echo "Testing Agent 01 renderer $AGENT01_SHA against Agent 02 QA only; repository branch is not modified."
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8901/konfigurator/?page=koverta >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+      - name: Run Agent 01 render regressions
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          echo "AGENT01_SHA=$AGENT01_SHA"
+          node konfigurator/test/prekrytie.js
+          node konfigurator/test/strecha-nepresvita.js
+          node konfigurator/test/stlpy-vidno.js
+          node konfigurator/test/plynulost.js
+          node coordination/koverta/02-focused-render-qa.js
+      - name: Upload Agent 01 compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-02-agent01-render-compatibility
+          path: qa-artifacts
+          if-no-files-found: ignore
