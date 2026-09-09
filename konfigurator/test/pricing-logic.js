@@ -6,7 +6,12 @@ function assert(condition, message) {
 
 async function waitRender(page) {
   await page.waitForTimeout(180);
-  await page.locator('[data-sp-total]').waitFor({ state: 'visible' });
+  const total = page.locator('#SoltecPremium [data-sp-total]').first();
+  await total.waitFor({ state: 'attached' });
+  await page.waitForFunction(() => {
+    const el = document.querySelector('#SoltecPremium [data-sp-total]');
+    return !!el && !!(el.textContent || '').trim() && (el.textContent || '').trim() !== '—';
+  });
 }
 
 (async () => {
