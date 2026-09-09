@@ -80,9 +80,12 @@ prove bolt grade, anchor selection or plate thickness.
 The renderer still contains visual simplifications: the side fascia uses
 190 mm instead of the measured 240 mm; upper fascia thickness is 6 mm; roof
 surfaces are simplified; head plates, fastener details and wall panels are not
-all independently measured. The Koverta upper-fascia SVG edge uses a local
-1.5 px same-colour stroke to make the opaque fascia own its subpixel raster
-seam over the roof sheet; this is render coverage, not a millimetre dimension. Earlier comments described some of these as
+all independently measured. At grazing views the BSP can split the long roof
+and fascia planes so a roof fragment would otherwise paint after the fascia.
+For Koverta only, and only while the camera is above the roof, the already
+higher upper-fascia top surface is painted after those fragments. This is an
+occlusion-order correction; it does not change millimetre geometry or test
+measurement points. Earlier comments described some of these as
 manufacturer-confirmed or fully measured without a traceable source. Do not
 repeat those claims. The complete 7 × 5.2 m scene also has 240 mm end fascia,
 so the 7 × 6 m fascia values cannot be applied universally as certified values.

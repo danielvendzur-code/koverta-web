@@ -1785,7 +1785,7 @@
               /* arris:false keeps the stroke but paints it in the face's own
                  colour, so members merge into one surface without a gap */
               edgeCol: o.edge === false ? null : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
-              edgeWidth: Number.isFinite(o.edgeWidth) ? o.edgeWidth : 0.7,
+              kvFasciaTop: o.kvFasciaTop === true,
               fit: o.fit !== false,
               /* Priesvitná plocha sa nesmie obťahovať: keď ju maliarske
                  triedenie rozdelí, obrysy susedných kusov sa na spoji sčítajú
@@ -2001,10 +2001,10 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, edgeWidth) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, kvFasciaTop) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
-            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, { normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0, edgeWidth }); };
+            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, { normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0, kvFasciaTop: kvFasciaTop === true && key === '+z' }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
             put('-y', [[x,y,z],[X,y,z],[X,y,Z],[x,y,Z]], [0,-1,0]);
@@ -3019,8 +3019,9 @@
             web([[ix1,iy0,B(ix1)],[ix1,iy0,T(ix1)],[ix1,iy1,T(ix1)],[ix1,iy1,B(ix1)]], [-1,0,0]);
           };
           /* ==================================================== strecha Koverta
-             Rozmery sú odmerané priamo z modelu Koverta v Expivi (katalóg
-             13412, prístrešok 6 × 6 m), nie odhadnuté:
+             Nižšie sú historické referenčné rozmery z archivovaných Expivi
+             mesh podkladov. Nie sú univerzálnou špecifikáciou pre všetky
+             katalógové varianty; presné aktívne scény majú prednosť:
 
                lemovací plech   240 mm dovnútra × 254 mm nadol, plech ~1,5 mm,
                                 dole zahnutý späť o 16 mm — otočené L
@@ -3033,9 +3034,11 @@
              škáru. Na odkvapovej strane stojí ešte ďalej, aby sa zaň zmestil
              žľab — inde je odsadenie rovnaké. */
           const drawKovertaRoof = () => {
-            /* Referenčný prístrešok. Všetky rozmery sú odmerané z jedného
-               Expivi exportu — katalóg 13670, „Pristresok 4.0 x 6.0", jeho
-               štvorstĺpová varianta. Model má hore Z, v pôdoryse 4 000 ×
+            /* Historický referenčný mesh z katalógu 13670, „Pristresok
+               4.0 x 6.0". Je to variantná mesh rodina, nie dôkaz jednej
+               aktívnej skladby pre celý katalóg. Presné aktívne osi a prierezy
+               pre 7000 × 5200 a 7000 × 6000 prepisuje kvBySize. Model má hore
+               Z, v pôdoryse 4 000 ×
                6 000 mm; tu je hĺbka na osi x a šírka na osi y, odkvapová
                hrana na x = L. Odmerané (v mm od vonkajšieho obrysu):
 
@@ -3093,17 +3096,15 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz, edgeWidth) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, edgeWidth);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, edgeWidth);
+              const put = (u0, u1, z, dz, kvFasciaTop) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, kvFasciaTop);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, kvFasciaTop);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
-              /* Expivi má strešný plech pod nepriehľadným horným ramenom.
-                 V natívnom 1× SVG rastri leží ich spoločná hrana medzi pixelmi;
-                 0,7 px obrys preto pri plochom pohľade prenechal susedný pixel
-                 streche. 1,5 px je rasterové krytie tej istej hrany, nie zmena
-                 milimetrovej geometrie ani meracích bodov testu. */
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, 1.5);   // horné rameno
+              /* Horné rameno je fyzicky nad strešným plechom. Označí sa iba
+                 jeho horná plocha, aby pri pohľade zhora vyhrala spoločný
+                 projekčný prekryv nad plechom aj po rozdelení BSP stromom. */
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -4120,14 +4121,25 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
+          let paintOrder = bspPaintOrder(podklad).concat(bspPaintOrder(stavba));
+          /* V Koverta modeli je horné rameno lemovania o 2 mm nad vrchom
+             trapézu. Pri veľmi plochom pohľade BSP rozdelí obe dlhé plochy a
+             niektoré fragmenty strechy skončia v poradí neskôr. Keď je kamera
+             nad strechou, horná plocha lemovania musí byť posledná z tejto
+             dvojice. Toto nemení geometriu ani Soltec a pri pohľade zdola sa
+             poradie nijako neprepisuje. */
+          if (fromAbove && model().roofKit === 'koverta') {
+            const fasciaTop = paintOrder.filter((f) => f.kvFasciaTop);
+            if (fasciaTop.length) paintOrder = paintOrder.filter((f) => !f.kvFasciaTop).concat(fasciaTop);
+          }
+          paintOrder.forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
                background between them. Stroking each face in its own colour
                closes it; the corner still reads, because the two sides are
                genuinely lit differently. */
-            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = String(f.edgeWidth); a['stroke-linejoin'] = 'round'; }
+            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
             if (f.seamless) a['shape-rendering'] = 'crispEdges';
             g.appendChild(svgEl('polygon', a));
           });
