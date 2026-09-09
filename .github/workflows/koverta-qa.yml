@@ -32,7 +32,7 @@ jobs:
           # is unrelated to Playwright Chromium dependencies and can transiently
           # return a Hash Sum mismatch; keep the QA deterministic by excluding
           # only that source before Playwright runs apt-get.
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start static server
