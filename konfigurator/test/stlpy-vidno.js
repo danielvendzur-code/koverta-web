@@ -27,12 +27,30 @@ const { chromium } = require(PLAYWRIGHT);
     for (const [W, L] of [[2500,5200],[4000,6000],[6200,6000],[6600,6000],[7000,6000]]) {
       set('[data-sp-w]', W); set('[data-sp-l]', L);
       await new Promise(r => setTimeout(r, 150));
+      /* Rady stĺpov aj ich prierezy dá tá istá osnova, akú kreslí engine —
+         čelné rámy majú os 52 a 196 mm od hrán strechy, väznice delia
+         rozpätie medzi nimi na rovnaké polia a stĺpy stoja pod osami tej
+         istej osnovy. Krajný stĺp je štvorec, stredný má hlbší prierez. */
       const band = geom.find(g => W <= g.max) || geom[geom.length-1];
-      const rows = band.poDlzke[String(L)].rows;
-      const pd = band.postD, pw = band.postW, vsun = bio.models.K.postInset;
+      const R = bio.models.K.kvRef, vsun = bio.models.K.postInset;
+      const zad = R.ramZad + R.ramW / 2, odk = L - R.ramOdkvap - R.ramW / 2;
+      const nv = band.vaznicPole > 0
+        ? Math.max(1, Math.ceil((odk - zad) / band.vaznicPole) - 1)
+        : Math.max(1, band.vaznic);
+      const pole = (odk - zad) / (nv + 1);
+      const vaz = []; for (let k = 1; k <= nv; k++) vaz.push(zad + pole * k);
+      const n = Math.max(2, band.postsPerSide);
+      const osi = [zad];
+      for (let k = 1; k < n - 1; k++) osi.push(vaz[Math.round(((vaz.length - 1) * k) / (n - 1))]);
+      osi.push(odk);
       const body = [];
-      for (const r of rows) for (const [y, n] of [[vsun + pw/2, 'y0'], [W - vsun - pw/2, 'yW']])
-        for (const z of [500, 1200, 2000]) body.push([r + pd/2, y, z, `rad ${r} ${n} z${z}`]);
+      osi.forEach((os, i) => {
+        const roh = i === 0 || i === osi.length - 1;
+        const pd = roh ? R.postD : R.stredD, pw = roh ? R.postW : R.stredW;
+        const x = Math.min(Math.max(os, pd / 2), L - pd / 2);
+        for (const [y, nm] of [[vsun + pw/2, 'y0'], [W - vsun - pw/2, 'yW']])
+          for (const z of [500, 1200, 2000]) body.push([x, y, z, `rad ${Math.round(os)} ${nm} z${z}`]);
+      });
       for (let ai = 0; ai < 8; ai++) {
         const az = -Math.PI + (ai * Math.PI * 2) / 8;
         for (const el of [0.10, 0.42]) {
