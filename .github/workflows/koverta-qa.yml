@@ -28,6 +28,11 @@ jobs:
           node-version: 22
       - name: Install Playwright
         run: |
+          # The GitHub runner already contains Chrome. Its external APT source
+          # is unrelated to Playwright Chromium dependencies and can transiently
+          # return a Hash Sum mismatch; keep the QA deterministic by excluding
+          # only that source before Playwright runs apt-get.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start static server
