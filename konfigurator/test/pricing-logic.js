@@ -263,8 +263,10 @@ async function waitRender(page) {
     assert(customPayload.body.includes('5\u00a0700 mm') || customPayload.body.includes('5 700 mm'),
       'Custom payload lost requested depth');
     assert(customPayload.body.includes('QA atypický rozmer'), 'Custom payload lost note');
-    assert(customPayload.body.includes('Najbližšia katalógová zostava použitá ako referencia'),
+    assert(customPayload.body.includes('Najbližšia katalógová zostava použitá iba ako cenová referencia'),
       'Custom payload does not distinguish requested and catalogue dimensions');
+    assert(customPayload.body.includes('Konfigurátor nepotvrdzuje jeho realizovateľnosť ani cenu'),
+      'Outside-catalogue request incorrectly implies technical feasibility or a valid catalogue price');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
     console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, RAL/side options, gutter state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
