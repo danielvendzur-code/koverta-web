@@ -120,6 +120,60 @@ function assert(condition, message) {
     assert(mob.heroRating && mob.heroRating.display !== 'none' && mob.heroRating.width > 120, 'Mobile hero rating is missing');
     await mobile.close();
 
+    // Product-page regression: all category heroes must keep the same layout,
+    // stay within the viewport and preserve at least one clear enquiry action.
+    const productCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await installAnalyticsStubs(productCtx);
+    const pp = await productCtx.newPage();
+    pp.on('pageerror', e => errors.push('product pageerror: ' + e.message));
+    pp.on('console', msg => { if (msg.type() === 'error') errors.push('product console: ' + msg.text()); });
+    const productPages = [
+      ['pristresky-pre-auta/', 'auto'],
+      ['zahradne-pristresky/', 'garden'],
+      ['carport-soltec/', 'carport'],
+      ['pevne-prestresenia/', 'canopy'],
+      ['bioklimaticke-pergoly/', 'bio'],
+      ['tienenie/', 'shade'],
+      ['outdoor-kuchyne/', 'kitchen']
+    ];
+    for (const [path, key] of productPages) {
+      await pp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
+      await dismissConsent(pp);
+      await pp.waitForTimeout(450);
+      const metrics = await pp.evaluate(() => {
+        const hero = document.querySelector('.kh-hero');
+        const h1 = hero && hero.querySelector('h1');
+        const crumbs = hero && hero.querySelector('.kh-crumbs');
+        const actions = hero ? [...hero.querySelectorAll('.kh-hero__actions a')] : [];
+        const bg = hero && hero.querySelector('.kh-hero__bg img, .kh-hero__bg video');
+        return {
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          hero: hero && hero.getBoundingClientRect().height,
+          h1: h1 && h1.textContent.replace(/\\s+/g, ' ').trim(),
+          crumbsBeforeH1: Boolean(crumbs && h1 && (crumbs.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          actions: actions.length,
+          background: Boolean(bg),
+          bodyText: document.body.innerText
+        };
+      });
+      console.log('PRODUCT_METRICS ' + key + ' ' + JSON.stringify(metrics));
+      assert(metrics.overflow <= 4, key + ' page has horizontal overflow: ' + metrics.overflow);
+      assert(metrics.hero && metrics.hero > 420, key + ' hero is missing/collapsed');
+      assert(metrics.h1 && metrics.h1.length > 12, key + ' hero heading is missing');
+      assert(metrics.crumbsBeforeH1, key + ' breadcrumb is not placed before the hero heading');
+      assert(metrics.actions >= 1, key + ' hero has no enquiry action');
+      assert(metrics.background, key + ' hero media is missing');
+      if (key === 'garden') {
+        assert(/do 8 m/i.test(metrics.bodyText), 'Garden page does not expose the verified 8 m catalogue width');
+        assert(!/Vydrží lamelová strecha sneh\?|Ako sa pergola čistí\?/i.test(metrics.bodyText),
+          'Garden page still contains stale pergola/lamella FAQ wording');
+      }
+      if (key === 'auto' || key === 'garden') {
+        await pp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-hero.png' });
+      }
+    }
+    await productCtx.close();
+
     const cfgCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(cfgCtx);
     const cp = await cfgCtx.newPage();
