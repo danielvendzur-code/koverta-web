@@ -3172,7 +3172,7 @@
               if (spara) {
                 const m = par / 2, sw = 3;
                 const q = [P(m - sw, 0, u0), P(m + sw, 0, u0), P(m + sw, 0, u1), P(m - sw, 0, u1)];
-                quad(q, 'rgba(10,12,14,.45)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+                quad(q, 'rgba(10,12,14,.16)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
               }
             };
             /* Bočný rám končí 2 mm pred lícom čelného — kým jeho čelo dosadalo
@@ -3240,13 +3240,19 @@
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
               /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
+              /* Na rendri sú v ramene štyri skrutky v štvorci, nie dve nad
+                 sebou. */
               const roz = UHOL_H * 0.26;
-              const stredR = py + sy * UHOL_LY * 0.55;
               const xLic = px + sx * UHOL_T;
-              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 8, sx));
-              const stredO = px + sx * UHOL_LX * 0.55;
+              [0.34, 0.72].forEach((t) => {
+                const r = py + sy * UHOL_LY * t;
+                [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
+              });
               const yLic = py + sy * UHOL_T;
-              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 8, sy));
+              [0.34, 0.72].forEach((t) => {
+                const o = px + sx * UHOL_LX * t;
+                [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
+              });
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -3267,16 +3273,9 @@
                  má zdola vidieť, obvodový rám nie. */
               if (!nadStrechou)
                 cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);
-              /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
-              const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
-              for (let i = 0; i <= stanic; i++) {
-                const y = inY0 + 40 + ((inY1 - inY0 - 80) * i) / stanic;
-                [-1, 1].forEach((sd) => {
-                  const x = os + sd * (VAZ_W + 1);
-                  skrutka(x, y, ramTop - 40, 'x', 0, sd);
-                  skrutka(x, y, ramTop - VAZ_H + 40, 'x', 0, sd);
-                });
-              }
+              /* Po dĺžke väznice žiadne skrutky nie sú — na oficiálnych
+                 rendroch aj na fotkách realizácií sú len na spojkách na jej
+                 koncoch. Rad skrutiek cez celý podhľad tam nepatrí. */
             });
             /* Koniec každej väznice: dva uholníky, po jednom na každej strane
                dvojice C profilov — teda štyri na väznicu. */
@@ -3384,7 +3383,7 @@
               /* Zdola je vlna obrátená — hrebeň je dutina, takže tam je tieň
                  a v drážke naopak svetlo. Na realizáciách je zdola sotva
                  znateľná, preto je tento kontrast ešte menší. */
-              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.05)');
+              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.035)');
             }
             /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
                k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
