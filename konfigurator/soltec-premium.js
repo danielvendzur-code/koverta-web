@@ -3378,11 +3378,17 @@
              [rx1 - RAM_W / 2, ry0 + RAM_W / 2], [rx1 - RAM_W / 2, ry1 - RAM_W / 2]]
               .forEach((c) => skrutka(c[0], c[1], ramBot, 'z', 10));
 
-            /* --- trapéz: vlna po šírke, spodok sivý (izolačná rohož). Plech
-               siaha pod lemovanie na oboch čelách, takže zhora nikde nezostane
-               diera — ani tam, kde je pod ním žľab. */
+            /* --- trapéz: vlna po šírke. Plech siaha pod lemovanie na oboch
+               čelách, takže zhora nikde nezostane diera — ani tam, kde je pod
+               ním žľab. Voliteľná izolácia mení iba priamo viazané spodné
+               líce; jej technická hrúbka sa bez výrobného podkladu nemodeluje. */
             const tx0 = TRAP_ZAD, tx1 = L - TRAP_ODK;
-            const spodHex = model().trapezSoffitHex || '#8f9295';
+            /* Izolácia je voliteľná výbava. V 3D ju nepredstierame ako
+               samostatnú hrubú dosku s vymyslenou technickou hrúbkou:
+               zobrazuje sa ako priamo nalepená vrstva na spodnom líci
+               trapézového plechu, takže nemôže levitovať ani križovať väznice. */
+            const maIzolaciu = Boolean(state.extras['kv-izol']);
+            const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#8f9295');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -3503,6 +3509,41 @@
                    'rgba(18,22,26,.16)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
             }
 
+            /* --- lineárne LED osvetlenie -------------------------------
+               Realizačné fotografie ukazujú lineárny profil priamo pod
+               obvodovým rámom. Profil sa preto kotví na spodné líce rámu a
+               každý render sa počíta z aktuálnych rx/ry osí; žiadna svetelná
+               lišta nemá pevnú svetovú súradnicu. Elektro vedenie v stĺpe je
+               skryté a v 3D sa nekreslí. Rozmery profilu sú iba vizuálne
+               proporcie hostiteľského rámu, nie výrobné milimetre. */
+            if (Boolean(state.extras['kv-led']) && !nadStrechou) {
+              const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
+              const ledT = Math.max(4, Math.min(8, RAM_H * 0.03));
+              const diffT = Math.max(1.2, ledT * 0.22);
+              const ledZ = ramBot - ledT;
+              const ledProfile = shade(zinok, -0.18);
+              const ledLight = '#f5e8c5';
+              const ledRun = (x, y, dx, dy) => {
+                if (dx <= ledW || dy <= ledW) return;
+                boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
+                const ix = dx > dy ? ledW * 0.18 : 0;
+                const iy = dy > dx ? ledW * 0.18 : 0;
+                boxFaces(x + ix, y + iy, ledZ - diffT,
+                         Math.max(1, dx - ix * 2), Math.max(1, dy - iy * 2),
+                         diffT, ledLight, [], SHAFT);
+              };
+              const xA = RAM_ZAD + RAM_PAR;
+              const xB = rx1 - RAM_PAR;
+              const yA = ry0;
+              const yB = ry1;
+              const sideLen = Math.max(0, xB - xA);
+              const endLen = Math.max(0, yB - yA);
+              ledRun(xA, RAM_VSUN + RAM_PAR / 2 - ledW / 2, sideLen, ledW);
+              ledRun(xA, W - RAM_VSUN - RAM_PAR / 2 - ledW / 2, sideLen, ledW);
+              ledRun(RAM_ZAD + RAM_PAR / 2 - ledW / 2, yA, ledW, endLen);
+              ledRun(rx1 - RAM_PAR / 2 - ledW / 2, yA, ledW, endLen);
+            }
+
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
                a žľab visí presne v tej kapse, hore pod lemovaním. Preto ho
                zboku nevidno — bočné lemovanie ide cez celú hĺbku a zakryje
@@ -3517,31 +3558,55 @@
                  Zavesený polkruhový žľab na hákoch, ktorý tu bol predtým,
                  na žiadnej fotke Koverty nie je. */
               const zlHex = shade(frame, -0.06);
-              const ZL_T = 6;                         // plech žľabu
-              const zlX0 = L - RAM_ODK + 8;           // pri líci čelného rámu
-              const zlX1 = L - LEM_T - LEM_LIP - 6;   // pred zvislým ramenom lemovania
-              const zlBot = zBot + 6;                 // dno ostáva nad spodnou hranou lemovania
-              const zlTop = Math.min(zlBot + 132, ramTop - 10);
+              const zlX0 = L - RAM_ODK + Math.max(5, RAM_W * 0.10);
+              const zlX1 = L - LEM_T - LEM_LIP - Math.max(4, RAM_W * 0.08);
+              const zlSpan = zlX1 - zlX0;
+              const zlWall = Math.max(3, Math.min(7, zlSpan * 0.045));
+              const zlBot = zBot + Math.max(5, Math.min(12, RAM_H * 0.04));
+              const zlRise = Math.max(48, Math.min(128, zlSpan * 0.78));
+              const zlTop = Math.min(zlBot + zlRise, ramTop - Math.max(8, RAM_H * 0.04));
               const zlY0 = LEM_T, zlY1 = W - LEM_T;
-              if (zlX1 > zlX0 + 30) {
-                // dno
-                boxFaces(zlX0, zlY0, zlBot, zlX1 - zlX0, zlY1 - zlY0, ZL_T, zlHex, [], SHAFT);
-                // vnútorná a vonkajšia stena
-                boxFaces(zlX0, zlY0, zlBot, ZL_T, zlY1 - zlY0, zlTop - zlBot, zlHex, [], SHAFT);
-                boxFaces(zlX1 - ZL_T, zlY0, zlBot, ZL_T, zlY1 - zlY0, zlTop - zlBot, zlHex, [], SHAFT);
-                /* Vnútro žľabu je tieň — bez neho by kapsa zdola vyzerala
-                   ako plná doska a nie ako otvorený žľab. */
-                quad([[zlX0 + ZL_T, zlY0, zlBot + ZL_T], [zlX1 - ZL_T, zlY0, zlBot + ZL_T],
-                      [zlX1 - ZL_T, zlY1, zlBot + ZL_T], [zlX0 + ZL_T, zlY1, zlBot + ZL_T]],
-                     shade(zlHex, -0.34), { normal: [0, 0, 1], cull: false, arris: false });
+              const zlMid = (zlX0 + zlX1) / 2;
+              if (zlSpan > 36 && zlTop > zlBot + 24) {
+                /* Otvorený žľab je jeden súvislý plech s oblým/fazetovaným
+                   dnom, nie tri hranaté kvádre. Konkrétny výrobný prierez nie
+                   je z dostupných podkladov potvrdený, preto sa proporcie
+                   odvádzajú iba od priestoru medzi rámom a lemovaním. */
+                const h = zlTop - zlBot;
+                const section = [
+                  [zlX0 + zlWall, zlTop],
+                  [zlX0 + zlWall, zlBot + h * 0.48],
+                  [zlX0 + zlSpan * 0.18, zlBot + h * 0.15],
+                  [zlMid, zlBot],
+                  [zlX1 - zlSpan * 0.18, zlBot + h * 0.15],
+                  [zlX1 - zlWall, zlBot + h * 0.48],
+                  [zlX1 - zlWall, zlTop]
+                ];
+                for (let i = 0; i < section.length - 1; i++) {
+                  const A = section[i], B = section[i + 1];
+                  quad([[A[0], zlY0, A[1]], [A[0], zlY1, A[1]],
+                        [B[0], zlY1, B[1]], [B[0], zlY0, B[1]]],
+                       zlHex, { cull: false, arris: false });
+                }
+                /* Uzavreté čelá žľabu. Zvod je napojený otvorom v dne, nie
+                   tým, že by sa rúra iba dotýkala konca žľabu. */
+                quad(section.map(p => [p[0], zlY0, p[1]]),
+                     shade(zlHex, -0.08), { normal: [0, -1, 0], cull: false, arris: false });
+                quad(section.slice().reverse().map(p => [p[0], zlY1, p[1]]),
+                     shade(zlHex, -0.08), { normal: [0, 1, 0], cull: false, arris: false });
+                const lip = Math.max(4, Math.min(10, zlSpan * 0.06));
+                boxFaces(zlX0 + zlWall, zlY0, zlTop - zlWall,
+                         lip, zlY1 - zlY0, zlWall, zlHex, [], SHAFT);
+                boxFaces(zlX1 - zlWall - lip, zlY0, zlTop - zlWall,
+                         lip, zlY1 - zlY0, zlWall, zlHex, [], SHAFT);
               }
 
               /* --- zvod ------------------------------------------------- */
-              /* Priemer odmeraný z oficiálneho rendru: šikmý úsek zvodu má na
-                 obrázku 11,3 px kolmo a stĺp vedľa neho 26 px na 150 mm, čo
-                 dáva 65 mm. Kreslí sa 70 — o pixel hrubšie ako meranie, lebo
-                 tenšia rúra sa pri stĺpe stráca. */
-              const rz = 35;                          // rúra Ø 70
+              /* Prierez zvodu nie je v dostupných podkladoch technicky
+                 kótovaný. Pre vizualizáciu sa preto odvodí od prierezu
+                 rohového stĺpa a zostáva v konzervatívnom rozsahu; nejde o
+                 tvrdenie výrobného rozmeru. */
+              const rz = Math.max(22, Math.min(38, Math.min(postW(), postD()) * 0.22));
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
@@ -3629,22 +3694,21 @@
                 }
               };
               const zvodHex = frame;
-              /* Rúra sa dotýka odkvapového líca stĺpa, teda jej os je od toho
-                 líca vzdialená presne o polomer. Kým bola bližšie, prechádzala
-                 stĺpom; kým bola ďalej, visela vedľa neho ako samostatná tyč.
-                 Zmestiť sa musí aj za zvislé rameno lemovania. */
-              const xRura = Math.min(xLicStlp + rz + 8, L - LEM_T - rz - 4);
-              /* Výtok zo žľabu je pri jeho vonkajšej stene, teda o kus von od
-                 rúry — preto má zvod hore krátke koleno, ako na oficiálnom
-                 rendri. Kým výtok sedel presne nad rúrou, bol zvod celý zvislý
-                 a to koleno chýbalo. */
-              const xVytok = Math.max(xRura, Math.min(zlX1 - rz, L - LEM_T - rz - 4));
+              /* Zvod sa kotví k lícu aktuálneho rohového stĺpa. Osa rúry je
+                 od líca vzdialená o polomer plus malý montážny odstup pre
+                 objímku; tým sa pri zmene rozmeru nemôže dostať dovnútra
+                 stĺpa ani zostať na starej svetovej pozícii. */
+              const standoff = Math.max(4, rz * 0.14);
+              const xRura = xLicStlp + rz + standoff;
+              /* Výtok je v dne žľabu a krátke koleno ho privedie k rúre na
+                 stĺpe. Jeho poloha sa odvodzuje od aktuálneho prierezu žľabu. */
+              const xVytok = zlMid;
               /* Koleno klesne asi o sedem desatín toho, o čo sa rúra vráti
                  dnu — tak je to na oficiálnom rendri, kde stĺp stojí vyše
                  metra od odkvapu a šikmý úsek preto vidieť. */
               const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) * 0.7 + 60);
-              const zPata = 265;                      // spodok zvislej časti
-              const RP = 90;                          // polomer vyhnutej pätky
+              const zPata = Math.max(140, Math.min(320, H * 0.12));
+              const RP = Math.max(55, rz * 2.25);
 
               /* Celý zvod je jedna dráha — od výtoku pod lemovaním, kolenom
                  k licu stĺpa, po ňom dole a vyhnutou pätkou von. Kým to boli
@@ -3683,17 +3747,19 @@
                 out.push(body[body.length - 1]);
                 return out;
               };
-              const lom = [[xVytok, yZvod, zBot + 40]];
+              const lom = [[xVytok, yZvod, zlBot + Math.max(4, rz * 0.12)]];
               if (Math.abs(xVytok - xRura) > 2) {
-                lom.push([xVytok, yZvod, zBot - 26]);
+                lom.push([xVytok, yZvod, zBot - rz * 0.75]);
                 lom.push([xRura, yZvod, zKoleno]);
               }
               lom.push([xRura, yZvod, zPata]);
               lom.push([xRura + RP * 0.92, yZvod, zPata - RP * 0.62]);
               const draha = zaobli(lom, RP, 7);
               tuba(draha, rz, zvodHex);
-              // hrdlo: kúsok širšej rúry tam, kde zvod vychádza spod lemovania
-              tuba([[xVytok, yZvod, zBot + 24], [xVytok, yZvod, zBot - 30]], rz * 1.14,
+              /* Hrdlo prechádza priamo cez dno žľabu do prvého kolena.
+                 Horný bod je vo vnútri žľabu, takže spoj nemôže levitovať. */
+              tuba([[xVytok, yZvod, zlBot + Math.max(3, rz * 0.10)],
+                    [xVytok, yZvod, zBot - rz * 0.82]], rz * 1.10,
                    shade(zvodHex, -0.07), false);
 
               /* Príchytky. Na stavbe je to úzka objímka okolo rúry a pod ňou
