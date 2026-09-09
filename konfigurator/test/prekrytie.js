@@ -72,15 +72,22 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 150 && pixels[i] < 130 && pixels[i + 2] < 130) green++;
             if (green < 100) throw new Error('Positive control failed: contrasting roof is missing');
           }
-          let zlych = 0, prvy = null;
+          let zlych = 0, prvy = null, prvyPx = null, prvyRgb = null;
           for (const [x, y] of body) {
             const q = window.SP_TEST.project(x, y, zTop);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
             const d = s.g.getImageData(px, py, 1, 1).data;
-            if (d[1] > 150 && d[0] < 130 && d[2] < 130) { zlych++; if (!prvy) prvy = Math.round(x) + ',' + Math.round(y); }
+            if (d[1] > 150 && d[0] < 130 && d[2] < 130) {
+              zlych++;
+              if (!prvy) {
+                prvy = Math.round(x) + ',' + Math.round(y);
+                prvyPx = px + ',' + py;
+                prvyRgb = Array.from(d).join(',');
+              }
+            }
           }
-          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, svg: new XMLSerializer().serializeToString(svg) });
+          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, firstPx: prvyPx, firstRgb: prvyRgb, svg: new XMLSerializer().serializeToString(svg) });
         }
       }
     }
@@ -90,7 +97,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
   if (zle.length) {
     console.log('PLECH PREKRÝVA LEMOVANIE:');
     zle.slice(0, 30).forEach((r, i) => {
-      console.log(`  ${r.W}×${r.L} az=${r.az.toFixed(2)} el=${r.el}: ${r.count} bodov, prvý ${r.first}`);
+      console.log(`  ${r.W}×${r.L} az=${r.az.toFixed(2)} el=${r.el}: ${r.count} bodov, prvý ${r.first}, px ${r.firstPx}, rgba ${r.firstRgb}`);
       fs.writeFileSync(`qa-artifacts/overlap-${i}.svg`, r.svg);
     });
     const first = zle[0];
