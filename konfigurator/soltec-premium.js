@@ -3484,30 +3484,40 @@
               }
             }
 
-            /* Vrch používa tú istú fyzickú vlnu ako podhľad.
-               Koplanárne polopriehľadné pruhy sa pri mobilnom šikmom pohľade
-               rasterizovali ako bodkovaný/moiré vzor. Reálny facetovaný profil
-               vytvára svetlo a tieň z normály plochy, nie z namaľovanej
-               textúry. Viditeľná plocha ostáva zrezaná za vnútornou hranou
-               lemovania; rozdelenie po X dá BSP lokálne plochy bez
-               painter-order výnimky a bez zmeny world-space rozmerov. */
+            /* Horné líce ostáva pod lemovaním v jednej fyzickej rovine.
+               Skutočné horné facety sa pri grazing uhle dostali projekciou do
+               toho istého raster pixela ako tenké horné rameno lemovania,
+               hoci sa world-space nepretínali. Namiesto posúvania alebo
+               zväčšovania lemovania sa rovina rozdelí na malé koplanárne
+               dlaždice, čo dá BSP lokálne hĺbky bez painter-order výnimky.
+               Rebrovanie zhora je iba súvislé vizuálne tieňovanie; pásy sa
+               zámerne NESegmentujú po X, preto na mobile nevzniká bodkovaný
+               raster. Technické rozmery plechu tým ostávajú nedotknuté. */
             if (vx1 > vx0 && vy1 > vy0) {
               const TOP_TILES_X = 4;
-              const cuts = trapBreaks(vy0, vy1);
+              const TOP_TILES_Y = 4;
               for (let ix = 0; ix < TOP_TILES_X; ix++) {
                 const x0 = vx0 + (vx1 - vx0) * (ix / TOP_TILES_X);
                 const x1 = vx0 + (vx1 - vx0) * ((ix + 1) / TOP_TILES_X);
-                for (let i = 0; i < cuts.length - 1; i++) {
-                  const a = cuts[i], b = cuts[i + 1];
-                  const za = trapProfileZ(a), zb = trapProfileZ(b);
-                  const pts = [[x0, a, za], [x1, a, za], [x1, b, zb], [x0, b, zb]];
-                  quad(pts, vrchHex, {
-                    normal: faceNormal(pts),
-                    cull: true,
-                    edge: false,
-                    seamless: true
-                  });
+                for (let iy = 0; iy < TOP_TILES_Y; iy++) {
+                  const y0 = vy0 + (vy1 - vy0) * (iy / TOP_TILES_Y);
+                  const y1 = vy0 + (vy1 - vy0) * ((iy + 1) / TOP_TILES_Y);
+                  quad([[x0, y0, trapTop], [x1, y0, trapTop], [x1, y1, trapTop], [x0, y1, trapTop]],
+                       vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
                 }
+              }
+
+              const topBand = (y0, y1, hex) => {
+                const a = Math.max(y0, vy0), b = Math.min(y1, vy1);
+                if (b <= a) return;
+                quad([[vx0, a, trapTop], [vx1, a, trapTop], [vx1, b, trapTop], [vx0, b, trapTop]],
+                     hex, { normal: [0, 0, 1], raw: true, edge: false, fit: false });
+              };
+              const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
+              for (let k = 0; k < vlnPocet; k++) {
+                const va = ty1 - vlnRoztec * k;
+                topBand(va - 17, va + 17, 'rgba(255,255,255,.075)');
+                topBand(va + 17, va + 44, 'rgba(10,12,14,.085)');
               }
             }
 
