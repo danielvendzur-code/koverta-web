@@ -179,6 +179,79 @@ function anchorSignature(anchor) {
   });
 }
 
+function validateAccessoryContacts(snap, label) {
+  const geometry = snap.geometry;
+  const accessories = geometry && geometry.accessories;
+  assert(accessories, `${label}: missing Koverta accessory contact geometry`);
+  const assembly = accessories.assembly;
+
+  const insulation = accessories.insulation;
+  assert(insulation && insulation.enabled, `${label}: insulation contact data missing`);
+  assertClose(insulation.renderZ, insulation.hostBottomZ,
+    `${label}: insulation is not bonded to the trapezoid underside`);
+
+  const led = accessories.led;
+  assert(led && led.enabled, `${label}: LED contact data missing`);
+  assert(led.runs.length === 4,
+    `${label}: evidenced perimeter LED installation must render four connected frame runs`);
+  led.runs.forEach((run, i) => {
+    assertClose(run.profileTopZ, run.hostBottomZ,
+      `${label}: LED run ${i} does not touch its host frame underside`);
+    assert(run.x >= assembly.xMin - 0.01 && run.y >= assembly.yMin - 0.01 &&
+      run.x + run.dx <= assembly.xMax + 0.01 &&
+      run.y + run.dy <= assembly.yMax + 0.01,
+      `${label}: LED run ${i} escaped the current frame footprint`);
+  });
+
+  const gutter = accessories.gutter;
+  assert(gutter && gutter.enabled, `${label}: gutter contact data missing`);
+  assert(gutter.x0 >= gutter.pocket.xMin - 0.01 &&
+    gutter.x1 <= gutter.pocket.xMax + 0.01 &&
+    gutter.x1 > gutter.x0,
+    `${label}: gutter is outside the intended fascia pocket`);
+  assert(gutter.zBottom >= gutter.pocket.zMin - 0.01 &&
+    gutter.zTop <= gutter.pocket.zMax + 0.01 &&
+    gutter.zTop > gutter.zBottom,
+    `${label}: gutter vertical section escaped the fascia/frame pocket`);
+  assert(gutter.y0 >= assembly.yMin - 0.01 &&
+    gutter.y1 <= assembly.yMax + 0.01 && gutter.y1 > gutter.y0,
+    `${label}: gutter escaped the current roof width`);
+  assert(gutter.outletX > gutter.x0 && gutter.outletX < gutter.x1,
+    `${label}: gutter outlet is not inside the gutter section`);
+
+  const downpipe = accessories.downpipe;
+  assert(downpipe && downpipe.enabled, `${label}: downpipe contact data missing`);
+  assertClose(downpipe.start[0], downpipe.outlet[0],
+    `${label}: downpipe start is horizontally detached from the gutter outlet`);
+  assertClose(downpipe.start[1], downpipe.outlet[1],
+    `${label}: downpipe start is laterally detached from the gutter outlet`);
+  assert(downpipe.start[2] >= gutter.zBottom - 0.01 &&
+    downpipe.start[2] <= gutter.zTop + 0.01,
+    `${label}: downpipe throat does not start inside the gutter section`);
+  assertClose(downpipe.pipeCenter[1], (downpipe.post.y0 + downpipe.post.y1) / 2,
+    `${label}: downpipe no longer follows the active corner-post centreline`);
+  assertClose(downpipe.pipeCenter[0] - downpipe.radius,
+    downpipe.post.x1 + downpipe.standoff,
+    `${label}: downpipe shell/standoff is detached from the active corner-post face`);
+
+  const bounds = downpipe.pathBounds;
+  assert(bounds.xMin >= assembly.xMin - 0.01 &&
+    bounds.xMax <= assembly.xMax + 0.01 &&
+    bounds.yMin >= assembly.yMin - 0.01 &&
+    bounds.yMax <= assembly.yMax + 0.01 &&
+    bounds.zMin >= assembly.zMin - 0.01 &&
+    bounds.zMax <= assembly.zMax + 0.01,
+    `${label}: downpipe bounding box escaped the intended assembly after resize`);
+
+  assert(downpipe.clamps.length >= 2, `${label}: downpipe clamps are missing`);
+  downpipe.clamps.forEach((clamp, i) => {
+    assert(clamp.bridgeX0 <= clamp.postFaceX + 0.01 &&
+      clamp.bridgeX1 >= clamp.pipeNearX - 0.01,
+      `${label}: clamp ${i} does not physically bridge post and downpipe`);
+    assert(Number.isFinite(clamp.z), `${label}: clamp ${i} has invalid height`);
+  });
+}
+
 (async () => {
   fs.mkdirSync('qa-artifacts', { recursive: true });
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
@@ -315,6 +388,7 @@ function anchorSignature(anchor) {
         assert(snap.extras['kv-izol'] === 1 && snap.extras['kv-led'] === 1 && snap.picks.odkvap === 'ano',
           `${device}: accessory state was lost after resize`);
         SIDES.forEach(side => validateWallAnchor(snap, side, `${device}/${width}x${length}`));
+        validateAccessoryContacts(snap, `${device}/${width}x${length}`);
         await rotateAndValidate(page, device, `${width}x${length}/accessories`, 24);
         await page.locator('.sp-stage').screenshot({
           path: `qa-artifacts/koverta-accessories-${width}x${length}-${device}.png`
