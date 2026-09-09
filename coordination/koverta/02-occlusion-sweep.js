@@ -11,6 +11,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
 const SILHOUETTE_JUMP_LIMIT = 0.22;
 const POLYGON_JUMP_LIMIT = 0.45;
 const ROTATION_STEPS = 24;
+const REFINE_STEP_RADIANS = Math.PI / 36; // 5°, matching the calibrated mandatory plynulost test
 const ELEVATIONS = [-0.16, 0.10, 0.42, 0.80, 1.12];
 const CRITICAL_VIEWS = [
   { name: 'front', az: 0.82, el: 0.22 },
@@ -143,6 +144,79 @@ async function checkDeterministicRedraw(page) {
   });
 }
 
+async function refineCandidate(page, candidate) {
+  const span = candidate.az - candidate.azFrom;
+  const segments = Math.max(1, Math.ceil(Math.abs(span) / REFINE_STEP_RADIANS));
+  const samples = [];
+  let maxSilhouetteJump = 0;
+  let maxPolygonJump = 0;
+  let maxSilhouettePair = null;
+  let maxPolygonPair = null;
+
+  for (let i = 0; i <= segments; i += 1) {
+    const az = candidate.azFrom + (span * i) / segments;
+    const metrics = await renderMetrics(page, az, candidate.el);
+    samples.push({
+      az,
+      silhouetteArea: metrics.silhouetteArea,
+      polygonCount: metrics.polygonCount,
+      invalidPolygons: metrics.invalidPolygons
+    });
+
+    if (i > 0) {
+      const previous = samples[i - 1];
+      const silhouetteJump = Math.abs(metrics.silhouetteArea - previous.silhouetteArea) /
+        Math.max(1, metrics.silhouetteArea, previous.silhouetteArea);
+      const polygonJump = Math.abs(metrics.polygonCount - previous.polygonCount) /
+        Math.max(1, metrics.polygonCount, previous.polygonCount);
+
+      if (silhouetteJump > maxSilhouetteJump) {
+        maxSilhouetteJump = silhouetteJump;
+        maxSilhouettePair = [previous.az, az];
+      }
+      if (polygonJump > maxPolygonJump) {
+        maxPolygonJump = polygonJump;
+        maxPolygonPair = [previous.az, az];
+      }
+    }
+  }
+
+  return {
+    ...candidate,
+    segments,
+    samples,
+    maxSilhouetteJump,
+    maxPolygonJump,
+    maxSilhouettePair,
+    maxPolygonPair
+  };
+}
+
+async function saveCandidateScreenshots(page, candidate, prefix) {
+  const angles = Array.from(new Set([
+    candidate.azFrom,
+    (candidate.azFrom + candidate.az) / 2,
+    candidate.az
+  ].map(value => Number(value.toFixed(12)))));
+  for (let i = 0; i < angles.length; i += 1) {
+    const az = angles[i];
+    await page.evaluate(({ az, el }) => {
+      window.SP_TEST.setView(az, el);
+      window.SP_TEST.redraw();
+    }, { az, el: candidate.el });
+    await page.waitForTimeout(40);
+    const safeEl = String(candidate.el).replace('-', 'm').replace('.', 'p');
+    await page.locator('[data-sp-canvas]').screenshot({
+      path: path.join(
+        ROOT,
+        'qa-artifacts',
+        prefix + '-' + candidate.width + 'x' + candidate.length +
+          '-el' + safeEl + '-frame' + i + '.png'
+      )
+    });
+  }
+}
+
 (async () => {
   fs.mkdirSync(path.join(ROOT, 'qa-artifacts'), { recursive: true });
 
@@ -169,6 +243,8 @@ async function checkDeterministicRedraw(page) {
   });
 
   const findings = [];
+  const coarseCandidates = [];
+  const refinementDiagnostics = [];
   let renderedViews = 0;
 
   try {
@@ -233,30 +309,28 @@ async function checkDeterministicRedraw(page) {
             const silhouetteJump = Math.abs(metrics.silhouetteArea - previous.silhouetteArea) /
               Math.max(1, metrics.silhouetteArea, previous.silhouetteArea);
             if (silhouetteJump > SILHOUETTE_JUMP_LIMIT) {
-              findings.push({
+              coarseCandidates.push({
                 type: 'silhouette-jump',
                 width,
                 length,
                 azFrom: previousAz,
                 az: azimuth,
                 el: elevation,
-                symptom: 'Silhouette area jumped by ' + Math.round(silhouetteJump * 100) + '% between adjacent rotation samples',
-                probableCause: 'A visible component appeared/disappeared or BSP ordering changed discontinuously'
+                coarseJump: silhouetteJump
               });
             }
 
             const polygonJump = Math.abs(metrics.polygonCount - previous.polygonCount) /
               Math.max(1, metrics.polygonCount, previous.polygonCount);
             if (polygonJump > POLYGON_JUMP_LIMIT) {
-              findings.push({
+              coarseCandidates.push({
                 type: 'polygon-count-jump',
                 width,
                 length,
                 azFrom: previousAz,
                 az: azimuth,
                 el: elevation,
-                symptom: 'Visible SVG polygon count jumped by ' + Math.round(polygonJump * 100) + '% between adjacent rotation samples',
-                probableCause: 'Unexpected mass culling or clipping'
+                coarseJump: polygonJump
               });
             }
           }
@@ -266,6 +340,91 @@ async function checkDeterministicRedraw(page) {
           if (findings.length >= 200) throw new Error('Occlusion sweep stopped after 200 findings');
         }
       }
+    }
+
+    const uniqueCandidates = Array.from(new Map(
+      coarseCandidates.map(candidate => [
+        [
+          candidate.type,
+          candidate.width,
+          candidate.length,
+          candidate.el,
+          candidate.azFrom.toFixed(12),
+          candidate.az.toFixed(12)
+        ].join('|'),
+        candidate
+      ])
+    ).values());
+
+    for (const candidate of uniqueCandidates) {
+      await setDimensions(page, candidate.width, candidate.length);
+      const refined = await refineCandidate(page, candidate);
+      renderedViews += refined.samples.length;
+      refinementDiagnostics.push(refined);
+
+      const invalid = refined.samples.find(sample => sample.invalidPolygons > 0);
+      if (invalid) {
+        findings.push({
+          type: 'invalid-svg-polygon-refined',
+          width: candidate.width,
+          length: candidate.length,
+          az: invalid.az,
+          el: candidate.el,
+          symptom: invalid.invalidPolygons + ' invalid SVG polygon(s) in refined transition',
+          probableCause: 'Degenerate BSP clipping output'
+        });
+        continue;
+      }
+
+      if (candidate.type === 'silhouette-jump' &&
+          refined.maxSilhouetteJump > SILHOUETTE_JUMP_LIMIT) {
+        findings.push({
+          type: 'refined-silhouette-jump',
+          width: candidate.width,
+          length: candidate.length,
+          azFrom: refined.maxSilhouettePair && refined.maxSilhouettePair[0],
+          az: refined.maxSilhouettePair && refined.maxSilhouettePair[1],
+          el: candidate.el,
+          symptom: 'Silhouette still jumps by ' +
+            Math.round(refined.maxSilhouetteJump * 100) +
+            '% at the calibrated 5° refinement step',
+          probableCause: 'A visible component appeared/disappeared or BSP ordering changed discontinuously'
+        });
+      }
+
+      if (candidate.type === 'polygon-count-jump' &&
+          refined.maxPolygonJump > POLYGON_JUMP_LIMIT &&
+          refined.maxSilhouetteJump > SILHOUETTE_JUMP_LIMIT) {
+        findings.push({
+          type: 'refined-polygon-and-silhouette-jump',
+          width: candidate.width,
+          length: candidate.length,
+          azFrom: refined.maxPolygonPair && refined.maxPolygonPair[0],
+          az: refined.maxPolygonPair && refined.maxPolygonPair[1],
+          el: candidate.el,
+          symptom: 'Polygon count and visible silhouette both jump after 5° refinement',
+          probableCause: 'Unexpected mass culling/clipping with visible geometry loss'
+        });
+      }
+    }
+
+    const polygonOnlyDiagnostics = refinementDiagnostics.filter(item =>
+      item.type === 'polygon-count-jump' &&
+      item.maxPolygonJump > POLYGON_JUMP_LIMIT &&
+      item.maxSilhouetteJump <= SILHOUETTE_JUMP_LIMIT
+    );
+    for (const candidate of polygonOnlyDiagnostics.slice(0, 3)) {
+      await setDimensions(page, candidate.width, candidate.length);
+      await saveCandidateScreenshots(page, candidate, 'polygon-diagnostic');
+    }
+
+    const coarseSilhouetteDiagnostics = refinementDiagnostics.filter(item =>
+      item.type === 'silhouette-jump' &&
+      item.maxSilhouetteJump <= SILHOUETTE_JUMP_LIMIT
+    );
+    for (const candidate of coarseSilhouetteDiagnostics.slice(0, 2)) {
+      await setDimensions(page, candidate.width, candidate.length);
+      await saveCandidateScreenshots(page, candidate, 'silhouette-diagnostic');
     }
 
     const contrastCases = [
@@ -331,6 +490,9 @@ async function checkDeterministicRedraw(page) {
       rotationSteps: ROTATION_STEPS,
       elevations: ELEVATIONS,
       rotationViews: configurations.length * ELEVATIONS.length * (ROTATION_STEPS + 1),
+      coarseCandidateCount: coarseCandidates.length,
+      refinedCandidateCount: refinementDiagnostics.length,
+      refinementDiagnostics,
       contrastViews: 2 * 4 * CRITICAL_VIEWS.length,
       renderedViews,
       firstPartyConsoleOrPageErrors: browserErrors,
