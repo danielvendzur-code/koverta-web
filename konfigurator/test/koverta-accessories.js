@@ -113,6 +113,10 @@ async function enableExtra(page, id) {
         `${device}: drainage selection did not change SVG`);
       await selectDrainage(page, 'ano');
 
+      /* Insulation is bonded to the roof underside, so verify it from an
+         underside view instead of weakening culling just for the test. */
+      await page.locator('[data-sp-view="under"]').click();
+      await page.waitForTimeout(220);
       const beforeInsulation = await svgState(page);
       await enableExtra(page, 'kv-izol');
       const withInsulation = await svgState(page);
