@@ -3549,14 +3549,11 @@
                zboku nevidno — bočné lemovanie ide cez celú hĺbku a zakryje
                jeho čelá — a spod strechy z neho vidno len kus. --- */
             if (maOdkvap()) {
-              /* Ako to vyzerá na realizáciách: pod odkvapovou hranou nevisí
-                 žiadny žľab. Obvodový rám je na tej strane zatiahnutý 159 mm
-                 dnu a práve v tej kapse za lemovaním žľab sedí — zvonku ho
-                 nevidno, spodná hrana lemovania ide po celej dĺžke čistá.
-                 Vidieť z neho iba zvod: spod lemovania vyjde pri rohovom
-                 stĺpe, kolenom sa vráti k jeho licu a po ňom ide na zem.
-                 Zavesený polkruhový žľab na hákoch, ktorý tu bol predtým,
-                 na žiadnej fotke Koverty nie je. */
+              /* V preverovaných realizáciách je žľab vizuálne schovaný v
+                 kapse za lemovaním a zvonka dominuje až externý zvod pri
+                 rohovom stĺpe. Presná výrobná geometria žľabu z fotografií
+                 neurčená nie je; poloha kapsy vychádza z referenčnej Koverta
+                 geometrie a prierez nižšie je iba konzervatívna vizualizácia. */
               const zlHex = shade(frame, -0.06);
               const zlX0 = L - RAM_ODK + Math.max(5, RAM_W * 0.10);
               const zlX1 = L - LEM_T - LEM_LIP - Math.max(4, RAM_W * 0.08);
@@ -3703,10 +3700,12 @@
               /* Výtok je v dne žľabu a krátke koleno ho privedie k rúre na
                  stĺpe. Jeho poloha sa odvodzuje od aktuálneho prierezu žľabu. */
               const xVytok = zlMid;
-              /* Koleno klesne asi o sedem desatín toho, o čo sa rúra vráti
-                 dnu — tak je to na oficiálnom rendri, kde stĺp stojí vyše
-                 metra od odkvapu a šikmý úsek preto vidieť. */
-              const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) * 0.7 + 60);
+              /* Výška prvého kolena sa odvodzuje od vodorovného
+                 presunu medzi výtokom a osou rúry. Nie je to kóta výrobku;
+                 cieľom je zachovať plynulé, fyzicky napojené koleno pri
+                 každom podporovanom rozmere. */
+              const zKoleno = zBot -
+                Math.max(rz * 1.8, Math.abs(xVytok - xRura) * 0.7 + rz * 1.4);
               const zPata = Math.max(140, Math.min(320, H * 0.12));
               const RP = Math.max(55, rz * 2.25);
 
