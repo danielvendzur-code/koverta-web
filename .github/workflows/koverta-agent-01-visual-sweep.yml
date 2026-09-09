@@ -67,12 +67,14 @@ jobs:
           }
 
           async function setRal(page, ral) {
-            const button = page.locator('[data-sp-frame-color]').filter({ has: page.locator('small', { hasText: ral.replace('RAL ', '') }) }).first();
-            if (!await button.count()) {
-              const titles = await page.locator('[data-sp-frame-color]').evaluateAll(nodes => nodes.map(n => n.getAttribute('title')));
-              throw new Error('RAL not found: ' + ral + ' in ' + JSON.stringify(titles));
-            }
-            await button.click();
+            const selected = await page.evaluate((ral) => {
+              const buttons = Array.from(document.querySelectorAll('[data-sp-frame-color]'));
+              const button = buttons.find(node => (node.getAttribute('title') || '').includes(ral));
+              if (!button) return { ok: false, titles: buttons.map(node => node.getAttribute('title')) };
+              button.click();
+              return { ok: true, title: button.getAttribute('title') };
+            }, ral);
+            if (!selected.ok) throw new Error('RAL not found: ' + ral + ' in ' + JSON.stringify(selected.titles));
             await page.waitForTimeout(120);
           }
 
