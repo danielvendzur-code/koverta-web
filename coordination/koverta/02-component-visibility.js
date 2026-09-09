@@ -11,11 +11,11 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
 const ROTATION_STEPS = 36; // 10° component-isolation sweep
 const DIMENSIONS = [[4000, 6000], [6200, 6000], [7000, 5200], [7000, 6000]];
 const COMPONENTS = [
-  { id: 'purlins', flag: '__QA_HIDE_PURLINS', elevations: [-0.16, 0.10, 0.42] },
-  { id: 'angles', flag: '__QA_HIDE_UHOLNIK', elevations: [-0.16, 0.10] },
-  { id: 'roof-screws', flag: '__QA_HIDE_ROOF_SCREWS', elevations: [-0.16, 0.10] },
+  { id: 'purlins', flag: '__QA_HIDE_PURLINS', elevations: [-0.16, 0.04] },
+  { id: 'angles', flag: '__QA_HIDE_UHOLNIK', elevations: [-0.16, 0.04] },
+  { id: 'roof-screws', flag: '__QA_HIDE_ROOF_SCREWS', elevations: [-0.16, 0.04] },
   { id: 'base-plates', flag: '__QA_HIDE_BASE_PLATES', elevations: [0.10, 0.42] },
-  { id: 'head-plates', flag: '__QA_HIDE_HEAD_PLATES', elevations: [-0.16, 0.10] },
+  { id: 'head-plates', flag: '__QA_HIDE_HEAD_PLATES', elevations: [-0.16, 0.04] },
   { id: 'gutter-downpipe', flag: '__QA_HIDE_GUTTER', elevations: [-0.16, 0.10, 0.42] }
 ];
 
