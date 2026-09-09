@@ -1,0 +1,172 @@
+name: Koverta visual agent sweep
+
+on:
+  push:
+    branches: [agent/01-koverta-visual-ci]
+
+permissions:
+  contents: read
+
+jobs:
+  visual-sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-visual-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-visual-http.log
+          exit 1
+      - name: Capture Koverta visual sweep
+        run: |
+          cat > /tmp/koverta-visual-sweep.js <<'NODE'
+          const fs = require('node:fs');
+          const { chromium } = require('playwright');
+
+          const URL = 'http://127.0.0.1:8901/konfigurator/?page=koverta';
+          const OUT = 'qa-visual-sweep';
+          fs.mkdirSync(OUT, { recursive: true });
+
+          const deg = (value) => value * Math.PI / 180;
+          const safe = (value) => String(value).replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+
+          async function prepare(page) {
+            await page.goto(URL, { waitUntil: 'load', timeout: 60000 });
+            const consent = page.getByRole('button', { name: 'Iba nevyhnutné' });
+            if (await consent.count()) await consent.first().click();
+            await page.waitForTimeout(1800);
+            const ready = await page.evaluate(() => Boolean(window.SP_TEST && window.SP_TEST.setView && window.SP_TEST.redraw));
+            if (!ready) throw new Error('SP_TEST is unavailable');
+          }
+
+          async function setSize(page, width, length) {
+            await page.evaluate(([width, length]) => {
+              const set = (selector, value) => {
+                const input = document.querySelector(selector);
+                if (!input) throw new Error('Missing input ' + selector);
+                input.value = String(value);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+              };
+              set('[data-sp-w]', width);
+              set('[data-sp-l]', length);
+            }, [width, length]);
+            await page.waitForTimeout(220);
+          }
+
+          async function setRal(page, ral) {
+            const button = page.locator('[data-sp-frame-color]').filter({ has: page.locator('small', { hasText: ral.replace('RAL ', '') }) }).first();
+            if (!await button.count()) {
+              const titles = await page.locator('[data-sp-frame-color]').evaluateAll(nodes => nodes.map(n => n.getAttribute('title')));
+              throw new Error('RAL not found: ' + ral + ' in ' + JSON.stringify(titles));
+            }
+            await button.click();
+            await page.waitForTimeout(120);
+          }
+
+          async function capture(page, scenario, view, device) {
+            await page.evaluate(([az, el]) => {
+              window.SP_TEST.setView(az, el);
+              window.SP_TEST.redraw();
+            }, [view.az, view.el]);
+            await page.waitForTimeout(90);
+            const snap = await page.evaluate(() => ({
+              snapshot: window.SP_TEST.snapshot(),
+              polygons: document.querySelectorAll('[data-sp-canvas] polygon').length,
+              aria: document.querySelector('[data-sp-canvas]')?.getAttribute('aria-label') || ''
+            }));
+            const filename = [device, scenario.name, view.name].map(safe).join('__') + '.png';
+            await page.locator('[data-sp-canvas]').screenshot({ path: OUT + '/' + filename });
+            return { device, scenario: scenario.name, view: view.name, file: filename, ...snap };
+          }
+
+          async function runDevice(browser, device, viewport) {
+            const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+            await context.route(/^https:\/\/(?:www\.googletagmanager\.com|www\.google-analytics\.com|[a-z0-9.-]*clarity\.ms)\//,
+              route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
+            const page = await context.newPage();
+            const browserErrors = [];
+            page.on('pageerror', e => browserErrors.push('pageerror: ' + e.message));
+            page.on('console', m => { if (m.type() === 'error') browserErrors.push('console: ' + m.text()); });
+            await prepare(page);
+
+            const orbitViews = Array.from({ length: 12 }, (_, i) => ({
+              name: 'orbit-' + (i * 30) + 'deg',
+              az: deg(i * 30),
+              el: 0.42
+            }));
+            const canonical = [
+              { name: 'front', az: deg(0), el: 0.28 },
+              { name: 'side', az: deg(90), el: 0.28 },
+              { name: 'corner', az: deg(45), el: 0.34 },
+              { name: 'top', az: deg(45), el: 1.12 },
+              { name: 'under', az: deg(45), el: -0.18 }
+            ];
+            const scenarios = [
+              { name: '6post-7000x6000-ral7016', width: 7000, length: 6000, ral: 'RAL 7016', views: orbitViews.concat([{ name: 'top', az: deg(45), el: 1.12 }, { name: 'under', az: deg(45), el: -0.18 }]) },
+              { name: '6post-7000x5200-ral9005', width: 7000, length: 5200, ral: 'RAL 9005', views: canonical },
+              { name: '4post-4000x6000-ral9006', width: 4000, length: 6000, ral: 'RAL 9006', views: canonical },
+              { name: '4post-4000x6000-ral9010', width: 4000, length: 6000, ral: 'RAL 9010', views: canonical }
+            ];
+
+            const manifest = [];
+            for (const scenario of scenarios) {
+              await setSize(page, scenario.width, scenario.length);
+              await setRal(page, scenario.ral);
+              const state = await page.evaluate(() => window.SP_TEST.snapshot());
+              if (state.width !== scenario.width || state.length !== scenario.length || state.frameColor !== scenario.ral) {
+                throw new Error('Scenario state mismatch: ' + JSON.stringify({ scenario, state }));
+              }
+              for (const view of scenario.views) {
+                manifest.push(await capture(page, scenario, view, device));
+              }
+            }
+            if (browserErrors.length) throw new Error(browserErrors.join('\n'));
+            await context.close();
+            return manifest;
+          }
+
+          (async () => {
+            const browser = await chromium.launch({ args: ['--no-sandbox'] });
+            try {
+              const desktop = await runDevice(browser, 'desktop', { width: 1440, height: 1000 });
+              const mobile = await runDevice(browser, 'mobile', { width: 390, height: 844 });
+              const manifest = desktop.concat(mobile);
+              fs.writeFileSync(OUT + '/manifest.json', JSON.stringify(manifest, null, 2));
+              console.log('Captured', manifest.length, 'visual states');
+              console.log(JSON.stringify(manifest.map(x => ({
+                device: x.device,
+                scenario: x.scenario,
+                view: x.view,
+                polygons: x.polygons,
+                posts: x.snapshot.geometry ? x.snapshot.geometry.postAxes.length : null,
+                frameColor: x.snapshot.frameColor
+              })), null, 2));
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          node /tmp/koverta-visual-sweep.js
+      - name: Upload visual sweep
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: koverta-agent-01-visual-sweep
+          path: qa-visual-sweep
+          if-no-files-found: error
