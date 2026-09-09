@@ -2962,6 +2962,21 @@
       prekresli();
     }
 
+    /* Fotografie v menu sa sťahujú až vtedy, keď je menu naozaj treba.
+       Čakali v skrytom paneli, ale ten je len priehľadný, nie vypnutý —
+       prehliadač ich preto považoval za viditeľné a stiahol na každej
+       stránke. Dvanásť fotografií, dva a pol megabajtu, ktoré väčšina
+       návštevníkov nikdy neuvidí. Adresa čaká v `data-k-foto` a `src` sa
+       doplní pri prvom otvorení; pri myši už pri nabehnutí na položku,
+       takže sú načítané skôr, než sa panel otvorí. */
+    const nacitajFotky = (koren) => {
+      if (!koren) return;
+      koren.querySelectorAll('img[data-k-foto]').forEach((img) => {
+        img.src = img.getAttribute('data-k-foto');
+        img.removeAttribute('data-k-foto');
+      });
+    };
+
     /* mega menu — otvára sa hoverom aj klávesnicou, zatvára Escapom */
     const items = [...header.querySelectorAll('[data-k-mega-item]')];
     let hoverTimer;
@@ -2982,6 +2997,7 @@
       const open = () => {
         clearTimeout(hoverTimer);
         closeAll(item);
+        nacitajFotky(item);
         item.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
       };
@@ -2991,6 +3007,9 @@
       };
 
       item.addEventListener('mouseenter', open);
+      /* Predohriatie: kým sa kurzor blíži k položke, obrázky sa už sťahujú. */
+      item.addEventListener('pointerenter', () => nacitajFotky(item), { once: true });
+      trigger.addEventListener('focus', () => nacitajFotky(item), { once: true });
       item.addEventListener('mouseleave', () => {
         hoverTimer = setTimeout(close, 140);
       });
@@ -3046,6 +3065,7 @@
       };
 
       const setDrawer = (open) => {
+        if (open) nacitajFotky(drawer);
         drawer.classList.toggle('is-open', open);
         scrim.classList.toggle('is-open', open);
         openBtn.setAttribute('aria-expanded', String(open));
@@ -3063,6 +3083,7 @@
         }
       };
 
+      openBtn.addEventListener('pointerenter', () => nacitajFotky(drawer), { once: true });
       openBtn.addEventListener('click', () => setDrawer(true));
       if (closeBtn) closeBtn.addEventListener('click', () => setDrawer(false));
       scrim.addEventListener('click', () => setDrawer(false));

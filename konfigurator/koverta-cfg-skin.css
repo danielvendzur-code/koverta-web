@@ -965,3 +965,117 @@ body { background: var(--k-white); color: var(--k-ink); }
     min-height: 44px;
   }
 }
+
+
+/* ==========================================================================
+   KONFIGURÁTOR AKO STRÁNKA WEBU
+   ==========================================================================
+   Konfigurátor mal vlastnú lištu s tromi záložkami namiesto navigácie, takže
+   z neho nebolo kam ísť a nevyzeral ako ten istý web. Teraz nesie tú istú
+   hlavičku aj pätku ako zvyšok stránok; tu ostáva len to, čo tie dva svety
+   potrebujú medzi sebou doladiť. */
+
+/* Web drží na telefóne dole lepivý pás s výzvou a rezervuje si naň miesto.
+   V konfigurátore taký pás nie je — rezerva by bola len prázdny prúžok. */
+@media (max-width: 759px) {
+  body { padding-bottom: 0; }
+}
+
+/* Lepivé časti konfigurátora sa musia zastaviť pod lištou webu, nie pod
+   horným okrajom okna. Runtime hľadá `.section-header` z pôvodnej témy,
+   ktorá tu nie je — hodnotu preto dopočíta nadstavba v koverta-cfg-enhance.js
+   a tu je len poistka pre prípad, že skript nenabehne. */
+#SoltecPremium { --sp-sticky-top: 0px; }
+
+/* --- prepínač produktu ---------------------------------------------------
+   Tri odkazy, ktoré predtým stáli v hlavičke. Vyzerajú ako čipy zvyšku webu:
+   vybraný je grafitový, ostatné majú vlasový rám. */
+.k.kv-cfg {
+  padding-block: clamp(18px, 2vw, 26px);
+  border-bottom: 1px solid var(--k-hair);
+  background: var(--k-bone);
+}
+.k .kv-cfg__in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px clamp(14px, 1.6vw, 22px);
+}
+.k .kv-cfg__label {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-grey);
+}
+.k .kv-cfg__tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.k .kv-cfg__tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: 999px;
+  background: var(--k-white);
+  font-family: var(--k-head);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--k-ink);
+  text-decoration: none;
+  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease);
+}
+.k .kv-cfg__tabs a:hover { border-color: var(--k-ink); }
+.k .kv-cfg__tabs a[aria-current="page"] {
+  background: var(--k-ink);
+  border-color: var(--k-ink);
+  color: var(--k-white);
+}
+.k .kv-cfg__eshop {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--k-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--k-hair);
+  padding-bottom: 2px;
+  transition: border-color 200ms var(--k-ease);
+}
+.k .kv-cfg__eshop:hover { border-color: var(--k-ink); }
+.k .kv-cfg__eshop svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; }
+/* Na telefóne sa pás rozpadol na štyri riadky a nástroj začínal až hlboko
+   pod zlomom. Popis a odkaz do e-shopu idú do jedného riadku, produkty pod
+   ne do jedného posuvného pásu. */
+@media (max-width: 699px) {
+  .k .kv-cfg__in { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; }
+  .k .kv-cfg__label { grid-column: 1; grid-row: 1; align-self: center; }
+  .k .kv-cfg__eshop { grid-column: 2; grid-row: 1; margin-left: 0; font-size: 12.5px; }
+  .k .kv-cfg__tabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--k-gut) * -1);
+    padding-inline: var(--k-gut);
+    scroll-snap-type: x proximity;
+  }
+  .k .kv-cfg__tabs::-webkit-scrollbar { display: none; }
+  .k .kv-cfg__tabs a { flex: 0 0 auto; scroll-snap-align: start; }
+}
+
+/* Nástroj sa dole dotýkal pätky. Medzi posledným krokom a tmavým pásom
+   patrí rovnaký odstup, aký majú sekcie na zvyšku webu. */
+#SoltecPremium .sp-cfg { padding-bottom: clamp(40px, 5vw, 76px); }
+
+/* Nástroj má začínať hneď pod prepínačom — nie po ďalšom páse vzduchu. */
+#SoltecPremium .sp-cfg { padding-top: clamp(22px, 2.6vw, 36px); }
+
+/* Pätka webu je tmavá a konfigurátor biely; medzi nimi má byť rez, nie
+   splynutie. */
+#kv-root { background: #fff; }

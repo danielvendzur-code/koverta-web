@@ -272,3 +272,45 @@
     boot();
   }
 })();
+
+
+/* --- Lepivé časti pod lištou webu ----------------------------------------
+   Runtime konfigurátora hľadá hlavičku ako `.section-header` — to je trieda
+   z pôvodnej témy e-shopu, na tomto webe neexistuje, takže mu vyšlo
+   `--sp-sticky-top: 0px` a lepivý panel s krokmi liezol pod lištu.
+   Dopočítame to z `.kv-bar`, vrátane toho, že lišta pri scrollovaní nadol
+   odchádza a pri návrate sa vracia. Runtime sa nemení. */
+(function kvLepivyVrch() {
+  var lista = document.querySelector('.kv-bar');
+  if (!lista) return;
+  var koren = null;
+  var poslednaVyska = 0;
+  var poslednyStav = null;
+
+  var prepocitaj = function () {
+    if (!koren) koren = document.getElementById('SoltecPremium');
+    if (!koren) return;
+    var r = lista.getBoundingClientRect();
+    if (r.height > 0) poslednaVyska = Math.round(r.height);
+    /* Lišta je vidieť, keď jej spodná hrana zasahuje do okna. Prepíname len
+       medzi dvoma hodnotami, aby to pri každom snímku neposkakovalo. */
+    var vidno = r.bottom > 4;
+    if (vidno === poslednyStav) return;
+    poslednyStav = vidno;
+    koren.style.setProperty('--sp-sticky-top', vidno ? poslednaVyska + 'px' : '0px');
+  };
+
+  var caka = false;
+  var naScroll = function () {
+    if (caka) return;
+    caka = true;
+    requestAnimationFrame(function () { caka = false; prepocitaj(); });
+  };
+
+  prepocitaj();
+  window.addEventListener('scroll', naScroll, { passive: true });
+  window.addEventListener('resize', function () { poslednyStav = null; prepocitaj(); }, { passive: true });
+  /* Konfigurátor sa vykresľuje skriptom, takže pri prvom behu ešte nemusí
+     existovať — skúsime to znovu, keď dobehne. */
+  window.addEventListener('load', function () { poslednyStav = null; prepocitaj(); });
+})();
