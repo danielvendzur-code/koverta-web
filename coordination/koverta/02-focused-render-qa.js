@@ -282,6 +282,11 @@ async function runMobileFullscreen(browser, findings, browserErrors) {
     );
     if (!ready) throw new Error('SP_TEST hooks unavailable');
 
+    const positive = await renderProbe(page, 0.82, 1.12, false);
+    if (positive.greenPixels < 100) {
+      throw new Error('Focused fascia QA positive control failed: contrasting roof is missing');
+    }
+
     for (const [width, length] of DIMENSIONS) {
       const snapshot = await setDimensions(page, width, length);
 
@@ -311,7 +316,16 @@ async function runMobileFullscreen(browser, findings, browserErrors) {
         }
       }
 
-      const beam = Number(snapshot.geometry && snapshot.geometry.roof && snapshot.geometry.roof.ramH) || 220;
+      const beam = await page.evaluate(() => {
+        const script = document.querySelector('[data-sp-bio-data]');
+        if (!script) throw new Error('Missing runtime model data');
+        const data = JSON.parse(script.textContent || '{}');
+        const snap = window.SP_TEST.snapshot();
+        const active = data.models && data.models[snap.model];
+        const value = Number(active && active.beam);
+        if (!Number.isFinite(value)) throw new Error('Missing active model beam');
+        return value;
+      });
       const distance = Math.max(length, width, snapshot.height) * 2.9;
       const ratio = Math.max(-1, Math.min(1, (snapshot.height / 2 + beam) / distance));
       const threshold = Math.asin(ratio);
