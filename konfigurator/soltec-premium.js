@@ -3528,9 +3528,17 @@
                 boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
                 const ix = dx > dy ? ledW * 0.18 : 0;
                 const iy = dy > dx ? ledW * 0.18 : 0;
-                boxFaces(x + ix, y + iy, ledZ - diffT,
-                         Math.max(1, dx - ix * 2), Math.max(1, dy - iy * 2),
-                         diffT, ledLight, [], SHAFT);
+                const lx = x + ix, ly = y + iy;
+                const ldx = Math.max(1, dx - ix * 2), ldy = Math.max(1, dy - iy * 2);
+                boxFaces(lx, ly, ledZ - diffT, ldx, ldy, diffT, ledLight, [], SHAFT);
+                /* Samotný diffuser má na spodnom líci stabilnú svetelnú
+                   plochu. Je priamo na profile (rovnaká spodná rovina), nejde
+                   o samostatný levitujúci pás. raw fill je zámerný: LED má
+                   svietiť rovnomerne a zároveň dáva QA jednoznačný fyzický
+                   marker bez závislosti od počtu BSP fragmentov. */
+                quad([[lx, ly, ledZ - diffT], [lx + ldx, ly, ledZ - diffT],
+                      [lx + ldx, ly + ldy, ledZ - diffT], [lx, ly + ldy, ledZ - diffT]],
+                     ledLight, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
               };
               const xA = RAM_ZAD + RAM_PAR;
               const xB = rx1 - RAM_PAR;
