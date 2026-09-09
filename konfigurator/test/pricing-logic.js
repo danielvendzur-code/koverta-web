@@ -101,6 +101,12 @@ async function waitRender(page) {
     assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 0,
       'Unverified Koverta-specific extras must not remain customer-selectable');
 
+    const allTemplateText = await page.locator('#SoltecPremium').textContent();
+    assert(!allTemplateText.includes('celá paleta RAL v cene'),
+      'Unsupported claim that the full RAL palette is included is still present');
+    assert(allTemplateText.includes('Cenový dopad zvoleného odtieňa: na nacenenie'),
+      'Unknown Koverta color price impact is not disclosed');
+
     const visibleText = await page.locator('#SoltecPremium').innerText();
     for (const forbidden of ['Táto dĺžka potrebuje', 'Profil obvodový', 'Najväčší rozmer', 'Svetlá výška']) {
       assert(!visibleText.includes(forbidden), 'Technical info block is still visible: ' + forbidden);
@@ -118,6 +124,37 @@ async function waitRender(page) {
     const initialSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
     assert(initialSnapshot.price.open === false && initialSnapshot.price.total === 4497,
       'Runtime and displayed default price state disagree');
+
+    // Exercise all 54 published catalogue points through the real controls.
+    for (let li = 0; li < expectedLengths.length; li++) {
+      for (let wi = 0; wi < expectedWidths.length; wi++) {
+        const width = expectedWidths[wi];
+        const length = expectedLengths[li];
+        const price = expectedPrices[li][wi];
+        await page.evaluate(({ width, length }) => {
+          const w = document.querySelector('[data-sp-w]');
+          const l = document.querySelector('[data-sp-l]');
+          w.value = String(width);
+          l.value = String(length);
+          w.dispatchEvent(new Event('input', { bubbles: true }));
+          l.dispatchEvent(new Event('input', { bubbles: true }));
+          w.dispatchEvent(new Event('change', { bubbles: true }));
+          l.dispatchEvent(new Event('change', { bubbles: true }));
+        }, { width, length });
+        await page.waitForFunction(({ width, length, price }) => {
+          if (!window.SP_TEST || typeof window.SP_TEST.snapshot !== 'function') return false;
+          const snap = window.SP_TEST.snapshot();
+          const total = document.querySelector('#SoltecPremium [data-sp-total]');
+          const totalText = total ? String(total.textContent || '').trim() : '';
+          return snap.width === width
+            && snap.length === length
+            && snap.price.total === price
+            && snap.price.open === false
+            && !/^od\s/i.test(totalText)
+            && totalText.replace(/[^0-9]/g, '') === String(price);
+        }, { width, length, price }, { timeout: 4000 });
+      }
+    }
 
     // Verify the published 6200 -> 6600 price transition separately from the renderer's post-count default.
     await page.evaluate(() => {
@@ -242,6 +279,8 @@ async function waitRender(page) {
     assert(payload.body.includes('Umiestnenie:'), 'Payload omits placement');
     assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state');
     assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
+    assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
+      'Payload incorrectly implies a verified zero color surcharge');
     assert(payload.body.includes('vrátane DPH a montáže'), 'Payload omits verified VAT/installation scope');
     assert(payload.body.includes('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.'),
       'Payload omits unresolved transport/quote-only disclaimer');
@@ -298,7 +337,7 @@ async function waitRender(page) {
       'Outside-catalogue request incorrectly implies technical feasibility or a valid catalogue price');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, RAL/side options, gutter/anchoring state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
+    console.log('PRICING_LOGIC_PASS all 54 catalogue points, 6200/6600 transition, RAL disclosure, side options, gutter/anchoring state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
     await context.close();
   } finally {
     await browser.close();
