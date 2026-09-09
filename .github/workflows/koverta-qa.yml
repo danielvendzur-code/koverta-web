@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: koverta-configurator-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   configurator:
     runs-on: ubuntu-latest
