@@ -14314,3 +14314,8 @@ main.k img[src$=".jpeg"]:not([src*="/mapa/"]) {
 }
 main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%; }
 
+
+
+/* Jednoduché porovnávacie tabuľky na Soltec podstránkach. */
+.k .kh-compare-stack { display: grid; gap: clamp(20px, 2.4vw, 32px); }
+.k .kh-compare-stack > .kh-typ2__note { margin: 0; }
