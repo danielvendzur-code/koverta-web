@@ -2039,11 +2039,11 @@
             put('+x', [[X,y,z],[X,Y,z],[X,Y,Z],[X,y,Z]], [1,0,0]);
           };
 
-          /* Skrutka zdola: šesťhran kľúč 19 položený na spodnom líci platne. */
-          /* Skrutka M12, kľúč 19. Kreslí sa ako krátky šesťhranný hranol,
-             ktorý z dielu naozaj vytŕča — nálepka na líci sa pri maliarskom
-             triedení schovala pod diel, na ktorom mala ležať. `os` hovorí, z
-             ktorej plochy hlava trčí, `sgn` ktorým smerom. */
+          /* Viditeľná hlava spojovacieho prvku sa kreslí ako krátky
+             šesťhranný hranol položený priamo na líci dielu. Aktívne Expivi
+             dáta neuvádzajú priemer, triedu ani veľkosť kľúča, preto renderer
+             tieto parametre nevydáva za technickú špecifikáciu. `os` určuje
+             plochu a `sgn` smer, ktorým hlava z líca vystupuje. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
             const r = R || 9, sd = sgn || 1, h = dlzka || 7;
             const P = (t, a) => {
@@ -2420,11 +2420,10 @@
                    visual head plate must bridge the same artificial 2 mm or it
                    would levitate below the member it is supposed to fix. */
                 const zH = H + lift + (model().roofKit === 'koverta' ? 2 : 0);
-                /* Platňa je len taká, aby sa na ňu zmestili dve skrutky —
-                   nie doska cez celý bok stĺpa. Kľúč 19 znamená hlavu asi
-                   19 mm cez ploché, takže na dve skrutky vedľa seba stačí
-                   pás asi 110 × 58 mm. Tieto rozmery zostávajú vizuálnym
-                   detailom; aktívna Expivi scéna ich samostatne nepotvrdzuje. */
+                /* Platňa hlavy zostáva rendererovým detailom 110 × 58 × 8.
+                   Aktívna Expivi scéna ju nerozkladá ako samostatný merateľný
+                   komponent, preto tieto rozmery ani veľkosť viditeľných hláv
+                   skrutiek nie sú prezentované ako výrobné kóty. */
                 const hp = 58;                                    // vyloženie platne
                 const sir = 110;                                  // dĺžka platne
                 const th = 8;
@@ -3318,9 +3317,9 @@
                farbe C profilov, lebo sú z toho istého pozinku. --- */
             const spojHex = zinok;
             const skrutHex = zinok;
-            /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
-               položený na líci dielu, nie ako guľa; v tejto mierke je to
-               presne to, čo je na spoji vidieť. */
+            /* Viditeľný spojovací prvok sa kreslí ako šesťhranná hlava na
+               líci uholníka. Aktívne Expivi komponenty potvrdzujú telo a
+               počet uholníkov, nie priemer/triedu skrutiek ani veľkosť kľúča. */
             /* Spojky, skrutky aj žľab sú celé v hĺbke obvodového rámu, teda
                za lemovaním. Pri pohľade zhora ich vidieť nemôže a maliarske
                triedenie im na spojoch veľkých plôch dovoľovalo vykuknúť —
