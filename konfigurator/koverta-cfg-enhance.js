@@ -476,20 +476,6 @@
   // nedá nič nastaviť — a to je správne, cena by inak bola vymyslená. Kto
   // potrebuje iný rozmer, si ho tu napíše a odíde s ním do dopytu aj so
   // všetkým, čo si medzitým vyklikal.
-  function textOf(sel) {
-    var el = document.querySelector(sel);
-    return el ? el.textContent.trim() : '';
-  }
-
-  function zostava() {
-    var riadky = [];
-    document.querySelectorAll('[data-sp-lines] li').forEach(function (li) {
-      var t = li.textContent.replace(/\s+/g, ' ').trim();
-      if (t) riadky.push('- ' + t);
-    });
-    return riadky;
-  }
-
   function wireCustom() {
     var btn = document.querySelector('[data-kv-custom]');
     if (!btn || btn.dataset.kvWired === '1') return;
