@@ -387,6 +387,33 @@ async function runMobileFullscreen(browser, findings, browserErrors) {
       }
     }
 
+    const evidenceKeys = new Set();
+    const evidenceFindings = [];
+    for (const finding of findings) {
+      if (!['fine-fascia-bleed', 'transition-fascia-bleed', 'fine-invalid-polygon', 'transition-invalid-polygon']
+        .includes(finding.type)) continue;
+      const key = [finding.type, finding.width, finding.length].join('|');
+      if (evidenceKeys.has(key)) continue;
+      evidenceKeys.add(key);
+      evidenceFindings.push(finding);
+      if (evidenceFindings.length >= 6) break;
+    }
+    for (let i = 0; i < evidenceFindings.length; i += 1) {
+      const finding = evidenceFindings[i];
+      await setDimensions(page, finding.width, finding.length);
+      const elevation = Number.isFinite(finding.elevation)
+        ? finding.elevation
+        : finding.threshold + finding.offset;
+      await renderProbe(page, finding.az, elevation, true);
+      const safe = value => String(Math.round(value * 10000) / 10000)
+        .replace('-', 'm').replace('.', 'p');
+      await saveCanvas(
+        page,
+        'failure-' + i + '-' + finding.type + '-' + finding.width + 'x' + finding.length +
+          '-az' + safe(finding.az) + '-el' + safe(elevation) + '.png'
+      );
+    }
+
     await runMobileFullscreen(browser, findings, browserErrors);
 
     if (browserErrors.length) {
