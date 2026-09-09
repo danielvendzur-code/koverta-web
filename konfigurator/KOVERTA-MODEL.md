@@ -277,6 +277,34 @@ vyzerať — tvar stĺpa, pätka, zvod.
 oproti výške lemovania (vyjde 150 mm, ako v exporte) a polohy stĺpov na
 obrázku.
 
+## Test „cez strechu nič nepresvitá"
+
+`konfigurator/test/strecha-nepresvita.js` prefarbí pozinkované diely a
+podhľad na sýte farby, ktoré sa na streche nemajú kde vziať, a v pohľadoch
+zhora spočíta, koľko takých pixelov na streche je. Musí ich byť nula.
+
+```
+npx http-server . -p 8901 -s &
+PLAYWRIGHT_PATH=/opt/node22/lib/node_modules/playwright \
+  node konfigurator/test/strecha-nepresvita.js
+```
+
+Túto triedu chýb od oka nenájdeš: je to jeden pixel na spoji, ktorý sa cez
+celú strechu poskladá do tenkej svetlej čiary, a pri väčšine uhlov tam nie
+je. Test ju našiel na štyroch miestach — na väzniciach, na obvodovom ráme,
+na platniach hlavy stĺpa aj na spojkách.
+
+**Prečo vzniká a čo ju vypína.** Maliarske triedenie (BSP) rozdelí veľkú
+plochu strechy rovinou zvislého líca profilu na dva kusy a samotné líce
+kreslí medzi ne. Kus, ktorý je už nakreslený, mu potom neprekryje ten
+pixel, o ktorý líce v premietaní presahuje. Spoľahlivo tomu zabráni jedine
+to, že sa taký diel nekreslí vôbec — a to sa dá, lebo keď je oko nad
+rovinou strechy, na nič pod ňou sa nedá pozrieť: každý lúč k takému bodu
+ide zhora nadol a strecha alebo lemovanie mu stoja v ceste. Hranica
+`nadStrechou` je presne tá rovina, takže sa nič nestratí ani o stupeň
+nižšie — overené: tesne pod ňou a tesne nad ňou sa po erózii 5 × 5 nezmení
+ani jeden pixel.
+
 ## Čiary na streche a fľaky na plechu
 
 Tri rôzne chyby vyzerali rovnako — „strecha má čiary" — a každá mala iný

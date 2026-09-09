@@ -1707,6 +1707,14 @@
              is not the same as being above the roof - which sits (H + beam) / 2
              higher. Compare against the roof plane itself. */
           const fromAbove = se * DIST > (H + beam) / 2;
+          /* Presnejšia otázka než „pozerám sa zhora": je oko nad rovinou
+             strechy? Ak áno, na nič pod ňou sa nedá pozrieť — každý lúč k
+             takému bodu ide zhora nadol a strecha mu stojí v ceste. Diely pod
+             strechou sa vtedy nemusia kresliť vôbec, a to je jediné, čo
+             spoľahlivo zabráni tomu, aby im na spoji, kde maliarske triedenie
+             rozdelí veľkú plochu strechy, vykukol pixel. Hranica je presná,
+             takže sa nič nestratí ani o stupeň nižšie. */
+          const nadStrechou = (H / 2 + se * DIST) >= H + beam;
 
           // Parts still set a semantic layer while they are generated, but
           // visibility is resolved from the real polygon planes below. Layer
@@ -1861,9 +1869,14 @@
             });
             return best;
           };
+          /* Strop hĺbky stromu. Pod ním sa triedi podľa priemernej hĺbky a to
+             pri veľkých plochách klame — na streche z toho vykukol pruh rámu.
+             Prístrešok Koverta má cez tri tisíc plôch, tak potrebuje hlbší
+             strom než Soltec. */
+          const BSP_MAX = 320;
           const buildBsp = (list, depth) => {
             if (!list.length) return null;
-            if (depth > 96) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || a.order - b.order) };
+            if (depth > BSP_MAX) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || a.order - b.order) };
             const splitterIndex = chooseSplitter(list);
             const plane = planeFor(list[splitterIndex]);
             if (!plane) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || a.order - b.order) };
@@ -2340,7 +2353,10 @@
                  na dvoch susedných stranách — jedna sa skrutkuje do bočného
                  rámu, druhá do čelného; stĺp v poli ich má oproti sebe.
                  Skrutky idú zdola cez pásnicu, takže zhora ich vidieť nie je. */
-              if (BIO.headPlates) {
+              /* Platne hlavy sú pod strechou a za lemovaním — zhora ich vidieť
+                 nemôže. Kreslili sa ale aj vtedy a na spoji, kde maliarske
+                 triedenie rozdelí veľkú plochu strechy, im vykukol pixel. */
+              if (BIO.headPlates && !nadStrechou) {
                 const zH = H + lift;
                 /* Platňa je len taká, aby sa na ňu zmestili dve skrutky —
                    nie doska cez celý bok stĺpa. Kľúč 19 znamená hlavu asi
@@ -3022,7 +3038,12 @@
             const TRAP_ZAD = REF.trapZad || 15, TRAP_ODK = REF.trapOdkvap || 85;
             const zinok = model().rimSoffitHex || '#c2c7cb';
             const zBot = H, zTop = zBot + LEM_H;
-            const ramBot = zBot, ramTop = ramBot + RAM_H;
+            /* Obvodový rám začína 2 mm nad spodkom lemovania. Kým mali obe
+               spodné líca tú istú rovinu, triedil ich BSP ako splynuté a rám
+               sa kreslil až po lemovaní, takže na spodnej hrane strechy z neho
+               vykukol pruh. Lemovanie sa naozaj pod rám zahýba, takže tie
+               2 mm tam patria. */
+            const ramBot = zBot + 2, ramTop = ramBot + RAM_H;
             /* Plech leží NA hornej pásnici rámu a väzníc, nie v nich. Kým
                bol jeho podhľad o 9 mm nižšie než horná pásnica, prerážali
                väznice a rám cez strechu — zhora z toho boli tie svetlé čiary
@@ -3128,7 +3149,7 @@
                  veľkú plochu strechy na dva kusy a samo sa kreslí medzi ne,
                  takže mu na spoji vykukol pixel a cez celú strechu z toho
                  bola tenká svetlá čiara. */
-              const bokom = !(podStrechou && fromAbove);
+              const bokom = !(podStrechou && nadStrechou);
               for (let i = 0; i < rez.length; i++) {
                 const A = rez[i], B = rez[(i + 1) % rez.length];
                 let da = B[0] - A[0], dz = B[1] - A[1];
@@ -3158,10 +3179,12 @@
                presne na vnútorné líce zvislého ramena lemovania, ležali obe
                roviny na sebe a čelo profilu cez lemovanie presvitalo ako
                svetlá zvislá čiara v rohu. */
-            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-            cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
-            cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+            if (!nadStrechou) {
+              cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
+              cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
+              cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+              cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+            }
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -3183,7 +3206,7 @@
                za lemovaním. Pri pohľade zhora ich vidieť nemôže a maliarske
                triedenie im na spojoch veľkých plôch dovoľovalo vykuknúť —
                preto sa vtedy nekreslia vôbec. */
-            const podStrechu = !fromAbove;
+            const podStrechu = !nadStrechou;
             const skrutka = (cx0, cy0, cz0, os, R, sgn) => {
               if (!podStrechu) return;
               skrutkuj(cx0, cy0, cz0, os, skrutHex, R || 11, os === 'z' ? -1 : (sgn || 1), 7);
@@ -3242,7 +3265,8 @@
               /* Väznica je tá istá dvojica C chrbtami k sebe ako obvodový rám,
                  len nižšia — kreslí sa z rovnakého rezu. Škáru medzi profilmi
                  má zdola vidieť, obvodový rám nie. */
-              cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);
+              if (!nadStrechou)
+                cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);
               /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
               const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
               for (let i = 0; i <= stanic; i++) {
