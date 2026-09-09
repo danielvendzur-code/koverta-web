@@ -228,6 +228,32 @@ Prečo plech prerážal a čo to spravilo:
   tam bola len škára a pri plochom pohľade cez ňu bolo vidieť pod strechu —
   pozdĺž hrany svietil svetlý pruh.
 
+## Stĺp je jakl s ostrou hranou, nie rúra
+
+Oficiálne rendre Koverty (obrázky produktov v e-shope, `products.json` →
+`images`) ukazujú stĺp ako dve rovné líca s ostrou hranou medzi nimi. Kým sa
+rohy zaobľovali polomerom 16 % šírky, mal stĺp cez celé líce mäkký prechod a
+čítal sa ako rúra. Zrazenie je preto 3,5 % šírky, teda asi 5 mm na stĺpe
+150 × 150.
+
+Pod stĺpom je na rendroch **doska so štyrmi skrutkami do betónu** a medzi
+ňou a stĺpom **krátka pozinkovaná objímka** vysoká asi tretinu šírky stĺpa.
+Objímka je v exporte 615 mm vysoká, ale na fotkách realizácií z nej toľko
+vidieť nie je.
+
+### Pozor na rendre z e-shopu
+
+Sú to marketingové obrázky, nie merateľná geometria: zo 179 stiahnutých
+súborov je len **123 rôznych** — Koverta ten istý render používa pre viac
+rozmerov (napr. 6,0 × 5,6, 6,0 × 6,0 a 6,2 × 5,6 majú tri identické obrázky
+a 6,6 × 6,0 zdieľa render so 7,0 × 6,0). Rozostupy stĺpov sa z nich preto
+merať nedajú; na to je model v Expivi. Dobré sú na to, ako má výrobok
+vyzerať — tvar stĺpa, pätka, zvod.
+
+`../archiv-expivi/meranie-z-rendrov.py` z nich vie prečítať šírku stĺpa
+oproti výške lemovania (vyjde 150 mm, ako v exporte) a polohy stĺpov na
+obrázku.
+
 ## Čiary na streche a fľaky na plechu
 
 Tri rôzne chyby vyzerali rovnako — „strecha má čiary" — a každá mala iný

@@ -2254,11 +2254,22 @@
                 const pth = Math.max(8, Math.round(pl * 0.05));
                 const cx = px + pd / 2, cy = py + pw / 2;
                 boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, '#c9ccce', ['-z'], SHAFT);
-                const objH = Number(model().plateSleeve) || 0;
+                /* Na oficiálnych rendroch sú v doske štyri skrutky do betónu,
+                   po jednej v každom rohu. Bez nich vyzerala doska ako
+                   podložený plech. */
+                const roz = pl / 2 - Math.max(16, Math.round(pl * 0.11));
+                [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach((k) => {
+                  skrutkuj(cx + k[0] * roz, cy + k[1] * roz, pth, 'z',
+                           shade('#c9ccce', -0.34), Math.max(5, Math.round(pl * 0.028)), 1, 5);
+                });
+                /* Medzi doskou a stĺpom je krátka pozinkovaná objímka. Na
+                   rendroch je z nej vidieť pás asi na tretinu šírky stĺpa —
+                   celých 615 mm z modelu Expivi na fotkách realizácií nie je. */
+                const objH = Number(model().plateSleeve) || Math.round(Math.min(pd, pw) * 0.36);
                 if (objH) {
-                  const g = Math.max(4, Math.round(Math.min(pd, pw) * 0.06));
+                  const g = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
                   boxFaces(px - g, py - g, pth, pd + 2 * g, pw + 2 * g, objH,
-                           shade('#c9ccce', -0.10), ['+z', '-z'], SHAFT);
+                           shade('#c9ccce', -0.06), ['+z', '-z'], SHAFT);
                 }
               }
               /* Soltec je hliníkový profil s ostrou hranou. Koverta je oceľový
@@ -2267,7 +2278,11 @@
                  štyri rovné líca a v každom rohu dva krátke úkosy, čo v tejto
                  mierke zaoblenie prečíta. */
               if (BIO.roundPosts) {
-                const r = Math.max(6, Math.round(Math.min(pd, pw) * 0.16));
+                /* Jakl má hrany len zrazené, nie oblé. Kým bol polomer 16 %
+                   šírky, mal stĺp cez celé líce mäkký prechod a čítal sa ako
+                   rúra — na oficiálnych rendroch Koverty sú pritom dve rovné
+                   líca a medzi nimi ostrá hrana. */
+                const r = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
                 const zTopP = H + lift;
                 /* Obrys sa obchádza proti smeru hodinových ručičiek: rovné líce,
                    oblúk v rohu, rovné líce. Predtým sa body kládli po rohoch
@@ -2975,7 +2990,7 @@
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
                medzi nimi ostane škára a pri plochom pohľade cez ňu presvitá
                podhľad — presne ten svetlý pruh pozdĺž hrany. */
-            const LEM_ARM = 4;
+            const LEM_ARM = 6;
             const RAM_W = REF.ramW || 74, RAM_H = REF.ramH || 220;
             const RAM_BOK = REF.ramBok || 18;        // odsadenie rámu od boku
             const RAM_ZAD = REF.ramZad || 15;        // od zadného čela
@@ -2993,7 +3008,11 @@
                väznice končia 220 mm nad spodkom rámu, plech začína 223 a
                končí 259, lemovanie 260. Plech je teda vždy pod ramenom
                lemovania a nemá kadiaľ presvitať. */
-            const trapBot = ramTop + 3, trapTop = trapBot + TRAP_H;
+            /* Plech dosadá priamo na hornú pásnicu. Odmeraných 223 mm proti
+               220 je v modeli Expivi trojmilimetrová vôľa a pri pohľade zhora
+               sa cez ňu na spoji dielov pozeralo popod plech — vyzeralo to
+               ako tenká svetlá čiara cez celú strechu. */
+            const trapBot = ramTop, trapTop = trapBot + TRAP_H;
 
             /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelné cez
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
@@ -3074,19 +3093,27 @@
             /* axis 'x': profil má rez naprieč X a beží po Y. axis 'y': rez
                naprieč Y, beh po X. `a0` je začiatok rezu naprieč, `z0` spodok,
                `u0..u1` beh. */
-            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara) => {
+            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara, podStrechou) => {
               const t = hrubka || 6;
               const rez = cRez(par, vys, t);
               const P = (a, z, u) => (axis === 'x' ? [a0 + a, u, z0 + z] : [u, a0 + a, z0 + z]);
+              /* Zvislé líca profilu sa pri pohľade zhora nekreslia. Sú celé
+                 pod plechom strechy a spoza lemovania ich vidieť nemôže —
+                 maliarske triedenie to ale nevie: rovina takého líca rozdelí
+                 veľkú plochu strechy na dva kusy a samo sa kreslí medzi ne,
+                 takže mu na spoji vykukol pixel a cez celú strechu z toho
+                 bola tenká svetlá čiara. */
+              const bokom = !(podStrechou && fromAbove);
               for (let i = 0; i < rez.length; i++) {
                 const A = rez[i], B = rez[(i + 1) % rez.length];
                 let da = B[0] - A[0], dz = B[1] - A[1];
                 const dl = Math.hypot(da, dz) || 1; da /= dl; dz /= dl;
                 const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
+                if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
                      hex, { normal: n, cull: true, arris: false });
               }
-              cCela(par, vys, t).forEach((r) => {
+              (bokom ? cCela(par, vys, t) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
@@ -3106,10 +3133,10 @@
                presne na vnútorné líce zvislého ramena lemovania, ležali obe
                roviny na sebe a čelo profilu cez lemovanie presvitalo ako
                svetlá zvislá čiara v rohu. */
-            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB);
-            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB);
-            cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
-            cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
+            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
+            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
+            cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+            cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -3127,8 +3154,15 @@
             /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
                položený na líci dielu, nie ako guľa; v tejto mierke je to
                presne to, čo je na spoji vidieť. */
-            const skrutka = (cx0, cy0, cz0, os, R, sgn) =>
+            /* Spojky, skrutky aj žľab sú celé v hĺbke obvodového rámu, teda
+               za lemovaním. Pri pohľade zhora ich vidieť nemôže a maliarske
+               triedenie im na spojoch veľkých plôch dovoľovalo vykuknúť —
+               preto sa vtedy nekreslia vôbec. */
+            const podStrechu = !fromAbove;
+            const skrutka = (cx0, cy0, cz0, os, R, sgn) => {
+              if (!podStrechu) return;
               skrutkuj(cx0, cy0, cz0, os, skrutHex, R || 11, os === 'z' ? -1 : (sgn || 1), 7);
+            };
             /* Spojka je uholník: plochý plech asi 10 mm hrubý, ohnutý o 90°
                presne v strede, širší ako vyšší. Jedno rameno dosadá na stojinu
                väznice, druhé na stojinu obvodového rámu, a v každom sú dve
@@ -3146,6 +3180,7 @@
             const zVaz = ramTop - VAZ_H / 2;     // stred priečnej väznice
             const zRam = (ramBot + ramTop) / 2;  // stred obvodového rámu
             const uholnik = (px, sx, py, sy, zc) => {
+              if (!podStrechu) return;
               const z0 = zc - UHOL_H / 2;
               /* Uholník má rovnakú farbu ako profil, na ktorom leží, takže ho
                  od neho odlíši len priznaná hrana — kreslí sa preto s obťahom,
@@ -3182,7 +3217,7 @@
               /* Väznica je tá istá dvojica C chrbtami k sebe ako obvodový rám,
                  len nižšia — kreslí sa z rovnakého rezu. Škáru medzi profilmi
                  má zdola vidieť, obvodový rám nie. */
-              cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true);
+              cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);
               /* Skrutky sú na oboch koncoch a potom zhruba každý meter. */
               const stanic = Math.max(1, Math.round((inY1 - inY0) / 1000));
               for (let i = 0; i <= stanic; i++) {

@@ -54,10 +54,23 @@ const { chromium } = require(PLAYWRIGHT);
       for (let ai = 0; ai < 8; ai++) {
         const az = -Math.PI + (ai * Math.PI * 2) / 8;
         for (const el of [0.10, 0.42]) {
+          /* Strecha smie stĺp zakryť — pri pohľade zhora zakryje ten, čo
+             stojí pri jej odvrátenej hrane, a je to tak správne. Lúč do
+             kamery ide smerom VIEWDIR = (−sin az · cos el, cos az · cos el,
+             sin el); keď na výške strechy padne ešte do jej pôdorysu, je bod
+             za strechou a nekontroluje sa. */
+          const V = [-Math.sin(az) * Math.cos(el), Math.cos(az) * Math.cos(el), Math.sin(el)];
+          const zaStrechou = (x, y, z) => {
+            if (V[2] <= 0.02) return false;
+            const t = (bio.models.K.fixedHeight - z) / V[2];
+            const rx = x + V[0] * t, ry = y + V[1] * t;
+            return rx > 0 && rx < L && ry > 0 && ry < W;
+          };
           window.SP_TEST.setView(az, el); window.SP_TEST.redraw();
           await new Promise(r => setTimeout(r, 40));
           const s = await snap();
           for (const [x, y, z, n] of body) {
+            if (zaStrechou(x, y, z)) continue;
             const q = window.SP_TEST.project(x, y, z);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w-1 || py >= s.h-1) continue;
