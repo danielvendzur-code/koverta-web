@@ -32,7 +32,7 @@ jobs:
           exit 1
       - name: Capture Koverta visual sweep
         run: |
-          cat > /tmp/koverta-visual-sweep.js <<'NODE'
+          cat > koverta-visual-sweep.js <<'NODE'
           const fs = require('node:fs');
           const { chromium } = require('playwright');
 
@@ -162,7 +162,7 @@ jobs:
             process.exit(1);
           });
           NODE
-          node /tmp/koverta-visual-sweep.js
+          node koverta-visual-sweep.js
       - name: Upload visual sweep
         if: always()
         uses: actions/upload-artifact@v4
