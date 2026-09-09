@@ -344,7 +344,8 @@
       body.push('Požadovaný rozmer: ' + formatMm(custom.w) + ' × ' + formatMm(custom.l) + ', výška ' + formatMm(custom.h) + '.');
       if (custom.note) body.push('Poznámka: ' + custom.note);
       body.push('');
-      body.push('Najbližšia katalógová zostava použitá ako referencia: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
+      body.push('Najbližšia katalógová zostava použitá iba ako cenová referencia: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
+      body.push('Atypický rozmer je samostatný dopyt na technické posúdenie. Konfigurátor nepotvrdzuje jeho realizovateľnosť ani cenu.');
     } else {
       body.push('Mám záujem o oceľový prístrešok Koverta.');
       body.push('Rozmer: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
@@ -486,13 +487,13 @@
     panel.className = 'kv-custom';
     panel.hidden = true;
     panel.innerHTML = ''
-      + '<p class="sp-side-note">Napíšte rozmer, ktorý potrebujete. Pošleme naň cenu po zameraní.</p>'
+      + '<p class="sp-side-note">Napíšte požadovaný rozmer. Je to samostatný dopyt na technické posúdenie; katalógová zostava ani jej cena nepotvrdzujú realizovateľnosť atypického rozmeru.</p>'
       + '<div class="kv-custom__row">'
       + '<label>Šírka (mm)<input type="number" min="1" step="1" required data-kv-cw></label>'
       + '<label>Hĺbka (mm)<input type="number" min="1" step="1" required data-kv-cl></label>'
       + '<label>Výška (mm)<input type="number" min="1" step="1" required data-kv-ch></label>'
       + '</div>'
-      + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad L-tvar, previs okolo stromu, prístrešok pre dodávku…"></textarea></label>'
+      + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad spôsob použitia, umiestnenie alebo iné požiadavky…"></textarea></label>'
       + '<p class="sp-side-note" data-kv-cerr role="alert" hidden>Vyplňte všetky tri rozmery kladným číslom v milimetroch.</p>'
       + '<button class="button" type="button" data-kv-csend>Poslať dopyt na tento rozmer</button>';
     btn.parentNode.insertBefore(panel, btn.nextSibling);
