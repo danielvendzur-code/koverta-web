@@ -15,13 +15,16 @@
 */
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
+const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
 
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
-  const p = await (await b.newContext({ viewport: { width: 1000, height: 750 } })).newPage();
-  p.on('pageerror', (e) => console.log('CHYBA STRÁNKY', e.message));
+  const ctx = await b.newContext({ viewport: { width: 1000, height: 750 } });
+  await prepareContext(ctx);
+  const p = await ctx.newPage();
+  const assertNoErrors = watchErrors(p);
   await p.goto(URL, { waitUntil: 'load', timeout: 60000 });
   await p.waitForTimeout(2200);
   if (!await p.evaluate(() => Boolean(window.SP_TEST))) { console.log('SP_TEST chýba'); await b.close(); process.exit(2); }
@@ -72,5 +75,6 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
     console.log('silueta sa mení plynulo (3 veľkosti × 5 sklonov × 72 uhlov)');
   }
   await b.close();
+  assertNoErrors();
   process.exit(nalezy.length ? 1 : 0);
 })();

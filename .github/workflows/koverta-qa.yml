@@ -1,6 +1,8 @@
 name: Koverta configurator QA
 
 on:
+  push:
+    branches: [fix/final-koverta-audit-20260909]
   pull_request:
     branches: [master]
 
@@ -11,10 +13,14 @@ jobs:
   configurator:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [osnova-podla-expivi, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Verify QA files
         run: ls -la konfigurator/test && test -f konfigurator/test/layout-smoke.js
       - uses: actions/setup-node@v4
@@ -22,6 +28,11 @@ jobs:
           node-version: 22
       - name: Install Playwright
         run: |
+          # The GitHub runner already contains Chrome. Its external APT source
+          # is unrelated to Playwright Chromium dependencies and can transiently
+          # return a Hash Sum mismatch; keep the QA deterministic by excluding
+          # only that source before Playwright runs apt-get.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start static server
@@ -37,15 +48,11 @@ jobs:
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
-          node konfigurator/test/layout-smoke.js
-          node konfigurator/test/stlpy-vidno.js
-          node konfigurator/test/prekrytie.js
-          node konfigurator/test/strecha-nepresvita.js
-          node konfigurator/test/plynulost.js
+          node konfigurator/test/${{ matrix.test }}.js
       - name: Upload visual QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-visual-qa
+          name: koverta-visual-qa-${{ matrix.test }}
           path: qa-artifacts
           if-no-files-found: ignore

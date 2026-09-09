@@ -1,388 +1,217 @@
-# Prístrešky Koverta v konfigurátore — čo je odkiaľ
-
-Stránka `?page=koverta` beží na tom istom behu ako Soltec
-(`soltec-premium.js`). Všetko, čo je pre Kovertu iné, je podmienené poľom
-modelu, ktoré Soltec modely nemajú — Soltec sa preto nesmie zmeniť.
-
-## Zdroj čísel
-
-Ceny, rozmery a možnosti sú z Expivi. Archív je v `../archiv-expivi`.
-
-Geometria je **odmeraná z Expivi modelu**, nie odhadnutá. Export katalógu sa
-sťahuje takto (token je verejne v HTML stránky
-`koverta.sk/apps/configurator?catalogue=<shopify_id>`, atribút `data-token`):
-
-```
-curl -H "Authorization: Bearer $TOK" \
-  https://data.expivi.net/teams/811/models/<katalog>/<hash>.zip
-```
-
-`<hash>` je v `archiv-expivi/scena/<katalog>.json` v poli `configurable_export`.
-
-Formát `.ebm` je jednoduchý binárny mesh. Hlavička je 8× uint32:
-
-| offset | čo |
-| --- | --- |
-| 0 | verzia (2) |
-| 4 | počet floatov pozícií (= 3 × počet vrcholov) |
-| 8 | počet indexov |
-| 12 | počet UV kanálov |
-| 16 | offset pozícií (3 × float32) |
-| 20 | offset normál (3 × float32) |
-| 24 | offset UV (2 × float32) |
-| 28 | offset indexov (uint32) |
-
-Parser je `../archiv-expivi/ebm.py`, meranie stĺpov
-`../archiv-expivi/meranie-stlpov.py`. Odmerané výsledky sú v
-`stlpy-odmerane.json` (surové, po katalógoch) a `stlpy-tabulka.json`
-(po veľkostiach).
-
-## Odmerané diely (katalóg 14069, prístrešok 7 × 6 m)
-
-Toto je **kompletný zoznam dielov** jednej scény, nie výber. Vyrobí ho
-`../archiv-expivi/diely-zo-sceny.py`.
-
-| diel | rozmer | počet |
-| --- | --- | --- |
-| rohový stĺp | 150 × 150 × 2 398 | 4 |
-| stĺp stredného radu | 110 × 190 × 2 398 (190 pozdĺž hĺbky) | 2 |
-| kotevná pätka | 250 × 250 × 615 | 6 |
-| obvodový rám po bokoch | C 74 × 220, dlhý 5 820 | 2 |
-| obvodový rám na čelách | C 74 × 220, dlhý 6 964 | 2 |
-| väznica | C 58 × 180, dlhá 6 940 | 10 = 5 dvojíc |
-| tabuľa trapézu | 1 057 × 5 900 × 36, krycia šírka 1 023 | 7 |
-| lemovanie na čelách | 190 dovnútra × 260 nadol | 2 |
-| lemovanie na bokoch | 240 dovnútra × 257 nadol — **kreslí sa 190**, viď nižšie | 2 |
-| spojka (uholník) | 120 × 85 × 140 | 24 = 20 na väzniciach + 4 v rohoch |
-| zadná stena (voľba) | 6 981 × 166 × 2 576 | 1 |
-
-Výšky nad spodkom rámu (a to je zároveň svetlá výška 2 398 mm):
-
-| od | do | čo |
-| --- | --- | --- |
-| 0 | 220 | obvodový rám |
-| 40 | 220 | väznice |
-| 223 | 259 | trapéz |
-| 0 | 260 | lemovanie |
-
-Z toho vyplýva, že **trapéz leží na hornej pásnici rámu a väzníc, nie v
-nich**, a že horné rameno lemovania je nad ním. Kým bol podhľad plechu o
-9 mm nižšie než pásnica, prerážali väznice a rám cez strechu a zhora z toho
-boli svetlé čiary krížom cez vlnu.
-
-### Prečo je dôležité merať len to, čo je v scéne
-
-Zip exportu obsahuje aj siete variánt, ktoré scéna nekreslí. Katalóg 14069
-má materiálové skupiny `4NOHY`, `6NOH`, `NOHY4`, `NOHY6`, `POZINK4`,
-`POZINK6` — teda štvor- aj šesťnohú variantu naraz — a v zipe je 427 sietí,
-z ktorých scéna kreslí 62. Kým sa meral celý zip, vyšla ich **zjednotená
-množina**: šesťstĺpová varianta z nej mala všetky tri rady vtiahnuté dnu a
-strecha na oboch koncoch prečnievala skoro meter. To v modeli nie je. Skript
-preto berie len siete uvedené v `batches` v `../archiv-expivi/scena/<id>.json`
-a každú rozdelí na súvislé komponenty podľa spoločných vrcholov — jedna sieť
-totiž môže nesť viac dielov spojených len materiálom.
-
-## Čo v Expivi modeli nie je
-
-Odkvap ani zvod. V žiadnom zo 70 exportov niet dielu, ktorý by nimi bol — v
-Expivi je odkvap samostatná voliteľná skupina bez geometrie.
-
-**Ako to vyzerá na realizáciách** (rendery Koverty v `archiv-expivi`, ktoré
-prišli s katalógmi): pod odkvapovou hranou **nevisí žiadny žľab**. Spodná
-hrana lemovania ide po celej dĺžke čistá. Obvodový rám je na tej strane
-zatiahnutý 159 mm dnu a v tej kapse za lemovaním žľab sedí — zvonku ho
-nevidno. Vidieť z neho iba **zvod**: spod lemovania vyjde pri rohovom stĺpe,
-kolenom sa vráti k jeho licu a po ňom ide na zem, kde končí vyhnutou pätkou.
-
-Tak je to aj nakreslené. Zavesený polkruhový žľab na hákoch, ktorý tu bol
-istý čas, na žiadnej fotke Koverty nie je — bola to chyba a je preč.
-
-## Polia modelu, ktoré túto cestu zapínajú
-
-`roofKit: 'koverta'`, `postD`, `postW`, `plate`, `rimSoffitHex`,
-`trapezSoffitHex`, `trapezTopHex`, `kvGeom`, `snap`, `wallSide`,
-`wallBack`, `minHeight`. Na úrovni stránky `gutter`, `bolts`, `roundPosts`,
-`basePlates`, `sideOpts`, `sideMat`, `sideLabel`, `sideLocative`.
-
-## Osnova: z čoho sa počíta celá konštrukcia
-
-Nič sa nekreslí podľa tabuľky rozmerov. Celý prístrešok stojí na jednej
-osnove a pravidlo je jedno: **stĺp nikdy nestojí sám o sebe — buď pod
-väznicou, alebo v osi čelného rámu.**
-
-1. **Osi čelných rámov.** Jedna je 52 mm od zadnej hrany strechy, druhá
-   196 mm od odkvapovej — tam je 159 mm kapsa, v ktorej visí žľab. (Profil
-   je 74 hrubý, takže líce je 15, resp. 159 mm dnu.)
-2. **Osi väzníc** — a tie má každá varianta inde:
-   * **štvorstĺpová** má tri väznice v strede a po **L/4 + 250** od neho
-     (na 6,0 m je to 1 750 mm, na 5,6 m 1 650 — obe odmerané);
-   * **šesťstĺpová** delí rozpätie medzi osami čelných rámov na rovnaké
-     polia so stropom 960 mm, čo pri 5,2 – 6,0 m dá päť väzníc.
-3. **Osi stĺpov.**
-   * **štvorstĺpová** stojí pod **krajnými dvoma väznicami** z troch, takže
-     strecha jej na oboch koncoch prečnieva vyše metra. Prierez 110 × 190
-     (190 pozdĺž hĺbky) — všetky štyri.
-   * **šesťstĺpová** má krajné rady **v osiach čelných rámov**, teda pri
-     hranách strechy (prierez 150 × 150), a stredný rad **pod prostrednou
-     väznicou** (110 × 190).
-
-**Počet stĺpov nie je voľba zákazníka.** Vyplýva zo šírky a cenník to hovorí
-sám: štvorstĺpová matica v Expivi končí na 6,2 m a od 6,6 m je publikovaná už
-len šesťstĺpová.
-
-| šírka | varianta | väznice pri 5,2 – 6,0 m | stĺpy |
-| --- | --- | --- | --- |
-| 2 500 – 6 200 | štvorstĺpová | 3, v strede ± (L/4 + 250) | 4 pod krajnými väznicami, 110 × 190 |
-| 6 600 – 7 000 | šesťstĺpová | 5, rovnomerne, pole ≤ 960 mm | 4 v osiach rámu (150 × 150) + 2 pod prostrednou väznicou (110 × 190) |
-
-### Prečo to nie je „stĺpy v rohoch"
-
-Pri štvorstĺpovej variante **nie sú stĺpy v rohoch** — sú vyše metra dnu a
-strecha nad nimi prečnieva. Vidieť to na oficiálnych rendroch Koverty aj v
-exporte. Prierez 150 × 150 v zipe patrí **šesťstĺpovej** variante, nie
-štvorstĺpovej; kým sa bral ako „rohový stĺp štvorstĺpovej", stáli stĺpy pri
-hranách strechy a to je zle. Štvorstĺpová má všetky štyri stĺpy 110 × 190 a
-tie v exporte sedia presne s krajnými väznicami svojej sady.
-
-### Čo z toho vyjde a čo je v exporte
-
-Osi sú vztiahnuté k hrane strechy, merané od odkvapového čela.
-
-| veľkosť | osi väzníc podľa osnovy | odmerané v exporte |
-| --- | --- | --- |
-| 2,5 × 5,6 (4 stĺpy) | 1 222 / 2 872 / 4 522 | 1 222 / 2 872 / 4 522 |
-| 2,5 × 6,0 (4 stĺpy) | 1 322 / 3 072 / 4 822 | 1 322 / 3 072 / 4 822 |
-| 7,0 × 5,2 (6 stĺpov) | 1 021 / 1 847 / 2 672 / 3 497 / 4 323 | 1 021 / 1 846 / 2 672 / 3 497 / 4 322 |
-| 7,0 × 6,0 (6 stĺpov) | 1 155 / 2 113 / 3 072 / 4 031 / 4 989 | 1 132 / 2 136 / 3 072 / 4 008 / 5 012 |
-
-Pri štvorstĺpovej a pri 7,0 × 5,2 to sedí na milimeter, pri 7,0 × 6,0 do
-23 mm — tam je autorský model o toľko nepravidelný. Os obvodového rámu
-(52 / 196 mm) sedí na **21 katalógoch** všetkých šírok a hĺbok.
-
-Preto tu nie je žiadna tabuľka polôh: rozmer na mieru vyjde tým istým
-vzorcom ako katalógový a nie je čo dopočítavať naslepo.
-
-### Dve chyby priamo v Expivi, ktoré netreba hľadať znova
-
-- katalóg 14198 (7,0 × 5,6) má v exporte geometriu 5,2 m;
-- scéna sa z API ťahá s prázdnym výberom atribútov, takže pri väčšine
-  katalógov vráti len časť dielov (často len strechu). Kompletnú scénu majú
-  14069 a 14192; ostatné vedia potvrdiť aspoň os obvodového rámu.
-
-Zip exportu navyše nesie aj siete variánt, ktoré sa pri danej veľkosti
-nepredávajú — pri 7,0 m sú v ňom rady 1 132 / 5 012, hoci štvorstĺpová
-varianta pri tej šírke v cenníku nie je.
-
-Novšie katalógy (šírky 3,0 / 3,8 / 4,5 / 5,4 / 6,2 / 6,6 m) sú iná generácia
-dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
-generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník.
-
-## Lemovanie má na všetkých stranách rovnakú šírku
-
-Export Expivi má na čelách 190 mm a na bokoch 240 mm — overené na katalógoch
-13670, 13688 aj 13412, všade rovnako. Podľa výrobcu je to v jeho modeli
-nezrovnalosť: lemovanie je zo všetkých štyroch strán rovnaké, aby zhora
-tvorilo pravidelný rám. Kreslí sa preto 190 na všetky štyri strany.
-Odmeraná hodnota z exportu ostáva zapísaná v dátach ako `lemBokExport`,
-aby sa nestratila.
-
-## Test osnovy proti Expivi
-
-`konfigurator/test/osnova-podla-expivi.js` prepočíta vzorec osnovy a porovná
-ho s dielmi odmeranými z kompletných scén
-(`archiv-expivi/diely-zo-sceny.json`). Nič nerenderuje — porovnávajú sa
-čísla, takže odpovie na otázku „sú stĺpy, rám a väznice tam, kde majú byť"
-bez hádania z obrázka. Kontroluje osi rámu, osi väzníc, osi stĺpov aj
-prierezy stĺpov.
-
-```
-node konfigurator/test/osnova-podla-expivi.js
-```
-
-Tolerancia je 50 mm. Test si vzorec drží zvlášť a číta ho z tých istých
-čísel v `kvRef` ako engine — keby sa engine a dáta rozišli, rozíde sa aj
-test.
-
-Overuje sa na troch úrovniach, takže „sedí to len pri jednej veľkosti" nemá
-kde vzniknúť:
-
-| čo | koľko katalógov | odkiaľ |
-| --- | --- | --- |
-| osi rámu, väzníc, stĺpov aj prierezy stĺpov | 2 (7,0 × 5,2 a 7,0 × 6,0) | kompletná scéna |
-| os obvodového rámu | 21 | scéna, aj keď nesie len strechu |
-| osi rohových stĺpov 150 × 150 (šesťstĺpová) | 32 | zip exportu — taký prierez má len šesťstĺpová varianta a sú presne štyri |
-| rady štvorstĺpovej 110 × 190 | 20 | zip exportu — trojica {krajný, stredný, krajný} sa porovná celá |
-
-## Test prekrytia
-
-`konfigurator/test/prekrytie.js` overí, či plech strechy neprerazí cez
-lemovanie. Túto triedu chýb od oka spoľahlivo nenájdeš: plech prerazí len
-pri niektorých uhloch a len o pár pixelov, ale na modeli to je vidieť ako
-„trapéz pretŕča cez lemovanie". Test zafarbí strechu a lemovanie kontrastne,
-scénu vykreslí do plátna a v bodoch, kde má byť lemovanie, prečíta skutočnú
-farbu pixela — 180 pohľadov × ~270 bodov, tri veľkosti.
-
-```
-npx http-server . -p 8901 -s &
-PLAYWRIGHT_PATH=/opt/node22/lib/node_modules/playwright node konfigurator/test/prekrytie.js
-```
-
-Engine na to nesie `window.SP_TEST` (kamera, prekreslenie, prepočet bodu na
-plátno). Nič nekreslí ani nemení.
-
-Prečo plech prerážal a čo to spravilo:
-
-* **Veľké plochy plechu sa nesmú obťahovať.** Obťah ide 0,35 px za obrys
-  plochy a pri plochom pohľade, keď je rameno lemovania zúžené na pár
-  pixelov, ho ten pretiahnutý okraj prekryje. Lícna aj spodná plocha plechu
-  sa preto kreslia bez obťahu a vcelku, nie po tabuliach. Presah tabúľ leží
-  v drážke vlny a zhora ho vidieť nie je — tabuľa sa prekrýva celým jedným
-  hrebeňom; zdola ho prezradí len vlások na spoji.
-* **Vrch plechu ide naopak cez celú plochu, aj pod ramená lemovania.** Kým
-  sa kreslil len po odkryté pole, ostala pod ramenom diera do tela plechu a
-  pri plochom pohľade bolo cez ňu vidieť pod strechu — svetlý pruh pozdĺž
-  hrany. Prerážať nemôže, lebo rameno lemovania je celé nad vrchom plechu
-  (256 – 260 mm proti 259 mm nad spodkom rámu).
-* **Rám má za ramenom lemovania 3 mm vzduchu a bočný rám končí 2 mm pred
-  čelným.** Kým jeho líce a čelo dosadali presne na roviny lemovania, ležali
-  obe roviny na sebe, BSP ich rozdelil na spoločnej rovine a profil cez
-  lemovanie presvital ako vlások.
-* **Vnútorná hrana horného ramena lemovania má krátky zahyb nadol.** Bez neho
-  tam bola len škára a pri plochom pohľade cez ňu bolo vidieť pod strechu —
-  pozdĺž hrany svietil svetlý pruh.
-
-## Stĺp je jakl s ostrou hranou, nie rúra
-
-Oficiálne rendre Koverty (obrázky produktov v e-shope, `products.json` →
-`images`) ukazujú stĺp ako dve rovné líca s ostrou hranou medzi nimi. Kým sa
-rohy zaobľovali polomerom 16 % šírky, mal stĺp cez celé líce mäkký prechod a
-čítal sa ako rúra. Zrazenie je preto 3,5 % šírky, teda asi 5 mm na stĺpe
-150 × 150.
-
-Pod stĺpom je na rendroch **doska so štyrmi skrutkami do betónu** a medzi
-ňou a stĺpom **krátka pozinkovaná objímka** vysoká asi tretinu šírky stĺpa.
-Objímka je v exporte 615 mm vysoká, ale na fotkách realizácií z nej toľko
-vidieť nie je.
-
-### Pozor na rendre z e-shopu
-
-Sú to marketingové obrázky, nie merateľná geometria: zo 179 stiahnutých
-súborov je len **123 rôznych** — Koverta ten istý render používa pre viac
-rozmerov (napr. 6,0 × 5,6, 6,0 × 6,0 a 6,2 × 5,6 majú tri identické obrázky
-a 6,6 × 6,0 zdieľa render so 7,0 × 6,0). Rozostupy stĺpov sa z nich preto
-merať nedajú; na to je model v Expivi. Dobré sú na to, ako má výrobok
-vyzerať — tvar stĺpa, pätka, zvod.
-
-`../archiv-expivi/meranie-z-rendrov.py` z nich vie prečítať šírku stĺpa
-oproti výške lemovania (vyjde 150 mm, ako v exporte) a polohy stĺpov na
-obrázku.
-
-## Test „cez strechu nič nepresvitá"
-
-`konfigurator/test/strecha-nepresvita.js` prefarbí pozinkované diely a
-podhľad na sýte farby, ktoré sa na streche nemajú kde vziať, a v pohľadoch
-zhora spočíta, koľko takých pixelov na streche je. Musí ich byť nula.
-
-```
-npx http-server . -p 8901 -s &
-PLAYWRIGHT_PATH=/opt/node22/lib/node_modules/playwright \
-  node konfigurator/test/strecha-nepresvita.js
-```
-
-Túto triedu chýb od oka nenájdeš: je to jeden pixel na spoji, ktorý sa cez
-celú strechu poskladá do tenkej svetlej čiary, a pri väčšine uhlov tam nie
-je. Test ju našiel na štyroch miestach — na väzniciach, na obvodovom ráme,
-na platniach hlavy stĺpa aj na spojkách.
-
-**Prečo vzniká a čo ju vypína.** Maliarske triedenie (BSP) rozdelí veľkú
-plochu strechy rovinou zvislého líca profilu na dva kusy a samotné líce
-kreslí medzi ne. Kus, ktorý je už nakreslený, mu potom neprekryje ten
-pixel, o ktorý líce v premietaní presahuje. Spoľahlivo tomu zabráni jedine
-to, že sa taký diel nekreslí vôbec — a to sa dá, lebo keď je oko nad
-rovinou strechy, na nič pod ňou sa nedá pozrieť: každý lúč k takému bodu
-ide zhora nadol a strecha alebo lemovanie mu stoja v ceste. Hranica
-`nadStrechou` je presne tá rovina, takže sa nič nestratí ani o stupeň
-nižšie — overené: tesne pod ňou a tesne nad ňou sa po erózii 5 × 5 nezmení
-ani jeden pixel.
-
-## Čiary na streche a fľaky na plechu
-
-Tri rôzne chyby vyzerali rovnako — „strecha má čiary" — a každá mala iný
-dôvod:
-
-* **Vlna trapézu ako žalúzia.** Svetlý pruh bol široký polovicu rozteče a na
-  antracitovom plechu z toho boli lamely. Skutočný plech T35 má rozteč
-  204,6 mm (krycia šírka 1 023 / 5) a zhora je na ňom vidieť len tenký lesk
-  na hrebeni a mäkký tieň v drážke.
-* **Škáry dlažby cez strechu.** Podklad — dlažba, jej škáry a vrhnutý tieň —
-  leží celý v rovine z = 0. V hustej scéne (5 400 plôch) naráža BSP na strop
-  hĺbky a tam sa vracia k triedeniu podľa priemernej hĺbky; škára dlažby je
-  pritom obrovská plocha vycentrovaná pod modelom, takže jej priemer vyjde
-  bližšie než strecha. Podklad sa preto triedi zvlášť a kreslí prvý.
-* **Biele vlásky na spojoch.** Veľkú plochu plechu rozdelí BSP na kusy podľa
-  rovín rámu a väzníc; s vyhladzovaním presvital na každom takom spoji
-  podklad. Veľké plochy sa preto kreslia s `crispEdges`. Úzke pruhy vlny
-  **nie** — tie sa pri plochom pohľade zúžia pod pixel a bez vyhladzovania z
-  nich ostanú zubaté kocky, teda tmavé fľaky na plechu.
-
-## Čo ešte nie je hotové
-
-- Steny sa kreslia z lamiel v engine, nie podľa odmeraných panelov.
-- Záhradné prístrešky používajú rovnaké diely ako prístrešky pre autá;
-  overiť, či to tak je aj v skutočnosti.
-
-## Referenčný prístrešok (od 2026-09)
-
-Konfigurátor kreslí jeden skutočný výrobok, nie dopočítaný rozmer:
-**katalóg Expivi 14069 „Prístrešok 7.0 x 6.0"**, ktorého scéna je kompletná
-— všetkých 62 sietí, ktoré kreslí, je odmeraných a rozdelených na diely.
-Druhá kompletná scéna je 14192 (7,0 × 5,2) a slúži na kontrolu vzorca.
-Čísla sú v `models.K.kvRef` v dátovom bloku stránky; to, čo sa mení šírkou,
-je vedľa v `kvGeom`.
-
-Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
-**y = šírka**, odkvapová hrana na `x = L`.
-
-| diel | odmerané | pole v `kvRef` |
+# Koverta configurator: sources, measured geometry and open questions
+
+Audit date: 2026-09-09. Working branch: `fix/final-koverta-audit-20260909`.
+
+Expivi dimensions and column positions are the technical baseline. Photographs
+can confirm appearance and installed variants; they cannot establish millimetre
+dimensions or replace a structural design. A passing image test does not certify
+structural accuracy.
+
+## Source priority and scope
+
+1. A complete Expivi scene for the exact catalogue and selected variant.
+2. The archived old configurator's catalogue, option and price data.
+3. Real installed Koverta photographs for appearance and visible details.
+
+The reference archive is commit
+`04b2c0c472020c80e73bc86d36fa72e92acda43d`.
+The two measurement files available on this branch are:
+
+- `archiv-expivi/diely-zo-sceny.json`: components of returned scenes.
+- `archiv-expivi/stlpy-a-vaznice-odmerane.json`: measurements of the exported
+  mesh collection, restored unchanged from that commit.
+
+A mesh collection contains inactive variants too. Its union of columns must
+never be rendered as one assembly. Many returned scenes contain only a roof;
+those scenes do not establish the active column variant. In particular,
+`archiv-expivi/scena/13670.json` is a configurable mesh family with variant
+assets; it is not a resolved active component list and cannot establish one
+universal column layout.
+
+## Exact axes implemented for complete scenes
+
+`models.K.kvBySize` in `cfg-pages.js` supplies these two exact assemblies.
+The runtime uses their measured axes directly, including irregular purlin
+spacing. It does not regularise them or clamp their corner columns to another
+axis. Other dimensions still use the inherited formulas and remain subject to
+the limitations below.
+
+Coordinates in the runtime: x = depth, y = width, z = height. Measurements are
+mirrored along depth from Expivi. The zero of the source depth is the beginning
+of the full-length side fascia: 20 mm for catalogue 14069 and 9 mm for 14192.
+These offsets come from the actual fascia components, not the overall envelope
+which also contains base assemblies. Values below are in millimetres.
+
+| Catalogue | Nominal size | Frame axes x | Purlin axes x | Column axes x |
+|---|---|---|---|---|
+| 14069 | 7000 × 6000 | 52, 5804 | 988, 1992, 2928, 3864, 4868 | 72, 2928, 5784 |
+| 14192 | 7000 × 5200 | 52, 5004 | 878, 1703, 2528, 3354, 4179 | 72, 2528, 4984 |
+
+Both scenes have four 150 × 150 corner columns and two 110 × 190 middle
+columns; the 190 mm side runs along depth. Their column length is 2398 mm.
+Along width the columns are flush with the roof outline: corner centres are
+75 and W−75, middle centres 55 and W−55. They are not shifted 15 mm inward.
+
+The first corner column axis is 72 mm from the roof edge; its 150 mm section
+therefore extends 3 mm past that edge in the rounded source measurements.
+The renderer preserves this measured position. It must not silently move it
+to 75 mm merely to make the outline flush.
+
+## Measured component bounds: catalogue 14069 only
+
+These are component bounds from the scene, not a specification for all sizes.
+
+| Component | Measured bounds (mm) | Count |
 |---|---|---|
-| pôdorys (obrys lemovania) | 7 000 × 6 000 mm | — |
-| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky v exporte 240 cez celú hĺbku (kreslí sa 190); **čelné kusy ležia na bočných**, presah je presne roh | `lemCelo`, `lemBok`, `lemH` |
-| obvodový rám | **jeden** C 74 × 220 na stranu; z 0…220 nad spodkom rámu; vonkajšie líce 18 mm za lícom lemovania, 15 mm od zadného čela, **159 od odkvapového** | `ramW`, `ramH`, `ramBok`, `ramZad`, `ramOdkvap` |
-| väznice | dvojice C 58 × 180 chrbtami k sebe, z 40…220; počet a osi dá osnova | `vazW`, `vazH`, `vazVsun` |
-| trapéz | hrúbka 36, z 223…259; tabuľa 1 057, krycia šírka 1 023 (presah 34); kladie sa od druhého boku, posledná sa oreže; 85 mm od zadného a 15 od odkvapového čela | `trapH`, `trapTabula`, `trapKryt`, `trapZad`, `trapOdkvap` |
-| rohový stĺp | **150 × 150** štvorec, výška 2 398, líce zarovnané s bokom pôdorysu | `postD`, `postW` |
-| stĺp stredného radu | **110 × 190**, 190 pozdĺž hĺbky, stojí pod prostrednou väznicou | `stredW`, `stredD` |
-| kotevná doska | 250 × 250, lícuje s bokom pôdorysu | `plate` |
-| platňa hlavy stĺpa | 110 × 58 × 8 pod spodnou pásnicou rámu, dve skrutky zdola; rohový stĺp má dve platne na dvoch susedných stranách, obe dovnútra poľa | — |
-| spojka | uholník s obrysom **120 × 85 × 140**, plech 8 mm ohnutý o 90°; dve skrutky do každého ramena. Na konci väznice dva (po jednom na každej strane dvojice C), **v rohu jeden**. Sedí v strede výšky profilu, na ktorý je skrutkovaný | `spojW`, `spojD`, `spojH`, `uholT` |
-| skrutka | M12, kľúč 19 — šesťhranná hlava, ktorá z dielu vytŕča; farba C profilov (pozink), nie prístrešku | — |
-| lamely steny | 20 × 100, rozteč 140, líce 15 mm pod obrysom | — |
+| Corner column | 150 × 150 × 2398 | 4 |
+| Middle column | 110 × 190 × 2398 | 2 |
+| Side perimeter C | 74 × 5820 × 220 | 2 |
+| End perimeter C | 6964 × 74 × 220 | 2 |
+| Purlin C | 6940 × 58 × 180 | 10, in 5 pairs |
+| Roof sheet | 1057 × 5900 × 36 | 7 |
+| End fascia | 7000 × 190 × 260 | 2 |
+| Side fascia | 240 × 6000 × 257 | 2 |
+| Connector bounds | 120 × 85 × 140 | 24 |
 
-Že spojok je presne 24 a v rohu je len jedna, hovorí kompletná scéna:
-20 na koncoch piatich väzníc (dva na koniec, po jednom na každej strane
-dvojice C) a 4 v rohoch. Kým sa kreslili dve na roh, bol pozdĺž bočného
-rámu rad spojok, ktorý v modeli nie je.
+The perimeter consists of single C profiles; each purlin is a pair of C
+profiles. Sheet cover spacing is about 1023 mm. Component bounds alone do not
+prove bolt grade, anchor selection or plate thickness.
 
-**Žľab ani zvod v exportoch nie sú** — podrobne vyššie v „Čo v Expivi
-modeli nie je". Kreslia sa podľa oficiálneho rendru, kde ich vidieť:
+The renderer still contains visual simplifications: upper fascia thickness is
+6 mm; roof surfaces are simplified; head plates, fastener details and wall
+panels are not all independently measured. Fascia faces follow the same
+world-plane BSP ordering as the rest of the structure, with the normal 0.7 px
+edge. There is no fascia-last ordering or enlarged 1.5 px outline. Collinear
+vertices created by clipping must not make an otherwise valid polygon lose
+its plane and fall back to centroid sorting. The side fascia follows the
+240 mm value present in every recovered active scene where that side component
+is measurable. Complete scene 14069 uses a 190 mm end fascia while complete
+scene 14192 uses 240 mm, so those exact values are attached to their own
+kvBySize entries rather than normalised. Sizes without a complete active scene
+use 240 mm on both side and end fascia as a visual fallback, matching the
+repeated dimension in the newer recovered roof family; those sizes are not
+documented as millimetre-exact. Earlier comments described some dimensions as
+manufacturer-confirmed or fully measured without a traceable source. Do not
+repeat those claims.
 
-* **Priemer rúry je odmeraný.** Šikmý úsek zvodu má na rendri kolmo 11,3 px
-  a stĺp vedľa neho 26 px na 150 mm, čo dáva 65 mm. Kreslí sa 70 — tenšia
-  rúra sa pri stĺpe stráca.
-* **Zvod vychádza zo žľabu pri jeho vonkajšej stene**, teda o kus von od
-  stĺpa, a jedným kolenom sa vráti k jeho odkvapovému licu. Koleno klesne
-  asi o sedem desatín toho, o čo sa rúra vráti dnu.
-* **Kolená sú kolená, nie zlomy.** Lomená čiara dráhy sa zaobľuje: v každom
-  rohu ju nahradí oblúk (kvadratická Bézierova krivka s riadiacim bodom v
-  rohu). Kým tam boli ostré zlomy, vyzeral zvod ako zohnutý drôt.
-* Rúra stojí 8 mm od líca stĺpa — na stavbe ju tam drží príchytka — a jej
-  kruhové tieňovanie je výraznejšie než na plochom líci, inak sa so stĺpom
-  zlieva.
+## Roof-only scenes: coordinate conventions
 
-Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
-realizácie nie je — kreslí sa len doska.
+`kvRoofBySize` stores roof cross-sections separately from `kvBySize`, so a
+roof-only export never becomes evidence for column axes or a complete assembly.
+Each entry identifies its source catalogue, axis order and actual source depth.
 
-Horné rameno lemovania sa kreslí 4 mm hrubé, nie 15 ako zvislé — je to
-plech, ktorý leží na hrebeňoch trapézu. Jeho spodné líce musí byť pod
-vrchom plechu, inak medzi nimi ostane škára a pri plochom pohľade cez ňu
-presvitá podhľad.
+The newer exports use **width, height, depth**, unlike 14069/14192, which use
+**width, depth, height**. A 5000 × 260 × 240 end component therefore has a
+260 mm height and a 240 mm inward reach; treating 260 as its reach swaps axes.
+The runtime uses the actual end/side reach, fascia height and C-frame height:
+
+| Nominal sizes | Source catalogues | End/side reach | Fascia/frame height |
+|---|---|---|---|
+| 3000 × 5200/5600/6000 | 21727/21728/21729 | 240/240 | 240/200 |
+| 3800 × 5200/5600/6000 | 20955/20915/20956 | 240/240 | 240/200 |
+| 4500 × 5200/5600/6000 | 20963/20964/20997 | 240/240 | 240/200 |
+| 5000 × 5600/6000 | 21183/21185 | 240/240 | 260/220 |
+| 5400 × 5200/5600/6000 | 21462/21465/21466 | 240/240 | 260/220 |
+| 6200 × 5200/5600/6000 | 21423/21444/21459 | 240/240 | 260/220 |
+| 6600 × 5200/5600/6000 | 21730/21731/21732 | 240/240 | 260/220 |
+| 7000 × 5600 label only | 14198 | 240/240 | 260/220 |
+
+14198 contains a **5200 mm** roof, and 21466 a **5600 mm** roof. Only the
+cross-section measurements are reused for those catalogue labels; their
+nominal depths and inherited axes are not claimed as measured. No source mesh
+is stretched. Missing catalogue combinations retain the explicitly documented
+240 mm visual fascia fallback. This does not confirm their structural family.
+
+## Unresolved catalogue and variant discrepancies
+
+- Catalogue 14198 is labelled 7 × 5.6 m but its archived geometry has the
+  5.2 m depth. Do not stretch that scene and call the result measured.
+- The union measurement for catalogue 21466, labelled 5.4 × 6 m, has a depth
+  envelope around 5.672 m. Its catalogue/variant mapping needs confirmation.
+- Newer mesh collections contain 100 × 100 × 2392 columns, including widths
+  3.0, 3.8, 4.5, 5.4, 6.2 and 6.6 m. The inherited renderer uses the older
+  150/110 × 190 family. An active scene or manufacturer's drawing is required
+  before choosing a family for each option; the 7 × 6 m reference is not proof
+  that the older family applies everywhere.
+- The old price data includes both four- and six-column options for narrower
+  sizes. The new UI automatically chooses four columns up to 6.2 m and six
+  from 6.6 m. The existence of a price boundary does not prove that six-column
+  narrower variants are forbidden. This product choice still needs resolving.
+- Formula checks over a union of inactive and active meshes do not establish
+  every column axis or the correct current product variant.
+
+## Drainage: supported claims and limits
+
+The archived configurator treats drainage as an option. Catalogue 13670
+exposes a material group named `ODKVAP`, but the recovered catalogue data does
+not provide an independently verified gutter price, section or universal
+downpipe route. The Koverta selection therefore marks it
+for quotation and does not present it as a free included item. The two Koverta
+product pages use the same conditional wording.
+
+The real photograph
+`assets/koverta-zahradny-pristresok-bratislava-detail.jpg` shows an external
+white downpipe next to a column. It disproves a universal statement that the
+downpipe is inside a column. Other photographs obscure parts of the drainage;
+absence from view is not proof that the gutter does not exist.
+
+The current drawing represents a gutter behind the fascia and an external
+pipe routed to a column. That is an illustrative variant. The 159 mm measured
+frame setback does not by itself certify a gutter section or its mounting.
+The renderer's 70 mm pipe diameter, bends and gutter section are inherited
+visual parameters, not verified installation dimensions. Marketing catalogue
+renders are not photographs and their pixel ratios are not technical drawings.
+
+The gutter and downpipe route, dimensions and price must follow the specific
+assembly and confirmed quotation. Do not claim that all Koverta gutters are
+invisible, included, below the fascia or integrated into the columns.
+
+## Anchoring
+
+The technical installation document on Google Drive is
+[koverta-technicke-poziadavky-na-montaz-pristresku.pdf](https://drive.google.com/file/d/1AgDyrU6pJbQsfwRR-OYSZrOEqKqfHa36/view).
+
+The steel structure is anchored into prepared concrete using mechanical or
+chemical anchors according to the design. Paving itself is not the anchoring
+substrate. Where foundations are below paving, the document describes paving
+after anchoring. Do not describe anchor plates as cast into fresh concrete.
+Visible base hardware in a simplified model does not define the foundation.
+
+## Price checks against the old catalogue
+
+The inherited default base-price matrix was compared with the archived old
+catalogue and shop product data. Front/rear aluminium side prices for
+5400 × 6000 and 5600 × 6000 were corrected from 1956 to 1950 EUR through an
+exact-size override; other sizes retain their existing tables. Drainage is
+not assigned a fabricated price.
+
+## Runtime isolation and tests
+
+All four routes use the shared runtime. Koverta-specific measured data is
+only read when present on the selected model. The default route is Koverta.
+
+- `osnova-podla-expivi.js`: historical formula/data comparison. Its 50 mm
+  tolerance is diagnostic, not a structural tolerance or proof of an exact
+  runtime match. Missing required measurement files are an error.
+- `routing-smoke.js`, called by `layout-smoke.js`: exercises the four routes
+  on desktop/mobile and reads the actual runtime geometry. It independently
+  derives axes from the two complete source scenes, comparing at 1 mm
+  precision (the measurement JSON is rounded), with section/orientation checks.
+- `prekrytie.js`: contrasting roof colours and projected fascia samples at
+  the native SVG viewBox raster; records failing SVGs for diagnosis. Its world
+  measurement points and native raster must not be rescaled to hide edge
+  failures.
+- `strecha-nepresvita.js`: detects contrasting soffit/galvanised colours in
+  top views.
+- `stlpy-vidno.js`: column visibility checks.
+- `plynulost.js`: silhouette continuity through rotation.
+
+`browser-qa.js` isolates only external analytics requests. First-party
+`pageerror` and all remaining console errors still fail the tests. Earlier
+PASS results from a test which changed DOM data and then reloaded it do not
+prove that contrasting test colours were applied. Current colour changes are
+made to the fetched template before runtime initialisation.
+
+Run the six named tests against a static server on port 8901. GitHub Actions
+runs each independently, with fail-fast disabled, and uploads visual artefacts.
+Consult the run for the exact commit; this document does not promise a PASS.

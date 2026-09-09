@@ -968,7 +968,31 @@
            väznicou. Overené na kompletných scénach 14069 (7,0 × 6,0) a 14192
            (7,0 × 5,2): tento vzorec dáva ich odmerané osi väzníc presne na
            milimeter a osi stĺpov do 40 mm. */
+        const kvMeasured = () => {
+          const sizes = model().kvBySize;
+          return sizes && sizes[`${widthMM()}x${lengthMM()}`];
+        };
+        const kvRoofRef = () => {
+          const base = model().kvRef || {};
+          const exact = kvMeasured() || {};
+          const roofSizes = model().kvRoofBySize || {};
+          const roof = roofSizes[`${widthMM()}x${lengthMM()}`] || {};
+          return {
+            ...base, ...roof,
+            lemCelo: Number(exact.lemCelo) || Number(roof.lemCelo) || Number(base.lemCeloFallback) || Number(base.lemCelo) || 190,
+            /* Every recovered active scene with a measurable side fascia uses
+               240 mm. Exact scenes override this explicitly; for unmeasured
+               sizes this remains a visual fallback, not a certified dimension. */
+            lemBok: Number(exact.lemBok) || Number(roof.lemBok) || Number(base.lemBokExport) || Number(base.lemBok) || 240
+          };
+        };
         const kvOsnova = () => {
+          const measured = kvMeasured();
+          if (measured) return {
+            zad: measured.frameAxes[0], odk: measured.frameAxes[1],
+            stred: measured.postAxes[1], vaz: measured.purlinAxes.slice(),
+            pole: null
+          };
           const R = model().kvRef || {}, L = lengthMM(), b = kvBand();
           const rw = Number(R.ramW) || 74;
           const zad = (Number(R.ramZad) || 15) + rw / 2;
@@ -1008,6 +1032,8 @@
            (prierez 110 × 190 pri štvorstĺpovej, 150 × 150 v rohoch pri
            šesťstĺpovej) — nie je to voľba, vyplýva to zo šírky. */
         const kvOsiStlpov = () => {
+          const measured = kvMeasured();
+          if (measured) return measured.postAxes.slice();
           const o = kvOsnova(), b = kvBand(), n = Math.max(2, postLayout().n);
           if (b && b.stlpyNaVaznici) return [o.vaz[0], o.vaz[o.vaz.length - 1]];
           const out = [o.zad];
@@ -1103,6 +1129,7 @@
             const osi = kvOsiStlpov(), n = osi.length;
             return osi.map((a, i) => {
               const r = kvStlpRez(i, n);
+              if (kvMeasured()) return a - r.d / 2;
               return Math.round(Math.min(Math.max(a - r.d / 2, 0), L - r.d));
             });
           }
@@ -1406,6 +1433,10 @@
                platí to nižšie, presne ako pri Soltec pásmach. */
             const kvMat = (BIO.sideMat || {})[kind];
             const kvWall = () => {
+              const exactSide = m.wallSideBySize && m.wallSideBySize[`${widthMM()}x${lengthMM()}`];
+              if ((side === 'front' || side === 'rear') && exactSide) {
+                return Number.isFinite(exactSide[kvMat]) ? exactSide[kvMat] : null;
+              }
               const t = (side === 'front' || side === 'rear') ? m.wallSide : m.wallBack;
               if (!t) return null;
               const bands = Object.keys(t).map(Number).sort((a, b) => a - b);
@@ -1554,6 +1585,19 @@
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { renderAll(); };
+          window.SP_TEST.snapshot = () => ({
+            page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
+            price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
+            picks: { ...state.picks }, extras: { ...state.extras },
+            geometry: model().kvGeom ? {
+              source: kvMeasured() ? kvMeasured().catalog : null,
+              frameAxes: [kvOsnova().zad, kvOsnova().odk], purlinAxes: kvOsnova().vaz,
+              postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
+              postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
+              postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
+              roof: { ...kvRoofRef() }
+            } : null
+          });
         } catch (e) {}
         const drawStage = () => {
           const L = lengthMM(), W = widthMM(), H = state.height;
@@ -1785,7 +1829,17 @@
           const BSP_EPS = Math.max(L, W, H) * 1e-6;
           const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
           const planeFor = (face) => {
-            const n = faceNormal(face.w);
+            let n = faceNormal(face.w);
+            // BSP clipping can leave the first three vertices collinear.
+            // Such a fragment still has a plane: find a non-degenerate fan
+            // triangle instead of falling back to centroid depth ordering.
+            // Keep the established Soltec path unchanged.
+            if (model().roofKit === 'koverta' && Math.hypot(...n) < 0.5) {
+              for (let i = 2; i < face.w.length - 1; i++) {
+                n = faceNormal([face.w[0], face.w[i], face.w[i + 1]]);
+                if (Math.hypot(...n) >= 0.5) break;
+              }
+            }
             if (Math.hypot(n[0], n[1], n[2]) < 0.5) return null;
             return { n, d: dot3(n, face.w[0]) };
           };
@@ -1970,10 +2024,13 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
-            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, { normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0 }); };
+            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
+              normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
+              seamless: seamlessTop === true && key === '+z'
+            }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
             put('-y', [[x,y,z],[X,y,z],[X,y,Z],[x,y,Z]], [0,-1,0]);
@@ -2245,7 +2302,7 @@
             /* Koverta: stĺp aj obvodový rám sedia rovnako hlboko pod obrysom,
                teda tesne za zvislým ramenom lemovania. Bez toho by stĺp z
                lemovania vykúkal — alebo naopak rám spred neho. */
-            const vsun = Number(model().postInset) || 0;
+            const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
             const rez = (xi) => (kvBand() ? kvStlpRez(xi, xs.length) : { d: pdRoh, w: pwRoh });
             xs.forEach((px, xi) => {
              const rz = rez(xi), pd = rz.d, pw = rz.w;
@@ -2988,8 +3045,9 @@
             web([[ix1,iy0,B(ix1)],[ix1,iy0,T(ix1)],[ix1,iy1,T(ix1)],[ix1,iy1,B(ix1)]], [-1,0,0]);
           };
           /* ==================================================== strecha Koverta
-             Rozmery sú odmerané priamo z modelu Koverta v Expivi (katalóg
-             13412, prístrešok 6 × 6 m), nie odhadnuté:
+             Nižšie sú historické referenčné rozmery z archivovaných Expivi
+             mesh podkladov. Nie sú univerzálnou špecifikáciou pre všetky
+             katalógové varianty; presné aktívne scény majú prednosť:
 
                lemovací plech   240 mm dovnútra × 254 mm nadol, plech ~1,5 mm,
                                 dole zahnutý späť o 16 mm — otočené L
@@ -3002,9 +3060,11 @@
              škáru. Na odkvapovej strane stojí ešte ďalej, aby sa zaň zmestil
              žľab — inde je odsadenie rovnaké. */
           const drawKovertaRoof = () => {
-            /* Referenčný prístrešok. Všetky rozmery sú odmerané z jedného
-               Expivi exportu — katalóg 13670, „Pristresok 4.0 x 6.0", jeho
-               štvorstĺpová varianta. Model má hore Z, v pôdoryse 4 000 ×
+            /* Historický referenčný mesh z katalógu 13670, „Pristresok
+               4.0 x 6.0". Je to variantná mesh rodina, nie dôkaz jednej
+               aktívnej skladby pre celý katalóg. Presné aktívne osi a prierezy
+               pre 7000 × 5200 a 7000 × 6000 prepisuje kvBySize. Model má hore
+               Z, v pôdoryse 4 000 ×
                6 000 mm; tu je hĺbka na osi x a šírka na osi y, odkvapová
                hrana na x = L. Odmerané (v mm od vonkajšieho obrysu):
 
@@ -3021,7 +3081,7 @@
                Odkvapová strana má 159 mm previsu za rámom — a práve v tej
                kapse, hore pod lemovaním, visí žľab. Preto ho zboku nevidno
                a spod strechy len trochu. */
-            const REF = model().kvRef || {};
+            const REF = kvRoofRef();
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
@@ -3062,12 +3122,16 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT);
+              const put = (u0, u1, z, dz, seamlessTop) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM);        // horné rameno
+              /* Native SVG QA showed the failing pixel centre inside this
+                 measured fascia surface while antialiasing still blended the
+                 adjacent green roof into the pixel. Crisp rasterisation applies
+                 only to the +Z face; no world-space geometry is enlarged. */
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -3118,8 +3182,16 @@
                `z` je výška. Stena sa vytiahne po behu, čelá sa poskladajú z
                obdĺžnikov — nekonvexný polygon by maliarske delenie rozbilo. */
             const C_LIP = 18;                      // zahyb na konci pásnice
-            const cRez = (par, vys, hr) => {
+            const cRez = (par, vys, hr, single) => {
               const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              if (single) {
+                const outline = [
+                  [0, 0], [par, 0], [par, t + lip], [par - t, t + lip],
+                  [par - t, t], [t, t], [t, vys - t], [par - t, vys - t],
+                  [par - t, vys - t - lip], [par, vys - t - lip], [par, vys], [0, vys]
+                ];
+                return single > 0 ? outline : outline.map(([a, z]) => [par - a, z]).reverse();
+              }
               return [
                 [0, 0], [par, 0], [par, t + lip], [par - t, t + lip], [par - t, t],
                 [m + t, t], [m + t, vys - t], [par - t, vys - t],
@@ -3128,8 +3200,13 @@
                 [m - t, vys - t], [m - t, t], [t, t], [t, t + lip], [0, t + lip]
               ];
             };
-            const cCela = (par, vys, hr) => {
+            const cCela = (par, vys, hr, single) => {
               const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              if (single) {
+                const rectangles = [[0, 0, par, t], [0, vys - t, par, t],
+                  [0, t, t, vys - 2 * t], [par - t, t, t, lip], [par - t, vys - t - lip, t, lip]];
+                return single > 0 ? rectangles : rectangles.map(([a, z, w, h]) => [par - a - w, z, w, h]);
+              }
               return [
                 [0, 0, par, t], [0, vys - t, par, t], [m - t, t, 2 * t, vys - 2 * t],
                 [0, t, t, lip], [par - t, t, t, lip],
@@ -3139,9 +3216,9 @@
             /* axis 'x': profil má rez naprieč X a beží po Y. axis 'y': rez
                naprieč Y, beh po X. `a0` je začiatok rezu naprieč, `z0` spodok,
                `u0..u1` beh. */
-            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara, podStrechou) => {
+            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara, podStrechou, single) => {
               const t = hrubka || 6;
-              const rez = cRez(par, vys, t);
+              const rez = cRez(par, vys, t, single);
               const P = (a, z, u) => (axis === 'x' ? [a0 + a, u, z0 + z] : [u, a0 + a, z0 + z]);
               /* Zvislé líca profilu sa pri pohľade zhora nekreslia. Sú celé
                  pod plechom strechy a spoza lemovania ich vidieť nemôže —
@@ -3159,7 +3236,7 @@
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
                      hex, { normal: n, cull: true, arris: false });
               }
-              (bokom ? cCela(par, vys, t) : []).forEach((r) => {
+              (bokom ? cCela(par, vys, t, single) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
@@ -3180,10 +3257,10 @@
                roviny na sebe a čelo profilu cez lemovanie presvitalo ako
                svetlá zvislá čiara v rohu. */
             if (!nadStrechou) {
-              cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-              cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-              cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
-              cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+              cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true, 1);
+              cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true, -1);
+              cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, 1);
+              cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, -1);
             }
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
@@ -3320,8 +3397,6 @@
                sa kladú od druhého boku — posledná, tá pri nulovom boku, sa
                oreže. Tak to je v scéne 14069: sedem tabúľ, šesť rozostupov po
                1 023 mm a prvá zľava užšia. */
-            const tabule = Math.max(1, Math.ceil((ty1 - ty0) / TRAP_KRYT));
-            const tabulaY = (i) => [Math.max(ty0, ty1 - TRAP_KRYT * (i + 1)), ty1 - TRAP_KRYT * i];
             /* Vrch plechu ide cez celú plochu, aj pod ramená lemovania. Kým
                sa kreslil len po odkryté pole, ostala pod ramenom diera do
                tela plechu a pri plochom pohľade bolo cez ňu vidieť pod
@@ -3331,8 +3406,14 @@
                Telo plechu je jeden kváder cez celú strechu — kým bolo po
                tabuliach, mali susedné tabule spoločné bočné líce a na streche
                z toho boli biele čiarky. */
-            const vx0 = tx0, vx1 = tx1, vy0 = ty0, vy1 = ty1;
-            boxFaces(tx0, ty0, trapBot, tx1 - tx0, ty1 - ty0, TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
+            // Keep the complete sheet body and soffit, but omit the upper
+            // surface hidden inside the fascia. Intersecting upper polygons
+            // otherwise defeat the painter fallback and cover the fascia.
+            const vx0 = Math.max(tx0, LEM_CELO + 11), vx1 = Math.min(tx1, L - LEM_CELO - 11);
+            const vy0 = Math.max(ty0, LEM_BOK + 11), vy1 = Math.min(ty1, W - LEM_BOK - 11);
+            // All four sheet end faces lie inside the opaque fascia. They
+            // have no exposed edge in this assembly; emitting them creates
+            // intersecting hidden polygons which the painter can misorder.
             /* Veľké plochy plechu sa nesmú obťahovať. Obťah ide 0,35 px za
                obrys plochy a pri plochom pohľade, keď je rameno lemovania
                zúžené na pár pixelov, ho ten pretiahnutý okraj prekryje — presne
@@ -3346,79 +3427,74 @@
                presvital podklad ako svetlý vlások — na streche z toho boli
                tenké čiary krížom cez vlnu. crispEdges ich posadí presne na
                seba. */
-            quad([[tx0, ty0, trapBot], [tx1, ty0, trapBot], [tx1, ty1, trapBot], [tx0, ty1, trapBot]],
-                 spodHex, { normal: [0, 0, -1], cull: true, edge: false, seamless: true });
-            if (vx1 > vx0 && vy1 > vy0) {
-              quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
-                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
-            }
-            /* Ryhy vlny. Rozteč je daná tabuľou, nie šírkou prístrešku, takže
-               vlna beží cez celú strechu rovnako a na spoji tabúľ nepreskočí.
-               Zhora idú len po odkryté pole, zdola po celej ploche. */
-            /* Vlna trapézu T35: rozteč 1 023 / 5 = 204,6 mm, hrebeň hore úzky.
-               Kým sa kreslil svetlý pruh široký polovicu rozteče, strecha
-               vyzerala ako žalúzia s lamelami — na antracitovom plechu je
-               pritom vidieť len tenký lesk na hrebeni a mäkký tieň v drážke.
-               Preto sú pruhy úzke a takmer priehľadné. */
+            /* Skutočný profil podhľadu aj vrchu.
+               Predtým bol trapéz jedna rovná plocha a vlny iba priesvitné
+               pásy. To vytváralo falošné čiary, plochý podhľad a pri šikmých
+               pohľadoch dojem tenkej SVG nálepky. Výška a rozteč ostávajú
+               výhradne z REF/Expivi (TRAP_H, TRAP_KRYT). Šírky koruny a
+               ramena sú presne tie isté vizuálne hodnoty 15/44, ktoré už
+               renderer používal na tieňovanie; touto zmenou sa z fotografie
+               neodvodzuje žiadny nový technický rozmer. */
             const vlnRoztec = TRAP_KRYT / 5;
-            const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
-            const pruh = (y0, y1, z, nz, hex) => {
-              const a = Math.max(y0, nz > 0 ? vy0 : ty0), b = Math.min(y1, nz > 0 ? vy1 : ty1);
-              if (b <= a) return;
-              const x0 = nz > 0 ? vx0 : tx0, x1 = nz > 0 ? vx1 : tx1;
-              if (x1 <= x0) return;
-              /* Ryhy vlny sa nesmú kresliť s crispEdges: pri plochom pohľade
-                 sa pruh zúži pod pixel a bez vyhladzovania z neho ostanú
-                 zubaté kocky — na streche z toho boli tmavé fľaky. Vlások na
-                 ich spoji nevznikne, lebo pod nimi je jedna veľká plocha,
-                 nie ďalší priesvitný pruh. */
-              quad([[x0, a, z], [x1, a, z], [x1, b, z], [x0, b, z]],
-                   hex, { normal: [0, 0, nz], raw: true, edge: false, fit: false });
-            };
-            for (let k = 0; k < vlnPocet; k++) {
-              const va = ty1 - vlnRoztec * k;               // os hrebeňa
-              /* Hore: úzky lesk na hrebeni a tesne pri ňom tmavší nábeh. */
-              pruh(va - 17, va + 17, trapTop, 1, 'rgba(255,255,255,.075)');
-              pruh(va + 17, va + 44, trapTop, 1, 'rgba(10,12,14,.085)');
-              /* Zdola je vlna obrátená — hrebeň je dutina, takže tam je tieň
-                 a v drážke naopak svetlo. Na realizáciách je zdola sotva
-                 znateľná, preto je tento kontrast ešte menší. */
-              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.035)');
-            }
-            /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
-               k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
-               diely na podhľade vyzerali nalepené na plochu, nie zapustené
-               medzi ňu. Kreslí sa ako úzky pruh na rovine podhľadu. */
-            const tien = (y0, y1) => {
-              if (y1 <= y0) return;
-              quad([[tx0, y0, trapBot], [tx1, y0, trapBot], [tx1, y1, trapBot], [tx0, y1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
-            };
-            const tienX = (x0, x1) => {
-              if (x1 <= x0) return;
-              quad([[x0, ty0, trapBot], [x1, ty0, trapBot], [x1, ty1, trapBot], [x0, ty1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
-            };
-            const TIEN = 55;
-            osi.forEach((os) => {
-              tien(Math.max(ty0, os - VAZ_W - TIEN), os - VAZ_W);
-              tien(os + VAZ_W, Math.min(ty1, os + VAZ_W + TIEN));
-            });
-            tien(ry0, Math.min(ty1, ry0 + TIEN));
-            tien(Math.max(ty0, ry1 - TIEN), ry1);
-            tienX(rx0, Math.min(tx1, rx0 + TIEN));
-            tienX(Math.max(tx0, rx1 - RAM_PAR - TIEN), rx1 - RAM_PAR);
+            const RIB_CROWN_VIS = 15;
+            const RIB_SHOULDER_VIS = 44;
 
-            /* Presah tabúľ leží v drážke vlny a zhora ho vidieť nie je —
-               tabuľa sa prekrýva celým jedným hrebeňom. Kým sa kreslil ako
-               tmavý pruh cez celú strechu, boli z neho tie čiary krížom cez
-               plech. Zdola ho prezradí len vlások na spoji. */
-            for (let i = 1; i < tabule; i++) {
-              const ys = ty1 - TRAP_KRYT * i;
-              if (ys <= ty0 || ys >= ty1) continue;
-              quad([[tx0, ys - 1, trapBot], [tx1, ys - 1, trapBot], [tx1, ys + 1, trapBot], [tx0, ys + 1, trapBot]],
-                   'rgba(18,22,26,.16)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
-            }
+            const trapProfileZ = (y) => {
+              /* Profil je fázovaný od ty1 rovnako ako pôvodné ryhy. Nájde sa
+                 najbližšia os hrebeňa bez zaokrúhľovania rozteče. */
+              const raw = ty1 - y;
+              const phase = ((raw % vlnRoztec) + vlnRoztec) % vlnRoztec;
+              const d = Math.min(phase, vlnRoztec - phase);
+              if (d <= RIB_CROWN_VIS) return trapTop;
+              if (d >= RIB_SHOULDER_VIS) return trapBot;
+              const t = (d - RIB_CROWN_VIS) / (RIB_SHOULDER_VIS - RIB_CROWN_VIS);
+              return trapTop + (trapBot - trapTop) * t;
+            };
+
+            const trapBreaks = (y0, y1) => {
+              const cuts = [y0, y1];
+              const first = Math.floor((ty1 - y1) / vlnRoztec) - 1;
+              const last = Math.ceil((ty1 - y0) / vlnRoztec) + 1;
+              for (let k = first; k <= last; k++) {
+                const axis = ty1 - k * vlnRoztec;
+                [-RIB_SHOULDER_VIS, -RIB_CROWN_VIS, RIB_CROWN_VIS, RIB_SHOULDER_VIS].forEach((off) => {
+                  const y = axis + off;
+                  if (y > y0 + 1e-6 && y < y1 - 1e-6) cuts.push(y);
+                });
+              }
+              cuts.sort((a, b) => a - b);
+              return cuts.filter((v, i) => !i || Math.abs(v - cuts[i - 1]) > 1e-6);
+            };
+
+            const trapSkin = (x0, x1, y0, y1, hex, upper) => {
+              if (x1 <= x0 || y1 <= y0) return;
+              const cuts = trapBreaks(y0, y1);
+              for (let i = 0; i < cuts.length - 1; i++) {
+                const a = cuts[i], b = cuts[i + 1];
+                const za = trapProfileZ(a), zb = trapProfileZ(b);
+                /* Rovnaká fyzická vlna má dve materiálové strany. Horná sa
+                   kreslí iba v odkrytom poli medzi lemovaním; spodná až pod
+                   lemovanie. Opačné vinutie dá správnu normálu pre svetlo aj
+                   culling bez duplicitného viditeľného polygonu. */
+                const pts = upper
+                  ? [[x0, a, za], [x1, a, za], [x1, b, zb], [x0, b, zb]]
+                  : [[x0, a, za], [x0, b, zb], [x1, b, zb], [x1, a, za]];
+                quad(pts, hex, {
+                  normal: faceNormal(pts),
+                  cull: true,
+                  edge: false,
+                  seamless: true
+                });
+              }
+            };
+
+            trapSkin(tx0, tx1, ty0, ty1, spodHex, false);
+            trapSkin(vx0, vx1, vy0, vy1, vrchHex, true);
+
+            /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy.
+               Reálny profil, C-profily a svetlo vytvárajú vlastné tienenie.
+               Umelé overlay pásy boli zdrojom diagonál a blikajúcich švov pri
+               BSP delení a nemajú oporu v samostatne overenom Expivi rozmere. */
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
                a žľab visí presne v tej kapse, hore pod lemovaním. Preto ho
@@ -3462,7 +3538,7 @@
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
-              const vsunStlp = Number(model().postInset) || 0;
+              const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               /* Rúra beží po líci stĺpa, nie vedľa neho. Kým sedela odsadená na
                  vonkajšom rohu, visela na modeli ako samostatná tyč vedľa
                  stĺpa; na fotkách realizácií ide po jeho čele, v jeho osi. */
@@ -4820,6 +4896,9 @@
             /* Keď výška nie je voľba, musí byť aspoň napísaná — inak zákazník
                nevie, ako vysoko pod prístreškom prejde. */
             + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
+          if (modelNote && m.kvGeom) modelNote.textContent = kvMeasured()
+            ? 'Zobrazená zostava: 4 rohové stĺpy 150 × 150 mm a 2 stredné 110 × 190 mm, výška pod rámom 2 398 mm. Osi podľa príslušného modelu Expivi.'
+            : 'Prierez a rozmiestnenie stĺpov závisia od konkrétnej zostavy. Nosnú konštrukciu a kotvenie potvrdíme pri návrhu.';
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
           PICKS_ROZMER.forEach((g) => {

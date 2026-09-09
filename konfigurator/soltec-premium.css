@@ -1070,7 +1070,7 @@
     #SoltecPremium .sp-cfg__close { display: none; }
 
     #SoltecPremium .sp-cfg.is-full .sp-cfg__grid {
-      position: fixed; inset: 0; z-index: 60; display: grid;
+      position: fixed; inset: 0; z-index: 80; display: grid;
       grid-template-columns: minmax(0, 1fr) 40rem; grid-template-rows: 100%;
       gap: 0; margin: 0; background: #fff;
     }

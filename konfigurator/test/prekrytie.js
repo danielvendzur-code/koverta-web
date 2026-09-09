@@ -13,28 +13,25 @@
 */
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
+const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
+const fs = require('fs');
+fs.mkdirSync('qa-artifacts', { recursive: true });
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
-  const p = await (await b.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
-  p.on('pageerror', (e) => console.log('CHYBA STRÁNKY', e.message));
+  const ctx = await b.newContext({ viewport: { width: 1200, height: 900 } });
+  await prepareContext(ctx);
+  const p = await ctx.newPage();
+  const assertNoErrors = watchErrors(p);
+  await setModelColors(ctx, { trapezTopHex: '#00ff00', trapezSoffitHex: '#ff00ff' });
   await p.goto(URL, { waitUntil: 'load', timeout: 60000 });
+  const consent = p.getByRole('button', { name: 'Iba nevyhnutné' });
+  if (await consent.count()) await consent.first().click();
   await p.waitForTimeout(2200);
 
   const ok = await p.evaluate(() => Boolean(window.SP_TEST && window.SP_TEST.setView && window.SP_TEST.project));
   if (!ok) { console.log('SP_TEST nie je k dispozícii — engine sa nenačítal'); await b.close(); process.exit(2); }
-
-  /* Strecha nazeleno, lemovanie načerveno a nažlto. Farby sa nastavujú cez
-     štýlovanie modelu, ktoré engine číta z dátového bloku stránky. */
-  await p.evaluate(() => {
-    const el = document.querySelector('[data-sp-bio-data]');
-    const bio = JSON.parse(el.textContent);
-    Object.values(bio.models).forEach((m) => { m.trapezTopHex = '#00ff00'; m.trapezSoffitHex = '#ff00ff'; });
-    el.textContent = JSON.stringify(bio);
-  });
-  await p.reload({ waitUntil: 'load' });
-  await p.waitForTimeout(2200);
 
   const zle = await p.evaluate(async () => {
     const svg = document.querySelector('[data-sp-canvas]');
@@ -55,11 +52,13 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
     for (const [W, L] of [[4000, 6000], [2500, 5200], [7000, 6000]]) {
       set('[data-sp-w]', W); set('[data-sp-l]', L);
       await new Promise((r) => setTimeout(r, 120));
-      const zTop = 2398 + 260;      // horná hrana lemovania
+      const actual = window.SP_TEST.snapshot();
+      if (actual.width !== W || actual.length !== L) throw new Error('Test dimensions differ from runtime: ' + JSON.stringify(actual));
+      const zTop = actual.height + actual.geometry.roof.lemH;      // horná hrana lemovania
       const body = [];
       for (let t = 0.02; t <= 0.99; t += 0.06) {
         for (const d of [25, 70, 120, 165]) { body.push([d, t * W]); body.push([L - d, t * W]); }
-        for (const d of [30, 90, 160, 225]) { body.push([t * L, d]); body.push([t * L, W - d]); }
+        for (const d of [30, 70, 120, 165]) { body.push([t * L, d]); body.push([t * L, W - d]); }
       }
       for (let ai = 0; ai < 12; ai++) {
         for (const el of [-0.15, 0.15, 0.42, 0.75, 1.12]) {
@@ -67,15 +66,28 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
           window.SP_TEST.setView(az, el); window.SP_TEST.redraw();
           await new Promise((r) => setTimeout(r, 40));
           const s = await snap();
-          let zlych = 0, prvy = null;
+          if (el === 1.12) {
+            const pixels = s.g.getImageData(0, 0, s.w, s.h).data;
+            let green = 0;
+            for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 150 && pixels[i] < 130 && pixels[i + 2] < 130) green++;
+            if (green < 100) throw new Error('Positive control failed: contrasting roof is missing');
+          }
+          let zlych = 0, prvy = null, prvyPx = null, prvyRgb = null;
           for (const [x, y] of body) {
             const q = window.SP_TEST.project(x, y, zTop);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
             const d = s.g.getImageData(px, py, 1, 1).data;
-            if (d[1] > 150 && d[0] < 130 && d[2] < 130) { zlych++; if (!prvy) prvy = Math.round(x) + ',' + Math.round(y); }
+            if (d[1] > 150 && d[0] < 130 && d[2] < 130) {
+              zlych++;
+              if (!prvy) {
+                prvy = Math.round(x) + ',' + Math.round(y);
+                prvyPx = px + ',' + py;
+                prvyRgb = Array.from(d).join(',');
+              }
+            }
           }
-          if (zlych) nalezy.push(`${W}×${L} az=${az.toFixed(2)} el=${el}: ${zlych} bodov, prvý ${prvy}`);
+          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, firstPx: prvyPx, firstRgb: prvyRgb, svg: new XMLSerializer().serializeToString(svg) });
         }
       }
     }
@@ -84,11 +96,23 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
 
   if (zle.length) {
     console.log('PLECH PREKRÝVA LEMOVANIE:');
-    zle.slice(0, 30).forEach((r) => console.log('  ' + r));
+    zle.slice(0, 30).forEach((r, i) => {
+      console.log(`  ${r.W}×${r.L} az=${r.az.toFixed(2)} el=${r.el}: ${r.count} bodov, prvý ${r.first}, px ${r.firstPx}, rgba ${r.firstRgb}`);
+      fs.writeFileSync(`qa-artifacts/overlap-${i}.svg`, r.svg);
+    });
+    const first = zle[0];
+    await p.evaluate(first => {
+      for (const [selector,value] of [['[data-sp-w]',first.W],['[data-sp-l]',first.L]]) {
+        const el=document.querySelector(selector); el.value=value; el.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      window.SP_TEST.setView(first.az,first.el); window.SP_TEST.redraw();
+    }, first);
+    await p.locator('[data-sp-canvas]').screenshot({path:'qa-artifacts/overlap-first.png'});
     console.log('zlých pohľadov spolu:', zle.length);
   } else {
     console.log('lemovanie nikde neprekryté (180 pohľadov × ~270 bodov)');
   }
   await b.close();
+  assertNoErrors();
   process.exit(zle.length ? 1 : 0);
 })();

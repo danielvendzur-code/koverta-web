@@ -1740,7 +1740,7 @@
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
         foto: './assets/koverta-pristresok-garaz.jpg',
-        preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha s odkvapom skrytým vnútri konštrukcie.' },
+        preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha; odvodnenie a vedenie zvodu sa riešia podľa konkrétnej zostavy.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
         foto: './assets/soltec-carport-sl240-real.jpg',
         preco: 'Celohliníkový systém SL 170 alebo SL 240. Bez údržby, dĺžka do 8,5 m, uzamykateľný box pod tou istou strechou.' },

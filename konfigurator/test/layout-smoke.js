@@ -2,6 +2,17 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs');
 fs.mkdirSync('qa-artifacts', { recursive: true });
 
+async function revealPage(page) {
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < height; y += 700) {
+    await page.evaluate(y => window.scrollTo(0, y), y);
+    await page.waitForTimeout(100);
+  }
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -9,15 +20,7 @@ function assert(condition, message) {
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const errors = [];
-  const installAnalyticsStubs = async (context) => {
-    await context.addInitScript(() => {
-      // GTM may invoke Microsoft Clarity while its external loader is blocked in CI.
-      // Mirror Clarity's documented queue stub so QA still catches first-party errors.
-      window.clarity = window.clarity || function () {
-        (window.clarity.q = window.clarity.q || []).push(arguments);
-      };
-    });
-  };
+  const installAnalyticsStubs = require('./browser-qa').prepareContext;
   const dismissConsent = async (page) => {
     const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
     if (await reject.count()) {
@@ -70,15 +73,22 @@ function assert(condition, message) {
       ['.kh-kfg', 'home-configurator-section.png'],
       ['.kh-proc', 'home-process.png'],
       ['.kh-rev', 'home-reviews.png'],
-      ['.kh-mat', 'home-material.png']
+      ['.kh-mat', 'home-material.png'],
+      ['.kh-znacky', 'home-brands.png'],
+      ['.kh-work', 'home-references-map.png'],
+      ['.kh-faq', 'home-faq.png'],
+      ['.kh-cta', 'home-form.png'],
+      ['footer', 'home-footer.png']
     ]) {
       const locator = page.locator(selector).first();
       if (await locator.count()) {
         await locator.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(350);
+        await page.waitForTimeout(1200);
         await locator.screenshot({ path: 'qa-artifacts/' + name });
       }
     }
+    await revealPage(page);
+    await page.screenshot({ path: 'qa-artifacts/home-desktop.png', fullPage: true });
     assert(home.overflow <= 4, 'Desktop homepage has horizontal overflow: ' + home.overflow);
     assert(home.heroRating && home.heroRating.width > 150 && home.heroRating.height > 25, 'Hero Google rating is not visible');
     assert(home.barPhone && home.barPhone.display !== 'none' && home.barPhone.visibility !== 'hidden' && home.barPhone.opacity > .9, 'Desktop main-nav phone is not visible');
@@ -87,6 +97,30 @@ function assert(condition, message) {
     assert(Math.abs(home.cards[0].y - home.cards[1].y) < 8, 'Brand cards are not aligned in one desktop row');
     assert(home.brandMoreVisible, 'Brand explanatory text is hidden behind hover');
     assert(home.kovertaCfg && home.kovertaCfg.width > 180 && home.kovertaCfg.height > 120, 'Koverta configurator card is missing or collapsed');
+
+    // Validate the client flow without delivering an enquiry to the company.
+    let submissions = 0;
+    await desktop.route('https://koverta.sk/contact', async route => {
+      assert(route.request().method() === 'POST', 'Unexpected contact request method');
+      submissions++;
+      const body = route.request().postData() || '';
+      assert(body.includes('qa@example.invalid') && body.includes('Koverta audit test'), 'Contact payload lost fields');
+      await route.fulfill({status:200,contentType:'text/html',body:'<html><body>Test response</body></html>'});
+    });
+    const form = page.locator('form[data-k-dopyt]').first();
+    await form.locator('[type="submit"]').click();
+    assert(submissions === 0, 'Empty contact form bypassed validation');
+    await form.locator('[name="contact[name]"]').fill('Koverta audit test');
+    await form.locator('[name="contact[phone]"]').fill('+421900000000');
+    await form.locator('[name="contact[email]"]').fill('qa@example.invalid');
+    await form.locator('[name="contact[body]"]').fill('Client-side QA; intercepted, never delivered.');
+    await form.locator('[type="submit"]').click();
+    assert(submissions === 0, 'Contact form bypassed consent validation');
+    await form.locator('[type="checkbox"]').check();
+    await form.locator('[type="submit"]').click();
+    await page.locator('[data-k-dakujem]').waitFor({state:'visible'});
+    assert(submissions === 1, 'Contact form did not issue exactly one intercepted request');
+    console.log('FORM_PASS validation, consent, request payload, client response; delivery not tested');
 
     await desktop.close();
 
@@ -112,6 +146,7 @@ function assert(condition, message) {
       };
     });
     console.log('MOBILE_METRICS ' + JSON.stringify(mob));
+    await revealPage(mp);
     await mp.screenshot({ path: 'qa-artifacts/home-mobile.png', fullPage: true });
     assert(mob.overflow <= 4, 'Mobile homepage has horizontal overflow: ' + mob.overflow);
     assert(mob.cards.length === 2 && mob.cards[1].y > mob.cards[0].bottom, 'Brand cards do not stack on mobile');
@@ -168,9 +203,8 @@ function assert(condition, message) {
         assert(!/Vydrží lamelová strecha sneh\?|Ako sa pergola čistí\?/i.test(metrics.bodyText),
           'Garden page still contains stale pergola/lamella FAQ wording');
       }
-      if (key === 'auto' || key === 'garden') {
-        await pp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-hero.png' });
-      }
+      await revealPage(pp);
+      await pp.screenshot({ path: 'qa-artifacts/product-' + key + '-desktop.png', fullPage: true });
     }
     await productCtx.close();
 
@@ -179,7 +213,7 @@ function assert(condition, message) {
     const pmp = await productMobileCtx.newPage();
     pmp.on('pageerror', e => errors.push('product-mobile pageerror: ' + e.message));
     pmp.on('console', msg => { if (msg.type() === 'error') errors.push('product-mobile console: ' + msg.text()); });
-    for (const [path, key] of [['pristresky-pre-auta/', 'auto'], ['zahradne-pristresky/', 'garden']]) {
+    for (const [path, key] of productPages.slice(0, 5)) {
       await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
       await dismissConsent(pmp);
       await pmp.waitForTimeout(400);
@@ -200,7 +234,8 @@ function assert(condition, message) {
       assert(metrics.heroHeight && metrics.heroHeight >= 560, key + ' mobile hero is too short/collapsed');
       assert(metrics.h1Width && metrics.h1Width <= 360, key + ' mobile hero heading overflows');
       assert(metrics.actionWidths.length >= 1 && metrics.actionWidths.every(w => w <= 360), key + ' mobile hero CTA overflows');
-      await pmp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-mobile-hero.png' });
+      await revealPage(pmp);
+      await pmp.screenshot({ path: 'qa-artifacts/product-' + key + '-mobile.png', fullPage: true });
     }
     await productMobileCtx.close();
 
@@ -238,6 +273,7 @@ function assert(condition, message) {
     assert(/Prístrešok Koverta|prístrešok Koverta/i.test(cfg.bodyText), 'Koverta configurator content is not rendered');
     await cfgCtx.close();
 
+    await require('./routing-smoke')(browser);
     assert(errors.length === 0, 'Browser errors:\n' + errors.join('\n'));
     console.log('Layout smoke test passed.');
   } finally {
