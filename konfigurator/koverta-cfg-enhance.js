@@ -272,7 +272,7 @@
 
   function selectedPlacement(root) {
     var btn = root && root.querySelector('[data-sp-place][aria-pressed="true"]');
-    if (!btn) return { id: '', label: 'neuvedené', quoteOnly: false, pending: true };
+    if (!btn) return { id: 'kv-free', label: 'Samostatne stojaci', quoteOnly: false, pending: false };
     var span = btn.querySelector('span');
     var label = '';
     if (span) {
