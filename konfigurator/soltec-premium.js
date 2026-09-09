@@ -2488,9 +2488,15 @@
                for Koverta's 150×150 and 190×110 sections. Keep the brace's
                visual thickness heuristic, but derive every physical contact
                point from the active post section. */
-            const rr = kvBand() ? kvStlpRez(xi, xs.length) : { d: post, w: post };
+            const kovertaContact = Boolean(kvBand());
+            const rr = kovertaContact ? kvStlpRez(xi, xs.length) : { d: post, w: post };
             const pd = rr.d, pw = rr.w;
-            const vsunBrace = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+            /* Preserve Soltec byte-for-byte geometry semantics here: its
+               historical brace rows were at Y=0/W-post. Koverta alone may use
+               its measured/configured inset. */
+            const vsunBrace = kovertaContact
+              ? (kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0)
+              : 0;
             const gap = left ? px : (L - pd - px);
             const reach = Math.max(180, Math.min(520, gap * 0.42));
             const drop = Math.max(220, Math.min(560, H * 0.22));
