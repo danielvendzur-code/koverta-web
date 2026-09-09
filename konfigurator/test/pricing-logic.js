@@ -49,7 +49,10 @@ async function waitRender(page) {
         priceNote: bio.priceNote,
         placements: bio.placements,
         gutter: bio.picks.find(group => group.id === 'odkvap'),
-        extras: bio.extras
+        extras: bio.extras,
+        colors: bio.colors,
+        sideOpts: bio.sideOpts,
+        surcharge: bio.surcharge
       };
     });
 
@@ -70,6 +73,19 @@ async function waitRender(page) {
       'Koverta price note contains an unsafe transport/assembly claim');
     assert(catalogue.placements.filter(item => item.id !== 'kv-free').every(item => /na nacenenie/.test(item.label)),
       'Non-standard placements are not marked for quotation');
+    assert(catalogue.placements.length === 2
+      && catalogue.placements[0].id === 'kv-free'
+      && catalogue.placements[1].id === 'kv-custom-place'
+      && /na nacenenie/.test(catalogue.placements[1].label),
+      'Unsupported structural placement variants are still exposed as concrete offers');
+    assert(JSON.stringify(catalogue.colors.map(item => item.ral)) === JSON.stringify([
+      'RAL 7016','RAL 9005','RAL 9006','RAL 9010','RAL 7037','RAL 7011','RAL 8017','RAL 6003','RAL 5010','RAL 3000'
+    ]), 'Koverta current RAL palette changed');
+    assert(catalogue.surcharge && catalogue.surcharge.frame == null && catalogue.surcharge.louver == null,
+      'Configurator invented a Koverta colour surcharge');
+    assert(JSON.stringify(catalogue.sideOpts.filter(item => item.id !== 'open').map(item => item.id)) === JSON.stringify([
+      'kvdrevo','kvwpc','kvhlinik'
+    ]), 'Current supported Koverta side-wall material set changed');
     const gutterNo = catalogue.gutter.opts.find(item => item.id === 'nie');
     const gutterYes = catalogue.gutter.opts.find(item => item.id === 'ano');
     assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
@@ -190,7 +206,7 @@ async function waitRender(page) {
     assert(woodPressed === 'true', 'Compatible side selection was lost after dimension change');
 
     // Non-standard placement is preserved as a quotation-only rule.
-    await page.locator('[data-sp-place="kv-back"]').click({ force: true });
+    await page.locator('[data-sp-place="kv-custom-place"]').click({ force: true });
     await waitRender(page);
     const placementLine = page.locator('[data-kv-placement-line]');
     await placementLine.waitFor({ state: 'attached' });
@@ -251,7 +267,7 @@ async function waitRender(page) {
       'Custom payload does not distinguish requested and catalogue dimensions');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, gutter state, unsupported extras, unknown-price handling, back/next, dimension persistence, placement, reset, payload, custom validation');
+    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, RAL/side options, gutter state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
     await context.close();
   } finally {
     await browser.close();
