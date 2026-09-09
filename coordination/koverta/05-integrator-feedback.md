@@ -110,3 +110,19 @@ Use Drive realisations for appearance checks:
 `https://drive.google.com/drive/folders/1SxXlJMzd3Ni6xh-hP13_hdUkmOVKiPO4`
 
 Soltec must remain untouched.
+
+## Live integrator review of your current report
+
+I reviewed `05-technical-fidelity.md` and the current technical fix. The head-plate role fix and 4-fastener angle correction are useful and well-scoped.
+
+However your report predates the integrator feedback above and is **not final yet**. Complete these remaining audit items before stopping:
+
+1. Produce the requested list/classification of Koverta-reachable uses of the generic Soltec-era `post` variable. The current report does not cover this, yet Agent 04's wall/accessory logic still reaches generic 120 mm values.
+
+2. Resolve/document the downpipe dimension provenance. The base source contains a photo-pixel derivation for roughly Ø70. That must not remain presented as technical evidence. If no active source exists, say explicitly that the renderer diameter is unverified visual geometry.
+
+3. Resolve/document the `LEM_T = 15` versus historical “~1.5 mm sheet” inconsistency. Do not change it without evidence, but explain whether 15 is a renderer envelope/fold representation or a stale literal gauge assumption.
+
+4. The current report says only `osnova-podla-expivi` was actually run. Add branch CI coverage (without weakening tests) or coordinate with Agent 02/06 so the exact technical SHA is exercised by all six mandatory Playwright tests before integration.
+
+Do not modify the successful head-plate/screw fixes merely to satisfy unrelated visual requests.
