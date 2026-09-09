@@ -1,0 +1,100 @@
+name: Koverta Agent 02 Final Verification
+
+on:
+  push:
+    branches:
+      - agent/02-koverta-occlusion-qa
+
+permissions:
+  contents: read
+
+jobs:
+  final-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8901/konfigurator/?page=koverta >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+
+      - name: Run six mandatory tests unchanged
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          node konfigurator/test/osnova-podla-expivi.js
+          node konfigurator/test/prekrytie.js
+          node konfigurator/test/strecha-nepresvita.js
+          node konfigurator/test/stlpy-vidno.js
+          node konfigurator/test/plynulost.js
+          node konfigurator/test/layout-smoke.js
+
+      - name: Run complete Agent 02 baseline render QA
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          node coordination/koverta/02-occlusion-sweep.js
+          node coordination/koverta/02-component-visibility.js
+          node coordination/koverta/02-focused-render-qa.js
+
+      - name: Preserve baseline evidence
+        if: always()
+        run: |
+          mkdir -p qa-evidence/base
+          if [ -d qa-artifacts ]; then cp -R qa-artifacts/. qa-evidence/base/; fi
+
+      - name: Load current Agent 01 renderer without merging
+        if: success()
+        run: |
+          cp konfigurator/soltec-premium.js /tmp/agent02-base-soltec-premium.js
+          git fetch --no-tags origin agent/01-koverta-visual
+          AGENT01_SHA="$(git rev-parse FETCH_HEAD)"
+          echo "AGENT01_SHA=$AGENT01_SHA" | tee -a "$GITHUB_ENV"
+          git show "$AGENT01_SHA:konfigurator/soltec-premium.js" > konfigurator/soltec-premium.js
+          rm -rf qa-artifacts
+          mkdir -p qa-artifacts
+          echo "Testing Agent 01 renderer $AGENT01_SHA in the runner only. No merge and no repository write."
+
+      - name: Run Agent 01 render compatibility
+        if: success()
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          echo "AGENT01_SHA=$AGENT01_SHA"
+          node konfigurator/test/prekrytie.js
+          node konfigurator/test/strecha-nepresvita.js
+          node konfigurator/test/stlpy-vidno.js
+          node konfigurator/test/plynulost.js
+          node coordination/koverta/02-focused-render-qa.js
+
+      - name: Preserve Agent 01 evidence
+        if: always()
+        run: |
+          mkdir -p qa-evidence/agent01
+          if [ -d qa-artifacts ]; then cp -R qa-artifacts/. qa-evidence/agent01/; fi
+          if [ -n "${AGENT01_SHA:-}" ]; then printf '%s\n' "$AGENT01_SHA" > qa-evidence/agent01/AGENT01_SHA.txt; fi
+
+      - name: Upload final Agent 02 QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-02-final-verification
+          path: qa-evidence
+          if-no-files-found: error
