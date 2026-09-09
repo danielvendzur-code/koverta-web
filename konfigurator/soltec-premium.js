@@ -3609,7 +3609,7 @@
                represents that evidenced installation, not a mandatory standard
                LED layout for every Koverta order. Profile dimensions remain
                visual proportions, never millimetres inferred from photos. */
-            if (Boolean(state.extras['kv-led']) && !nadStrechou) {
+            if (Boolean(state.extras['kv-led'])) {
               kvAccessoryGeometry.led.enabled = true;
               kvAccessoryGeometry.led.corners = [];
               const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
@@ -3619,6 +3619,11 @@
               const ledProfile = shade(zinok, -0.18);
               const ledLight = '#f5e8c5';
               const ledSurface = (x, y, dx, dy) => {
+                /* Geometry is calculated at every camera angle so resize/contact
+                   QA can inspect the actual anchor. Rendering stays culled from
+                   above because the opaque roof physically hides this underside
+                   accessory. */
+                if (nadStrechou) return;
                 boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
                 const ix = dx > dy ? ledW * 0.18 : 0;
                 const iy = dy > dx ? ledW * 0.18 : 0;
