@@ -1165,6 +1165,55 @@
           return out;
         };
         const sideSpan = (side) => (side === 'front' || side === 'rear' ? lengthMM() : widthMM());
+
+        /* KOVER​TA side-wall anchors must follow the real faces of the current
+           post sections, not the generic Soltec 120 mm post placeholder.
+           This function is intentionally Koverta-only and does not change
+           post axes or post sections; it derives the infill run from the same
+           postXs()/kvStlpRez() geometry that draws the steel posts. */
+        const kvWallAnchor = (side) => {
+          if (!model().kvGeom) return null;
+          const xs = postXs();
+          if (!xs.length) return null;
+          const n = xs.length;
+          const W = widthMM();
+          const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+          const rez = (i) => kvStlpRez(i, n);
+          const sectionScale = (indices) => Math.min(...indices.map((i) => {
+            const r = rez(i);
+            return Math.min(r.d, r.w);
+          }));
+          if (side === 'rear' || side === 'front') {
+            const first = rez(0), last = rez(n - 1);
+            const vFace = side === 'rear' ? vsun : W - vsun;
+            const cuts = [];
+            for (let i = 1; i < n - 1; i++) {
+              const r = rez(i);
+              cuts.push([xs[i], xs[i] + r.d]);
+            }
+            return {
+              axis: 'x',
+              out: side === 'rear' ? -1 : 1,
+              vFace,
+              runFrom: xs[0] + first.d,
+              runTo: xs[n - 1],
+              cuts,
+              guideScale: sectionScale(xs.map((_, i) => i))
+            };
+          }
+          const xi = side === 'left' ? 0 : n - 1;
+          const r = rez(xi);
+          const vFace = side === 'left' ? xs[xi] : xs[xi] + r.d;
+          return {
+            axis: 'y',
+            out: side === 'left' ? -1 : 1,
+            vFace,
+            runFrom: vsun + r.w,
+            runTo: W - vsun - r.w,
+            cuts: [],
+            guideScale: Math.min(r.d, r.w)
+          };
+        };
         /* How many leaves a side is made of. The price worked this out and the
            drawing assumed two, so a five-leaf H50 was quoted and drawn as a
            pair. One answer, so what a customer sees is what is on the quote.
@@ -1595,7 +1644,10 @@
               postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
               postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
               postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
-              roof: { ...kvRoofRef() }
+              roof: { ...kvRoofRef() },
+              accessoryAnchors: Object.fromEntries(
+                ['rear', 'front', 'left', 'right'].map((side) => [side, kvWallAnchor(side)])
+              )
             } : null
           });
         } catch (e) {}
@@ -2501,23 +2553,41 @@
                denného svetla vysoký ako celý spád. Bočná stena beží pozdĺž
                dĺžky, takže sa jej hlava počíta pre každé pole zvlášť (nižšie
                ako `zHead`); čelná stojí na jednom mieste dĺžky a má jednu. */
-            const gw = Math.round(post * 0.42);          // guide and head rail
-            const back = Math.round(gw * 0.62);          // the face of the infill
+            const kvAnchor = kvWallAnchor(side);
+            /* Guide/head proportions remain renderer-only visual proportions.
+               For Koverta their scale follows the actual current supporting
+               post sections; no manufacturing dimension is inferred here. */
+            const guideRef = kvAnchor ? kvAnchor.guideScale : post;
+            const gw = Math.round(guideRef * 0.42);
+            const back = Math.round(gw * 0.62);
             const open = Math.max(0, Math.min(1, (state.sideOpen || {})[side] || 0));
 
             let a, b, axis, out;
-            if (side === 'rear')  { a = [post, 0, 0]; b = [L - post, 0, 0]; axis = 'x'; out = -1; }
-            if (side === 'front') { a = [post, W, 0]; b = [L - post, W, 0]; axis = 'x'; out = 1; }
-            if (side === 'left')  { a = [0, post, 0]; b = [0, W - post, 0]; axis = 'y'; out = -1; }
-            if (side === 'right') { a = [L, post, 0]; b = [L, W - post, 0]; axis = 'y'; out = 1; }
+            if (kvAnchor) {
+              axis = kvAnchor.axis;
+              out = kvAnchor.out;
+              if (axis === 'x') {
+                a = [kvAnchor.runFrom, kvAnchor.vFace, 0];
+                b = [kvAnchor.runTo, kvAnchor.vFace, 0];
+              } else {
+                a = [kvAnchor.vFace, kvAnchor.runFrom, 0];
+                b = [kvAnchor.vFace, kvAnchor.runTo, 0];
+              }
+            } else {
+              if (side === 'rear')  { a = [post, 0, 0]; b = [L - post, 0, 0]; axis = 'x'; out = -1; }
+              if (side === 'front') { a = [post, W, 0]; b = [L - post, W, 0]; axis = 'x'; out = 1; }
+              if (side === 'left')  { a = [0, post, 0]; b = [0, W - post, 0]; axis = 'y'; out = -1; }
+              if (side === 'right') { a = [L, post, 0]; b = [L, W - post, 0]; axis = 'y'; out = 1; }
+            }
 
-            const vFace = axis === 'x' ? a[1] : a[0];    // the outer face of the wall
+            const vFace = axis === 'x' ? a[1] : a[0];
             const runFrom = axis === 'x' ? a[0] : a[1];
             const runTo = axis === 'x' ? b[0] : b[1];
 
-            /* the posts standing inside this run divide it into bays */
-            const cuts = [];
-            if (axis === 'x') postXs().forEach((px) => {
+            /* Interior Koverta posts cut the run by their real section depth.
+               Soltec keeps the existing generic post calculation unchanged. */
+            const cuts = kvAnchor ? kvAnchor.cuts.slice() : [];
+            if (!kvAnchor && axis === 'x') postXs().forEach((px) => {
               if (px > runFrom - 1 && px + post < runTo + 1) cuts.push([px, px + post]);
             });
             const bays = [];
