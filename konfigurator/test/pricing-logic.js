@@ -262,6 +262,8 @@ async function revealControl(page, selector) {
     let accessorySnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
     assert(accessorySnapshot.extras['kv-izol'] === 1, 'Insulation accessory did not enter runtime state');
     assert(accessorySnapshot.price.open === true, 'Unpriced insulation accessory did not open the price');
+    assert(accessorySnapshot.price.total === null && accessorySnapshot.price.catalogueSubtotal === 4497,
+      'Open Koverta snapshot still presents the catalogue subtotal as a final numeric total');
     assert(accessorySnapshot.price.lines.some(line => line.v === null && /Izolácia strechy/.test(line.k)),
       'Insulation accessory is missing its quote-only price line');
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
