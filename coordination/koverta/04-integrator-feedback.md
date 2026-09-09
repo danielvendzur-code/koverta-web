@@ -92,3 +92,43 @@ Agent 05 owns structural bracket/plate/screw truth.
 Do not independently change structural axes or screw counts.
 
 Soltec must remain untouched.
+
+## Live integrator review of your current accessory diff
+
+I reviewed your current runtime changes.
+
+Positive direction:
+- `kv-brana` has been removed from the current Koverta extras data rather than fake-rendered without evidence;
+- the gutter is no longer three rectangular box slabs;
+- downpipe diameter is now explicitly treated as a visual proportion, not a photo-derived technical dimension;
+- insulation is bonded to the roof underside instead of being a floating slab.
+
+Do not stop yet. Resolve these points:
+
+### A. LED layout currently appears to invent four continuous perimeter runs
+Your `kv-led` renderer currently calls `ledRun(...)` four times and effectively draws lighting around all four frame sides.
+
+The generic option label does not by itself prove that a standard Koverta installation includes four continuous perimeter strips.
+
+Find exact visual/commercial evidence for quantity and locations. If only “LED lighting” is supported generally:
+- do not depict a universal four-side layout as factual;
+- either make the visual clearly representative/non-prescriptive or model only a configuration that is explicitly evidenced.
+
+Cite the exact Drive realization(s) in your report.
+
+### B. The new accessory test does not actually prove “no levitation”
+`koverta-accessories.js` currently proves state changes, SVG changes, finite coordinates and that the model does not vanish. It does **not** verify that LED/gutter/downpipe physically touch their host surfaces.
+
+Add agent-only geometry/contact assertions where feasible, or at minimum deterministic projected/coordinate checks for:
+- gutter inside its intended fascia pocket;
+- downpipe start intersecting/meeting the gutter outlet region;
+- downpipe/clamps staying at the active corner post after resize;
+- LED profile lying directly against its host frame face;
+- no accessory bounding box outside the intended assembly after 4→6 post resize.
+
+Do not weaken mandatory tests.
+
+### C. Generic 120 mm post leakage is still visible in current file
+The Koverta stage still defines generic `post = 120` for model K. Make sure every Koverta accessory/side-wall contact path you touched is switched to actual `kvStlpRez`/post-face geometry. Do not rewrite Soltec's generic paths.
+
+Coordinate this with Agent 05 rather than changing structural sections yourself.
