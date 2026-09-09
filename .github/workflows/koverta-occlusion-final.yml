@@ -36,6 +36,7 @@ jobs:
           exit 1
 
       - name: Run six mandatory tests unchanged
+        id: mandatory
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
@@ -47,12 +48,28 @@ jobs:
           node konfigurator/test/layout-smoke.js
 
       - name: Run complete Agent 02 baseline render QA
+        id: baseline_qa
+        continue-on-error: true
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
+          mkdir -p qa-artifacts
+          set +e
           node coordination/koverta/02-occlusion-sweep.js
+          OCCLUSION_EXIT=$?
           node coordination/koverta/02-component-visibility.js
+          COMPONENT_EXIT=$?
           node coordination/koverta/02-focused-render-qa.js
+          FOCUSED_EXIT=$?
+          set -e
+          {
+            echo "occlusion_exit=$OCCLUSION_EXIT"
+            echo "component_exit=$COMPONENT_EXIT"
+            echo "focused_exit=$FOCUSED_EXIT"
+          } | tee qa-artifacts/baseline-status.txt
+          if [ "$OCCLUSION_EXIT" -ne 0 ] || [ "$COMPONENT_EXIT" -ne 0 ] || [ "$FOCUSED_EXIT" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Preserve baseline evidence
         if: always()
@@ -61,7 +78,8 @@ jobs:
           if [ -d qa-artifacts ]; then cp -R qa-artifacts/. qa-evidence/base/; fi
 
       - name: Load current Agent 01 renderer without merging
-        if: success()
+        id: load_agent01
+        if: steps.mandatory.outcome == 'success'
         run: |
           cp konfigurator/soltec-premium.js /tmp/agent02-base-soltec-premium.js
           git fetch --no-tags origin agent/01-koverta-visual
@@ -73,16 +91,37 @@ jobs:
           echo "Testing Agent 01 renderer $AGENT01_SHA in the runner only. No merge and no repository write."
 
       - name: Run Agent 01 render compatibility
-        if: success()
+        id: agent01_compat
+        if: steps.mandatory.outcome == 'success' && steps.load_agent01.outcome == 'success'
+        continue-on-error: true
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
+          mkdir -p qa-artifacts
           echo "AGENT01_SHA=$AGENT01_SHA"
+          set +e
           node konfigurator/test/prekrytie.js
+          PREKRYTIE_EXIT=$?
           node konfigurator/test/strecha-nepresvita.js
+          STRECHA_EXIT=$?
           node konfigurator/test/stlpy-vidno.js
+          STLPY_EXIT=$?
           node konfigurator/test/plynulost.js
+          PLYNULOST_EXIT=$?
           node coordination/koverta/02-focused-render-qa.js
+          FOCUSED_EXIT=$?
+          set -e
+          {
+            echo "agent01_sha=$AGENT01_SHA"
+            echo "prekrytie_exit=$PREKRYTIE_EXIT"
+            echo "strecha_exit=$STRECHA_EXIT"
+            echo "stlpy_exit=$STLPY_EXIT"
+            echo "plynulost_exit=$PLYNULOST_EXIT"
+            echo "focused_exit=$FOCUSED_EXIT"
+          } | tee qa-artifacts/agent01-status.txt
+          if [ "$PREKRYTIE_EXIT" -ne 0 ] || [ "$STRECHA_EXIT" -ne 0 ] || [ "$STLPY_EXIT" -ne 0 ] || [ "$PLYNULOST_EXIT" -ne 0 ] || [ "$FOCUSED_EXIT" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Preserve Agent 01 evidence
         if: always()
@@ -98,3 +137,15 @@ jobs:
           name: agent-02-final-verification
           path: qa-evidence
           if-no-files-found: error
+
+      - name: Assert final verification
+        if: always()
+        run: |
+          echo "mandatory=${{ steps.mandatory.outcome }}"
+          echo "baseline_qa=${{ steps.baseline_qa.outcome }}"
+          echo "load_agent01=${{ steps.load_agent01.outcome }}"
+          echo "agent01_compat=${{ steps.agent01_compat.outcome }}"
+          test "${{ steps.mandatory.outcome }}" = "success"
+          test "${{ steps.baseline_qa.outcome }}" = "success"
+          test "${{ steps.load_agent01.outcome }}" = "success"
+          test "${{ steps.agent01_compat.outcome }}" = "success"
