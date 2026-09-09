@@ -3454,7 +3454,11 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              const rz = 30;                          // rúra Ø 60, ako na rendroch
+              /* Priemer odmeraný z oficiálneho rendru: šikmý úsek zvodu má na
+                 obrázku 11,3 px kolmo a stĺp vedľa neho 26 px na 150 mm, čo
+                 dáva 65 mm. Kreslí sa 70 — o pixel hrubšie ako meranie, lebo
+                 tenšia rúra sa pri stĺpe stráca. */
+              const rz = 35;                          // rúra Ø 70
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
@@ -3563,15 +3567,47 @@
                  k licu stĺpa, po ňom dole a vyhnutou pätkou von. Kým to boli
                  štyri samostatné valce, na každom ohybe ostávala medzi nimi
                  diera. */
-              const draha = [[xVytok, yZvod, zBot + 40]];
+              /* Zvod nie je lomený z rovných kusov — kolená sú kolená. Lomená
+                 čiara sa preto zaoblí: v každom rohu sa nahradí oblúkom o
+                 danom polomere. Kým tam boli ostré zlomy, vyzeral zvod ako
+                 zohnutý drôt, nie ako rúra s kolenami. */
+              const zaobli = (body, r, seg) => {
+                if (body.length < 3) return body;
+                const od = (A, B) => {
+                  const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+                  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+                  return [d[0] / l, d[1] / l, d[2] / l, l];
+                };
+                const out = [body[0]];
+                for (let i = 1; i < body.length - 1; i++) {
+                  const A = body[i - 1], B = body[i], C = body[i + 1];
+                  const u = od(B, A), v = od(B, C);
+                  const cos = Math.max(-0.999, Math.min(0.999, u[0] * v[0] + u[1] * v[1] + u[2] * v[2]));
+                  const pol = Math.acos(cos);                       // uhol medzi ramenami
+                  if (pol > Math.PI - 0.08) { out.push(B.slice()); continue; }
+                  const t = Math.min(r / Math.tan(pol / 2), u[3] * 0.48, v[3] * 0.48);
+                  const P = [B[0] + u[0] * t, B[1] + u[1] * t, B[2] + u[2] * t];
+                  const Q = [B[0] + v[0] * t, B[1] + v[1] * t, B[2] + v[2] * t];
+                  /* Kvadratická Bézierova krivka s riadiacim bodom v rohu je
+                     na oblúk dosť presná a nemá kde sa zlomiť. */
+                  for (let k = 0; k <= seg; k++) {
+                    const w = k / seg, m = 1 - w;
+                    out.push([m * m * P[0] + 2 * m * w * B[0] + w * w * Q[0],
+                              m * m * P[1] + 2 * m * w * B[1] + w * w * Q[1],
+                              m * m * P[2] + 2 * m * w * B[2] + w * w * Q[2]]);
+                  }
+                }
+                out.push(body[body.length - 1]);
+                return out;
+              };
+              const lom = [[xVytok, yZvod, zBot + 40]];
               if (Math.abs(xVytok - xRura) > 2) {
-                draha.push([xVytok, yZvod, zBot - 16]);
-                draha.push([xRura, yZvod, zKoleno]);
+                lom.push([xVytok, yZvod, zBot - 26]);
+                lom.push([xRura, yZvod, zKoleno]);
               }
-              for (let i = 0; i <= 8; i++) {
-                const t = (Math.PI / 2) * 0.80 * (i / 8);
-                draha.push([xRura + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
-              }
+              lom.push([xRura, yZvod, zPata]);
+              lom.push([xRura + RP * 0.92, yZvod, zPata - RP * 0.62]);
+              const draha = zaobli(lom, RP, 7);
               tuba(draha, rz, zvodHex);
               // hrdlo: kúsok širšej rúry tam, kde zvod vychádza spod lemovania
               tuba([[xVytok, yZvod, zBot + 24], [xVytok, yZvod, zBot - 30]], rz * 1.14,

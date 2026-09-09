@@ -364,11 +364,20 @@ dvojice C) a 4 v rohoch. Kým sa kreslili dve na roh, bol pozdĺž bočného
 rámu rad spojok, ktorý v modeli nie je.
 
 **Žľab ani zvod v exportoch nie sú** — podrobne vyššie v „Čo v Expivi
-modeli nie je". Zvod sa kreslí podľa fotiek realizácií: tenká rúra Ø 80,
-ktorá sa dotýka odkvapového líca rohového stĺpa, ide po ňom celá zvislo a
-dole má krátku vyhnutú pätku. Keď je os rúry v kapse žľabu — a pri rohovom
-stĺpe je — nemá zvod žiadne koleno; ďalej od odkvapu sa ku stĺpu vráti
-jedným.
+modeli nie je". Kreslia sa podľa oficiálneho rendru, kde ich vidieť:
+
+* **Priemer rúry je odmeraný.** Šikmý úsek zvodu má na rendri kolmo 11,3 px
+  a stĺp vedľa neho 26 px na 150 mm, čo dáva 65 mm. Kreslí sa 70 — tenšia
+  rúra sa pri stĺpe stráca.
+* **Zvod vychádza zo žľabu pri jeho vonkajšej stene**, teda o kus von od
+  stĺpa, a jedným kolenom sa vráti k jeho odkvapovému licu. Koleno klesne
+  asi o sedem desatín toho, o čo sa rúra vráti dnu.
+* **Kolená sú kolená, nie zlomy.** Lomená čiara dráhy sa zaobľuje: v každom
+  rohu ju nahradí oblúk (kvadratická Bézierova krivka s riadiacim bodom v
+  rohu). Kým tam boli ostré zlomy, vyzeral zvod ako zohnutý drôt.
+* Rúra stojí 8 mm od líca stĺpa — na stavbe ju tam drží príchytka — a jej
+  kruhové tieňovanie je výraznejšie než na plochom líci, inak sa so stĺpom
+  zlieva.
 
 Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
 realizácie nie je — kreslí sa len doska.
