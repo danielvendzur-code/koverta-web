@@ -193,14 +193,27 @@ function validateAccessoryContacts(snap, label) {
   const led = accessories.led;
   assert(led && led.enabled, `${label}: LED contact data missing`);
   assert(led.runs.length === 4,
-    `${label}: evidenced perimeter LED installation must render four connected frame runs`);
-  led.runs.forEach((run, i) => {
-    assertClose(run.profileTopZ, run.hostBottomZ,
-      `${label}: LED run ${i} does not touch its host frame underside`);
-    assert(run.x >= assembly.xMin - 0.01 && run.y >= assembly.yMin - 0.01 &&
-      run.x + run.dx <= assembly.xMax + 0.01 &&
-      run.y + run.dy <= assembly.yMax + 0.01,
-      `${label}: LED run ${i} escaped the current frame footprint`);
+    `${label}: evidenced perimeter LED installation must contain four frame runs`);
+  assert(Array.isArray(led.corners) && led.corners.length === 4,
+    `${label}: LED perimeter is missing one or more corner connectors`);
+  const ledParts = led.runs.concat(led.corners);
+  ledParts.forEach((part, i) => {
+    assertClose(part.profileTopZ, part.hostBottomZ,
+      `${label}: LED part ${i} does not touch its host frame underside`);
+    assert(part.x >= assembly.xMin - 0.01 && part.y >= assembly.yMin - 0.01 &&
+      part.x + part.dx <= assembly.xMax + 0.01 &&
+      part.y + part.dy <= assembly.yMax + 0.01,
+      `${label}: LED part ${i} escaped the current frame footprint`);
+  });
+  const touches = (a, b) => {
+    const eps = 0.02;
+    return a.x <= b.x + b.dx + eps && a.x + a.dx >= b.x - eps &&
+      a.y <= b.y + b.dy + eps && a.y + a.dy >= b.y - eps;
+  };
+  led.corners.forEach((corner, i) => {
+    const touchingRuns = led.runs.filter((run) => touches(corner, run)).length;
+    assert(touchingRuns === 2,
+      `${label}: LED corner ${i} must physically connect exactly two perimeter runs, got ${touchingRuns}`);
   });
 
   const gutter = accessories.gutter;
@@ -310,6 +323,18 @@ function validateAccessoryContacts(snap, label) {
         `${device}: LED selection did not change the physical SVG render`);
       assert(/f5e8c5/i.test(withLed.markup),
         `${device}: LED diffuser surface is missing from the rendered SVG`);
+
+      /* Preserve visual evidence for manual QA in the workflow artifact. */
+      await setSize(page, 7000, 6000);
+      for (const viewName of ['front', 'corner', 'under']) {
+        await page.locator(`[data-sp-view="${viewName}"]`).click();
+        await page.waitForTimeout(180);
+        await page.locator('.sp-stage').screenshot({
+          path: `qa-artifacts/koverta-accessories-${viewName}-7000x6000-${device}.png`
+        });
+      }
+      await page.locator('[data-sp-view="under"]').click();
+      await page.waitForTimeout(120);
 
       /* Verify all three current Koverta side-wall materials are selectable
          and physically rendered. */
