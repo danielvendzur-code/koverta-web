@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [osnova-podla-expivi, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
+        test: [osnova-podla-expivi, technical-fidelity, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
     steps:
       - uses: actions/checkout@v4
         with:
