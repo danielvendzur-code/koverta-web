@@ -88,13 +88,9 @@ async function revealControl(page, selector) {
       'Unverified side-wall prices must not remain numeric');
     assert(/vrátane DPH a montáže/.test(catalogue.priceNote) && /dopravu.*potvrdíme/i.test(catalogue.priceNote),
       'Koverta price note does not preserve verified installation scope and unresolved transport scope');
-    assert(catalogue.placements.filter(item => item.id !== 'kv-free').every(item => /na nacenenie/.test(item.label)),
-      'Non-standard placements are not marked for quotation');
-    assert(catalogue.placements.length === 2
-      && catalogue.placements[0].id === 'kv-free'
-      && catalogue.placements[1].id === 'kv-custom-place'
-      && /na nacenenie/.test(catalogue.placements[1].label),
-      'Unsupported structural placement variants are still exposed as concrete offers');
+    assert(catalogue.placements.length === 1
+      && catalogue.placements[0].id === 'kv-free',
+      'Hidden or unsupported placement variants are still exposed in Koverta product data');
     assert(JSON.stringify(catalogue.colors.map(item => item.ral)) === JSON.stringify([
       'RAL 7016','RAL 9005','RAL 9006','RAL 9010','RAL 7037','RAL 7011','RAL 8017','RAL 6003','RAL 5010','RAL 3000'
     ]), 'Koverta current RAL palette changed');
@@ -326,21 +322,11 @@ async function revealControl(page, selector) {
     const woodPressed = await page.locator('[data-sp-side-opt="kvdrevo"]').getAttribute('aria-pressed');
     assert(woodPressed === 'true', 'Compatible side selection was lost after dimension change');
 
-    // Non-standard placement is preserved as a quotation-only rule.
-    await revealControl(page, '[data-sp-place="kv-custom-place"]');
-    await page.locator('[data-sp-place="kv-custom-place"]').click();
-    await waitRender(page);
-    const placementLine = page.locator('[data-kv-placement-line]');
-    await placementLine.waitFor({ state: 'attached' });
-    assert((await placementLine.innerText()).includes('na nacenenie'), 'Quote-only placement line is missing');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Quote-only placement still presents an exact final total');
-
     // Deterministic payload must carry the selected placement, options and safe price wording.
     const payload = await page.evaluate(() => window.KVBuildKovertaQuote());
     assert(payload && payload.body, 'Koverta payload builder returned no payload');
-    assert(payload.body.includes('Umiestnenie:'), 'Payload omits placement');
-    assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state');
+    assert(payload.body.includes('Umiestnenie: Samostatne stojaci.'), 'Payload omits the actual default placement');
+    assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state from selected unpriced configuration');
     assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
     assert(payload.body.includes('Izolácia strechy'), 'Payload omits selected sourced accessory');
     assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
@@ -366,8 +352,11 @@ async function revealControl(page, selector) {
     await page.locator('#SoltecPremium[data-sp-page="koverta"]').waitFor();
     await waitRender(page);
     assert(/2\s*500/.test(await page.locator('[data-sp-w-out]').textContent()), 'Reset did not restore initial width');
-    assert((await page.locator('[data-sp-place="kv-free"]').getAttribute('aria-pressed')) === 'true',
-      'Reset did not restore standalone placement');
+    assert(await page.locator('[data-sp-place]').count() === 0,
+      'Single-model Koverta unexpectedly exposes a hidden placement control after reset');
+    const resetPayload = await page.evaluate(() => window.KVBuildKovertaQuote());
+    assert(resetPayload.body.includes('Umiestnenie: Samostatne stojaci.'),
+      'Reset payload did not restore the implicit standalone placement');
     const resetSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
     assert(resetSnapshot.price.total === 4497 && resetSnapshot.price.open === false,
       'Reset left the Koverta base price open or stale');
@@ -409,7 +398,7 @@ async function revealControl(page, selector) {
       'Outside-catalogue request incorrectly implies technical feasibility or a valid catalogue price');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-    console.log('PRICING_LOGIC_PASS all 54 catalogue points, 6200/6600 transition, RAL disclosure, side options, gutter/anchoring state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
+    console.log('PRICING_LOGIC_PASS all 54 catalogue points, 6200/6600 transition, RAL disclosure, side options, gutter/anchoring state, sourced accessories, no hidden placement variants, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
     await context.close();
   } finally {
     await browser.close();
