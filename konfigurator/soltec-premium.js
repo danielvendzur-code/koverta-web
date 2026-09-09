@@ -1406,6 +1406,10 @@
                platí to nižšie, presne ako pri Soltec pásmach. */
             const kvMat = (BIO.sideMat || {})[kind];
             const kvWall = () => {
+              const exactSide = m.wallSideBySize && m.wallSideBySize[`${widthMM()}x${lengthMM()}`];
+              if ((side === 'front' || side === 'rear') && exactSide) {
+                return Number.isFinite(exactSide[kvMat]) ? exactSide[kvMat] : null;
+              }
               const t = (side === 'front' || side === 'rear') ? m.wallSide : m.wallBack;
               if (!t) return null;
               const bands = Object.keys(t).map(Number).sort((a, b) => a - b);
@@ -3401,8 +3405,8 @@
             };
             const TIEN = 55;
             osi.forEach((os) => {
-              tien(Math.max(ty0, os - VAZ_W - TIEN), os - VAZ_W);
-              tien(os + VAZ_W, Math.min(ty1, os + VAZ_W + TIEN));
+              tienX(Math.max(tx0, os - VAZ_W - TIEN), os - VAZ_W);
+              tienX(os + VAZ_W, Math.min(tx1, os + VAZ_W + TIEN));
             });
             tien(ry0, Math.min(ty1, ry0 + TIEN));
             tien(Math.max(ty0, ry1 - TIEN), ry1);

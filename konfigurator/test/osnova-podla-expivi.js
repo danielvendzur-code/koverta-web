@@ -33,10 +33,10 @@ if (!fs.existsSync(MER)) {
   process.exit(2);
 }
 const mer = JSON.parse(fs.readFileSync(MER, 'utf8'));
-const idx = fs.readFileSync(path.join(KOREN, 'konfigurator', 'index.html'), 'utf8');
-const i = idx.indexOf('  var PAGES = ');
-const j = idx.indexOf('\n', i);
-const PAGES = JSON.parse(idx.slice(i + '  var PAGES = '.length, j).trim().replace(/;$/, ''));
+const templates = fs.readFileSync(path.join(KOREN, 'konfigurator', 'cfg-pages.js'), 'utf8');
+const assignment = /^window\.KV_PAGES\s*=\s*(\{.*\});?\s*$/m.exec(templates);
+if (!assignment) throw new Error('Missing JSON template assignment in cfg-pages.js');
+const PAGES = JSON.parse(assignment[1]);
 const bio = JSON.parse(/data-sp-bio-data>([\s\S]*?)<\/script>/.exec(PAGES.koverta)[1].replace(/<\\\//g, '</'));
 const M = bio.models.K;
 const REF = M.kvRef;
@@ -175,6 +175,7 @@ Object.keys(mer).sort().forEach((k) => {
    do stlpy-a-vaznice-odmerane.json. */
 const fs2 = require('fs');
 const UNIA = path.join(KOREN, 'archiv-expivi', 'stlpy-a-vaznice-odmerane.json');
+if (!fs.existsSync(UNIA)) throw new Error('Missing required Expivi measurements: ' + UNIA);
 let rohOk = 0, styriOk = 0;
 if (fs2.existsSync(UNIA)) {
   const u = JSON.parse(fs2.readFileSync(UNIA, 'utf8'));
@@ -231,6 +232,7 @@ if (fs2.existsSync(UNIA)) {
     else styriOk += 1;
   });
 }
+if (!ok || !ramOk || !rohOk || !styriOk) throw new Error('Incomplete Expivi coverage; refusing to report PASS');
 if (zle) { console.log('osnova nesedí s Expivi: ' + zle + ' rozdielov'); process.exit(1); }
 console.log('osnova sedí s Expivi (' + ok + ' porovnaní osí a prierezov, '
             + ramOk + ' katalógov s osou rámu, ' + rohOk + ' s rohovými stĺpmi, '

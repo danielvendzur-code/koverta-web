@@ -13,28 +13,21 @@
 */
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
+const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
-  const p = await (await b.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
-  p.on('pageerror', (e) => console.log('CHYBA STRÁNKY', e.message));
+  const ctx = await b.newContext({ viewport: { width: 1200, height: 900 } });
+  await prepareContext(ctx);
+  const p = await ctx.newPage();
+  const assertNoErrors = watchErrors(p);
+  await setModelColors(ctx, { trapezTopHex: '#00ff00', trapezSoffitHex: '#ff00ff' });
   await p.goto(URL, { waitUntil: 'load', timeout: 60000 });
   await p.waitForTimeout(2200);
 
   const ok = await p.evaluate(() => Boolean(window.SP_TEST && window.SP_TEST.setView && window.SP_TEST.project));
   if (!ok) { console.log('SP_TEST nie je k dispozícii — engine sa nenačítal'); await b.close(); process.exit(2); }
-
-  /* Strecha nazeleno, lemovanie načerveno a nažlto. Farby sa nastavujú cez
-     štýlovanie modelu, ktoré engine číta z dátového bloku stránky. */
-  await p.evaluate(() => {
-    const el = document.querySelector('[data-sp-bio-data]');
-    const bio = JSON.parse(el.textContent);
-    Object.values(bio.models).forEach((m) => { m.trapezTopHex = '#00ff00'; m.trapezSoffitHex = '#ff00ff'; });
-    el.textContent = JSON.stringify(bio);
-  });
-  await p.reload({ waitUntil: 'load' });
-  await p.waitForTimeout(2200);
 
   const zle = await p.evaluate(async () => {
     const svg = document.querySelector('[data-sp-canvas]');
@@ -59,7 +52,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
       const body = [];
       for (let t = 0.02; t <= 0.99; t += 0.06) {
         for (const d of [25, 70, 120, 165]) { body.push([d, t * W]); body.push([L - d, t * W]); }
-        for (const d of [30, 90, 160, 225]) { body.push([t * L, d]); body.push([t * L, W - d]); }
+        for (const d of [30, 70, 120, 165]) { body.push([t * L, d]); body.push([t * L, W - d]); }
       }
       for (let ai = 0; ai < 12; ai++) {
         for (const el of [-0.15, 0.15, 0.42, 0.75, 1.12]) {
@@ -90,5 +83,6 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
     console.log('lemovanie nikde neprekryté (180 pohľadov × ~270 bodov)');
   }
   await b.close();
+  assertNoErrors();
   process.exit(zle.length ? 1 : 0);
 })();

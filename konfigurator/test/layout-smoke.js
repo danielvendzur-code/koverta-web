@@ -9,15 +9,7 @@ function assert(condition, message) {
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const errors = [];
-  const installAnalyticsStubs = async (context) => {
-    await context.addInitScript(() => {
-      // GTM may invoke Microsoft Clarity while its external loader is blocked in CI.
-      // Mirror Clarity's documented queue stub so QA still catches first-party errors.
-      window.clarity = window.clarity || function () {
-        (window.clarity.q = window.clarity.q || []).push(arguments);
-      };
-    });
-  };
+  const installAnalyticsStubs = require('./browser-qa').prepareContext;
   const dismissConsent = async (page) => {
     const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
     if (await reject.count()) {
