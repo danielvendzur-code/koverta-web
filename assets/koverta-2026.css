@@ -14437,9 +14437,15 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 
   /* Keď je hero na obrazovke, spodný sticky CTA iba duplikuje žlté tlačidlo.
      Skript ho vtedy označí touto triedou; po odchode z hero sa vráti. */
+  .kh-dock {
+    transition: transform 260ms var(--k-ease-out), opacity 180ms var(--k-ease);
+  }
   .kh-dock.je-hero-skryty {
     transform: translateY(calc(100% + 12px));
     opacity: 0;
     pointer-events: none;
+  }
+  .ma-hero-dok-skryty .kh-hero__inner {
+    padding-bottom: 24px !important;
   }
 }
