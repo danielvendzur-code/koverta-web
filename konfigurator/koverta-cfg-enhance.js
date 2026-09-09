@@ -350,7 +350,7 @@
       body.push('Rozmer: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
     }
     body.push('Umiestnenie: ' + placement.label + (placement.quoteOnly ? ' (na nacenenie)' : '') + '.');
-    if (frameColor) body.push('Farba konštrukcie: ' + frameColor + '.');
+    if (frameColor) body.push('Farba konštrukcie: ' + frameColor + ' (cenový dopad na nacenenie).');
     if (rows.length) {
       body.push('Zostava:');
       rows.forEach(function (row) {
