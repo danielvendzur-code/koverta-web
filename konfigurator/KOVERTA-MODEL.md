@@ -89,8 +89,17 @@ končí na 6,2 m a od 6,6 m je publikovaná už len šesťstĺpová.
 
 | šírka | stĺpy | väznice | prierez stĺpa |
 | --- | --- | --- | --- |
-| 2 500 – 6 200 | 4 (v rohoch) | 3 | 150 × 150 |
-| 6 600 – 7 000 | 6 (rohy + stredný rad) | 5 | 110 × 190 |
+| 2 500 – 6 200 | 4 v rohoch | 3 | 150 × 150 |
+| 6 600 | 6: rohy + stredný rad | 5 | 110 × 190 |
+| 7 000 | 6 zatiahnutých dnu, strecha na oboch koncoch prečnieva | 5 | 110 × 190 |
+
+Prečo má 7,0 m stĺpy inde než 6,6 m: sú to dva rôzne výrobky z dvoch
+generácií. Katalógy 6,6 m (21730 / 21731 / 21732) sú z rokov 2024 – 25 a
+majú stĺp 100 × 100 v rohoch a v strede. Katalógy 7,0 m (14192 / 14198 /
+14069) sú z roku 2022 a majú šesť stĺpov zatiahnutých dnu — pri hĺbke 6 m
+sú rady v osiach 1 152 / 3 092 / 5 032 od vonkajšej hrany strechy, takže
+strecha na oboch koncoch prečnieva skoro meter. Konfigurátor kreslí každú
+šírku podľa jej vlastného exportu, nie podľa jedného pravidla.
 
 V dátach stránky je to pole `kvGeom` — zoznam pásiem `{max, postsPerSide,
 postD, postW, poDlzke}`. V engine ho číta `kvBand()` a z neho berú polohy
@@ -147,6 +156,22 @@ nezrovnalosť: lemovanie je zo všetkých štyroch strán rovnaké, aby zhora
 tvorilo pravidelný rám. Kreslí sa preto 190 na všetky štyri strany.
 Odmeraná hodnota z exportu ostáva zapísaná v dátach ako `lemBokExport`,
 aby sa nestratila.
+
+## Test rád stĺpov proti Expivi
+
+`konfigurator/test/stlpy-podla-expivi.js` porovná pásma `kvGeom` s polohami
+odmeranými z exportov (`archiv-expivi/stlpy-a-vaznice-odmerane.json`). Nič
+nerenderuje — porovnávajú sa čísla, takže odpovie na otázku „sú stĺpy tam,
+kde majú byť" bez hádania z obrázka.
+
+```
+node konfigurator/test/stlpy-podla-expivi.js
+```
+
+Prejde na 50 porovnateľných veľkostiach. Tolerancia je 70 mm z dvoch
+dôvodov, ktoré nie sú chyby: novšie katalógy majú stĺp 100 × 100 namiesto
+150 × 150 (os vyjde o 25 – 58 mm inde, hoci líce sedí), a export katalógu
+7,0 × 5,6 m nesie geometriu 5,2 m, takže sa preskočí.
 
 ## Test prekrytia
 

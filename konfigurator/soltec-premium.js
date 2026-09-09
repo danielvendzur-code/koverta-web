@@ -1447,13 +1447,28 @@
         let viewTouched = false;
         let lastRoofKind = null;
         const view = { az: -0.62, el: 0.42 };
-        const VIEWS = {
+        /* Otvárací pohľad si berie ten, ktorý patrí modelu. */
+        const otvorPohlad = () => { const v = VIEWS_FOR().front; view.az = v.az; view.el = v.el; };
+        const VIEWS_SOLTEC = {
           front:  { az: -0.62, el: 0.42 },   // the opening three-quarter view
           side:   { az: -0.05, el: 0.10 },   // straight along the long side
           corner: { az: 0.72,  el: 0.30 },   // from the other corner
           top:    { az: -0.62, el: 1.12 },
           under:  { az: -0.62, el: -0.16 }
         };
+        /* Koverta má vlastné otvorenie. Rendery, ktoré k prístreškom robí sama,
+           sú z odkvapovej strany, nižšie a viac spredu — zvod vychádza pri
+           ľavom rohovom stĺpe. Kým sa model otváral zo Soltecového uhla,
+           vyzeral vedľa nich ako iný výrobok, hoci geometria je tá istá. */
+        const VIEWS_KOVERTA = {
+          front:  { az: 0.82,  el: 0.22 },
+          side:   { az: 0.05,  el: 0.10 },
+          corner: { az: -0.70, el: 0.34 },
+          top:    { az: 0.82,  el: 1.12 },
+          under:  { az: 0.82,  el: -0.16 }
+        };
+        const VIEWS_FOR = () => (model().kvGeom ? VIEWS_KOVERTA : VIEWS_SOLTEC);
+        const VIEWS = new Proxy({}, { get: (_, k) => VIEWS_FOR()[k] });
         /* How far the orbit may drop. Enough to look up into the soffit,
              not so far that the model turns inside out. */
         const EL_FLOOR = () => -0.2;
@@ -1504,6 +1519,12 @@
           const roofKind = panelRoof ? 'panel' : 'louver';
           if (!viewTouched && roofKind !== lastRoofKind) view.el = FRONT_EL();
           lastRoofKind = roofKind;
+          /* Kým sa zákazník modelu nedotkol, drží sa otvárací pohľad toho
+             výrobku, ktorý je na scéne. */
+          if (!viewTouched) {
+            const vf = VIEWS_FOR().front;
+            if (Math.abs(view.az - vf.az) > 1e-6) { view.az = vf.az; view.el = vf.el; }
+          }
           const meshPatternId = `sp-mesh-${String(state.model).replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
           /* The catalogue prices the box panels in the same palette as the
              frame but as a separate item, so the store can be picked out or
