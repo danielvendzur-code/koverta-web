@@ -272,7 +272,7 @@
 
   function selectedPlacement(root) {
     var btn = root && root.querySelector('[data-sp-place][aria-pressed="true"]');
-    if (!btn) return { id: '', label: 'neuvedené', quoteOnly: true };
+    if (!btn) return { id: '', label: 'neuvedené', quoteOnly: false, pending: true };
     var span = btn.querySelector('span');
     var label = '';
     if (span) {
@@ -399,26 +399,39 @@
     var host = root.querySelector('[data-sp-lines]');
     if (!host) return;
     var placement = selectedPlacement(root);
+    if (placement.pending) return;
+
     var old = host.querySelector('[data-kv-placement-line]');
-    if (!placement.quoteOnly) {
-      if (old) old.parentNode.removeChild(old);
-      return;
+    if (placement.quoteOnly) {
+      if (!old) {
+        old = document.createElement('li');
+        old.setAttribute('data-kv-placement-line', '');
+        host.appendChild(old);
+      }
+      var stamp = placement.id + '|' + placement.label;
+      if (old.dataset.kvStamp !== stamp) {
+        old.dataset.kvStamp = stamp;
+        old.innerHTML = '<span>Umiestnenie — ' + placement.label + '</span><b>na nacenenie</b>';
+      }
+    } else if (old) {
+      old.parentNode.removeChild(old);
     }
-    if (!old) {
-      old = document.createElement('li');
-      old.setAttribute('data-kv-placement-line', '');
-      host.appendChild(old);
-    }
-    var stamp = placement.id + '|' + placement.label;
-    if (old.dataset.kvStamp !== stamp) {
-      old.dataset.kvStamp = stamp;
-      old.innerHTML = '<span>Umiestnenie — ' + placement.label + '</span><b>na nacenenie</b>';
-    }
+
+    var hasOtherUnpriced = [].slice.call(host.querySelectorAll('li')).some(function (li) {
+      if (li.hasAttribute('data-kv-placement-line')) return false;
+      var price = li.querySelector('b');
+      return cleanText(price && price.textContent) === 'na nacenenie';
+    });
+    var mustBeOpen = placement.quoteOnly || hasOtherUnpriced;
+
     ['[data-sp-total]', '[data-sp-mini-total]'].forEach(function (selector) {
       var el = root.querySelector(selector);
       if (!el) return;
       var value = cleanText(el.textContent);
-      if (value && value !== '—' && value.indexOf('od ') !== 0) el.textContent = 'od ' + value;
+      if (!value || value === '—') return;
+      var baseValue = value.replace(/^od\s+/i, '');
+      var nextValue = mustBeOpen ? 'od ' + baseValue : baseValue;
+      if (cleanText(el.textContent) !== nextValue) el.textContent = nextValue;
     });
   }
 
