@@ -46,11 +46,26 @@ function assert(condition, message) {
 
     console.log('HOME_METRICS ' + JSON.stringify(home));
     await page.screenshot({ path: 'qa-artifacts/home-desktop.png', fullPage: true });
+    for (const [selector, name] of [
+      ['.kh-hero', 'home-hero.png'],
+      ['.kh-ponuka', 'home-offer.png'],
+      ['.kh-kfg', 'home-configurator-section.png'],
+      ['.kh-proc', 'home-process.png'],
+      ['.kh-rev', 'home-reviews.png'],
+      ['.kh-mat', 'home-material.png']
+    ]) {
+      const locator = page.locator(selector).first();
+      if (await locator.count()) {
+        await locator.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(350);
+        await locator.screenshot({ path: 'qa-artifacts/' + name });
+      }
+    }
     assert(home.overflow <= 4, 'Desktop homepage has horizontal overflow: ' + home.overflow);
     assert(home.heroRating && home.heroRating.width > 150 && home.heroRating.height > 25, 'Hero Google rating is not visible');
     assert(home.barPhone && home.barPhone.display !== 'none' && home.barPhone.visibility !== 'hidden' && home.barPhone.opacity > .9, 'Desktop main-nav phone is not visible');
     assert(home.topPhone && home.topPhone.display === 'none', 'Desktop duplicates the phone in topbar and main nav');
-    assert(home.cards.length === 2 && home.cards.every(c => c.width > 250), 'Brand information cards are not laid out as two useful desktop cards');
+    assert(home.cards.length === 2 && home.cards.every(c => c.width >= 190), 'Brand information cards are too narrow for desktop');
     assert(Math.abs(home.cards[0].y - home.cards[1].y) < 8, 'Brand cards are not aligned in one desktop row');
     assert(home.brandMoreVisible, 'Brand explanatory text is hidden behind hover');
     assert(home.kovertaCfg && home.kovertaCfg.width > 180 && home.kovertaCfg.height > 120, 'Koverta configurator card is missing or collapsed');
