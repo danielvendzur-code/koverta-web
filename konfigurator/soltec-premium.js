@@ -2414,11 +2414,17 @@
                  nemôže. Kreslili sa ale aj vtedy a na spoji, kde maliarske
                  triedenie rozdelí veľkú plochu strechy, im vykukol pixel. */
               if (BIO.headPlates && !nadStrechou) {
-                const zH = H + lift;
+                /* Expivi complete scenes put the column top exactly at the
+                   bottom of the side perimeter frame. The renderer lifts that
+                   frame by 2 mm only to avoid coplanar BSP artefacts, so the
+                   visual head plate must bridge the same artificial 2 mm or it
+                   would levitate below the member it is supposed to fix. */
+                const zH = H + lift + (model().roofKit === 'koverta' ? 2 : 0);
                 /* Platňa je len taká, aby sa na ňu zmestili dve skrutky —
                    nie doska cez celý bok stĺpa. Kľúč 19 znamená hlavu asi
                    19 mm cez ploché, takže na dve skrutky vedľa seba stačí
-                   pás asi 110 × 58 mm. */
+                   pás asi 110 × 58 mm. Tieto rozmery zostávajú vizuálnym
+                   detailom; aktívna Expivi scéna ich samostatne nepotvrdzuje. */
                 const hp = 58;                                    // vyloženie platne
                 const sir = 110;                                  // dĺžka platne
                 const th = 8;
@@ -2426,7 +2432,7 @@
                    oficiálnych rendroch je pod stĺpom svetlá, nie tmavá. */
                 const hlava = model().rimSoffitHex ? shade(model().rimSoffitHex, -0.06) : shade(frame, -0.30);
                 const rohovy = Boolean(rz.roh);
-                /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
+                /* Platňa leží pod pásnicou a jej horné líce sa jej dotýka. */
                 const plat = (x0, y0, dx, dy) => {
                   boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
                   const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
@@ -2437,23 +2443,28 @@
                                  vodo ? cy0 : cy0 + sd * roz, zH - th - 1);
                   });
                 };
-                /* Typ hlavovej platne sa riadi skutočným nosným prvkom, nie
-                   iba poradím stĺpa v rade. Rohový 150 × 150 stĺp je v styku
-                   s dvomi obvodovými C profilmi, preto si necháva dve platne.
-                   Stĺp 110 × 190 pod väznicou má iba platňu vedenú po osi
-                   väznice. Predchádzajúce x-ové platne ležali mimo jej
-                   116 mm širokého pôdorysu a fyzicky sa na nič nepripájali. */
+                /* Rozhoduje skutočná rola stĺpa, nie jeho index v rade.
+                   - Rohový 150 × 150 stĺp stojí pod stykom bočného a čelného
+                     rámu: jedna platňa ide po bočnom ráme, druhá do čelného.
+                   - Nerohový 110 × 190 stĺp končí na spodku BOČNÉHO rámu.
+                     Väznica je v aktívnych Expivi scénach o 40 mm vyššie a
+                     pripája sa k bočnému rámu vlastnými uholníkmi. Preto má
+                     nerohový stĺp iba platne vedené po bočnom ráme; žiadna
+                     platňa nesmie smerovať naprieč do väznice ani k vzdialenému
+                     čelnému rámu. To odstraňuje plávajúcu konzolu na 4-stĺpovej
+                     zostave, kde prvý/posledný index nie je skutočný roh. */
                 const kBoku = py < W / 2;
                 const cy = py + pw / 2, cx = px + pd / 2;
                 if (rohovy) {
-                  const dnu = xi === 0 ? 1 : -1;              // smerom do poľa
+                  const dnu = xi === 0 ? 1 : -1;              // po bočnom ráme smerom do poľa
                   if (dnu > 0) plat(px + pd, cy - sir / 2, hp, sir);
                   else plat(px - hp, cy - sir / 2, hp, sir);
+                  if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
+                  else plat(cx - sir / 2, py - hp, sir, hp);
+                } else {
+                  plat(px - hp, cy - sir / 2, hp, sir);
+                  plat(px + pd, cy - sir / 2, hp, sir);
                 }
-                /* Väznica beží cez šírku prístrešku (os Y). Táto platňa je
-                   vycentrovaná na jej 116 mm priereze a smeruje do poľa. */
-                if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
-                else plat(cx - sir / 2, py - hp, sir, hp);
               }
              });
             });
