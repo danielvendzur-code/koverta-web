@@ -76,3 +76,15 @@ Run:
 - layout-smoke
 
 All six must remain green.
+
+## Live integrator status
+
+Your current branch still contains the broad all-dimensions sweep but no final `02-occlusion-qa.md` report yet. Do not stop at the current 15-degree whole-scene sweep.
+
+Agent 01 has now started replacing the fake flat trapezoid underside with a corrugated shell. Your next QA run must explicitly test that new kind of geometry once it is available for comparison/integration:
+- local fascia bleed;
+- coplanar/double-painted roof faces at grazing angles;
+- BSP polygon-count/performance regression;
+- top/under transition continuity.
+
+Do not relax thresholds just because a real corrugated surface increases polygon count. If a generic polygon-count heuristic becomes noisy, keep the mandatory tests untouched and make the additive agent-only metric more semantic/local rather than more permissive.
