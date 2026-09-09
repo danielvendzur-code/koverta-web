@@ -76,7 +76,14 @@ module.exports = async function routingSmoke(browser) {
       await page.locator(route === 'koverta' ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
+      if (route === 'koverta') {
+        assert(withSide.price.open === true, 'koverta: unverified side price must remain quote-only');
+        assert(withSide.price.total === resized.price.total, 'koverta: quote-only side must not invent a numeric surcharge');
+        assert(withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
+          'koverta: selected side is not represented as an unpriced quote line');
+      } else {
+        assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
+      }
 
       if (route === 'koverta') {
         await gotoControl('[data-sp-add-opt="pick:odkvap"]');
