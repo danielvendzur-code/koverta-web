@@ -42,3 +42,10 @@ jobs:
           node konfigurator/test/prekrytie.js
           node konfigurator/test/strecha-nepresvita.js
           node konfigurator/test/plynulost.js
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: koverta-visual-qa
+          path: qa-artifacts
+          if-no-files-found: ignore
