@@ -98,6 +98,30 @@ function assert(condition, message) {
     assert(home.brandMoreVisible, 'Brand explanatory text is hidden behind hover');
     assert(home.kovertaCfg && home.kovertaCfg.width > 180 && home.kovertaCfg.height > 120, 'Koverta configurator card is missing or collapsed');
 
+    // Validate the client flow without delivering an enquiry to the company.
+    let submissions = 0;
+    await desktop.route('https://koverta.sk/contact', async route => {
+      assert(route.request().method() === 'POST', 'Unexpected contact request method');
+      submissions++;
+      const body = route.request().postData() || '';
+      assert(body.includes('qa@example.invalid') && body.includes('Koverta audit test'), 'Contact payload lost fields');
+      await route.fulfill({status:200,contentType:'text/html',body:'<html><body>Test response</body></html>'});
+    });
+    const form = page.locator('form[data-k-dopyt]').first();
+    await form.locator('[type="submit"]').click();
+    assert(submissions === 0, 'Empty contact form bypassed validation');
+    await form.locator('[name="contact[name]"]').fill('Koverta audit test');
+    await form.locator('[name="contact[phone]"]').fill('+421900000000');
+    await form.locator('[name="contact[email]"]').fill('qa@example.invalid');
+    await form.locator('[name="contact[body]"]').fill('Client-side QA; intercepted, never delivered.');
+    await form.locator('[type="submit"]').click();
+    assert(submissions === 0, 'Contact form bypassed consent validation');
+    await form.locator('[type="checkbox"]').check();
+    await form.locator('[type="submit"]').click();
+    await page.locator('[data-k-dakujem]').waitFor({state:'visible'});
+    assert(submissions === 1, 'Contact form did not issue exactly one intercepted request');
+    console.log('FORM_PASS validation, consent, request payload, client response; delivery not tested');
+
     await desktop.close();
 
     const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
