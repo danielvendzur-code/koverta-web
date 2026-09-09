@@ -190,6 +190,15 @@ Tolerancia je 50 mm. Test si vzorec drží zvlášť a číta ho z tých istých
 čísel v `kvRef` ako engine — keby sa engine a dáta rozišli, rozíde sa aj
 test.
 
+Overuje sa na troch úrovniach, takže „sedí to len pri jednej veľkosti" nemá
+kde vzniknúť:
+
+| čo | koľko katalógov | odkiaľ |
+| --- | --- | --- |
+| osi rámu, väzníc, stĺpov aj prierezy stĺpov | 2 (7,0 × 5,2 a 7,0 × 6,0) | kompletná scéna |
+| os obvodového rámu | 21 | scéna, aj keď nesie len strechu |
+| osi rohových stĺpov 150 × 150 | 32 | zip exportu — taký prierez má len štvorstĺpová varianta a sú presne štyri, takže ich nie je s čím zameniť |
+
 ## Test prekrytia
 
 `konfigurator/test/prekrytie.js` overí, či plech strechy neprerazí cez

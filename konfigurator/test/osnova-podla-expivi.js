@@ -157,6 +157,45 @@ Object.keys(mer).sort().forEach((k) => {
   if (d > TOL) chyba(k + ' os obvodového rámu: odchýlka ' + Math.round(d) + ' mm');
   else ramOk += 1;
 });
+/* Rohové stĺpy 150 × 150 sa dajú overiť na každom katalógu, nielen na tých
+   s kompletnou scénou: v zipe exportu sú síce siete oboch variánt naraz,
+   ale prierez 150 × 150 má len štvorstĺpová a sú presne štyri. Ich osi teda
+   nie je s čím zameniť. Meria ich archiv-expivi/meranie-stlpov-a-vaznic.py
+   do stlpy-a-vaznice-odmerane.json. */
+const fs2 = require('fs');
+const UNIA = path.join(KOREN, 'archiv-expivi', 'stlpy-a-vaznice-odmerane.json');
+let rohOk = 0;
+if (fs2.existsSync(UNIA)) {
+  const u = JSON.parse(fs2.readFileSync(UNIA, 'utf8'));
+  Object.keys(u).sort().forEach((k) => {
+    const v = u[k];
+    const rez = v.stlpy && v.stlpy['(150, 150, 2398)'];
+    if (!rez || rez.length !== 4) return;
+    /* Prvá zložka bodu je os po hĺbke. Nula je hrana strechy: obrys modelu
+       je o kus väčší, lebo doň patria aj kotevné pätky. */
+    const osi = [];
+    rez.map((p) => p[0]).sort((a, b) => a - b).forEach((x) => {
+      if (!osi.length || x - osi[osi.length - 1] > 70) osi.push(x);
+    });
+    if (osi.length !== 2) return;
+    /* Obrys modelu je dlhší než strecha, lebo na odkvapovom konci prečnieva
+       kotevná pätka: jej os je 52 mm od hrany a doska má 250, takže vytŕča
+       125 − 52 = 73 mm. O toľko je obrys dlhší a o toľko treba osi posunúť.
+       Export, ktorý nesie geometriu inej hĺbky (14198), sa preskočí. */
+    if (Math.abs(v.ext[1] - v.L) > 150) return;
+    const nula = v.ext[1] - v.L - (REF.plate / 2 - (REF.ramZad + REF.ramW / 2));
+    const m = osi.map((x) => x - nula).sort((a, b) => a - b);
+    const o = osnova(v.W, v.L);
+    const moje = [o.zad, o.odk].sort((a, b) => a - b);
+    const zr = m.map((x) => v.L - x).sort((a, b) => a - b);
+    const d = Math.min(Math.max(Math.abs(m[0] - moje[0]), Math.abs(m[1] - moje[1])),
+                       Math.max(Math.abs(zr[0] - moje[0]), Math.abs(zr[1] - moje[1])));
+    if (d > TOL) chyba(k + ' osi rohových stĺpov: odchýlka ' + Math.round(d)
+                       + ' mm (model ' + m.map(Math.round) + ', engine ' + moje.map(Math.round) + ')');
+    else rohOk += 1;
+  });
+}
 if (zle) { console.log('osnova nesedí s Expivi: ' + zle + ' rozdielov'); process.exit(1); }
 console.log('osnova sedí s Expivi (' + ok + ' porovnaní osí a prierezov, '
-            + ramOk + ' katalógov s osou rámu, tolerancia ' + TOL + ' mm)');
+            + ramOk + ' katalógov s osou rámu, ' + rohOk + ' s rohovými stĺpmi, '
+            + 'tolerancia ' + TOL + ' mm)');
