@@ -114,8 +114,13 @@ async function revealControl(page, selector) {
       'Base concrete anchoring must not create a fake 0 € surcharge');
     assert(catalogue.anchoring.opts[1].cena == null && /na nacenenie/.test(catalogue.anchoring.opts[1].s || ''),
       'Alternative substrate must remain quote-only without an invented price');
-    assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 0,
-      'Unverified Koverta-specific extras must not remain customer-selectable');
+    assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 1,
+      'Koverta sourced accessory group is missing');
+    const accessoryItems = catalogue.extras[0].items || [];
+    assert(JSON.stringify(accessoryItems.map(item => item.id)) === JSON.stringify(['kv-izol', 'kv-elektro']),
+      'Unsupported Koverta accessory was exposed or a sourced accessory is missing');
+    assert(accessoryItems.every(item => item.price == null),
+      'Koverta accessory received an invented numeric price');
 
     const allTemplateText = await page.locator('#SoltecPremium').textContent();
     assert(!allTemplateText.includes('celá paleta RAL v cene'),
@@ -244,6 +249,40 @@ async function revealControl(page, selector) {
     assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Returning to verified base anchoring left stale quote-only state');
 
+    // Sourced Koverta accessories remain quote-only and must survive a compatible size change.
+    const accessoryToggle = page.locator('[data-sp-add-on="x-kv"]');
+    await accessoryToggle.check();
+    const insulationPlus = page.locator('[data-sp-x="kv-izol"][data-sp-xd="1"]');
+    await insulationPlus.waitFor({ state: 'visible' });
+    await insulationPlus.click();
+    await waitRender(page);
+    let accessorySnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
+    assert(accessorySnapshot.extras['kv-izol'] === 1, 'Insulation accessory did not enter runtime state');
+    assert(accessorySnapshot.price.open === true, 'Unpriced insulation accessory did not open the price');
+    assert(accessorySnapshot.price.lines.some(line => line.v === null && /Izolácia strechy/.test(line.k)),
+      'Insulation accessory is missing its quote-only price line');
+    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Selected unpriced accessory still presents an exact final total');
+
+    await page.evaluate(() => {
+      const w = document.querySelector('[data-sp-w]');
+      w.value = '2800';
+      w.dispatchEvent(new Event('input', { bubbles: true }));
+      w.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await waitRender(page);
+    accessorySnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
+    assert(accessorySnapshot.width === 2800 && accessorySnapshot.extras['kv-izol'] === 1,
+      'Compatible accessory was lost after dimension change');
+
+    await page.evaluate(() => {
+      const w = document.querySelector('[data-sp-w]');
+      w.value = '2500';
+      w.dispatchEvent(new Event('input', { bubbles: true }));
+      w.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await waitRender(page);
+
     // Back/next must remain reversible.
     const stepCap = page.locator('[data-sp-stepcap]');
     const stepBefore = (await stepCap.textContent()).trim();
@@ -298,6 +337,7 @@ async function revealControl(page, selector) {
     assert(payload.body.includes('Umiestnenie:'), 'Payload omits placement');
     assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state');
     assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
+    assert(payload.body.includes('Izolácia strechy'), 'Payload omits selected sourced accessory');
     assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
       'Payload incorrectly implies a verified zero color surcharge');
     assert(payload.body.includes('vrátane DPH a montáže'), 'Payload omits verified VAT/installation scope');
