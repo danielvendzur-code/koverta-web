@@ -1,9 +1,7 @@
 name: Koverta Agent 02 Occlusion QA
 
 on:
-  push:
-    branches:
-      - agent/02-koverta-occlusion-qa
+  workflow_dispatch:
 
 permissions:
   contents: read
