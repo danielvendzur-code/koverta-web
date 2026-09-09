@@ -2677,6 +2677,32 @@
     window.addEventListener('load', naplan, { once: true });
     if (window.ResizeObserver) new ResizeObserver(naplan).observe(dok);
 
+    /* Na telefóne nemá sticky výzva prekrývať prvú obrazovku, keď je rovnaká
+       cenová ponuka už priamo v hero. Po odchode z hero sa pás vráti a ostáva
+       po ruke na zvyšku stránky. IntersectionObserver nemení layout; iba
+       prepína triedu, takže pri scrollovaní nič neposkočí. */
+    const hero = doc.querySelector('.kh-hero');
+    const nastavHeroDok = (skryt) => dok.classList.toggle('je-hero-skryty', skryt);
+    const jeMobil = () => window.matchMedia('(max-width: 759px)').matches;
+    if (hero && 'IntersectionObserver' in window) {
+      const heroPozor = new IntersectionObserver((zaznamy) => {
+        const zaznam = zaznamy[0];
+        nastavHeroDok(jeMobil() && zaznam.isIntersecting && zaznam.intersectionRatio > 0.16);
+      }, { threshold: [0, 0.16, 0.4] });
+      heroPozor.observe(hero);
+      window.addEventListener('resize', () => {
+        if (!jeMobil()) nastavHeroDok(false);
+      }, { passive: true });
+    } else if (hero) {
+      const prepniHeroDok = () => {
+        const r = hero.getBoundingClientRect();
+        nastavHeroDok(jeMobil() && r.bottom > window.innerHeight * 0.16 && r.top < window.innerHeight);
+      };
+      window.addEventListener('scroll', prepniHeroDok, { passive: true });
+      window.addEventListener('resize', prepniHeroDok, { passive: true });
+      prepniHeroDok();
+    }
+
     /* Pás je `position: fixed` k spodku okna. Klávesnica na telefóne okno
        nezmenší — zmenší len viditeľnú časť, takže pás ostal sedieť pod ňou
        a pri vypĺňaní dopytu prekrýval práve to políčko, do ktorého sa písalo.
