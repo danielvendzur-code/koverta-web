@@ -2329,7 +2329,9 @@
                 const hp = 58;                                    // vyloženie platne
                 const sir = 110;                                  // dĺžka platne
                 const th = 8;
-                const hlava = shade(frame, -0.30);
+                /* Platňa hlavy je pozinkovaný plech ako rám a väznice — na
+                   oficiálnych rendroch je pod stĺpom svetlá, nie tmavá. */
+                const hlava = model().rimSoffitHex ? shade(model().rimSoffitHex, -0.06) : shade(frame, -0.30);
                 const okraj = xi === 0 || xi === xs.length - 1;
                 /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
                 const plat = (x0, y0, dx, dy) => {
@@ -3033,8 +3035,11 @@
               const zav = outer + sirka * dir;
               put(zav - 9 * dir, zav + 11 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
             };
-            lemL('y', 0, 1, 0, L, LEM_BOK);                  // bočné, cez celú hĺbku
-            lemL('y', W, -1, 0, L, LEM_BOK);
+            /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
+               išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
+               na hrane z toho bol zub. */
+            lemL('y', 0, 1, LEM_T, L - LEM_T, LEM_BOK);      // bočné, medzi čelami
+            lemL('y', W, -1, LEM_T, L - LEM_T, LEM_BOK);
             lemL('x', 0, 1, 0, W, LEM_CELO);                 // čelné, cez celú šírku
             lemL('x', L, -1, 0, W, LEM_CELO);
 
@@ -3406,7 +3411,7 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              const rz = 40;                          // rúra Ø 80
+              const rz = 30;                          // rúra Ø 60, ako na rendroch
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
@@ -3475,8 +3480,12 @@
                        tvar: po obvode musí ísť plynulý prechod od svetla k
                        tieňu. arris:false zaistí, že medzi pásmi plášťa
                        nesvieti podklad. */
+                    /* Rúra má farbu konštrukcie a stojí tesne pri stĺpe, takže
+                       ju od neho odlíši len kruhové tieňovanie. Musí byť
+                       preto výraznejšie než na plochom líci — inak sa zvod so
+                       stĺpom zlial a nebolo ho vidieť. */
                     const lam = nx * 0.42 + ny * 0.50 + nz * 0.76;
-                    quad([A.p, D.p, C.p, B.p], shade(hex, -0.17 + Math.max(0, lam) * 0.36),
+                    quad([A.p, D.p, C.p, B.p], shade(hex, -0.26 + Math.max(0, lam) * 0.54),
                          { normal: [nx, ny, nz], cull: true, arris: false });
                   }
                 }
@@ -3494,13 +3503,12 @@
                  líca vzdialená presne o polomer. Kým bola bližšie, prechádzala
                  stĺpom; kým bola ďalej, visela vedľa neho ako samostatná tyč.
                  Zmestiť sa musí aj za zvislé rameno lemovania. */
-              const xRura = Math.min(xLicStlp + rz, L - LEM_T - rz - 4);
-              /* Výtok zo žľabu je nad rúrou. Keď os rúry padne do kapsy žľabu
-                 — a pri rohovom stĺpe padne — je zvod celý zvislý a žiadne
-                 koleno nemá; na fotke p6 je to práve tak. Ďalej od odkvapu sa
-                 rúra ku stĺpu vráti jedným kolenom. */
-              const xVytok = Math.min(Math.max(xRura, Math.min(zlX0 + 24, zlX1 - 24)),
-                                      Math.max(zlX1 - 24, zlX0 + 24));
+              const xRura = Math.min(xLicStlp + rz + 8, L - LEM_T - rz - 4);
+              /* Výtok zo žľabu je pri jeho vonkajšej stene, teda o kus von od
+                 rúry — preto má zvod hore krátke koleno, ako na oficiálnom
+                 rendri. Kým výtok sedel presne nad rúrou, bol zvod celý zvislý
+                 a to koleno chýbalo. */
+              const xVytok = Math.max(xRura, Math.min(zlX1 - rz, L - LEM_T - rz - 4));
               const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) + 40);
               const zPata = 265;                      // spodok zvislej časti
               const RP = 90;                          // polomer vyhnutej pätky
