@@ -48,7 +48,8 @@ async function waitRender(page) {
         wallSideBySize: model.wallSideBySize,
         priceNote: bio.priceNote,
         placements: bio.placements,
-        gutter: bio.picks.find(group => group.id === 'odkvap')
+        gutter: bio.picks.find(group => group.id === 'odkvap'),
+        extras: bio.extras
       };
     });
 
@@ -73,6 +74,9 @@ async function waitRender(page) {
     const gutterYes = catalogue.gutter.opts.find(item => item.id === 'ano');
     assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
     assert(gutterNo && gutterNo.tichy === true && gutterNo.cena == null, 'No-gutter selection must not create a fake 0 € line');
+    assert(catalogue.gutter.opts[0].id === 'nie', 'Optional gutter must not be preselected without a verified inclusion rule');
+    assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 0,
+      'Unverified Koverta-specific extras must not remain customer-selectable');
 
     const visibleText = await page.locator('#SoltecPremium').innerText();
     for (const forbidden of ['Táto dĺžka potrebuje', 'Profil obvodový', 'Najväčší rozmer', 'Svetlá výška']) {
@@ -85,16 +89,79 @@ async function waitRender(page) {
     const initialLength = await page.locator('[data-sp-l-out]').textContent();
     assert(/2\s*500/.test(initialWidth), 'Unexpected initial Koverta width: ' + initialWidth);
     assert(/5\s*200/.test(initialLength), 'Unexpected initial Koverta depth: ' + initialLength);
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '4 497 €',
+      'Default Koverta state must be the verified base price with optional gutter off');
+
+    // Verify the published 6200 -> 6600 price transition separately from the renderer's post-count default.
+    await page.evaluate(() => {
+      const w = document.querySelector('[data-sp-w]');
+      const l = document.querySelector('[data-sp-l]');
+      w.value = '6200';
+      l.value = '6000';
+      w.dispatchEvent(new Event('input', { bubbles: true }));
+      l.dispatchEvent(new Event('input', { bubbles: true }));
+      w.dispatchEvent(new Event('change', { bubbles: true }));
+      l.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await waitRender(page);
+    assert(/6\s*200/.test(await page.locator('[data-sp-w-out]').textContent()), '6200 mm width is not selectable');
+    assert(/6\s*000/.test(await page.locator('[data-sp-l-out]').textContent()), '6000 mm depth is not selectable');
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '8 397 €',
+      '6200 × 6000 base price changed from the verified public catalogue');
+    assert(/4\s+stĺpy/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
+      'Current base renderer no longer uses the documented four-post visualization at 6200 mm');
+
+    await page.evaluate(() => {
+      const w = document.querySelector('[data-sp-w]');
+      w.value = '6600';
+      w.dispatchEvent(new Event('input', { bubbles: true }));
+      w.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await waitRender(page);
+    assert(/6\s*600/.test(await page.locator('[data-sp-w-out]').textContent()), '6600 mm width is not selectable');
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '10 897 €',
+      '6600 × 6000 base price changed from the verified public catalogue');
+    assert(/6\s+stĺpov/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
+      'Current base renderer no longer uses the documented six-post visualization at 6600 mm');
+
+    // Return to the default catalogue point before testing independent options.
+    await page.evaluate(() => {
+      const w = document.querySelector('[data-sp-w]');
+      const l = document.querySelector('[data-sp-l]');
+      w.value = '2500';
+      l.value = '5200';
+      w.dispatchEvent(new Event('input', { bubbles: true }));
+      l.dispatchEvent(new Event('input', { bubbles: true }));
+      w.dispatchEvent(new Event('change', { bubbles: true }));
+      l.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await waitRender(page);
+
+    // Optional gutter is off by default. Selecting it makes the price explicitly open/quote-only.
+    const gutterButtons = page.locator('[data-sp-add-opt="pick:odkvap"]');
+    assert((await gutterButtons.filter({ hasText: 'Bez odkvapu' }).getAttribute('aria-pressed')) === 'true',
+      'No-gutter option is not the default state');
+    await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).click({ force: true });
+    await waitRender(page);
+    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Selecting unpriced gutter did not mark total as open');
+    assert((await page.locator('[data-sp-lines]').innerText()).includes('Odkvap a zvod'),
+      'Selected gutter is missing from the quote lines');
+    await gutterButtons.filter({ hasText: 'Bez odkvapu' }).click({ force: true });
+    await waitRender(page);
+    assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Turning optional gutter off left stale quote-only price state');
 
     // Back/next must remain reversible.
     const stepCap = page.locator('[data-sp-stepcap]');
     const stepBefore = (await stepCap.textContent()).trim();
-    await page.locator('[data-sp-next]').click({ force: true });
+    await page.locator('[data-sp-next]:visible').first().click();
     await page.waitForTimeout(80);
     const stepAfter = (await stepCap.textContent()).trim();
     assert(stepAfter !== stepBefore, 'Next did not advance the configurator');
-    assert(!(await page.locator('[data-sp-back]').isDisabled()), 'Back stayed disabled after advancing');
-    await page.locator('[data-sp-back]').click({ force: true });
+    const visibleBack = page.locator('[data-sp-back]:visible').first();
+    assert(!(await visibleBack.isDisabled()), 'Back stayed disabled after advancing');
+    await visibleBack.click();
     await page.waitForTimeout(80);
     assert((await stepCap.textContent()).trim() === stepBefore, 'Back did not return to the previous step');
 
@@ -184,7 +251,7 @@ async function waitRender(page) {
       'Custom payload does not distinguish requested and catalogue dimensions');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-    console.log('PRICING_LOGIC_PASS base grid, unknown-price handling, back/next, dimension persistence, placement, reset, payload, custom validation');
+    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, gutter state, unsupported extras, unknown-price handling, back/next, dimension persistence, placement, reset, payload, custom validation');
     await context.close();
   } finally {
     await browser.close();
