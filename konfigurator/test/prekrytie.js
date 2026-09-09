@@ -14,6 +14,8 @@
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
 const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
+const fs = require('fs');
+fs.mkdirSync('qa-artifacts', { recursive: true });
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 
 (async () => {
@@ -48,7 +50,9 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
     for (const [W, L] of [[4000, 6000], [2500, 5200], [7000, 6000]]) {
       set('[data-sp-w]', W); set('[data-sp-l]', L);
       await new Promise((r) => setTimeout(r, 120));
-      const zTop = 2398 + 260;      // horná hrana lemovania
+      const actual = window.SP_TEST.snapshot();
+      if (actual.width !== W || actual.length !== L) throw new Error('Test dimensions differ from runtime: ' + JSON.stringify(actual));
+      const zTop = actual.height + actual.geometry.roof.lemH;      // horná hrana lemovania
       const body = [];
       for (let t = 0.02; t <= 0.99; t += 0.06) {
         for (const d of [25, 70, 120, 165]) { body.push([d, t * W]); body.push([L - d, t * W]); }
@@ -68,7 +72,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             const d = s.g.getImageData(px, py, 1, 1).data;
             if (d[1] > 150 && d[0] < 130 && d[2] < 130) { zlych++; if (!prvy) prvy = Math.round(x) + ',' + Math.round(y); }
           }
-          if (zlych) nalezy.push(`${W}×${L} az=${az.toFixed(2)} el=${el}: ${zlych} bodov, prvý ${prvy}`);
+          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, svg: new XMLSerializer().serializeToString(svg) });
         }
       }
     }
@@ -77,7 +81,18 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
 
   if (zle.length) {
     console.log('PLECH PREKRÝVA LEMOVANIE:');
-    zle.slice(0, 30).forEach((r) => console.log('  ' + r));
+    zle.slice(0, 30).forEach((r, i) => {
+      console.log(`  ${r.W}×${r.L} az=${r.az.toFixed(2)} el=${r.el}: ${r.count} bodov, prvý ${r.first}`);
+      fs.writeFileSync(`qa-artifacts/overlap-${i}.svg`, r.svg);
+    });
+    const first = zle[0];
+    await p.evaluate(first => {
+      for (const [selector,value] of [['[data-sp-w]',first.W],['[data-sp-l]',first.L]]) {
+        const el=document.querySelector(selector); el.value=value; el.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      window.SP_TEST.setView(first.az,first.el); window.SP_TEST.redraw();
+    }, first);
+    await p.locator('[data-sp-canvas]').screenshot({path:'qa-artifacts/overlap-first.png'});
     console.log('zlých pohľadov spolu:', zle.length);
   } else {
     console.log('lemovanie nikde neprekryté (180 pohľadov × ~270 bodov)');

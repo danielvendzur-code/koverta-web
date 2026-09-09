@@ -62,7 +62,12 @@ function assert(condition, message) {
       ['.kh-kfg', 'home-configurator-section.png'],
       ['.kh-proc', 'home-process.png'],
       ['.kh-rev', 'home-reviews.png'],
-      ['.kh-mat', 'home-material.png']
+      ['.kh-mat', 'home-material.png'],
+      ['.kh-znacky', 'home-brands.png'],
+      ['.kh-work', 'home-references-map.png'],
+      ['.kh-faq', 'home-faq.png'],
+      ['.kh-cta', 'home-form.png'],
+      ['footer', 'home-footer.png']
     ]) {
       const locator = page.locator(selector).first();
       if (await locator.count()) {
@@ -160,9 +165,7 @@ function assert(condition, message) {
         assert(!/Vydrží lamelová strecha sneh\?|Ako sa pergola čistí\?/i.test(metrics.bodyText),
           'Garden page still contains stale pergola/lamella FAQ wording');
       }
-      if (key === 'auto' || key === 'garden') {
-        await pp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-hero.png' });
-      }
+      await pp.screenshot({ path: 'qa-artifacts/product-' + key + '-desktop.png', fullPage: true });
     }
     await productCtx.close();
 
@@ -171,7 +174,7 @@ function assert(condition, message) {
     const pmp = await productMobileCtx.newPage();
     pmp.on('pageerror', e => errors.push('product-mobile pageerror: ' + e.message));
     pmp.on('console', msg => { if (msg.type() === 'error') errors.push('product-mobile console: ' + msg.text()); });
-    for (const [path, key] of [['pristresky-pre-auta/', 'auto'], ['zahradne-pristresky/', 'garden']]) {
+    for (const [path, key] of productPages.slice(0, 5)) {
       await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
       await dismissConsent(pmp);
       await pmp.waitForTimeout(400);
@@ -192,7 +195,7 @@ function assert(condition, message) {
       assert(metrics.heroHeight && metrics.heroHeight >= 560, key + ' mobile hero is too short/collapsed');
       assert(metrics.h1Width && metrics.h1Width <= 360, key + ' mobile hero heading overflows');
       assert(metrics.actionWidths.length >= 1 && metrics.actionWidths.every(w => w <= 360), key + ' mobile hero CTA overflows');
-      await pmp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-mobile-hero.png' });
+      await pmp.screenshot({ path: 'qa-artifacts/product-' + key + '-mobile.png', fullPage: true });
     }
     await productMobileCtx.close();
 
@@ -230,6 +233,7 @@ function assert(condition, message) {
     assert(/Prístrešok Koverta|prístrešok Koverta/i.test(cfg.bodyText), 'Koverta configurator content is not rendered');
     await cfgCtx.close();
 
+    await require('./routing-smoke')(browser);
     assert(errors.length === 0, 'Browser errors:\n' + errors.join('\n'));
     console.log('Layout smoke test passed.');
   } finally {

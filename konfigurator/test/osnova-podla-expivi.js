@@ -56,6 +56,8 @@ const styri = (L) => {
   return { zad: o.zad, odk: o.odk, stred, vaz, stlpy: [vaz[0], vaz[2]] };
 };
 const osnova = (W, L) => {
+  const measured = M.kvBySize && M.kvBySize[`${W}x${L}`];
+  if (measured) return { zad: measured.frameAxes[0], odk: measured.frameAxes[1], vaz: measured.purlinAxes, stlpy: measured.postAxes, nv: measured.purlinAxes.length };
   const b = pasmo(W), o = osiRamu(L);
   if (b.vaznicStred) {
     const s = styri(L);
@@ -234,6 +236,6 @@ if (fs2.existsSync(UNIA)) {
 }
 if (!ok || !ramOk || !rohOk || !styriOk) throw new Error('Incomplete Expivi coverage; refusing to report PASS');
 if (zle) { console.log('osnova nesedí s Expivi: ' + zle + ' rozdielov'); process.exit(1); }
-console.log('osnova sedí s Expivi (' + ok + ' porovnaní osí a prierezov, '
+console.log('Historická kontrola vzorcov a dát (presný runtime kontroluje routing-smoke): (' + ok + ' porovnaní osí a prierezov, '
             + ramOk + ' katalógov s osou rámu, ' + rohOk + ' s rohovými stĺpmi, '
             + styriOk + ' s radmi štvorstĺpovej, tolerancia ' + TOL + ' mm)');

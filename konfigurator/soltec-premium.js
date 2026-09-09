@@ -968,7 +968,17 @@
            väznicou. Overené na kompletných scénach 14069 (7,0 × 6,0) a 14192
            (7,0 × 5,2): tento vzorec dáva ich odmerané osi väzníc presne na
            milimeter a osi stĺpov do 40 mm. */
+        const kvMeasured = () => {
+          const sizes = model().kvBySize;
+          return sizes && sizes[`${widthMM()}x${lengthMM()}`];
+        };
         const kvOsnova = () => {
+          const measured = kvMeasured();
+          if (measured) return {
+            zad: measured.frameAxes[0], odk: measured.frameAxes[1],
+            stred: measured.postAxes[1], vaz: measured.purlinAxes.slice(),
+            pole: null
+          };
           const R = model().kvRef || {}, L = lengthMM(), b = kvBand();
           const rw = Number(R.ramW) || 74;
           const zad = (Number(R.ramZad) || 15) + rw / 2;
@@ -1008,6 +1018,8 @@
            (prierez 110 × 190 pri štvorstĺpovej, 150 × 150 v rohoch pri
            šesťstĺpovej) — nie je to voľba, vyplýva to zo šírky. */
         const kvOsiStlpov = () => {
+          const measured = kvMeasured();
+          if (measured) return measured.postAxes.slice();
           const o = kvOsnova(), b = kvBand(), n = Math.max(2, postLayout().n);
           if (b && b.stlpyNaVaznici) return [o.vaz[0], o.vaz[o.vaz.length - 1]];
           const out = [o.zad];
@@ -1103,6 +1115,7 @@
             const osi = kvOsiStlpov(), n = osi.length;
             return osi.map((a, i) => {
               const r = kvStlpRez(i, n);
+              if (kvMeasured()) return a - r.d / 2;
               return Math.round(Math.min(Math.max(a - r.d / 2, 0), L - r.d));
             });
           }
@@ -1558,6 +1571,19 @@
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { renderAll(); };
+          window.SP_TEST.snapshot = () => ({
+            page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
+            price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
+            picks: { ...state.picks }, extras: { ...state.extras },
+            geometry: model().kvGeom ? {
+              source: kvMeasured() ? kvMeasured().catalog : null,
+              frameAxes: [kvOsnova().zad, kvOsnova().odk], purlinAxes: kvOsnova().vaz,
+              postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
+              postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
+              postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
+              roof: { ...model().kvRef }
+            } : null
+          });
         } catch (e) {}
         const drawStage = () => {
           const L = lengthMM(), W = widthMM(), H = state.height;
@@ -2249,7 +2275,7 @@
             /* Koverta: stĺp aj obvodový rám sedia rovnako hlboko pod obrysom,
                teda tesne za zvislým ramenom lemovania. Bez toho by stĺp z
                lemovania vykúkal — alebo naopak rám spred neho. */
-            const vsun = Number(model().postInset) || 0;
+            const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
             const rez = (xi) => (kvBand() ? kvStlpRez(xi, xs.length) : { d: pdRoh, w: pwRoh });
             xs.forEach((px, xi) => {
              const rz = rez(xi), pd = rz.d, pw = rz.w;
@@ -3466,7 +3492,7 @@
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
-              const vsunStlp = Number(model().postInset) || 0;
+              const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               /* Rúra beží po líci stĺpa, nie vedľa neho. Kým sedela odsadená na
                  vonkajšom rohu, visela na modeli ako samostatná tyč vedľa
                  stĺpa; na fotkách realizácií ide po jeho čele, v jeho osi. */
