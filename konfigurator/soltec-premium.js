@@ -2425,7 +2425,7 @@
                 /* Platňa hlavy je pozinkovaný plech ako rám a väznice — na
                    oficiálnych rendroch je pod stĺpom svetlá, nie tmavá. */
                 const hlava = model().rimSoffitHex ? shade(model().rimSoffitHex, -0.06) : shade(frame, -0.30);
-                const okraj = xi === 0 || xi === xs.length - 1;
+                const rohovy = Boolean(rz.roh);
                 /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
                 const plat = (x0, y0, dx, dy) => {
                   boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
@@ -2437,22 +2437,23 @@
                                  vodo ? cy0 : cy0 + sd * roz, zH - th - 1);
                   });
                 };
-                /* Rohový stĺp má dve platne na dvoch susedných stranách: jednu
-                   pozdĺž bočného rámu, jednu cez šírku do čelného. Obe mieria
-                   dovnútra prístrešku, nie von — vonku by nemali čo držať.
-                   Stĺp v poli má dve oproti sebe, pozdĺž bočného rámu. */
+                /* Typ hlavovej platne sa riadi skutočným nosným prvkom, nie
+                   iba poradím stĺpa v rade. Rohový 150 × 150 stĺp je v styku
+                   s dvomi obvodovými C profilmi, preto si necháva dve platne.
+                   Stĺp 110 × 190 pod väznicou má iba platňu vedenú po osi
+                   väznice. Predchádzajúce x-ové platne ležali mimo jej
+                   116 mm širokého pôdorysu a fyzicky sa na nič nepripájali. */
                 const kBoku = py < W / 2;
                 const cy = py + pw / 2, cx = px + pd / 2;
-                if (okraj) {
+                if (rohovy) {
                   const dnu = xi === 0 ? 1 : -1;              // smerom do poľa
                   if (dnu > 0) plat(px + pd, cy - sir / 2, hp, sir);
                   else plat(px - hp, cy - sir / 2, hp, sir);
-                  if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
-                  else plat(cx - sir / 2, py - hp, sir, hp);
-                } else {
-                  plat(px - hp, cy - sir / 2, hp, sir);
-                  plat(px + pd, cy - sir / 2, hp, sir);
                 }
+                /* Väznica beží cez šírku prístrešku (os Y). Táto platňa je
+                   vycentrovaná na jej 116 mm priereze a smeruje do poľa. */
+                if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
+                else plat(cx - sir / 2, py - hp, sir, hp);
               }
              });
             });
@@ -3316,20 +3317,17 @@
               const bx0 = Math.min(px, px + sx * UHOL_LX);
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
-              /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
-              /* Na rendri sú v ramene štyri skrutky v štvorci, nie dve nad
-                 sebou. */
+              /* Dve skrutky na každom ramene, spolu štyri na uholník.
+                 Historická Koverta technická skladba používala túto dvojicu
+                 nad sebou; neskoršia vizuálna mriežka omylom zdvojnásobila
+                 počet na každom ramene. */
               const roz = UHOL_H * 0.26;
               const xLic = px + sx * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const r = py + sy * UHOL_LY * t;
-                [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
-              });
+              const stredR = py + sy * UHOL_LY * 0.55;
+              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 8, sx));
               const yLic = py + sy * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const o = px + sx * UHOL_LX * t;
-                [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
-              });
+              const stredO = px + sx * UHOL_LX * 0.55;
+              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 8, sy));
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
