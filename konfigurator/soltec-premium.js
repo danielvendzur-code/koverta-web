@@ -3611,18 +3611,18 @@
                visual proportions, never millimetres inferred from photos. */
             if (Boolean(state.extras['kv-led'])) {
               kvAccessoryGeometry.led.enabled = true;
-              kvAccessoryGeometry.led.corners = [];
+              kvAccessoryGeometry.led.blockedPosts = [];
               const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
               const ledT = Math.max(4, Math.min(8, RAM_H * 0.03));
               const diffT = Math.max(1.2, ledT * 0.22);
               const ledZ = ramBot - ledT;
               const ledProfile = shade(zinok, -0.18);
               const ledLight = '#f5e8c5';
+
               const ledSurface = (x, y, dx, dy) => {
                 /* Geometry is calculated at every camera angle so resize/contact
-                   QA can inspect the actual anchor. Rendering stays culled from
-                   above because the opaque roof physically hides this underside
-                   accessory. */
+                   QA can inspect the anchor. The actual underside profile stays
+                   culled from above because the opaque roof physically hides it. */
                 if (nadStrechou) return;
                 boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
                 const ix = dx > dy ? ledW * 0.18 : 0;
@@ -3634,49 +3634,81 @@
                       [lx + ldx, ly + ldy, ledZ - diffT], [lx, ly + ldy, ledZ - diffT]],
                      ledLight, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
               };
-              const ledRun = (x, y, dx, dy) => {
-                /* One dimension intentionally equals ledW: that is the strip
-                   width. Reject only a run whose longitudinal dimension is too
-                   short, not every valid horizontal/vertical strip. */
+
+              const ledRun = (side, x, y, dx, dy) => {
                 if (Math.max(dx, dy) <= ledW) return;
                 kvAccessoryGeometry.led.runs.push({
-                  x, y, dx, dy,
+                  side, x, y, dx, dy,
                   profileBottomZ: ledZ,
                   profileTopZ: ledZ + ledT,
                   hostBottomZ: ramBot
                 });
                 ledSurface(x, y, dx, dy);
               };
-              const ledCorner = (x, y) => {
-                kvAccessoryGeometry.led.corners.push({
-                  x, y, dx: ledW, dy: ledW,
-                  profileBottomZ: ledZ,
-                  profileTopZ: ledZ + ledT,
-                  hostBottomZ: ramBot
+
+              /* Subtract real post footprints from a host-frame interval. LED
+                 therefore follows the frame through overhangs and between posts,
+                 but never passes through a steel post just to keep a drawn line
+                 visually continuous. Photos show the strips terminating at post
+                 connections; no corner connector or hidden through-post path is
+                 invented. */
+              const subtractIntervals = (from, to, blockers) => {
+                const clipped = blockers
+                  .map((b) => [Math.max(from, b[0]), Math.min(to, b[1])])
+                  .filter((b) => b[1] > b[0])
+                  .sort((a, b) => a[0] - b[0]);
+                const out = [];
+                let cur = from;
+                clipped.forEach((b) => {
+                  if (b[0] - cur > ledW * 1.5) out.push([cur, b[0]]);
+                  cur = Math.max(cur, b[1]);
                 });
-                ledSurface(x, y, ledW, ledW);
+                if (to - cur > ledW * 1.5) out.push([cur, to]);
+                return out;
               };
 
-              /* The realization shows the light tracing the INSIDE edge of
-                 the steel perimeter. Four straight runs therefore sit against
-                 the inner frame faces and four square/miter connector regions
-                 close the corners. This avoids the visible gaps created by the
-                 previous centreline placement while keeping every illuminated
-                 surface directly under steel. */
-              const xA = rx0;
-              const xB = rx1 - RAM_PAR;
-              const yA = ry0;
-              const yB = ry1;
-              const sideLen = Math.max(0, xB - xA);
-              const endLen = Math.max(0, yB - yA);
-              ledRun(xA, yA - ledW, sideLen, ledW);
-              ledRun(xA, yB, sideLen, ledW);
-              ledRun(xA - ledW, yA, ledW, endLen);
-              ledRun(xB, yA, ledW, endLen);
-              ledCorner(xA - ledW, yA - ledW);
-              ledCorner(xB, yA - ledW);
-              ledCorner(xA - ledW, yB);
-              ledCorner(xB, yB);
+              const ledXs = postXs();
+              const ledN = ledXs.length;
+              const ledVsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+              const ledSections = ledXs.map((_, i) => kvStlpRez(i, ledN));
+              const sideBlocks = ledXs.map((px, i) => {
+                const b = [px, px + ledSections[i].d];
+                kvAccessoryGeometry.led.blockedPosts.push({
+                  axis: 'x', index: i, from: b[0], to: b[1],
+                  rearY0: ledVsun, rearY1: ledVsun + ledSections[i].w,
+                  frontY0: W - ledVsun - ledSections[i].w, frontY1: W - ledVsun
+                });
+                return b;
+              });
+
+              /* This is a representative renderer of the perimeter-light
+                 realization in IMG_3675/3676, not a claim that every order uses
+                 the same number of physical LED pieces. Side-frame segments
+                 occupy the underside centreline of the host C profile and are
+                 split wherever a current post physically meets that frame. */
+              const sideX0 = RAM_ZAD + 2, sideX1 = rx1 - 2;
+              const rearY = RAM_VSUN + RAM_PAR / 2 - ledW / 2;
+              const frontY = W - RAM_VSUN - RAM_PAR / 2 - ledW / 2;
+              subtractIntervals(sideX0, sideX1, sideBlocks).forEach((seg) => {
+                ledRun('rear', seg[0], rearY, seg[1] - seg[0], ledW);
+                ledRun('front', seg[0], frontY, seg[1] - seg[0], ledW);
+              });
+
+              /* End-frame strips run between the rear/front post footprints.
+                 The two end rows can have different Koverta sections, so each
+                 end derives its own y blockers from kvStlpRez(). */
+              const endRun = (side, xi, x) => {
+                const r = ledSections[xi];
+                const yBlocks = [
+                  [ledVsun, ledVsun + r.w],
+                  [W - ledVsun - r.w, W - ledVsun]
+                ];
+                subtractIntervals(ry0, ry1, yBlocks).forEach((seg) => {
+                  ledRun(side, x, seg[0], ledW, seg[1] - seg[0]);
+                });
+              };
+              endRun('left', 0, RAM_ZAD + RAM_PAR / 2 - ledW / 2);
+              endRun('right', Math.max(0, ledN - 1), rx1 - RAM_PAR / 2 - ledW / 2);
             }
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
