@@ -77,18 +77,17 @@ The perimeter consists of single C profiles; each purlin is a pair of C
 profiles. Sheet cover spacing is about 1023 mm. Component bounds alone do not
 prove bolt grade, anchor selection or plate thickness.
 
-The renderer still contains visual simplifications: the side fascia uses
-190 mm instead of the measured 240 mm; upper fascia thickness is 6 mm; roof
-surfaces are simplified; head plates, fastener details and wall panels are not
-all independently measured. At grazing views the BSP can split the long roof
-and fascia planes so a roof fragment would otherwise paint after the fascia.
-For Koverta only, and only while the camera is above the roof, the already
-higher upper-fascia top surface is painted after those fragments. This is an
-occlusion-order correction; it does not change millimetre geometry or test
-measurement points. Earlier comments described some of these as
+The renderer still contains visual simplifications: upper fascia thickness is
+6 mm; roof surfaces are simplified; head plates, fastener details and wall
+panels are not all independently measured. The side fascia now follows the
+240 mm value present in every recovered active scene where that side component
+is measurable. Complete scene 14069 uses a 190 mm end fascia while complete
+scene 14192 uses 240 mm, so those exact values are attached to their own
+kvBySize entries rather than normalised. Sizes without a complete active scene
+use 240 mm on the side only as a visual fallback and are not documented as
+millimetre-exact. Earlier comments described some dimensions as
 manufacturer-confirmed or fully measured without a traceable source. Do not
-repeat those claims. The complete 7 × 5.2 m scene also has 240 mm end fascia,
-so the 7 × 6 m fascia values cannot be applied universally as certified values.
+repeat those claims.
 
 ## Unresolved catalogue and variant discrepancies
 

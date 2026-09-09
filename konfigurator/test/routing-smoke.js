@@ -87,7 +87,9 @@ module.exports = async function routingSmoke(browser) {
         const groupSelector = `[data-sp-add-on="${extraGroup}"]`;
         await gotoControl(groupSelector);
         const beforeExtra = (await snapshot()).price.total;
-        await page.locator(groupSelector).check();
+        const groupToggle = page.locator(groupSelector);
+        await groupToggle.locator('xpath=ancestor::label[1]').click();
+        assert(await groupToggle.isChecked(), `${route}: extra group did not open`);
         await page.locator('[data-sp-xd="1"]').first().waitFor({state:'visible'});
         await page.locator('[data-sp-xd="1"]').first().click();
         const withExtra = await snapshot();

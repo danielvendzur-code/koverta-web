@@ -972,6 +972,18 @@
           const sizes = model().kvBySize;
           return sizes && sizes[`${widthMM()}x${lengthMM()}`];
         };
+        const kvRoofRef = () => {
+          const base = model().kvRef || {};
+          const exact = kvMeasured() || {};
+          return {
+            ...base,
+            lemCelo: Number(exact.lemCelo) || Number(base.lemCelo) || 190,
+            /* Every recovered active scene with a measurable side fascia uses
+               240 mm. Exact scenes override this explicitly; for unmeasured
+               sizes this remains a visual fallback, not a certified dimension. */
+            lemBok: Number(exact.lemBok) || Number(base.lemBokExport) || Number(base.lemBok) || 240
+          };
+        };
         const kvOsnova = () => {
           const measured = kvMeasured();
           if (measured) return {
@@ -1581,7 +1593,7 @@
               postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
               postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
               postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
-              roof: { ...model().kvRef }
+              roof: { ...kvRoofRef() }
             } : null
           });
         } catch (e) {}
@@ -1785,7 +1797,6 @@
               /* arris:false keeps the stroke but paints it in the face's own
                  colour, so members merge into one surface without a gap */
               edgeCol: o.edge === false ? null : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
-              kvFasciaTop: o.kvFasciaTop === true,
               fit: o.fit !== false,
               /* Priesvitná plocha sa nesmie obťahovať: keď ju maliarske
                  triedenie rozdelí, obrysy susedných kusov sa na spoji sčítajú
@@ -2001,10 +2012,10 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, kvFasciaTop) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
-            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, { normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0, kvFasciaTop: kvFasciaTop === true && key === '+z' }); };
+            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, { normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0 }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
             put('-y', [[x,y,z],[X,y,z],[X,y,Z],[x,y,Z]], [0,-1,0]);
@@ -3055,7 +3066,7 @@
                Odkvapová strana má 159 mm previsu za rámom — a práve v tej
                kapse, hore pod lemovaním, visí žľab. Preto ho zboku nevidno
                a spod strechy len trochu. */
-            const REF = model().kvRef || {};
+            const REF = kvRoofRef();
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
@@ -3096,15 +3107,12 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz, kvFasciaTop) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, kvFasciaTop);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, kvFasciaTop);
+              const put = (u0, u1, z, dz) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
-              /* Horné rameno je fyzicky nad strešným plechom. Označí sa iba
-                 jeho horná plocha, aby pri pohľade zhora vyhrala spoločný
-                 projekčný prekryv nad plechom aj po rozdelení BSP stromom. */
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM);        // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -4121,18 +4129,7 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          let paintOrder = bspPaintOrder(podklad).concat(bspPaintOrder(stavba));
-          /* V Koverta modeli je horné rameno lemovania o 2 mm nad vrchom
-             trapézu. Pri veľmi plochom pohľade BSP rozdelí obe dlhé plochy a
-             niektoré fragmenty strechy skončia v poradí neskôr. Keď je kamera
-             nad strechou, horná plocha lemovania musí byť posledná z tejto
-             dvojice. Toto nemení geometriu ani Soltec a pri pohľade zdola sa
-             poradie nijako neprepisuje. */
-          if (fromAbove && model().roofKit === 'koverta') {
-            const fasciaTop = paintOrder.filter((f) => f.kvFasciaTop);
-            if (fasciaTop.length) paintOrder = paintOrder.filter((f) => !f.kvFasciaTop).concat(fasciaTop);
-          }
-          paintOrder.forEach((f) => {
+          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
