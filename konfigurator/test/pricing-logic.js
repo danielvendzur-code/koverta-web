@@ -49,6 +49,7 @@ async function waitRender(page) {
         priceNote: bio.priceNote,
         placements: bio.placements,
         gutter: bio.picks.find(group => group.id === 'odkvap'),
+        anchoring: bio.picks.find(group => group.id === 'kotvenie'),
         extras: bio.extras,
         colors: bio.colors,
         sideOpts: bio.sideOpts,
@@ -91,6 +92,10 @@ async function waitRender(page) {
     assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
     assert(gutterNo && gutterNo.tichy === true && gutterNo.cena == null, 'No-gutter selection must not create a fake 0 € line');
     assert(catalogue.gutter.opts[0].id === 'nie', 'Optional gutter must not be preselected without a verified inclusion rule');
+    assert(catalogue.anchoring && catalogue.anchoring.opts[0].id === 'beton' && catalogue.anchoring.opts[0].cena == null,
+      'Base concrete anchoring must not create a fake 0 € surcharge');
+    assert(catalogue.anchoring.opts.filter(item => item.id !== 'beton').every(item => item.cena == null),
+      'Unverified alternative anchoring received an invented numeric price');
     assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 0,
       'Unverified Koverta-specific extras must not remain customer-selectable');
 
@@ -168,6 +173,17 @@ async function waitRender(page) {
     assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Turning optional gutter off left stale quote-only price state');
 
+    // Alternative anchoring is request-only; returning to base concrete anchoring clears that state.
+    const anchoringButtons = page.locator('[data-sp-add-opt="pick:kotvenie"]');
+    await anchoringButtons.filter({ hasText: 'Betónové pätky' }).click({ force: true });
+    await waitRender(page);
+    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Unpriced foundation option did not mark total as open');
+    await anchoringButtons.filter({ hasText: 'Do betónu' }).click({ force: true });
+    await waitRender(page);
+    assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Returning to verified base anchoring left stale quote-only state');
+
     // Back/next must remain reversible.
     const stepCap = page.locator('[data-sp-stepcap]');
     const stepBefore = (await stepCap.textContent()).trim();
@@ -194,13 +210,13 @@ async function waitRender(page) {
     // A dimension change keeps a compatible selected side and recomputes the base band.
     await page.evaluate(() => {
       const slider = document.querySelector('[data-sp-w]');
-      slider.value = '5600';
+      slider.value = '6600';
       slider.dispatchEvent(new Event('input', { bubbles: true }));
       slider.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await waitRender(page);
     const changedWidth = await page.locator('[data-sp-w-out]').textContent();
-    assert(/5\s*600/.test(changedWidth), 'Width did not snap to 5600 mm after change: ' + changedWidth);
+    assert(/6\s*600/.test(changedWidth), 'Width did not cross into the 6600 mm catalogue band after change: ' + changedWidth);
     await page.locator('[data-sp-side="rear"]').click({ force: true });
     const woodPressed = await page.locator('[data-sp-side-opt="kvdrevo"]').getAttribute('aria-pressed');
     assert(woodPressed === 'true', 'Compatible side selection was lost after dimension change');
@@ -269,7 +285,7 @@ async function waitRender(page) {
       'Outside-catalogue request incorrectly implies technical feasibility or a valid catalogue price');
 
     assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, RAL/side options, gutter state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
+    console.log('PRICING_LOGIC_PASS base grid, 6200/6600 transition, RAL/side options, gutter/anchoring state, unsupported extras/placements, unknown-price handling, back/next, dimension persistence, reset, payload, custom validation');
     await context.close();
   } finally {
     await browser.close();
