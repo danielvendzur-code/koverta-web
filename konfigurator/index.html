@@ -582,9 +582,10 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   <div class="k-wrap kv-cfg__in">
     <p class="kv-cfg__label">Čo si skladáte</p>
     <nav class="kv-cfg__tabs" aria-label="Produkt">
+      <a href="?page=koverta" data-kv-tab="koverta">Prístrešky Koverta</a>
+      <a href="?page=carport" data-kv-tab="carport">Carport Soltec</a>
+      <a href="?page=canopy" data-kv-tab="canopy">Pevné prestrešenia Soltec</a>
       <a href="?page=bio" data-kv-tab="bio">Bioklimatické pergoly</a>
-      <a href="?page=canopy" data-kv-tab="canopy">Prístrešky Soltec</a>
-      <a href="?page=carport" data-kv-tab="carport">Prístrešky pre autá</a>
     </nav>
     <a class="kv-cfg__eshop" href="https://koverta.sk/" target="_blank" rel="noopener">
       Katalóg a ceny na koverta.sk
@@ -610,7 +611,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   <div class="k-wrap" data-k-cfg-zaloha style="padding-block:clamp(48px,8vw,96px)">
     <p class="k-eyebrow">Konfigurátor</p>
     <h1 class="k-h2">3D konfigurátor prístreškov a pergol</h1>
-    <p>Poskladajte si prístrešok pre auto alebo bioklimatickú pergolu: rozmer, farba, výplne a doplnky. Vizualizácia aj orientačná cena sa menia hneď. Konfigurátor sa načíta v prehliadači so zapnutým JavaScriptom.</p>
+    <p>Vyberte riešenie a nastavte rozmer, farbu a výbavu. Vizualizácia aj orientačná cena sa menia hneď. Konfigurátor sa načíta v prehliadači so zapnutým JavaScriptom.</p>
   </div>
 </main>
 
@@ -619,9 +620,9 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 (function () {
   var PAGES = window.KV_PAGES || {};
 
-  var LABEL = { bio: 'Bioklimatické pergoly', canopy: 'Prístrešky Soltec', carport: 'Prístrešky pre autá' };
+  var LABEL = { koverta: 'Prístrešky Koverta', bio: 'Bioklimatické pergoly Soltec', canopy: 'Pevné prestrešenia Soltec', carport: 'Carport Soltec' };
   var page = new URLSearchParams(location.search).get('page');
-  if (!PAGES[page]) page = 'bio';
+  if (!PAGES[page]) page = 'koverta';
 
   document.querySelectorAll('[data-kv-tab]').forEach(function (a) {
     if (a.dataset.kvTab === page) a.setAttribute('aria-current', 'page');
