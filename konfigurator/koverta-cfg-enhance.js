@@ -485,7 +485,7 @@
     panel.className = 'kv-custom';
     panel.hidden = true;
     panel.innerHTML = ''
-      + '<p class="sp-side-note">Napíšte požadovaný rozmer. Je to samostatný dopyt na technické posúdenie; katalógová zostava ani jej cena nepotvrdzujú realizovateľnosť atypického rozmeru.</p>'
+      + '<p class="sp-side-note">Napíšte požadovaný rozmer. Je to samostatný dopyt na technické posúdenie; katalógová zostava ani jej cena nepotvrdzujú realizovateľnosť atypického rozmeru. Individuálne riešenia ako šikmé steny, kotvenie do steny, L-tvar alebo zelená strecha riešime samostatným posúdením a nacenením.</p>'
       + '<div class="kv-custom__row">'
       + '<label>Šírka (mm)<input type="number" min="1" step="1" required data-kv-cw></label>'
       + '<label>Hĺbka (mm)<input type="number" min="1" step="1" required data-kv-cl></label>'
