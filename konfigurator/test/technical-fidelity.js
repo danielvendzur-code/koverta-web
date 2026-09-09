@@ -21,6 +21,10 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function overlap(a0, a1, b0, b1) {
+  return Math.min(a1, b1) >= Math.max(a0, b0);
+}
+
 const exact = {
   '7000x6000': {
     frameAxes: [52, 5804],
@@ -58,6 +62,74 @@ for (const [size, expected] of Object.entries(exact)) {
     size + ': post top ' + postTop + ' does not meet side-frame bottom ' + sideFrameBottom);
   assert(purlinBottom - postTop === 40,
     size + ': expected purlin bottom 40 mm above post top, got ' + (purlinBottom - postTop));
+
+  /* Renderer contact proof for the exact complete assembly. The +2 mm in the
+     renderer exists only to separate coplanar BSP faces; the head plate bridges
+     it and overlaps 6 mm into the post while touching the frame at its top. */
+  const [W, L] = size.split('x').map(Number);
+  const frameY0 = R.ramBok;
+  const frameY1 = R.ramBok + R.ramW;
+  const frameRunX0 = R.ramZad + 2;
+  const frameRunX1 = L - R.ramOdkvap - 2;
+  const headPlateTop = R.h + 2;
+  const headPlateBottom = headPlateTop - 8;
+  assert(headPlateBottom < R.h && headPlateTop === R.h + 2,
+    size + ': head plate must overlap the post and touch the renderer-lifted frame');
+
+  expected.postAxes.forEach((axis, index) => {
+    const corner = index === 0 || index === expected.postAxes.length - 1;
+    const pd = corner ? R.postD : R.stredD;
+    const pw = corner ? R.postW : R.stredW;
+    const px = axis - pd / 2;
+    for (const py of [0, W - pw]) {
+      const cy = py + pw / 2;
+      const plateY0 = cy - 110 / 2;
+      const plateY1 = cy + 110 / 2;
+      assert(overlap(plateY0, plateY1, py < W / 2 ? frameY0 : W - frameY1,
+                     py < W / 2 ? frameY1 : W - frameY0),
+        size + ': side-frame head plate misses side frame at post ' + index);
+
+      const sidePlates = corner
+        ? (index === 0 ? [[px + pd, px + pd + 58]] : [[px - 58, px]])
+        : [[px - 58, px], [px + pd, px + pd + 58]];
+      for (const [x0, x1] of sidePlates) {
+        assert(overlap(x0, x1, frameRunX0, frameRunX1),
+          size + ': side-frame head plate has no X contact at post ' + index);
+      }
+
+      if (corner) {
+        const cx = px + pd / 2;
+        const endPlateX0 = cx - 110 / 2;
+        const endPlateX1 = cx + 110 / 2;
+        const endFrameX0 = index === 0 ? R.ramZad : L - R.ramOdkvap - R.ramW;
+        const endFrameX1 = endFrameX0 + R.ramW;
+        assert(overlap(endPlateX0, endPlateX1, endFrameX0, endFrameX1),
+          size + ': corner end-frame head plate misses end frame at post ' + index);
+      }
+    }
+  });
+
+  /* Base plate: active Expivi confirms the 250 mm footprint. The renderer's
+     four anchor-head markers must stay inside it and the sleeve starts on the
+     plate top rather than floating above it. */
+  const plate = R.plate;
+  const plateHalf = plate / 2;
+  const anchorOffset = plateHalf - Math.max(16, Math.round(plate * 0.11));
+  const anchorHeadR = Math.max(5, Math.round(plate * 0.028));
+  assert(anchorOffset + anchorHeadR < plateHalf,
+    size + ': base anchor marker leaves the base plate');
+  for (const section of [[R.postD, R.postW], [R.stredD, R.stredW]]) {
+    assert(section[0] / 2 <= plateHalf && section[1] / 2 <= plateHalf,
+      size + ': post section does not sit on the 250 mm base plate');
+  }
+
+  /* Five purlin pairs produce 20 end connectors; four frame corners add four.
+     This matches the 24 active Expivi connector components exactly. */
+  const connectorCount = expected.purlinAxes.length * 4 + 4;
+  const expiviConnectorCount = scene.diely.filter(d =>
+    JSON.stringify(d.r) === JSON.stringify([120, 85, 140])).length;
+  assert(connectorCount === 24 && expiviConnectorCount === 24,
+    size + ': connector count is not 20 purlin-end + 4 corner connectors');
 }
 
 /* The four-post Koverta band stands under purlins, not in frame corners.
@@ -92,5 +164,12 @@ assert(!runtime.includes('Priemer odmeraný z oficiálneho rendru'),
   'Downpipe renderer size is still presented as a technical measurement from a render');
 assert(runtime.includes('not a verified 15 mm material thickness'),
   'Fascia renderer thickness provenance is not explicit');
+assert(runtime.includes('vodo ? cy0 : cy0 + sd * roz, zH - th);'),
+  'Head fastener is not seated on the head-plate underside');
+assert(!runtime.includes('zH - th - 1'),
+  'Obsolete 1 mm air gap remains under a head fastener');
+assert(runtime.includes('const stredR = py + sy * UHOL_LY * 0.55;') &&
+       runtime.includes('const stredO = px + sx * UHOL_LX * 0.55;'),
+  'Angle fasteners are not the verified secondary-reference 2+2 layout');
 
-console.log('technical fidelity contact PASS: exact axes preserved; post -> side frame contact; purlin +40 mm; four-post non-corners not misclassified; Koverta brace/infill contacts use real sections; visual-only provenance is explicit');
+console.log('technical fidelity contact PASS: exact axes preserved; post/head/base/angle contacts verified; purlin +40 mm; four-post non-corners not misclassified; Koverta brace/infill contacts use real sections; visual-only provenance is explicit');
