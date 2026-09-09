@@ -130,8 +130,10 @@ async function enableExtra(page, id) {
       const withLed = await svgState(page);
       const ledSnap = windowState(await page.evaluate(() => window.SP_TEST.snapshot()));
       assert(ledSnap.extras['kv-led'] === 1, `${device}: LED state missing`);
-      assert(withLed.polygons > beforeLed.polygons,
-        `${device}: LED did not add physical frame-mounted geometry`);
+      assert(withLed.markup !== beforeLed.markup,
+        `${device}: LED selection did not change the physical SVG render`);
+      assert(/f5e8c5/i.test(withLed.markup),
+        `${device}: LED diffuser surface is missing from the rendered SVG`);
 
       for (const [width, expectedRows] of [[6200, 2], [7000, 3]]) {
         await setSize(page, width, 6000);
