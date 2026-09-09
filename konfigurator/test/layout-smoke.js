@@ -9,8 +9,18 @@ function assert(condition, message) {
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const errors = [];
+  const installAnalyticsStubs = async (context) => {
+    await context.addInitScript(() => {
+      // GTM may invoke Microsoft Clarity while its external loader is blocked in CI.
+      // Mirror Clarity's documented queue stub so QA still catches first-party errors.
+      window.clarity = window.clarity || function () {
+        (window.clarity.q = window.clarity.q || []).push(arguments);
+      };
+    });
+  };
   try {
     const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await installAnalyticsStubs(desktop);
     const page = await desktop.newPage();
     page.on('pageerror', e => errors.push('desktop pageerror: ' + e.message));
     page.on('console', msg => { if (msg.type() === 'error') errors.push('desktop console: ' + msg.text()); });
@@ -73,6 +83,7 @@ function assert(condition, message) {
     await desktop.close();
 
     const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await installAnalyticsStubs(mobile);
     const mp = await mobile.newPage();
     mp.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
     mp.on('console', msg => { if (msg.type() === 'error') errors.push('mobile console: ' + msg.text()); });
@@ -101,6 +112,7 @@ function assert(condition, message) {
     await mobile.close();
 
     const cfgCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await installAnalyticsStubs(cfgCtx);
     const cp = await cfgCtx.newPage();
     cp.on('pageerror', e => errors.push('config pageerror: ' + e.message));
     cp.on('console', msg => { if (msg.type() === 'error') errors.push('config console: ' + msg.text()); });
