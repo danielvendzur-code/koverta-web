@@ -156,10 +156,14 @@ assert(runtime.includes('plat(px - hp, cy - sir / 2, hp, sir);') &&
 assert(!runtime.includes('Stĺp 110 × 190 pod väznicou má iba platňu vedenú po osi'),
   'Obsolete floating purlin-directed head-plate logic remains');
 
-assert(runtime.includes('const rr = kvBand() ? kvStlpRez(xi, xs.length) : { d: post, w: post };'),
-  'Cantilever brace still uses the generic Soltec post section for Koverta contact');
+assert(runtime.includes('const kovertaContact = Boolean(kvBand());') &&
+       runtime.includes('const rr = kovertaContact ? kvStlpRez(xi, xs.length) : { d: post, w: post };'),
+  'Cantilever brace does not isolate Koverta real-section contact from Soltec');
 assert(runtime.includes('const pd = kvBand() ? kvStlpRez(xi, rowXs.length).d : post;'),
   'Koverta side infill still cuts around a generic 120 mm post');
+assert(runtime.includes("const vsunBrace = kovertaContact") &&
+       runtime.includes(": 0;"),
+  'Soltec cantilever fallback must preserve its historical zero inset');
 assert(!runtime.includes('Priemer odmeraný z oficiálneho rendru'),
   'Downpipe renderer size is still presented as a technical measurement from a render');
 assert(runtime.includes('not a verified 15 mm material thickness'),
