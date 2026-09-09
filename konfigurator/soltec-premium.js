@@ -1585,6 +1585,10 @@
 
         /* --------------------------------------------------------- stage svg */
         const canvas = cfgRoot.querySelector('[data-sp-canvas]');
+        /* Test-only snapshot of geometry already used by the Koverta renderer.
+           It is reset for every stage render, so tests can prove physical
+           contacts without reconstructing dimensions from SVG pixels. */
+        let lastKvAccessoryGeometry = null;
 
         /* ---------------------------------------------------------------- camera
            A yaw/pitch camera with an orthographic projection. Every part is built
@@ -1647,11 +1651,15 @@
               roof: { ...kvRoofRef() },
               accessoryAnchors: Object.fromEntries(
                 ['rear', 'front', 'left', 'right'].map((side) => [side, kvWallAnchor(side)])
-              )
+              ),
+              accessories: lastKvAccessoryGeometry
+                ? JSON.parse(JSON.stringify(lastKvAccessoryGeometry))
+                : null
             } : null
           });
         } catch (e) {}
         const drawStage = () => {
+          lastKvAccessoryGeometry = null;
           const L = lengthMM(), W = widthMM(), H = state.height;
           const frame = state.frameColor.hex, louv = state.louverColor.hex;
           const sideHex = (state.sideColor && state.sideColor.hex) || frame;
@@ -3174,6 +3182,14 @@
                vykukol pruh. Lemovanie sa naozaj pod rám zahýba, takže tie
                2 mm tam patria. */
             const ramBot = zBot + 2, ramTop = ramBot + RAM_H;
+            const kvAccessoryGeometry = {
+              assembly: { xMin: 0, xMax: L, yMin: 0, yMax: W, zMin: 0, zMax: zTop },
+              insulation: null,
+              led: { enabled: false, runs: [] },
+              gutter: null,
+              downpipe: null
+            };
+            lastKvAccessoryGeometry = kvAccessoryGeometry;
             /* Plech leží NA hornej pásnici rámu a väzníc, nie v nich. Kým
                bol jeho podhľad o 9 mm nižšie než horná pásnica, prerážali
                väznice a rám cez strechu — zhora z toho boli tie svetlé čiary
@@ -3458,6 +3474,11 @@
                zobrazuje sa ako priamo nalepená vrstva na spodnom líci
                trapézového plechu, takže nemôže levitovať ani križovať väznice. */
             const maIzolaciu = Boolean(state.extras['kv-izol']);
+            kvAccessoryGeometry.insulation = {
+              enabled: maIzolaciu,
+              hostBottomZ: trapBot,
+              renderZ: trapBot
+            };
             const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#8f9295');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
@@ -3580,13 +3601,16 @@
             }
 
             /* --- lineárne LED osvetlenie -------------------------------
-               Realizačné fotografie ukazujú lineárny profil priamo pod
-               obvodovým rámom. Profil sa preto kotví na spodné líce rámu a
-               každý render sa počíta z aktuálnych rx/ry osí; žiadna svetelná
-               lišta nemá pevnú svetovú súradnicu. Elektro vedenie v stĺpe je
-               skryté a v 3D sa nekreslí. Rozmery profilu sú iba vizuálne
-               proporcie hostiteľského rámu, nie výrobné milimetre. */
+               Drive realization IMG_3676 copy.jpeg (id
+               1w1t5Sw5Yi1rkJkVd3GbbCN3vWCI5HzOD) shows one installation with
+               a continuous illuminated perimeter on all four frame runs;
+               IMG_1569.jpeg (id 10ZmiliwPjt_HqwsbxkGSgZf2iWTynT3Y) shows the
+               profile physically seated against a steel member. This renderer
+               represents that evidenced installation, not a mandatory standard
+               LED layout for every Koverta order. Profile dimensions remain
+               visual proportions, never millimetres inferred from photos. */
             if (Boolean(state.extras['kv-led']) && !nadStrechou) {
+              kvAccessoryGeometry.led.enabled = true;
               const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
               const ledT = Math.max(4, Math.min(8, RAM_H * 0.03));
               const diffT = Math.max(1.2, ledT * 0.22);
@@ -3595,6 +3619,12 @@
               const ledLight = '#f5e8c5';
               const ledRun = (x, y, dx, dy) => {
                 if (dx <= ledW || dy <= ledW) return;
+                kvAccessoryGeometry.led.runs.push({
+                  x, y, dx, dy,
+                  profileBottomZ: ledZ,
+                  profileTopZ: ledZ + ledT,
+                  hostBottomZ: ramBot
+                });
                 boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
                 const ix = dx > dy ? ledW * 0.18 : 0;
                 const iy = dy > dx ? ledW * 0.18 : 0;
@@ -3642,6 +3672,17 @@
               const zlTop = Math.min(zlBot + zlRise, ramTop - Math.max(8, RAM_H * 0.04));
               const zlY0 = LEM_T, zlY1 = W - LEM_T;
               const zlMid = (zlX0 + zlX1) / 2;
+              kvAccessoryGeometry.gutter = {
+                enabled: true,
+                x0: zlX0, x1: zlX1, y0: zlY0, y1: zlY1,
+                zBottom: zlBot, zTop: zlTop, outletX: zlMid,
+                pocket: {
+                  xMin: L - RAM_ODK,
+                  xMax: L - LEM_T - LEM_LIP,
+                  zMin: zBot,
+                  zMax: ramTop
+                }
+              };
               if (zlSpan > 36 && zlTop > zlBot + 24) {
                 /* Otvorený žľab je jeden súvislý plech s oblým/fazetovaným
                    dnom, nie tri hranaté kvádre. Konkrétny výrobný prierez nie
@@ -3677,19 +3718,21 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              /* Prierez zvodu nie je v dostupných podkladoch technicky
-                 kótovaný. Pre vizualizáciu sa preto odvodí od prierezu
-                 rohového stĺpa a zostáva v konzervatívnom rozsahu; nejde o
-                 tvrdenie výrobného rozmeru. */
-              const rz = Math.max(22, Math.min(38, Math.min(postW(), postD()) * 0.22));
               const rada = postXs();
-              const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
-              const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
+              const xiZvod = Math.max(0, rada.length - 1);
+              const rezZvod = rada.length
+                ? kvStlpRez(xiZvod, rada.length)
+                : { d: postD(), w: postW() };
+              /* Prierez zvodu nie je v dostupných podkladoch technicky
+                 kótovaný. Pre vizualizáciu sa odvodí od skutočného prierezu
+                 aktívneho rohového stĺpa, nie z generického 120 mm placeholdera. */
+              const rz = Math.max(22, Math.min(38, Math.min(rezZvod.w, rezZvod.d) * 0.22));
+              const xStlp = rada.length ? rada[xiZvod] : L - rezZvod.d;
+              const xLicStlp = xStlp + rezZvod.d;
               const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
-              /* Rúra beží po líci stĺpa, nie vedľa neho. Kým sedela odsadená na
-                 vonkajšom rohu, visela na modeli ako samostatná tyč vedľa
-                 stĺpa; na fotkách realizácií ide po jeho čele, v jeho osi. */
-              const yZvod = vsunStlp + postW() / 2;
+              const yPost0 = vsunStlp;
+              const yPost1 = yPost0 + rezZvod.w;
+              const yZvod = (yPost0 + yPost1) / 2;
               /* Rúra ako jeden súvislý ťah. Kým sa každý úsek kreslil ako
                  samostatný valec, na ohyboch sa konce nestretli a medzi nimi
                  ostávala klinová diera — „miesta, kde nič nie je". Teraz sa
@@ -3832,6 +3875,25 @@
               lom.push([xRura, yZvod, zPata]);
               lom.push([xRura + RP * 0.92, yZvod, zPata - RP * 0.62]);
               const draha = zaobli(lom, RP, 7);
+              const pipeBounds = {
+                xMin: Math.min(...draha.map((p) => p[0])) - rz,
+                xMax: Math.max(...draha.map((p) => p[0])) + rz,
+                yMin: yZvod - rz,
+                yMax: yZvod + rz,
+                zMin: Math.min(...draha.map((p) => p[2])) - rz,
+                zMax: Math.max(...draha.map((p) => p[2])) + rz
+              };
+              kvAccessoryGeometry.downpipe = {
+                enabled: true,
+                radius: rz,
+                start: lom[0].slice(),
+                outlet: [xVytok, yZvod, zlBot],
+                pipeCenter: [xRura, yZvod],
+                standoff,
+                post: { x0: xStlp, x1: xLicStlp, y0: yPost0, y1: yPost1 },
+                pathBounds: pipeBounds,
+                clamps: []
+              };
               tuba(draha, rz, zvodHex);
               /* Hrdlo prechádza priamo cez dno žľabu do prvého kolena.
                  Horný bod je vo vnútri žľabu, takže spoj nemôže levitovať. */
@@ -3845,9 +3907,18 @@
               const medzera = xRura - rz - xLicStlp;
               [0.24, 0.72].forEach((t) => {
                 const z = zPata + 60 + (zBot - 300 - zPata) * t;
+                const bridgeX0 = xLicStlp - 8;
+                const bridgeX1 = bridgeX0 + Math.max(6, medzera) + 16;
+                kvAccessoryGeometry.downpipe.clamps.push({
+                  z,
+                  bridgeX0,
+                  bridgeX1,
+                  pipeNearX: xRura - rz,
+                  postFaceX: xLicStlp
+                });
                 tuba([[xRura, yZvod - 13, z], [xRura, yZvod + 13, z]], rz * 1.09, shade(frame, -0.42));
                 if (medzera > -rz && medzera < 80) {
-                  boxFaces(xLicStlp - 8, yZvod - 11, z - 5, Math.max(6, medzera) + 16, 22, 10,
+                  boxFaces(bridgeX0, yZvod - 11, z - 5, bridgeX1 - bridgeX0, 22, 10,
                            shade(frame, -0.38), [], SHAFT);
                 }
               });
