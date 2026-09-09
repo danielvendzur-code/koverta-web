@@ -977,7 +977,7 @@
           const exact = kvMeasured() || {};
           return {
             ...base,
-            lemCelo: Number(exact.lemCelo) || Number(base.lemCelo) || 190,
+            lemCelo: Number(exact.lemCelo) || Number(base.lemCeloFallback) || Number(base.lemCelo) || 190,
             /* Every recovered active scene with a measurable side fascia uses
                240 mm. Exact scenes override this explicitly; for unmeasured
                sizes this remains a visual fallback, not a certified dimension. */

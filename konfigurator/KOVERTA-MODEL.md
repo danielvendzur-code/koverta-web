@@ -90,8 +90,9 @@ no millimetre coordinate or QA measurement point is expanded. The side fascia no
 is measurable. Complete scene 14069 uses a 190 mm end fascia while complete
 scene 14192 uses 240 mm, so those exact values are attached to their own
 kvBySize entries rather than normalised. Sizes without a complete active scene
-use 240 mm on the side only as a visual fallback and are not documented as
-millimetre-exact. Earlier comments described some dimensions as
+use 240 mm on both side and end fascia as a visual fallback, matching the
+repeated dimension in the newer recovered roof family; those sizes are not
+documented as millimetre-exact. Earlier comments described some dimensions as
 manufacturer-confirmed or fully measured without a traceable source. Do not
 repeat those claims.
 
