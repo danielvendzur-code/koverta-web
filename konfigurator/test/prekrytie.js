@@ -43,13 +43,9 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));
       });
       const vb = svg.getAttribute('viewBox').split(' ').map(Number);
-      // At grazing angles a fascia sample is less than one native pixel
-      // from the exposed roof. Sample at 4x resolution so rounding does not
-      // move a valid fascia coordinate onto an adjacent roof pixel.
-      const scale = 4;
-      const c = document.createElement('canvas'); c.width = vb[2] * scale; c.height = vb[3] * scale;
-      const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
-      return { g, w: c.width, h: c.height, scale };
+      const c = document.createElement('canvas'); c.width = vb[2]; c.height = vb[3];
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, vb[2], vb[3]);
+      return { g, w: vb[2], h: vb[3] };
     };
     const set = (sel, v) => { const e = document.querySelector(sel); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); };
     const nalezy = [];
@@ -79,7 +75,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
           let zlych = 0, prvy = null;
           for (const [x, y] of body) {
             const q = window.SP_TEST.project(x, y, zTop);
-            const px = Math.round(q.x * s.scale), py = Math.round(q.y * s.scale);
+            const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
             const d = s.g.getImageData(px, py, 1, 1).data;
             if (d[1] > 150 && d[0] < 130 && d[2] < 130) { zlych++; if (!prvy) prvy = Math.round(x) + ',' + Math.round(y); }

@@ -83,9 +83,16 @@ module.exports = async function routingSmoke(browser) {
         await page.locator('[data-sp-add-opt="pick:odkvap"]:not([aria-pressed="true"])').first().click();
         assert((await snapshot()).picks.odkvap !== initial.picks.odkvap, 'Koverta gutter selection did not change');
       } else {
-        await gotoControl('[data-sp-xd="1"]');
+        const extraGroup = route === 'bio' ? 'x-ovl' : 'x-konstr';
+        const groupSelector = `[data-sp-add-on="${extraGroup}"]`;
+        await gotoControl(groupSelector);
+        const beforeExtra = (await snapshot()).price.total;
+        await page.locator(groupSelector).check();
+        await page.locator('[data-sp-xd="1"]').first().waitFor({state:'visible'});
         await page.locator('[data-sp-xd="1"]').first().click();
-        assert(Object.values((await snapshot()).extras).some(v => v > 0), `${route}: extra did not change`);
+        const withExtra = await snapshot();
+        assert(Object.values(withExtra.extras).some(v => v > 0), `${route}: extra did not change`);
+        assert(withExtra.price.total > beforeExtra, `${route}: selected extra did not increase price`);
       }
       await page.locator('[data-sp-cfg-open]').click();
       assert(await page.locator('[data-sp-section]').evaluate(el => el.classList.contains('is-full')), `${route}: fullscreen did not open`);

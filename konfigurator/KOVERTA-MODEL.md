@@ -23,7 +23,10 @@ The two measurement files available on this branch are:
 
 A mesh collection contains inactive variants too. Its union of columns must
 never be rendered as one assembly. Many returned scenes contain only a roof;
-those scenes do not establish the active column variant.
+those scenes do not establish the active column variant. In particular,
+`archiv-expivi/scena/13670.json` is a configurable mesh family with variant
+assets; it is not a resolved active component list and cannot establish one
+universal column layout.
 
 ## Exact axes implemented for complete scenes
 
@@ -77,7 +80,9 @@ prove bolt grade, anchor selection or plate thickness.
 The renderer still contains visual simplifications: the side fascia uses
 190 mm instead of the measured 240 mm; upper fascia thickness is 6 mm; roof
 surfaces are simplified; head plates, fastener details and wall panels are not
-all independently measured. Earlier comments described some of these as
+all independently measured. The Koverta upper-fascia SVG edge uses a local
+1.5 px same-colour stroke to make the opaque fascia own its subpixel raster
+seam over the roof sheet; this is render coverage, not a millimetre dimension. Earlier comments described some of these as
 manufacturer-confirmed or fully measured without a traceable source. Do not
 repeat those claims. The complete 7 × 5.2 m scene also has 240 mm end fascia,
 so the 7 × 6 m fascia values cannot be applied universally as certified values.
@@ -102,8 +107,10 @@ so the 7 × 6 m fascia values cannot be applied universally as certified values.
 
 ## Drainage: supported claims and limits
 
-The archived configurator treats drainage as an option. No independently
-verified gutter price was recovered. The Koverta selection therefore marks it
+The archived configurator treats drainage as an option. Catalogue 13670
+exposes a material group named `ODKVAP`, but the recovered catalogue data does
+not provide an independently verified gutter price, section or universal
+downpipe route. The Koverta selection therefore marks it
 for quotation and does not present it as a free included item. The two Koverta
 product pages use the same conditional wording.
 
@@ -155,8 +162,10 @@ only read when present on the selected model. The default route is Koverta.
   on desktop/mobile and reads the actual runtime geometry. It independently
   derives axes from the two complete source scenes, comparing at 1 mm
   precision (the measurement JSON is rounded), with section/orientation checks.
-- `prekrytie.js`: contrasting roof colours and projected fascia samples;
-  records failing SVGs for diagnosis.
+- `prekrytie.js`: contrasting roof colours and projected fascia samples at
+  the native SVG viewBox raster; records failing SVGs for diagnosis. Its world
+  measurement points and native raster must not be rescaled to hide edge
+  failures.
 - `strecha-nepresvita.js`: detects contrasting soffit/galvanised colours in
   top views.
 - `stlpy-vidno.js`: column visibility checks.
