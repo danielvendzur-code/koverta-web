@@ -3737,16 +3737,19 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   grid-area: 1 / 1;
   opacity: 0;
   visibility: hidden;
-  /* Žiadny posun — panel sa iba prelína. Akýkoľvek transform hýbe fotkou. */
+  pointer-events: none;
+  /* Outgoing content disappears immediately. This prevents two step texts
+     from being readable on top of each other while scroll changes the step. */
   transform: none;
-  transition: opacity 380ms var(--k-ease), visibility 0s linear 380ms;
+  transition: none;
   animation: none;
 }
 .kh-proc__panels.is-stacked > .kh-proc__panel.is-active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   transform: none;
-  transition: opacity 380ms var(--k-ease), visibility 0s;
+  transition: opacity 180ms var(--k-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .kh-proc__panels.is-stacked > .kh-proc__panel { transition: none; transform: none; }
@@ -14319,3 +14322,133 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 /* Jednoduché porovnávacie tabuľky na Soltec podstránkach. */
 .k .kh-compare-stack { display: grid; gap: clamp(20px, 2.4vw, 32px); }
 .k .kh-compare-stack > .kh-typ2__note { margin: 0; }
+
+
+/* FINAL KOVERTA UX PASS 2026-09-09 */
+@media (min-width: 1120px) {
+  .k-js .kv-bar .kv-bar__tel { visibility: visible !important; opacity: 1 !important; }
+  .kv-topbar__side a[href^="tel:"] { display: none; }
+}
+
+/* Značky v ponuke sú informácia, nie hover puzzle. */
+.k .kh-znacky {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.k .kh-znacky__kus {
+  min-height: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: #fff;
+}
+.k .kh-znacky__viac {
+  position: static !important;
+  display: block !important;
+  max-height: none !important;
+  margin-top: 8px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+.k .kh-znacky__kus:hover,
+.k .kh-znacky__kus:focus { transform: none !important; box-shadow: none !important; }
+
+.k .kh-ponuka__akcia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+.k .kh-ponuka__cta { align-self: end; white-space: nowrap; }
+
+.k .kh-hero .kh-crumbs { margin-bottom: clamp(18px, 2.2vw, 30px); }
+.k .kh-hero .k-display { max-width: 15ch; }
+
+@media (max-width: 759px) {
+  .k .kh-znacky { grid-template-columns: 1fr; }
+  .k .kh-ponuka__cta { width: 100%; justify-content: center; }
+}
+
+
+/* FINAL MOBILE TOP DECLUTTER 2026-09-09 */
+@media (max-width: 759px) {
+  /* Na malej obrazovke sú v hlavičke len dve potrebné akcie: hľadanie a menu.
+     Košík zostáva dostupný cez otvorené menu / e-shop, ale nemusí zaberať
+     štvrtinu pravého okraja na každej obrazovke. */
+  .kv-bar__side > a.kv-icon-btn[href*="/cart"] { display: none; }
+  .kv-bar__side { gap: 6px; }
+  .kv-bar__in { min-height: 60px; gap: 12px; }
+  .kv-icon-btn { width: 42px; height: 42px; }
+  .kv-logo .k-logo { height: 25px; }
+
+  /* Prvá obrazovka má jednu dominantnú akciu. Konfigurátor ostáva priamo
+     dostupný, ale ako tichý textový odkaz namiesto druhého veľkého tlačidla. */
+  .k .kh-hero__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .k .kh-hero__actions .k-btn { width: auto; }
+  .k .kh-hero__actions .k-btn:first-child {
+    min-height: 44px;
+    padding: 0 17px;
+  }
+  .k .kh-hero__actions .k-btn:nth-child(n+2) {
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255,255,255,.9);
+    font-size: 13.5px;
+    text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,.42);
+    text-underline-offset: 4px;
+  }
+  .k .kh-hero__actions .k-btn:nth-child(n+2):hover,
+  .k .kh-hero__actions .k-btn:nth-child(n+2):focus-visible {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration-color: #fff;
+  }
+
+  /* Google dôkaz ostáva, ale už nie ako ďalšia veľká karta pod tlačidlami. */
+  .k .kh-hero__rating {
+    min-height: 34px;
+    padding: 0;
+    gap: 7px;
+    border: 0;
+    background: transparent;
+  }
+  .k .kh-hero__rating:hover,
+  .k .kh-hero__rating:focus-visible {
+    border: 0;
+    background: transparent;
+  }
+  .kh-hero__rating .k-google { width: 17px; height: 17px; }
+  .kh-hero__rating strong { font-size: 15px; }
+  .kh-hero__rating .kh-hero__divider { height: 16px; opacity: .55; }
+  .kh-hero__rating .k-stars svg { width: 12px; height: 12px; }
+  .kh-hero__rating-meta > span:last-child { display: none; }
+
+  /* Keď je hero na obrazovke, spodný sticky CTA iba duplikuje žlté tlačidlo.
+     Skript ho vtedy označí touto triedou; po odchode z hero sa vráti. */
+  .kh-dock {
+    transition: transform 260ms var(--k-ease-out), opacity 180ms var(--k-ease);
+  }
+  .kh-dock.je-hero-skryty {
+    transform: translateY(calc(100% + 12px));
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ma-hero-dok-skryty .kh-hero__inner {
+    padding-bottom: 24px !important;
+  }
+}

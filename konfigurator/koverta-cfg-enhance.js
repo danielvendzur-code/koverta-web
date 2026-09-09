@@ -9,6 +9,7 @@
    Čo pridáva:
    1) Rozmer sa dá napísať. Na presné číslo sa posuvníkom trafiť nedá.
    2) Fullscreen posunie pohľad rovno na konfigurátor, aby sa nemuselo scrollovať.
+   3) Pri Koverta variante vie odoslať dopyt na atypický rozmer bez vymyslenej ceny.
    ========================================================================== */
 (function () {
   'use strict';
@@ -253,6 +254,83 @@
     if (document.fullscreenElement) scrollToConfigurator();
   });
 
+  /* --- 3 · rozmer na mieru ---------------------------------------------- */
+
+  // Cenník má hotové veľkosti a posuvník po nich skáče, takže sa mimo nich
+  // nedá nič nastaviť — a to je správne, cena by inak bola vymyslená. Kto
+  // potrebuje iný rozmer, si ho tu napíše a odíde s ním do dopytu aj so
+  // všetkým, čo si medzitým vyklikal.
+  function textOf(sel) {
+    var el = document.querySelector(sel);
+    return el ? el.textContent.trim() : '';
+  }
+
+  function zostava() {
+    var riadky = [];
+    document.querySelectorAll('[data-sp-lines] li').forEach(function (li) {
+      var t = li.textContent.replace(/\s+/g, ' ').trim();
+      if (t) riadky.push('- ' + t);
+    });
+    return riadky;
+  }
+
+  function wireCustom() {
+    var btn = document.querySelector('[data-kv-custom]');
+    if (!btn || btn.dataset.kvWired === '1') return;
+    btn.dataset.kvWired = '1';
+
+    var panel = document.createElement('div');
+    panel.className = 'kv-custom';
+    panel.hidden = true;
+    panel.innerHTML = ''
+      + '<p class="sp-side-note">Napíšte rozmer, ktorý potrebujete. Pošleme naň cenu po zameraní.</p>'
+      + '<div class="kv-custom__row">'
+      + '<label>Šírka (mm)<input type="number" min="2000" max="12000" step="10" data-kv-cw></label>'
+      + '<label>Hĺbka (mm)<input type="number" min="2000" max="12000" step="10" data-kv-cl></label>'
+      + '<label>Výška (mm)<input type="number" min="2000" max="4000" step="10" data-kv-ch></label>'
+      + '</div>'
+      + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad L-tvar, previs okolo stromu, prístrešok pre dodávku…"></textarea></label>'
+      + '<button class="button" type="button" data-kv-csend>Poslať dopyt na tento rozmer</button>';
+    btn.parentNode.insertBefore(panel, btn.nextSibling);
+
+    btn.addEventListener('click', function () {
+      panel.hidden = !panel.hidden;
+      if (panel.hidden) return;
+      var w = document.querySelector('[data-sp-w]'), l = document.querySelector('[data-sp-l]'), h = document.querySelector('[data-sp-h]');
+      if (w) panel.querySelector('[data-kv-cw]').value = w.value;
+      if (l) panel.querySelector('[data-kv-cl]').value = l.value;
+      if (h) panel.querySelector('[data-kv-ch]').value = h.value;
+      panel.querySelector('[data-kv-cw]').focus();
+    });
+
+    panel.querySelector('[data-kv-csend]').addEventListener('click', function () {
+      var w = panel.querySelector('[data-kv-cw]').value;
+      var l = panel.querySelector('[data-kv-cl]').value;
+      var h = panel.querySelector('[data-kv-ch]').value;
+      var pozn = panel.querySelector('[data-kv-cnote]').value.trim();
+      var telo = [
+        'Mám záujem o prístrešok Koverta v rozmere na mieru.',
+        'Rozmer: ' + w + ' × ' + l + ' mm, výška ' + h + ' mm.',
+        pozn ? 'Poznámka: ' + pozn : '',
+        '',
+        'Najbližšia zostava z konfigurátora: ' + textOf('[data-sp-dims]'),
+        zostava().join('\n'),
+        'Jej cena podľa cenníka: ' + textOf('[data-sp-total]') + ' € vrátane DPH.',
+        '',
+        'Meno:',
+        'Telefón:',
+        'Obec realizácie:'
+      ].filter(Boolean).join('\n');
+      var odkaz = 'mailto:obchod@koverta.sk?subject='
+        + encodeURIComponent('Prístrešok Koverta — rozmer na mieru ' + w + ' × ' + l + ' mm')
+        + '&body=' + encodeURIComponent(telo);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(telo).catch(function () {});
+      }
+      window.location.href = odkaz;
+    });
+  }
+
   /* --- štart ------------------------------------------------------------ */
 
   // Konfigurátor si obsah vykresľuje sám, preto čakáme, kým sa objaví,
@@ -260,9 +338,10 @@
   function boot() {
     wireAll();
     wireAllToggle();
+    wireCustom();
     var root = document.getElementById('kv-root');
     if (root && 'MutationObserver' in window) {
-      new MutationObserver(function () { wireAll(); wireAllToggle(); }).observe(root, { childList: true, subtree: true });
+      new MutationObserver(function () { wireAll(); wireAllToggle(); wireCustom(); }).observe(root, { childList: true, subtree: true });
     }
   }
 

@@ -2573,6 +2573,15 @@
           b.addEventListener('mouseenter', () => ukaz(b.dataset.kMapaBod));
         }
       });
+
+      /* Panel nesmie po načítaní vyzerať prázdny. Predvolená je Bratislava,
+         ak je v dátach; inak prvá realizácia, ktorá má kartu. Výber používa
+         tú istú cestu ako klik, takže aria-pressed, mapa aj detail ostanú
+         synchronizované. */
+      const predvoleny = karty.some((k) => k.dataset.kMapaKarta === 'bratislava')
+        ? 'bratislava'
+        : karty[0].dataset.kMapaKarta;
+      ukaz(predvoleny);
     });
   }
 
@@ -2667,6 +2676,35 @@
     window.addEventListener('resize', naplan, { passive: true });
     window.addEventListener('load', naplan, { once: true });
     if (window.ResizeObserver) new ResizeObserver(naplan).observe(dok);
+
+    /* Na telefóne nemá sticky výzva prekrývať prvú obrazovku, keď je rovnaká
+       cenová ponuka už priamo v hero. Po odchode z hero sa pás vráti a ostáva
+       po ruke na zvyšku stránky. IntersectionObserver nemení layout; iba
+       prepína triedu, takže pri scrollovaní nič neposkočí. */
+    const hero = doc.querySelector('.kh-hero');
+    const nastavHeroDok = (skryt) => {
+      dok.classList.toggle('je-hero-skryty', skryt);
+      doc.documentElement.classList.toggle('ma-hero-dok-skryty', skryt);
+    };
+    const jeMobil = () => window.matchMedia('(max-width: 759px)').matches;
+    if (hero && 'IntersectionObserver' in window) {
+      const heroPozor = new IntersectionObserver((zaznamy) => {
+        const zaznam = zaznamy[0];
+        nastavHeroDok(jeMobil() && zaznam.isIntersecting && zaznam.intersectionRatio > 0.16);
+      }, { threshold: [0, 0.16, 0.4] });
+      heroPozor.observe(hero);
+      window.addEventListener('resize', () => {
+        if (!jeMobil()) nastavHeroDok(false);
+      }, { passive: true });
+    } else if (hero) {
+      const prepniHeroDok = () => {
+        const r = hero.getBoundingClientRect();
+        nastavHeroDok(jeMobil() && r.bottom > window.innerHeight * 0.16 && r.top < window.innerHeight);
+      };
+      window.addEventListener('scroll', prepniHeroDok, { passive: true });
+      window.addEventListener('resize', prepniHeroDok, { passive: true });
+      prepniHeroDok();
+    }
 
     /* Pás je `position: fixed` k spodku okna. Klávesnica na telefóne okno
        nezmenší — zmenší len viditeľnú časť, takže pás ostal sedieť pod ňou
@@ -3040,6 +3078,19 @@
     const closeBtn = header.querySelector('[data-k-drawer-close]');
 
     if (drawer && scrim && openBtn) {
+      /* Na telefóne sme košík vyčistili z úzkej hlavičky, preto ostáva
+         dostupný v zásuvke. Pridáva sa skriptom, aby sa nemusel kopírovať
+         rovnaký odkaz do každej statickej podstránky. */
+      if (!drawer.querySelector('[data-k-drawer-cart]')) {
+        const cartLink = document.createElement('a');
+        cartLink.className = 'kv-drawer__odkaz';
+        cartLink.href = 'https://koverta.sk/cart';
+        cartLink.textContent = 'Košík';
+        cartLink.setAttribute('data-k-drawer-cart', '');
+        drawer.appendChild(cartLink);
+        drawer.dataset.kvDrawerCartAdded = 'true';
+      }
+
       /* Zásuvka je zavretá posunutím mimo obrazovku, nie skrytím. Odkazy v nej
          teda ostávali na tabulátore: po hlavičke skočil kurzor do zavretého
          menu a človek písal do niečoho, čo nevidel. `inert` ju vyradí celú —
