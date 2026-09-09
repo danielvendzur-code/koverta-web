@@ -129,6 +129,8 @@ async function revealControl(page, selector) {
       'Unknown Koverta color price impact is not disclosed');
 
     const visibleText = await page.locator('#SoltecPremium').innerText();
+    assert(allTemplateText.includes('Iný počet stĺpov je na individuálne nacenenie'),
+      'Configurator still implies the 3D base post count is the only commercial variant');
     for (const forbidden of ['Táto dĺžka potrebuje', 'Profil obvodový', 'Najväčší rozmer', 'Svetlá výška']) {
       assert(!visibleText.includes(forbidden), 'Technical info block is still visible: ' + forbidden);
     }
@@ -251,7 +253,8 @@ async function revealControl(page, selector) {
 
     // Sourced Koverta accessories remain quote-only and must survive a compatible size change.
     const accessoryToggle = page.locator('[data-sp-add-on="x-kv"]');
-    await accessoryToggle.check();
+    await accessoryToggle.locator('xpath=ancestor::label[1]').click();
+    assert(await accessoryToggle.isChecked(), 'Accessory group did not open through the visible switch');
     const insulationPlus = page.locator('[data-sp-x="kv-izol"][data-sp-xd="1"]');
     await insulationPlus.waitFor({ state: 'visible' });
     await insulationPlus.click();
@@ -363,6 +366,13 @@ async function revealControl(page, selector) {
     assert(/2\s*500/.test(await page.locator('[data-sp-w-out]').textContent()), 'Reset did not restore initial width');
     assert((await page.locator('[data-sp-place="kv-free"]').getAttribute('aria-pressed')) === 'true',
       'Reset did not restore standalone placement');
+    const resetSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
+    assert(resetSnapshot.price.total === 4497 && resetSnapshot.price.open === false,
+      'Reset left the Koverta base price open or stale');
+    assert(resetSnapshot.picks.odkvap === 'nie' && resetSnapshot.picks.kotvenie === 'beton',
+      'Reset did not restore default gutter/anchoring');
+    assert(Object.values(resetSnapshot.extras).every(value => !value),
+      'Reset left a selected Koverta accessory in runtime state');
 
     // Opening custom-size UI must not trigger the legacy runtime mailto.
     const root = page.locator('#SoltecPremium');
