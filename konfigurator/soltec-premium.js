@@ -1797,6 +1797,8 @@
               /* arris:false keeps the stroke but paints it in the face's own
                  colour, so members merge into one surface without a gap */
               edgeCol: o.edge === false ? null : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
+              edgeWidth: Number.isFinite(o.edgeWidth) ? o.edgeWidth : 0.7,
+              kvFasciaTop: o.kvFasciaTop === true,
               fit: o.fit !== false,
               /* Priesvitná plocha sa nesmie obťahovať: keď ju maliarske
                  triedenie rozdelí, obrysy susedných kusov sa na spoji sčítajú
@@ -2012,13 +2014,18 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, fasciaTop) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
-            const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
-              normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
-              seamless: seamlessTop === true && key === '+z'
-            }); };
+            const put = (key, pts, n) => {
+              if (s.indexOf(key) >= 0) return;
+              const isFasciaTop = fasciaTop === true && key === '+z';
+              quad(pts, hex, {
+                normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
+                seamless: isFasciaTop, kvFasciaTop: isFasciaTop,
+                edgeWidth: isFasciaTop ? 1.5 : 0.7
+              });
+            };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
             put('-y', [[x,y,z],[X,y,z],[X,y,Z],[x,y,Z]], [0,-1,0]);
@@ -4136,14 +4143,25 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
+          let paintOrder = bspPaintOrder(podklad).concat(bspPaintOrder(stavba));
+          /* Native 1x SVG evidence shows two independent raster cases at the
+             same measured fascia edge: a roof fragment can be painted later,
+             and the rounded sample pixel can sit <0.2 px outside the fascia
+             polygon although the projected world point is inside it. Only the
+             already-higher +Z fascia surface is therefore painted last from
+             above; this changes raster ownership, never world geometry. */
+          if (fromAbove && model().roofKit === 'koverta') {
+            const fasciaTop = paintOrder.filter((f) => f.kvFasciaTop);
+            if (fasciaTop.length) paintOrder = paintOrder.filter((f) => !f.kvFasciaTop).concat(fasciaTop);
+          }
+          paintOrder.forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
                background between them. Stroking each face in its own colour
                closes it; the corner still reads, because the two sides are
                genuinely lit differently. */
-            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
+            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = String(f.edgeWidth); a['stroke-linejoin'] = 'round'; }
             if (f.seamless) a['shape-rendering'] = 'crispEdges';
             g.appendChild(svgEl('polygon', a));
           });
