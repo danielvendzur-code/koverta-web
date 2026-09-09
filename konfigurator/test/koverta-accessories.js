@@ -341,7 +341,7 @@ function validateAccessoryContacts(snap, label) {
 
       /* Preserve visual evidence for manual QA in the workflow artifact. */
       await setSize(page, 7000, 6000);
-      for (const viewName of ['front', 'corner', 'under']) {
+      for (const viewName of ['front', 'side', 'corner', 'under']) {
         await page.locator(`[data-sp-view="${viewName}"]`).click();
         await page.waitForTimeout(180);
         await page.locator('.sp-stage').screenshot({
