@@ -3618,7 +3618,10 @@
               const ledProfile = shade(zinok, -0.18);
               const ledLight = '#f5e8c5';
               const ledRun = (x, y, dx, dy) => {
-                if (dx <= ledW || dy <= ledW) return;
+                /* One dimension intentionally equals ledW: that is the strip
+                   width. Reject only a run whose longitudinal dimension is too
+                   short, not every valid horizontal/vertical strip. */
+                if (Math.max(dx, dy) <= ledW) return;
                 kvAccessoryGeometry.led.runs.push({
                   x, y, dx, dy,
                   profileBottomZ: ledZ,
