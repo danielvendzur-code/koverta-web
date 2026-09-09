@@ -2682,7 +2682,10 @@
        po ruke na zvyšku stránky. IntersectionObserver nemení layout; iba
        prepína triedu, takže pri scrollovaní nič neposkočí. */
     const hero = doc.querySelector('.kh-hero');
-    const nastavHeroDok = (skryt) => dok.classList.toggle('je-hero-skryty', skryt);
+    const nastavHeroDok = (skryt) => {
+      dok.classList.toggle('je-hero-skryty', skryt);
+      doc.documentElement.classList.toggle('ma-hero-dok-skryty', skryt);
+    };
     const jeMobil = () => window.matchMedia('(max-width: 759px)').matches;
     if (hero && 'IntersectionObserver' in window) {
       const heroPozor = new IntersectionObserver((zaznamy) => {
@@ -3075,6 +3078,19 @@
     const closeBtn = header.querySelector('[data-k-drawer-close]');
 
     if (drawer && scrim && openBtn) {
+      /* Na telefóne sme košík vyčistili z úzkej hlavičky, preto ostáva
+         dostupný v zásuvke. Pridáva sa skriptom, aby sa nemusel kopírovať
+         rovnaký odkaz do každej statickej podstránky. */
+      if (!drawer.querySelector('[data-k-drawer-cart]')) {
+        const cartLink = document.createElement('a');
+        cartLink.className = 'kv-drawer__odkaz';
+        cartLink.href = 'https://koverta.sk/cart';
+        cartLink.textContent = 'Košík';
+        cartLink.setAttribute('data-k-drawer-cart', '');
+        drawer.appendChild(cartLink);
+        drawer.dataset.kvDrawerCartAdded = 'true';
+      }
+
       /* Zásuvka je zavretá posunutím mimo obrazovku, nie skrytím. Odkazy v nej
          teda ostávali na tabulátore: po hlavičke skočil kurzor do zavretého
          menu a človek písal do niečoho, čo nevidel. `inert` ju vyradí celú —
