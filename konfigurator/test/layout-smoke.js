@@ -1,4 +1,6 @@
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
+const fs = require('fs');
+fs.mkdirSync('qa-artifacts', { recursive: true });
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -42,6 +44,8 @@ function assert(condition, message) {
       };
     });
 
+    console.log('HOME_METRICS ' + JSON.stringify(home));
+    await page.screenshot({ path: 'qa-artifacts/home-desktop.png', fullPage: true });
     assert(home.overflow <= 4, 'Desktop homepage has horizontal overflow: ' + home.overflow);
     assert(home.heroRating && home.heroRating.width > 150 && home.heroRating.height > 25, 'Hero Google rating is not visible');
     assert(home.barPhone && home.barPhone.display !== 'none' && home.barPhone.visibility !== 'hidden' && home.barPhone.opacity > .9, 'Desktop main-nav phone is not visible');
@@ -72,6 +76,8 @@ function assert(condition, message) {
         heroRating: css('.kh-hero__rating')
       };
     });
+    console.log('MOBILE_METRICS ' + JSON.stringify(mob));
+    await mp.screenshot({ path: 'qa-artifacts/home-mobile.png', fullPage: true });
     assert(mob.overflow <= 4, 'Mobile homepage has horizontal overflow: ' + mob.overflow);
     assert(mob.cards.length === 2 && mob.cards[1].y > mob.cards[0].bottom, 'Brand cards do not stack on mobile');
     assert(mob.phone && mob.phone.display === 'none', 'Main-nav phone should not consume mobile header space');
@@ -100,6 +106,8 @@ function assert(condition, message) {
         bodyText: document.body.innerText
       };
     });
+    console.log('CONFIG_METRICS ' + JSON.stringify(cfg));
+    await cp.screenshot({ path: 'qa-artifacts/config-koverta.png', fullPage: true });
     assert(cfg.overflow <= 4, 'Configurator has horizontal overflow: ' + cfg.overflow);
     assert(cfg.tabCurrent === 'page', 'Koverta product tab is not current');
     assert(cfg.stage && cfg.stage.width > 500 && cfg.stage.height > 300, '3D stage is missing/collapsed');
