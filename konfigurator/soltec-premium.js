@@ -958,17 +958,63 @@
           for (const b of g) if (w <= b.max) return b;
           return g[g.length - 1];
         };
-        const kvPoDlzke = () => {
-          const b = kvBand();
-          return (b && b.poDlzke && b.poDlzke[String(lengthMM())]) || null;
+        /* --- osnova prístreška ------------------------------------------
+           Celá konštrukcia stojí na jednej osnove a nie na tabuľke rozmerov.
+           Obvodový rám má dve pozdĺžne osi: zadnú 52 mm od zadnej hrany
+           strechy a odkvapovú 196 mm od odkvapovej — tam je 159 mm kapsa pre
+           žľab. Väznice delia rozpätie medzi tými dvoma osami na rovnaké
+           polia a stĺpy stoja pod osami tej istej osnovy: v štvorstĺpovej
+           zostave pod oboma osami rámu, v šesťstĺpovej ešte pod prostrednou
+           väznicou. Overené na kompletných scénach 14069 (7,0 × 6,0) a 14192
+           (7,0 × 5,2): tento vzorec dáva ich odmerané osi väzníc presne na
+           milimeter a osi stĺpov do 40 mm. */
+        const kvOsnova = () => {
+          const R = model().kvRef || {}, L = lengthMM(), b = kvBand();
+          const rw = Number(R.ramW) || 74;
+          const zad = (Number(R.ramZad) || 15) + rw / 2;
+          const odk = L - (Number(R.ramOdkvap) || 159) - rw / 2;
+          /* Počet väzníc nie je pevný: pole medzi nimi má strop a väzníc je
+             toľko, aby ho žiadne pole neprekročilo. Strop je odmeraný —
+             960 mm pri 7,0 m šírke, 1 440 mm pri užších. Katalógové hĺbky tak
+             dajú presne ten počet, ktorý je v exporte (2 na 3,0 m, 3 na
+             4,0 m, 5 na 5,2 aj 6,0 m pri siedmich metroch šírky). */
+          const strop = Number(b && b.vaznicPole) || 0;
+          const nv = strop > 0
+            ? Math.max(1, Math.ceil((odk - zad) / strop) - 1)
+            : Math.max(1, Number(b && b.vaznic) || 3);
+          const pole = (odk - zad) / (nv + 1);
+          const vaz = [];
+          for (let i = 1; i <= nv; i++) vaz.push(zad + pole * i);
+          return { zad: zad, odk: odk, vaz: vaz, pole: pole };
+        };
+        /* Osi stĺpov. Krajné sedia na osiach rámu, stredné na väzniciach —
+           stĺp nikdy nestojí medzi väznicami, vždy priamo pod jednou. */
+        const kvOsiStlpov = () => {
+          const o = kvOsnova(), n = Math.max(2, postLayout().n);
+          const out = [o.zad];
+          for (let i = 1; i < n - 1; i++)
+            out.push(o.vaz[Math.round(((o.vaz.length - 1) * i) / (n - 1))]);
+          out.push(o.odk);
+          return out;
+        };
+        /* Prierez stĺpa: v rohoch 150 × 150, stredný rad 110 × 190 (190 ide
+           pozdĺž hĺbky). Odmerané z 14069 aj 14192. */
+        const kvStlpRez = (i, n) => {
+          const R = model().kvRef || {};
+          const roh = i === 0 || i === n - 1;
+          return roh
+            ? { d: Number(R.postD) || 150, w: Number(R.postW) || 150, roh: true }
+            : { d: Number(R.stredD) || 190, w: Number(R.stredW) || 110, roh: false };
         };
         const postD = () => {
           const b = kvBand();
-          return Number(b && b.postD) || Number(model().postD) || postSize();   // pozdĺž hĺbky
+          if (b) return kvStlpRez(0, 2).d;
+          return Number(model().postD) || postSize();   // pozdĺž hĺbky
         };
         const postW = () => {
           const b = kvBand();
-          return Number(b && b.postW) || Number(model().postW) || postSize();   // cez šírku
+          if (b) return kvStlpRez(0, 2).w;
+          return Number(model().postW) || postSize();   // cez šírku
         };
         const postLayout = () => {
           const L = lengthMM();
@@ -1031,9 +1077,14 @@
              tam bola vymyslená. Šesťstĺpová varianta má napríklad všetky tri
              rady vtiahnuté dnu a strecha na oboch koncoch prečnieva, čo by z
              rovnomerného delenia nikdy nevyšlo. */
-          const pasmo = kvPoDlzke();
-          if (pasmo && Array.isArray(pasmo.rows) && pasmo.rows.length) {
-            return pasmo.rows.map((v) => Math.round(Math.min(Math.max(v, 0), span)));
+          if (kvBand()) {
+            /* Stĺp stojí v osi osnovy a je na ňu vycentrovaný; keď by takto
+               prečnieval cez hranu strechy, zarovná sa s ňou. */
+            const osi = kvOsiStlpov(), n = osi.length;
+            return osi.map((a, i) => {
+              const r = kvStlpRez(i, n);
+              return Math.round(Math.min(Math.max(a - r.d / 2, 0), L - r.d));
+            });
           }
           const rady = model().postRows && model().postRows[String(L)];
           const merane = rady && rady[String(lay.n)];
@@ -1683,6 +1734,14 @@
                  vypneme vyhladzovanie, takže kusy na seba sadnú presne. */
               seamless: o.seamless === true,
               depthAvg,
+              /* Podklad — dlažba, jej škáry a vrhnutý tieň — leží celý v
+                 rovine z = 0 pod konštrukciou a triedi sa zvlášť. V hustej
+                 scéne totiž BSP naráža na strop hĺbky a tam sa vracia k
+                 triedeniu podľa priemernej hĺbky; škára dlažby je pritom
+                 obrovská plocha vycentrovaná pod modelom, takže jej priemer
+                 vyjde bližšie než strecha a čiary dlažby sa prekreslili cez
+                 ňu. Podklad sa preto vykreslí prvý a s modelom sa netriedi. */
+              bg: layer < -ROOF_LAYER,
               order: faces.length
             });
           };
@@ -2149,13 +2208,16 @@
           const xs = postXs();
           const plc = placement();
           if (!plc.noPosts) {
-            const pd = postD(), pw = postW();
+            const pdRoh = postD(), pwRoh = postW();
             /* Koverta: stĺp aj obvodový rám sedia rovnako hlboko pod obrysom,
                teda tesne za zvislým ramenom lemovania. Bez toho by stĺp z
                lemovania vykúkal — alebo naopak rám spred neho. */
             const vsun = Number(model().postInset) || 0;
-            const ys = [vsun, W - pw - vsun];
-            xs.forEach((px, xi) => ys.forEach((py) => {
+            const rez = (xi) => (kvBand() ? kvStlpRez(xi, xs.length) : { d: pdRoh, w: pwRoh });
+            xs.forEach((px, xi) => {
+             const rz = rez(xi), pd = rz.d, pw = rz.w;
+             const ys = [vsun, W - pw - vsun];
+             ys.forEach((py) => {
               if (walls.indexOf('rear') > -1 && py === 0) return;
               if (walls.indexOf('front') > -1 && py === 1) return;
               if (walls.indexOf('left') > -1 && xi === 0) return;
@@ -2165,22 +2227,22 @@
               if (plc.freePosts && xi !== 0 && xi !== xs.length - 1) return;
               // the head of a post is always under the roof, never in view
               // where the post meets the ground, tight and dark
-              const g0 = Math.round(post * 0.16);
+              const g0 = Math.round(Math.max(pd, pw) * 0.16);
               const savedLayer = layer;
               layer = -2 * ROOF_LAYER + 2;
               for (let s = 7; s >= 1; s--) {
                 const grow = g0 * s;
                 // same falloff as the cast shadow: dense at the foot, thin at the edge
                 const t = 1 - (s - 1) / 6;
-                quad([[px - grow, py - grow, 0], [px + post + grow, py - grow, 0],
-                      [px + post + grow, py + post + grow, 0], [px - grow, py + post + grow, 0]],
+                quad([[px - grow, py - grow, 0], [px + pd + grow, py - grow, 0],
+                      [px + pd + grow, py + pw + grow, 0], [px - grow, py + pw + grow, 0]],
                      'rgba(18,20,22,' + (0.018 + 0.052 * t * t).toFixed(4) + ')',
                      { raw: true, edge: false, fit: false, normal: [0,0,1] });
               }
               layer = savedLayer;
               /* The water exits are at one end, so the posts there stand
                  lower - "resulting in poles of different heights". */
-              const lift = fallShown && panelRoof ? Math.round(fall * (1 - (px + post / 2) / L)) : 0;
+              const lift = fallShown && panelRoof ? Math.round(fall * (1 - (px + pd / 2) / L)) : 0;
               /* Oceľové stĺpy Koverta stoja na kotevnej pätke — na každej
                  fotke realizácie je pod stĺpom svetlá doska väčšia než profil.
                  Soltec ju v cenníku nemá a bez tohto prepínača ju nedostane. */
@@ -2282,7 +2344,8 @@
                   plat(px + pd, cy - sir / 2, hp, sir);
                 }
               }
-            }));
+             });
+            });
           }
 
           /* Odkvap. Voda z pultovej strechy Koverta steká po spáde k nižšej
@@ -2908,9 +2971,10 @@
             const REF = model().kvRef || {};
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
-            /* Horné rameno lemovania je plech, ktorý leží na trapéze. Kým malo
-               rovnakú hrúbku ako zvislé rameno, trapéz doň zapadal a presvital
-               cezeň; tenšie rameno ho pustí takmer na odmeranú výšku. */
+            /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
+               trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
+               medzi nimi ostane škára a pri plochom pohľade cez ňu presvitá
+               podhľad — presne ten svetlý pruh pozdĺž hrany. */
             const LEM_ARM = 4;
             const RAM_W = REF.ramW || 74, RAM_H = REF.ramH || 220;
             const RAM_BOK = REF.ramBok || 18;        // odsadenie rámu od boku
@@ -2922,11 +2986,14 @@
             const zinok = model().rimSoffitHex || '#c2c7cb';
             const zBot = H, zTop = zBot + LEM_H;
             const ramBot = zBot, ramTop = ramBot + RAM_H;
-            /* Trapéz musí sadnúť pod horné rameno lemovania, nie doň — inak
-               sa jeho plech s lemovaním prekrýva a presvitá cezeň. */
-            /* Plech leží pod horným ramenom lemovania — s medzerou, inak sa
-               ich líca prekrývajú a plech cezeň presvitá. */
-            const trapTop = zTop - LEM_ARM - 9, trapBot = trapTop - TRAP_H;
+            /* Plech leží NA hornej pásnici rámu a väzníc, nie v nich. Kým
+               bol jeho podhľad o 9 mm nižšie než horná pásnica, prerážali
+               väznice a rám cez strechu — zhora z toho boli tie svetlé čiary
+               krížom cez vlnu. Odmerané v kompletnej scéne 14069: rám a
+               väznice končia 220 mm nad spodkom rámu, plech začína 223 a
+               končí 259, lemovanie 260. Plech je teda vždy pod ramenom
+               lemovania a nemá kadiaľ presvitať. */
+            const trapBot = ramTop + 3, trapTop = trapBot + TRAP_H;
 
             /* --- lemovanie. Štyri kusy: dva bočné cez celú hĺbku a čelné cez
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
@@ -2952,14 +3019,18 @@
             lemL('x', 0, 1, 0, W, LEM_CELO);                 // čelné, cez celú šírku
             lemL('x', L, -1, 0, W, LEM_CELO);
 
-            /* --- obvodový rám. Nie je to jeden C profil, ale dvojica
-               zoskrutkovaná chrbtami k sebe, presne ako priečne väznice —
-               preto je rám rovnako hrubý ako stĺp (2 × 74 = 148 ≈ 150) a stĺp
-               spod neho nevyčnieva. Vonkajšie líce bočného rámu sedí s lícom
-               stĺpa; čelá sú zatiahnuté 15 mm od zadku a 159 od odkvapu, aby
-               na odkvapovej strane ostala kapsa na žľab. */
-            const RAM_PAR = REF.ramPar || 150;              // šírka dvojice
-            const RAM_VSUN = LEM_T;                        // za zvislým ramenom lemovania
+            /* --- obvodový rám. Jeden C profil 74 × 220, nie dvojica —
+               v kompletnej scéne 14069 sú na každej strane presne dva kusy
+               (74 × 5 820 po bokoch a 6 964 × 74 na čelách) a stĺp 150 × 150
+               je od nich hrubší, takže spod rámu dovnútra vyčnieva. Vonkajšie
+               líce rámu je 18 mm za lícom lemovania. Čelá sú zatiahnuté 15 mm
+               od zadku a 159 od odkvapu — v tej kapse visí žľab. */
+            const RAM_PAR = RAM_W;                         // hrúbka profilu rámu
+            /* Vonkajšie líce rámu je odmeraných 18 mm za lícom lemovania,
+               teda o 3 mm za jeho zvislým ramenom. Kým rám dosadal presne na
+               rameno, mali obe roviny tú istú polohu, BSP ich rozdelil na
+               spoločnej rovine a rám cez lemovanie presvital ako vlások. */
+            const RAM_VSUN = Number(REF.ramBok) || 18;     // za zvislým ramenom lemovania
             const rx1 = L - RAM_ODK, rx0 = RAM_ZAD + RAM_PAR;
             const ry0 = RAM_VSUN + RAM_PAR, ry1 = W - RAM_VSUN - RAM_PAR;
             const fl = 10, web = 5;
@@ -3031,8 +3102,12 @@
                 quad(q, 'rgba(10,12,14,.45)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
               }
             };
-            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD, rx1, C_WEB);
-            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD, rx1, C_WEB);
+            /* Bočný rám končí 2 mm pred lícom čelného — kým jeho čelo dosadalo
+               presne na vnútorné líce zvislého ramena lemovania, ležali obe
+               roviny na sebe a čelo profilu cez lemovanie presvitalo ako
+               svetlá zvislá čiara v rohu. */
+            cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB);
+            cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB);
             cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
             cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB);
 
@@ -3059,9 +3134,13 @@
                väznice, druhé na stojinu obvodového rámu, a v každom sú dve
                skrutky — štyri na uholník. Na každom konci väznice sú dva, po
                jednom na každej strane dvojice C profilov. */
+            /* Odmerané v kompletnej scéne 14069: spojka má obrys 120 × 85 ×
+               140 mm — rameno cez šírku je dlhšie než to pozdĺž hĺbky. */
             const UHOL_T = REF.uholT || 8;       // hrúbka plechu
-            const UHOL_L = REF.uholL || 95;      // dĺžka ramena
-            const UHOL_H = REF.uholH || 150;     // výška uholníka
+            const UHOL_LY = REF.spojW || 120;    // rameno cez šírku
+            const UHOL_LX = REF.spojD || 85;     // rameno pozdĺž hĺbky
+            const UHOL_L = UHOL_LX;              // pre odsadenie rohových spojok
+            const UHOL_H = REF.spojH || 140;     // výška uholníka
             /* Uholník sedí presne v strede výšky profilu, na ktorý je
                priskrutkovaný — väznica má svoj stred inde než obvodový rám. */
             const zVaz = ramTop - VAZ_H / 2;     // stred priečnej väznice
@@ -3072,17 +3151,17 @@
                  od neho odlíši len priznaná hrana — kreslí sa preto s obťahom,
                  nie ako splynutý kus. */
               const ax0 = Math.min(px, px + sx * UHOL_T);
-              const ay0 = Math.min(py, py + sy * UHOL_L);
-              boxFaces(ax0, ay0, z0, UHOL_T, UHOL_L, UHOL_H, spojHex);
-              const bx0 = Math.min(px, px + sx * UHOL_L);
+              const ay0 = Math.min(py, py + sy * UHOL_LY);
+              boxFaces(ax0, ay0, z0, UHOL_T, UHOL_LY, UHOL_H, spojHex);
+              const bx0 = Math.min(px, px + sx * UHOL_LX);
               const by0 = Math.min(py, py + sy * UHOL_T);
-              boxFaces(bx0, by0, z0, UHOL_L, UHOL_T, UHOL_H, spojHex);
+              boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
               /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
               const roz = UHOL_H * 0.26;
-              const stredR = py + sy * UHOL_L * 0.55;
+              const stredR = py + sy * UHOL_LY * 0.55;
               const xLic = px + sx * UHOL_T;
               [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 8, sx));
-              const stredO = px + sx * UHOL_L * 0.55;
+              const stredO = px + sx * UHOL_LX * 0.55;
               const yLic = py + sy * UHOL_T;
               [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 8, sy));
             };
@@ -3090,19 +3169,13 @@
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
                v strede dvojice a pásnice idú od nich von. Osi sú odmerané, nie
                dopočítané — v modeli nie sú rozdelené rovnomerne. */
-            /* Osi väzníc sú odmerané pre každú katalógovú dĺžku — v modeloch
-               delia rozpätie medzi osami stĺpov na štyri rovnaké diely. Keď
-               dĺžka v tabuľke nie je (rozmer na mieru), dopočítajú sa presne
-               tým istým pravidlom. */
-            const podl = kvPoDlzke();
-            const osi = podl && Array.isArray(podl.vaznice) && podl.vaznice.length
-              ? podl.vaznice
-              : (() => {
-                  const rada = postXs();
-                  const c0 = (rada.length ? rada[0] : 0) + postD() / 2;
-                  const c1 = (rada.length ? rada[rada.length - 1] : L - postD()) + postD() / 2;
-                  return [1, 2, 3].map((i) => Math.round(c0 + ((c1 - c0) * i) / 4));
-                })();
+            /* Osi väzníc dáva osnova: delia rozpätie medzi osami čelných
+               rámov na rovnaké polia. Na kompletnej scéne 14192 to sedí na
+               milimeter (1 021 / 1 846 / 2 672 / 3 497 / 4 323 od odkvapu) a
+               pri troch väzniciach dá to isté pravidlo odmerané 1 490 / 2 928
+               / 4 366. Žiadna tabuľka rozmerov teda netreba a rozmer na mieru
+               vyjde tým istým vzorcom. */
+            const osi = kvOsnova().vaz.map((v) => Math.round(v));
             const vaznePary = [];
             osi.forEach((os) => {
               vaznePary.push(os);
@@ -3130,13 +3203,14 @@
               });
             });
 
-            /* Rohy: uholník spája stojinu čelného a bočného rámu. Dva na roh,
-               vedľa seba po dĺžke, v strede výšky rámu — rovnako ako na
-               väzniciach, nie nad sebou. */
+            /* Rohy: uholník spája stojinu čelného a bočného rámu. Jeden na
+               roh, teda štyri na prístrešok — v kompletnej scéne 14069 je
+               spojok presne 24: dvadsať na koncoch piatich väzníc a štyri v
+               rohoch. Dvojica na roh tam robila rad spojok pozdĺž bočného
+               rámu, ktorý na modeli nie je. */
             [[RAM_ZAD + RAM_PAR, 1], [rx1 - RAM_PAR, -1]].forEach((ce) => {
               [[ry0, 1], [ry1, -1]].forEach((bo) => {
                 uholnik(ce[0], ce[1], bo[0], bo[1], zRam);
-                uholnik(ce[0] + ce[1] * (UHOL_L + 40), ce[1], bo[0], bo[1], zRam);
               });
             });
             /* Pod rohom je ešte jedna skrutka zospodu, presne v strede rohu. */
@@ -3159,22 +3233,23 @@
                úzkych prístreškoch tabule široké aj meter a štvrť — plech,
                ktorý sa nevyrába. Kladie sa ich toľko, koľko treba, a
                posledná sa oreže, presne ako na streche. */
+            /* Krycia šírka je 1 023 mm (tabuľa 1 057 s presahom 34) a tabule
+               sa kladú od druhého boku — posledná, tá pri nulovom boku, sa
+               oreže. Tak to je v scéne 14069: sedem tabúľ, šesť rozostupov po
+               1 023 mm a prvá zľava užšia. */
             const tabule = Math.max(1, Math.ceil((ty1 - ty0) / TRAP_KRYT));
-            const tabulaY = (i) => [ty0 + TRAP_KRYT * i, Math.min(ty1, ty0 + TRAP_KRYT * (i + 1))];
-            /* Lícna plocha plechu sa kreslí len tam, kde je naozaj odkrytá.
-               Kým sa kreslila cez celú tabuľu, siahala pod ramená lemovania a
-               v rohu spod nich vyliezala — plech cez lemovanie pretŕčal. Pod
-               lemovaním nie je čo vidieť, takže tam vrchná plocha nie je a
-               niet čomu prerážať. Podhľad ide cez celú tabuľu, tam lemovanie
-               nie je. */
-            const vx0 = Math.max(tx0, LEM_CELO), vx1 = Math.min(tx1, L - LEM_CELO);
-            const vy0 = Math.max(ty0, LEM_BOK), vy1 = Math.min(ty1, W - LEM_BOK);
-            /* Telo plechu po tabuliach — bez lícnej a bez spodnej plochy, tie
-               idú vcelku nižšie. */
-            for (let i = 0; i < tabule; i++) {
-              const tp = tabulaY(i);
-              boxFaces(tx0, tp[0], trapBot, tx1 - tx0, tp[1] - tp[0], TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
-            }
+            const tabulaY = (i) => [Math.max(ty0, ty1 - TRAP_KRYT * (i + 1)), ty1 - TRAP_KRYT * i];
+            /* Vrch plechu ide cez celú plochu, aj pod ramená lemovania. Kým
+               sa kreslil len po odkryté pole, ostala pod ramenom diera do
+               tela plechu a pri plochom pohľade bolo cez ňu vidieť pod
+               strechu — to bol ten svetlý pruh pozdĺž hrany. Prerážať teraz
+               nemôže: rameno lemovania siaha od 256 do 260 mm nad spodkom
+               rámu a vrch plechu je na 259, takže rameno je vždy nad ním.
+               Telo plechu je jeden kváder cez celú strechu — kým bolo po
+               tabuliach, mali susedné tabule spoločné bočné líce a na streche
+               z toho boli biele čiarky. */
+            const vx0 = tx0, vx1 = tx1, vy0 = ty0, vy1 = ty1;
+            boxFaces(tx0, ty0, trapBot, tx1 - tx0, ty1 - ty0, TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
             /* Veľké plochy plechu sa nesmú obťahovať. Obťah ide 0,35 px za
                obrys plochy a pri plochom pohľade, keď je rameno lemovania
                zúžené na pár pixelov, ho ten pretiahnutý okraj prekryje — presne
@@ -3183,32 +3258,49 @@
                plocha je jedna, takže vnútri ani žiadna škára nevznikne.
                Lícna plocha ide len po odkryté pole — pod ramenami lemovania
                nie je čo vidieť. */
+            /* Veľkú plochu plechu rozdelí BSP na kusy podľa rovín rámu a
+               väzníc. Kým sa kreslila s vyhladzovaním, na každom takom spoji
+               presvital podklad ako svetlý vlások — na streche z toho boli
+               tenké čiary krížom cez vlnu. crispEdges ich posadí presne na
+               seba. */
             quad([[tx0, ty0, trapBot], [tx1, ty0, trapBot], [tx1, ty1, trapBot], [tx0, ty1, trapBot]],
-                 spodHex, { normal: [0, 0, -1], cull: true, edge: false });
+                 spodHex, { normal: [0, 0, -1], cull: true, edge: false, seamless: true });
             if (vx1 > vx0 && vy1 > vy0) {
               quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
-                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false });
+                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
             }
             /* Ryhy vlny. Rozteč je daná tabuľou, nie šírkou prístrešku, takže
                vlna beží cez celú strechu rovnako a na spoji tabúľ nepreskočí.
                Zhora idú len po odkryté pole, zdola po celej ploche. */
-            const vlnNaTabulu = Math.max(3, Math.round(TRAP_KRYT / 205));
-            const vlnRoztec = TRAP_KRYT / vlnNaTabulu;
-            const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec);
-            {
-              for (let k = 0; k < vlnPocet; k++) {
-                const va = ty0 + vlnRoztec * k, vb = Math.min(ty1, va + vlnRoztec * 0.46);
-                /* Podhľad je zvnútra jemný — na realizáciách je vlna trapézu
-                   zdola sotva znateľná, nie pruhovaná. Silné pruhy z neho
-                   robili žalúziu. */
-                quad([[tx0, va, trapBot], [tx1, va, trapBot], [tx1, vb, trapBot], [tx0, vb, trapBot]],
-                     'rgba(24,28,32,.13)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
-                const ha = Math.max(va, vy0), hb = Math.min(vb, vy1);
-                if (hb > ha && vx1 > vx0) {
-                  quad([[vx0, ha, trapTop], [vx1, ha, trapTop], [vx1, hb, trapTop], [vx0, hb, trapTop]],
-                       'rgba(255,255,255,.14)', { normal: [0, 0, 1], raw: true, edge: false, fit: false });
-                }
-              }
+            /* Vlna trapézu T35: rozteč 1 023 / 5 = 204,6 mm, hrebeň hore úzky.
+               Kým sa kreslil svetlý pruh široký polovicu rozteče, strecha
+               vyzerala ako žalúzia s lamelami — na antracitovom plechu je
+               pritom vidieť len tenký lesk na hrebeni a mäkký tieň v drážke.
+               Preto sú pruhy úzke a takmer priehľadné. */
+            const vlnRoztec = TRAP_KRYT / 5;
+            const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
+            const pruh = (y0, y1, z, nz, hex) => {
+              const a = Math.max(y0, nz > 0 ? vy0 : ty0), b = Math.min(y1, nz > 0 ? vy1 : ty1);
+              if (b <= a) return;
+              const x0 = nz > 0 ? vx0 : tx0, x1 = nz > 0 ? vx1 : tx1;
+              if (x1 <= x0) return;
+              /* Ryhy vlny sa nesmú kresliť s crispEdges: pri plochom pohľade
+                 sa pruh zúži pod pixel a bez vyhladzovania z neho ostanú
+                 zubaté kocky — na streche z toho boli tmavé fľaky. Vlások na
+                 ich spoji nevznikne, lebo pod nimi je jedna veľká plocha,
+                 nie ďalší priesvitný pruh. */
+              quad([[x0, a, z], [x1, a, z], [x1, b, z], [x0, b, z]],
+                   hex, { normal: [0, 0, nz], raw: true, edge: false, fit: false });
+            };
+            for (let k = 0; k < vlnPocet; k++) {
+              const va = ty1 - vlnRoztec * k;               // os hrebeňa
+              /* Hore: úzky lesk na hrebeni a tesne pri ňom tmavší nábeh. */
+              pruh(va - 17, va + 17, trapTop, 1, 'rgba(255,255,255,.075)');
+              pruh(va + 17, va + 44, trapTop, 1, 'rgba(10,12,14,.085)');
+              /* Zdola je vlna obrátená — hrebeň je dutina, takže tam je tieň
+                 a v drážke naopak svetlo. Na realizáciách je zdola sotva
+                 znateľná, preto je tento kontrast ešte menší. */
+              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.075)');
             }
             /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
                k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
@@ -3217,12 +3309,12 @@
             const tien = (y0, y1) => {
               if (y1 <= y0) return;
               quad([[tx0, y0, trapBot], [tx1, y0, trapBot], [tx1, y1, trapBot], [tx0, y1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
             };
             const tienX = (x0, x1) => {
               if (x1 <= x0) return;
               quad([[x0, ty0, trapBot], [x1, ty0, trapBot], [x1, ty1, trapBot], [x0, ty1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false });
+                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
             };
             const TIEN = 55;
             osi.forEach((os) => {
@@ -3234,14 +3326,15 @@
             tienX(rx0, Math.min(tx1, rx0 + TIEN));
             tienX(Math.max(tx0, rx1 - RAM_PAR - TIEN), rx1 - RAM_PAR);
 
-            /* Presah tabúľ: na streche ho vidieť ako tenkú čiaru, nie ako
-               škáru. Kreslí sa až po odkrytom poli, takže na lemovanie
-               nedosiahne. */
+            /* Presah tabúľ leží v drážke vlny a zhora ho vidieť nie je —
+               tabuľa sa prekrýva celým jedným hrebeňom. Kým sa kreslil ako
+               tmavý pruh cez celú strechu, boli z neho tie čiary krížom cez
+               plech. Zdola ho prezradí len vlások na spoji. */
             for (let i = 1; i < tabule; i++) {
-              const ys = ty0 + TRAP_KRYT * i;
-              if (ys <= vy0 || ys >= vy1 || vx1 <= vx0) continue;
-              quad([[vx0, ys - 3, trapTop], [vx1, ys - 3, trapTop], [vx1, ys + 3, trapTop], [vx0, ys + 3, trapTop]],
-                   'rgba(10,12,14,.28)', { normal: [0, 0, 1], raw: true, edge: false, fit: false });
+              const ys = ty1 - TRAP_KRYT * i;
+              if (ys <= ty0 || ys >= ty1) continue;
+              quad([[tx0, ys - 1, trapBot], [tx1, ys - 1, trapBot], [tx1, ys + 1, trapBot], [tx0, ys + 1, trapBot]],
+                   'rgba(18,22,26,.16)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
             }
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
@@ -3278,7 +3371,7 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              const rz = 46;                          // rúra Ø 92
+              const rz = 40;                          // rúra Ø 80
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
@@ -3362,30 +3455,37 @@
                 }
               };
               const zvodHex = frame;
-              /* Výtok je pri odkvapovej hrane, stĺp je o kus dnu — rúra sa k
-                 nemu vráti jedným kolenom, nie oblúkom cez pol prístrešku. */
-              const xVytok = Math.max(xLicStlp + rz, L - LEM_T - rz - 20);
-              const xRura = xLicStlp + rz * 0.55;
-              const zKoleno = zBot - Math.max(70, (xVytok - xRura) + 40);
-              const zPata = 150;                      // spodok zvislej časti
-              const RP = 130;                         // polomer vyhnutej pätky
+              /* Rúra sa dotýka odkvapového líca stĺpa, teda jej os je od toho
+                 líca vzdialená presne o polomer. Kým bola bližšie, prechádzala
+                 stĺpom; kým bola ďalej, visela vedľa neho ako samostatná tyč.
+                 Zmestiť sa musí aj za zvislé rameno lemovania. */
+              const xRura = Math.min(xLicStlp + rz, L - LEM_T - rz - 4);
+              /* Výtok zo žľabu je nad rúrou. Keď os rúry padne do kapsy žľabu
+                 — a pri rohovom stĺpe padne — je zvod celý zvislý a žiadne
+                 koleno nemá; na fotke p6 je to práve tak. Ďalej od odkvapu sa
+                 rúra ku stĺpu vráti jedným kolenom. */
+              const xVytok = Math.min(Math.max(xRura, Math.min(zlX0 + 24, zlX1 - 24)),
+                                      Math.max(zlX1 - 24, zlX0 + 24));
+              const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) + 40);
+              const zPata = 265;                      // spodok zvislej časti
+              const RP = 90;                          // polomer vyhnutej pätky
 
               /* Celý zvod je jedna dráha — od výtoku pod lemovaním, kolenom
                  k licu stĺpa, po ňom dole a vyhnutou pätkou von. Kým to boli
                  štyri samostatné valce, na každom ohybe ostávala medzi nimi
                  diera. */
-              const draha = [
-                [xVytok, yZvod, zBot + 60],
-                [xVytok, yZvod, zBot - 16],
-                [xRura, yZvod, zKoleno]
-              ];
+              const draha = [[xVytok, yZvod, zBot + 40]];
+              if (Math.abs(xVytok - xRura) > 2) {
+                draha.push([xVytok, yZvod, zBot - 16]);
+                draha.push([xRura, yZvod, zKoleno]);
+              }
               for (let i = 0; i <= 8; i++) {
-                const t = (Math.PI / 2) * 0.82 * (i / 8);
+                const t = (Math.PI / 2) * 0.80 * (i / 8);
                 draha.push([xRura + RP * (1 - Math.cos(t)), yZvod, zPata - RP * Math.sin(t)]);
               }
               tuba(draha, rz, zvodHex);
               // hrdlo: kúsok širšej rúry tam, kde zvod vychádza spod lemovania
-              tuba([[xVytok, yZvod, zBot + 30], [xVytok, yZvod, zBot - 26]], rz * 1.14,
+              tuba([[xVytok, yZvod, zBot + 24], [xVytok, yZvod, zBot - 30]], rz * 1.14,
                    shade(zvodHex, -0.07), false);
 
               /* Príchytky. Na stavbe je to úzka objímka okolo rúry a pod ňou
@@ -3393,7 +3493,7 @@
                  rúra a stĺp prekrývajú — inak by nedosadol ani na jeden. */
               const medzera = xRura - rz - xLicStlp;
               [0.24, 0.72].forEach((t) => {
-                const z = zPata + (zKoleno - 120 - zPata) * t;
+                const z = zPata + 60 + (zBot - 300 - zPata) * t;
                 tuba([[xRura, yZvod - 13, z], [xRura, yZvod + 13, z]], rz * 1.09, shade(frame, -0.42));
                 if (medzera > -rz && medzera < 80) {
                   boxFaces(xLicStlp - 8, yZvod - 11, z - 5, Math.max(6, medzera) + 16, 22, 10,
@@ -3838,7 +3938,9 @@
 
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
-          bspPaintOrder(faces).forEach((f) => {
+          const podklad = faces.filter((f) => f.bg);
+          const stavba = faces.filter((f) => !f.bg);
+          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of

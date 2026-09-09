@@ -27,6 +27,25 @@ vytiahnuť znova.
 | `zoznam-katalogov.json` | Index všetkých 72 katalógov na účte, aj neaktívnych. |
 | `eshop-produkty.json` | `products.json` z koverta.sk — mapovanie na produkty a ceny v e-shope. |
 | `cennik-destilovany.json` | To podstatné vytiahnuté do jednej tabuľky: rozmer → základ, steny, strecha. Z tohto číta konfigurátor. |
+| `diely-zo-sceny.json` | Odmerané diely modelov: obrys a poloha každého dielu, ktorý scéna naozaj kreslí. Z tohto sa overuje geometria. |
+| `diely-zo-sceny.py` | Skript, ktorý ten súbor vyrobí zo stiahnutých `.zip` exportov. |
+| `ebm.py` | Parser binárneho formátu `.ebm`, v ktorom sú siete modelov. |
+
+### Ako sa meria geometria
+
+Zip exportu nesie **aj siete variánt, ktoré scéna nekreslí** — katalóg má
+materiálové skupiny `4NOHY` aj `6NOH`, takže v zipe je štvor- aj šesťnohá
+varianta naraz (v 14069 je 427 sietí, scéna kreslí 62). Kým sa meral celý
+zip, vyšla ich zjednotená množina a z nej nesprávne polohy stĺpov.
+
+`diely-zo-sceny.py` preto berie len siete uvedené v `batches` v
+`scena/<id>.json` a každú rozdelí na súvislé komponenty podľa spoločných
+vrcholov — jedna sieť môže nesť viac dielov spojených len materiálom.
+
+Scéna sa z API ťahá s prázdnym výberom atribútov, takže pri väčšine
+katalógov vráti len časť dielov (často len strechu). Kompletnú scénu majú
+14069 (7,0 × 6,0) a 14192 (7,0 × 5,2); ostatné vedia potvrdiť aspoň os
+obvodového rámu, a tú potvrdzujú všetky.
 
 ## Čo z toho vyplýva o produkte
 

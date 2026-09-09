@@ -37,27 +37,50 @@ Parser je `../archiv-expivi/ebm.py`, meranie stĺpov
 `stlpy-odmerane.json` (surové, po katalógoch) a `stlpy-tabulka.json`
 (po veľkostiach).
 
-## Odmerané diely (katalóg 13412, prístrešok 6 × 6 m)
+## Odmerané diely (katalóg 14069, prístrešok 7 × 6 m)
 
-Model je v centimetroch, tu prepočítané na milimetre.
+Toto je **kompletný zoznam dielov** jednej scény, nie výber. Vyrobí ho
+`../archiv-expivi/diely-zo-sceny.py`.
 
-| diel | rozmer |
-| --- | --- |
-| stĺp 4-stĺpovej varianty | 150 × 150 |
-| stĺp 6-stĺpovej varianty | 110 × 190 (190 pozdĺž hĺbky) |
-| kotevná pätka | 250 × 250 |
-| lemovanie na čelách | 190 dovnútra × 257 nadol |
-| lemovanie na bokoch | 240 dovnútra × 254 nadol — **kreslí sa 190**, viď nižšie |
-| obvodový C rám | 74 × 220, líce 18 pod lemovaním |
-| väznica | C 58 × 180, vždy dve chrbtami k sebe |
-| trapéz | vlna 36, krycia šírka 1 072 |
-| lamela steny | 20 × 100 |
-| panel steny | 30 hrubý, 1 980 vysoký, od 268 nad zemou |
+| diel | rozmer | počet |
+| --- | --- | --- |
+| rohový stĺp | 150 × 150 × 2 398 | 4 |
+| stĺp stredného radu | 110 × 190 × 2 398 (190 pozdĺž hĺbky) | 2 |
+| kotevná pätka | 250 × 250 × 615 | 6 |
+| obvodový rám po bokoch | C 74 × 220, dlhý 5 820 | 2 |
+| obvodový rám na čelách | C 74 × 220, dlhý 6 964 | 2 |
+| väznica | C 58 × 180, dlhá 6 940 | 10 = 5 dvojíc |
+| tabuľa trapézu | 1 057 × 5 900 × 36, krycia šírka 1 023 | 7 |
+| lemovanie na čelách | 190 dovnútra × 260 nadol | 2 |
+| lemovanie na bokoch | 240 dovnútra × 257 nadol — **kreslí sa 190**, viď nižšie | 2 |
+| spojka (uholník) | 120 × 85 × 140 | 24 = 20 na väzniciach + 4 v rohoch |
+| zadná stena (voľba) | 6 981 × 166 × 2 576 | 1 |
 
-Stĺp, lemovanie aj pôdorysný rozmer majú **spoločné vonkajšie líce** — stĺp
-nikdy netrčí z fasády. Výnimka je odkvapová strana, kde lemovanie stojí
-142 mm ďalej von, aby sa zaň zmestil žľab; presne o toľko je v modeli
-štvorstĺpová varianta na tom konci zatiahnutá dnu.
+Výšky nad spodkom rámu (a to je zároveň svetlá výška 2 398 mm):
+
+| od | do | čo |
+| --- | --- | --- |
+| 0 | 220 | obvodový rám |
+| 40 | 220 | väznice |
+| 223 | 259 | trapéz |
+| 0 | 260 | lemovanie |
+
+Z toho vyplýva, že **trapéz leží na hornej pásnici rámu a väzníc, nie v
+nich**, a že horné rameno lemovania je nad ním. Kým bol podhľad plechu o
+9 mm nižšie než pásnica, prerážali väznice a rám cez strechu a zhora z toho
+boli svetlé čiary krížom cez vlnu.
+
+### Prečo je dôležité merať len to, čo je v scéne
+
+Zip exportu obsahuje aj siete variánt, ktoré scéna nekreslí. Katalóg 14069
+má materiálové skupiny `4NOHY`, `6NOH`, `NOHY4`, `NOHY6`, `POZINK4`,
+`POZINK6` — teda štvor- aj šesťnohú variantu naraz — a v zipe je 427 sietí,
+z ktorých scéna kreslí 62. Kým sa meral celý zip, vyšla ich **zjednotená
+množina**: šesťstĺpová varianta z nej mala všetky tri rady vtiahnuté dnu a
+strecha na oboch koncoch prečnievala skoro meter. To v modeli nie je. Skript
+preto berie len siete uvedené v `batches` v `../archiv-expivi/scena/<id>.json`
+a každú rozdelí na súvislé komponenty podľa spoločných vrcholov — jedna sieť
+totiž môže nesť viac dielov spojených len materiálom.
 
 ## Čo v Expivi modeli nie je
 
@@ -81,72 +104,65 @@ istý čas, na žiadnej fotke Koverty nie je — bola to chyba a je preč.
 `wallBack`, `minHeight`. Na úrovni stránky `gutter`, `bolts`, `roundPosts`,
 `basePlates`, `sideOpts`, `sideMat`, `sideLabel`, `sideLocative`.
 
-## Počet a rozmiestnenie stĺpov a väzníc
+## Osnova: z čoho sa počíta celá konštrukcia
 
-**Nie je to voľba zákazníka.** Vyplýva to zo šírky prístreška a konfigurátor
-si to určí sám. Cenník to hovorí sám za seba: štvorstĺpová matica v Expivi
-končí na 6,2 m a od 6,6 m je publikovaná už len šesťstĺpová.
+Nič sa nekreslí podľa tabuľky rozmerov. Celý prístrešok stojí na jednej
+osnove a tá má tri pravidlá:
 
-| šírka | stĺpy | väznice | prierez stĺpa |
+1. **Osi čelných rámov.** Jedna je 52 mm od zadnej hrany strechy, druhá
+   196 mm od odkvapovej — tam je 159 mm kapsa, v ktorej visí žľab. (Profil
+   je 74 hrubý, takže líce je 15, resp. 159 mm dnu.)
+2. **Osi väzníc.** Delia rozpätie medzi tými dvoma osami na rovnaké polia a
+   pole má strop: 960 mm pri 7,0 m šírke, 1 440 mm pri užších. Väzníc je
+   toľko, aby ho žiadne pole neprekročilo.
+3. **Osi stĺpov.** Krajné stoja na osiach rámu, stredné priamo pod
+   väznicami — stĺp nikdy nestojí medzi väznicami. Prierez je vycentrovaný
+   na os a keď by takto prečnieval cez hranu strechy, zarovná sa s ňou.
+
+**Počet stĺpov nie je voľba zákazníka.** Vyplýva zo šírky a cenník to hovorí
+sám: štvorstĺpová matica v Expivi končí na 6,2 m a od 6,6 m je publikovaná už
+len šesťstĺpová.
+
+| šírka | stĺpy | strop poľa väzníc | väznice pri 5,2 – 6,0 m |
 | --- | --- | --- | --- |
-| 2 500 – 6 200 | 4 v rohoch | 3 | 150 × 150 |
-| 6 600 | 6: rohy + stredný rad | 5 | 110 × 190 |
-| 7 000 | 6 zatiahnutých dnu, strecha na oboch koncoch prečnieva | 5 | 110 × 190 |
+| 2 500 – 6 200 | 4 v rohoch | 1 440 mm | 3 |
+| 6 600 – 7 000 | 6: rohy + stredný rad | 960 mm | 5 |
 
-Prečo má 7,0 m stĺpy inde než 6,6 m: sú to dva rôzne výrobky z dvoch
-generácií. Katalógy 6,6 m (21730 / 21731 / 21732) sú z rokov 2024 – 25 a
-majú stĺp 100 × 100 v rohoch a v strede. Katalógy 7,0 m (14192 / 14198 /
-14069) sú z roku 2022 a majú šesť stĺpov zatiahnutých dnu — pri hĺbke 6 m
-sú rady v osiach 1 152 / 3 092 / 5 032 od vonkajšej hrany strechy, takže
-strecha na oboch koncoch prečnieva skoro meter. Konfigurátor kreslí každú
-šírku podľa jej vlastného exportu, nie podľa jedného pravidla.
+Prierez stĺpa je odmeraný a je iný v rohu než v poli: **rohový 150 × 150,
+stredný 110 × 190**, kde 190 ide pozdĺž hĺbky.
 
-V dátach stránky je to pole `kvGeom` — zoznam pásiem `{max, postsPerSide,
-postD, postW, poDlzke}`. V engine ho číta `kvBand()` a z neho berú polohy
-`postD()`, `postW()`, `postLayout()`, `postXs()` aj osi väzníc. Soltec pole
-`kvGeom` nemá, takže ide ďalej po svojom.
+V dátach stránky je pásmo v poli `kvGeom` — `{max, postsPerSide, vaznic,
+vaznicPole}` — a rozmery dielov v `kvRef`. V engine to číta `kvOsnova()`,
+`kvOsiStlpov()` a `kvStlpRez()`; z nich berú `postXs()`, prierezy stĺpov aj
+osi väzníc. Soltec pole `kvGeom` nemá, takže ide ďalej po svojom.
 
-Osi sú vztiahnuté k obvodovému rámu, teda 158 mm dnu od vonkajšej hrany
-strechy; `rows` je predné líce stĺpa, `vaznice` sú osi dvojíc C.
+### Čo z toho vyjde a čo je v exporte
 
-| hĺbka | rady 4 stĺpov | väznice pri 4 stĺpoch |
+| veľkosť | osi väzníc podľa osnovy | odmerané v scéne |
 | --- | --- | --- |
-| 5 200 | 0, 4 910 | 1 286 / 2 529 / 3 772 |
-| 5 600 | 0, 5 310 | 1 391 / 2 729 / 4 067 |
-| 6 000 | 0, 5 710 | 1 491 / 2 929 / 4 367 |
+| 7,0 × 5,2 | 877 / 1 703 / 2 528 / 3 353 / 4 179 | 877 / 1 703 / 2 528 / 3 353 / 4 179 |
+| 7,0 × 6,0 | 1 011 / 1 969 / 2 928 / 3 887 / 4 845 | 988 / 1 992 / 2 928 / 3 864 / 4 868 |
+| 4,0 × 6,0 | 1 490 / 2 928 / 4 366 | 1 490 / 2 928 / 4 366 |
+| 7,0 × 4,0 | 3 väznice, pole 938 | 3 väznice, osi 1 149 / 2 086 / 3 023 |
+| 7,0 × 3,0 | 2 väznice, pole 917 | 2 väznice, osi 1 116 / 2 056 |
 
-| hĺbka | rady 6 stĺpov | väznice pri 6 stĺpoch |
-| --- | --- | --- |
-| 5 200 | 0, 2 418, 4 870 | 838 / 1 675 / 2 513 / 3 351 / 4 188 |
-| 5 600 | 0, 2 618, 5 270 | 904 / 1 809 / 2 713 / 3 617 / 4 522 |
-| 6 000 | 0, 2 818, 5 670 | 971 / 1 942 / 2 913 / 3 884 / 4 855 |
+Pri 7,0 × 5,2 a 4,0 × 6,0 to sedí na milimeter, pri 7,0 × 6,0 do 23 mm —
+tam je autorský model o toľko nepravidelný. Os obvodového rámu (52 / 196 mm)
+sedí na **21 katalógoch** všetkých šírok a hĺbok.
 
-### Ako sú tie čísla odmerané
+Preto tu nie je žiadna tabuľka polôh: rozmer na mieru vyjde tým istým
+vzorcom ako katalógový a nie je čo dopočítavať naslepo.
 
-Skript `mer4.py` (v pracovnom adresári relácie) prejde všetkých 66 exportov
-prístreškov, pre každý si podľa názvu katalógu určí, ktorá os je šírka,
-ktorá hĺbka a ktorá výška — novšie katalógy majú inú orientáciu než staršie —
-a zaradí diely podľa prierezu.
+### Dve chyby priamo v Expivi, ktoré netreba hľadať znova
 
-Kľúč k čítaniu výsledkov: katalóg, ktorý má otázku „Typ prístrešku", obsahuje
-meshe **oboch variánt naraz**. Namerané osi väzníc sú preto ich zjednotenie:
-pri hĺbke 5 600 vyjde päť osí, z toho `{1 391, 2 729, 4 067}` patrí
-štvorstĺpovej a `{1 089, 2 729, 4 369}` šesťstĺpovej — stredná je spoločná.
-Pri hĺbke 5 200 obe sady splývajú, tam sú osi len tri.
-
-Katalógy 6,6 × … a 7,0 × … otázku „Typ prístrešku" **nemajú** — tam je
-geometria jediná, a tá má päť väzníc a šesť stĺpov. Presne to je ten
-prístrešok pre tri autá z fotky: stĺpy inde a väzníc viac.
-
-Dve chyby priamo v Expivi, ktoré netreba hľadať znova:
 - katalóg 14198 (7,0 × 5,6) má v exporte geometriu 5,2 m;
-- katalógy s hĺbkou 5 200 majú v exporte len štyri zo šiestich stĺpov
-  šesťstĺpovej varianty — chýbajúci rad je zrkadlom toho, ktorý tam je.
+- scéna sa z API ťahá s prázdnym výberom atribútov, takže pri väčšine
+  katalógov vráti len časť dielov (často len strechu). Kompletnú scénu majú
+  14069 a 14192; ostatné vedia potvrdiť aspoň os obvodového rámu.
 
 Novšie katalógy (šírky 3,0 / 3,8 / 4,5 / 5,4 / 6,2 / 6,6 m) sú iná generácia
 dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
-generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník; z novšej sa
-preberajú len polohy radov a osi väzníc pre šírky od 6,6 m.
+generáciu, lebo tá sedí s tým, čo o profiloch povedal zákazník.
 
 ## Lemovanie má na všetkých stranách rovnakú šírku
 
@@ -157,21 +173,22 @@ tvorilo pravidelný rám. Kreslí sa preto 190 na všetky štyri strany.
 Odmeraná hodnota z exportu ostáva zapísaná v dátach ako `lemBokExport`,
 aby sa nestratila.
 
-## Test rád stĺpov proti Expivi
+## Test osnovy proti Expivi
 
-`konfigurator/test/stlpy-podla-expivi.js` porovná pásma `kvGeom` s polohami
-odmeranými z exportov (`archiv-expivi/stlpy-a-vaznice-odmerane.json`). Nič
-nerenderuje — porovnávajú sa čísla, takže odpovie na otázku „sú stĺpy tam,
-kde majú byť" bez hádania z obrázka.
+`konfigurator/test/osnova-podla-expivi.js` prepočíta vzorec osnovy a porovná
+ho s dielmi odmeranými z kompletných scén
+(`archiv-expivi/diely-zo-sceny.json`). Nič nerenderuje — porovnávajú sa
+čísla, takže odpovie na otázku „sú stĺpy, rám a väznice tam, kde majú byť"
+bez hádania z obrázka. Kontroluje osi rámu, osi väzníc, osi stĺpov aj
+prierezy stĺpov.
 
 ```
-node konfigurator/test/stlpy-podla-expivi.js
+node konfigurator/test/osnova-podla-expivi.js
 ```
 
-Prejde na 50 porovnateľných veľkostiach. Tolerancia je 70 mm z dvoch
-dôvodov, ktoré nie sú chyby: novšie katalógy majú stĺp 100 × 100 namiesto
-150 × 150 (os vyjde o 25 – 58 mm inde, hoci líce sedí), a export katalógu
-7,0 × 5,6 m nesie geometriu 5,2 m, takže sa preskočí.
+Tolerancia je 50 mm. Test si vzorec drží zvlášť a číta ho z tých istých
+čísel v `kvRef` ako engine — keby sa engine a dáta rozišli, rozíde sa aj
+test.
 
 ## Test prekrytia
 
@@ -195,13 +212,41 @@ Prečo plech prerážal a čo to spravilo:
 * **Veľké plochy plechu sa nesmú obťahovať.** Obťah ide 0,35 px za obrys
   plochy a pri plochom pohľade, keď je rameno lemovania zúžené na pár
   pixelov, ho ten pretiahnutý okraj prekryje. Lícna aj spodná plocha plechu
-  sa preto kreslia bez obťahu a vcelku, nie po tabuliach — škáry medzi
-  tabuľami sú samostatné čiary.
-* **Lícna plocha ide len po odkryté pole.** Pod ramenami lemovania nie je čo
-  vidieť, takže tam vrchná plocha nie je a niet čomu prerážať.
+  sa preto kreslia bez obťahu a vcelku, nie po tabuliach. Presah tabúľ leží
+  v drážke vlny a zhora ho vidieť nie je — tabuľa sa prekrýva celým jedným
+  hrebeňom; zdola ho prezradí len vlások na spoji.
+* **Vrch plechu ide naopak cez celú plochu, aj pod ramená lemovania.** Kým
+  sa kreslil len po odkryté pole, ostala pod ramenom diera do tela plechu a
+  pri plochom pohľade bolo cez ňu vidieť pod strechu — svetlý pruh pozdĺž
+  hrany. Prerážať nemôže, lebo rameno lemovania je celé nad vrchom plechu
+  (256 – 260 mm proti 259 mm nad spodkom rámu).
+* **Rám má za ramenom lemovania 3 mm vzduchu a bočný rám končí 2 mm pred
+  čelným.** Kým jeho líce a čelo dosadali presne na roviny lemovania, ležali
+  obe roviny na sebe, BSP ich rozdelil na spoločnej rovine a profil cez
+  lemovanie presvital ako vlások.
 * **Vnútorná hrana horného ramena lemovania má krátky zahyb nadol.** Bez neho
   tam bola len škára a pri plochom pohľade cez ňu bolo vidieť pod strechu —
   pozdĺž hrany svietil svetlý pruh.
+
+## Čiary na streche a fľaky na plechu
+
+Tri rôzne chyby vyzerali rovnako — „strecha má čiary" — a každá mala iný
+dôvod:
+
+* **Vlna trapézu ako žalúzia.** Svetlý pruh bol široký polovicu rozteče a na
+  antracitovom plechu z toho boli lamely. Skutočný plech T35 má rozteč
+  204,6 mm (krycia šírka 1 023 / 5) a zhora je na ňom vidieť len tenký lesk
+  na hrebeni a mäkký tieň v drážke.
+* **Škáry dlažby cez strechu.** Podklad — dlažba, jej škáry a vrhnutý tieň —
+  leží celý v rovine z = 0. V hustej scéne (5 400 plôch) naráža BSP na strop
+  hĺbky a tam sa vracia k triedeniu podľa priemernej hĺbky; škára dlažby je
+  pritom obrovská plocha vycentrovaná pod modelom, takže jej priemer vyjde
+  bližšie než strecha. Podklad sa preto triedi zvlášť a kreslí prvý.
+* **Biele vlásky na spojoch.** Veľkú plochu plechu rozdelí BSP na kusy podľa
+  rovín rámu a väzníc; s vyhladzovaním presvital na každom takom spoji
+  podklad. Veľké plochy sa preto kreslia s `crispEdges`. Úzke pruhy vlny
+  **nie** — tie sa pri plochom pohľade zúžia pod pixel a bez vyhladzovania z
+  nich ostanú zubaté kocky, teda tmavé fľaky na plechu.
 
 ## Čo ešte nie je hotové
 
@@ -212,51 +257,46 @@ Prečo plech prerážal a čo to spravilo:
 ## Referenčný prístrešok (od 2026-09)
 
 Konfigurátor kreslí jeden skutočný výrobok, nie dopočítaný rozmer:
-**katalóg Expivi 13670 „Pristresok 4.0 x 6.0", štvorstĺpová varianta.**
-Všetky čísla nižšie sú odmerané z `.ebm` meshov toho exportu
-(`archiv-expivi/exporty-modelov.json` → `zips/13670.zip`), nie odhadnuté.
-Uložené sú v `models.K.kvRef` v dátovom bloku stránky; to, čo sa mení
-rozmerom, je vedľa v `kvGeom`.
+**katalóg Expivi 14069 „Prístrešok 7.0 x 6.0"**, ktorého scéna je kompletná
+— všetkých 62 sietí, ktoré kreslí, je odmeraných a rozdelených na diely.
+Druhá kompletná scéna je 14192 (7,0 × 5,2) a slúži na kontrolu vzorca.
+Čísla sú v `models.K.kvRef` v dátovom bloku stránky; to, čo sa mení šírkou,
+je vedľa v `kvGeom`.
 
 Model má v exporte hore Z, X = šírka, Y = hĺbka. V engine je **x = hĺbka**,
-**y = šírka**, odkvapová hrana na `x = L`. Prepočet: `x = 6000 − (Y + 3512)`,
-`y = X + 2000`.
+**y = šírka**, odkvapová hrana na `x = L`.
 
-| diel | odmerané |
-|---|---|
-| pôdorys (obrys lemovania) | 4 000 × 6 000 mm |
-| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky v exporte 240 cez celú hĺbku; **čelné kusy ležia na bočných**, presah je presne roh |
-| obvodový rám | **dvojica** C 74 × 220 chrbtami k sebe, spolu 150 mm — rovnako hrubý ako stĺp; z 2 398…2 618; vonkajšie líce bokov za zvislým ramenom lemovania, 15 mm od zadného čela, **159 od odkvapového** |
-| väznice | 3 dvojice C 58 × 180 chrbtami k sebe, z 2 438…2 618, osi 1 490 / 2 928 / 4 366 od zadného čela, beh y 30…3 970 |
-| trapéz | hrúbka 36, z 2 621…2 656, krycia šírka 1 072 (presah 254), x 15…5 915, y 46…3 982 |
-| stĺp | **150 × 150 štvorec**, výška 2 398, rady x = 0 a 5 709 |
-| kotevná doska | 250 × 250, lícuje s bokom pôdorysu |
-| platňa hlavy stĺpa | 110 × 58 × 8 pod spodnou pásnicou rámu, dve skrutky zdola; rohový stĺp má dve platne na dvoch susedných stranách, obe dovnútra poľa |
-| spojka | uholník: plech 10 mm ohnutý o 90° v strede, rameno 170, výška 70; dve skrutky do každého ramena. Na konci väznice dva (po jednom na každej strane dvojice C), v rohu dva vedľa seba po dĺžke. Sedí v strede výšky profilu, na ktorý je skrutkovaný |
-| skrutka | M12, kľúč 19 — šesťhranná hlava, ktorá z dielu vytŕča; farba C profilov (pozink), nie prístrešku |
-| lamely steny | 20 × 100, rozteč 140, z 298…2 218, líce 15 mm pod obrysom |
+| diel | odmerané | pole v `kvRef` |
+|---|---|---|
+| pôdorys (obrys lemovania) | 7 000 × 6 000 mm | — |
+| lemovanie | výška 260; čelá 190 hlboké cez celú šírku; boky v exporte 240 cez celú hĺbku (kreslí sa 190); **čelné kusy ležia na bočných**, presah je presne roh | `lemCelo`, `lemBok`, `lemH` |
+| obvodový rám | **jeden** C 74 × 220 na stranu; z 0…220 nad spodkom rámu; vonkajšie líce 18 mm za lícom lemovania, 15 mm od zadného čela, **159 od odkvapového** | `ramW`, `ramH`, `ramBok`, `ramZad`, `ramOdkvap` |
+| väznice | dvojice C 58 × 180 chrbtami k sebe, z 40…220; počet a osi dá osnova | `vazW`, `vazH`, `vazVsun` |
+| trapéz | hrúbka 36, z 223…259; tabuľa 1 057, krycia šírka 1 023 (presah 34); kladie sa od druhého boku, posledná sa oreže; 85 mm od zadného a 15 od odkvapového čela | `trapH`, `trapTabula`, `trapKryt`, `trapZad`, `trapOdkvap` |
+| rohový stĺp | **150 × 150** štvorec, výška 2 398, líce zarovnané s bokom pôdorysu | `postD`, `postW` |
+| stĺp stredného radu | **110 × 190**, 190 pozdĺž hĺbky, stojí pod prostrednou väznicou | `stredW`, `stredD` |
+| kotevná doska | 250 × 250, lícuje s bokom pôdorysu | `plate` |
+| platňa hlavy stĺpa | 110 × 58 × 8 pod spodnou pásnicou rámu, dve skrutky zdola; rohový stĺp má dve platne na dvoch susedných stranách, obe dovnútra poľa | — |
+| spojka | uholník s obrysom **120 × 85 × 140**, plech 8 mm ohnutý o 90°; dve skrutky do každého ramena. Na konci väznice dva (po jednom na každej strane dvojice C), **v rohu jeden**. Sedí v strede výšky profilu, na ktorý je skrutkovaný | `spojW`, `spojD`, `spojH`, `uholT` |
+| skrutka | M12, kľúč 19 — šesťhranná hlava, ktorá z dielu vytŕča; farba C profilov (pozink), nie prístrešku | — |
+| lamely steny | 20 × 100, rozteč 140, líce 15 mm pod obrysom | — |
 
-Šesťstĺpová varianta má v tom istom exporte stĺpy 110 × 190 v osiach
-1 322 / 3 072 / 4 822. V konfigurátore sa nedá vybrať — nasadí sa sama od
-šírky 6,6 m, a to v rozmiestnení z novších katalógov (rohy + stred), lebo
-tam je jediná publikovaná. Viď „Počet a rozmiestnenie stĺpov a väzníc".
+Že spojok je presne 24 a v rohu je len jedna, hovorí kompletná scéna:
+20 na koncoch piatich väzníc (dva na koniec, po jednom na každej strane
+dvojice C) a 4 v rohoch. Kým sa kreslili dve na roh, bol pozdĺž bočného
+rámu rad spojok, ktorý v modeli nie je.
 
-**Žľab ani zvod v exportoch nie sú** — podrobne vyššie v „Čo v Expivi modeli
-nie je".
+**Žľab ani zvod v exportoch nie sú** — podrobne vyššie v „Čo v Expivi
+modeli nie je". Zvod sa kreslí podľa fotiek realizácií: tenká rúra Ø 80,
+ktorá sa dotýka odkvapového líca rohového stĺpa, ide po ňom celá zvislo a
+dole má krátku vyhnutú pätku. Keď je os rúry v kapse žľabu — a pri rohovom
+stĺpe je — nemá zvod žiadne koleno; ďalej od odkvapu sa ku stĺpu vráti
+jedným.
 
 Kotevná objímka 250 × 250 × 615 v exporte je, ale na žiadnej fotke
 realizácie nie je — kreslí sa len doska.
 
-Dva rozdiely medzi odmeraným exportom a tým, čo kreslíme, a prečo:
-
-* **Obvodový rám je dvojica C profilov, nie jeden.** V exporte je na bok
-  jeden C 74 mm, ale stĺp má 150 a zdola by spoza rámu vyčnieval o 58 mm.
-  Podľa výrobcu je rám rovnako hrubý ako stĺp, takže sú to dva C profily
-  chrbtami k sebe (2 × 74 ≈ 150) — rovnako ako priečne väznice. Škáru medzi
-  nimi majú zdola vidieť len väznice; obvodový rám má čistý spodok.
-* **Spojka je uholník, nie kváder.** Export má 24 kusov dielu s obrysom
-  120 × 85 × 140; ten obrys je obálka ohnutého plechu, nie plný blok.
-
 Horné rameno lemovania sa kreslí 4 mm hrubé, nie 15 ako zvislé — je to
-plech, ktorý leží na trapéze. Pri 15 mm doň trapéz zapadal a strecha
-vyzerala zhora ako vaňa.
+plech, ktorý leží na hrebeňoch trapézu. Jeho spodné líce musí byť pod
+vrchom plechu, inak medzi nimi ostane škára a pri plochom pohľade cez ňu
+presvitá podhľad.
