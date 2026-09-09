@@ -63,22 +63,20 @@ async function setDimensions(page, width, length) {
 }
 
 async function setFrameColor(page, ral) {
-  const buttons = page.locator('[data-sp-frame-color]');
-  const count = await buttons.count();
-  for (let i = 0; i < count; i += 1) {
-    const button = buttons.nth(i);
-    const title = (await button.getAttribute('title')) || '';
-    if (title.includes(ral)) {
-      await button.click();
-      await page.waitForTimeout(80);
-      const snapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-      if (snapshot.frameColor !== ral) {
-        throw new Error('Frame colour did not update to ' + ral + ': ' + snapshot.frameColor);
-      }
-      return;
-    }
+  const clicked = await page.evaluate(targetRal => {
+    const buttons = Array.from(document.querySelectorAll('[data-sp-frame-color]'));
+    const button = buttons.find(candidate => ((candidate.getAttribute('title') || '').includes(targetRal)));
+    if (!button) return false;
+    button.click();
+    return true;
+  }, ral);
+  if (!clicked) throw new Error('Frame colour control not found for ' + ral);
+
+  await page.waitForTimeout(80);
+  const snapshot = await page.evaluate(() => window.SP_TEST.snapshot());
+  if (snapshot.frameColor !== ral) {
+    throw new Error('Frame colour did not update to ' + ral + ': ' + snapshot.frameColor);
   }
-  throw new Error('Frame colour control not found for ' + ral);
 }
 
 async function renderMetrics(page, az, el) {
