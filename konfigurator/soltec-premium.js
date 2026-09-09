@@ -3148,8 +3148,16 @@
                `z` je výška. Stena sa vytiahne po behu, čelá sa poskladajú z
                obdĺžnikov — nekonvexný polygon by maliarske delenie rozbilo. */
             const C_LIP = 18;                      // zahyb na konci pásnice
-            const cRez = (par, vys, hr) => {
+            const cRez = (par, vys, hr, single) => {
               const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              if (single) {
+                const outline = [
+                  [0, 0], [par, 0], [par, t + lip], [par - t, t + lip],
+                  [par - t, t], [t, t], [t, vys - t], [par - t, vys - t],
+                  [par - t, vys - t - lip], [par, vys - t - lip], [par, vys], [0, vys]
+                ];
+                return single > 0 ? outline : outline.map(([a, z]) => [par - a, z]).reverse();
+              }
               return [
                 [0, 0], [par, 0], [par, t + lip], [par - t, t + lip], [par - t, t],
                 [m + t, t], [m + t, vys - t], [par - t, vys - t],
@@ -3158,8 +3166,13 @@
                 [m - t, vys - t], [m - t, t], [t, t], [t, t + lip], [0, t + lip]
               ];
             };
-            const cCela = (par, vys, hr) => {
+            const cCela = (par, vys, hr, single) => {
               const m = par / 2, t = hr, lip = Math.min(C_LIP, vys / 2 - t - 1);
+              if (single) {
+                const rectangles = [[0, 0, par, t], [0, vys - t, par, t],
+                  [0, t, t, vys - 2 * t], [par - t, t, t, lip], [par - t, vys - t - lip, t, lip]];
+                return single > 0 ? rectangles : rectangles.map(([a, z, w, h]) => [par - a - w, z, w, h]);
+              }
               return [
                 [0, 0, par, t], [0, vys - t, par, t], [m - t, t, 2 * t, vys - 2 * t],
                 [0, t, t, lip], [par - t, t, t, lip],
@@ -3169,9 +3182,9 @@
             /* axis 'x': profil má rez naprieč X a beží po Y. axis 'y': rez
                naprieč Y, beh po X. `a0` je začiatok rezu naprieč, `z0` spodok,
                `u0..u1` beh. */
-            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara, podStrechou) => {
+            const cProfil = (axis, a0, par, z0, vys, u0, u1, hex, hrubka, spara, podStrechou, single) => {
               const t = hrubka || 6;
-              const rez = cRez(par, vys, t);
+              const rez = cRez(par, vys, t, single);
               const P = (a, z, u) => (axis === 'x' ? [a0 + a, u, z0 + z] : [u, a0 + a, z0 + z]);
               /* Zvislé líca profilu sa pri pohľade zhora nekreslia. Sú celé
                  pod plechom strechy a spoza lemovania ich vidieť nemôže —
@@ -3189,7 +3202,7 @@
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
                      hex, { normal: n, cull: true, arris: false });
               }
-              (bokom ? cCela(par, vys, t) : []).forEach((r) => {
+              (bokom ? cCela(par, vys, t, single) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
@@ -3210,10 +3223,10 @@
                roviny na sebe a čelo profilu cez lemovanie presvitalo ako
                svetlá zvislá čiara v rohu. */
             if (!nadStrechou) {
-              cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-              cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true);
-              cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
-              cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true);
+              cProfil('y', RAM_VSUN, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true, 1);
+              cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true, -1);
+              cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, 1);
+              cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, -1);
             }
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
@@ -3361,7 +3374,11 @@
                Telo plechu je jeden kváder cez celú strechu — kým bolo po
                tabuliach, mali susedné tabule spoločné bočné líce a na streche
                z toho boli biele čiarky. */
-            const vx0 = tx0, vx1 = tx1, vy0 = ty0, vy1 = ty1;
+            // Keep the complete sheet body and soffit, but omit the upper
+            // surface hidden inside the fascia. Intersecting upper polygons
+            // otherwise defeat the painter fallback and cover the fascia.
+            const vx0 = Math.max(tx0, LEM_CELO + 11), vx1 = Math.min(tx1, L - LEM_CELO - 11);
+            const vy0 = Math.max(ty0, LEM_BOK + 11), vy1 = Math.min(ty1, W - LEM_BOK - 11);
             boxFaces(tx0, ty0, trapBot, tx1 - tx0, ty1 - ty0, TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
             /* Veľké plochy plechu sa nesmú obťahovať. Obťah ide 0,35 px za
                obrys plochy a pri plochom pohľade, keď je rameno lemovania
@@ -4850,6 +4867,9 @@
             /* Keď výška nie je voľba, musí byť aspoň napísaná — inak zákazník
                nevie, ako vysoko pod prístreškom prejde. */
             + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
+          if (modelNote && m.kvGeom) modelNote.textContent = kvMeasured()
+            ? 'Zobrazená zostava: 4 rohové stĺpy 150 × 150 mm a 2 stredné 110 × 190 mm, výška pod rámom 2 398 mm. Osi podľa príslušného modelu Expivi.'
+            : 'Prierez a rozmiestnenie stĺpov závisia od konkrétnej zostavy. Nosnú konštrukciu a kotvenie potvrdíme pri návrhu.';
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
           PICKS_ROZMER.forEach((g) => {

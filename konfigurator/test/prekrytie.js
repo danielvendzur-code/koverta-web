@@ -26,6 +26,8 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
   const assertNoErrors = watchErrors(p);
   await setModelColors(ctx, { trapezTopHex: '#00ff00', trapezSoffitHex: '#ff00ff' });
   await p.goto(URL, { waitUntil: 'load', timeout: 60000 });
+  const consent = p.getByRole('button', { name: 'Iba nevyhnutné' });
+  if (await consent.count()) await consent.first().click();
   await p.waitForTimeout(2200);
 
   const ok = await p.evaluate(() => Boolean(window.SP_TEST && window.SP_TEST.setView && window.SP_TEST.project));
@@ -64,6 +66,12 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
           window.SP_TEST.setView(az, el); window.SP_TEST.redraw();
           await new Promise((r) => setTimeout(r, 40));
           const s = await snap();
+          if (el === 1.12) {
+            const pixels = s.g.getImageData(0, 0, s.w, s.h).data;
+            let green = 0;
+            for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 150 && pixels[i] < 130 && pixels[i + 2] < 130) green++;
+            if (green < 100) throw new Error('Positive control failed: contrasting roof is missing');
+          }
           let zlych = 0, prvy = null;
           for (const [x, y] of body) {
             const q = window.SP_TEST.project(x, y, zTop);
