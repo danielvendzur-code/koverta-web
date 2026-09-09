@@ -3737,16 +3737,19 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   grid-area: 1 / 1;
   opacity: 0;
   visibility: hidden;
-  /* Žiadny posun — panel sa iba prelína. Akýkoľvek transform hýbe fotkou. */
+  pointer-events: none;
+  /* Outgoing content disappears immediately. This prevents two step texts
+     from being readable on top of each other while scroll changes the step. */
   transform: none;
-  transition: opacity 380ms var(--k-ease), visibility 0s linear 380ms;
+  transition: none;
   animation: none;
 }
 .kh-proc__panels.is-stacked > .kh-proc__panel.is-active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   transform: none;
-  transition: opacity 380ms var(--k-ease), visibility 0s;
+  transition: opacity 180ms var(--k-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .kh-proc__panels.is-stacked > .kh-proc__panel { transition: none; transform: none; }
