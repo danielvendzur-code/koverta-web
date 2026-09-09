@@ -79,13 +79,11 @@ prove bolt grade, anchor selection or plate thickness.
 
 The renderer still contains visual simplifications: upper fascia thickness is
 6 mm; roof surfaces are simplified; head plates, fastener details and wall
-panels are not all independently measured. Native 1× SVG QA showed that a
-projected fascia sample can land within 0.2 px of its raster edge even while
-the world-space point is inside the measured fascia, and that a split roof
-fragment can paint later at another angle. For Koverta only, the +Z fascia
-surface therefore uses a 1.5 px same-colour edge and is painted after roof
-fragments when the camera is above the roof. This is raster ownership only;
-no millimetre coordinate or QA measurement point is expanded. The side fascia now follows the
+panels are not all independently measured. Fascia faces follow the same
+world-plane BSP ordering as the rest of the structure, with the normal 0.7 px
+edge. There is no fascia-last ordering or enlarged 1.5 px outline. Collinear
+vertices created by clipping must not make an otherwise valid polygon lose
+its plane and fall back to centroid sorting. The side fascia follows the
 240 mm value present in every recovered active scene where that side component
 is measurable. Complete scene 14069 uses a 190 mm end fascia while complete
 scene 14192 uses 240 mm, so those exact values are attached to their own
