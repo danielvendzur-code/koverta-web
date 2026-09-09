@@ -299,7 +299,7 @@
       if (!key) return;
       rows.push({
         label: titles[key] || key,
-        value: cleanText(btn.textContent)
+        value: rootText(btn, 'strong') || cleanText(btn.textContent)
       });
     });
     return rows;
@@ -308,6 +308,7 @@
   function visibleQuoteRows(root) {
     var rows = [];
     root.querySelectorAll('[data-sp-lines] li').forEach(function (li) {
+      if (li.hasAttribute('data-kv-placement-line')) return;
       var label = rootText(li, 'span');
       var value = rootText(li, 'b');
       if (label || value) rows.push({ label: label, value: value });
@@ -321,8 +322,6 @@
 
     var placement = selectedPlacement(root);
     var rows = visibleQuoteRows(root);
-    var existing = {};
-    rows.forEach(function (row) { existing[row.label] = true; });
     activePickRows(root).forEach(function (row) {
       var already = rows.some(function (x) {
         return x.label.indexOf(row.label) === 0;
@@ -358,8 +357,8 @@
         body.push('- ' + row.label + (row.value ? ': ' + row.value : ''));
       });
     }
-    body.push('Orientačná cena z konfigurátora: ' + total + ', vrátane DPH.');
-    body.push('Konečný rozsah montáže, dopravy a položiek označených „na nacenenie“ potvrdíme v ponuke.');
+    body.push('Orientačná cena z konfigurátora: ' + total + ', vrátane DPH a montáže.');
+    body.push('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.');
     body.push('');
     body.push('Meno:');
     body.push('Telefón:');
