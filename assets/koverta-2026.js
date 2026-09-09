@@ -2573,6 +2573,15 @@
           b.addEventListener('mouseenter', () => ukaz(b.dataset.kMapaBod));
         }
       });
+
+      /* Panel nesmie po načítaní vyzerať prázdny. Predvolená je Bratislava,
+         ak je v dátach; inak prvá realizácia, ktorá má kartu. Výber používa
+         tú istú cestu ako klik, takže aria-pressed, mapa aj detail ostanú
+         synchronizované. */
+      const predvoleny = karty.some((k) => k.dataset.kMapaKarta === 'bratislava')
+        ? 'bratislava'
+        : karty[0].dataset.kMapaKarta;
+      ukaz(predvoleny);
     });
   }
 
