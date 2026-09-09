@@ -14370,3 +14370,76 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .kh-znacky { grid-template-columns: 1fr; }
   .k .kh-ponuka__cta { width: 100%; justify-content: center; }
 }
+
+
+/* FINAL MOBILE TOP DECLUTTER 2026-09-09 */
+@media (max-width: 759px) {
+  /* Na malej obrazovke sú v hlavičke len dve potrebné akcie: hľadanie a menu.
+     Košík zostáva dostupný cez otvorené menu / e-shop, ale nemusí zaberať
+     štvrtinu pravého okraja na každej obrazovke. */
+  .kv-bar__side > a.kv-icon-btn[href*="/cart"] { display: none; }
+  .kv-bar__side { gap: 6px; }
+  .kv-bar__in { min-height: 60px; gap: 12px; }
+  .kv-icon-btn { width: 42px; height: 42px; }
+  .kv-logo .k-logo { height: 25px; }
+
+  /* Prvá obrazovka má jednu dominantnú akciu. Konfigurátor ostáva priamo
+     dostupný, ale ako tichý textový odkaz namiesto druhého veľkého tlačidla. */
+  .k .kh-hero__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .k .kh-hero__actions .k-btn { width: auto; }
+  .k .kh-hero__actions .k-btn:first-child {
+    min-height: 44px;
+    padding: 0 17px;
+  }
+  .k .kh-hero__actions .k-btn:nth-child(n+2) {
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255,255,255,.9);
+    font-size: 13.5px;
+    text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,.42);
+    text-underline-offset: 4px;
+  }
+  .k .kh-hero__actions .k-btn:nth-child(n+2):hover,
+  .k .kh-hero__actions .k-btn:nth-child(n+2):focus-visible {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    text-decoration-color: #fff;
+  }
+
+  /* Google dôkaz ostáva, ale už nie ako ďalšia veľká karta pod tlačidlami. */
+  .k .kh-hero__rating {
+    min-height: 34px;
+    padding: 0;
+    gap: 7px;
+    border: 0;
+    background: transparent;
+  }
+  .k .kh-hero__rating:hover,
+  .k .kh-hero__rating:focus-visible {
+    border: 0;
+    background: transparent;
+  }
+  .kh-hero__rating .k-google { width: 17px; height: 17px; }
+  .kh-hero__rating strong { font-size: 15px; }
+  .kh-hero__rating .kh-hero__divider { height: 16px; opacity: .55; }
+  .kh-hero__rating .k-stars svg { width: 12px; height: 12px; }
+  .kh-hero__rating-meta > span:last-child { display: none; }
+
+  /* Keď je hero na obrazovke, spodný sticky CTA iba duplikuje žlté tlačidlo.
+     Skript ho vtedy označí touto triedou; po odchode z hero sa vráti. */
+  .kh-dock.je-hero-skryty {
+    transform: translateY(calc(100% + 12px));
+    opacity: 0;
+    pointer-events: none;
+  }
+}
