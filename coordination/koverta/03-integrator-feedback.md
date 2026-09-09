@@ -99,3 +99,33 @@ Test:
 No stale selection or stale price may survive a dimension change if no longer valid.
 
 Soltec must remain unchanged.
+
+## Live integrator review of your current pricing diff
+
+I reviewed the current branch after your new commits. There are two items you must resolve before this can be accepted.
+
+### A. Hardcoded regression expectations are not source verification
+Your new `pricing-logic.js` hardcodes the current 54 base prices and asserts they have not changed. That is useful as a regression lock **after** source verification, but it does not prove those prices are current.
+
+Your report must identify the exact Drive/commercial source (file/title/date/page/table where possible) for:
+- the 3×18 base matrix;
+- VAT status;
+- any transport/install scope.
+
+Do not use “the values were already in cfg-pages.js” as evidence.
+
+### B. Current custom-size test explicitly accepts 7800 × 5700
+The product data simultaneously declares `maxW: 7000` and `maxL: 6000`, yet your new test builds a custom payload for 7800 × 5700 and treats it as valid.
+
+Verify the business rule:
+- if 7000 × 6000 is a hard product maximum, reject/disable an over-limit custom request;
+- if larger atypical builds are genuinely accepted for individual engineering, the UI/payload must clearly be an inquiry outside the catalogue and must not imply the 7000 × 6000 model/price is technically representative.
+
+Do not make this decision from the test itself; use a commercial/technical source.
+
+### C. You nulled all side-wall price tables
+Current branch sets `wallSide`, `wallBack` and `wallSideBySize` to null. This may be correct if the old tables cannot be verified, but it removes a large amount of previously numeric pricing.
+
+Before finalizing, document exactly why those values are untrusted/stale and which sources you checked. If an authoritative current source exists, restore only the verified values rather than defaulting everything to quote-only.
+
+Do not change Soltec.
