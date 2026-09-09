@@ -2481,17 +2481,26 @@
             const left = plc.cantilever === 'left';
             const xi = left ? 1 : xs.length - 2;
             const px = xs[xi];
-            const gap = left ? px : (L - post - px);
+            /* Koverta must anchor the brace to the actual post face. The old
+               generic `post=120` is a Soltec-era visual scalar and is wrong
+               for Koverta's 150×150 and 190×110 sections. Keep the brace's
+               visual thickness heuristic, but derive every physical contact
+               point from the active post section. */
+            const rr = kvBand() ? kvStlpRez(xi, xs.length) : { d: post, w: post };
+            const pd = rr.d, pw = rr.w;
+            const vsunBrace = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+            const gap = left ? px : (L - pd - px);
             const reach = Math.max(180, Math.min(520, gap * 0.42));
             const drop = Math.max(220, Math.min(560, H * 0.22));
-            const t = Math.max(10, Math.round(post * 0.16));
-            const zTopBrace = H - Math.round(post * 0.10);
-            const xTip = left ? px - reach : px + post + reach;
-            const xHeel = left ? px : px + post;
-            [0, W - post].forEach((py) => {
-              if (walls.indexOf('rear') > -1 && py === 0) return;
-              if (walls.indexOf('front') > -1 && py !== 0) return;
-              const yc = py + post / 2;
+            const contactScale = Math.min(pd, pw);
+            const t = Math.max(10, Math.round(contactScale * 0.16));
+            const zTopBrace = H - Math.round(contactScale * 0.10);
+            const xTip = left ? px - reach : px + pd + reach;
+            const xHeel = left ? px : px + pd;
+            [vsunBrace, W - pw - vsunBrace].forEach((py) => {
+              if (walls.indexOf('rear') > -1 && py === vsunBrace) return;
+              if (walls.indexOf('front') > -1 && py !== vsunBrace) return;
+              const yc = py + pw / 2;
               const y0 = yc - t / 2, y1 = yc + t / 2;
               const A = [xHeel, zTopBrace], B = [xTip, zTopBrace], C = [xHeel, zTopBrace - drop];
               [[y0, [0, -1, 0]], [y1, [0, 1, 0]]].forEach(([y, n]) => {
@@ -2529,9 +2538,17 @@
 
             /* the posts standing inside this run divide it into bays */
             const cuts = [];
-            if (axis === 'x') postXs().forEach((px) => {
-              if (px > runFrom - 1 && px + post < runTo + 1) cuts.push([px, px + post]);
-            });
+            if (axis === 'x') {
+              const rowXs = postXs();
+              rowXs.forEach((px, xi) => {
+                /* Only the cut around a real post is structural here. Koverta
+                   cannot use the generic 120 mm width: its active section may
+                   be 190 mm along X. The overall accessory run remains owned
+                   by the side/accessory rules and is not reinterpreted here. */
+                const pd = kvBand() ? kvStlpRez(xi, rowXs.length).d : post;
+                if (px > runFrom - 1 && px + pd < runTo + 1) cuts.push([px, px + pd]);
+              });
+            }
             const bays = [];
             let cursor = runFrom;
             cuts.sort((m, n) => m[0] - n[0]).forEach((c) => {
@@ -3095,6 +3112,11 @@
                a spod strechy len trochu. */
             const REF = kvRoofRef();
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
+            /* Active Expivi component bounds establish the fascia envelope
+               (reach/height), not sheet gauge. LEM_T=15 is therefore a
+               renderer envelope used to construct the folded L silhouette,
+               not a verified 15 mm material thickness. Do not infer gauge
+               from this value or from photographs. */
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
@@ -3546,11 +3568,11 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              /* Priemer odmeraný z oficiálneho rendru: šikmý úsek zvodu má na
-                 obrázku 11,3 px kolmo a stĺp vedľa neho 26 px na 150 mm, čo
-                 dáva 65 mm. Kreslí sa 70 — o pixel hrubšie ako meranie, lebo
-                 tenšia rúra sa pri stĺpe stráca. */
-              const rz = 35;                          // rúra Ø 70
+              /* Aktívne Expivi scény ani montážny technický dokument
+                 nepotvrdzujú priemer zvodu. Hodnota nižšie je iba rendererový
+                 vizuálny polomer, nie technická kóta a nesmie sa odvodiť z
+                 pixelov fotografie alebo marketingového rendru. */
+              const rz = 35;                          // unverified visual radius
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane
