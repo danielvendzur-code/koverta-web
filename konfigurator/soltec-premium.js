@@ -1805,9 +1805,6 @@
                  a z hairline sa stane tmavá čiara. Namiesto obrysu jej
                  vypneme vyhladzovanie, takže kusy na seba sadnú presne. */
               seamless: o.seamless === true,
-              /* Koverta-only occlusion guard for the thin top fascia arm.
-                 This flag is opt-in; no Soltec caller sets it. */
-              paintLast: o.paintLast === true,
               depthAvg,
               /* Podklad — dlažba, jej škáry a vrhnutý tieň — leží celý v
                  rovine z = 0 pod konštrukciou a triedi sa zvlášť. V hustej
@@ -2027,13 +2024,12 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
               normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
-              seamless: seamlessTop === true && key === '+z',
-              paintLast: paintLast === true
+              seamless: seamlessTop === true && key === '+z'
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -3126,16 +3122,16 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz, seamlessTop, paintLast) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
+              const put = (u0, u1, z, dz, seamlessTop) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
                  only to the +Z face; no world-space geometry is enlarged. */
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true, nadStrechou);  // horné rameno
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -3320,16 +3316,20 @@
               const bx0 = Math.min(px, px + sx * UHOL_LX);
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
-              /* Dve skrutky na každom ramene, nad sebou — spolu štyri
-                 na uholník. Poloha po dĺžke ramena je v jeho strede; žiadny
-                 nový technický rozmer sa tým nezavádza. */
+              /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
+              /* Na rendri sú v ramene štyri skrutky v štvorci, nie dve nad
+                 sebou. */
               const roz = UHOL_H * 0.26;
               const xLic = px + sx * UHOL_T;
-              const r = py + sy * UHOL_LY * 0.5;
-              [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
+              [0.34, 0.72].forEach((t) => {
+                const r = py + sy * UHOL_LY * t;
+                [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
+              });
               const yLic = py + sy * UHOL_T;
-              const o = px + sx * UHOL_LX * 0.5;
-              [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
+              [0.34, 0.72].forEach((t) => {
+                const o = px + sx * UHOL_LX * t;
+                [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
+              });
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -3485,17 +3485,38 @@
             }
 
             /* Vrchná plocha je bezpečne zrezaná až za vnútornú hranu
-               lemovania rovnako ako pred vizuálnou úpravou. Jemné ryhy sú
-               iba svetelný detail; nemajú technický ani hit-test význam. */
+               lemovania rovnako ako pred vizuálnou úpravou. Veľký jediný
+               polygon sa však pri nízkom šikmom pohľade triedil proti tenkému
+               hornému ramenu lemovania ako celok a v jednom konkrétnom pixeli
+               sa mohol namaľovať pred neho. Namiesto painter-order výnimky sa
+               tá istá fyzická rovina iba tesselluje na menšie neprekrývajúce
+               plochy. World-space extenty, výška aj materiál ostávajú rovnaké. */
             if (vx1 > vx0 && vy1 > vy0) {
-              quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
-                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
+              const TOP_TILES_X = 4;
+              const TOP_TILES_Y = 4;
+              const topQuad = (x0, x1, y0, y1, fill, raw) => {
+                if (x1 <= x0 || y1 <= y0) return;
+                quad([[x0, y0, trapTop], [x1, y0, trapTop], [x1, y1, trapTop], [x0, y1, trapTop]],
+                     fill, { normal: [0, 0, 1], cull: true, edge: false, seamless: true, raw: raw === true, fit: raw !== true });
+              };
+              for (let ix = 0; ix < TOP_TILES_X; ix++) {
+                const x0 = vx0 + (vx1 - vx0) * (ix / TOP_TILES_X);
+                const x1 = vx0 + (vx1 - vx0) * ((ix + 1) / TOP_TILES_X);
+                for (let iy = 0; iy < TOP_TILES_Y; iy++) {
+                  const y0 = vy0 + (vy1 - vy0) * (iy / TOP_TILES_Y);
+                  const y1 = vy0 + (vy1 - vy0) * ((iy + 1) / TOP_TILES_Y);
+                  topQuad(x0, x1, y0, y1, vrchHex, false);
+                }
+              }
 
               const topBand = (y0, y1, hex) => {
                 const a = Math.max(y0, vy0), b = Math.min(y1, vy1);
                 if (b <= a) return;
-                quad([[vx0, a, trapTop], [vx1, a, trapTop], [vx1, b, trapTop], [vx0, b, trapTop]],
-                     hex, { normal: [0, 0, 1], raw: true, edge: false, fit: false });
+                for (let ix = 0; ix < TOP_TILES_X; ix++) {
+                  const x0 = vx0 + (vx1 - vx0) * (ix / TOP_TILES_X);
+                  const x1 = vx0 + (vx1 - vx0) * ((ix + 1) / TOP_TILES_X);
+                  topQuad(x0, x1, a, b, hex, true);
+                }
               };
               const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
               for (let k = 0; k < vlnPocet; k++) {
@@ -4155,9 +4176,7 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          const stavbaBezna = stavba.filter((f) => !f.paintLast);
-          const stavbaNeskor = stavba.filter((f) => f.paintLast);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavbaBezna), bspPaintOrder(stavbaNeskor)).forEach((f) => {
+          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
