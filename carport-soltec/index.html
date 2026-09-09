@@ -350,53 +350,33 @@
   <div class="k-wrap">
     <header class="k-head k-head--split">
       <div class="k-head__title">
-        <p class="k-eyebrow k-rise">Modely SL 170 a SL 240</p>
-        <h2 id="typTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Najprv počet áut. Potom rozmer.</h2>
+        <p class="k-eyebrow k-rise">SL 170 alebo SL 240</p>
+        <h2 id="typTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Rozdiel vidíte v jednej tabuľke</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
-        <p class="k-copy"><strong>SL 170 = jedno auto, šírka do 3,14 m.</strong> <strong>SL 240 = dve autá, šírka do 6 m.</strong> Box je doplnok k obom modelom, nie tretí typ carportu.</p>
+        <p class="k-copy"><strong>SL 170 je pre jedno auto.</strong> <strong>SL 240 je pre dve autá.</strong> Box je doplnok a porovnanie modelov preto zbytočne nemiešame s parametrami boxu.</p>
         <a class="k-link" href="../konfigurator/?page=carport">Vyskúšať v konfigurátore <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </header>
 
-    <!-- Najprv model, potom parametre. Šesťstĺpcová tabuľka so štyrmi
-         riadkami — carport aj box naraz — sa dala prečítať len po jednom
-         políčku. Model sa teraz vyberá kartou a tabuľka pod ňou patrí len
-         jemu: vľavo carport, vpravo box pod tou istou strechou. -->
-    <div class="kh-typ2 k-rise" data-k-typ2>
-      <div class="kh-typ2__nav">
-        <span class="kh-typ2__nav-label">Vyberte model</span>
-        <span class="kh-typ2__nav-text">Kliknite na model. Obsah a parametre pod kartami sa prepínajú podľa výberu.</span>
-      </div>
-      <div class="kh-typ2__rady" role="tablist" aria-label="Modely carportu">
-        <button class="kh-typ2__rad is-active" type="button" data-k-typ2-rad id="carport-tab-sl170" aria-controls="carport-panel-sl170">
-          <span class="kh-typ2__foto"><img src="../assets/soltec-carport-simko-trencin.jpg" width="1600" height="1200" alt="Carport Soltec s integrovaným boxom v Trenčíne" loading="lazy" decoding="async" title="Carport Soltec s boxom — Trenčín"></span>
-          <span class="kh-typ2__nazov">SL 170<em>vybraný</em></span>
-          <span class="kh-typ2__veta">Jedno auto. Max. šírka 3,14 m, max. dĺžka 8,0 m na troch stĺpoch. Strecha z ISO panela má približne 2 % spád.</span>
-          <span class="kh-typ2__akcia"><span class="kh-typ2__akcia-off">Zobraziť parametre</span><span class="kh-typ2__akcia-on">Parametre sú zobrazené</span><span aria-hidden="true">→</span></span>
-        </button>
-        <button class="kh-typ2__rad" type="button" data-k-typ2-rad id="carport-tab-sl240" aria-controls="carport-panel-sl240">
-          <span class="kh-typ2__foto"><img src="../assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Hliníkový carport Soltec pre dve autá s uzamykateľným boxom" loading="lazy" decoding="async"></span>
-          <span class="kh-typ2__nazov">SL 240<em>vybraný</em></span>
-          <span class="kh-typ2__veta">Dve autá. Max. šírka 6,0 m, max. dĺžka 8,5 m na troch stĺpoch. Box sa dá umiestniť vzadu alebo zboku.</span>
-          <span class="kh-typ2__akcia"><span class="kh-typ2__akcia-off">Zobraziť parametre</span><span class="kh-typ2__akcia-on">Parametre sú zobrazené</span><span aria-hidden="true">→</span></span>
-        </button>
-      </div>
-      <div class="kh-typ2__panel" data-k-typ2-panel id="carport-panel-sl170" role="tabpanel" aria-labelledby="carport-tab-sl170">
+    <div class="kh-typ2 k-rise">
+      <div class="kh-typ2__panel">
         <table class="kh-typ2__tab">
-          <caption>SL 170 — parametre</caption>
-          <thead><tr><td></td><th scope="col"><strong>Carport</strong><span>jedno auto</span></th><th scope="col"><strong>Uzamykateľný box</strong><span>pod tou istou strechou</span></th></tr></thead>
-          <tbody><tr><th scope="row">Rám</th><td data-popis="Rám · Carport"><b>170 × 120 mm</b></td><td data-popis="Rám · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Stĺp</th><td data-popis="Stĺp · Carport"><b>120 × 120 mm</b></td><td data-popis="Stĺp · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Sekundárny profil</th><td data-popis="Sekundárny profil · Carport"><b>80 × 50 mm</b></td><td data-popis="Sekundárny profil · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Max. šírka</th><td data-popis="Max. šírka · Carport"><b>3,14 m</b></td><td data-popis="Max. šírka · Uzamykateľný box"><b>3,14 m</b></td></tr><tr><th scope="row">Max. dĺžka</th><td data-popis="Max. dĺžka · Carport"><b>6,0 m</b> <i>na 2 stĺpoch</i><br><b>8,0 m</b> <i>na 3 stĺpoch</i></td><td data-popis="Max. dĺžka · Uzamykateľný box"><b>hĺbka 1,2 – 3 m</b></td></tr><tr><th scope="row">Strecha</th><td data-popis="Strecha · Carport"><b>ISO panel 3 cm</b></td><td data-popis="Strecha · Uzamykateľný box"><i>spoločná s carportom</i></td></tr></tbody>
+          <caption>Porovnanie modelov carportu Soltec</caption>
+          <thead>
+            <tr><td></td><th scope="col"><strong>SL 170</strong><span>1 auto</span></th><th scope="col"><strong>SL 240</strong><span>2 autá</span></th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Max. šírka</th><td data-popis="Max. šírka · SL 170"><b>3,14 m</b></td><td data-popis="Max. šírka · SL 240"><b>6,0 m</b></td></tr>
+            <tr><th scope="row">Max. dĺžka</th><td data-popis="Max. dĺžka · SL 170"><b>6,0 m</b> <i>na 2 stĺpoch</i><br><b>8,0 m</b> <i>na 3 stĺpoch</i></td><td data-popis="Max. dĺžka · SL 240"><b>6,0 m</b> <i>na 2 stĺpoch</i><br><b>8,5 m</b> <i>na 3 stĺpoch</i></td></tr>
+            <tr><th scope="row">Rám</th><td data-popis="Rám · SL 170"><b>170 × 120 mm</b></td><td data-popis="Rám · SL 240"><b>240 × 150 mm</b></td></tr>
+            <tr><th scope="row">Stĺp</th><td data-popis="Stĺp · SL 170"><b>120 × 120 mm</b></td><td data-popis="Stĺp · SL 240"><b>150 × 150 mm</b></td></tr>
+            <tr><th scope="row">Strecha</th><td data-popis="Strecha · SL 170"><b>ISO panel 3 cm</b></td><td data-popis="Strecha · SL 240"><b>ISO panel 3 cm</b></td></tr>
+            <tr><th scope="row">Kotvenie</th><td data-popis="Kotvenie · SL 170"><b>do betónovej pätky</b></td><td data-popis="Kotvenie · SL 240"><b>do betónovej pätky</b></td></tr>
+          </tbody>
         </table>
+        <p class="kh-typ2__note"><strong>Spoločné pre oba:</strong> variant zaťaženia 100 / 160 / 240 kg/m² sa volí podľa konkrétnej zostavy a snehovej oblasti. Box môže byť vzadu alebo zboku a rieši sa až po výbere carportu.</p>
       </div>
-      <div class="kh-typ2__panel" hidden data-k-typ2-panel id="carport-panel-sl240" role="tabpanel" aria-labelledby="carport-tab-sl240">
-        <table class="kh-typ2__tab">
-          <caption>SL 240 — parametre</caption>
-          <thead><tr><td></td><th scope="col"><strong>Carport</strong><span>dve autá</span></th><th scope="col"><strong>Uzamykateľný box</strong><span>pod tou istou strechou</span></th></tr></thead>
-          <tbody><tr><th scope="row">Rám</th><td data-popis="Rám · Carport"><b>240 × 150 mm</b></td><td data-popis="Rám · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Stĺp</th><td data-popis="Stĺp · Carport"><b>150 × 150 mm</b></td><td data-popis="Stĺp · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Sekundárny profil</th><td data-popis="Sekundárny profil · Carport"><b>150 × 50 mm</b></td><td data-popis="Sekundárny profil · Uzamykateľný box"><i>rovnaký profil</i></td></tr><tr><th scope="row">Max. šírka</th><td data-popis="Max. šírka · Carport"><b>6,0 m</b></td><td data-popis="Max. šírka · Uzamykateľný box"><b>6,0 m</b> <i>bočný box až 8,5 m</i></td></tr><tr><th scope="row">Max. dĺžka</th><td data-popis="Max. dĺžka · Carport"><b>6,0 m</b> <i>na 2 stĺpoch</i><br><b>8,5 m</b> <i>na 3 stĺpoch</i></td><td data-popis="Max. dĺžka · Uzamykateľný box"><b>hĺbka 1,2 – 3 m</b></td></tr><tr><th scope="row">Strecha</th><td data-popis="Strecha · Carport"><b>ISO panel 3 cm</b></td><td data-popis="Strecha · Uzamykateľný box"><i>spoločná s carportom</i></td></tr></tbody>
-        </table>
-      </div>
-      <p class="kh-typ2__note"><strong>Spoločné pre oba modely:</strong> ISO panel 3 cm a variant zaťaženia 100 / 160 / 240 kg/m² podľa konkrétnej zostavy a snehovej oblasti. Preto tieto údaje nie sú medzi rozdielmi modelov. Väčšie plochy sa skladajú z modulov vedľa seba.</p>
     </div>
   </div>
 </section>
