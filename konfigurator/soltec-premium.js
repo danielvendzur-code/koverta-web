@@ -3611,12 +3611,24 @@
                visual proportions, never millimetres inferred from photos. */
             if (Boolean(state.extras['kv-led']) && !nadStrechou) {
               kvAccessoryGeometry.led.enabled = true;
+              kvAccessoryGeometry.led.corners = [];
               const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
               const ledT = Math.max(4, Math.min(8, RAM_H * 0.03));
               const diffT = Math.max(1.2, ledT * 0.22);
               const ledZ = ramBot - ledT;
               const ledProfile = shade(zinok, -0.18);
               const ledLight = '#f5e8c5';
+              const ledSurface = (x, y, dx, dy) => {
+                boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
+                const ix = dx > dy ? ledW * 0.18 : 0;
+                const iy = dy > dx ? ledW * 0.18 : 0;
+                const lx = x + ix, ly = y + iy;
+                const ldx = Math.max(1, dx - ix * 2), ldy = Math.max(1, dy - iy * 2);
+                boxFaces(lx, ly, ledZ - diffT, ldx, ldy, diffT, ledLight, [], SHAFT);
+                quad([[lx, ly, ledZ - diffT], [lx + ldx, ly, ledZ - diffT],
+                      [lx + ldx, ly + ldy, ledZ - diffT], [lx, ly + ldy, ledZ - diffT]],
+                     ledLight, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
+              };
               const ledRun = (x, y, dx, dy) => {
                 /* One dimension intentionally equals ledW: that is the strip
                    width. Reject only a run whose longitudinal dimension is too
@@ -3628,31 +3640,38 @@
                   profileTopZ: ledZ + ledT,
                   hostBottomZ: ramBot
                 });
-                boxFaces(x, y, ledZ, dx, dy, ledT, ledProfile, [], SHAFT);
-                const ix = dx > dy ? ledW * 0.18 : 0;
-                const iy = dy > dx ? ledW * 0.18 : 0;
-                const lx = x + ix, ly = y + iy;
-                const ldx = Math.max(1, dx - ix * 2), ldy = Math.max(1, dy - iy * 2);
-                boxFaces(lx, ly, ledZ - diffT, ldx, ldy, diffT, ledLight, [], SHAFT);
-                /* Samotný diffuser má na spodnom líci stabilnú svetelnú
-                   plochu. Je priamo na profile (rovnaká spodná rovina), nejde
-                   o samostatný levitujúci pás. raw fill je zámerný: LED má
-                   svietiť rovnomerne a zároveň dáva QA jednoznačný fyzický
-                   marker bez závislosti od počtu BSP fragmentov. */
-                quad([[lx, ly, ledZ - diffT], [lx + ldx, ly, ledZ - diffT],
-                      [lx + ldx, ly + ldy, ledZ - diffT], [lx, ly + ldy, ledZ - diffT]],
-                     ledLight, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
+                ledSurface(x, y, dx, dy);
               };
-              const xA = RAM_ZAD + RAM_PAR;
+              const ledCorner = (x, y) => {
+                kvAccessoryGeometry.led.corners.push({
+                  x, y, dx: ledW, dy: ledW,
+                  profileBottomZ: ledZ,
+                  profileTopZ: ledZ + ledT,
+                  hostBottomZ: ramBot
+                });
+                ledSurface(x, y, ledW, ledW);
+              };
+
+              /* The realization shows the light tracing the INSIDE edge of
+                 the steel perimeter. Four straight runs therefore sit against
+                 the inner frame faces and four square/miter connector regions
+                 close the corners. This avoids the visible gaps created by the
+                 previous centreline placement while keeping every illuminated
+                 surface directly under steel. */
+              const xA = rx0;
               const xB = rx1 - RAM_PAR;
               const yA = ry0;
               const yB = ry1;
               const sideLen = Math.max(0, xB - xA);
               const endLen = Math.max(0, yB - yA);
-              ledRun(xA, RAM_VSUN + RAM_PAR / 2 - ledW / 2, sideLen, ledW);
-              ledRun(xA, W - RAM_VSUN - RAM_PAR / 2 - ledW / 2, sideLen, ledW);
-              ledRun(RAM_ZAD + RAM_PAR / 2 - ledW / 2, yA, ledW, endLen);
-              ledRun(rx1 - RAM_PAR / 2 - ledW / 2, yA, ledW, endLen);
+              ledRun(xA, yA - ledW, sideLen, ledW);
+              ledRun(xA, yB, sideLen, ledW);
+              ledRun(xA - ledW, yA, ledW, endLen);
+              ledRun(xB, yA, ledW, endLen);
+              ledCorner(xA - ledW, yA - ledW);
+              ledCorner(xB, yA - ledW);
+              ledCorner(xA - ledW, yB);
+              ledCorner(xB, yB);
             }
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
