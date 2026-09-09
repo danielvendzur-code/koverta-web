@@ -3427,21 +3427,25 @@
                presvital podklad ako svetlý vlások — na streche z toho boli
                tenké čiary krížom cez vlnu. crispEdges ich posadí presne na
                seba. */
-            /* Skutočný profil podhľadu aj vrchu.
-               Predtým bol trapéz jedna rovná plocha a vlny iba priesvitné
-               pásy. To vytváralo falošné čiary, plochý podhľad a pri šikmých
-               pohľadoch dojem tenkej SVG nálepky. Výška a rozteč ostávajú
-               výhradne z REF/Expivi (TRAP_H, TRAP_KRYT). Šírky koruny a
-               ramena sú presne tie isté vizuálne hodnoty 15/44, ktoré už
-               renderer používal na tieňovanie; touto zmenou sa z fotografie
-               neodvodzuje žiadny nový technický rozmer. */
+            /* Skutočný 3D profil podhľadu.
+               Predtým bol spodok trapézu jedna rovná plocha a vlny iba
+               priesvitné pásy. Výška a rozteč ostávajú výhradne z REF/Expivi
+               (TRAP_H, TRAP_KRYT). Šírky koruny a ramena sú tie isté
+               vizuálne hodnoty 15/44, ktoré už renderer používal na ryhy;
+               z fotografie sa tým nevytvára nový technický rozmer.
+
+               Vrch zostáva jedna súvislá plocha v odkrytom poli. Reálny plech
+               je pod horným ramenom lemovania a pri nízkom pohľade zhora musí
+               zostať za ním. Rozdelenie vrchu na desiatky šikmých facetov
+               vytváralo v BSP štyri konkrétne pixely cez lemovanie, hoci
+               svetlá výška profilu bola správna. Podhľad sa pri pohľade nad
+               strechou vôbec negeneruje, takže sa nemôže zamiešať do painter
+               orderu vrchnej skladby. */
             const vlnRoztec = TRAP_KRYT / 5;
             const RIB_CROWN_VIS = 15;
             const RIB_SHOULDER_VIS = 44;
 
             const trapProfileZ = (y) => {
-              /* Profil je fázovaný od ty1 rovnako ako pôvodné ryhy. Nájde sa
-                 najbližšia os hrebeňa bez zaokrúhľovania rozteče. */
               const raw = ty1 - y;
               const phase = ((raw % vlnRoztec) + vlnRoztec) % vlnRoztec;
               const d = Math.min(phase, vlnRoztec - phase);
@@ -3466,35 +3470,45 @@
               return cuts.filter((v, i) => !i || Math.abs(v - cuts[i - 1]) > 1e-6);
             };
 
-            const trapSkin = (x0, x1, y0, y1, hex, upper) => {
-              if (x1 <= x0 || y1 <= y0) return;
-              const cuts = trapBreaks(y0, y1);
+            if (!nadStrechou) {
+              const cuts = trapBreaks(ty0, ty1);
               for (let i = 0; i < cuts.length - 1; i++) {
                 const a = cuts[i], b = cuts[i + 1];
                 const za = trapProfileZ(a), zb = trapProfileZ(b);
-                /* Rovnaká fyzická vlna má dve materiálové strany. Horná sa
-                   kreslí iba v odkrytom poli medzi lemovaním; spodná až pod
-                   lemovanie. Opačné vinutie dá správnu normálu pre svetlo aj
-                   culling bez duplicitného viditeľného polygonu. */
-                const pts = upper
-                  ? [[x0, a, za], [x1, a, za], [x1, b, zb], [x0, b, zb]]
-                  : [[x0, a, za], [x0, b, zb], [x1, b, zb], [x1, a, za]];
-                quad(pts, hex, {
+                const pts = [[tx0, a, za], [tx0, b, zb], [tx1, b, zb], [tx1, a, za]];
+                quad(pts, spodHex, {
                   normal: faceNormal(pts),
-                  cull: true,
                   edge: false,
                   seamless: true
                 });
               }
-            };
+            }
 
-            trapSkin(tx0, tx1, ty0, ty1, spodHex, false);
-            trapSkin(vx0, vx1, vy0, vy1, vrchHex, true);
+            /* Vrchná plocha je bezpečne zrezaná až za vnútornú hranu
+               lemovania rovnako ako pred vizuálnou úpravou. Jemné ryhy sú
+               iba svetelný detail; nemajú technický ani hit-test význam. */
+            if (vx1 > vx0 && vy1 > vy0) {
+              quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
+                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
 
-            /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy.
-               Reálny profil, C-profily a svetlo vytvárajú vlastné tienenie.
-               Umelé overlay pásy boli zdrojom diagonál a blikajúcich švov pri
-               BSP delení a nemajú oporu v samostatne overenom Expivi rozmere. */
+              const topBand = (y0, y1, hex) => {
+                const a = Math.max(y0, vy0), b = Math.min(y1, vy1);
+                if (b <= a) return;
+                quad([[vx0, a, trapTop], [vx1, a, trapTop], [vx1, b, trapTop], [vx0, b, trapTop]],
+                     hex, { normal: [0, 0, 1], raw: true, edge: false, fit: false });
+              };
+              const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
+              for (let k = 0; k < vlnPocet; k++) {
+                const va = ty1 - vlnRoztec * k;
+                topBand(va - 17, va + 17, 'rgba(255,255,255,.075)');
+                topBand(va + 17, va + 44, 'rgba(10,12,14,.085)');
+              }
+            }
+
+            /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
+               podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
+               tienenie; tie overlay pásy boli zdrojom falošných línií a
+               blikajúcich švov. */
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
                a žľab visí presne v tej kapse, hore pod lemovaním. Preto ho

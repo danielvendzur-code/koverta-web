@@ -1,0 +1,75 @@
+# Integrator feedback — Agent 01 VISUAL
+
+Read this before your next runtime commit. Update `coordination/koverta/01-visual.md` when these checks are complete.
+
+Do not touch master. Do not change Soltec. Do not change pricing, Expivi axes, post sections, dimensional rules, or tests.
+
+## New concrete findings from integrator
+
+### 1. Underside trapezoid is currently largely a flat plane with painted bands
+In `konfigurator/soltec-premium.js`, Koverta draws the underside body as one large `trapBot` quad. The visible corrugation underneath is then simulated using low-alpha `pruh(...)` strips. This is a strong candidate for the user's complaint that the underside has strange lines and looks synthetic.
+
+Your task:
+- make the Koverta underside read as one coherent trapezoidal/corrugated roof, not a flat sheet with arbitrary stripes;
+- preserve technical extents and Expivi-based axes;
+- do not invent corrugation millimetres from photos;
+- avoid new intersecting/copanar faces that could reintroduce z-fighting/BSP failures;
+- keep the existing `prekrytie` and roof tests unchanged.
+
+### 2. Fascia / sheet interface still looks wrong in real use
+The user supplied a real screenshot where the trapezoid visually shows through the fascia. The current renderer deliberately crops the visible top sheet away from the fascia using `vx0/vx1/vy0/vy1`, but that has not fully solved the visual result.
+
+Do not solve this with painter-order bias, test tolerances or enlarged hidden cover geometry. Inspect the actual Koverta fascia/sheet surfaces and make the visible assembly clean from grazing angles.
+
+Check especially:
+- upper oblique front/corner views;
+- fascia inner edge;
+- all four corners;
+- transition from visible roof top to fascia top arm;
+- lower/grazing views where the fascia becomes only a few screen pixels thick.
+
+### 3. Material quality
+The current renderer already has world-space lighting. Improve only Koverta material perception where justified:
+- RAL-coated fascia/posts should not read as plastic;
+- galvanized C profiles, plates and hardware must remain visually distinct from painted RAL parts;
+- dark RAL 7016/9005 must retain readable edges/details;
+- RAL 9010/9006 must not blow out into one white mass.
+
+Do not alter the official Koverta RAL option list.
+
+### 4. Use real Drive realizations, visually only
+Use:
+Google Drive → MARKETING → realizácie → **Koverta Auto Pristresky**
+Folder:
+`https://drive.google.com/drive/folders/1SxXlJMzd3Ni6xh-hP13_hdUkmOVKiPO4`
+
+Compare at minimum:
+- **Limbach Sevelova 7 x 6 x 6** — six-post appearance;
+- **Skalica Funny Sport 6,6 x 5,2 x 6** — six-post appearance;
+- a 4-post realization such as **Váhovce Takáč 4,2 x 6 x 4, RAL 9006**;
+- one dark realization and one light realization.
+
+Photos prove appearance/existence only. Never derive millimetres from them.
+
+### 5. Scope boundaries
+Agent 04 owns gutter/downpipe and accessories. If you notice visual defects there, document them in your report instead of independently rebuilding those parts unless coordination requires a tiny shared renderer primitive.
+
+Agent 05 owns connection/plate/screw technical fidelity. Do not change screw count, bracket orientation, plate sizes or structural sections without its verified technical evidence.
+
+## Browser evidence required
+Before finishing, capture/inspect Koverta:
+- 4-post and 6-post;
+- 7000×5200 and 7000×6000;
+- RAL 9005/7016 and RAL 9010/9006;
+- front, side, corner, top, under;
+- desktop and mobile;
+- several intermediate orbit angles, not just presets.
+
+Specifically look for:
+- fake/diagonal underside lines;
+- roof appearing through fascia;
+- fascia corner teeth/gaps;
+- suddenly changing material tone during rotation;
+- any part disappearing.
+
+Do not weaken any existing test. Soltec must remain byte-for-byte/runtime unchanged unless the integrator explicitly authorizes otherwise.
