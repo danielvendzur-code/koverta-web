@@ -70,8 +70,8 @@ async function waitRender(page) {
     assert(catalogue.maxW === 7000 && catalogue.maxL === 6000, 'Configurator catalogue scope is not 7000 × 6000 mm');
     assert(catalogue.wallSide === null && catalogue.wallBack === null && catalogue.wallSideBySize === null,
       'Unverified side-wall prices must not remain numeric');
-    assert(/vrátane DPH/.test(catalogue.priceNote) && !/s dopravou a montážou/.test(catalogue.priceNote),
-      'Koverta price note contains an unsafe transport/assembly claim');
+    assert(/vrátane DPH a montáže/.test(catalogue.priceNote) && /dopravu.*potvrdíme/i.test(catalogue.priceNote),
+      'Koverta price note does not preserve verified installation scope and unresolved transport scope');
     assert(catalogue.placements.filter(item => item.id !== 'kv-free').every(item => /na nacenenie/.test(item.label)),
       'Non-standard placements are not marked for quotation');
     assert(catalogue.placements.length === 2
@@ -92,10 +92,12 @@ async function waitRender(page) {
     assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
     assert(gutterNo && gutterNo.tichy === true && gutterNo.cena == null, 'No-gutter selection must not create a fake 0 € line');
     assert(catalogue.gutter.opts[0].id === 'nie', 'Optional gutter must not be preselected without a verified inclusion rule');
-    assert(catalogue.anchoring && catalogue.anchoring.opts[0].id === 'beton' && catalogue.anchoring.opts[0].cena == null,
+    assert(catalogue.anchoring && JSON.stringify(catalogue.anchoring.opts.map(item => item.id)) === JSON.stringify(['beton', 'ine']),
+      'Unsupported concrete-footing/paving anchoring variants are still exposed');
+    assert(catalogue.anchoring.opts[0].tichy === true && catalogue.anchoring.opts[0].cena == null,
       'Base concrete anchoring must not create a fake 0 € surcharge');
-    assert(catalogue.anchoring.opts.filter(item => item.id !== 'beton').every(item => item.cena == null),
-      'Unverified alternative anchoring received an invented numeric price');
+    assert(catalogue.anchoring.opts[1].cena == null && /na nacenenie/.test(catalogue.anchoring.opts[1].s || ''),
+      'Alternative substrate must remain quote-only without an invented price');
     assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 0,
       'Unverified Koverta-specific extras must not remain customer-selectable');
 
@@ -104,7 +106,8 @@ async function waitRender(page) {
       assert(!visibleText.includes(forbidden), 'Technical info block is still visible: ' + forbidden);
     }
     assert(!visibleText.includes('s DPH, dopravou aj montážou'), 'Unsafe mini-price transport claim is still visible');
-    assert(!visibleText.includes('Cena vrátane DPH, dopravy aj montáže'), 'Unsafe summary transport claim is still visible');
+    assert(visibleText.includes('s DPH a montážou'), 'Verified installation inclusion is missing from the compact price note');
+    assert(!visibleText.includes('vrátane DPH, dopravy aj montáže'), 'Unsafe summary transport claim is still visible');
 
     const initialWidth = await page.locator('[data-sp-w-out]').textContent();
     const initialLength = await page.locator('[data-sp-l-out]').textContent();
@@ -112,6 +115,9 @@ async function waitRender(page) {
     assert(/5\s*200/.test(initialLength), 'Unexpected initial Koverta depth: ' + initialLength);
     assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '4 497 €',
       'Default Koverta state must be the verified base price with optional gutter off');
+    const initialSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
+    assert(initialSnapshot.price.open === false && initialSnapshot.price.total === 4497,
+      'Runtime and displayed default price state disagree');
 
     // Verify the published 6200 -> 6600 price transition separately from the renderer's post-count default.
     await page.evaluate(() => {
@@ -175,11 +181,11 @@ async function waitRender(page) {
 
     // Alternative anchoring is request-only; returning to base concrete anchoring clears that state.
     const anchoringButtons = page.locator('[data-sp-add-opt="pick:kotvenie"]');
-    await anchoringButtons.filter({ hasText: 'Betónové pätky' }).click({ force: true });
+    await anchoringButtons.filter({ hasText: 'Iný podklad / príprava základov' }).click({ force: true });
     await waitRender(page);
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Unpriced foundation option did not mark total as open');
-    await anchoringButtons.filter({ hasText: 'Do betónu' }).click({ force: true });
+    await anchoringButtons.filter({ hasText: 'Do pripraveného betónu' }).click({ force: true });
     await waitRender(page);
     assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Returning to verified base anchoring left stale quote-only state');
@@ -236,8 +242,15 @@ async function waitRender(page) {
     assert(payload.body.includes('Umiestnenie:'), 'Payload omits placement');
     assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state');
     assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
-    assert(payload.body.includes('vrátane DPH'), 'Payload omits VAT context');
-    assert(payload.body.includes('Konečný rozsah montáže, dopravy'), 'Payload omits safe fulfilment disclaimer');
+    assert(payload.body.includes('vrátane DPH a montáže'), 'Payload omits verified VAT/installation scope');
+    assert(payload.body.includes('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.'),
+      'Payload omits unresolved transport/quote-only disclaimer');
+    assert(payload.body.includes('Kotvenie stĺpov: Do pripraveného betónu'), 'Payload omits selected base anchoring');
+    assert(payload.body.includes('Odkvap a zvod: Bez odkvapu'), 'Payload omits selected gutter state');
+    assert(!payload.body.includes('voda steká z hrany') && !payload.body.includes('kotvenie podľa podkladu'),
+      'Payload leaks helper copy into selected-option values');
+    assert((payload.body.match(/Umiestnenie:/g) || []).length === 1 && !payload.body.includes('Umiestnenie —'),
+      'Payload duplicates placement in the summary lines');
     assert(!payload.body.includes('s dopravou a montážou'), 'Payload contains obsolete included-transport claim');
 
     // Reset is an explicit fresh Koverta route, so it cannot leave stale options behind.
