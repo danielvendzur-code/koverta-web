@@ -3379,7 +3379,9 @@
             // otherwise defeat the painter fallback and cover the fascia.
             const vx0 = Math.max(tx0, LEM_CELO + 11), vx1 = Math.min(tx1, L - LEM_CELO - 11);
             const vy0 = Math.max(ty0, LEM_BOK + 11), vy1 = Math.min(ty1, W - LEM_BOK - 11);
-            boxFaces(tx0, ty0, trapBot, tx1 - tx0, ty1 - ty0, TRAP_H, vrchHex, ['-z', '+z'], SHAFT);
+            // All four sheet end faces lie inside the opaque fascia. They
+            // have no exposed edge in this assembly; emitting them creates
+            // intersecting hidden polygons which the painter can misorder.
             /* Veľké plochy plechu sa nesmú obťahovať. Obťah ide 0,35 px za
                obrys plochy a pri plochom pohľade, keď je rameno lemovania
                zúžené na pár pixelov, ho ten pretiahnutý okraj prekryje — presne

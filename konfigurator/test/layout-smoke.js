@@ -2,6 +2,17 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('fs');
 fs.mkdirSync('qa-artifacts', { recursive: true });
 
+async function revealPage(page) {
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < height; y += 700) {
+    await page.evaluate(y => window.scrollTo(0, y), y);
+    await page.waitForTimeout(100);
+  }
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -72,10 +83,12 @@ function assert(condition, message) {
       const locator = page.locator(selector).first();
       if (await locator.count()) {
         await locator.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(350);
+        await page.waitForTimeout(1200);
         await locator.screenshot({ path: 'qa-artifacts/' + name });
       }
     }
+    await revealPage(page);
+    await page.screenshot({ path: 'qa-artifacts/home-desktop.png', fullPage: true });
     assert(home.overflow <= 4, 'Desktop homepage has horizontal overflow: ' + home.overflow);
     assert(home.heroRating && home.heroRating.width > 150 && home.heroRating.height > 25, 'Hero Google rating is not visible');
     assert(home.barPhone && home.barPhone.display !== 'none' && home.barPhone.visibility !== 'hidden' && home.barPhone.opacity > .9, 'Desktop main-nav phone is not visible');
@@ -109,6 +122,7 @@ function assert(condition, message) {
       };
     });
     console.log('MOBILE_METRICS ' + JSON.stringify(mob));
+    await revealPage(mp);
     await mp.screenshot({ path: 'qa-artifacts/home-mobile.png', fullPage: true });
     assert(mob.overflow <= 4, 'Mobile homepage has horizontal overflow: ' + mob.overflow);
     assert(mob.cards.length === 2 && mob.cards[1].y > mob.cards[0].bottom, 'Brand cards do not stack on mobile');
@@ -165,6 +179,7 @@ function assert(condition, message) {
         assert(!/Vydrží lamelová strecha sneh\?|Ako sa pergola čistí\?/i.test(metrics.bodyText),
           'Garden page still contains stale pergola/lamella FAQ wording');
       }
+      await revealPage(pp);
       await pp.screenshot({ path: 'qa-artifacts/product-' + key + '-desktop.png', fullPage: true });
     }
     await productCtx.close();
@@ -195,6 +210,7 @@ function assert(condition, message) {
       assert(metrics.heroHeight && metrics.heroHeight >= 560, key + ' mobile hero is too short/collapsed');
       assert(metrics.h1Width && metrics.h1Width <= 360, key + ' mobile hero heading overflows');
       assert(metrics.actionWidths.length >= 1 && metrics.actionWidths.every(w => w <= 360), key + ' mobile hero CTA overflows');
+      await revealPage(pmp);
       await pmp.screenshot({ path: 'qa-artifacts/product-' + key + '-mobile.png', fullPage: true });
     }
     await productMobileCtx.close();
