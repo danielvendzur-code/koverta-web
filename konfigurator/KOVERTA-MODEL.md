@@ -107,48 +107,57 @@ istý čas, na žiadnej fotke Koverty nie je — bola to chyba a je preč.
 ## Osnova: z čoho sa počíta celá konštrukcia
 
 Nič sa nekreslí podľa tabuľky rozmerov. Celý prístrešok stojí na jednej
-osnove a tá má tri pravidlá:
+osnove a pravidlo je jedno: **stĺp nikdy nestojí sám o sebe — buď pod
+väznicou, alebo v osi čelného rámu.**
 
 1. **Osi čelných rámov.** Jedna je 52 mm od zadnej hrany strechy, druhá
    196 mm od odkvapovej — tam je 159 mm kapsa, v ktorej visí žľab. (Profil
    je 74 hrubý, takže líce je 15, resp. 159 mm dnu.)
-2. **Osi väzníc.** Delia rozpätie medzi tými dvoma osami na rovnaké polia a
-   pole má strop: 960 mm pri 7,0 m šírke, 1 440 mm pri užších. Väzníc je
-   toľko, aby ho žiadne pole neprekročilo.
-3. **Osi stĺpov.** Krajné stoja na osiach rámu, stredné priamo pod
-   väznicami — stĺp nikdy nestojí medzi väznicami. Prierez je vycentrovaný
-   na os a keď by takto prečnieval cez hranu strechy, zarovná sa s ňou.
+2. **Osi väzníc** — a tie má každá varianta inde:
+   * **štvorstĺpová** má tri väznice v strede a po **L/4 + 250** od neho
+     (na 6,0 m je to 1 750 mm, na 5,6 m 1 650 — obe odmerané);
+   * **šesťstĺpová** delí rozpätie medzi osami čelných rámov na rovnaké
+     polia so stropom 960 mm, čo pri 5,2 – 6,0 m dá päť väzníc.
+3. **Osi stĺpov.**
+   * **štvorstĺpová** stojí pod **krajnými dvoma väznicami** z troch, takže
+     strecha jej na oboch koncoch prečnieva vyše metra. Prierez 110 × 190
+     (190 pozdĺž hĺbky) — všetky štyri.
+   * **šesťstĺpová** má krajné rady **v osiach čelných rámov**, teda pri
+     hranách strechy (prierez 150 × 150), a stredný rad **pod prostrednou
+     väznicou** (110 × 190).
 
 **Počet stĺpov nie je voľba zákazníka.** Vyplýva zo šírky a cenník to hovorí
 sám: štvorstĺpová matica v Expivi končí na 6,2 m a od 6,6 m je publikovaná už
 len šesťstĺpová.
 
-| šírka | stĺpy | strop poľa väzníc | väznice pri 5,2 – 6,0 m |
+| šírka | varianta | väznice pri 5,2 – 6,0 m | stĺpy |
 | --- | --- | --- | --- |
-| 2 500 – 6 200 | 4 v rohoch | 1 440 mm | 3 |
-| 6 600 – 7 000 | 6: rohy + stredný rad | 960 mm | 5 |
+| 2 500 – 6 200 | štvorstĺpová | 3, v strede ± (L/4 + 250) | 4 pod krajnými väznicami, 110 × 190 |
+| 6 600 – 7 000 | šesťstĺpová | 5, rovnomerne, pole ≤ 960 mm | 4 v osiach rámu (150 × 150) + 2 pod prostrednou väznicou (110 × 190) |
 
-Prierez stĺpa je odmeraný a je iný v rohu než v poli: **rohový 150 × 150,
-stredný 110 × 190**, kde 190 ide pozdĺž hĺbky.
+### Prečo to nie je „stĺpy v rohoch"
 
-V dátach stránky je pásmo v poli `kvGeom` — `{max, postsPerSide, vaznic,
-vaznicPole}` — a rozmery dielov v `kvRef`. V engine to číta `kvOsnova()`,
-`kvOsiStlpov()` a `kvStlpRez()`; z nich berú `postXs()`, prierezy stĺpov aj
-osi väzníc. Soltec pole `kvGeom` nemá, takže ide ďalej po svojom.
+Pri štvorstĺpovej variante **nie sú stĺpy v rohoch** — sú vyše metra dnu a
+strecha nad nimi prečnieva. Vidieť to na oficiálnych rendroch Koverty aj v
+exporte. Prierez 150 × 150 v zipe patrí **šesťstĺpovej** variante, nie
+štvorstĺpovej; kým sa bral ako „rohový stĺp štvorstĺpovej", stáli stĺpy pri
+hranách strechy a to je zle. Štvorstĺpová má všetky štyri stĺpy 110 × 190 a
+tie v exporte sedia presne s krajnými väznicami svojej sady.
 
 ### Čo z toho vyjde a čo je v exporte
 
-| veľkosť | osi väzníc podľa osnovy | odmerané v scéne |
-| --- | --- | --- |
-| 7,0 × 5,2 | 877 / 1 703 / 2 528 / 3 353 / 4 179 | 877 / 1 703 / 2 528 / 3 353 / 4 179 |
-| 7,0 × 6,0 | 1 011 / 1 969 / 2 928 / 3 887 / 4 845 | 988 / 1 992 / 2 928 / 3 864 / 4 868 |
-| 4,0 × 6,0 | 1 490 / 2 928 / 4 366 | 1 490 / 2 928 / 4 366 |
-| 7,0 × 4,0 | 3 väznice, pole 938 | 3 väznice, osi 1 149 / 2 086 / 3 023 |
-| 7,0 × 3,0 | 2 väznice, pole 917 | 2 väznice, osi 1 116 / 2 056 |
+Osi sú vztiahnuté k hrane strechy, merané od odkvapového čela.
 
-Pri 7,0 × 5,2 a 4,0 × 6,0 to sedí na milimeter, pri 7,0 × 6,0 do 23 mm —
-tam je autorský model o toľko nepravidelný. Os obvodového rámu (52 / 196 mm)
-sedí na **21 katalógoch** všetkých šírok a hĺbok.
+| veľkosť | osi väzníc podľa osnovy | odmerané v exporte |
+| --- | --- | --- |
+| 2,5 × 5,6 (4 stĺpy) | 1 222 / 2 872 / 4 522 | 1 222 / 2 872 / 4 522 |
+| 2,5 × 6,0 (4 stĺpy) | 1 322 / 3 072 / 4 822 | 1 322 / 3 072 / 4 822 |
+| 7,0 × 5,2 (6 stĺpov) | 1 021 / 1 847 / 2 672 / 3 497 / 4 323 | 1 021 / 1 846 / 2 672 / 3 497 / 4 322 |
+| 7,0 × 6,0 (6 stĺpov) | 1 155 / 2 113 / 3 072 / 4 031 / 4 989 | 1 132 / 2 136 / 3 072 / 4 008 / 5 012 |
+
+Pri štvorstĺpovej a pri 7,0 × 5,2 to sedí na milimeter, pri 7,0 × 6,0 do
+23 mm — tam je autorský model o toľko nepravidelný. Os obvodového rámu
+(52 / 196 mm) sedí na **21 katalógoch** všetkých šírok a hĺbok.
 
 Preto tu nie je žiadna tabuľka polôh: rozmer na mieru vyjde tým istým
 vzorcom ako katalógový a nie je čo dopočítavať naslepo.
@@ -159,6 +168,10 @@ vzorcom ako katalógový a nie je čo dopočítavať naslepo.
 - scéna sa z API ťahá s prázdnym výberom atribútov, takže pri väčšine
   katalógov vráti len časť dielov (často len strechu). Kompletnú scénu majú
   14069 a 14192; ostatné vedia potvrdiť aspoň os obvodového rámu.
+
+Zip exportu navyše nesie aj siete variánt, ktoré sa pri danej veľkosti
+nepredávajú — pri 7,0 m sú v ňom rady 1 132 / 5 012, hoci štvorstĺpová
+varianta pri tej šírke v cenníku nie je.
 
 Novšie katalógy (šírky 3,0 / 3,8 / 4,5 / 5,4 / 6,2 / 6,6 m) sú iná generácia
 dielov — stĺp 100 × 100 namiesto 150 × 150. Konfigurátor kreslí staršiu
@@ -197,7 +210,8 @@ kde vzniknúť:
 | --- | --- | --- |
 | osi rámu, väzníc, stĺpov aj prierezy stĺpov | 2 (7,0 × 5,2 a 7,0 × 6,0) | kompletná scéna |
 | os obvodového rámu | 21 | scéna, aj keď nesie len strechu |
-| osi rohových stĺpov 150 × 150 | 32 | zip exportu — taký prierez má len štvorstĺpová varianta a sú presne štyri, takže ich nie je s čím zameniť |
+| osi rohových stĺpov 150 × 150 (šesťstĺpová) | 32 | zip exportu — taký prierez má len šesťstĺpová varianta a sú presne štyri |
+| rady štvorstĺpovej 110 × 190 | 20 | zip exportu — trojica {krajný, stredný, krajný} sa porovná celá |
 
 ## Test prekrytia
 

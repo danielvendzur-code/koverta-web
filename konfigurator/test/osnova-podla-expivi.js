@@ -46,21 +46,32 @@ const pasmo = (w) => GEOM.find((g) => w <= g.max) || GEOM[GEOM.length - 1];
 /* Ten istý vzorec, aký beží v soltec-premium.js. Keby sa rozišli, rozíde sa
    aj tento test s modelom — preto sú tu obe strany napísané z tých istých
    čísel v kvRef, nie prepísané rukou. */
+const osiRamu = (L) => ({ zad: REF.ramZad + REF.ramW / 2, odk: L - REF.ramOdkvap - REF.ramW / 2 });
+/* Štvorstĺpová varianta: tri väznice po L/4 + 250 od stredu, stĺpy pod
+   krajnými dvoma. Existuje v exporte pri každej veľkosti, aj tam, kde ju
+   konfigurátor nekreslí, tak sa dá overiť všade. */
+const styri = (L) => {
+  const o = osiRamu(L), stred = (o.zad + o.odk) / 2, sm = L / 4 + 250;
+  const vaz = [stred - sm, stred, stred + sm];
+  return { zad: o.zad, odk: o.odk, stred, vaz, stlpy: [vaz[0], vaz[2]] };
+};
 const osnova = (W, L) => {
-  const b = pasmo(W), rw = REF.ramW;
-  const zad = REF.ramZad + rw / 2;
-  const odk = L - REF.ramOdkvap - rw / 2;
+  const b = pasmo(W), o = osiRamu(L);
+  if (b.vaznicStred) {
+    const s = styri(L);
+    return { zad: o.zad, odk: o.odk, vaz: s.vaz, stlpy: s.stlpy, nv: 3 };
+  }
   const nv = b.vaznicPole > 0
-    ? Math.max(1, Math.ceil((odk - zad) / b.vaznicPole) - 1)
+    ? Math.max(1, Math.ceil((o.odk - o.zad) / b.vaznicPole) - 1)
     : Math.max(1, b.vaznic);
-  const pole = (odk - zad) / (nv + 1);
+  const pole = (o.odk - o.zad) / (nv + 1);
   const vaz = [];
-  for (let k = 1; k <= nv; k++) vaz.push(zad + pole * k);
+  for (let k = 1; k <= nv; k++) vaz.push(o.zad + pole * k);
   const n = Math.max(2, b.postsPerSide);
-  const stlpy = [zad];
+  const stlpy = [o.zad];
   for (let k = 1; k < n - 1; k++) stlpy.push(vaz[Math.round(((vaz.length - 1) * k) / (n - 1))]);
-  stlpy.push(odk);
-  return { zad, odk, vaz, stlpy, nv };
+  stlpy.push(o.odk);
+  return { zad: o.zad, odk: o.odk, vaz, stlpy, nv };
 };
 
 /* Odmerané diely: nájdi os hĺbky, potom vyber rámy, väznice a stĺpy. Diel
@@ -164,7 +175,7 @@ Object.keys(mer).sort().forEach((k) => {
    do stlpy-a-vaznice-odmerane.json. */
 const fs2 = require('fs');
 const UNIA = path.join(KOREN, 'archiv-expivi', 'stlpy-a-vaznice-odmerane.json');
-let rohOk = 0;
+let rohOk = 0, styriOk = 0;
 if (fs2.existsSync(UNIA)) {
   const u = JSON.parse(fs2.readFileSync(UNIA, 'utf8'));
   Object.keys(u).sort().forEach((k) => {
@@ -185,7 +196,7 @@ if (fs2.existsSync(UNIA)) {
     if (Math.abs(v.ext[1] - v.L) > 150) return;
     const nula = v.ext[1] - v.L - (REF.plate / 2 - (REF.ramZad + REF.ramW / 2));
     const m = osi.map((x) => x - nula).sort((a, b) => a - b);
-    const o = osnova(v.W, v.L);
+    const o = osiRamu(v.L);
     const moje = [o.zad, o.odk].sort((a, b) => a - b);
     const zr = m.map((x) => v.L - x).sort((a, b) => a - b);
     const d = Math.min(Math.max(Math.abs(m[0] - moje[0]), Math.abs(m[1] - moje[1])),
@@ -194,8 +205,33 @@ if (fs2.existsSync(UNIA)) {
                        + ' mm (model ' + m.map(Math.round) + ', engine ' + moje.map(Math.round) + ')');
     else rohOk += 1;
   });
+  /* Rady štvorstĺpovej varianty: prierez 110 × 190 majú jej štyri stĺpy aj
+     stredný rad šesťstĺpovej, takže v zipe je z nich zjednotenie {krajný,
+     stredný, krajný}. Porovnáva sa celá trojica proti vzorcu. */
+  Object.keys(u).sort().forEach((k) => {
+    const v = u[k];
+    const rez = v.stlpy && v.stlpy['(110, 190, 2398)'];
+    /* Od 6,6 m sa štvorstĺpová varianta nepredáva a v jej exporte je
+       päťväznicová sada, takže tie rady sú inde a niet ich s čím porovnať. */
+    if (!rez || Math.abs(v.ext[1] - v.L) > 150 || v.W > 6200) return;
+    const osiM = [];
+    rez.map((p) => p[0]).sort((a, b) => a - b).forEach((x) => {
+      if (!osiM.length || x - osiM[osiM.length - 1] > 70) osiM.push(x);
+    });
+    if (osiM.length !== 3) return;
+    const nula = v.ext[1] - v.L - (REF.plate / 2 - (REF.ramZad + REF.ramW / 2));
+    const m = osiM.map((x) => x - nula);
+    const s4 = styri(v.L);
+    const moje = s4.vaz.slice().sort((a, b) => a - b);
+    const zr = m.map((x) => v.L - x).sort((a, b) => a - b);
+    const roz = (A, B) => Math.max(Math.abs(A[0] - B[0]), Math.abs(A[1] - B[1]), Math.abs(A[2] - B[2]));
+    const d = Math.min(roz(m, moje), roz(zr, moje));
+    if (d > TOL) chyba(k + ' rady štvorstĺpovej: odchýlka ' + Math.round(d)
+                       + ' mm (model ' + m.map(Math.round) + ', engine ' + moje.map(Math.round) + ')');
+    else styriOk += 1;
+  });
 }
 if (zle) { console.log('osnova nesedí s Expivi: ' + zle + ' rozdielov'); process.exit(1); }
 console.log('osnova sedí s Expivi (' + ok + ' porovnaní osí a prierezov, '
             + ramOk + ' katalógov s osou rámu, ' + rohOk + ' s rohovými stĺpmi, '
-            + 'tolerancia ' + TOL + ' mm)');
+            + styriOk + ' s radmi štvorstĺpovej, tolerancia ' + TOL + ' mm)');

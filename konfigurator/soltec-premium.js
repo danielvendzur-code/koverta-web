@@ -978,6 +978,17 @@
              960 mm pri 7,0 m šírke, 1 440 mm pri užších. Katalógové hĺbky tak
              dajú presne ten počet, ktorý je v exporte (2 na 3,0 m, 3 na
              4,0 m, 5 na 5,2 aj 6,0 m pri siedmich metroch šírky). */
+          const stred = (zad + odk) / 2;
+          /* Štvorstĺpová a šesťstĺpová varianta majú väznice inde — v exporte
+             sú obe sady vedľa seba a líšia sa rozstupom. Štvorstĺpová ich má
+             po L/4 + 250 od stredu (na 6,0 m to je 1 750, na 5,6 m 1 650) a
+             stoja pod krajnými dvoma stĺpy. Šesťstĺpová delí rozpätie medzi
+             osami čelných rámov na rovnaké polia so stropom. */
+          if (b && b.vaznicStred) {
+            const sm = L / 4 + Number(b.vaznicStred);
+            return { zad: zad, odk: odk, stred: stred, pole: sm,
+                     vaz: [stred - sm, stred, stred + sm] };
+          }
           const strop = Number(b && b.vaznicPole) || 0;
           const nv = strop > 0
             ? Math.max(1, Math.ceil((odk - zad) / strop) - 1)
@@ -985,26 +996,35 @@
           const pole = (odk - zad) / (nv + 1);
           const vaz = [];
           for (let i = 1; i <= nv; i++) vaz.push(zad + pole * i);
-          return { zad: zad, odk: odk, vaz: vaz, pole: pole };
+          return { zad: zad, odk: odk, stred: stred, vaz: vaz, pole: pole };
         };
-        /* Osi stĺpov. Krajné sedia na osiach rámu, stredné na väzniciach —
-           stĺp nikdy nestojí medzi väznicami, vždy priamo pod jednou. */
+        /* Osi stĺpov. Stĺp nikdy nestojí sám o sebe — buď pod väznicou, alebo
+           v osi čelného rámu.
+
+           Štvorstĺpová varianta stojí pod krajnými dvoma väznicami z troch a
+           strecha jej na oboch koncoch prečnieva vyše metra. Šesťstĺpová má
+           krajné rady v osiach čelných rámov, teda pri hranách strechy, a
+           stredný rad pod prostrednou väznicou. Odmerané zo všetkých exportov
+           (prierez 110 × 190 pri štvorstĺpovej, 150 × 150 v rohoch pri
+           šesťstĺpovej) — nie je to voľba, vyplýva to zo šírky. */
         const kvOsiStlpov = () => {
-          const o = kvOsnova(), n = Math.max(2, postLayout().n);
+          const o = kvOsnova(), b = kvBand(), n = Math.max(2, postLayout().n);
+          if (b && b.stlpyNaVaznici) return [o.vaz[0], o.vaz[o.vaz.length - 1]];
           const out = [o.zad];
           for (let i = 1; i < n - 1; i++)
             out.push(o.vaz[Math.round(((o.vaz.length - 1) * i) / (n - 1))]);
           out.push(o.odk);
           return out;
         };
-        /* Prierez stĺpa: v rohoch 150 × 150, stredný rad 110 × 190 (190 ide
-           pozdĺž hĺbky). Odmerané z 14069 aj 14192. */
+        /* Prierez stĺpa: 150 × 150 tam, kde stĺp stojí v osi čelného rámu,
+           110 × 190 tam, kde stojí pod väznicou (190 ide pozdĺž hĺbky).
+           Štvorstĺpová varianta má teda všetky štyri 110 × 190. */
         const kvStlpRez = (i, n) => {
-          const R = model().kvRef || {};
-          const roh = i === 0 || i === n - 1;
-          return roh
-            ? { d: Number(R.postD) || 150, w: Number(R.postW) || 150, roh: true }
-            : { d: Number(R.stredD) || 190, w: Number(R.stredW) || 110, roh: false };
+          const R = model().kvRef || {}, b = kvBand();
+          const naVaznici = (b && b.stlpyNaVaznici) || i !== 0 && i !== n - 1;
+          return naVaznici
+            ? { d: Number(R.stredD) || 190, w: Number(R.stredW) || 110, roh: false }
+            : { d: Number(R.postD) || 150, w: Number(R.postW) || 150, roh: true };
         };
         const postD = () => {
           const b = kvBand();
@@ -3509,7 +3529,10 @@
                  rendri. Kým výtok sedel presne nad rúrou, bol zvod celý zvislý
                  a to koleno chýbalo. */
               const xVytok = Math.max(xRura, Math.min(zlX1 - rz, L - LEM_T - rz - 4));
-              const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) + 40);
+              /* Koleno klesne asi o sedem desatín toho, o čo sa rúra vráti
+                 dnu — tak je to na oficiálnom rendri, kde stĺp stojí vyše
+                 metra od odkvapu a šikmý úsek preto vidieť. */
+              const zKoleno = zBot - Math.max(60, Math.abs(xVytok - xRura) * 0.7 + 60);
               const zPata = 265;                      // spodok zvislej časti
               const RP = 90;                          // polomer vyhnutej pätky
 
