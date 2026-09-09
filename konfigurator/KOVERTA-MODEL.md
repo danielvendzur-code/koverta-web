@@ -94,6 +94,34 @@ documented as millimetre-exact. Earlier comments described some dimensions as
 manufacturer-confirmed or fully measured without a traceable source. Do not
 repeat those claims.
 
+## Roof-only scenes: coordinate conventions
+
+`kvRoofBySize` stores roof cross-sections separately from `kvBySize`, so a
+roof-only export never becomes evidence for column axes or a complete assembly.
+Each entry identifies its source catalogue, axis order and actual source depth.
+
+The newer exports use **width, height, depth**, unlike 14069/14192, which use
+**width, depth, height**. A 5000 × 260 × 240 end component therefore has a
+260 mm height and a 240 mm inward reach; treating 260 as its reach swaps axes.
+The runtime uses the actual end/side reach, fascia height and C-frame height:
+
+| Nominal sizes | Source catalogues | End/side reach | Fascia/frame height |
+|---|---|---|---|
+| 3000 × 5200/5600/6000 | 21727/21728/21729 | 240/240 | 240/200 |
+| 3800 × 5200/5600/6000 | 20955/20915/20956 | 240/240 | 240/200 |
+| 4500 × 5200/5600/6000 | 20963/20964/20997 | 240/240 | 240/200 |
+| 5000 × 5600/6000 | 21183/21185 | 240/240 | 260/220 |
+| 5400 × 5200/5600/6000 | 21462/21465/21466 | 240/240 | 260/220 |
+| 6200 × 5200/5600/6000 | 21423/21444/21459 | 240/240 | 260/220 |
+| 6600 × 5200/5600/6000 | 21730/21731/21732 | 240/240 | 260/220 |
+| 7000 × 5600 label only | 14198 | 240/240 | 260/220 |
+
+14198 contains a **5200 mm** roof, and 21466 a **5600 mm** roof. Only the
+cross-section measurements are reused for those catalogue labels; their
+nominal depths and inherited axes are not claimed as measured. No source mesh
+is stretched. Missing catalogue combinations retain the explicitly documented
+240 mm visual fascia fallback. This does not confirm their structural family.
+
 ## Unresolved catalogue and variant discrepancies
 
 - Catalogue 14198 is labelled 7 × 5.6 m but its archived geometry has the

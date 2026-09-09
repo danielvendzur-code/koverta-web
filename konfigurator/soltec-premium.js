@@ -975,13 +975,15 @@
         const kvRoofRef = () => {
           const base = model().kvRef || {};
           const exact = kvMeasured() || {};
+          const roofSizes = model().kvRoofBySize || {};
+          const roof = roofSizes[`${widthMM()}x${lengthMM()}`] || {};
           return {
-            ...base,
-            lemCelo: Number(exact.lemCelo) || Number(base.lemCeloFallback) || Number(base.lemCelo) || 190,
+            ...base, ...roof,
+            lemCelo: Number(exact.lemCelo) || Number(roof.lemCelo) || Number(base.lemCeloFallback) || Number(base.lemCelo) || 190,
             /* Every recovered active scene with a measurable side fascia uses
                240 mm. Exact scenes override this explicitly; for unmeasured
                sizes this remains a visual fallback, not a certified dimension. */
-            lemBok: Number(exact.lemBok) || Number(base.lemBokExport) || Number(base.lemBok) || 240
+            lemBok: Number(exact.lemBok) || Number(roof.lemBok) || Number(base.lemBokExport) || Number(base.lemBok) || 240
           };
         };
         const kvOsnova = () => {
