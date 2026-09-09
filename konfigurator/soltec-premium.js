@@ -2439,8 +2439,10 @@
                   const vodo = dx > dy;
                   const roz = (vodo ? dx : dy) * 0.30;
                   [-1, 1].forEach((sd) => {
+                    /* Head starts exactly on the plate underside.
+                       The old -1 mm render offset left a literal air gap. */
                     skrutkaHlavy(vodo ? cx0 + sd * roz : cx0,
-                                 vodo ? cy0 : cy0 + sd * roz, zH - th - 1);
+                                 vodo ? cy0 : cy0 + sd * roz, zH - th);
                   });
                 };
                 /* Rozhoduje skutočná rola stĺpa, nie jeho index v rade.
