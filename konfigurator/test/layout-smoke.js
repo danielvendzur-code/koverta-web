@@ -18,6 +18,13 @@ function assert(condition, message) {
       };
     });
   };
+  const dismissConsent = async (page) => {
+    const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
+    if (await reject.count()) {
+      await reject.first().click();
+      await page.waitForTimeout(150);
+    }
+  };
   try {
     const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(desktop);
@@ -26,6 +33,7 @@ function assert(condition, message) {
     page.on('console', msg => { if (msg.type() === 'error') errors.push('desktop console: ' + msg.text()); });
 
     await page.goto('http://127.0.0.1:8901/', { waitUntil: 'load', timeout: 60000 });
+    await dismissConsent(page);
     await page.waitForTimeout(1000);
 
     const home = await page.evaluate(() => {
@@ -88,6 +96,7 @@ function assert(condition, message) {
     mp.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
     mp.on('console', msg => { if (msg.type() === 'error') errors.push('mobile console: ' + msg.text()); });
     await mp.goto('http://127.0.0.1:8901/', { waitUntil: 'load', timeout: 60000 });
+    await dismissConsent(mp);
     await mp.waitForTimeout(800);
     const mob = await mp.evaluate(() => {
       const cards = [...document.querySelectorAll('.kh-znacky__kus')].map(el => {
@@ -117,6 +126,7 @@ function assert(condition, message) {
     cp.on('pageerror', e => errors.push('config pageerror: ' + e.message));
     cp.on('console', msg => { if (msg.type() === 'error') errors.push('config console: ' + msg.text()); });
     await cp.goto('http://127.0.0.1:8901/konfigurator/?page=koverta', { waitUntil: 'load', timeout: 60000 });
+    await dismissConsent(cp);
     await cp.waitForTimeout(2200);
     const cfg = await cp.evaluate(() => {
       const stage=document.querySelector('[data-sp-canvas]');
