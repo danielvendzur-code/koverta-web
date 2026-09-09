@@ -16,7 +16,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Verify QA files
-        run: ls -la configurator/test && test -f configurator/test/layout-smoke.js
+        run: ls -la konfigurator/test && test -f konfigurator/test/layout-smoke.js
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -37,8 +37,8 @@ jobs:
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
-          node configurator/test/layout-smoke.js
-          node configurator/test/stlpy-vidno.js
-          node configurator/test/prekrytie.js
-          node configurator/test/strecha-nepresvita.js
-          node configurator/test/plynulost.js
+          node konfigurator/test/layout-smoke.js
+          node konfigurator/test/stlpy-vidno.js
+          node konfigurator/test/prekrytie.js
+          node konfigurator/test/strecha-nepresvita.js
+          node konfigurator/test/plynulost.js
