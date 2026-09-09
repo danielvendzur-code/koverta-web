@@ -444,8 +444,8 @@
   }
 
   // Testovateľný čistý výstup payloadu bez otvárania e-mailového klienta.
-  window.KVBuildKovertaQuote = function () {
-    return buildKovertaQuote(null);
+  window.KVBuildKovertaQuote = function (custom) {
+    return buildKovertaQuote(custom || null);
   };
 
   document.addEventListener('click', function (event) {
