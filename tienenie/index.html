@@ -691,22 +691,11 @@
           <input type="hidden" name="form_type" value="contact">
           <input type="hidden" name="utf8" value="✓">
           <fieldset>
-            <legend>Čo riešite?</legend>
-            <div class="kh-select" data-k-select>
-              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
-                <span data-k-select-label>Prístrešok pre auto</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
-                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
-              </ul>
-              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
-            </div>
-          </fieldset>
+          <legend>Máte záujem o</legend>
+          <div class="kh-form__choices">
+            <label><input type="radio" name="contact[Čo rieši]" value="Tienenie Soltec" checked><span>Tienenie Soltec</span></label>
+          </div>
+        </fieldset>
 
           <div class="kh-form__grid">
             <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
