@@ -192,28 +192,43 @@ function validateAccessoryContacts(snap, label) {
 
   const led = accessories.led;
   assert(led && led.enabled, `${label}: LED contact data missing`);
-  assert(led.runs.length === 4,
-    `${label}: evidenced perimeter LED installation must contain four frame runs`);
-  assert(Array.isArray(led.corners) && led.corners.length === 4,
-    `${label}: LED perimeter is missing one or more corner connectors`);
-  const ledParts = led.runs.concat(led.corners);
-  ledParts.forEach((part, i) => {
-    assertClose(part.profileTopZ, part.hostBottomZ,
-      `${label}: LED part ${i} does not touch its host frame underside`);
-    assert(part.x >= assembly.xMin - 0.01 && part.y >= assembly.yMin - 0.01 &&
-      part.x + part.dx <= assembly.xMax + 0.01 &&
-      part.y + part.dy <= assembly.yMax + 0.01,
-      `${label}: LED part ${i} escaped the current frame footprint`);
+  assert(Array.isArray(led.runs) && led.runs.length >= 4,
+    `${label}: LED renderer produced too few physical frame segments`);
+  const renderedSides = new Set(led.runs.map((run) => run.side));
+  ['rear', 'front', 'left', 'right'].forEach((side) => {
+    assert(renderedSides.has(side), `${label}: LED has no segment on ${side} frame`);
   });
-  const touches = (a, b) => {
-    const eps = 0.02;
-    return a.x <= b.x + b.dx + eps && a.x + a.dx >= b.x - eps &&
-      a.y <= b.y + b.dy + eps && a.y + a.dy >= b.y - eps;
+  led.runs.forEach((run, i) => {
+    assertClose(run.profileTopZ, run.hostBottomZ,
+      `${label}: LED segment ${i} does not touch its host frame underside`);
+    assert(run.dx > 0 && run.dy > 0,
+      `${label}: LED segment ${i} has a non-positive footprint`);
+    assert(run.x >= assembly.xMin - 0.01 && run.y >= assembly.yMin - 0.01 &&
+      run.x + run.dx <= assembly.xMax + 0.01 &&
+      run.y + run.dy <= assembly.yMax + 0.01,
+      `${label}: LED segment ${i} escaped the current frame footprint`);
+  });
+
+  /* A post may touch the end of an LED segment but no positive-area part of
+     the LED profile may occupy the steel post footprint. This is the physical
+     regression that the earlier visual-only test could not detect. */
+  const postRects = (led.blockedPosts || []).flatMap((post) => [
+    { x0: post.from, x1: post.to, y0: post.rearY0, y1: post.rearY1 },
+    { x0: post.from, x1: post.to, y0: post.frontY0, y1: post.frontY1 }
+  ]);
+  const overlapArea = (run, post) => {
+    const x0 = Math.max(run.x, post.x0);
+    const x1 = Math.min(run.x + run.dx, post.x1);
+    const y0 = Math.max(run.y, post.y0);
+    const y1 = Math.min(run.y + run.dy, post.y1);
+    return Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   };
-  led.corners.forEach((corner, i) => {
-    const touchingRuns = led.runs.filter((run) => touches(corner, run)).length;
-    assert(touchingRuns === 2,
-      `${label}: LED corner ${i} must physically connect exactly two perimeter runs, got ${touchingRuns}`);
+  assert(postRects.length >= 4, `${label}: LED post-footprint data is incomplete`);
+  led.runs.forEach((run, runIndex) => {
+    postRects.forEach((post, postIndex) => {
+      assert(overlapArea(run, post) <= 0.01,
+        `${label}: LED segment ${runIndex} penetrates post footprint ${postIndex}`);
+    });
   });
 
   const gutter = accessories.gutter;
