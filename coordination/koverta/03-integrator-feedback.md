@@ -129,3 +129,21 @@ Current branch sets `wallSide`, `wallBack` and `wallSideBySize` to null. This ma
 Before finalizing, document exactly why those values are untrusted/stale and which sources you checked. If an authoritative current source exists, restore only the verified values rather than defaulting everything to quote-only.
 
 Do not change Soltec.
+
+
+## PRIORITA TERAZ — POKRAČUJ V PRÁCI
+
+Pokračuj **hneď teraz** na svojom branche a dokonči otvorené body z tohto feedbacku. Nečakaj na ďalšiu správu ani na integráciu.
+
+Pravidlá:
+- neukončuj prácu len preto, že prvý fix vyzerá dobre;
+- prejdi celý svoj scope ešte raz a hľadaj ďalšie konkrétne chyby;
+- oprav iba veci podložené dôkazom;
+- po každej úprave znovu prever regresie;
+- master nemeníš;
+- Soltec nemeníš;
+- testy nemeníš ani neoslabuješ;
+- ak narazíš na problém patriaci inému agentovi, zapíš ho do reportu namiesto zásahu mimo svoj scope;
+- skonči až keď sú všetky body z feedbacku vyriešené, branch je čistý, vlastné kontroly hotové a výsledok je pripravený na integráciu.
+
+Ak počas práce nájdeš ďalšiu chybu v rámci svojho scope, **oprav ju tiež** — neobmedzuj sa iba na už vypísané body.
