@@ -174,6 +174,36 @@ function assert(condition, message) {
     }
     await productCtx.close();
 
+    const productMobileCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await installAnalyticsStubs(productMobileCtx);
+    const pmp = await productMobileCtx.newPage();
+    pmp.on('pageerror', e => errors.push('product-mobile pageerror: ' + e.message));
+    pmp.on('console', msg => { if (msg.type() === 'error') errors.push('product-mobile console: ' + msg.text()); });
+    for (const [path, key] of [['pristresky-pre-auta/', 'auto'], ['zahradne-pristresky/', 'garden']]) {
+      await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
+      await dismissConsent(pmp);
+      await pmp.waitForTimeout(400);
+      const metrics = await pmp.evaluate(() => {
+        const hero = document.querySelector('.kh-hero');
+        const h1 = hero && hero.querySelector('h1');
+        const actions = hero ? [...hero.querySelectorAll('.kh-hero__actions a')].map(a => a.getBoundingClientRect()) : [];
+        return {
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          heroHeight: hero && hero.getBoundingClientRect().height,
+          h1Width: h1 && h1.getBoundingClientRect().width,
+          actionWidths: actions.map(r => r.width),
+          bodyWidth: document.body.getBoundingClientRect().width
+        };
+      });
+      console.log('PRODUCT_MOBILE_METRICS ' + key + ' ' + JSON.stringify(metrics));
+      assert(metrics.overflow <= 4, key + ' mobile page has horizontal overflow: ' + metrics.overflow);
+      assert(metrics.heroHeight && metrics.heroHeight >= 560, key + ' mobile hero is too short/collapsed');
+      assert(metrics.h1Width && metrics.h1Width <= 360, key + ' mobile hero heading overflows');
+      assert(metrics.actionWidths.length >= 1 && metrics.actionWidths.every(w => w <= 360), key + ' mobile hero CTA overflows');
+      await pmp.locator('.kh-hero').screenshot({ path: 'qa-artifacts/product-' + key + '-mobile-hero.png' });
+    }
+    await productMobileCtx.close();
+
     const cfgCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(cfgCtx);
     const cp = await cfgCtx.newPage();
