@@ -132,3 +132,21 @@ Do not weaken mandatory tests.
 The Koverta stage still defines generic `post = 120` for model K. Make sure every Koverta accessory/side-wall contact path you touched is switched to actual `kvStlpRez`/post-face geometry. Do not rewrite Soltec's generic paths.
 
 Coordinate this with Agent 05 rather than changing structural sections yourself.
+
+
+## PRIORITA TERAZ — POKRAČUJ V PRÁCI
+
+Pokračuj **hneď teraz** na svojom branche a dokonči otvorené body z tohto feedbacku. Nečakaj na ďalšiu správu ani na integráciu.
+
+Pravidlá:
+- neukončuj prácu len preto, že prvý fix vyzerá dobre;
+- prejdi celý svoj scope ešte raz a hľadaj ďalšie konkrétne chyby;
+- oprav iba veci podložené dôkazom;
+- po každej úprave znovu prever regresie;
+- master nemeníš;
+- Soltec nemeníš;
+- testy nemeníš ani neoslabuješ;
+- ak narazíš na problém patriaci inému agentovi, zapíš ho do reportu namiesto zásahu mimo svoj scope;
+- skonči až keď sú všetky body z feedbacku vyriešené, branch je čistý, vlastné kontroly hotové a výsledok je pripravený na integráciu.
+
+Ak počas práce nájdeš ďalšiu chybu v rámci svojho scope, **oprav ju tiež** — neobmedzuj sa iba na už vypísané body.
