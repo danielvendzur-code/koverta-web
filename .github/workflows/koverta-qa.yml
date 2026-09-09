@@ -33,7 +33,7 @@ jobs:
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
-          node configurator/test/stlpy-vidno.js
+          node configurator/test/layout-smoke.js\n          node configurator/test/stlpy-vidno.js
           node configurator/test/prekrytie.js
           node configurator/test/strecha-nepresvita.js
           node configurator/test/plynulost.js
