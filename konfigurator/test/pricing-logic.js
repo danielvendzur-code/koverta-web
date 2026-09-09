@@ -14,6 +14,22 @@ async function waitRender(page) {
   });
 }
 
+async function revealControl(page, selector) {
+  const control = page.locator(selector).first();
+  await control.waitFor({ state: 'attached' });
+  const step = await control.evaluate(el => {
+    const panel = el.closest('[data-sp-stepno]');
+    return panel ? panel.getAttribute('data-sp-stepno') : '';
+  });
+  if (step) {
+    const go = page.locator('[data-sp-goto="' + step + '"]').first();
+    if (await go.count()) {
+      await go.click();
+      await control.waitFor({ state: 'visible' });
+    }
+  }
+}
+
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const errors = [];
@@ -201,28 +217,29 @@ async function waitRender(page) {
     });
     await waitRender(page);
 
-    // Optional gutter is off by default. Selecting it makes the price explicitly open/quote-only.
+    // Optional gutter is off by default. Navigate to its real step before interacting.
+    await revealControl(page, '[data-sp-add-opt="pick:odkvap"]');
     const gutterButtons = page.locator('[data-sp-add-opt="pick:odkvap"]');
     assert((await gutterButtons.filter({ hasText: 'Bez odkvapu' }).getAttribute('aria-pressed')) === 'true',
       'No-gutter option is not the default state');
-    await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).click({ force: true });
+    await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).click();
     await waitRender(page);
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Selecting unpriced gutter did not mark total as open');
     assert((await page.locator('[data-sp-lines]').innerText()).includes('Odkvap a zvod'),
       'Selected gutter is missing from the quote lines');
-    await gutterButtons.filter({ hasText: 'Bez odkvapu' }).click({ force: true });
+    await gutterButtons.filter({ hasText: 'Bez odkvapu' }).click();
     await waitRender(page);
     assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Turning optional gutter off left stale quote-only price state');
 
     // Alternative anchoring is request-only; returning to base concrete anchoring clears that state.
     const anchoringButtons = page.locator('[data-sp-add-opt="pick:kotvenie"]');
-    await anchoringButtons.filter({ hasText: 'Iný podklad / príprava základov' }).click({ force: true });
+    await anchoringButtons.filter({ hasText: 'Iný podklad / príprava základov' }).click();
     await waitRender(page);
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Unpriced foundation option did not mark total as open');
-    await anchoringButtons.filter({ hasText: 'Do pripraveného betónu' }).click({ force: true });
+    await anchoringButtons.filter({ hasText: 'Do pripraveného betónu' }).click();
     await waitRender(page);
     assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Returning to verified base anchoring left stale quote-only state');
@@ -241,8 +258,9 @@ async function waitRender(page) {
     assert((await stepCap.textContent()).trim() === stepBefore, 'Back did not return to the previous step');
 
     // A side wall without a current commercial price must be quote-only.
-    await page.locator('[data-sp-side="rear"]').click({ force: true });
-    await page.locator('[data-sp-side-opt="kvdrevo"]').click({ force: true });
+    await revealControl(page, '[data-sp-side="rear"]');
+    await page.locator('[data-sp-side="rear"]').click();
+    await page.locator('[data-sp-side-opt="kvdrevo"]').click();
     await waitRender(page);
     let linesText = await page.locator('[data-sp-lines]').innerText();
     assert(linesText.includes('Lamely — drevo') && linesText.includes('na nacenenie'),
@@ -260,12 +278,13 @@ async function waitRender(page) {
     await waitRender(page);
     const changedWidth = await page.locator('[data-sp-w-out]').textContent();
     assert(/6\s*600/.test(changedWidth), 'Width did not cross into the 6600 mm catalogue band after change: ' + changedWidth);
-    await page.locator('[data-sp-side="rear"]').click({ force: true });
+    await page.locator('[data-sp-side="rear"]').click();
     const woodPressed = await page.locator('[data-sp-side-opt="kvdrevo"]').getAttribute('aria-pressed');
     assert(woodPressed === 'true', 'Compatible side selection was lost after dimension change');
 
     // Non-standard placement is preserved as a quotation-only rule.
-    await page.locator('[data-sp-place="kv-custom-place"]').click({ force: true });
+    await revealControl(page, '[data-sp-place="kv-custom-place"]');
+    await page.locator('[data-sp-place="kv-custom-place"]').click();
     await waitRender(page);
     const placementLine = page.locator('[data-kv-placement-line]');
     await placementLine.waitFor({ state: 'attached' });
@@ -307,7 +326,8 @@ async function waitRender(page) {
 
     // Opening custom-size UI must not trigger the legacy runtime mailto.
     const root = page.locator('#SoltecPremium');
-    await page.locator('[data-kv-custom]').click({ force: true });
+    await revealControl(page, '[data-kv-custom]');
+    await page.locator('[data-kv-custom]').click();
     const customPanel = page.locator('.kv-custom');
     await customPanel.waitFor({ state: 'visible' });
     assert(!(await root.getAttribute('data-sp-quote-href')), 'Opening custom-size UI prematurely generated a quote');
