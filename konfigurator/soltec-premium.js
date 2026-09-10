@@ -4414,7 +4414,14 @@
             const pitch = (i1 - i0) / n;
             const blade = louverSize();
             const bladeW = blade.w;                      // "lamela 200" or "lamela 270"
-            const ang = louverAngle(beam, bladeW, state.louverT);
+            /* Exactly zero degrees makes every neighbouring underside plane
+               mathematically coplanar. The simplified sealing overlap then
+               gives BSP several valid paint orders and tiny camera changes can
+               reshuffle them. Keep the visual closed stop, but render it a
+               fraction of a degree off the singular plane. Across a 200 mm
+               blade this is sub-millimetre and not visually measurable. */
+            const renderLouverT = Math.max(0.003, state.louverT);
+            const ang = louverAngle(beam, bladeW, renderLouverT);
             const y0 = post, y1 = W - post;
             const lap = 30;   // blades tuck under the rails rather than butting them
             /* Lamela je tuhé teleso: jej fyzická šírka sa počas pohybu
@@ -5199,6 +5206,12 @@
           stageTimer = window.setTimeout(paintStage, 60);
         };
         const flushStage = () => { if (stagePending) paintStage(); };
+        const cancelStageQueue = () => {
+          stagePending = 0;
+          if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
+          window.clearTimeout(stageTimer);
+          stageTimer = 0;
+        };
 
         let louverRun = 0, moverTimer = 0;
         const runMover = (ch, target, immediate) => {
@@ -5206,6 +5219,9 @@
           const to = Math.max(0, Math.min(1, target));
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
           if (moverTimer) { window.clearTimeout(moverTimer); moverTimer = 0; }
+          /* A slider/camera frame queued before this animation must never
+             repaint an older state in the middle of the new motion. */
+          cancelStageQueue();
           if (ch === 'all') { MOVER.all.ciel = to; MOVER.all.zapamataj(); }
           const from = M.get();
           if (immediate || reducedMotion || Math.abs(to - from) < 0.005) {
@@ -5244,14 +5260,9 @@
             louverRun = 0;
             window.clearTimeout(moverTimer);
             moverTimer = 0;
-            M.set(to);
-            /* Beh končil prestavbou celého panela. Tá prejde aj cez ,
-               takže posledný snímok behu a to, čo ostane na obrazovke, nie je tá istá
-               geometria — lamely na konci každého zatvorenia poskočili. Od polohy
-               lamiel ani krídel nezávisí nič v paneli okrem čísel, ktoré dopíšeme sami. */
-            drawStage();
-            syncSideMove();
-            syncLouverReadout();
+            /* k === 1 was already rendered above with M.set(to). Do not draw
+               the identical endpoint a second time: near the closed coplanar
+               state that redundant BSP pass was visible as a final settle. */
           };
           louverRun = requestAnimationFrame(step);
           moverTimer = window.setTimeout(() => {
@@ -5284,7 +5295,13 @@
           M.set(v);
           drawStage();
           syncLouver();
-          if ((holdDir > 0 && v >= 1) || (holdDir < 0 && v <= 0)) { stopHold(); return; }
+          if ((holdDir > 0 && v >= 1) || (holdDir < 0 && v <= 0)) {
+            /* This exact endpoint has already been painted in this frame.
+               Mark the hold complete without asking stopHold() to repaint it. */
+            hold = 0;
+            holdDir = 0;
+            return;
+          }
           hold = requestAnimationFrame(holdStep);
         };
         const stopHold = () => {
@@ -5296,11 +5313,16 @@
           /* Finishing a Soltec motion changes only moving geometry/readouts.
              Do not rebuild the entire configurator UI at pointer release. */
           if (model().kvGeom) renderAll();
-          else { drawStage(); syncLouver(); }
+          else { cancelStageQueue(); syncLouver(); }
         };
         const startHold = (dir, ch) => {
           if (hold) return;
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
+          /* runMover has a timeout fallback as well as rAF. Cancelling only
+             rAF left that stale fallback alive and it could move the blades
+             backwards one frame after a new hold started. */
+          if (moverTimer) { window.clearTimeout(moverTimer); moverTimer = 0; }
+          cancelStageQueue();
           holdCh = ch || 'louver';
           holdDir = dir;
           holdFrom = holdLast = clockNow();

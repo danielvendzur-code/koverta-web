@@ -14,6 +14,9 @@ function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
+  assert.match(source, /const renderLouverT = Math\.max\(0\.003, state\.louverT\);/, 'Closed Soltec louvers must avoid the exact coplanar BSP singularity');
+  assert.match(source, /const cancelStageQueue = \(\) =>/, 'Soltec moving interactions must be able to cancel stale queued stage frames');
+  assert.match(source, /if \(moverTimer\) \{ window\.clearTimeout\(moverTimer\); moverTimer = 0; \}/, 'Changing louver interaction mode must clear the stale mover fallback timer');
   assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
   assert.match(source, /const topO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[-bladeUz, 0, bladeUx\] \}\);/, 'Only the broad louver top face is culled');
   assert.match(source, /const underO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[bladeUz, 0, -bladeUx\] \}\);/, 'Only the broad louver underside is culled');
@@ -190,6 +193,39 @@ function percentile(values, p) {
   const maxLouver = Math.max(...louverCounts.map((item) => item.count));
   assert.ok(minLouver > 0, 'Soltec scene disappeared during louver travel');
   assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);
+
+  // Closing is the numerically hardest region because neighbouring blades
+  // approach parallel/coplanar planes. Inspect it at 1-3% increments rather
+  // than letting the ordinary 5% sweep skip over the problematic endpoint.
+  const closeCounts = [];
+  for (const value of [15, 12, 10, 8, 6, 4, 3, 2, 1, 0]) {
+    const count = await page.evaluate((nextValue) => {
+      const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');
+      range.value = String(nextValue);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() =>
+        resolve(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length))));
+    }, value);
+    closeCounts.push({ value, count });
+  }
+  for (let i = 1; i < closeCounts.length; i += 1) {
+    const a = closeCounts[i - 1].count, b = closeCounts[i].count;
+    const jump = Math.abs(b - a) / Math.max(1, Math.max(a, b));
+    assert.ok(jump < 0.12, `Soltec close-end topology jumps at ${closeCounts[i].value}%: ${a} -> ${b}`);
+  }
+
+  // Run the real close button, then make sure no stale timer or queued stage
+  // frame changes the finished SVG after the endpoint has been reached.
+  const openButton = page.locator('#SoltecPremium [data-sp-louver="1"]');
+  const closeButton = page.locator('#SoltecPremium [data-sp-louver="0"]');
+  await openButton.click();
+  await page.waitForTimeout(2350);
+  await closeButton.click();
+  await page.waitForTimeout(2350);
+  const endpointA = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);
+  await page.waitForTimeout(180);
+  const endpointB = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);
+  assert.equal(endpointB, endpointA, 'Soltec SVG changed after the closing animation had already finished');
 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
   fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, releaseSettle, p95, maxFrame }, null, 2));
