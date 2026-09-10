@@ -3858,9 +3858,16 @@
                  štíhlejšom 110 mm stĺpe zmenšil na priemer 48 mm, takže
                  horný úsek vyzeral ako tenká konštrukčná vzpera. Toto je
                  stále iba vizuálny pomer (nie deklarovaný priemer výrobku). */
-              const rz = Math.max(34, Math.min(42, Math.min(rezZvod.w, rezZvod.d) * 0.28));
               const xStlp = rada.length ? rada[xiZvod] : L - rezZvod.d;
               const xLicStlp = xStlp + rezZvod.d;
+              const rzVizu = Math.max(34, Math.min(42,
+                Math.min(rezZvod.w, rezZvod.d) * 0.28));
+              /* Pri niektorých presných šesťstĺpových osiach je rohový stĺp
+                 bližšie k odkvapovej hrane. Polomer sa preto zhora obmedzí
+                 voľným miestom po okraj strechy; rúra nesmie kvôli
+                 realistickejšej hrúbke preraziť obrys aktuálnej zostavy. */
+              const rzPriestor = Math.max(22, (L - xLicStlp - 4) / 2.14);
+              const rz = Math.min(rzVizu, rzPriestor);
               const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               const yPost0 = vsunStlp;
               const yPost1 = yPost0 + rezZvod.w;

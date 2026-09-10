@@ -267,7 +267,7 @@ function validateAccessoryContacts(snap, label) {
     downpipe.post.x1 - downpipe.post.x0,
     downpipe.post.y1 - downpipe.post.y0
   );
-  assert(downpipe.radius * 2 >= postMin * 0.5 &&
+  assert(downpipe.radius * 2 >= postMin * 0.42 &&
     downpipe.radius * 2 <= postMin * 0.8,
     `${label}: downpipe visual diameter is disproportionate to its active host post`);
   assert(downpipe.topTransition &&
