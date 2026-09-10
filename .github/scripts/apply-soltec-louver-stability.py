@@ -18,6 +18,10 @@ replacements = [
         """              moverTimer = window.setTimeout(step, 90);""",
         """              moverTimer = window.setTimeout(() => {\n                /* rAF is the primary clock. The timeout is only a fallback for\n                   throttled/hidden tabs; if it wins, cancel the queued rAF so\n                   one physical instant can never be rendered twice. */\n                if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }\n                moverTimer = 0;\n                step(clockNow());\n              }, 90);""",
     ),
+    (
+        """          if (se > 0.01) {\n            const reach = Math.max(L, W) * 2.4;""",
+        """          /* Ground visibility follows the camera's real world-space\n             height, not an arbitrary elevation threshold through the model.\n             The old se > 0.01 switch added ~80 paving polygons in one frame\n             and caused a visible pop while orbiting near the horizon. */\n          if ((H / 2 + se * DIST) > 0) {\n            const reach = Math.max(L, W) * 2.4;""",
+    ),
 ]
 
 for old, new in replacements:
@@ -27,7 +31,7 @@ for old, new in replacements:
     source = source.replace(old, new, 1)
 
 contract_anchor = """  assert.match(source, /const fullHalf = bladeW \\/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');\n"""
-contract_add = contract_anchor + """  assert.match(source, /const layO = Object\\.assign\\(\\{\\}, lay, obrys, \\{ fit: false \\}\\);/, 'Moving Soltec louvers must not change stage fitting');\n  assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');\n"""
+contract_add = contract_anchor + """  assert.match(source, /const layO = Object\\.assign\\(\\{\\}, lay, obrys, \\{ fit: false \\}\\);/, 'Moving Soltec louvers must not change stage fitting');\n  assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');\n  assert.match(source, /if \\(\\(H \\/ 2 \\+ se \\* DIST\\) > 0\\)/, 'Ground visibility must use actual camera height');\n  assert.doesNotMatch(source, /if \\(se > 0\\.01\\)/, 'Ground must not pop at an arbitrary camera elevation threshold');\n"""
 if test.count(contract_anchor) != 1:
     raise SystemExit('Could not locate Soltec source-contract anchor')
 test = test.replace(contract_anchor, contract_add, 1)
@@ -68,6 +72,10 @@ if test.count(metrics_old) != 1:
     raise SystemExit('Could not locate Soltec metrics write')
 test = test.replace(metrics_old, metrics_new, 1)
 
+# Correct the stale legacy route used by this test. The actual Soltec runtime
+# is mounted by the unified configurator on ?page=bio.
+test = test.replace("http://127.0.0.1:8901/bioklimaticke-pergoly/", "http://127.0.0.1:8901/konfigurator/?page=bio")
+
 source_path.write_text(source, encoding='utf-8')
 test_path.write_text(test, encoding='utf-8')
-print('Applied Soltec-only louver stability patch and framing regression.')
+print('Applied Soltec louver, camera-ground stability and regression patches.')
