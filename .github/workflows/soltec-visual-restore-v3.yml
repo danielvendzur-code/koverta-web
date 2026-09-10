@@ -17,7 +17,23 @@ jobs:
           ref: fix/soltec-louver-stability-20260910
           fetch-depth: 0
       - name: Apply narrow visual restore
-        run: python3 .github/scripts/apply-soltec-visual-restore-v3.py
+        run: |
+          python3 .github/scripts/apply-soltec-visual-restore-v3.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('konfigurator/test/soltec-all-models-regression.js')
+          s = p.read_text(encoding='utf-8')
+          old = "  assert.match(source, /edge: model\\(\\)\\.kvGeom \\? o\\.edge !== false : o\\.edge === true/, 'Soltec structural faces must not receive synthetic outline strokes');\n"
+          if old not in s:
+              raise SystemExit('obsolete global edge assertion missing')
+          s = s.replace(old, '', 1)
+          old = "  assert.match(source, /boxFaces\\(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, \\[\\], SHAFT, 0, false, true\\);/, 'Fixed Soltec secondary profiles must retain both end caps');"
+          new = "  assert.match(source, /boxFaces\\(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, \\[\\], SHAFT, 0, false, true, true\\);/, 'Fixed Soltec secondary profiles must retain both end caps and persist at grazing angles');"
+          if old not in s:
+              raise SystemExit('obsolete fixed-profile assertion missing')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
       - name: Syntax
         run: |
           node --check konfigurator/soltec-premium.js
