@@ -1,0 +1,58 @@
+name: Verify Soltec endpoint stability
+
+on:
+  push:
+    branches: [fix/soltec-louver-stability-20260910]
+
+concurrency:
+  group: soltec-endpoint-stability
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  soltec-endpoint-stability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/soltec-louver-stability-20260910
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply endpoint stability patch
+        run: python3 .github/scripts/apply-soltec-endpoint-stability.py
+      - name: Syntax check
+        run: |
+          node --check konfigurator/soltec-premium.js
+          node --check konfigurator/test/soltec-motion-regression.js
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=bio' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/soltec-http.log
+          exit 1
+      - name: Soltec motion regression
+        env:
+          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
+        run: node konfigurator/test/soltec-motion-regression.js
+      - name: Commit verified endpoint fix only
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js konfigurator/test/soltec-motion-regression.js
+          git rm .github/scripts/apply-soltec-endpoint-stability.py .github/workflows/soltec-endpoint-stability.yml
+          git commit -m 'fix: remove final Soltec louver settling and close-end jumps'
+          git push origin HEAD:fix/soltec-louver-stability-20260910
