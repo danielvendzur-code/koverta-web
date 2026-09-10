@@ -1,4 +1,4 @@
-name: Koverta guarded fascia closure repair
+name: Koverta guarded geometry repair
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Apply exact Koverta fascia repair
+      - name: Apply guarded Koverta geometry repair
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -34,13 +34,40 @@ jobs:
           closure_start = "              /* A narrow hidden closure caps the sight line beneath the\n"
           closure_body = "              const uz = trapBot - 0.5;"
           closure_end = "              });\n            };"
-          marker = 'const turnBottom = trapBot - 1;'
 
-          if marker in text:
-              if closure_start in text or closure_body in text:
-                  raise SystemExit('partial fascia repair detected')
-              print('Guarded fascia repair already present.')
-          else:
+          old_cull = "                if (!bokom && Math.abs(n[2]) < 0.4) continue;"
+          new_cull = "                if (!bokom && Math.abs(n[2]) < 0.4) continue;\n                /* The upper C-profile flange is permanently covered by the sheet.\n                   Do not emit its +Z face: at the corrugation valleys it is exactly\n                   coplanar with trapLowerZ and only adds a BSP splitting plane. */\n                if (podStrechou && n[2] > 0.9) continue;"
+
+          old_slat = """                const d = Math.min(KV_SLAT.hrubka, Math.max(12, gw * 0.62));
+                const n = Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                for (let i = 0; i < Math.min(n, 40); i++) {
+                  const a = od + KV_SLAT.pitch * i;
+                  const tone = mat === 'drevo' ? boardTone(i, KV_TONE.drevo)
+                    : mat === 'wpc' ? boardTone(i * 7, KV_TONE.wpc)
+                    : shade(sideHex, 0.10 + (i % 2 ? 0.03 : 0));
+                  memb(t0, t1, a, a + KV_SLAT.vyska, depth - d / 2, depth + d / 2, tone, [], SHAFT);
+                }"""
+          new_slat = """                const d = Math.min(KV_SLAT.hrubka, Math.max(12, gw * 0.62));
+                /* Expivi-derived KV_SLAT.zapust is the seating depth into both
+                   vertical side guides. Extend only inside those guide members;
+                   the visible clear span and 140/100 course stay unchanged. */
+                const embed = Math.min(KV_SLAT.zapust, Math.max(0, gw - 2)) / Math.max(1, uLen);
+                const slatT0 = Math.max(0, t0 - embed);
+                const slatT1 = Math.min(1, t1 + embed);
+                const n = Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                for (let i = 0; i < Math.min(n, 40); i++) {
+                  const a = od + KV_SLAT.pitch * i;
+                  const tone = mat === 'drevo' ? boardTone(i, KV_TONE.drevo)
+                    : mat === 'wpc' ? boardTone(i * 7, KV_TONE.wpc)
+                    : shade(sideHex, 0.10 + (i % 2 ? 0.03 : 0));
+                  memb(slatT0, slatT1, a, a + KV_SLAT.vyska, depth - d / 2, depth + d / 2, tone, [], SHAFT);
+                }"""
+
+          closure_done = 'const turnBottom = trapBot - 1;' in text
+          c_done = 'if (podStrechou && n[2] > 0.9) continue;' in text
+          slat_done = 'const slatT0 = Math.max(0, t0 - embed);' in text
+
+          if not closure_done:
               if text.count(old_turn) != 1:
                   raise SystemExit(f'expected one hidden-turn target, got {text.count(old_turn)}')
               if text.count(closure_start) != 1 or text.count(closure_body) != 1:
@@ -51,12 +78,29 @@ jobs:
               closure = text[start:end]
               if 'const ua = ' not in closure or 'const ub = ' not in closure or 'quad(closure, roofEdgeHex' not in closure:
                   raise SystemExit('closure structure does not match expected renderer block')
-              text = text.replace(old_turn, new_turn, 1)
+              # Remove first, then replace the earlier hidden turn. This avoids
+              # invalidating the closure indices by changing text length first.
               text = text[:start] + text[end:]
-              if closure_start in text or closure_body in text or 'quad(closure, roofEdgeHex' in text:
-                  raise SystemExit('horizontal closure residue remains')
-              path.write_text(text, encoding='utf-8')
-              print('Replaced horizontal roof closure with extended vertical fascia turn.')
+              text = text.replace(old_turn, new_turn, 1)
+          elif closure_start in text or closure_body in text or 'quad(closure, roofEdgeHex' in text:
+              raise SystemExit('partial fascia repair detected')
+
+          if not c_done:
+              if text.count(old_cull) != 1:
+                  raise SystemExit(f'expected one C-profile cull target, got {text.count(old_cull)}')
+              text = text.replace(old_cull, new_cull, 1)
+
+          if not slat_done:
+              if text.count(old_slat) != 1:
+                  raise SystemExit(f'expected one Koverta slat target, got {text.count(old_slat)}')
+              text = text.replace(old_slat, new_slat, 1)
+
+          forbidden = ['const uz = trapBot - 0.5;', 'quad(closure, roofEdgeHex']
+          if any(token in text for token in forbidden):
+              raise SystemExit('horizontal closure residue remains')
+
+          path.write_text(text, encoding='utf-8')
+          print('Applied guarded Koverta geometry repair.')
           PY
 
           node --check konfigurator/soltec-premium.js
@@ -73,5 +117,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- konfigurator/soltec-premium.js
           test "$(git diff --cached --name-only)" = "konfigurator/soltec-premium.js"
-          git commit -m 'fix: close Koverta roof sightline in fascia'
+          git commit -m 'fix: repair Koverta roof edge and hidden contacts'
           git push origin HEAD:fix/koverta-final-repair-20260910
