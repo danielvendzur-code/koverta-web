@@ -32,16 +32,14 @@ jobs:
           s=p.read_text(encoding='utf-8')
           v=os.environ['VARIANT']
           if v == 'hide-side-outer-web':
-              old = """                const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
-                if (!bokom && Math.abs(n[2]) < 0.4) continue;"""
-              new = """                const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
+              old = "const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];"
+              new = """const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
                 /* Diagnostic: the exterior web of both side perimeter C-rails is
                    permanently behind the opaque side fascia. Do not let that
                    invisible zinc plane enter BSP and leak through fascia splits. */
                 const outsideA = single > 0 ? 0 : par;
                 if (podStrechou && axis === 'y' && single &&
-                    Math.abs(A[0] - outsideA) < 1e-6 && Math.abs(B[0] - outsideA) < 1e-6) continue;
-                if (!bokom && Math.abs(n[2]) < 0.4) continue;"""
+                    Math.abs(A[0] - outsideA) < 1e-6 && Math.abs(B[0] - outsideA) < 1e-6) continue;"""
               if s.count(old) != 1: raise SystemExit(f'c-profile marker count={s.count(old)}')
               s=s.replace(old,new,1)
           elif v != 'baseline':
