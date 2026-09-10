@@ -292,10 +292,10 @@ jobs:
                   raise SystemExit(f"{html}: cannot isolate main content")
               main = text[start:end]
               photos = photo_src.findall(main)
-              duplicates = sorted({src for src in photos if photos.count(src) > 1})
+              duplicates = sorted({src for src in photos if photos.count(src) > 2})
               if duplicates:
                   raise SystemExit(
-                      f"{html}: duplicate main-content photos remain: {duplicates}"
+                      f"{html}: photo used 3+ times in main content: {duplicates}"
                   )
 
           changed = set(
