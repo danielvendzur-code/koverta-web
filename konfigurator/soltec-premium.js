@@ -2039,11 +2039,11 @@
             put('+x', [[X,y,z],[X,Y,z],[X,Y,Z],[X,y,Z]], [1,0,0]);
           };
 
-          /* Skrutka zdola: šesťhran kľúč 19 položený na spodnom líci platne. */
-          /* Skrutka M12, kľúč 19. Kreslí sa ako krátky šesťhranný hranol,
-             ktorý z dielu naozaj vytŕča — nálepka na líci sa pri maliarskom
-             triedení schovala pod diel, na ktorom mala ležať. `os` hovorí, z
-             ktorej plochy hlava trčí, `sgn` ktorým smerom. */
+          /* Viditeľná hlava spojovacieho prvku sa kreslí ako krátky
+             šesťhranný hranol položený priamo na líci dielu. Aktívne Expivi
+             dáta neuvádzajú priemer, triedu ani veľkosť kľúča, preto renderer
+             tieto parametre nevydáva za technickú špecifikáciu. `os` určuje
+             plochu a `sgn` smer, ktorým hlava z líca vystupuje. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
             const r = R || 9, sd = sgn || 1, h = dlzka || 7;
             const P = (t, a) => {
@@ -2414,37 +2414,50 @@
                  nemôže. Kreslili sa ale aj vtedy a na spoji, kde maliarske
                  triedenie rozdelí veľkú plochu strechy, im vykukol pixel. */
               if (BIO.headPlates && !nadStrechou) {
-                const zH = H + lift;
-                /* Platňa je len taká, aby sa na ňu zmestili dve skrutky —
-                   nie doska cez celý bok stĺpa. Kľúč 19 znamená hlavu asi
-                   19 mm cez ploché, takže na dve skrutky vedľa seba stačí
-                   pás asi 110 × 58 mm. */
+                /* Expivi complete scenes put the column top exactly at the
+                   bottom of the side perimeter frame. The renderer lifts that
+                   frame by 2 mm only to avoid coplanar BSP artefacts, so the
+                   visual head plate must bridge the same artificial 2 mm or it
+                   would levitate below the member it is supposed to fix. */
+                const zH = H + lift + (model().roofKit === 'koverta' ? 2 : 0);
+                /* Platňa hlavy zostáva rendererovým detailom 110 × 58 × 8.
+                   Aktívna Expivi scéna ju nerozkladá ako samostatný merateľný
+                   komponent, preto tieto rozmery ani veľkosť viditeľných hláv
+                   skrutiek nie sú prezentované ako výrobné kóty. */
                 const hp = 58;                                    // vyloženie platne
                 const sir = 110;                                  // dĺžka platne
                 const th = 8;
                 /* Platňa hlavy je pozinkovaný plech ako rám a väznice — na
                    oficiálnych rendroch je pod stĺpom svetlá, nie tmavá. */
                 const hlava = model().rimSoffitHex ? shade(model().rimSoffitHex, -0.06) : shade(frame, -0.30);
-                const okraj = xi === 0 || xi === xs.length - 1;
-                /* Platňa leží pod pásnicou, teda o jej hrúbku nižšie. */
+                const rohovy = Boolean(rz.roh);
+                /* Platňa leží pod pásnicou a jej horné líce sa jej dotýka. */
                 const plat = (x0, y0, dx, dy) => {
                   boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
                   const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
                   const vodo = dx > dy;
                   const roz = (vodo ? dx : dy) * 0.30;
                   [-1, 1].forEach((sd) => {
+                    /* Head starts exactly on the plate underside.
+                       The old -1 mm render offset left a literal air gap. */
                     skrutkaHlavy(vodo ? cx0 + sd * roz : cx0,
-                                 vodo ? cy0 : cy0 + sd * roz, zH - th - 1);
+                                 vodo ? cy0 : cy0 + sd * roz, zH - th);
                   });
                 };
-                /* Rohový stĺp má dve platne na dvoch susedných stranách: jednu
-                   pozdĺž bočného rámu, jednu cez šírku do čelného. Obe mieria
-                   dovnútra prístrešku, nie von — vonku by nemali čo držať.
-                   Stĺp v poli má dve oproti sebe, pozdĺž bočného rámu. */
+                /* Rozhoduje skutočná rola stĺpa, nie jeho index v rade.
+                   - Rohový 150 × 150 stĺp stojí pod stykom bočného a čelného
+                     rámu: jedna platňa ide po bočnom ráme, druhá do čelného.
+                   - Nerohový 110 × 190 stĺp končí na spodku BOČNÉHO rámu.
+                     Väznica je v aktívnych Expivi scénach o 40 mm vyššie a
+                     pripája sa k bočnému rámu vlastnými uholníkmi. Preto má
+                     nerohový stĺp iba platne vedené po bočnom ráme; žiadna
+                     platňa nesmie smerovať naprieč do väznice ani k vzdialenému
+                     čelnému rámu. To odstraňuje plávajúcu konzolu na 4-stĺpovej
+                     zostave, kde prvý/posledný index nie je skutočný roh. */
                 const kBoku = py < W / 2;
                 const cy = py + pw / 2, cx = px + pd / 2;
-                if (okraj) {
-                  const dnu = xi === 0 ? 1 : -1;              // smerom do poľa
+                if (rohovy) {
+                  const dnu = xi === 0 ? 1 : -1;              // po bočnom ráme smerom do poľa
                   if (dnu > 0) plat(px + pd, cy - sir / 2, hp, sir);
                   else plat(px - hp, cy - sir / 2, hp, sir);
                   if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
@@ -2469,17 +2482,32 @@
             const left = plc.cantilever === 'left';
             const xi = left ? 1 : xs.length - 2;
             const px = xs[xi];
-            const gap = left ? px : (L - post - px);
+            /* Koverta must anchor the brace to the actual post face. The old
+               generic `post=120` is a Soltec-era visual scalar and is wrong
+               for Koverta's 150×150 and 190×110 sections. Keep the brace's
+               visual thickness heuristic, but derive every physical contact
+               point from the active post section. */
+            const kovertaContact = Boolean(kvBand());
+            const rr = kovertaContact ? kvStlpRez(xi, xs.length) : { d: post, w: post };
+            const pd = rr.d, pw = rr.w;
+            /* Preserve Soltec byte-for-byte geometry semantics here: its
+               historical brace rows were at Y=0/W-post. Koverta alone may use
+               its measured/configured inset. */
+            const vsunBrace = kovertaContact
+              ? (kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0)
+              : 0;
+            const gap = left ? px : (L - pd - px);
             const reach = Math.max(180, Math.min(520, gap * 0.42));
             const drop = Math.max(220, Math.min(560, H * 0.22));
-            const t = Math.max(10, Math.round(post * 0.16));
-            const zTopBrace = H - Math.round(post * 0.10);
-            const xTip = left ? px - reach : px + post + reach;
-            const xHeel = left ? px : px + post;
-            [0, W - post].forEach((py) => {
-              if (walls.indexOf('rear') > -1 && py === 0) return;
-              if (walls.indexOf('front') > -1 && py !== 0) return;
-              const yc = py + post / 2;
+            const contactScale = Math.min(pd, pw);
+            const t = Math.max(10, Math.round(contactScale * 0.16));
+            const zTopBrace = H - Math.round(contactScale * 0.10);
+            const xTip = left ? px - reach : px + pd + reach;
+            const xHeel = left ? px : px + pd;
+            [vsunBrace, W - pw - vsunBrace].forEach((py) => {
+              if (walls.indexOf('rear') > -1 && py === vsunBrace) return;
+              if (walls.indexOf('front') > -1 && py !== vsunBrace) return;
+              const yc = py + pw / 2;
               const y0 = yc - t / 2, y1 = yc + t / 2;
               const A = [xHeel, zTopBrace], B = [xTip, zTopBrace], C = [xHeel, zTopBrace - drop];
               [[y0, [0, -1, 0]], [y1, [0, 1, 0]]].forEach(([y, n]) => {
@@ -2517,9 +2545,17 @@
 
             /* the posts standing inside this run divide it into bays */
             const cuts = [];
-            if (axis === 'x') postXs().forEach((px) => {
-              if (px > runFrom - 1 && px + post < runTo + 1) cuts.push([px, px + post]);
-            });
+            if (axis === 'x') {
+              const rowXs = postXs();
+              rowXs.forEach((px, xi) => {
+                /* Only the cut around a real post is structural here. Koverta
+                   cannot use the generic 120 mm width: its active section may
+                   be 190 mm along X. The overall accessory run remains owned
+                   by the side/accessory rules and is not reinterpreted here. */
+                const pd = kvBand() ? kvStlpRez(xi, rowXs.length).d : post;
+                if (px > runFrom - 1 && px + pd < runTo + 1) cuts.push([px, px + pd]);
+              });
+            }
             const bays = [];
             let cursor = runFrom;
             cuts.sort((m, n) => m[0] - n[0]).forEach((c) => {
@@ -3083,6 +3119,11 @@
                a spod strechy len trochu. */
             const REF = kvRoofRef();
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
+            /* Active Expivi component bounds establish the fascia envelope
+               (reach/height), not sheet gauge. LEM_T=15 is therefore a
+               renderer envelope used to construct the folded L silhouette,
+               not a verified 15 mm material thickness. Do not infer gauge
+               from this value or from photographs. */
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
@@ -3276,9 +3317,9 @@
                farbe C profilov, lebo sú z toho istého pozinku. --- */
             const spojHex = zinok;
             const skrutHex = zinok;
-            /* Skrutka M12 — kľúč 19. Kreslí sa ako šesťhran s podložkou
-               položený na líci dielu, nie ako guľa; v tejto mierke je to
-               presne to, čo je na spoji vidieť. */
+            /* Viditeľný spojovací prvok sa kreslí ako šesťhranná hlava na
+               líci uholníka. Aktívne Expivi komponenty potvrdzujú telo a
+               počet uholníkov, nie priemer/triedu skrutiek ani veľkosť kľúča. */
             /* Spojky, skrutky aj žľab sú celé v hĺbke obvodového rámu, teda
                za lemovaním. Pri pohľade zhora ich vidieť nemôže a maliarske
                triedenie im na spojoch veľkých plôch dovoľovalo vykuknúť —
@@ -3316,20 +3357,17 @@
               const bx0 = Math.min(px, px + sx * UHOL_LX);
               const by0 = Math.min(py, py + sy * UHOL_T);
               boxFaces(bx0, by0, z0, UHOL_LX, UHOL_T, UHOL_H, spojHex);
-              /* Skrutky sú v ramene nad sebou, nie vedľa seba. */
-              /* Na rendri sú v ramene štyri skrutky v štvorci, nie dve nad
-                 sebou. */
+              /* Dve skrutky na každom ramene, spolu štyri na uholník.
+                 Historická Koverta technická skladba používala túto dvojicu
+                 nad sebou; neskoršia vizuálna mriežka omylom zdvojnásobila
+                 počet na každom ramene. */
               const roz = UHOL_H * 0.26;
               const xLic = px + sx * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const r = py + sy * UHOL_LY * t;
-                [-1, 1].forEach((k) => skrutka(xLic, r, zc + k * roz, 'x', 7, sx));
-              });
+              const stredR = py + sy * UHOL_LY * 0.55;
+              [-1, 1].forEach((k) => skrutka(xLic, stredR, zc + k * roz, 'x', 8, sx));
               const yLic = py + sy * UHOL_T;
-              [0.34, 0.72].forEach((t) => {
-                const o = px + sx * UHOL_LX * t;
-                [-1, 1].forEach((k) => skrutka(o, yLic, zc + k * roz, 'y', 7, sy));
-              });
+              const stredO = px + sx * UHOL_LX * 0.55;
+              [-1, 1].forEach((k) => skrutka(stredO, yLic, zc + k * roz, 'y', 8, sy));
             };
 
             /* --- väznice. Dva C profily chrbtami k sebe: stojiny sa dotýkajú
@@ -3560,11 +3598,11 @@
               }
 
               /* --- zvod ------------------------------------------------- */
-              /* Priemer odmeraný z oficiálneho rendru: šikmý úsek zvodu má na
-                 obrázku 11,3 px kolmo a stĺp vedľa neho 26 px na 150 mm, čo
-                 dáva 65 mm. Kreslí sa 70 — o pixel hrubšie ako meranie, lebo
-                 tenšia rúra sa pri stĺpe stráca. */
-              const rz = 35;                          // rúra Ø 70
+              /* Aktívne Expivi scény ani montážny technický dokument
+                 nepotvrdzujú priemer zvodu. Hodnota nižšie je iba rendererový
+                 vizuálny polomer, nie technická kóta a nesmie sa odvodiť z
+                 pixelov fotografie alebo marketingového rendru. */
+              const rz = 35;                          // unverified visual radius
               const rada = postXs();
               const xStlp = rada.length ? rada[rada.length - 1] : L - postD();
               const xLicStlp = xStlp + postD();       // líce stĺpa na odkvapovej strane

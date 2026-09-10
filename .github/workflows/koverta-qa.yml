@@ -2,7 +2,7 @@ name: Koverta configurator QA
 
 on:
   push:
-    branches: [fix/final-koverta-audit-20260909]
+    branches: [fix/final-koverta-audit-20260909, agent/05-koverta-technical-fidelity]
   pull_request:
     branches: [master]
 
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [osnova-podla-expivi, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
+        test: [osnova-podla-expivi, technical-fidelity, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
     steps:
       - uses: actions/checkout@v4
         with:
