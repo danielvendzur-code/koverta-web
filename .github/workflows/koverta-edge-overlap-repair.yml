@@ -1,0 +1,48 @@
+name: Koverta one-shot roof edge repair
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded roof-edge overlap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('konfigurator/soltec-premium.js')
+          s = p.read_text(encoding='utf-8')
+          old_comment = '''              /* Keep the hidden turn and the visible sheet non-coplanar and\n                 non-intersecting. A butt joint at +11 mm rasterised as dots;\n                 extending the turn through the corrugation made BSP split it\n                 at every rib and produced dots across the whole roof. The\n                 concealed 1 mm clearance avoids both failure modes without\n                 altering the outside flashing envelope. */'''
+          new_comment = '''              /* The inner vertical turn must cover the open corrugation mouths.\n                 A 1 mm clearance exposed the dark rib cavities at grazing/top views,\n                 while the earlier 4 mm overlap created unnecessary BSP splitting.\n                 The existing turn therefore overlaps the visible sheet edge by only\n                 0.5 mm: no extra closure plane, no outside-envelope change. */'''
+          old_line = '              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
+          new_line = '              put(zav - 9 * dir, zav + 11.5 * dir, turnBottom, zTop - turnBottom);'
+          if s.count(old_comment) != 1 or s.count(old_line) != 1:
+              raise SystemExit('roof-edge guard did not match exact current renderer')
+          s = s.replace(old_comment, new_comment, 1).replace(old_line, new_line, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          node --check konfigurator/soltec-premium.js
+          git diff --check
+          git diff --exit-code -- archiv-expivi konfigurator/test coordination/koverta assets/mapa/reca.jpg
+      - name: Commit renderer only
+        run: |
+          test -n "$(git diff --name-only -- konfigurator/soltec-premium.js)"
+          test "$(git diff --name-only)" = "konfigurator/soltec-premium.js"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js
+          git commit -m 'fix: cover Koverta corrugation mouths at fascia'
+          git push origin HEAD:fix/koverta-final-repair-20260910
