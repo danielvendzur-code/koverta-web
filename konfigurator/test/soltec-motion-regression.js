@@ -7,13 +7,17 @@ const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SOURCE_PATH = path.join(ROOT, 'konfigurator', 'soltec-premium.js');
-const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/bioklimaticke-pergoly/';
+const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/konfigurator/?page=bio';
 const ARTIFACT_DIR = path.join(ROOT, 'qa-artifacts', 'soltec-motion');
 
 function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
+  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
+  assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');
+  assert.match(source, /if \(\(H \/ 2 \+ se \* DIST\) > 0\)/, 'Ground visibility must use actual camera height');
+  assert.doesNotMatch(source, /if \(se > 0\.01\)/, 'Ground must not pop at an arbitrary camera elevation threshold');
   assert.match(source, /const overlap = Math\.max\(0, bladeW - Math\.min\(bladeW, pitch\)\);/, 'Soltec louvers must model the fixed sealing underlap without changing blade width');
   assert.doesNotMatch(source, /const najviac = \(pitch \/ 2\)/, 'Angle-dependent louver width deformation must be removed');
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
@@ -55,6 +59,30 @@ function percentile(values, p) {
 
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
+
+  // The frame/posts are static while the blades rotate. Projecting the same
+  // world point must therefore stay pixel-identical through the full louver
+  // travel; any drift means moving blade bounds are zooming/recentering the
+  // whole stage, which is the visible "waving/settling" regression.
+  const framingSamples = [];
+  for (const value of [0, 10, 25, 40, 55, 70, 85, 100]) {
+    const anchor = await page.evaluate((nextValue) => {
+      const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');
+      if (!range) throw new Error('Louver range not found for framing regression');
+      range.value = String(nextValue);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+        resolve(window.SP_TEST.project(0, 0, 0));
+      })));
+    }, value);
+    framingSamples.push({ value, x: anchor.x, y: anchor.y });
+  }
+  const frameXs = framingSamples.map((item) => item.x);
+  const frameYs = framingSamples.map((item) => item.y);
+  const frameDriftX = Math.max(...frameXs) - Math.min(...frameXs);
+  const frameDriftY = Math.max(...frameYs) - Math.min(...frameYs);
+  assert.ok(frameDriftX < 0.12 && frameDriftY < 0.12,
+    `Soltec stage framing moves with the louvers: dx=${frameDriftX.toFixed(3)} dy=${frameDriftY.toFixed(3)}`);
 
   // Sweep directly through the low-elevation region. The test uses only the
   // stage renderer so it measures geometry/render behavior rather than rebuilding UI.
@@ -153,12 +181,12 @@ function percentile(values, p) {
   assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);
 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, p95, maxFrame }, null, 2));
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, p95, maxFrame }, null, 2));
 
   assert.deepEqual(pageErrors, [], `Browser errors:\n${pageErrors.join('\n')}`);
   await browser.close();
   console.log(JSON.stringify({ ok: true, p95, maxFrame, cameraCounts, louverCounts }, null, 2));
 })().catch((error) => {
   console.error(error.stack || error);
-  process.exitCode = 1;
+  process.exit(1);
 });

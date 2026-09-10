@@ -2166,7 +2166,11 @@
           const shX = 0.22 * H * (-KEY[0] / KEY[2]), shY = 0.22 * H * (-KEY[1] / KEY[2]);
 
           layer = -3 * ROOF_LAYER;
-          if (se > 0.01) {
+          /* Ground visibility follows the camera's real world-space
+             height, not an arbitrary elevation threshold through the model.
+             The old se > 0.01 switch added ~80 paving polygons in one frame
+             and caused a visible pop while orbiting near the horizon. */
+          if ((H / 2 + se * DIST) > 0) {
             const reach = Math.max(L, W) * 2.4;
             const fx0 = L / 2 - reach, fx1 = L / 2 + reach;
             const fy0 = W / 2 - reach, fy1 = W / 2 + reach;
@@ -4468,7 +4472,11 @@
                  vlasové škáry medzi plochami sa aj tak zatvoria a kontrast
                  nesie geometria — dva pásy na rube a tmavšia čelná hrana. */
               const obrys = { arris: false };
-              const layO = Object.assign({}, lay, obrys);
+              /* Soltec motion stability: rotating louvers must not participate
+                 in stage fitting. The fixed frame/posts define the camera
+                 envelope, so opening/closing cannot zoom, wave or settle the
+                 whole pergola. */
+              const layO = Object.assign({}, lay, obrys, { fit: false });
               /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
                  lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
                  je to ten 17 mm lap, ktorým strecha tesní.
@@ -4511,7 +4519,7 @@
                 const strip = (w, fill, bias) => quad([
                   [cx - bladeUx * w, yc - hy, cz - bladeUz * w], [cx + bladeUx * w, yc - hy, cz + bladeUz * w],
                   [cx + bladeUx * w, yc + hy, cz + bladeUz * w], [cx - bladeUx * w, yc + hy, cz - bladeUz * w]
-                ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias });
+                ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias, fit: false });
                 for (let k = 3; k >= 1; k--) strip(9 + k * 22, 'rgba(' + ledCol.spill + ',' + (0.06 * (4 - k)).toFixed(3) + ')', 380 + (3 - k));
                 strip(13, 'rgba(20,19,16,.5)', 396);
                 strip(8, ledCol.core, 400);
@@ -5218,7 +5226,14 @@
             if (k < 1) {
               louverRun = requestAnimationFrame(step);
               window.clearTimeout(moverTimer);
-              moverTimer = window.setTimeout(step, 90);
+              moverTimer = window.setTimeout(() => {
+                /* rAF is the primary clock. The timeout is only a fallback for
+                   throttled/hidden tabs; if it wins, cancel the queued rAF so
+                   one physical instant can never be rendered twice. */
+                if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
+                moverTimer = 0;
+                step(clockNow());
+              }, 90);
               return;
             }
             louverRun = 0;
