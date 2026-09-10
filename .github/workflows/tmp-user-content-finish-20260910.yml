@@ -1,0 +1,527 @@
+name: User requested Koverta and Soltec content repair
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-user-content-finish-20260910.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply narrowly scoped content and presentation repair
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, struct, subprocess
+
+          BRANCH = 'fix/koverta-final-repair-20260910'
+          html_pages = [
+              'index.html',
+              'pristresky-pre-auta/index.html',
+              'zahradne-pristresky/index.html',
+              'carport-soltec/index.html',
+              'bioklimaticke-pergoly/index.html',
+              'pevne-prestresenia/index.html',
+              'tienenie/index.html',
+              'outdoor-kuchyne/index.html',
+          ]
+          expected_changes = set(html_pages + [
+              'assets/koverta-2026.css',
+              'assets/koverta-2026.js',
+              'assets/koverta-sketch-carport.svg',
+          ])
+
+          def read(path): return Path(path).read_text(encoding='utf-8')
+          def write(path, text): Path(path).write_text(text, encoding='utf-8')
+
+          def image_size(path):
+              data = Path(path).read_bytes()
+              if data.startswith(b'\x89PNG\r\n\x1a\n') and len(data) >= 24:
+                  return struct.unpack('>II', data[16:24])
+              if data[:2] == b'\xff\xd8':
+                  i = 2
+                  sof = {0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF}
+                  while i + 9 < len(data):
+                      if data[i] != 0xFF:
+                          i += 1; continue
+                      while i < len(data) and data[i] == 0xFF: i += 1
+                      if i >= len(data): break
+                      marker = data[i]; i += 1
+                      if marker in {0xD8,0xD9} or 0xD0 <= marker <= 0xD7: continue
+                      if i + 2 > len(data): break
+                      length = int.from_bytes(data[i:i+2], 'big')
+                      if length < 2 or i + length > len(data): break
+                      if marker in sof and length >= 7:
+                          h = int.from_bytes(data[i+3:i+5], 'big')
+                          w = int.from_bytes(data[i+5:i+7], 'big')
+                          return w,h
+                      i += length
+              raise SystemExit(f'Cannot read image dimensions: {path}')
+
+          def asset_dims(src):
+              rel = src.replace('../assets/','').replace('./assets/','')
+              p = Path('assets') / rel
+              if not p.is_file(): raise SystemExit(f'Missing asset: {p}')
+              return image_size(p)
+
+          def section_bounds(text, needle):
+              pos = text.find(needle)
+              if pos < 0: raise SystemExit(f'Section needle not found: {needle}')
+              start = text.rfind('<section', 0, pos)
+              if start < 0: raise SystemExit(f'No section before: {needle}')
+              depth = 0
+              for m in re.finditer(r'</?section\b[^>]*>', text[start:], re.I):
+                  tag = m.group(0)
+                  depth += -1 if tag.startswith('</') else 1
+                  if depth == 0:
+                      return start, start + m.end()
+              raise SystemExit(f'Unclosed section around: {needle}')
+
+          def replace_section(path, needle, replacement):
+              text = read(path)
+              a,b = section_bounds(text, needle)
+              write(path, text[:a] + replacement.strip() + '\n' + text[b:])
+
+          def set_img_tag(tag, src, alt):
+              w,h = asset_dims(src)
+              tag = re.sub(r'\s(?:src|alt|width|height|title)="[^"]*"', '', tag)
+              close = ' />' if tag.rstrip().endswith('/>') else '>'
+              tag = tag.rstrip()
+              if tag.endswith('/>'): tag = tag[:-2].rstrip()
+              elif tag.endswith('>'): tag = tag[:-1].rstrip()
+              title = alt.split(' — ')[0]
+              return f'{tag} src="{src}" alt="{alt}" title="{title}" width="{w}" height="{h}">{"" if close == ">" else ""}'
+
+          def replace_first_img_after(path, marker, src, alt, max_distance=1800):
+              text = read(path)
+              pos = text.find(marker)
+              if pos < 0: raise SystemExit(f'{path}: marker not found: {marker}')
+              m = re.search(r'<img\b[^>]*>', text[pos:pos+max_distance], re.S|re.I)
+              if not m: raise SystemExit(f'{path}: no img after marker: {marker}')
+              a = pos + m.start(); b = pos + m.end()
+              write(path, text[:a] + set_img_tag(text[a:b], src, alt) + text[b:])
+
+          def replace_hero(path, old_h1_fragment, src, alt, new_h1=None):
+              text = read(path)
+              a,b = section_bounds(text, old_h1_fragment)
+              sec = text[a:b]
+              m = re.search(r'<img\b[^>]*>', sec, re.S|re.I)
+              if not m: raise SystemExit(f'{path}: hero image missing')
+              sec = sec[:m.start()] + set_img_tag(m.group(0), src, alt) + sec[m.end():]
+              if new_h1:
+                  sec2,n = re.subn(r'(<h1\b[^>]*>).*?(</h1>)', lambda x:x.group(1)+new_h1+x.group(2), sec, count=1, flags=re.S)
+                  if n != 1: raise SystemExit(f'{path}: hero H1 replace failed')
+                  sec = sec2
+              write(path, text[:a] + sec + text[b:])
+
+          def replace_card_img_by_label(path, label, src, alt):
+              text = read(path)
+              marker = f'<p class="kh-mat__label">{label}</p>'
+              pos = text.find(marker)
+              if pos < 0: raise SystemExit(f'{path}: material label missing: {label}')
+              art = text.rfind('<article', 0, pos)
+              if art < 0: raise SystemExit(f'{path}: article missing before {label}')
+              m = re.search(r'<img\b[^>]*>', text[art:pos], re.S|re.I)
+              if not m: raise SystemExit(f'{path}: image missing before {label}')
+              a=art+m.start(); b=art+m.end()
+              write(path, text[:a] + set_img_tag(text[a:b], src, alt) + text[b:])
+
+          # ------------------------------------------------------------------
+          # HOME: normal ordering/equal visual weight + corrected imagery.
+          replace_first_img_after('index.html', 'href="./konfigurator/?page=koverta"', './assets/koverta-pristresok-garaz.jpg', 'Prístrešok Koverta pri rodinnom dome')
+          replace_first_img_after('index.html', 'href="./konfigurator/?page=carport"', './assets/soltec-carport-f240-real.jpg', 'Profesionálna fotografia hliníkového carportu Soltec')
+          replace_first_img_after('index.html', 'href="./konfigurator/?page=canopy"', './assets/soltec-canopy-glassport-balkon.jpg', 'Profesionálne prestrešenie terasy Soltec so sklenenou strechou')
+          replace_first_img_after('index.html', '<a class="kh-ponuka__karta" href="./pristresky-pre-auta/">', './assets/koverta-carport-lamely-stena.jpg', 'Prístrešok Koverta pre auto s lamelovou bočnou výplňou')
+          replace_first_img_after('index.html', '<a class="kh-ponuka__karta" href="./zahradne-pristresky/">', './assets/koverta-zahradny-pristresok-bratislava-detail.jpg', 'Záhradný prístrešok Koverta pri rodinnom dome v Bratislave')
+          replace_first_img_after('index.html', '<a class="kh-ponuka__karta" href="./carport-soltec/">', './assets/soltec-carport-sl240-real.jpg', 'Profesionálna fotografia carportu Soltec SL 240')
+
+          process = r'''
+          <!-- ======================================================= 07 · PROCES -->
+          <section class="k-band kh-proc" id="proces" aria-labelledby="procTitle">
+            <div class="k-wrap">
+              <div class="kh-proc__grid" data-k-process>
+                <div class="kh-proc__aside">
+                  <p class="k-eyebrow k-rise">Ako to prebieha</p>
+                  <h2 id="procTitle" class="k-h2 k-rise" data-k-delay="1">Od návrhu po hotový prístrešok</h2>
+                  <p class="k-copy k-rise" data-k-delay="2">Tri jasné kroky. Zameranie a návrh sú nezáväzné; technické riešenie podkladu potvrdíme podľa konkrétneho miesta.</p>
+                  <div class="kh-proc__list k-rise" data-k-delay="3">
+                    <button class="kh-proc__row" type="button" data-k-step-row><em>01</em><strong>Návrh a zameranie</strong></button>
+                    <button class="kh-proc__row" type="button" data-k-step-row><em>02</em><strong>Výroba na mieru</strong></button>
+                    <button class="kh-proc__row" type="button" data-k-step-row><em>03</em><strong>Montáž a odovzdanie</strong></button>
+                  </div>
+                </div>
+                <div class="kh-proc__panels k-reveal">
+                  <article class="kh-proc__panel" data-k-step>
+                    <span class="kh-proc__media"><img src="./assets/koverta-carport-pri-garazi.jpg" width="1600" height="1200" alt="Prístrešok Koverta pri dome ako referencia pre návrh a zameranie" loading="lazy" decoding="async"></span>
+                    <span class="kh-proc__body"><span class="kh-proc__num">01</span><h3 class="k-h3">Návrh a zameranie</h3><p class="k-copy">Povieme si účel, rozmer a výbavu, zameriame priestor a ešte pred výrobou odsúhlasíme konkrétnu zostavu.</p></span>
+                  </article>
+                  <article class="kh-proc__panel" data-k-step>
+                    <span class="kh-proc__media"><img src="./assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Oceľový prístrešok Koverta vyrobený podľa odsúhlaseného návrhu" loading="lazy" decoding="async"></span>
+                    <span class="kh-proc__body"><span class="kh-proc__num">02</span><h3 class="k-h3">Výroba na mieru</h3><p class="k-copy">Konštrukciu pripravíme podľa odsúhlaseného návrhu, zvoleného povrchu a výbavy. Zmeny riešime pred výrobou, nie až na stavbe.</p></span>
+                  </article>
+                  <article class="kh-proc__panel" data-k-step>
+                    <span class="kh-proc__media"><img src="./assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Hotový hliníkový carport Soltec po montáži" loading="lazy" decoding="async"></span>
+                    <span class="kh-proc__body"><span class="kh-proc__num">03</span><h3 class="k-h3">Montáž a odovzdanie</h3><p class="k-copy">Dovezieme zostavu, osadíme ju podľa návrhu a po dokončení ju odovzdáme pripravenú na používanie.</p></span>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+          '''
+          replace_section('index.html', 'Od prvého kontaktu', process)
+
+          # ------------------------------------------------------------------
+          # KOVERTA AUTO: new hero, higher-quality detail photos, roof angle, 4-card set.
+          replace_hero('pristresky-pre-auta/index.html', 'Auto pod strechou', '../assets/koverta-pristresok-auto-trnava-hero.jpg', 'Prístrešok Koverta pre autá pri rodinnom dome v Trnave')
+          replace_card_img_by_label('pristresky-pre-auta/index.html', 'Konštrukcia', '../assets/koverta-pristresok-garaz.jpg', 'Oceľová nosná konštrukcia prístrešku Koverta pri dome')
+          replace_card_img_by_label('pristresky-pre-auta/index.html', 'Strecha', '../assets/koverta-pristresok-auto-trnava-sikmy.jpg', 'Šikmý pohľad zhora na strechu prístrešku Koverta v Trnave')
+          replace_card_img_by_label('pristresky-pre-auta/index.html', 'Výplne', '../assets/koverta-carport-lamely-stena.jpg', 'Prístrešok Koverta s lamelovou bočnou výplňou')
+          auto = read('pristresky-pre-auta/index.html')
+          if '<p class="kh-mat__label">Doplnky</p>' not in auto:
+              pos = auto.find('<p class="kh-mat__label">Výplne</p>')
+              art_end = auto.find('</article>', pos)
+              if pos < 0 or art_end < 0: raise SystemExit('Cannot append accessories card')
+              art_end += len('</article>')
+              w,h = asset_dims('../assets/koverta-zahradny-pristresok-bratislava-detail.jpg')
+              extra = f'''
+              <article class="kh-mat__card k-rise" data-k-delay="4">
+                <div class="kh-mat__media"><img src="../assets/koverta-zahradny-pristresok-bratislava-detail.jpg" width="{w}" height="{h}" alt="Detail prístrešku Koverta s doplnkovým riešením pri dome" title="Doplnky prístrešku Koverta" decoding="async" loading="lazy"></div>
+                <div class="kh-mat__body">
+                  <p class="kh-mat__label">Doplnky</p>
+                  <h3 class="kh-mat__title">Výbava sa rieši spolu s návrhom</h3>
+                  <p class="kh-mat__text">Bočné výplne, osvetlenie, elektroprípravu a odvodnenie zahrnieme do konkrétnej zostavy podľa miesta a odsúhlaseného návrhu.</p>
+                  <div class="kh-mat__pata"><div class="kh-mat__udaj"><p class="kh-mat__pojem">Výbava</p><p class="kh-mat__hodnota">podľa zostavy</p></div><div class="kh-mat__udaj"><p class="kh-mat__pojem">Návrh</p><p class="kh-mat__hodnota">pred výrobou</p></div></div>
+                </div>
+              </article>'''
+              auto = auto[:art_end] + extra + auto[art_end:]
+              write('pristresky-pre-auta/index.html', auto)
+          auto = read('pristresky-pre-auta/index.html')
+          auto = auto.replace('../assets/koverta-carport-dve-auta-zima.jpg', '../assets/koverta-pristresok-nakladne-auto.jpg')
+          auto = auto.replace('Žľab a zvod sú súčasťou zostavy; izolácia proti teplu a hluku je doplnok.', 'Odvodnenie riešime podľa konkrétnej zostavy; izolácia proti teplu a hluku je doplnok.')
+          auto = auto.replace('Žľab a zvod sú súčasťou zostavy; ich vyhotovenie a vedenie sa určia podľa konkrétneho prístrešku.', 'Odvodnenie je riešené podľa konkrétnej zostavy; ak je zvolené, vyhotovenie žľabu a vedenie zvodu určí návrh.')
+          auto = auto.replace('<b>Odvodnenie</b> — žľab a zvod sú súčasťou zostavy; vyústenie sa navrhne podľa podkladu', '<b>Odvodnenie</b> — rieši sa podľa konkrétnej zostavy; trasu žľabu a zvodu určí návrh')
+          write('pristresky-pre-auta/index.html', auto)
+
+          # ------------------------------------------------------------------
+          # KOVERTA GARDEN: page identity first + corrected situational photos.
+          replace_hero('zahradne-pristresky/index.html', 'Terasa použiteľná', '../assets/koverta-zahradny-pristresok-bratislava-hero.jpg', 'Záhradný prístrešok Koverta nad terasou pri rodinnom dome v Bratislave', 'Záhradné prístrešky Koverta')
+          replace_first_img_after('zahradne-pristresky/index.html', '<h3 class="kh-mat__title">Na zelenej ploche</h3>', '../assets/koverta-zahradny-pristresok-bratislava-hero.jpg', 'Záhradný prístrešok Koverta pri rodinnom dome — riešenie osadenia podľa pripraveného podkladu', 3000)
+          replace_first_img_after('zahradne-pristresky/index.html', '<h3 class="kh-mat__title">Na hotovej ploche</h3>', '../assets/koverta-pristresok-garaz.jpg', 'Prístrešok Koverta osadený pri hotovej spevnenej ploche', 3000)
+          replace_first_img_after('zahradne-pristresky/index.html', '<h3 class="kh-mat__title">Pri dome</h3>', '../assets/koverta-zahradny-pristresok-bratislava-detail.jpg', 'Detail prístrešku Koverta pri fasáde rodinného domu', 3000)
+          garden = read('zahradne-pristresky/index.html')
+          garden = garden.replace('Osem vecí, ktoré sa rozhodujú v tomto poradí', 'Osem bodov, ktoré držia návrh pokope')
+          garden = garden.replace('Poradie je pri každej stavbe rovnaké. Viete tak dopredu, čo od vás budeme kedy potrebovať a kedy sa čo dá ešte zmeniť.', 'Konštrukciu, strechu, výplne, odvodnenie aj kotvenie riešime ako jeden návrh. Vďaka tomu sú technické detaily vyriešené skôr, než sa začne výroba.')
+          write('zahradne-pristresky/index.html', garden)
+
+          # ------------------------------------------------------------------
+          # SOLTEC CARPORT: restore visual comparison, keep current verified facts, box separate.
+          carport_models = r'''
+          <section class="k-band k-bone k-model-section" id="modely-carport" aria-labelledby="carportModelsTitle">
+            <div class="k-rules" aria-hidden="true"></div>
+            <div class="k-wrap">
+              <header class="k-head k-head--split">
+                <div class="k-head__title">
+                  <p class="k-eyebrow k-rise">SL 170 alebo SL 240</p>
+                  <h2 id="carportModelsTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Dva modely. Rozdiel vidíte hneď.</h2>
+                </div>
+                <div class="k-rise" data-k-delay="2">
+                  <p class="k-copy"><strong>SL 170 je pre jedno auto.</strong> <strong>SL 240 je pre dve autá.</strong> Box je samostatný doplnok a do základného porovnania modelov ho nemiešame.</p>
+                  <a class="k-btn k-btn--line" href="../konfigurator/?page=carport">Vyskúšať v konfigurátore</a>
+                </div>
+              </header>
+              <div class="k-model-grid k-model-grid--2">
+                <article class="k-model-card k-rise" data-k-delay="1">
+                  <figure class="k-model-card__media"><img src="../assets/soltec-carport-f240-real.jpg" width="2400" height="1500" alt="Profesionálna fotografia hliníkového carportu Soltec" loading="lazy" decoding="async"></figure>
+                  <div class="k-model-card__body"><div class="k-model-card__top"><span class="k-model-card__code">SL 170</span><span class="k-model-card__use">1 auto</span></div><h3>Úspornejší pôdorys pre jedno auto</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>3,14 m</dd></div><div><dt>Max. dĺžka</dt><dd>8,0 m</dd></div><div><dt>Využitie</dt><dd>jedno státie</dd></div></dl></div>
+                </article>
+                <article class="k-model-card k-rise" data-k-delay="2">
+                  <figure class="k-model-card__media"><img src="../assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Profesionálna fotografia dvojmiestneho hliníkového carportu Soltec" loading="lazy" decoding="async"></figure>
+                  <div class="k-model-card__body"><div class="k-model-card__top"><span class="k-model-card__code">SL 240</span><span class="k-model-card__use">2 autá</span></div><h3>Širší systém pre dve autá</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>6,0 m</dd></div><div><dt>Max. dĺžka</dt><dd>8,5 m</dd></div><div><dt>Využitie</dt><dd>dve státia</dd></div></dl></div>
+                </article>
+              </div>
+              <div class="k-model-note k-rise" data-k-delay="3"><strong>Box sa rieši samostatne.</strong><span>Jeho poloha a nadväzujúce prvky sa majú zahrnúť už do návrhu konkrétnej zostavy.</span></div>
+            </div>
+          </section>
+          '''
+          replace_section('carport-soltec/index.html', 'Rozdiel vidíte v jednej tabuľke', carport_models)
+
+          # ------------------------------------------------------------------
+          # SOLTEC BIO: six visual type cards, grouped by row; verified current dimensions preserved.
+          bio_models = r'''
+          <section class="k-band k-bone k-model-section" id="typy-bio" aria-labelledby="typTitle">
+            <div class="k-rules" aria-hidden="true"></div><div class="k-wrap">
+              <header class="k-head k-head--split"><div class="k-head__title"><p class="k-eyebrow k-rise">Šesť typoradov</p><h2 id="typTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Najprv rad. Potom rozmer.</h2></div><div class="k-rise" data-k-delay="2"><p class="k-copy">Typorad vychádza zo šírky, dĺžky a počtu stĺpov. Namiesto jednej širokej tabuľky sú všetky možnosti vedľa seba ako samostatné karty.</p><a class="k-btn k-btn--line" href="../konfigurator/?page=bio">Vyskúšať v konfigurátore</a></div></header>
+              <div class="k-model-family"><div class="k-model-family__head"><span>SL 170</span><p>Kompaktnejší nosný profil pre menšie a stredné rozpätia.</p></div><div class="k-model-grid k-model-grid--3">
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-lifestyle.jpg" width="1656" height="1190" alt="Profesionálna fotografia bioklimatickej pergoly Soltec" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 170/28</span><h3>Do šírky 3,5 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>3,5 × 6,5 m</dd></div><div><dt>6 stĺpov</dt><dd>3,5 × 9,3 m</dd></div><div><dt>Lamela</dt><dd>200 / 28 mm</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-spring-2024.jpg" width="1656" height="1190" alt="Profesionálna fotografia pergoly Soltec pri dome" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 170/36</span><h3>Do šírky 4,3 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>4,3 × 6,5 m</dd></div><div><dt>6 stĺpov</dt><dd>4,3 × 9,3 m</dd></div><div><dt>Lamela</dt><dd>200 / 36 mm</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-lamely-real.jpg" width="2000" height="1467" alt="Detail otočných lamiel bioklimatickej pergoly Soltec" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 170/42</span><h3>Do šírky 4,8 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>4,8 × 6,5 m</dd></div><div><dt>6 stĺpov</dt><dd>4,8 × 9,3 m</dd></div><div><dt>Lamela</dt><dd>200 / 42 mm</dd></div></dl></div></article>
+              </div></div>
+              <div class="k-model-family"><div class="k-model-family__head"><span>SL 240</span><p>Väčší nosný profil pre dlhšie a širšie zostavy.</p></div><div class="k-model-grid k-model-grid--3">
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-summer-2024.jpg" width="1656" height="1190" alt="Profesionálna fotografia bioklimatickej pergoly Soltec v lete" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 240/36</span><h3>Do šírky 4,3 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>4,3 × 8,0 m</dd></div><div><dt>6 stĺpov</dt><dd>4,3 × 9,0 m</dd></div><div><dt>Lamela</dt><dd>200 / 36 mm</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Profesionálna fotografia modernej bioklimatickej pergoly Soltec" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 240/42</span><h3>Do šírky 4,8 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>4,8 × 8,0 m</dd></div><div><dt>6 stĺpov</dt><dd>4,8 × 9,0 m</dd></div><div><dt>Lamela</dt><dd>200 / 42 mm</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-bio-pool-2026.png" width="1200" height="1200" alt="Profesionálna prezentácia veľkej bioklimatickej pergoly Soltec" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">SL 240/60</span><h3>Do šírky 6,0 m</h3><dl class="k-model-facts"><div><dt>4 stĺpy</dt><dd>6,0 × 6,0 m</dd></div><div><dt>6 stĺpov</dt><dd>5,0 × 8,0 m</dd></div><div><dt>Lamela</dt><dd>270 / 60 mm</dd></div></dl></div></article>
+              </div></div>
+              <p class="k-model-note"><strong>Typorad sa potvrdí podľa konkrétnej zostavy.</strong><span>Výška stĺpa je do 3 m; doplnky, tienenie a elektropríprava sa riešia už v návrhu.</span></p>
+            </div>
+          </section>
+          '''
+          replace_section('bioklimaticke-pergoly/index.html', 'Stačí poznať šírku a dĺžku pergoly', bio_models)
+
+          # ------------------------------------------------------------------
+          # SOLTEC FIXED CANOPIES: replace the two spreadsheets with four visual cards.
+          fixed_models = r'''
+          <section class="k-band k-bone k-model-section" id="typy-prestresenia" aria-labelledby="typTitle">
+            <div class="k-rules" aria-hidden="true"></div><div class="k-wrap">
+              <header class="k-head k-head--split"><div class="k-head__title"><p class="k-eyebrow k-rise">Typorady F a G</p><h2 id="typTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Najprv strecha. Potom rozmer.</h2></div><div class="k-rise" data-k-delay="2"><p class="k-copy"><strong>F používa ISO panel.</strong> <strong>G je pre sklo alebo zelenú strechu.</strong> Štyri modely sú zobrazené priamo, bez širokej technickej tabuľky.</p><a class="k-btn k-btn--line" href="#ponuka">Prejsť na nezáväznú ponuku</a></div></header>
+              <div class="k-model-family"><div class="k-model-family__head"><span>Rad F</span><p>ISO panel 30 mm, maximálna výška 2,8 m.</p></div><div class="k-model-grid k-model-grid--2">
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-canopy-f170-real.jpg" width="2000" height="1239" alt="Profesionálna fotografia prestrešenia Soltec radu F" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">F170</span><h3>Menší rozpon</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>3,0 m</dd></div><div><dt>4 stĺpy</dt><dd>do 6,0 m</dd></div><div><dt>6 stĺpov</dt><dd>do 9,15 m</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Profesionálna fotografia pevného prestrešenia Soltec" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">F240</span><h3>Väčší rozpon</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>6,0 m</dd></div><div><dt>4 stĺpy</dt><dd>do 6,0 m</dd></div><div><dt>6 stĺpov</dt><dd>do 9,15 m</dd></div></dl></div></article>
+              </div></div>
+              <div class="k-model-family"><div class="k-model-family__head"><span>Rad G</span><p>Sklo alebo zelená strecha, maximálna výška 3,0 m.</p></div><div class="k-model-grid k-model-grid--2">
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-canopy-glassport-balkon.jpg" width="2400" height="1600" alt="Profesionálna fotografia skleneného prestrešenia Soltec Glassport" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">G170</span><h3>Kratšie pole</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>3,0 m</dd></div><div><dt>4 stĺpy</dt><dd>do 5,0 m</dd></div><div><dt>6 stĺpov</dt><dd>do 9,0 m</dd></div></dl></div></article>
+                <article class="k-model-card"><figure class="k-model-card__media"><img src="../assets/soltec-canopy-glassport-pool.jpg" width="2400" height="1600" alt="Profesionálna fotografia skleneného prestrešenia Soltec pri bazéne" loading="lazy" decoding="async"></figure><div class="k-model-card__body"><span class="k-model-card__code">G240</span><h3>Dlhšie pole</h3><dl class="k-model-facts"><div><dt>Max. šírka</dt><dd>3,0 m</dd></div><div><dt>4 stĺpy</dt><dd>do 7,0 m</dd></div><div><dt>6 stĺpov</dt><dd>do 9,0 m</dd></div></dl></div></article>
+              </div></div>
+              <p class="k-model-note"><strong>Kotvenie a strešná skladba sa potvrdia v návrhu.</strong><span>Konkrétny model vyberieme podľa rozmeru, podkladu a požadovaného typu strechy.</span></p>
+            </div>
+          </section>
+          '''
+          replace_section('pevne-prestresenia/index.html', 'Najprv typ strechy. Potom už len rozmer.', fixed_models)
+
+          # ------------------------------------------------------------------
+          # Every standalone CTA the audit identified becomes a real outlined button.
+          labels = {
+              'Prejsť na nezáväznú ponuku','Čo si overiť pred realizáciou','Vyskúšať v konfigurátore',
+              'Chcem návrh podľa rozmeru','Poslať rozmer terasy','Nechať si poradiť odtieň'
+          }
+          def upgrade_ctas(path):
+              text=read(path)
+              pat=re.compile(r'<a class="k-link"([^>]*)>(.*?)</a>',re.S)
+              def repl(m):
+                  label=' '.join(re.sub(r'<[^>]+>',' ',m.group(2)).split())
+                  if label in labels:
+                      return '<a class="k-btn k-btn--line"'+m.group(1)+'>'+m.group(2)+'</a>'
+                  return m.group(0)
+              write(path,pat.sub(repl,text))
+          for p in html_pages[1:]: upgrade_ctas(p)
+
+          # ------------------------------------------------------------------
+          # Restore always-available sticky main bar: keep existing float mechanism, stop hiding it.
+          js=read('assets/koverta-2026.js')
+          js2,n=re.subn(r"if \(rozdiel > prah\) bar\.classList\.add\('je-schovana'\);\s*else if \(rozdiel < -prah\) bar\.classList\.remove\('je-schovana'\);", "bar.classList.remove('je-schovana');", js, count=1)
+          if n != 1:
+              # tolerate an equivalent compact current form, but require the feature to exist.
+              js2,n=re.subn(r"if\s*\(rozdiel\s*>\s*prah\)\s*bar\.classList\.add\(['\"]je-schovana['\"]\);\s*else\s*if\s*\(rozdiel\s*<\s*-prah\)\s*bar\.classList\.remove\(['\"]je-schovana['\"]\);", "bar.classList.remove('je-schovana');", js, count=1)
+          if n != 1: raise SystemExit('Sticky header hide/show block not found exactly; refusing blind JS rewrite')
+          write('assets/koverta-2026.js',js2)
+
+          # ------------------------------------------------------------------
+          # Technical SVG: grounded in KOVERTA-MODEL.md. No invented universal millimetre sizes.
+          svg='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" role="img" aria-labelledby="t d">
+          <title id="t">Skladba oceľového prístrešku Koverta</title><desc id="d">Ilustračný technický rez: nosné stĺpy, obvodový C profil, párované C väznice, trapézový plech, lemovanie, voliteľné odvodnenie, bočná výplň a kotvenie do pripraveného betónu.</desc>
+          <rect width="1000" height="620" rx="28" fill="#f6f5f2"/>
+          <g fill="none" stroke="#12171a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M120 465H900" stroke="#9aa1a4" stroke-width="2"/>
+            <rect x="170" y="225" width="34" height="240" rx="2" fill="#eef0ef"/>
+            <rect x="770" y="225" width="34" height="240" rx="2" fill="#eef0ef"/>
+            <rect x="448" y="225" width="28" height="240" rx="2" fill="#eef0ef"/>
+            <path d="M155 205H820V237H155Z" fill="#eef0ef"/>
+            <path d="M145 185H830V207H145Z" fill="#d9dcdb"/>
+            <path d="M155 172L830 151L830 185H145Z" fill="#f8f8f6"/>
+            <g stroke-width="3"><path d="M210 171L220 185M270 169L280 184M330 167L340 183M390 165L400 181M450 163L460 180M510 161L520 178M570 159L580 176M630 157L640 174M690 155L700 172M750 153L760 170"/></g>
+            <path d="M160 205V242M815 205V242"/>
+            <path d="M790 236V410Q790 425 806 425" stroke="#455a64" stroke-width="8"/>
+            <g stroke="#455a64" stroke-width="3"><path d="M690 272H770M690 300H770M690 328H770M690 356H770M690 384H770"/></g>
+            <rect x="157" y="465" width="60" height="13" fill="#d9dcdb"/><path d="M166 478L154 505M208 478L220 505"/>
+            <rect x="757" y="465" width="60" height="13" fill="#d9dcdb"/><path d="M766 478L754 505M808 478L820 505"/>
+          </g>
+          <g font-family="Arial, sans-serif" font-weight="700" font-size="17" fill="#12171a">
+            <g><circle cx="185" cy="345" r="17" fill="#ffcc00"/><text x="185" y="351" text-anchor="middle">01</text></g>
+            <g><circle cx="285" cy="220" r="17" fill="#ffcc00"/><text x="285" y="226" text-anchor="middle">02</text></g>
+            <g><circle cx="470" cy="220" r="17" fill="#ffcc00"/><text x="470" y="226" text-anchor="middle">03</text></g>
+            <g><circle cx="520" cy="164" r="17" fill="#ffcc00"/><text x="520" y="170" text-anchor="middle">04</text></g>
+            <g><circle cx="810" cy="193" r="17" fill="#ffcc00"/><text x="810" y="199" text-anchor="middle">05</text></g>
+            <g><circle cx="790" cy="328" r="17" fill="#ffcc00"/><text x="790" y="334" text-anchor="middle">06</text></g>
+            <g><circle cx="715" cy="356" r="17" fill="#ffcc00"/><text x="715" y="362" text-anchor="middle">07</text></g>
+            <g><circle cx="186" cy="490" r="17" fill="#ffcc00"/><text x="186" y="496" text-anchor="middle">08</text></g>
+            <text x="80" y="555" font-size="15" font-weight="400" fill="#5f6669">Ilustračný rez — rozmery, poloha stĺpov a vedenie odvodnenia sa riadia konkrétnou zostavou.</text>
+          </g></svg>'''
+          write('assets/koverta-sketch-carport.svg',svg)
+
+          # Make the auto structure legend agree with the verified technical model, without guessed dimensions.
+          auto=read('pristresky-pre-auta/index.html')
+          legend='''<ol class="kh-zost__vrstvy">
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">01</span><span class="kh-zost__co"><b>Nosné stĺpy</b> — oceľové stĺpy podľa zvolenej a overenej zostavy</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">02</span><span class="kh-zost__co"><b>Obvodový rám</b> — obvodové C profily nesú strešnú skladbu</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">03</span><span class="kh-zost__co"><b>Väznice</b> — páry C profilov pod trapézovým plechom</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">04</span><span class="kh-zost__co"><b>Trapézový plech</b> — strešné tabule uložené na väzniciach</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">05</span><span class="kh-zost__co"><b>Lemovanie</b> — ukončuje obvod strechy a prekrýva jej hrany</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">06</span><span class="kh-zost__co"><b>Odvodnenie</b> — voliteľné riešenie podľa konkrétnej zostavy; trasu zvodu určí návrh</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">07</span><span class="kh-zost__co"><b>Bočná výplň</b> — voliteľná podľa požiadaviek a odsúhlaseného návrhu</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">08</span><span class="kh-zost__co"><b>Kotvenie</b> — mechanické alebo chemické kotvy do pripraveného betónu podľa návrhu; dlažba sama nie je nosný podklad</span></li>
+          </ol>'''
+          auto2,n=re.subn(r'<ol class="kh-zost__vrstvy">.*?</ol>',legend,auto,count=1,flags=re.S)
+          if n != 1: raise SystemExit('Auto structure legend not found')
+          write('pristresky-pre-auta/index.html',auto2)
+
+          # ------------------------------------------------------------------
+          # Scoped visual polish: equal ordering, cards instead of spreadsheets, cleaner structure list.
+          css=read('assets/koverta-2026.css')
+          marker='/* USER-CONTENT-RESTORE-20260910 */'
+          if marker in css: raise SystemExit('CSS restore marker already exists; refusing duplicate append')
+          css += r'''
+
+          /* USER-CONTENT-RESTORE-20260910 */
+          .k-model-section .k-head { margin-bottom: clamp(28px,4vw,54px); }
+          .k-model-family + .k-model-family { margin-top: clamp(34px,5vw,64px); }
+          .k-model-family__head { display:flex; align-items:end; justify-content:space-between; gap:24px; padding:0 0 14px; margin-bottom:18px; border-bottom:1px solid rgba(18,23,26,.18); }
+          .k-model-family__head > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
+          .k-model-family__head p { margin:0; max-width:560px; color:#596064; }
+          .k-model-grid { display:grid; gap:18px; }
+          .k-model-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+          .k-model-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+          .k-model-card { min-width:0; overflow:hidden; background:#fff; border:1px solid rgba(18,23,26,.16); border-radius:24px; box-shadow:0 14px 38px rgba(18,23,26,.06); }
+          .k-model-card__media { margin:0; aspect-ratio:16/9; overflow:hidden; background:#ececeb; }
+          .k-model-card__media img { width:100%; height:100%; display:block; object-fit:cover; }
+          .k-model-card__body { padding:clamp(20px,2.5vw,32px); }
+          .k-model-card__top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+          .k-model-card__code { display:inline-flex; align-items:center; min-height:34px; padding:0 12px; border:1px solid rgba(18,23,26,.24); border-radius:999px; font-weight:760; font-size:13px; letter-spacing:.04em; }
+          .k-model-card__use { color:#6c7376; font-size:14px; font-weight:650; }
+          .k-model-card__body h3 { margin:0 0 22px; font-size:clamp(23px,2.1vw,32px); line-height:1.05; letter-spacing:-.025em; }
+          .k-model-facts { margin:0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
+          .k-model-facts > div { display:flex; justify-content:space-between; gap:18px; padding:12px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+          .k-model-facts dt { color:#687074; }
+          .k-model-facts dd { margin:0; text-align:right; font-weight:730; }
+          .k-model-note { display:flex; justify-content:space-between; gap:28px; padding:20px 0 0; margin:22px 0 0; border-top:1px solid rgba(18,23,26,.18); }
+          .k-model-note span { max-width:680px; color:#62696c; }
+          .kh-zost__panel { border:1px solid rgba(18,23,26,.14); border-radius:22px; box-shadow:0 12px 32px rgba(18,23,26,.05); overflow:hidden; }
+          .kh-zost__vrstvy { margin:14px 0 22px; padding:0; list-style:none; border-top:1px solid rgba(18,23,26,.12); }
+          .kh-zost__vrstva { display:grid; grid-template-columns:46px 1fr; gap:14px; align-items:start; padding:15px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+          .kh-zost__cislo { font-size:12px; font-weight:800; letter-spacing:.06em; color:#8a6900; }
+          .kh-zost__co { line-height:1.55; }
+          .kh-pick__lane .k-link { display:inline-flex; align-items:center; min-height:42px; padding:0 15px; border:1px solid currentColor; border-radius:999px; }
+          @media (min-width: 900px) {
+            .kh-kfg__typy { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:18px !important; }
+            .kh-kfg__typ, .kh-kfg__typ--siroky { grid-column:auto !important; grid-row:auto !important; width:auto !important; }
+            .kh-kfg__karta { height:100%; }
+            .kh-ponuka__mriezka { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+            .kh-ponuka__kus, .kh-ponuka__kus--hlavna, .kh-ponuka__kus--siroka { grid-column:auto !important; grid-row:auto !important; }
+          }
+          @media (max-width: 899px) {
+            .k-model-grid--2, .k-model-grid--3 { grid-template-columns:1fr; }
+            .k-model-family__head, .k-model-note { align-items:flex-start; flex-direction:column; gap:8px; }
+            .k-model-card { border-radius:18px; }
+          }
+          '''
+          write('assets/koverta-2026.css',css)
+
+          # ------------------------------------------------------------------
+          # Validation: no SEO/configurator regressions and no broken local assets.
+          required_seo=['<title>','meta name="description"','rel="canonical"','meta name="robots"','property="og:image"','application/ld+json']
+          local_ref=re.compile(r'(?:src|href)="(?:\.\./|\./)?assets/([^"?#]+)')
+          for p in html_pages:
+              txt=read(p)
+              for needle in required_seo:
+                  if needle not in txt: raise SystemExit(f'{p}: SEO marker lost: {needle}')
+              if '<h1' not in txt: raise SystemExit(f'{p}: H1 missing')
+              for rel in local_ref.findall(txt):
+                  if not (Path('assets')/rel).is_file(): raise SystemExit(f'{p}: broken asset assets/{rel}')
+              for bad in ['použiteľnáaj','konfigurátoresvg','určímtu']:
+                  if bad in txt: raise SystemExit(f'{p}: broken text token remains: {bad}')
+
+          # User-requested postconditions.
+          home=read('index.html')
+          if 'Podklad a pätky</strong>' in home or '<h3 class="k-h3">Podklad a pätky</h3>' in home: raise SystemExit('Home process still contains Podklad a pätky')
+          if home.count('data-k-step-row') != 3 or home.count('data-k-step>') < 3: raise SystemExit('Process is not three steps')
+          if '<em>03</em><strong>Montáž a odovzdanie</strong>' not in home: raise SystemExit('Montáž is not step 03')
+          auto=read('pristresky-pre-auta/index.html')
+          if 'koverta-carport-dve-auta-zima.jpg' in auto: raise SystemExit('Low-quality winter image still used on auto page')
+          if 'Žľab a zvod sú súčasťou zostavy' in auto: raise SystemExit('Unverified universal drainage claim remains')
+          if '120 × 120' in read('assets/koverta-sketch-carport.svg'): raise SystemExit('Invented universal post dimension remains in technical SVG')
+          if 'Rozdiel vidíte v jednej tabuľke' in read('carport-soltec/index.html'): raise SystemExit('Old ugly carport table heading remains')
+          if '<table class="kh-typ2__tab">' in read('bioklimaticke-pergoly/index.html'): raise SystemExit('Bio wide model table remains')
+          if '<table class="kh-typ2__tab">' in read('pevne-prestresenia/index.html'): raise SystemExit('Fixed-canopy wide model table remains')
+          if "bar.classList.add('je-schovana')" in read('assets/koverta-2026.js'): raise SystemExit('Header still hides while scrolling')
+
+          # All audited standalone CTA labels must now use outlined k-btn, not bare k-link anchors.
+          for p in html_pages[1:]:
+              txt=read(p)
+              for m in re.finditer(r'<a class="k-link"[^>]*>(.*?)</a>',txt,re.S):
+                  label=' '.join(re.sub(r'<[^>]+>',' ',m.group(1)).split())
+                  if label in labels: raise SystemExit(f'{p}: borderless CTA remains: {label}')
+
+          # Critical non-scope files stay byte-identical to the triggering commit parent.
+          for p in ['konfigurator/cfg-pages.js','konfigurator/soltec-premium.js','konfigurator/index.html','robots.txt','llms.txt','sitemap.xml']:
+              subprocess.run(['git','diff','--exit-code','HEAD','--',p],check=True)
+
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          if changed != expected_changes:
+              raise SystemExit(f'Unexpected scope. Expected {sorted(expected_changes)}, got {sorted(changed)}')
+          PY
+          git diff --check
+
+      - name: Browser smoke and screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME"
+          mkdir -p qa-user-content
+          urls=(
+            "index.html#proces"
+            "pristresky-pre-auta/index.html#skladbaTitle"
+            "zahradne-pristresky/index.html"
+            "carport-soltec/index.html#modely-carport"
+            "bioklimaticke-pergoly/index.html#typy-bio"
+            "pevne-prestresenia/index.html#typy-prestresenia"
+          )
+          i=0
+          for u in "${urls[@]}"; do
+            i=$((i+1))
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot="qa-user-content/desktop-$i.png" "http://127.0.0.1:8901/$u"
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --screenshot="qa-user-content/mobile-$i.png" "http://127.0.0.1:8901/$u"
+          done
+          test "$(find qa-user-content -name '*.png' | wc -l)" -eq 12
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: user-content-visual-qa-${{ github.sha }}
+          path: qa-user-content/*.png
+          if-no-files-found: error
+
+      - name: Commit only scoped repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            index.html \
+            pristresky-pre-auta/index.html \
+            zahradne-pristresky/index.html \
+            carport-soltec/index.html \
+            bioklimaticke-pergoly/index.html \
+            pevne-prestresenia/index.html \
+            tienenie/index.html \
+            outdoor-kuchyne/index.html \
+            assets/koverta-2026.css \
+            assets/koverta-2026.js \
+            assets/koverta-sketch-carport.svg
+          git diff --cached --check
+          git commit -m 'fix: finish requested Koverta and Soltec content UX'
+          git push origin HEAD:fix/koverta-final-repair-20260910
