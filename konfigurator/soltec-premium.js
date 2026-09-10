@@ -1646,6 +1646,7 @@
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { renderAll(); };
+          window.SP_TEST.redrawStage = () => { if (!model().kvGeom) drawStage(); else renderAll(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
@@ -1873,9 +1874,10 @@
                  a z hairline sa stane tmavá čiara. Namiesto obrysu jej
                  vypneme vyhladzovanie, takže kusy na seba sadnú presne. */
               seamless: o.seamless === true,
-              /* Koverta-only occlusion guard for the thin top fascia arm.
-                 This flag is opt-in; no Soltec caller sets it. */
-              paintLast: o.paintLast === true,
+              /* Soltec uses explicit painter bias for deliberately adjacent or
+                 coplanar detail faces. Koverta keeps its existing ordering
+                 exactly unchanged. */
+              sortBias: model().kvGeom ? 0 : (Number.isFinite(Number(o.bias)) ? Number(o.bias) : 0),
               depthAvg,
               /* Podklad — dlažba, jej škáry a vrhnutý tieň — leží celý v
                  rovine z = 0 pod konštrukciou a triedi sa zvlášť. V hustej
@@ -1900,6 +1902,11 @@
           const BSP_EPS = Math.max(L, W, H) * 1e-6;
           const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
           const planeFor = (face) => {
+            /* A face plane is world-space geometry and does not depend on the
+               camera. During one Soltec BSP build the same candidate is tested
+               repeatedly, so cache its plane on the face. Koverta stays on the
+               established path. */
+            if (!model().kvGeom && face._spPlane) return face._spPlane;
             let n = faceNormal(face.w);
             // BSP clipping can leave the first three vertices collinear.
             // Such a fragment still has a plane: find a non-degenerate fan
@@ -1912,7 +1919,9 @@
               }
             }
             if (Math.hypot(n[0], n[1], n[2]) < 0.5) return null;
-            return { n, d: dot3(n, face.w[0]) };
+            const plane = { n, d: dot3(n, face.w[0]) };
+            if (!model().kvGeom) face._spPlane = plane;
+            return plane;
           };
           const sideOf = (point, plane) => dot3(point, plane.n) - plane.d;
           const faceSides = (face, plane) => {
@@ -1998,13 +2007,13 @@
              pri veľkých plochách klame — na streche z toho vykukol pruh rámu.
              Prístrešok Koverta má cez tri tisíc plôch, tak potrebuje hlbší
              strom než Soltec. */
-          const BSP_MAX = 320;
+          const BSP_MAX = model().kvGeom ? 320 : 96;
           const buildBsp = (list, depth) => {
             if (!list.length) return null;
-            if (depth > BSP_MAX) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || a.order - b.order) };
+            if (depth > BSP_MAX) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order) };
             const splitterIndex = chooseSplitter(list);
             const plane = planeFor(list[splitterIndex]);
-            if (!plane) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || a.order - b.order) };
+            if (!plane) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order) };
             const coplanar = [], front = [], back = [];
             list.forEach((face) => {
               const side = faceSides(face, plane);
@@ -2017,7 +2026,7 @@
                 if (parts[1]) back.push(parts[1]);
               }
             });
-            coplanar.sort((a, b) => a.order - b.order);
+            coplanar.sort((a, b) => (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order);
             return { plane, coplanar, front: buildBsp(front, depth + 1), back: buildBsp(back, depth + 1) };
           };
           const cameraWorld = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
@@ -2095,14 +2104,13 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast, cleanSurface) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
               normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
               edge: cleanSurface === true ? false : undefined,
-              seamless: seamlessTop === true && key === '+z',
-              paintLast: paintLast === true
+              seamless: seamlessTop === true && key === '+z'
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -2417,7 +2425,7 @@
                 const pth = Math.max(8, Math.round(pl * 0.05));
                 const cx = px + pd / 2, cy = py + pw / 2;
                 const plateHex = model().roofKit === 'koverta' ? frame : '#c9ccce';
-                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, ['-z'], SHAFT, 0, false, false, true);
+                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, ['-z'], SHAFT, 0, false, true);
                 /* Na oficiálnych rendroch sú v doske štyri skrutky do betónu,
                    po jednej v každom rohu. Bez nich vyzerala doska ako
                    podložený plech. */
@@ -2433,7 +2441,7 @@
                 if (objH) {
                   const g = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
                   boxFaces(px - g, py - g, pth, pd + 2 * g, pw + 2 * g, objH,
-                           model().roofKit === 'koverta' ? plateHex : shade('#c9ccce', -0.06), ['+z', '-z'], SHAFT, 0, false, false, model().roofKit === 'koverta');
+                           model().roofKit === 'koverta' ? plateHex : shade('#c9ccce', -0.06), ['+z', '-z'], SHAFT, 0, false, model().roofKit === 'koverta');
                 }
               }
               /* Soltec je hliníkový profil s ostrou hranou. Koverta je oceľový
@@ -2507,7 +2515,7 @@
                 const rohovy = Boolean(rz.roh);
                 /* Platňa leží pod pásnicou a jej horné líce sa jej dotýka. */
                 const plat = (x0, y0, dx, dy) => {
-                  boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT, 0, false, false, model().roofKit === 'koverta');
+                  boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT, 0, false, model().roofKit === 'koverta');
                   const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
                   const vodo = dx > dy;
                   const roz = (vodo ? dx : dy) * 0.30;
@@ -3278,9 +3286,9 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz, seamlessTop, paintLast) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, false, true);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, false, true);
+              const put = (u0, u1, z, dz, seamlessTop) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, true);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
@@ -4074,7 +4082,7 @@
                 tuba([[xRura, yZvod - 13, z], [xRura, yZvod + 13, z]], rz * 1.09, shade(frame, -0.42));
                 if (medzera > -rz && medzera < 80) {
                   boxFaces(bridgeX0, yZvod - 11, z - 5, bridgeX1 - bridgeX0, 22, 10,
-                           shade(frame, -0.38), [], SHAFT, 0, false, false, true);
+                           shade(frame, -0.38), [], SHAFT, 0, false, true);
                 }
               });
             }
@@ -4229,8 +4237,11 @@
               });
             };
 
-            if (integratedFall || !fromAbove || glass) {
-              const lit = !fromAbove && state.ledSet && state.ledSet.on;
+            {
+              /* Secondary members must not pop in/out at the camera/roof
+                 boundary. They always exist; the roof and BSP decide whether
+                 they are visible from the current view. */
+              const lit = state.ledSet && state.ledSet.on;
               beamRuns.forEach((run) => {
                 const z = integratedFall ? integratedSecTop : secTop(run.center);
                 drawSec(run.a, run.b, z, model().secHex || frame);
@@ -4383,22 +4394,16 @@
             const ang = louverAngle(beam, bladeW, state.louverT);
             const y0 = post, y1 = W - post;
             const lap = 30;   // blades tuck under the rails rather than butting them
-            /* Šírka, ktorou sa lamela naozaj kreslí. Jediné, čo maliarske
-               triedenie nevie rozhodnúť, sú dve plochy, ktoré sa prekrývajú a
-               ležia takmer v jednej rovine — vtedy sa medzi snímkami prehadzuje
-               ich poradie a lamely preblikávajú. Preto sa lamela kreslí vždy
-               nanajvýš tak široko, aby jej priemet do roviny strechy práve
-               vyplnil rozteč: pri dosadnutí je z lamiel súvislá rovná plocha,
-               pri otvorení plná lamela s medzerami, a medzi tým sa nikdy
-               neprekryjú. Prechod je spojitý, takže sa všetky lamely hýbu
-               rovnakou rýchlosťou a nič sa cestou nemení skokom.
-
-               Prekrytie, ktoré tu ubudne, je ten lap, ktorým lamela zapadá pod
-               susednú — ten aj v skutočnosti nie je vidieť. */
-            const najviac = (pitch / 2) / Math.max(0.2, Math.cos(ang));
-            const half = Math.min(bladeW / 2, najviac);
-            const otvorenie = Math.min(1, ang / Math.max(1e-6, LOUVER_MAX(beam, bladeW) * 0.2));
-            const dx = half * Math.cos(ang), dz = half * Math.sin(ang);
+            /* Lamela je tuhé teleso: jej fyzická šírka sa počas pohybu
+               nesmie meniť. Zvyšok šírky nad roztečou je pevný tesniaci
+               podklad pod susednou lamelou, nie plocha, ktorá sa podľa uhla
+               rozťahuje a sťahuje. Tak zostane profil v každom snímku rovnaký
+               a pri zatvorení nevznikne veľký koplanárny prekryv. */
+            const fullHalf = bladeW / 2;
+            const overlap = Math.max(0, bladeW - Math.min(bladeW, pitch));
+            const topLeadS = -fullHalf + overlap;
+            const bladeUx = Math.cos(ang), bladeUz = Math.sin(ang);
+            const dx = fullHalf * bladeUx, dz = fullHalf * bladeUz;
             /* The roof plane finishes level with the top of the frame at every
                position - that edge is the line the eye reads as the roof. Shut,
                the blades lie flat and overlap by the 17 mm the pitch leaves
@@ -4406,12 +4411,12 @@
                jump to, it is simply this one at nought degrees. */
             const mid = bz + beam - dz;
             const t = blade.t;                     // blade thickness, along its own normal
-            const ox = t * dz / half, oz = -t * dx / half;
+            const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
                recessed into the underside of the blade, so it is only ever seen
                from below - the same rule the panel roof uses. Without it the
                glow was drawn over the top of the blades as well. */
-            const ledOn = !fromAbove && state.ledSet && state.ledSet.on;
+            const ledOn = state.ledSet && state.ledSet.on;
             const ledQty = Math.min(n, Math.max(1, (state.ledSet || {}).qty || 1));
             const ledLen = [500, 1000, 1500][(state.ledSet || {}).len || 1] || 1000;
             const ledLit = new Set();
@@ -4420,7 +4425,9 @@
 
             for (let i = 0; i < n; i++) {
               const x = i0 + pitch * (i + 0.5);
-              const aX = x - dx, aZ = mid - dz, bX = x + dx, bZ = mid + dz;
+              const fullAX = x - dx, fullAZ = mid - dz;
+              const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
+              const bX = x + dx, bZ = mid + dz;
               /* Shut, the blades overlap and lie in one plane, so a centroid
                  cannot order them. Stepping the bias along the run makes each
                  blade lap the one before it, the way they actually close. */
@@ -4466,26 +4473,25 @@
                  kreslí ako dva pásy. Je to skutočný jav a zároveň jediné,
                  čo dá radu lamiel kontrast aj na antracite — na bielej bolo
                  všetko vidieť, na tmavej sa strecha zdola zlievala do dosky. */
-              const sX = (aX + bX) / 2 + ox, sZ = (aZ + bZ) / 2 + oz;
-              quad([[aX+ox,y1+lap,aZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[aX+ox,y0-lap,aZ+oz]], shade(louv, -0.04), layO);
+              const sX = (fullAX + bX) / 2 + ox, sZ = (fullAZ + bZ) / 2 + oz;
+              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), layO);
               quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), layO);
               quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]], shade(louv, -0.48), layO);
-              /* Tesniaca hrana, ktorou lamely dosadajú jedna na druhú. Pri
-                 dosadnutí by ležala v rovine hornej plochy a prekrývala ju,
-                 tak sa spolu s prekrytím stiahne na nulu a nekreslí sa. */
-              const lipX = dx * 0.16 * otvorenie, lipZ = dz * 0.16 * otvorenie;
-              if (otvorenie > 0.02)
-                quad([[aX,y0-lap,aZ],[aX+lipX,y0-lap,aZ+lipZ],[aX+lipX,y1+lap,aZ+lipZ],[aX,y1+lap,aZ]], shade(louv, -0.40), layO);
+              /* Pevný tesniaci podklad uzatvára skutočnú šírku profilu.
+                 Pri zatvorení leží pod koncom susednej lamely, takže horné
+                 plochy sa iba stretnú na hrane a BSP nemusí deliť dve veľké
+                 koplanárne plochy. Celý tento profil sa potom iba otáča. */
+              if (overlap > 0.5)
+                quad([[fullAX+ox,y0-lap,fullAZ+oz],[aX,y0-lap,aZ],[aX,y1+lap,aZ],[fullAX+ox,y1+lap,fullAZ+oz]], shade(louv, -0.40), layO);
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */
               if (ledLit.has(i)) {
-                const cx = (aX + bX) / 2 + ox, cz = (aZ + bZ) / 2 + oz;
-                const ux = dx / half, uz = dz / half;
+                const cx = x + ox, cz = mid + oz;
                 const yc = (y0 + y1) / 2, hy = Math.min((y1 - y0) / 2 - 30, ledLen / 2);
                 const strip = (w, fill, bias) => quad([
-                  [cx - ux * w, yc - hy, cz - uz * w], [cx + ux * w, yc - hy, cz + uz * w],
-                  [cx + ux * w, yc + hy, cz + uz * w], [cx - ux * w, yc + hy, cz - uz * w]
+                  [cx - bladeUx * w, yc - hy, cz - bladeUz * w], [cx + bladeUx * w, yc - hy, cz + bladeUz * w],
+                  [cx + bladeUx * w, yc + hy, cz + bladeUz * w], [cx - bladeUx * w, yc + hy, cz - bladeUz * w]
                 ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias });
                 for (let k = 3; k >= 1; k--) strip(9 + k * 22, 'rgba(' + ledCol.spill + ',' + (0.06 * (4 - k)).toFixed(3) + ')', 380 + (3 - k));
                 strip(13, 'rgba(20,19,16,.5)', 396);
@@ -4517,9 +4523,7 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          const stavbaBezna = stavba.filter((f) => !f.paintLast);
-          const stavbaNeskor = stavba.filter((f) => f.paintLast);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavbaBezna), bspPaintOrder(stavbaNeskor)).forEach((f) => {
+          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
@@ -5246,7 +5250,10 @@
           hold = 0;
           if (clockNow() - holdFrom < 200) { runMover(holdCh, MOVER[holdCh].get() + holdDir * 0.14); return; }
           holdDir = 0;
-          renderAll();
+          /* Finishing a Soltec motion changes only moving geometry/readouts.
+             Do not rebuild the entire configurator UI at pointer release. */
+          if (model().kvGeom) renderAll();
+          else { drawStage(); syncLouver(); }
         };
         const startHold = (dir, ch) => {
           if (hold) return;
@@ -5715,7 +5722,11 @@
             view.az += (e.clientX - lastX) * 0.006;
             view.el = Math.max(EL_FLOOR(), Math.min(1.45, view.el + (e.clientY - lastY) * 0.005));
             lastX = e.clientX; lastY = e.clientY;
-            scheduleRender();
+            /* Camera drag changes only the view. Rebuilding all controls, price
+               rows and option groups on every pointer frame is unnecessary for
+               Soltec. Koverta deliberately keeps its existing full-render path. */
+            if (model().kvGeom) scheduleRender();
+            else scheduleStage();
           });
           const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };
           stageEl.addEventListener('pointerup', stop);

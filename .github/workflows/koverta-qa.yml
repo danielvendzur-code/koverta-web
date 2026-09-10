@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,4 +95,44 @@ jobs:
         with:
           name: koverta-deep-qa-${{ matrix.script }}
           path: qa-artifacts
+          if-no-files-found: ignore
+
+  soltec-motion:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify renderer and motion test syntax
+        run: |
+          node --check konfigurator/soltec-premium.js
+          node --check konfigurator/test/soltec-motion-regression.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/bioklimaticke-pergoly/' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/soltec-http.log
+          exit 1
+      - name: Soltec louver and camera motion regression
+        env:
+          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
+        run: node konfigurator/test/soltec-motion-regression.js
+      - name: Upload Soltec motion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soltec-motion-qa
+          path: qa-artifacts/soltec-motion
           if-no-files-found: ignore

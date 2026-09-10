@@ -26,8 +26,8 @@ function patchRenderer(source) {
       'if (BIO.basePlates && !window.__QA_HIDE_BASE_PLATES) {'
     ],
     [
-      'if (BIO.headPlates && !nadStrechou) {',
-      'if (BIO.headPlates && !nadStrechou && !window.__QA_HIDE_HEAD_PLATES) {'
+      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou)) {",
+      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou) && !window.__QA_HIDE_HEAD_PLATES) {"
     ],
     [
       'const uholnik = (px, sx, py, sy, zc) => {\n              if (!podStrechu) return;',
@@ -38,8 +38,8 @@ function patchRenderer(source) {
       'const skrutka = (cx0, cy0, cz0, os, R, sgn) => {\n              if (window.__QA_HIDE_ROOF_SCREWS) return;\n              if (!podStrechu) return;'
     ],
     [
-      "if (!nadStrechou)\n                cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);",
-      "if (!nadStrechou && !window.__QA_HIDE_PURLINS)\n                cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);"
+      "cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);",
+      "if (!window.__QA_HIDE_PURLINS)\n                cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);"
     ],
     [
       'if (maOdkvap()) {',
