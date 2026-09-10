@@ -31,38 +31,29 @@ jobs:
 
           old_turn = "              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);"
           new_turn = "              const turnBottom = trapBot - 1;\n              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);"
-          old_closure = "\n".join([
-              "              /* A narrow hidden closure caps the sight line beneath the",
-              "                 corrugation crowns. Only its upward face exists: it is below",
-              "                 the lowest sheet skin, cannot cut a facet or become a second",
-              "                 soffit, and uses the roof material so the concealed perimeter",
-              "                 pocket cannot appear as alternating bright/dark dashes. */",
-              "              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);",
-              "              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);",
-              "              const uz = trapBot - 0.5;",
-              "              const roofEdgeHex = model().trapezTopHex || frame;",
-              "              const closure = axis === 'x'",
-              "                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]",
-              "                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];",
-              "              quad(closure, roofEdgeHex, {",
-              "                normal: [0, 0, 1], cull: true, raw: true,",
-              "                edge: false, seamless: true",
-              "              });",
-          ]) + "\n"
-
+          closure_start = "              /* A narrow hidden closure caps the sight line beneath the\n"
+          closure_body = "              const uz = trapBot - 0.5;"
+          closure_end = "              });\n            };"
           marker = 'const turnBottom = trapBot - 1;'
+
           if marker in text:
-              if old_closure in text or 'const uz = trapBot - 0.5;' in text:
+              if closure_start in text or closure_body in text:
                   raise SystemExit('partial fascia repair detected')
               print('Guarded fascia repair already present.')
           else:
               if text.count(old_turn) != 1:
                   raise SystemExit(f'expected one hidden-turn target, got {text.count(old_turn)}')
-              if text.count(old_closure) != 1:
-                  raise SystemExit(f'expected one horizontal closure target, got {text.count(old_closure)}')
+              if text.count(closure_start) != 1 or text.count(closure_body) != 1:
+                  raise SystemExit('horizontal closure markers are not unique')
+              start = text.index(closure_start)
+              end_anchor = text.index(closure_end, start)
+              end = end_anchor + len("              });\n")
+              closure = text[start:end]
+              if 'const ua = ' not in closure or 'const ub = ' not in closure or 'quad(closure, roofEdgeHex' not in closure:
+                  raise SystemExit('closure structure does not match expected renderer block')
               text = text.replace(old_turn, new_turn, 1)
-              text = text.replace(old_closure, '', 1)
-              if 'const uz = trapBot - 0.5;' in text or 'const roofEdgeHex = model().trapezTopHex || frame;' in text:
+              text = text[:start] + text[end:]
+              if closure_start in text or closure_body in text or 'quad(closure, roofEdgeHex' in text:
                   raise SystemExit('horizontal closure residue remains')
               path.write_text(text, encoding='utf-8')
               print('Replaced horizontal roof closure with extended vertical fascia turn.')
