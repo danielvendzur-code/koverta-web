@@ -2,7 +2,7 @@ name: Koverta configurator QA
 
 on:
   push:
-    branches: [fix/final-koverta-audit-20260909, agent/05-koverta-technical-fidelity, agent/06-koverta-final-integration]
+    branches: [master, fix/final-koverta-audit-20260909, agent/05-koverta-technical-fidelity, agent/06-koverta-final-integration]
   pull_request:
     branches: [master]
 
