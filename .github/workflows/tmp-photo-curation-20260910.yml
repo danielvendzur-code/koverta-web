@@ -25,6 +25,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
+          import struct
           import subprocess
 
           allowed_files = {
@@ -42,11 +43,47 @@ jobs:
               text = p.read_text(encoding="utf-8")
               count = text.count(old)
               if count != expected:
-                  raise SystemExit(f"{path}: expected {expected} occurrence(s), found {count}: {old[:120]!r}")
+                  raise SystemExit(f"{path}: expected {expected} occurrence(s), found {count}: {old[:140]!r}")
               p.write_text(text.replace(old, new), encoding="utf-8")
 
-          # Koverta carports: keep the already-correct slanted hero, align preload/social image,
-          # and remove the exact body duplicate by using another angle of the same Trnava realization.
+          def image_size(path: str) -> tuple[int, int]:
+              data = Path(path).read_bytes()
+              if data.startswith(b"\x89PNG\r\n\x1a\n") and len(data) >= 24:
+                  return struct.unpack(">II", data[16:24])
+              if data[:2] == b"\xff\xd8":
+                  i = 2
+                  sof = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+                  while i + 9 < len(data):
+                      if data[i] != 0xFF:
+                          i += 1
+                          continue
+                      while i < len(data) and data[i] == 0xFF:
+                          i += 1
+                      if i >= len(data):
+                          break
+                      marker = data[i]
+                      i += 1
+                      if marker in {0xD8, 0xD9} or 0xD0 <= marker <= 0xD7:
+                          continue
+                      if i + 2 > len(data):
+                          break
+                      length = int.from_bytes(data[i:i+2], "big")
+                      if length < 2 or i + length > len(data):
+                          break
+                      if marker in sof and length >= 7:
+                          height = int.from_bytes(data[i+3:i+5], "big")
+                          width = int.from_bytes(data[i+5:i+7], "big")
+                          return width, height
+                      i += length
+              raise SystemExit(f"Cannot read image dimensions: {path}")
+
+          def dims(asset: str) -> tuple[int, int]:
+              path = f"assets/{asset}"
+              if not Path(path).is_file():
+                  raise SystemExit(f"Missing required asset: {path}")
+              return image_size(path)
+
+          # Koverta carports: preserve the already-correct alternate-angle hero.
           p = "pristresky-pre-auta/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1nxq4twPeH1LSifkgS31HQGO4M3e4k2fs=w2000" fetchpriority="high">',
@@ -57,22 +94,22 @@ jobs:
           replace_exact(p,
               '<meta name="twitter:image" content="https://koverta.sk/cdn/shop/files/03.jpg?width=1200">',
               '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/koverta-pristresok-auto-trnava-sikmy.jpg">')
+          w, h = dims("koverta-pristresok-auto-trnava-hero.jpg")
           replace_exact(p,
               '<img src="../assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Dvojmiestny prístrešok pri rodinnom dome" loading="lazy" decoding="async">',
-              '<img src="../assets/koverta-pristresok-auto-trnava-hero.jpg" width="1600" height="1200" alt="Dvojmiestny prístrešok Koverta v Trnave — pohľad z iného uhla" title="Prístrešok Koverta pre dve autá — Trnava" loading="lazy" decoding="async">')
+              f'<img src="../assets/koverta-pristresok-auto-trnava-hero.jpg" width="{w}" height="{h}" alt="Dvojmiestny prístrešok Koverta v Trnave — pohľad z iného uhla" title="Prístrešok Koverta pre dve autá — Trnava" loading="lazy" decoding="async">')
 
-          # Koverta garden canopy: retain the selected hero, but do not repeat that exact photo
-          # in the construction card; use the second existing Bratislava angle instead.
+          # Koverta garden canopy: keep the chosen hero, use a different Bratislava angle in body.
           p = "zahradne-pristresky/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1-f0lkIcKvJ2xBggzkDtgVhivR-Rl5haD=w2000" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/koverta-zahradny-pristresok-bratislava-detail.jpg" fetchpriority="high">')
+          w, h = dims("koverta-zahradny-pristresok-bratislava-hero.jpg")
           replace_exact(p,
               '<img src="../assets/koverta-zahradny-pristresok-bratislava-detail.jpg" width="1600" height="1200" alt="Detail nosnej konštrukcie záhradného prístrešku Koverta v Bratislave" decoding="async" loading="lazy">',
-              '<img src="../assets/koverta-zahradny-pristresok-bratislava-hero.jpg" width="1600" height="1200" alt="Záhradný prístrešok Koverta v Bratislave — pohľad z iného uhla" title="Záhradný prístrešok Koverta — Bratislava" decoding="async" loading="lazy">')
+              f'<img src="../assets/koverta-zahradny-pristresok-bratislava-hero.jpg" width="{w}" height="{h}" alt="Záhradný prístrešok Koverta v Bratislave — pohľad z iného uhla" title="Záhradný prístrešok Koverta — Bratislava" decoding="async" loading="lazy">')
 
-          # Soltec carport: professional manufacturer/marketing photography is primary.
-          # Customer photos remain as supporting gallery/navigation material.
+          # Soltec carport: professional photography becomes primary; customer photos stay supporting.
           p = "carport-soltec/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="../assets/soltec-carport-plavecky-03.jpg" fetchpriority="high">',
@@ -81,37 +118,41 @@ jobs:
               'https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-plavecky-03.jpg',
               'https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg',
               expected=2)
+          w, h = dims("soltec-carport-sl240-real.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-carport-toth-nitra-clean.jpg" width="2200" height="1650" alt="Hliníkový carport Soltec SL 240 pre dve autá — realizácia Nitra" fetchpriority="high" decoding="async">',
-              '<img src="../assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Hliníkový carport Soltec SL 240 pre dve autá" title="Carport Soltec SL 240 — hliníkový prístrešok" fetchpriority="high" decoding="async">')
+              f'<img src="../assets/soltec-carport-sl240-real.jpg" width="{w}" height="{h}" alt="Hliníkový carport Soltec SL 240 pre dve autá" title="Carport Soltec SL 240 — hliníkový prístrešok" fetchpriority="high" decoding="async">')
+          w, h = dims("soltec-carport-plavecky-02.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-carport-sl240-real.jpg" width="2400" height="1500" alt="Carport Soltec SL 240 s priznaným spádom" loading="lazy" decoding="async">',
-              '<img src="../assets/soltec-carport-2cars-box.jpg" width="2400" height="1500" alt="Dvojmiestny hliníkový carport Soltec s integrovaným boxom" title="Carport Soltec pre dve autá s boxom" loading="lazy" decoding="async">')
+              f'<img src="../assets/soltec-carport-plavecky-02.jpg" width="{w}" height="{h}" alt="Carport Soltec — realizácia prístrešku pre auto z iného pohľadu" title="Carport Soltec — realizácia" loading="lazy" decoding="async">')
+          w, h = dims("soltec-roof-iso.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-roof-glass.jpg" width="1600" height="1132" alt="Sklenená výplň strechy" decoding="async" loading="lazy">',
-              '<img src="../assets/soltec-roof-iso.jpg" width="2400" height="1600" alt="ISO panel strechy hliníkového carportu Soltec" title="Strecha carportu Soltec — ISO panel 30 mm" decoding="async" loading="lazy">')
+              f'<img src="../assets/soltec-roof-iso.jpg" width="{w}" height="{h}" alt="ISO panel strechy hliníkového carportu Soltec" title="Strecha carportu Soltec — ISO panel 30 mm" decoding="async" loading="lazy">')
 
-          # Fixed Soltec canopies: professional hero remains primary; gallery gets a different
-          # real installation instead of repeating the exact hero image.
+          # Fixed Soltec canopies: professional hero remains primary; gallery uses a real Slovak install.
           p = "pevne-prestresenia/index.html"
+          w, h = dims("soltec-pevne-prestresenie-mokrance.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Prístrešok s pevnou strechou nad terasou" loading="lazy" decoding="async">',
-              '<img src="../assets/soltec-pevne-prestresenie-mokrance.jpg" width="1600" height="1200" alt="Pevné hliníkové prestrešenie Soltec pri rodinnom dome v Mokranciach" title="Pevné prestrešenie Soltec — Mokrance" loading="lazy" decoding="async">')
+              f'<img src="../assets/soltec-pevne-prestresenie-mokrance.jpg" width="{w}" height="{h}" alt="Pevné hliníkové prestrešenie Soltec pri rodinnom dome v Mokranciach" title="Pevné prestrešenie Soltec — Mokrance" loading="lazy" decoding="async">')
 
-          # Bioclimatic pergola: remove only duplicates with semantically safe alternatives.
-          # Leave seasonal/rain imagery alone where no equally accurate alternative exists.
+          # Bioclimatic pergola: replace only duplicates with semantically accurate alternatives.
           p = "bioklimaticke-pergoly/index.html"
+          w, h = dims("soltec-accessory-walls.jpg")
           replace_exact(p,
               '<img width="1656" height="1190" src="../assets/soltec-bio-winter-2024.jpg" alt="Bočné uzavretie pergoly Soltec v zimnej realizácii" loading="lazy" decoding="async">',
-              '<img src="../assets/soltec-accessory-walls.jpg" width="2000" height="1239" alt="Pevné bočné steny bioklimatickej pergoly Soltec" title="Bočné steny pergoly Soltec" loading="lazy" decoding="async">')
+              f'<img src="../assets/soltec-accessory-walls.jpg" width="{w}" height="{h}" alt="Pevné bočné steny bioklimatickej pergoly Soltec" title="Bočné steny pergoly Soltec" loading="lazy" decoding="async">')
+          w, h = dims("soltec-bioklimaticka-pergola-limbach.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-bio-vecer-led.jpg" alt="Bioklimatická pergola s LED osvetlením večer" width="1600" height="960" loading="lazy" decoding="async">',
-              '<img src="../assets/soltec-bioklimaticka-pergola-limbach.jpg" alt="Bioklimatická pergola Soltec pri rodinnom dome v Limbachu" title="Bioklimatická pergola Soltec — realizácia Limbach" width="1600" height="1200" loading="lazy" decoding="async">')
+              f'<img src="../assets/soltec-bioklimaticka-pergola-limbach.jpg" alt="Bioklimatická pergola Soltec pri rodinnom dome v Limbachu" title="Bioklimatická pergola Soltec — realizácia Limbach" width="{w}" height="{h}" loading="lazy" decoding="async">')
 
-          # SEO/social metadata should point at the actual local hero rather than stale CDN photos.
+          # SEO/social metadata points to the actual local hero, not stale Shopify assets.
           p = "tienenie/index.html"
           replace_exact(p,
-              '<link rel="preload" as="image" href="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=2000" fetchpriority="high">',
+              '<link rel="preload" as="image" href="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1800" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/soltec-tienenie-lamely-velka-luka.jpg" fetchpriority="high">')
           replace_exact(p,
               'https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1200',
@@ -123,58 +164,30 @@ jobs:
               '<link rel="preload" as="image" href="../assets/soltec-kuchyna-pergola.jpg" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/soltec-outdoor-kuchyna-graz.jpg" fetchpriority="high">')
           replace_exact(p,
-              'https://koverta.sk/cdn/shop/files/20250522_144659.jpg?width=1200',
+              'https://koverta.sk/cdn/shop/files/Graz_Showroom_horizontal_1.png?width=1200',
               'https://danielvendzur-code.github.io/koverta-web/assets/soltec-outdoor-kuchyna-graz.jpg',
               expected=2)
 
-          # All newly referenced local assets must already exist. No binary/photo files are added here.
-          required_assets = {
-              "assets/koverta-pristresok-auto-trnava-sikmy.jpg",
-              "assets/koverta-pristresok-auto-trnava-hero.jpg",
-              "assets/koverta-zahradny-pristresok-bratislava-detail.jpg",
-              "assets/koverta-zahradny-pristresok-bratislava-hero.jpg",
-              "assets/soltec-carport-sl240-real.jpg",
-              "assets/soltec-carport-2cars-box.jpg",
-              "assets/soltec-roof-iso.jpg",
-              "assets/soltec-pevne-prestresenie-mokrance.jpg",
-              "assets/soltec-accessory-walls.jpg",
-              "assets/soltec-bioklimaticka-pergola-limbach.jpg",
-              "assets/soltec-tienenie-lamely-velka-luka.jpg",
-              "assets/soltec-outdoor-kuchyna-graz.jpg",
-          }
-          missing = sorted(a for a in required_assets if not Path(a).is_file())
-          if missing:
-              raise SystemExit("Missing required assets: " + ", ".join(missing))
-
-          # Validate every local image reference in the changed HTML files resolves to an existing asset.
-          local_src = re.compile(r'(?:src|href)="\.\./assets/([^"?#]+)')
+          # Validate every local asset reference in the changed pages.
+          local_ref = re.compile(r'(?:src|href)="\.\./assets/([^"?#]+)')
+          photo_src = re.compile(r'<img\b[^>]*\bsrc="\.\./assets/([^"?#]+\.(?:jpe?g|png|webp))"', re.I)
           for html in sorted(allowed_files):
               text = Path(html).read_text(encoding="utf-8")
-              for rel in local_src.findall(text):
+              for rel in local_ref.findall(text):
                   asset = Path("assets") / rel
                   if not asset.is_file():
                       raise SystemExit(f"{html}: broken local asset reference: {asset}")
 
-          # Targeted postconditions: the explicitly fixed exact duplicates must be gone from main content.
-          def main_count(path: str, needle: str) -> int:
-              text = Path(path).read_text(encoding="utf-8")
+              # User requirement: no exact photo repeats inside a product subpage's main content.
               start = text.find('<main class="k"')
               end = text.rfind('</main>')
               if start < 0 or end < start:
-                  raise SystemExit(f"{path}: cannot isolate main content")
-              return text[start:end].count(needle)
-
-          checks = [
-              ("zahradne-pristresky/index.html", "koverta-zahradny-pristresok-bratislava-detail.jpg", 1),
-              ("carport-soltec/index.html", "soltec-carport-sl240-real.jpg", 1),
-              ("pevne-prestresenia/index.html", "soltec-canopy-hero.jpg", 1),
-              ("bioklimaticke-pergoly/index.html", "soltec-bio-winter-2024.jpg", 1),
-              ("bioklimaticke-pergoly/index.html", "soltec-bio-vecer-led.jpg", 1),
-          ]
-          for path, needle, expected in checks:
-              actual = main_count(path, needle)
-              if actual != expected:
-                  raise SystemExit(f"{path}: expected {needle} {expected}x in main, found {actual}")
+                  raise SystemExit(f"{html}: cannot isolate main content")
+              main = text[start:end]
+              photos = photo_src.findall(main)
+              duplicates = sorted({src for src in photos if photos.count(src) > 1})
+              if duplicates:
+                  raise SystemExit(f"{html}: duplicate main-content photos remain: {duplicates}")
 
           changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
           if changed != allowed_files:
