@@ -21,14 +21,17 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 2
 
-      - name: Apply guarded Soltec renderer fix
-        run: python3 tools/apply-soltec-smoothness-fix.py
+      - name: Apply guarded Soltec renderer fixes
+        run: |
+          python3 tools/apply-soltec-smoothness-fix.py
+          python3 tools/apply-soltec-bsp-depth.py
 
       - name: Verify JavaScript syntax and Koverta isolation
         run: |
           node --check konfigurator/soltec-premium.js
           node --check konfigurator/test/soltec-motion-regression.js
           git diff --check
+          grep -F 'const BSP_MAX = model().kvGeom ? 320 : 96;' konfigurator/soltec-premium.js
           if git diff -U0 -- konfigurator/soltec-premium.js | grep -E '^[+-].*(nadStrechou|drawKovertaRoof|UHOL_|VAZ_|TRAP_)' ; then
             echo 'ERROR: Koverta-specific geometry changed in a Soltec-only task.' >&2
             exit 1
