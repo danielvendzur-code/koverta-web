@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, no-turn, no-caps, no-turn-no-caps]
+        variant: [baseline, open-z-turn]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,22 +31,16 @@ jobs:
           p = Path('konfigurator/soltec-premium.js')
           s = p.read_text(encoding='utf-8')
           v = os.environ['VARIANT']
-          if v in ('no-turn', 'no-turn-no-caps'):
-              old = 'put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
-              new = '/* diagnostic: hidden flashing turn omitted */'
+          if v == 'open-z-turn':
+              old = '              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
+              new = '''              {
+                const t0 = zav - 9 * dir, t1 = zav + 10 * dir;
+                if (axis === 'x') boxFaces(Math.min(t0, t1), a, turnBottom, Math.abs(t1 - t0), b - a, zTop - turnBottom, frame, ['+z', '-z'], SHAFT, 0, false, true);
+                else boxFaces(a, Math.min(t0, t1), turnBottom, b - a, Math.abs(t1 - t0), zTop - turnBottom, frame, ['+z', '-z'], SHAFT, 0, false, true);
+              }'''
               if s.count(old) != 1: raise SystemExit(f'turn marker count={s.count(old)}')
               s = s.replace(old, new, 1)
-          if v in ('no-caps', 'no-turn-no-caps'):
-              markers = [
-                  'drawTrapEndCap(vx0, vy0, vy1, vrchHex);',
-                  'drawTrapEndCap(vx1, vy0, vy1, vrchHex);',
-                  'drawTrapSideCap(vy0, vx0, vx1, vrchHex);',
-                  'drawTrapSideCap(vy1, vx0, vx1, vrchHex);'
-              ]
-              for old in markers:
-                  if s.count(old) != 1: raise SystemExit(f'cap marker count {old}={s.count(old)}')
-                  s = s.replace(old, '/* diagnostic: roof cut cap omitted */', 1)
-          if v not in ('baseline', 'no-turn', 'no-caps', 'no-turn-no-caps'):
+          elif v != 'baseline':
               raise SystemExit('unknown variant')
           p.write_text(s, encoding='utf-8')
           PY
@@ -82,6 +76,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-diagnostic2-${{ matrix.variant }}
+          name: koverta-diagnostic3-${{ matrix.variant }}
           path: diagnostic
           if-no-files-found: error
