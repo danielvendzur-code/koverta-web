@@ -254,26 +254,246 @@
     if (document.fullscreenElement) scrollToConfigurator();
   });
 
-  /* --- 3 · rozmer na mieru ---------------------------------------------- */
+  /* --- 3 · Koverta obchodná logika a payload ---------------------------- */
+
+  function isKovertaPage() {
+    var root = document.querySelector(ROOT_SEL);
+    return !!root && root.getAttribute('data-sp-page') === 'koverta';
+  }
+
+  function cleanText(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function rootText(root, selector) {
+    var el = root && root.querySelector(selector);
+    return el ? cleanText(el.textContent) : '';
+  }
+
+  function selectedPlacement(root) {
+    var btn = root && root.querySelector('[data-sp-place][aria-pressed="true"]');
+    if (!btn) return { id: 'kv-free', label: 'Samostatne stojaci', quoteOnly: false, pending: false };
+    var span = btn.querySelector('span');
+    var label = '';
+    if (span) {
+      var textNodes = [].slice.call(span.childNodes).filter(function (n) {
+        return n.nodeType === 3 && cleanText(n.nodeValue);
+      });
+      label = textNodes.length ? cleanText(textNodes[textNodes.length - 1].nodeValue) : '';
+    }
+    if (!label) {
+      label = cleanText(btn.textContent).replace(/^Možnosť\s+\d+\s*/i, '');
+    }
+    return {
+      id: btn.dataset.spPlace || '',
+      label: label || 'neuvedené',
+      quoteOnly: (btn.dataset.spPlace || '') !== 'kv-free'
+    };
+  }
+
+  function activePickRows(root) {
+    var titles = { kotvenie: 'Kotvenie stĺpov', odkvap: 'Odkvap a zvod' };
+    var rows = [];
+    root.querySelectorAll('[data-sp-add-opt^="pick:"][aria-pressed="true"]').forEach(function (btn) {
+      var key = String(btn.dataset.spAddOpt || '').slice(5);
+      if (!key) return;
+      rows.push({
+        label: titles[key] || key,
+        value: rootText(btn, 'strong') || cleanText(btn.textContent)
+      });
+    });
+    return rows;
+  }
+
+  function visibleQuoteRows(root) {
+    var rows = [];
+    root.querySelectorAll('[data-sp-lines] li').forEach(function (li) {
+      if (li.hasAttribute('data-kv-placement-line')) return;
+      var label = rootText(li, 'span');
+      var value = rootText(li, 'b');
+      if (label || value) rows.push({ label: label, value: value });
+    });
+    return rows;
+  }
+
+  function buildKovertaQuote(custom) {
+    var root = document.querySelector(ROOT_SEL);
+    if (!root || !isKovertaPage()) return null;
+
+    var placement = selectedPlacement(root);
+    var rows = visibleQuoteRows(root);
+    activePickRows(root).forEach(function (row) {
+      var already = rows.some(function (x) {
+        return x.label.indexOf(row.label) === 0;
+      });
+      if (!already) rows.push(row);
+    });
+
+    var configuredSize = [
+      rootText(root, '[data-sp-w-out]'),
+      rootText(root, '[data-sp-l-out]')
+    ].filter(Boolean).join(' × ');
+    var configuredHeight = rootText(root, '[data-sp-h-out]');
+    var frameColor = rootText(root, '[data-sp-frame-val]');
+    var total = rootText(root, '[data-sp-total]') || 'na nacenenie';
+
+    var body = [];
+    if (custom) {
+      body.push('Mám záujem o oceľový prístrešok Koverta v rozmere na mieru.');
+      body.push('Požadovaný rozmer: ' + formatMm(custom.w) + ' × ' + formatMm(custom.l) + ', výška ' + formatMm(custom.h) + '.');
+      if (custom.note) body.push('Poznámka: ' + custom.note);
+      body.push('');
+      body.push('Najbližšia katalógová zostava použitá iba ako cenová referencia: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
+      body.push('Atypický rozmer je samostatný dopyt na technické posúdenie. Konfigurátor nepotvrdzuje jeho realizovateľnosť ani cenu.');
+    } else {
+      body.push('Mám záujem o oceľový prístrešok Koverta.');
+      body.push('Rozmer: ' + configuredSize + (configuredHeight ? ', výška ' + configuredHeight : '') + '.');
+    }
+    body.push('Umiestnenie: ' + placement.label + (placement.quoteOnly ? ' (na nacenenie)' : '') + '.');
+    if (frameColor) body.push('Farba konštrukcie: ' + frameColor + ' (cenový dopad na nacenenie).');
+    if (rows.length) {
+      body.push('Zostava:');
+      rows.forEach(function (row) {
+        body.push('- ' + row.label + (row.value ? ': ' + row.value : ''));
+      });
+    }
+    body.push('Orientačná cena z konfigurátora: ' + total + ', vrátane DPH a montáže.');
+    body.push('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.');
+    body.push('');
+    body.push('Meno:');
+    body.push('Telefón:');
+    body.push('Obec realizácie:');
+
+    return {
+      body: body.join('\n'),
+      subject: custom
+        ? 'Prístrešok Koverta — rozmer na mieru ' + custom.w + ' × ' + custom.l + ' mm'
+        : 'Konfigurácia Koverta — ' + (configuredSize || 'dopyt'),
+      placement: placement,
+      total: total,
+      rows: rows
+    };
+  }
+
+  function sendKovertaQuote(custom) {
+    var payload = buildKovertaQuote(custom);
+    var root = document.querySelector(ROOT_SEL);
+    if (!payload || !root) return false;
+    var mailto = 'mailto:obchod@koverta.sk?subject='
+      + encodeURIComponent(payload.subject)
+      + '&body=' + encodeURIComponent(payload.body);
+    root.dataset.spQuoteHref = mailto;
+    root.dataset.kvQuotePayload = payload.body;
+    if (custom) root.dataset.kvCustomQuotePayload = payload.body;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(payload.body).catch(function () {});
+    }
+    window.location.href = mailto;
+    return true;
+  }
+
+  function syncPlacementQuoteState() {
+    if (!isKovertaPage()) return;
+    var root = document.querySelector(ROOT_SEL);
+    var host = root.querySelector('[data-sp-lines]');
+    if (!host) return;
+    var placement = selectedPlacement(root);
+    if (placement.pending) return;
+
+    var old = host.querySelector('[data-kv-placement-line]');
+    if (placement.quoteOnly) {
+      if (!old) {
+        old = document.createElement('li');
+        old.setAttribute('data-kv-placement-line', '');
+        host.appendChild(old);
+      }
+      var stamp = placement.id + '|' + placement.label;
+      if (old.dataset.kvStamp !== stamp) {
+        old.dataset.kvStamp = stamp;
+        old.innerHTML = '<span>Umiestnenie — ' + placement.label + '</span><b>na nacenenie</b>';
+      }
+    } else if (old) {
+      old.parentNode.removeChild(old);
+    }
+
+    var hasOtherUnpriced = [].slice.call(host.querySelectorAll('li')).some(function (li) {
+      if (li.hasAttribute('data-kv-placement-line')) return false;
+      var price = li.querySelector('b');
+      return cleanText(price && price.textContent) === 'na nacenenie';
+    });
+    var mustBeOpen = placement.quoteOnly || hasOtherUnpriced;
+
+    ['[data-sp-total]', '[data-sp-mini-total]'].forEach(function (selector) {
+      var el = root.querySelector(selector);
+      if (!el) return;
+      var value = cleanText(el.textContent);
+      if (!value || value === '—') return;
+      var baseValue = value.replace(/^od\s+/i, '');
+      var nextValue = mustBeOpen ? 'od ' + baseValue : baseValue;
+      if (cleanText(el.textContent) !== nextValue) el.textContent = nextValue;
+    });
+  }
+
+  function wireKovertaSnapshotSemantics() {
+    if (!isKovertaPage() || !window.SP_TEST || typeof window.SP_TEST.snapshot !== 'function') return;
+    if (window.SP_TEST.kvPricingWrapped) return;
+    var baseSnapshot = window.SP_TEST.snapshot;
+    window.SP_TEST.snapshot = function () {
+      var snap = baseSnapshot();
+      if (!snap || snap.page !== 'koverta' || !snap.price || !snap.price.open) return snap;
+      var subtotal = snap.price.total;
+      snap.price = Object.assign({}, snap.price, {
+        catalogueSubtotal: subtotal,
+        total: null
+      });
+      return snap;
+    };
+    window.SP_TEST.kvPricingWrapped = true;
+  }
+
+  function wireReset() {
+    if (!isKovertaPage()) return;
+    var root = document.querySelector(ROOT_SEL);
+    if (root.querySelector('[data-kv-reset]')) return;
+    var cap = root.querySelector('.sp-railcap');
+    if (!cap) return;
+    var link = document.createElement('a');
+    link.href = location.pathname + '?page=koverta';
+    link.className = 'kv-linkbtn';
+    link.setAttribute('data-kv-reset', '');
+    link.setAttribute('aria-label', 'Resetovať konfiguráciu Koverta');
+    link.textContent = 'Resetovať';
+    cap.appendChild(document.createTextNode(' · '));
+    cap.appendChild(link);
+  }
+
+  function wireKovertaPricing() {
+    if (!isKovertaPage()) return;
+    wireKovertaSnapshotSemantics();
+    wireReset();
+    syncPlacementQuoteState();
+  }
+
+  // Testovateľný čistý výstup payloadu bez otvárania e-mailového klienta.
+  window.KVBuildKovertaQuote = function (custom) {
+    return buildKovertaQuote(custom || null);
+  };
+
+  document.addEventListener('click', function (event) {
+    if (!isKovertaPage()) return;
+    var target = event.target.closest && event.target.closest('[data-sp-cfg-quote]');
+    if (!target) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    sendKovertaQuote(null);
+  }, true);
+
+  /* --- 4 · rozmer na mieru ---------------------------------------------- */
 
   // Cenník má hotové veľkosti a posuvník po nich skáče, takže sa mimo nich
   // nedá nič nastaviť — a to je správne, cena by inak bola vymyslená. Kto
   // potrebuje iný rozmer, si ho tu napíše a odíde s ním do dopytu aj so
   // všetkým, čo si medzitým vyklikal.
-  function textOf(sel) {
-    var el = document.querySelector(sel);
-    return el ? el.textContent.trim() : '';
-  }
-
-  function zostava() {
-    var riadky = [];
-    document.querySelectorAll('[data-sp-lines] li').forEach(function (li) {
-      var t = li.textContent.replace(/\s+/g, ' ').trim();
-      if (t) riadky.push('- ' + t);
-    });
-    return riadky;
-  }
-
   function wireCustom() {
     var btn = document.querySelector('[data-kv-custom]');
     if (!btn || btn.dataset.kvWired === '1') return;
@@ -283,17 +503,21 @@
     panel.className = 'kv-custom';
     panel.hidden = true;
     panel.innerHTML = ''
-      + '<p class="sp-side-note">Napíšte rozmer, ktorý potrebujete. Pošleme naň cenu po zameraní.</p>'
+      + '<p class="sp-side-note">Napíšte požadovaný rozmer. Je to samostatný dopyt na technické posúdenie; katalógová zostava ani jej cena nepotvrdzujú realizovateľnosť atypického rozmeru. Individuálne riešenia ako šikmé steny, kotvenie do steny, L-tvar alebo zelená strecha riešime samostatným posúdením a nacenením.</p>'
       + '<div class="kv-custom__row">'
-      + '<label>Šírka (mm)<input type="number" min="2000" max="12000" step="10" data-kv-cw></label>'
-      + '<label>Hĺbka (mm)<input type="number" min="2000" max="12000" step="10" data-kv-cl></label>'
-      + '<label>Výška (mm)<input type="number" min="2000" max="4000" step="10" data-kv-ch></label>'
+      + '<label>Šírka (mm)<input type="number" min="1" step="1" required data-kv-cw></label>'
+      + '<label>Hĺbka (mm)<input type="number" min="1" step="1" required data-kv-cl></label>'
+      + '<label>Výška (mm)<input type="number" min="1" step="1" required data-kv-ch></label>'
       + '</div>'
-      + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad L-tvar, previs okolo stromu, prístrešok pre dodávku…"></textarea></label>'
+      + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad spôsob použitia, umiestnenie alebo iné požiadavky…"></textarea></label>'
+      + '<p class="sp-side-note" data-kv-cerr role="alert" hidden>Vyplňte všetky tri rozmery kladným číslom v milimetroch.</p>'
       + '<button class="button" type="button" data-kv-csend>Poslať dopyt na tento rozmer</button>';
     btn.parentNode.insertBefore(panel, btn.nextSibling);
 
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function (event) {
+      // Zastaví zdieľaný runtime: ten má starší handler data-kv-custom, ktorý
+      // inak otvorí mailto skôr, než používateľ zadá atypický rozmer.
+      event.stopPropagation();
       panel.hidden = !panel.hidden;
       if (panel.hidden) return;
       var w = document.querySelector('[data-sp-w]'), l = document.querySelector('[data-sp-l]'), h = document.querySelector('[data-sp-h]');
@@ -304,30 +528,30 @@
     });
 
     panel.querySelector('[data-kv-csend]').addEventListener('click', function () {
-      var w = panel.querySelector('[data-kv-cw]').value;
-      var l = panel.querySelector('[data-kv-cl]').value;
-      var h = panel.querySelector('[data-kv-ch]').value;
-      var pozn = panel.querySelector('[data-kv-cnote]').value.trim();
-      var telo = [
-        'Mám záujem o prístrešok Koverta v rozmere na mieru.',
-        'Rozmer: ' + w + ' × ' + l + ' mm, výška ' + h + ' mm.',
-        pozn ? 'Poznámka: ' + pozn : '',
-        '',
-        'Najbližšia zostava z konfigurátora: ' + textOf('[data-sp-dims]'),
-        zostava().join('\n'),
-        'Jej cena podľa cenníka: ' + textOf('[data-sp-total]') + ' € vrátane DPH.',
-        '',
-        'Meno:',
-        'Telefón:',
-        'Obec realizácie:'
-      ].filter(Boolean).join('\n');
-      var odkaz = 'mailto:obchod@koverta.sk?subject='
-        + encodeURIComponent('Prístrešok Koverta — rozmer na mieru ' + w + ' × ' + l + ' mm')
-        + '&body=' + encodeURIComponent(telo);
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(telo).catch(function () {});
+      var wEl = panel.querySelector('[data-kv-cw]');
+      var lEl = panel.querySelector('[data-kv-cl]');
+      var hEl = panel.querySelector('[data-kv-ch]');
+      var err = panel.querySelector('[data-kv-cerr]');
+      var w = Number(wEl.value);
+      var l = Number(lEl.value);
+      var h = Number(hEl.value);
+      var bad = !Number.isFinite(w) || w <= 0 || !Number.isFinite(l) || l <= 0 || !Number.isFinite(h) || h <= 0;
+      if (bad) {
+        if (err) err.hidden = false;
+        var firstBad = [wEl, lEl, hEl].find(function (el) {
+          var v = Number(el.value);
+          return !Number.isFinite(v) || v <= 0;
+        });
+        if (firstBad) firstBad.focus();
+        return;
       }
-      window.location.href = odkaz;
+      if (err) err.hidden = true;
+      sendKovertaQuote({
+        w: Math.round(w),
+        l: Math.round(l),
+        h: Math.round(h),
+        note: panel.querySelector('[data-kv-cnote]').value.trim()
+      });
     });
   }
 
@@ -339,9 +563,10 @@
     wireAll();
     wireAllToggle();
     wireCustom();
+    wireKovertaPricing();
     var root = document.getElementById('kv-root');
     if (root && 'MutationObserver' in window) {
-      new MutationObserver(function () { wireAll(); wireAllToggle(); wireCustom(); }).observe(root, { childList: true, subtree: true });
+      new MutationObserver(function () { wireAll(); wireAllToggle(); wireCustom(); wireKovertaPricing(); }).observe(root, { childList: true, subtree: true });
     }
   }
 

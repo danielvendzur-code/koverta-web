@@ -18,6 +18,7 @@
 */
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
+const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 
 /* Farby, ktoré sa dajú na streche spoznať na prvý pohľad. */
@@ -26,16 +27,10 @@ const BARVY = { rimSoffitHex: '#ffcc00', trapezSoffitHex: '#ff00ff' };
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 1 });
-  await ctx.addInitScript((bar) => {
-    const orig = JSON.parse;
-    JSON.parse = function (t, r) {
-      const v = orig.call(JSON, t, r);
-      if (v && v.models) for (const k in v.models) Object.assign(v.models[k], bar);
-      return v;
-    };
-  }, BARVY);
+  await prepareContext(ctx);
+  await setModelColors(ctx, BARVY);
   const p = await ctx.newPage();
-  p.on('pageerror', (e) => { console.log('ERR', e.message); process.exitCode = 1; });
+  const assertNoErrors = watchErrors(p);
   await p.goto(URL, { waitUntil: 'load', timeout: 60000 });
   await p.waitForTimeout(2200);
 
@@ -79,5 +74,6 @@ const BARVY = { rimSoffitHex: '#ffcc00', trapezSoffitHex: '#ff00ff' };
     ? zle.slice(0, 15).join('\n') + `\nspolu ${zle.length} pohľadov`
     : 'cez strechu nič nepresvitá (4 veľkosti × 12 uhlov × 4 sklony zhora)');
   await b.close();
+  assertNoErrors();
   process.exit(zle.length ? 1 : 0);
 })();

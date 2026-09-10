@@ -2,10 +2,13 @@
    polovici výšky; keď tam je farba podhľadu alebo pozadia, stĺp je prekrytý. */
 const PLAYWRIGHT = process.env.PLAYWRIGHT_PATH || 'playwright';
 const { chromium } = require(PLAYWRIGHT);
+const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
-  const p = await (await b.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
-  p.on('pageerror', e => console.log('ERR', e.message));
+  const ctx = await b.newContext({ viewport: { width: 1200, height: 900 } });
+  await prepareContext(ctx);
+  const p = await ctx.newPage();
+  const assertNoErrors = watchErrors(p);
   await p.goto(process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta', { waitUntil: 'load', timeout: 60000 });
   await p.waitForTimeout(2200);
   const out = await p.evaluate(async () => {
@@ -94,5 +97,6 @@ const { chromium } = require(PLAYWRIGHT);
   });
   console.log(out.length ? out.slice(0, 20).join('\n') + `\nspolu ${out.length}` : 'stĺpy nikde neprekryté');
   await b.close();
+  assertNoErrors();
   process.exit(out.length ? 1 : 0);
 })();

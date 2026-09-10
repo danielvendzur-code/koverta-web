@@ -1,6 +1,8 @@
 name: Koverta configurator QA
 
 on:
+  push:
+    branches: [fix/final-koverta-audit-20260909, agent/05-koverta-technical-fidelity, agent/06-koverta-final-integration]
   pull_request:
     branches: [master]
 
@@ -9,43 +11,88 @@ permissions:
 
 jobs:
   configurator:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Verify QA files
-        run: ls -la konfigurator/test && test -f konfigurator/test/layout-smoke.js
+        run: |
+          test -f "konfigurator/test/${{ matrix.test }}.js"
+          node --check konfigurator/soltec-premium.js
+          node --check konfigurator/koverta-cfg-enhance.js
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install Playwright
         run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start static server
         run: |
           python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
           for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:8901/konfigurator/?page=koverta >/dev/null; then exit 0; fi
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/koverta-http.log
           exit 1
-      - name: Koverta geometry regression
+      - name: Koverta regression
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
-        run: |
-          node konfigurator/test/layout-smoke.js
-          node konfigurator/test/stlpy-vidno.js
-          node konfigurator/test/prekrytie.js
-          node konfigurator/test/strecha-nepresvita.js
-          node konfigurator/test/plynulost.js
+        run: node "konfigurator/test/${{ matrix.test }}.js"
       - name: Upload visual QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-visual-qa
+          name: koverta-visual-qa-${{ matrix.test }}
+          path: qa-artifacts
+          if-no-files-found: ignore
+
+  occlusion-deep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [02-occlusion-sweep, 02-component-visibility, 02-focused-render-qa]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify deep QA script
+        run: test -f "coordination/koverta/${{ matrix.script }}.js"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+      - name: Deep render QA
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: node "coordination/koverta/${{ matrix.script }}.js"
+      - name: Upload deep QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: koverta-deep-qa-${{ matrix.script }}
           path: qa-artifacts
           if-no-files-found: ignore

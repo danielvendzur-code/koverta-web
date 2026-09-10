@@ -7,6 +7,11 @@
      kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
 <script>
 (function (w) {
+  // Queue Clarity calls before GTM can run its consent tag. The loaded
+  // Clarity client consumes this queue; no analytics call is discarded.
+  if (typeof w.clarity !== 'function') {
+    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
+  }
   w.dataLayer = w.dataLayer || [];
   function gtag() { w.dataLayer.push(arguments); }
   w.kvGtag = gtag;
@@ -467,7 +472,7 @@
         <h2 id="skladbaTitle" class="k-h2 k-rise" data-k-headline data-k-delay="1">Čo prístrešok drží a kadiaľ ide voda</h2>
       </div>
       <div class="k-rise" data-k-delay="2">
-        <p class="k-copy">Nosná časť je oceľová. Trapézovú strechu ukončuje lemovanie; odkvap je osadený pod ním a zvod je vedený pri stĺpe.</p>
+        <p class="k-copy">Nosná časť je oceľová a trapézovú strechu ukončuje lemovanie. Odkvap je voliteľný; jeho vyhotovenie a vedenie zvodu sa určia podľa konkrétnej zostavy.</p>
         <a class="k-link" href="#ponuka">Prejsť na nezáväznú ponuku <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </header>
@@ -478,7 +483,7 @@
         <div class="kh-zost__koty">
           <div><p class="kh-pojem">Stĺpy</p><p class="kh-hodnota">podľa zvoleného rozmeru</p></div>
           <div><p class="kh-pojem">Šírka</p><p class="kh-hodnota">do 8 m</p></div>
-          <div><p class="kh-pojem">Zvod vody</p><p class="kh-hodnota">pri krajnom stĺpe</p></div>
+          <div><p class="kh-pojem">Zvod vody</p><p class="kh-hodnota">trasa podľa zostavy</p></div>
         </div>
       </figure>
       <div class="kh-zost__stlpec">
@@ -496,7 +501,7 @@
             <li class="kh-zost__vrstva"><span class="kh-zost__cislo">05</span><span class="kh-zost__co"><b>Odvodnenie</b> — odkvap ako voliteľná výbava; vyústenie sa navrhne podľa podkladu</span></li>
             <li class="kh-zost__vrstva"><span class="kh-zost__cislo">06</span><span class="kh-zost__co"><b>Výplne bokov</b> — lamely z hliníka, dreva alebo WPC, prípadne plná stena</span></li>
             <li class="kh-zost__vrstva"><span class="kh-zost__cislo">07</span><span class="kh-zost__co"><b>Elektro</b> — voliteľná elektropríprava podľa odsúhlaseného návrhu</span></li>
-            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">08</span><span class="kh-zost__co"><b>Kotvenie</b> — betónové pätky ako doplnková služba alebo kotvenie do existujúcej plochy</span></li>
+            <li class="kh-zost__vrstva"><span class="kh-zost__cislo">08</span><span class="kh-zost__co"><b>Kotvenie</b> — betónové pätky ako doplnková služba alebo kotvenie do vhodného existujúceho betónového podkladu</span></li>
           </ol>
           <a class="k-link" href="#otazky">Čo si overiť pred realizáciou <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         </div>
@@ -537,7 +542,7 @@
         <div class="kh-mat__media"><img referrerpolicy="no-referrer" src="https://lh3.googleusercontent.com/d/1oU1TxTYuvNcXVpb5wYgSQg2C9h22d0IV=w1600" width="1500" height="1200" alt="Prístrešok Koverta pri dome — detail vzťahu konštrukcie a fasády" loading="lazy" decoding="async"></div>
         <div class="kh-mat__body">
           <h3 class="kh-mat__title">Pri dome</h3>
-          <p class="kh-mat__text">Samostatne stojaci alebo kotvený k fasáde — kotvenie do steny rieši aj zateplenie. Odvod vody napojíme na existujúci zvod.</p><div class="kh-mat__pata"><div class="kh-mat__udaj"><p class="kh-mat__pojem">Kotvenie</p><p class="kh-mat__hodnota">voľné aj k stene</p></div><div class="kh-mat__udaj"><p class="kh-mat__pojem">Stĺpy</p><p class="kh-mat__hodnota">pri stene ubudne rad</p></div></div>
+          <p class="kh-mat__text">Samostatne stojaci alebo kotvený k fasáde — kotvenie do steny rieši aj zateplenie. Spôsob odvodnenia a prípadné napojenie na existujúci zvod určíme podľa konkrétneho miesta.</p><div class="kh-mat__pata"><div class="kh-mat__udaj"><p class="kh-mat__pojem">Kotvenie</p><p class="kh-mat__hodnota">voľné aj k stene</p></div><div class="kh-mat__udaj"><p class="kh-mat__pojem">Stĺpy</p><p class="kh-mat__hodnota">pri stene ubudne rad</p></div></div>
         </div>
       </article>
     </div>
@@ -597,9 +602,9 @@
       </div>
       <div class="kh-faq__list" data-k-faq>
         <details class="kh-faq__item k-rise"><summary><span>Potrebujem stavebné povolenie?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Povoľovací režim závisí od rozmeru, umiestnenia a konkrétneho pozemku. Pred realizáciou si požiadavky potvrďte s príslušným stavebným úradom; pri návrhu vám vieme pripraviť rozmery a osadenie konštrukcie.</p></div></details>
-        <details class="kh-faq__item k-rise"><summary><span>Ako sa prístrešok kotví?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Do betónovej pätky alebo do existujúcej spevnenej plochy. Spôsob určíme pri zameraní podľa podložia a podľa zaťaženia snehom a vetrom vo vašej lokalite. Ak pätky ešte nie sú, vieme ich spraviť ako doplnkovú službu.</p></div></details>
+        <details class="kh-faq__item k-rise"><summary><span>Ako sa prístrešok kotví?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Do pripraveného betónového podkladu mechanickými alebo chemickými kotvami podľa návrhu. Spôsob určíme pri zameraní podľa podložia a zaťaženia v danej lokalite. Ak pätky ešte nie sú, vieme ich spraviť ako doplnkovú službu.</p></div></details>
         <details class="kh-faq__item k-rise"><summary><span>Z čoho sa skladá cena?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Z rozmeru, typu strechy, počtu stĺpov a zvolených výplní. Doprava a montáž sú v cene. Presnú sumu dostanete po zameraní; konfigurátor dá orientačné číslo hneď.</p></div></details>
-        <details class="kh-faq__item k-rise"><summary><span>Kto spraví betónové pätky?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>My. Betónové pätky vieme vykopať a vybetónovať podľa kót z odsúhlaseného návrhu — je to doplnková služba k montáži, nie automaticky súčasť ceny. Ak už máte betónovú platňu alebo zámkovú dlažbu, kotvíme priamo do nej a pätky odpadajú.</p></div></details>
+        <details class="kh-faq__item k-rise"><summary><span>Kto spraví betónové pätky?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>My. Betónové pätky vieme vykopať a vybetónovať podľa kót z odsúhlaseného návrhu — je to doplnková služba k montáži, nie automaticky súčasť ceny. Pri existujúcej ploche overíme nosný betónový podklad. Samotná zámková dlažba nie je podkladom na kotvenie; pod ňou musí byť vhodný betónový základ.</p></div></details>
         <details class="kh-faq__item k-rise"><summary><span>Koľko miesta treba na jedno auto?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Pre bežné osobné auto počítajte šírku od 2,5 m a dĺžku od 5,2 m — to sú aj najmenšie katalógové rozmery. Ak chcete pohodlne otvoriť dvere z oboch strán alebo pod prístreškom aj prejsť, pridajte pol metra na šírku. Pre dodávku alebo karavan riešime výšku individuálne.</p></div></details>
         <details class="kh-faq__item k-rise"><summary><span>Dá sa strecha zatepliť?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Áno. Pultovú strechu z trapézového profilu vieme doplniť o izoláciu — bráni prehrievaniu, kondenzu a tlmí hluk dažďa. Má zmysel tam, kde prístrešok stojí pri okne spálne alebo nadväzuje na terasu.</p></div></details>
         <details class="kh-faq__item k-rise"><summary><span>Ako dlho trvá montáž?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Štandardný prístrešok postavíme za jeden deň. Ak si objednáte aj pätky, montáž ide až po tom, čo betón dostatočne vyzrie — celkovo teda počítajte s dvomi návštevami v odstupe niekoľkých dní.</p></div></details>

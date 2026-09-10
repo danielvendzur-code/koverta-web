@@ -7,6 +7,11 @@
      kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
 <script>
 (function (w) {
+  // Queue Clarity calls before GTM can run its consent tag. The loaded
+  // Clarity client consumes this queue; no analytics call is discarded.
+  if (typeof w.clarity !== 'function') {
+    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
+  }
   w.dataLayer = w.dataLayer || [];
   function gtag() { w.dataLayer.push(arguments); }
   w.kvGtag = gtag;
