@@ -2135,7 +2135,11 @@
               /* Čistý plech nesmie po BSP rozdelení dostať vlasovú medzeru.
                  crispEdges sa preto pri cleanSurface týka každého jeho líca,
                  nie iba hornej plochy. Geometriu ani poradie nemení. */
-              seamless: cleanSurface === true || (seamlessTop === true && key === '+z')
+              seamless: cleanSurface === true || (seamlessTop === true && key === '+z'),
+              /* Seal only artificial BSP fragment edges on surfaces explicitly
+                 marked clean. This never strokes the source polygon boundary and
+                 does not change world-space geometry. */
+              sealSplits: cleanSurface === true
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -3744,10 +3748,14 @@
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
             drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
-            drawTrapEndCap(vx0, vy0, vy1, frame);
-            drawTrapEndCap(vx1, vy0, vy1, frame);
-            drawTrapSideCap(vy0, vx0, vx1, frame);
-            drawTrapSideCap(vy1, vx0, vx1, frame);
+            /* The finite sheet cut sits inside the opaque fascia pocket. Use
+               the sheet finish on that hidden cut: a dark frame-colour cap can
+               otherwise appear as one tiny notch per corrugation through the
+               intentional 1 mm clearance. Geometry and drainage stay unchanged. */
+            drawTrapEndCap(vx0, vy0, vy1, vrchHex);
+            drawTrapEndCap(vx1, vy0, vy1, vrchHex);
+            drawTrapSideCap(vy0, vx0, vx1, vrchHex);
+            drawTrapSideCap(vy1, vx0, vx1, vrchHex);
 
             /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
                podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
