@@ -1,0 +1,179 @@
+name: Koverta final realism apply and QA
+
+on:
+  push:
+    branches: [agent/koverta-final-realism]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: koverta-final-realism-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apply-and-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply guarded Koverta-only patch
+        run: |
+          cp .github/scripts/apply-koverta-final-realism.py /tmp/apply-koverta-final-realism.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/apply-koverta-final-realism.py')
+          s = p.read_text(encoding='utf-8')
+          start = s.index('# Guard the non-negotiable technical/product invariants before writing.')
+          end = s.index('TARGET.write_text(source, encoding="utf-8")', start)
+          guard = '''# Guard the non-negotiable technical/product invariants before writing.\ncfg = Path("konfigurator/cfg-pages.js").read_text(encoding="utf-8")\ncompact_cfg = "".join(cfg.split())\nfor required in [\n    '"postAxes":[72,2928,5784]',\n    '"postAxes":[72,2528,4984]',\n    '"catalog":14069',\n    '"catalog":14192',\n    '"catalog":14198',\n]:\n    if required not in compact_cfg:\n        raise RuntimeError(f"Required cfg invariant missing after patch: {required}")\nfor required in [\n    "const rohovy = Boolean(rz.roh);",\n    "const kovertaContact = Boolean(kvBand());",\n]:\n    if required not in source:\n        raise RuntimeError(f"Required runtime invariant missing after patch: {required}")\nif "paintLast" in source:\n    raise RuntimeError("paintLast still exists after patch")\n\n'''
+          p.write_text(s[:start] + guard + s[end:], encoding='utf-8')
+          PY
+          python3 /tmp/apply-koverta-final-realism.py
+          node --check konfigurator/soltec-premium.js
+          node --check konfigurator/koverta-cfg-enhance.js
+
+      - name: Verify protected files and Koverta invariants
+        run: |
+          git diff --exit-code HEAD -- konfigurator/cfg-pages.js
+          git diff --exit-code HEAD -- archiv-expivi
+          git diff --exit-code HEAD -- konfigurator/test coordination/koverta
+          python3 - <<'PY'
+          from pathlib import Path
+          s = Path('konfigurator/soltec-premium.js').read_text(encoding='utf-8')
+          cfg = ''.join(Path('konfigurator/cfg-pages.js').read_text(encoding='utf-8').split())
+          required_cfg = [
+              '"postAxes":[72,2928,5784]',
+              '"postAxes":[72,2528,4984]',
+              '"catalog":14069',
+              '"catalog":14192',
+              '"catalog":14198',
+          ]
+          for token in required_cfg:
+              if token not in cfg:
+                  raise SystemExit('missing protected cfg invariant: ' + token)
+          required_runtime = [
+              'Koverta final realism: true corrugated shell',
+              'const rohovy = Boolean(rz.roh);',
+              'const kovertaContact = Boolean(kvBand());',
+              'const hlava = frame;',
+              'const plateHex = frame;',
+              'const kvSlatWall = Boolean(KV_MAT[kind]);',
+              'angleDeg: 90',
+          ]
+          for token in required_runtime:
+              if token not in s:
+                  raise SystemExit('missing runtime invariant: ' + token)
+          forbidden = ['paintLast']
+          for token in forbidden:
+              if token in s:
+                  raise SystemExit('forbidden renderer workaround remains: ' + token)
+          print('protected invariants PASS')
+          PY
+
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+
+      - name: Full Koverta test matrix
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          set +e
+          status=0
+          : > /tmp/koverta-test-results.txt
+          for test in \
+            osnova-podla-expivi \
+            prekrytie \
+            strecha-nepresvita \
+            stlpy-vidno \
+            plynulost \
+            layout-smoke \
+            technical-fidelity \
+            koverta-accessories \
+            pricing-logic \
+            routing-smoke \
+            browser-qa
+          do
+            echo "===== ${test} =====" | tee -a /tmp/koverta-test-results.txt
+            node "konfigurator/test/${test}.js" 2>&1 | tee -a /tmp/koverta-test-results.txt
+            rc=${PIPESTATUS[0]}
+            echo "RESULT ${test}: ${rc}" | tee -a /tmp/koverta-test-results.txt
+            if [ "$rc" -ne 0 ]; then status=1; fi
+          done
+          for test in 02-occlusion-sweep 02-component-visibility 02-focused-render-qa
+          do
+            echo "===== ${test} =====" | tee -a /tmp/koverta-test-results.txt
+            node "coordination/koverta/${test}.js" 2>&1 | tee -a /tmp/koverta-test-results.txt
+            rc=${PIPESTATUS[0]}
+            echo "RESULT ${test}: ${rc}" | tee -a /tmp/koverta-test-results.txt
+            if [ "$rc" -ne 0 ]; then status=1; fi
+          done
+          cp /tmp/koverta-test-results.txt qa-artifacts/final-realism-results.txt
+          exit "$status"
+
+      - name: Static Koverta page checks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('konfigurator/index.html').read_text(encoding='utf-8')
+          required = ['<title', 'meta name="description"', 'rel="canonical"']
+          for token in required:
+              if token not in html:
+                  raise SystemExit('missing static page token: ' + token)
+          ids = re.findall(r'\bid="([^"]+)"', html)
+          dup = sorted({x for x in ids if ids.count(x) > 1})
+          if dup:
+              raise SystemExit('duplicate static ids: ' + ', '.join(dup))
+          for local in re.findall(r'(?:src|href)="([^"?#]+)', html):
+              if local.startswith(('http://', 'https://', '//', 'mailto:', 'tel:', '#', 'data:')):
+                  continue
+              path = Path('konfigurator') / local
+              if local.startswith('/'):
+                  path = Path(local.lstrip('/'))
+              if not path.exists() and not local.endswith('/'):
+                  raise SystemExit('missing local asset: ' + local)
+          print('static checks PASS')
+          PY
+
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: koverta-final-realism-${{ github.sha }}
+          path: qa-artifacts
+          if-no-files-found: ignore
+
+      - name: Commit verified renderer change
+        if: success()
+        run: |
+          if git diff --quiet -- konfigurator/soltec-premium.js; then
+            echo 'No renderer diff to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- konfigurator/soltec-premium.js
+          git commit -m 'fix: finalize Koverta physical realism'
+          git push origin HEAD:agent/koverta-final-realism
