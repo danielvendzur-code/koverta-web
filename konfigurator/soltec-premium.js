@@ -678,7 +678,7 @@
         const PICKS_ROZMER = PICKS.filter((g) => g.krok === 'rozmer');
         const PICKS_DOPLNKY = PICKS.filter((g) => g.krok !== 'rozmer');
         /* Odkvap kreslíme, keď ho stránka má a zákazník ho neodopol. */
-        const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';
+        const maOdkvap = () => Boolean(BIO.gutter) && (model().roofKit === 'koverta' || state.picks.odkvap !== 'nie');
         const RAIL = ONE_MODEL ? [
           ['1', 'Rozmer', 'Rozmer'],
           ['2', 'Farba', 'Farba'],
@@ -1042,12 +1042,20 @@
           out.push(o.odk);
           return out;
         };
-        /* Prierez stĺpa: 150 × 150 tam, kde stĺp stojí v osi čelného rámu,
-           110 × 190 tam, kde stojí pod väznicou (190 ide pozdĺž hĺbky).
-           Štvorstĺpová varianta má teda všetky štyri 110 × 190. */
+        /* Prierez stĺpa. Presné legacy 7000 × 5200/6000 zostavy ostávajú
+           podľa kvBySize/Expivi. Novšie aktívne exporty smú použiť 100 × 100 ×
+           2392 iba vtedy, keď ich sourceCatalog je priamo potvrdený v archíve. */
+        const kvExportPost100 = () => {
+          if (kvMeasured()) return false;
+          const roof = (model().kvRoofBySize || {})[`${widthMM()}x${lengthMM()}`] || {};
+          const ids = model().post100Catalogs || [];
+          return ids.indexOf(Number(roof.sourceCatalog)) > -1;
+        };
         const kvStlpRez = (i, n) => {
           const R = model().kvRef || {}, b = kvBand();
-          const naVaznici = (b && b.stlpyNaVaznici) || i !== 0 && i !== n - 1;
+          const rohovy = i === 0 || i === n - 1;
+          if (kvExportPost100()) return { d: 100, w: 100, roh: rohovy };
+          const naVaznici = (b && b.stlpyNaVaznici) || !rohovy;
           return naVaznici
             ? { d: Number(R.stredD) || 190, w: Number(R.stredW) || 110, roh: false }
             : { d: Number(R.postD) || 150, w: Number(R.postW) || 150, roh: true };
@@ -2087,11 +2095,12 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast, cleanSurface) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
               normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
+              edge: cleanSurface === true ? false : undefined,
               seamless: seamlessTop === true && key === '+z',
               paintLast: paintLast === true
             }); };
@@ -2408,7 +2417,7 @@
                 const pth = Math.max(8, Math.round(pl * 0.05));
                 const cx = px + pd / 2, cy = py + pw / 2;
                 const plateHex = model().roofKit === 'koverta' ? frame : '#c9ccce';
-                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, ['-z'], SHAFT);
+                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, ['-z'], SHAFT, 0, false, false, true);
                 /* Na oficiálnych rendroch sú v doske štyri skrutky do betónu,
                    po jednej v každom rohu. Bez nich vyzerala doska ako
                    podložený plech. */
@@ -2424,7 +2433,7 @@
                 if (objH) {
                   const g = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
                   boxFaces(px - g, py - g, pth, pd + 2 * g, pw + 2 * g, objH,
-                           model().roofKit === 'koverta' ? plateHex : shade('#c9ccce', -0.06), ['+z', '-z'], SHAFT);
+                           model().roofKit === 'koverta' ? plateHex : shade('#c9ccce', -0.06), ['+z', '-z'], SHAFT, 0, false, false, model().roofKit === 'koverta');
                 }
               }
               /* Soltec je hliníkový profil s ostrou hranou. Koverta je oceľový
@@ -2460,7 +2469,7 @@
                   const nx = b[1] - a[1], ny = a[0] - b[0];
                   const ln = Math.hypot(nx, ny) || 1;
                   quad([[a[0], a[1], 0], [b[0], b[1], 0], [b[0], b[1], zTopP], [a[0], a[1], zTopP]],
-                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false });
+                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false, edge: false });
                 }
               } else {
                 boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z', '-z'], SHAFT);
@@ -2498,7 +2507,7 @@
                 const rohovy = Boolean(rz.roh);
                 /* Platňa leží pod pásnicou a jej horné líce sa jej dotýka. */
                 const plat = (x0, y0, dx, dy) => {
-                  boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT);
+                  boxFaces(x0, y0, zH - th, dx, dy, th, hlava, ['+z'], SHAFT, 0, false, false, model().roofKit === 'koverta');
                   const cx0 = x0 + dx / 2, cy0 = y0 + dy / 2;
                   const vodo = dx > dy;
                   const roz = (vodo ? dx : dy) * 0.30;
@@ -3270,8 +3279,8 @@
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
               const put = (u0, u1, z, dz, seamlessTop, paintLast) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, false, true);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, false, true);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
@@ -3381,14 +3390,14 @@
                 const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
-                     hex, { normal: n, cull: true, arris: false });
+                     hex, { normal: n, cull: true, arris: false, edge: false });
               }
               (bokom ? cCela(par, vys, t, single) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
                   quad(e[1] > 0 ? pts : pts.slice().reverse(), hex,
-                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false });
+                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false, edge: false });
                 });
               });
               /* Škáru medzi dvojicou profilov má zdola vidieť len väznica —
@@ -3579,14 +3588,11 @@
                presvital podklad ako svetlý vlások — na streche z toho boli
                tenké čiary krížom cez vlnu. crispEdges ich posadí presne na
                seba. */
-            /* Koverta final realism: true corrugated shell.
-               TRAP_H a TRAP_KRYT ostávajú výhradne z aktívnej referencie.
-               Horná aj spodná strana sledujú rovnakú skutočnú geometriu:
-               koruna, šikmé ramená a údolie — nie rovnú plochu s pásmi.
-
-               TRAP_SKIN_VIS je iba rendererová separácia dvoch povrchov proti
-               z-fightingu, nie deklarovaná výrobná hrúbka. Celý profil zostáva
-               v pôvodnom rozsahu trapBot..trapTop. */
+            /* Koverta final 100: clean long-rib shell.
+               TRAP_H a TRAP_KRYT ostávajú z aktívnych dát. Všetky facet y jednej
+               vlny bežia bez segmentácie cez celý viditeľný otvor strechy.
+               Spodok má jednu pevnú materiálovú farbu bez normal-dependent
+               shadingu; tým sa na podhľade nemôže objaviť antracitový pás. */
             const vlnRoztec = TRAP_KRYT / 5;
             const RIB_CROWN_VIS = 15;
             const RIB_SHOULDER_VIS = 44;
@@ -3628,19 +3634,28 @@
                 const pts = upward
                   ? [[x0, a, za], [x1, a, za], [x1, b, zb], [x0, b, zb]]
                   : [[x0, a, za], [x0, b, zb], [x1, b, zb], [x1, a, za]];
-                quad(pts, hex, {
+                let tone = hex;
+                if (upward) {
+                  const mid = (a + b) / 2;
+                  const flat = Math.abs(zb - za) < 0.01;
+                  const high = trapProfile01(mid) > 0.5;
+                  tone = flat ? shade(hex, high ? 0.035 : -0.025)
+                              : shade(hex, zb > za ? -0.055 : 0.010);
+                }
+                quad(pts, tone, {
                   normal: faceNormal(pts),
                   cull: true,
                   edge: false,
+                  raw: true,
                   seamless: true
                 });
               }
             };
 
-            /* Spodná škrupina ide po plnom Expivi pôdoryse plechu. Horná sa
-               generuje iba v fyzicky odkrytom poli; okraje sú trvalo ukryté
-               pod nepriehľadným lemovaním, nezávisle od uhla kamery. */
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
+               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
+               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
+            drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
             drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
 
             /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
@@ -3806,21 +3821,13 @@
                 ];
                 for (let i = 0; i < section.length - 1; i++) {
                   const A = section[i], B = section[i + 1];
-                  quad([[A[0], zlY0, A[1]], [A[0], zlY1, A[1]],
-                        [B[0], zlY1, B[1]], [B[0], zlY0, B[1]]],
-                       zlHex, { cull: false, arris: false });
+                  const pts = [[A[0], zlY0, A[1]], [A[0], zlY1, A[1]],
+                               [B[0], zlY1, B[1]], [B[0], zlY0, B[1]]];
+                  quad(pts, zlHex, { normal: faceNormal(pts), cull: true, arris: false, edge: false });
                 }
-                /* Uzavreté čelá žľabu. Zvod je napojený otvorom v dne, nie
-                   tým, že by sa rúra iba dotýkala konca žľabu. */
-                quad(section.map(p => [p[0], zlY0, p[1]]),
-                     shade(zlHex, -0.08), { normal: [0, -1, 0], cull: false, arris: false });
-                quad(section.slice().reverse().map(p => [p[0], zlY1, p[1]]),
-                     shade(zlHex, -0.08), { normal: [0, 1, 0], cull: false, arris: false });
-                const lip = Math.max(4, Math.min(10, zlSpan * 0.06));
-                boxFaces(zlX0 + zlWall, zlY0, zlTop - zlWall,
-                         lip, zlY1 - zlY0, zlWall, zlHex, [], SHAFT);
-                boxFaces(zlX1 - zlWall - lip, zlY0, zlTop - zlWall,
-                         lip, zlY1 - zlY0, zlWall, zlHex, [], SHAFT);
+                /* Čelá a horné perá ležia natrvalo za bočným/čelným
+                   lemovaním. V SVG ich zámerne nevysielame: nie sú z nijakého
+                   fyzicky dostupného pohľadu exponované a boli zdrojom leakov. */
               }
 
               /* --- zvod ------------------------------------------------- */
@@ -3843,7 +3850,7 @@
                  stále iba vizuálny pomer (nie deklarovaný priemer výrobku). */
               const xStlp = rada.length ? rada[xiZvod] : L - rezZvod.d;
               const xLicStlp = xStlp + rezZvod.d;
-              const rzVizu = Math.max(34, Math.min(42,
+              const rzVizu = Math.max(28, Math.min(36,
                 Math.min(rezZvod.w, rezZvod.d) * 0.28));
               /* Pri niektorých presných šesťstĺpových osiach je rohový stĺp
                  bližšie k odkvapovej hrane. Polomer sa preto zhora obmedzí
@@ -3952,15 +3959,22 @@
                  cieľom je zachovať plynulé, fyzicky napojené koleno pri
                  každom podporovanom rozmere. */
               const prechodX = Math.abs(xVytok - xRura);
-              const prechodZ = Math.max(52, rz * 1.55);
-              const zKoleno = zBot - prechodZ;
               const zPata = Math.max(140, Math.min(320, H * 0.12));
-              const RP = Math.max(55, rz * 2.25);
+              const RP = Math.max(50, rz * 2.05);
 
-              /* Celý zvod je jedna dráha — od výtoku pod lemovaním, kolenom
-                 k licu stĺpa, po ňom dole a vyhnutou pätkou von. Kým to boli
-                 štyri samostatné valce, na každom ohybe ostávala medzi nimi
-                 diera. */
+              /* Horné koleno je krátke a šikmé, nie pravouhlé. Uhol je
+                 rendererová proporcia, nie výrobná kóta; drží sa v úzkom
+                 vizuálnom pásme a smeruje rovno k najbližšiemu stĺpu. */
+              const targetElbow = 56 * Math.PI / 180;
+              const maxElbow = 68 * Math.PI / 180;
+              const prechodZ = prechodX > 2
+                ? Math.min(Math.max(prechodX * Math.tan(targetElbow), rz * 0.45),
+                           prechodX * Math.tan(maxElbow))
+                : rz * 0.55;
+              const zKoleno = zBot - Math.max(rz * 0.9, prechodZ);
+
+              /* Celý zvod je jedna dráha — od výtoku pod lemovaním, krátkym
+                 šikmým kolenom k lícu stĺpa, po ňom dole a vyhnutou pätkou. */
               /* Zvod nie je lomený z rovných kusov — kolená sú kolená. Lomená
                  čiara sa preto zaoblí: v každom rohu sa nahradí oblúkom o
                  danom polomere. Kým tam boli ostré zlomy, vyzeral zvod ako
@@ -3995,9 +4009,9 @@
                 return out;
               };
               const startZ = zlBot + Math.max(4, rz * 0.12);
-              const lom = [[xVytok, yZvod, startZ]];
-              lom.push([xVytok, yZvod, zKoleno]);
-              if (Math.abs(xVytok - xRura) > 2) lom.push([xRura, yZvod, zKoleno]);
+              const throatZ = startZ - Math.max(8, rz * 0.32);
+              const lom = [[xVytok, yZvod, startZ], [xVytok, yZvod, throatZ]];
+              if (Math.abs(xVytok - xRura) > 2) lom.push([xRura, yZvod, throatZ - prechodZ]);
               lom.push([xRura, yZvod, zPata]);
 
               const footClear = Math.max(0, L - xRura - rz - 5);
@@ -4029,7 +4043,7 @@
                 topTransition: {
                   run: prechodX,
                   drop: prechodZ,
-                  angleDeg: 90
+                  angleDeg: prechodX > 2 ? Math.atan2(prechodZ, prechodX) * 180 / Math.PI : 56
                 },
                 post: { x0: xStlp, x1: xLicStlp, y0: yPost0, y1: yPost1 },
                 pathBounds: pipeBounds,
@@ -4060,7 +4074,7 @@
                 tuba([[xRura, yZvod - 13, z], [xRura, yZvod + 13, z]], rz * 1.09, shade(frame, -0.42));
                 if (medzera > -rz && medzera < 80) {
                   boxFaces(bridgeX0, yZvod - 11, z - 5, bridgeX1 - bridgeX0, 22, 10,
-                           shade(frame, -0.38), [], SHAFT);
+                           shade(frame, -0.38), [], SHAFT, 0, false, false, true);
                 }
               });
             }
