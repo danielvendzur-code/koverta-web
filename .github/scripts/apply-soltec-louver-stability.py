@@ -72,9 +72,8 @@ if test.count(metrics_old) != 1:
     raise SystemExit('Could not locate Soltec metrics write')
 test = test.replace(metrics_old, metrics_new, 1)
 
-# Correct the stale legacy route used by this test. The actual Soltec runtime
-# is mounted by the unified configurator on ?page=bio.
 test = test.replace("http://127.0.0.1:8901/bioklimaticke-pergoly/", "http://127.0.0.1:8901/konfigurator/?page=bio")
+test = test.replace("  process.exitCode = 1;\n", "  process.exit(1);\n")
 
 source_path.write_text(source, encoding='utf-8')
 test_path.write_text(test, encoding='utf-8')
