@@ -1855,7 +1855,12 @@
           const quad = (pts, fill, opts) => {
             const o = opts || {};
             const normal = o.normal || faceNormal(pts);
-            if (o.cull && facing(normal) <= 0) return;
+            const faceView = facing(normal);
+            /* Soltec must not drop a face a fraction before its opposite face
+               becomes visible at a grazing angle. Koverta keeps its existing
+               strict rule; Soltec gets only a numerical epsilon, not disabled
+               culling, so polygon count and performance stay stable. */
+            if (o.cull && (model().kvGeom ? faceView <= 0 : faceView < -1e-7)) return;
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
@@ -1886,7 +1891,7 @@
                  obrovská plocha vycentrovaná pod modelom, takže jej priemer
                  vyjde bližšie než strecha a čiary dlažby sa prekreslili cez
                  ňu. Podklad sa preto vykreslí prvý a s modelom sa netriedi. */
-              bg: layer < -ROOF_LAYER,
+              bg: model().kvGeom ? layer < -ROOF_LAYER : layer < -1.5 * ROOF_LAYER,
               order: faces.length
             });
           };
@@ -2113,11 +2118,11 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface, twoSided) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
-              normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
+              normal: n, cull: twoSided === true ? false : true, arris: fl.indexOf(key) < 0, bias: bias || 0,
               edge: cleanSurface === true ? false : undefined,
               seamless: seamlessTop === true && key === '+z'
             }); };
@@ -2166,7 +2171,11 @@
           const shX = 0.22 * H * (-KEY[0] / KEY[2]), shY = 0.22 * H * (-KEY[1] / KEY[2]);
 
           layer = -3 * ROOF_LAYER;
-          if (se > 0.01) {
+          /* Ground visibility follows the camera's real world-space
+             height, not an arbitrary elevation threshold through the model.
+             The old se > 0.01 switch added ~80 paving polygons in one frame
+             and caused a visible pop while orbiting near the horizon. */
+          if ((H / 2 + se * DIST) > 0) {
             const reach = Math.max(L, W) * 2.4;
             const fx0 = L / 2 - reach, fx1 = L / 2 + reach;
             const fy0 = W / 2 - reach, fy1 = W / 2 + reach;
@@ -3147,7 +3156,20 @@
           const bz = H;
           layer = fromAbove ? ROOF_LAYER : -ROOF_LAYER;
           const roofBase = layer;
-          const nearSide = (n) => { layer = roofBase + (facing(n) > 0 ? UNDER_SIDE : -UNDER_SIDE); };
+          const nearSide = (n) => {
+            /* Koverta still uses its established side-layer ordering. Soltec
+               must not do that: below the roof, `roofBase - UNDER_SIDE` falls
+               below `-ROOF_LAYER`, which is the renderer's background cutoff.
+               A perfectly valid perimeter member was therefore classified
+               like paving/shadow and painted before the pergola, so it could
+               disappear completely behind the louvers at certain camera
+               angles. Soltec already has BSP world-space occlusion; keep all
+               four fixed rim members in the structure set and let geometry
+               decide what is actually hidden. */
+            layer = model().kvGeom
+              ? roofBase + (facing(n) > 0 ? UNDER_SIDE : -UNDER_SIDE)
+              : roofBase;
+          };
 
           /* Obvodové profily sú v skutočnosti rezané na pokos, nie na zraz.
              Dva zrazené hranoly sa v rohu prekrývajú po celej dĺžke styku a ich
@@ -3171,13 +3193,22 @@
             const T = zAt || (() => z + d);
             const B = (x) => T(x) - d;
             const spodok = soffitHex || hex;
-            const cap = (pts, n) => quad(pts, n[2] > 0 ? hex : spodok, { normal: n, cull: true });
+            const cap = (pts, n) => quad(pts, n[2] > 0 ? hex : spodok, {
+              normal: n,
+              cull: model().kvGeom,
+              edge: model().kvGeom ? undefined : false
+            });
             /* Vonkajšie líce je to, ktoré leží na obryse rámu; vnútorné sedí
                o hrúbku profilu ďalej a lemovanie naň nesiaha. */
             const web = (pts, n) => {
               const px = pts[0][0], py = pts[0][1];
               const vonku = px === x0 || px === x1 || py === y0 || py === y1;
-              quad(pts, vonku ? hex : spodok, { normal: n, cull: true, arris: false });
+              quad(pts, vonku ? hex : spodok, {
+                normal: n,
+                cull: model().kvGeom,
+                arris: false,
+                edge: model().kvGeom ? undefined : false
+              });
             };
             // predný profil, y od y0 po iy0
             nearSide([0, -1, 0]);
@@ -4225,7 +4256,7 @@
             const drawSec = (x0, x1, zTop, hex) => {
               const w = x1 - x0;
               if (!twinC || w < 24) {
-                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, ['-y', '+y']);
+                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, [], SHAFT, 0, false, true, true);
                 return;
               }
               const half = w / 2;
@@ -4282,10 +4313,10 @@
               const pane = glass ? { raw: true, bias: ON_SKIN } : { bias: integratedFall ? -20 : -600 };
               quad([[a, inY0, panelTopZ(a, inY0)], [b, inY0, panelTopZ(b, inY0)],
                     [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], skinTop,
-                   Object.assign({ cull: true, edgeHex: seamTop }, pane));
+                   Object.assign({ cull: true, edge: true, edgeHex: seamTop }, pane));
               quad([[a, inY1, panelBottomZ(a, inY1)], [b, inY1, panelBottomZ(b, inY1)],
                     [b, inY0, panelBottomZ(b, inY0)], [a, inY0, panelBottomZ(a, inY0)]], skinLow,
-                   Object.assign({ cull: true, edgeHex: seamLow }, pane));
+                   Object.assign({ cull: true, edge: true, edgeHex: seamLow }, pane));
               /* Odlesk oblohy. Skutočná panelová ani sklenená strecha nie je
                  jeden plochý tón — zbiera oblohu, najsvetlejšia je pri hrane
                  otočenej k slnku a smerom k divákovi zoslabne. Bez toho vyzerá
@@ -4410,9 +4441,17 @@
             const pitch = (i1 - i0) / n;
             const blade = louverSize();
             const bladeW = blade.w;                      // "lamela 200" or "lamela 270"
+            /* Closed means closed. At 0 % the lamella is exactly horizontal;
+               the hidden sealing underlap is clipped from the visible underside
+               instead of faking a partially open roof. */
             const ang = louverAngle(beam, bladeW, state.louverT);
             const y0 = post, y1 = W - post;
-            const lap = 30;   // blades tuck under the rails rather than butting them
+            /* The blade terminates at the inside rail face. Do not make the
+               visible polygon penetrate the perimeter extrusion: intersecting
+               solids are exactly what produced the saw-tooth rim and profiles
+               apparently disappearing during orbit. The real concealed seat is
+               not a visible surface in this renderer. */
+            const lap = 0;
             /* Lamela je tuhé teleso: jej fyzická šírka sa počas pohybu
                nesmie meniť. Zvyšok šírky nad roztečou je pevný tesniaci
                podklad pod susednou lamelou, nie plocha, ktorá sa podľa uhla
@@ -4421,6 +4460,12 @@
             const fullHalf = bladeW / 2;
             const overlap = Math.max(0, bladeW - Math.min(bladeW, pitch));
             const topLeadS = -fullHalf + overlap;
+            /* The underlap is completely hidden when closed and becomes visible
+               continuously as the roof starts opening. This removes the broad
+               coplanar underside overlap that caused the last 15 -> 0 % jitter. */
+            const revealK = Math.max(0, Math.min(1, state.louverT / 0.04));
+            const underReveal = revealK * revealK * (3 - 2 * revealK);
+            const underLeadS = topLeadS + (-fullHalf - topLeadS) * underReveal;
             const bladeUx = Math.cos(ang), bladeUz = Math.sin(ang);
             const dx = fullHalf * bladeUx, dz = fullHalf * bladeUz;
             /* The roof plane finishes level with the top of the frame at every
@@ -4446,11 +4491,12 @@
               const x = i0 + pitch * (i + 0.5);
               const fullAX = x - dx, fullAZ = mid - dz;
               const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
+              const underAX = x + underLeadS * bladeUx, underAZ = mid + underLeadS * bladeUz;
               const bX = x + dx, bZ = mid + dz;
               /* Shut, the blades overlap and lie in one plane, so a centroid
                  cannot order them. Stepping the bias along the run makes each
                  blade lap the one before it, the way they actually close. */
-              const lay = { bias: i * 0.02 };
+              const lay = { bias: i * 2 };
               /* Zospodu je vidieť len rub lamiel a ich čelnú hranu. Rub mal
                  -0.20 a hrana -0.30, čo je na antracite rozdiel, ktorý oko
                  nerozozná: strecha zdola vyzerala ako jedna hladká doska a
@@ -4468,7 +4514,13 @@
                  vlasové škáry medzi plochami sa aj tak zatvoria a kontrast
                  nesie geometria — dva pásy na rube a tmavšia čelná hrana. */
               const obrys = { arris: false };
-              const layO = Object.assign({}, lay, obrys);
+              /* Soltec motion stability: rotating louvers must not participate
+                 in stage fitting. The fixed frame/posts define the camera
+                 envelope, so opening/closing cannot zoom, wave or settle the
+                 whole pergola. */
+              const layO = Object.assign({}, lay, obrys, { fit: false });
+              const topO = Object.assign({}, layO, { cull: true, normal: [-bladeUz, 0, bladeUx] });
+              const underO = Object.assign({}, layO, { cull: true, normal: [bladeUz, 0, -bladeUx] });
               /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
                  lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
                  je to ten 17 mm lap, ktorým strecha tesní.
@@ -4484,24 +4536,25 @@
                  chyba, ktorou si táto scéna už prešla. */
               const lapF = 0.13;
               const jX = aX + (bX - aX) * lapF, jZ = aZ + (bZ - aZ) * lapF;
-              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), layO);
-              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), layO);
-              /* Rub lamely nie je jeden tón. Horná hrana je zastrčená pod
-                 susednou lamelou, takže tá polovica je v jej tieni; spodná
-                 hrana je otvorená k oblohe a je svetlejšia. Rub sa preto
-                 kreslí ako dva pásy. Je to skutočný jav a zároveň jediné,
-                 čo dá radu lamiel kontrast aj na antracite — na bielej bolo
-                 všetko vidieť, na tmavej sa strecha zdola zlievala do dosky. */
-              const sX = (fullAX + bX) / 2 + ox, sZ = (fullAZ + bZ) / 2 + oz;
-              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), layO);
-              quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), layO);
-              quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]], shade(louv, -0.48), layO);
-              /* Pevný tesniaci podklad uzatvára skutočnú šírku profilu.
-                 Pri zatvorení leží pod koncom susednej lamely, takže horné
-                 plochy sa iba stretnú na hrane a BSP nemusí deliť dve veľké
-                 koplanárne plochy. Celý tento profil sa potom iba otáča. */
+              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), topO);
+              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), topO);
+              /* One powder-coated underside, not two painted fake-shadow
+                 bands. From below the same lamella must not change colour merely
+                 because the camera moved. Geometry carries the depth cue. */
+              const underFlatO = Object.assign({}, underO, { edge: false });
+              const edgeO = Object.assign({}, layO, { edge: false });
+              quad([[underAX+ox,y1+lap,underAZ+oz],[bX+ox,y1+lap,bZ+oz],
+                    [bX+ox,y0-lap,bZ+oz],[underAX+ox,y0-lap,underAZ+oz]],
+                   shade(louv, -0.08), underFlatO);
+              quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]],
+                   shade(louv, -0.26), edgeO);
+              /* Always emit the physical underlap side. At 0 % it degenerates
+                 to zero width, which keeps topology/count stable without any
+                 visible coplanar surface; it opens continuously afterwards. */
               if (overlap > 0.5)
-                quad([[fullAX+ox,y0-lap,fullAZ+oz],[aX,y0-lap,aZ],[aX,y1+lap,aZ],[fullAX+ox,y1+lap,fullAZ+oz]], shade(louv, -0.40), layO);
+                quad([[underAX+ox,y0-lap,underAZ+oz],[aX,y0-lap,aZ],
+                      [aX,y1+lap,aZ],[underAX+ox,y1+lap,underAZ+oz]],
+                     shade(louv, -0.18), edgeO);
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */
@@ -4511,7 +4564,7 @@
                 const strip = (w, fill, bias) => quad([
                   [cx - bladeUx * w, yc - hy, cz - bladeUz * w], [cx + bladeUx * w, yc - hy, cz + bladeUz * w],
                   [cx + bladeUx * w, yc + hy, cz + bladeUz * w], [cx - bladeUx * w, yc + hy, cz - bladeUz * w]
-                ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias });
+                ], fill, { normal: [bladeUz, 0, -bladeUx], cull: true, edge: false, raw: true, bias: bias, fit: false });
                 for (let k = 3; k >= 1; k--) strip(9 + k * 22, 'rgba(' + ledCol.spill + ',' + (0.06 * (4 - k)).toFixed(3) + ')', 380 + (3 - k));
                 strip(13, 'rgba(20,19,16,.5)', 396);
                 strip(8, ledCol.core, 400);
@@ -5171,28 +5224,34 @@
         /* Snímok nemusí prísť — v skrytej karte prehliadač rAF nespustí vôbec.
            Bez záložného časovača by posuvník aj beh ticho nič neurobili, presne
            ako to už rieši  o kus vyššie. */
-        let stagePending = 0, stageTimer = 0;
+        let stagePending = 0, stageRaf = 0;
+        const paintStage = () => {
+          if (!stagePending) return;
+          stagePending = 0;
+          if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
+          drawStage();
+          syncSideMove();
+          syncLouverReadout();
+        };
         const scheduleStage = () => {
           if (stagePending) return;
           stagePending = 1;
-          const run = () => {
-            if (!stagePending) return;
-            stagePending = 0;
-            window.clearTimeout(stageTimer);
-            drawStage();
-            syncSideMove();
-            syncLouverReadout();
-          };
-          window.requestAnimationFrame(run);
-          stageTimer = window.setTimeout(run, 60);
+          stageRaf = window.requestAnimationFrame(paintStage);
+        };
+        const flushStage = () => { if (stagePending) paintStage(); };
+        const cancelStageQueue = () => {
+          stagePending = 0;
+          if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
         };
 
-        let louverRun = 0, moverTimer = 0;
+        let louverRun = 0;
         const runMover = (ch, target, immediate) => {
           const M = MOVER[ch];
           const to = Math.max(0, Math.min(1, target));
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
-          if (moverTimer) { window.clearTimeout(moverTimer); moverTimer = 0; }
+          /* A slider/camera frame queued before this animation must never
+             repaint an older state in the middle of the new motion. */
+          cancelStageQueue();
           if (ch === 'all') { MOVER.all.ciel = to; MOVER.all.zapamataj(); }
           const from = M.get();
           if (immediate || reducedMotion || Math.abs(to - from) < 0.005) {
@@ -5217,24 +5276,14 @@
             syncLouverReadout();
             if (k < 1) {
               louverRun = requestAnimationFrame(step);
-              window.clearTimeout(moverTimer);
-              moverTimer = window.setTimeout(step, 90);
               return;
             }
             louverRun = 0;
-            window.clearTimeout(moverTimer);
-            moverTimer = 0;
-            M.set(to);
-            /* Beh končil prestavbou celého panela. Tá prejde aj cez ,
-               takže posledný snímok behu a to, čo ostane na obrazovke, nie je tá istá
-               geometria — lamely na konci každého zatvorenia poskočili. Od polohy
-               lamiel ani krídel nezávisí nič v paneli okrem čísel, ktoré dopíšeme sami. */
-            drawStage();
-            syncSideMove();
-            syncLouverReadout();
+            /* k === 1 was already rendered above with M.set(to). Do not draw
+               the identical endpoint a second time: near the closed coplanar
+               state that redundant BSP pass was visible as a final settle. */
           };
           louverRun = requestAnimationFrame(step);
-          moverTimer = window.setTimeout(step, 90);
         };
 
         /* Vonkajšia nadstavba (tlačidlá „Zavrieť všetko" / „Otvoriť všetko")
@@ -5260,7 +5309,13 @@
           M.set(v);
           drawStage();
           syncLouver();
-          if ((holdDir > 0 && v >= 1) || (holdDir < 0 && v <= 0)) { stopHold(); return; }
+          if ((holdDir > 0 && v >= 1) || (holdDir < 0 && v <= 0)) {
+            /* This exact endpoint has already been painted in this frame.
+               Mark the hold complete without asking stopHold() to repaint it. */
+            hold = 0;
+            holdDir = 0;
+            return;
+          }
           hold = requestAnimationFrame(holdStep);
         };
         const stopHold = () => {
@@ -5272,11 +5327,12 @@
           /* Finishing a Soltec motion changes only moving geometry/readouts.
              Do not rebuild the entire configurator UI at pointer release. */
           if (model().kvGeom) renderAll();
-          else { drawStage(); syncLouver(); }
+          else { cancelStageQueue(); syncLouver(); }
         };
         const startHold = (dir, ch) => {
           if (hold) return;
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
+          cancelStageQueue();
           holdCh = ch || 'louver';
           holdDir = dir;
           holdFrom = holdLast = clockNow();
@@ -5436,8 +5492,12 @@
           if (event.target.closest && event.target.closest('[data-sp-louver-hold]')) stopHold();
         });
         document.addEventListener('visibilitychange', () => { if (document.hidden) stopHold(); });
-        window.addEventListener('pointerup', stopHold);
-        window.addEventListener('pointercancel', stopHold);
+        const finishPointerMotion = () => {
+          stopHold();
+          if (!model().kvGeom) flushStage();
+        };
+        window.addEventListener('pointerup', finishPointerMotion);
+        window.addEventListener('pointercancel', finishPointerMotion);
         window.addEventListener('blur', stopHold);
 
         cfgRoot.addEventListener('click', (event) => {
@@ -5747,7 +5807,12 @@
             if (model().kvGeom) scheduleRender();
             else scheduleStage();
           });
-          const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };
+          const stop = (e) => {
+            if (!dragging) return;
+            dragging = false;
+            if (!model().kvGeom) flushStage();
+            try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
+          };
           stageEl.addEventListener('pointerup', stop);
           stageEl.addEventListener('pointercancel', stop);
         }

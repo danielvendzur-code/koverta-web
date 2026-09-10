@@ -7,13 +7,30 @@ const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SOURCE_PATH = path.join(ROOT, 'konfigurator', 'soltec-premium.js');
-const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/bioklimaticke-pergoly/';
+const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/konfigurator/?page=bio';
 const ARTIFACT_DIR = path.join(ROOT, 'qa-artifacts', 'soltec-motion');
 
 function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
+  assert.match(source, /const ang = louverAngle\(beam, bladeW, state\.louverT\);/, 'Closed Soltec louvers must render at the exact requested angle');
+  assert.doesNotMatch(source, /renderLouverT/, 'Soltec must not fake a partially open closed stop');
+  assert.match(source, /const underReveal = revealK \* revealK \* \(3 - 2 \* revealK\);/, 'Hidden sealing underlap must reveal smoothly instead of overlapping at the closed stop');
+  assert.match(source, /const cancelStageQueue = \(\) =>/, 'Soltec moving interactions must be able to cancel stale queued stage frames');
+  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
+  assert.match(source, /const topO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[-bladeUz, 0, bladeUx\] \}\);/, 'Only the broad louver top face is culled');
+  assert.match(source, /const underO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[bladeUz, 0, -bladeUx\] \}\);/, 'Only the broad louver underside is culled');
+  assert.match(source, /shade\(louv, -0\.08\), underFlatO\);/, 'Louver underside must be one stable material tone');
+  assert.match(source, /shade\(louv, -0\.26\), edgeO\);/, 'Louver edge thickness must remain visible');
+  assert.match(source, /let stagePending = 0, stageRaf = 0;/, 'Stage scheduling must have one animation-frame owner');
+  assert.doesNotMatch(source, /stageTimer|moverTimer/, 'Soltec motion must not race animation frames against timeout clocks');
+  assert.match(source, /const flushStage = \(\) => \{ if \(stagePending\) paintStage\(\); \};/, 'Final pointer state must flush synchronously');
+  assert.doesNotMatch(source, /moverTimer = window\.setTimeout\(step, 90\);/, 'Mover fallback must not race a queued animation frame');
+  assert.match(source, /normal: \[bladeUz, 0, -bladeUx\]/, 'Louver-mounted LEDs must follow the rotating underside normal');
+  assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');
+  assert.match(source, /if \(\(H \/ 2 \+ se \* DIST\) > 0\)/, 'Ground visibility must use actual camera height');
+  assert.doesNotMatch(source, /if \(se > 0\.01\)/, 'Ground must not pop at an arbitrary camera elevation threshold');
   assert.match(source, /const overlap = Math\.max\(0, bladeW - Math\.min\(bladeW, pitch\)\);/, 'Soltec louvers must model the fixed sealing underlap without changing blade width');
   assert.doesNotMatch(source, /const najviac = \(pitch \/ 2\)/, 'Angle-dependent louver width deformation must be removed');
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
@@ -21,6 +38,7 @@ function assertSourceContract() {
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
   assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
   assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
+  assert.match(source, /layer = model\(\)\.kvGeom[\s\S]{0,120}\? roofBase \+ \(facing\(n\) > 0 \? UNDER_SIDE : -UNDER_SIDE\)[\s\S]{0,80}: roofBase;/, 'Soltec perimeter profiles must remain structural faces at every camera angle');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the
@@ -56,6 +74,30 @@ function percentile(values, p) {
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
 
+  // The frame/posts are static while the blades rotate. Projecting the same
+  // world point must therefore stay pixel-identical through the full louver
+  // travel; any drift means moving blade bounds are zooming/recentering the
+  // whole stage, which is the visible "waving/settling" regression.
+  const framingSamples = [];
+  for (const value of [0, 10, 25, 40, 55, 70, 85, 100]) {
+    const anchor = await page.evaluate((nextValue) => {
+      const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');
+      if (!range) throw new Error('Louver range not found for framing regression');
+      range.value = String(nextValue);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+        resolve(window.SP_TEST.project(0, 0, 0));
+      })));
+    }, value);
+    framingSamples.push({ value, x: anchor.x, y: anchor.y });
+  }
+  const frameXs = framingSamples.map((item) => item.x);
+  const frameYs = framingSamples.map((item) => item.y);
+  const frameDriftX = Math.max(...frameXs) - Math.min(...frameXs);
+  const frameDriftY = Math.max(...frameYs) - Math.min(...frameYs);
+  assert.ok(frameDriftX < 0.12 && frameDriftY < 0.12,
+    `Soltec stage framing moves with the louvers: dx=${frameDriftX.toFixed(3)} dy=${frameDriftY.toFixed(3)}`);
+
   // Sweep directly through the low-elevation region. The test uses only the
   // stage renderer so it measures geometry/render behavior rather than rebuilding UI.
   const cameraCounts = [];
@@ -74,6 +116,24 @@ function percentile(values, p) {
     const relativeJump = Math.abs(b - a) / Math.max(1, Math.max(a, b));
     assert.ok(relativeJump < 0.22, `Abrupt Soltec face-count jump at elevation ${cameraCounts[i].el.toFixed(2)}: ${a} -> ${b}`);
   }
+
+  // The disappearing-rim regression was azimuth-dependent while looking
+  // slightly upward from below. Sweep a full orbit at that elevation and make
+  // sure the fixed scene never collapses into an anomalously small face set.
+  const rimOrbitCounts = [];
+  for (let i = 0; i <= 72; i += 1) {
+    const az = -Math.PI + (Math.PI * 2 * i) / 72;
+    const count = await page.evaluate(([azimuth, elevation]) => {
+      window.SP_TEST.setView(azimuth, elevation);
+      window.SP_TEST.redrawStage();
+      return document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length;
+    }, [az, -0.18]);
+    rimOrbitCounts.push({ az, count });
+  }
+  const orbitSorted = rimOrbitCounts.map((item) => item.count).sort((a, b) => a - b);
+  const orbitMedian = orbitSorted[Math.floor(orbitSorted.length / 2)];
+  const orbitMin = Math.min(...orbitSorted);
+  assert.ok(orbitMin >= orbitMedian * 0.78, `Soltec fixed rim/profile disappears during low orbit: min=${orbitMin}, median=${orbitMedian}`);
 
   // A camera drag must not rebuild option/add-on DOM.
   await page.evaluate(() => {
@@ -112,7 +172,11 @@ function percentile(values, p) {
     await page.waitForTimeout(8);
   }
   await page.mouse.up();
+  const releaseAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));
   await page.waitForTimeout(120);
+  const settledAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));
+  const releaseSettle = Math.hypot(settledAnchor.x - releaseAnchor.x, settledAnchor.y - releaseAnchor.y);
+  assert.ok(releaseSettle < 0.05, `Soltec stage moved after pointer release: ${releaseSettle.toFixed(3)} px`);
 
   const motionMetrics = await page.evaluate(() => {
     window.__soltecFrameActive = false;
@@ -152,13 +216,46 @@ function percentile(values, p) {
   assert.ok(minLouver > 0, 'Soltec scene disappeared during louver travel');
   assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);
 
+  // Closing is the numerically hardest region because neighbouring blades
+  // approach parallel/coplanar planes. Inspect it at 1-3% increments rather
+  // than letting the ordinary 5% sweep skip over the problematic endpoint.
+  const closeCounts = [];
+  for (const value of [15, 12, 10, 8, 6, 4, 3, 2, 1, 0]) {
+    const count = await page.evaluate((nextValue) => {
+      const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');
+      range.value = String(nextValue);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() =>
+        resolve(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length))));
+    }, value);
+    closeCounts.push({ value, count });
+  }
+  for (let i = 1; i < closeCounts.length; i += 1) {
+    const a = closeCounts[i - 1].count, b = closeCounts[i].count;
+    const jump = Math.abs(b - a) / Math.max(1, Math.max(a, b));
+    assert.ok(jump < 0.12, `Soltec close-end topology jumps at ${closeCounts[i].value}%: ${a} -> ${b}`);
+  }
+
+  // Run the real close button, then make sure no stale timer or queued stage
+  // frame changes the finished SVG after the endpoint has been reached.
+  const openButton = page.locator('#SoltecPremium [data-sp-louver="1"]');
+  const closeButton = page.locator('#SoltecPremium [data-sp-louver="0"]');
+  await openButton.click();
+  await page.waitForTimeout(2350);
+  await closeButton.click();
+  await page.waitForTimeout(2350);
+  const endpointA = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);
+  await page.waitForTimeout(180);
+  const endpointB = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);
+  assert.equal(endpointB, endpointA, 'Soltec SVG changed after the closing animation had already finished');
+
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, p95, maxFrame }, null, 2));
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, rimOrbitCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, releaseSettle, p95, maxFrame }, null, 2));
 
   assert.deepEqual(pageErrors, [], `Browser errors:\n${pageErrors.join('\n')}`);
   await browser.close();
   console.log(JSON.stringify({ ok: true, p95, maxFrame, cameraCounts, louverCounts }, null, 2));
 })().catch((error) => {
   console.error(error.stack || error);
-  process.exitCode = 1;
+  process.exit(1);
 });
