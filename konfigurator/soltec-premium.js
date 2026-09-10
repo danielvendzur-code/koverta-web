@@ -1869,15 +1869,10 @@
               w: pts.map((point) => point.slice()),
               p: pp,
               fill: lit,
-              /* Koverta keeps the established outline policy. Soltec
-                 extrusions are continuous surfaces: a default SVG stroke on
-                 every polygon created the diagonal/inner/outer lines visible
-                 on the perimeter frame. Soltec outlines only an explicitly
-                 requested seam. */
-              edge: model().kvGeom ? o.edge !== false : o.edge === true,
-              edgeCol: (model().kvGeom ? o.edge === false : o.edge !== true)
-                ? null
-                : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
+              edge: o.edge !== false,
+              /* arris:false keeps the stroke but paints it in the face's own
+                 colour, so members merge into one surface without a gap */
+              edgeCol: o.edge === false ? null : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
               fit: o.fit !== false,
               /* Priesvitná plocha sa nesmie obťahovať: keď ju maliarske
                  triedenie rozdelí, obrysy susedných kusov sa na spoji sčítajú
@@ -2123,11 +2118,11 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface, twoSided) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
-              normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
+              normal: n, cull: twoSided === true ? false : true, arris: fl.indexOf(key) < 0, bias: bias || 0,
               edge: cleanSurface === true ? false : undefined,
               seamless: seamlessTop === true && key === '+z'
             }); };
@@ -3199,9 +3194,9 @@
             const B = (x) => T(x) - d;
             const spodok = soffitHex || hex;
             const cap = (pts, n) => quad(pts, n[2] > 0 ? hex : spodok, {
-              normal: n, cull: true,
-              edge: model().kvGeom ? undefined : false,
-              seamless: !model().kvGeom
+              normal: n,
+              cull: model().kvGeom,
+              edge: model().kvGeom ? undefined : false
             });
             /* Vonkajšie líce je to, ktoré leží na obryse rámu; vnútorné sedí
                o hrúbku profilu ďalej a lemovanie naň nesiaha. */
@@ -3209,9 +3204,10 @@
               const px = pts[0][0], py = pts[0][1];
               const vonku = px === x0 || px === x1 || py === y0 || py === y1;
               quad(pts, vonku ? hex : spodok, {
-                normal: n, cull: true, arris: false,
-                edge: model().kvGeom ? undefined : false,
-                seamless: !model().kvGeom
+                normal: n,
+                cull: model().kvGeom,
+                arris: false,
+                edge: model().kvGeom ? undefined : false
               });
             };
             // predný profil, y od y0 po iy0
@@ -4260,7 +4256,7 @@
             const drawSec = (x0, x1, zTop, hex) => {
               const w = x1 - x0;
               if (!twinC || w < 24) {
-                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, [], SHAFT, 0, false, true);
+                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, [], SHAFT, 0, false, true, true);
                 return;
               }
               const half = w / 2;
@@ -4450,7 +4446,12 @@
                instead of faking a partially open roof. */
             const ang = louverAngle(beam, bladeW, state.louverT);
             const y0 = post, y1 = W - post;
-            const lap = 30;   // blades tuck under the rails rather than butting them
+            /* The blade terminates at the inside rail face. Do not make the
+               visible polygon penetrate the perimeter extrusion: intersecting
+               solids are exactly what produced the saw-tooth rim and profiles
+               apparently disappearing during orbit. The real concealed seat is
+               not a visible surface in this renderer. */
+            const lap = 0;
             /* Lamela je tuhé teleso: jej fyzická šírka sa počas pohybu
                nesmie meniť. Zvyšok šírky nad roztečou je pevný tesniaci
                podklad pod susednou lamelou, nie plocha, ktorá sa podľa uhla
@@ -4462,7 +4463,7 @@
             /* The underlap is completely hidden when closed and becomes visible
                continuously as the roof starts opening. This removes the broad
                coplanar underside overlap that caused the last 15 -> 0 % jitter. */
-            const revealK = Math.max(0, Math.min(1, state.louverT / 0.12));
+            const revealK = Math.max(0, Math.min(1, state.louverT / 0.04));
             const underReveal = revealK * revealK * (3 - 2 * revealK);
             const underLeadS = topLeadS + (-fullHalf - topLeadS) * underReveal;
             const bladeUx = Math.cos(ang), bladeUz = Math.sin(ang);
@@ -4540,8 +4541,8 @@
               /* One powder-coated underside, not two painted fake-shadow
                  bands. From below the same lamella must not change colour merely
                  because the camera moved. Geometry carries the depth cue. */
-              const underFlatO = Object.assign({}, underO, { raw: true, edge: false });
-              const edgeO = Object.assign({}, layO, { raw: true, edge: false });
+              const underFlatO = Object.assign({}, underO, { edge: false });
+              const edgeO = Object.assign({}, layO, { edge: false });
               quad([[underAX+ox,y1+lap,underAZ+oz],[bX+ox,y1+lap,bZ+oz],
                     [bX+ox,y0-lap,bZ+oz],[underAX+ox,y0-lap,underAZ+oz]],
                    shade(louv, -0.08), underFlatO);
