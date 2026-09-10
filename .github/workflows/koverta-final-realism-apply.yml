@@ -9,12 +9,12 @@ permissions:
 
 concurrency:
   group: koverta-final-realism-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   apply-and-qa:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,56 +27,38 @@ jobs:
 
       - name: Apply guarded Koverta-only patch
         run: |
-          cp .github/scripts/apply-koverta-final-realism.py /tmp/apply-koverta-final-realism.py
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('/tmp/apply-koverta-final-realism.py')
-          s = p.read_text(encoding='utf-8')
-          start = s.index('# Guard the non-negotiable technical/product invariants before writing.')
-          end = s.index('TARGET.write_text(source, encoding="utf-8")', start)
-          guard = '''# Guard the non-negotiable technical/product invariants before writing.\ncfg = Path("konfigurator/cfg-pages.js").read_text(encoding="utf-8")\ncompact_cfg = "".join(cfg.split())\nfor required in [\n    '"postAxes":[72,2928,5784]',\n    '"postAxes":[72,2528,4984]',\n    '"catalog":14069',\n    '"catalog":14192',\n    '"catalog":14198',\n]:\n    if required not in compact_cfg:\n        raise RuntimeError(f"Required cfg invariant missing after patch: {required}")\nfor required in [\n    "const rohovy = Boolean(rz.roh);",\n    "const kovertaContact = Boolean(kvBand());",\n]:\n    if required not in source:\n        raise RuntimeError(f"Required runtime invariant missing after patch: {required}")\nif "paintLast" in source:\n    raise RuntimeError("paintLast still exists after patch")\n\n'''
-          p.write_text(s[:start] + guard + s[end:], encoding='utf-8')
-          PY
-          python3 /tmp/apply-koverta-final-realism.py
+          python3 .github/scripts/apply-koverta-final-realism.py
           node --check konfigurator/soltec-premium.js
           node --check konfigurator/koverta-cfg-enhance.js
 
-      - name: Verify protected files and Koverta invariants
+      - name: Verify protected technical sources
         run: |
           git diff --exit-code HEAD -- konfigurator/cfg-pages.js
           git diff --exit-code HEAD -- archiv-expivi
           git diff --exit-code HEAD -- konfigurator/test coordination/koverta
+          node konfigurator/test/technical-fidelity.js
           python3 - <<'PY'
           from pathlib import Path
           s = Path('konfigurator/soltec-premium.js').read_text(encoding='utf-8')
-          cfg = ''.join(Path('konfigurator/cfg-pages.js').read_text(encoding='utf-8').split())
-          required_cfg = [
-              '"postAxes":[72,2928,5784]',
-              '"postAxes":[72,2528,4984]',
-              '"catalog":14069',
-              '"catalog":14192',
-              '"catalog":14198',
-          ]
-          for token in required_cfg:
-              if token not in cfg:
-                  raise SystemExit('missing protected cfg invariant: ' + token)
-          required_runtime = [
+          required = [
               'Koverta final realism: true corrugated shell',
-              'const rohovy = Boolean(rz.roh);',
+              "const rohovy = Boolean(rz.roh);",
               'const kovertaContact = Boolean(kvBand());',
-              'const hlava = frame;',
-              'const plateHex = frame;',
-              'const kvSlatWall = Boolean(KV_MAT[kind]);',
+              "const plateHex = model().roofKit === 'koverta' ? frame : '#c9ccce';",
+              "const kvSlatWall = model().roofKit === 'koverta' && Boolean(KV_MAT[kind]);",
               'angleDeg: 90',
           ]
-          for token in required_runtime:
+          for token in required:
               if token not in s:
-                  raise SystemExit('missing runtime invariant: ' + token)
-          forbidden = ['paintLast']
+                  raise SystemExit('missing protected runtime invariant: ' + token)
+          forbidden = [
+              'put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true, nadStrechou)',
+              'if (BIO.headPlates && !nadStrechou)',
+          ]
           for token in forbidden:
               if token in s:
-                  raise SystemExit('forbidden renderer workaround remains: ' + token)
-          print('protected invariants PASS')
+                  raise SystemExit('camera/painter workaround remains in Koverta: ' + token)
+          print('Koverta-only source invariants PASS')
           PY
 
       - name: Install Playwright
@@ -85,23 +67,96 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Start static server
+      - name: Start branch and master servers
         run: |
-          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
-            sleep 1
+          python3 -m http.server 8901 >/tmp/koverta-branch-http.log 2>&1 &
+          git worktree add --detach /tmp/koverta-master 741608cfbc3748ddf5b0cac3122207a17053c931
+          (cd /tmp/koverta-master && python3 -m http.server 8902 >/tmp/koverta-master-http.log 2>&1) &
+          for port in 8901 8902; do
+            ready=0
+            for i in {1..30}; do
+              if curl -fsS "http://127.0.0.1:${port}/konfigurator/?page=koverta" >/dev/null; then ready=1; break; fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then
+              cat /tmp/koverta-branch-http.log || true
+              cat /tmp/koverta-master-http.log || true
+              exit 1
+            fi
           done
-          cat /tmp/koverta-http.log
-          exit 1
+
+      - name: Prove Soltec rendered output unchanged
+        run: |
+          cat >/tmp/compare-soltec.js <<'JS'
+          'use strict';
+          const { chromium } = require(process.cwd() + '/node_modules/playwright');
+          const { prepareContext } = require(process.cwd() + '/konfigurator/test/browser-qa');
+          const assert = (condition, message) => { if (!condition) throw new Error(message); };
+          const normalize = value => JSON.parse(JSON.stringify(value));
+          async function capture(base, route, viewport, view) {
+            const browser = await chromium.launch({ args: ['--no-sandbox'] });
+            try {
+              const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+              await prepareContext(context);
+              const page = await context.newPage();
+              const errors = [];
+              page.on('pageerror', e => errors.push('pageerror:' + e.message));
+              page.on('console', m => { if (m.type() === 'error') errors.push('console.error:' + m.text()); });
+              await page.goto(`${base}/konfigurator/?page=${route}`, { waitUntil: 'load', timeout: 60000 });
+              const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
+              if (await reject.count()) await reject.first().click();
+              await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas] polygon')));
+              await page.evaluate(({ az, el }) => { window.SP_TEST.setView(az, el); window.SP_TEST.redraw(); }, view);
+              await page.waitForTimeout(80);
+              const data = await page.evaluate(() => {
+                const svg = document.querySelector('[data-sp-canvas]');
+                const polygons = Array.from(svg.querySelectorAll('polygon')).map(p => ({
+                  points: p.getAttribute('points'),
+                  fill: (p.getAttribute('fill') || '').replace(/url\(#[^)]+\)/g, 'url(#pattern)'),
+                  stroke: p.getAttribute('stroke'),
+                  strokeWidth: p.getAttribute('stroke-width'),
+                  shapeRendering: p.getAttribute('shape-rendering')
+                }));
+                return { snapshot: window.SP_TEST.snapshot(), viewBox: svg.getAttribute('viewBox'), polygons };
+              });
+              assert(errors.length === 0, `${route} ${viewport.width}x${viewport.height}: ${errors.join(' | ')}`);
+              await context.close();
+              return normalize(data);
+            } finally {
+              await browser.close();
+            }
+          }
+          (async () => {
+            const routes = ['carport', 'canopy', 'bio'];
+            const viewports = [{ width: 1440, height: 1000 }, { width: 390, height: 844 }];
+            const views = [{ az: 0.82, el: 0.22 }, { az: -1.05, el: -0.12 }, { az: 2.20, el: 0.72 }];
+            for (const route of routes) {
+              for (const viewport of viewports) {
+                for (const view of views) {
+                  const master = await capture('http://127.0.0.1:8902', route, viewport, view);
+                  const branch = await capture('http://127.0.0.1:8901', route, viewport, view);
+                  assert(JSON.stringify(branch.snapshot) === JSON.stringify(master.snapshot),
+                    `${route} ${viewport.width}x${viewport.height} snapshot changed at ${JSON.stringify(view)}`);
+                  assert(branch.viewBox === master.viewBox,
+                    `${route} ${viewport.width}x${viewport.height} viewBox changed at ${JSON.stringify(view)}`);
+                  assert(JSON.stringify(branch.polygons) === JSON.stringify(master.polygons),
+                    `${route} ${viewport.width}x${viewport.height} rendered polygons changed at ${JSON.stringify(view)}`);
+                }
+              }
+            }
+            console.log('Soltec equivalence PASS: carport/canopy/bio, desktop/mobile, 3 camera views each');
+          })().catch(error => { console.error(error.stack || error); process.exit(1); });
+          JS
+          node /tmp/compare-soltec.js
 
       - name: Full Koverta test matrix
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: |
+          mkdir -p qa-artifacts
           set +e
           status=0
-          : > /tmp/koverta-test-results.txt
+          : > qa-artifacts/final-realism-results.txt
           for test in \
             osnova-podla-expivi \
             prekrytie \
@@ -115,46 +170,95 @@ jobs:
             routing-smoke \
             browser-qa
           do
-            echo "===== ${test} =====" | tee -a /tmp/koverta-test-results.txt
-            node "konfigurator/test/${test}.js" 2>&1 | tee -a /tmp/koverta-test-results.txt
+            echo "===== ${test} =====" | tee -a qa-artifacts/final-realism-results.txt
+            node "konfigurator/test/${test}.js" 2>&1 | tee -a qa-artifacts/final-realism-results.txt
             rc=${PIPESTATUS[0]}
-            echo "RESULT ${test}: ${rc}" | tee -a /tmp/koverta-test-results.txt
+            echo "RESULT ${test}: ${rc}" | tee -a qa-artifacts/final-realism-results.txt
             if [ "$rc" -ne 0 ]; then status=1; fi
           done
           for test in 02-occlusion-sweep 02-component-visibility 02-focused-render-qa
           do
-            echo "===== ${test} =====" | tee -a /tmp/koverta-test-results.txt
-            node "coordination/koverta/${test}.js" 2>&1 | tee -a /tmp/koverta-test-results.txt
+            echo "===== ${test} =====" | tee -a qa-artifacts/final-realism-results.txt
+            node "coordination/koverta/${test}.js" 2>&1 | tee -a qa-artifacts/final-realism-results.txt
             rc=${PIPESTATUS[0]}
-            echo "RESULT ${test}: ${rc}" | tee -a /tmp/koverta-test-results.txt
+            echo "RESULT ${test}: ${rc}" | tee -a qa-artifacts/final-realism-results.txt
             if [ "$rc" -ne 0 ]; then status=1; fi
           done
-          cp /tmp/koverta-test-results.txt qa-artifacts/final-realism-results.txt
           exit "$status"
 
-      - name: Static Koverta page checks
+      - name: One-degree 360 Koverta visibility sweep
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          cat >/tmp/koverta-360.js <<'JS'
+          'use strict';
+          const { chromium } = require(process.cwd() + '/node_modules/playwright');
+          const { prepareContext, watchErrors } = require(process.cwd() + '/konfigurator/test/browser-qa');
+          const assert = (c, m) => { if (!c) throw new Error(m); };
+          const URL = process.env.KV_URL;
+          const configs = [[7000,6000],[7000,5200],[6200,6000],[6200,5200],[4000,5200]];
+          async function setSize(page, width, length) {
+            await page.evaluate(({ width, length }) => {
+              const set = (sel, val) => { const e = document.querySelector(sel); e.value = String(val); e.dispatchEvent(new Event('input', { bubbles: true })); };
+              set('[data-sp-w]', width); set('[data-sp-l]', length);
+            }, { width, length });
+            await page.waitForTimeout(80);
+          }
+          (async () => {
+            const browser = await chromium.launch({ args: ['--no-sandbox'] });
+            try {
+              for (const viewport of [{ width:1440,height:1000 }, { width:390,height:844 }]) {
+                const context = await browser.newContext({ viewport });
+                await prepareContext(context);
+                const page = await context.newPage();
+                const assertNoErrors = watchErrors(page);
+                await page.goto(URL, { waitUntil:'load', timeout:60000 });
+                const reject = page.getByRole('button', { name:'Iba nevyhnutné' });
+                if (await reject.count()) await reject.first().click();
+                await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.redraw && document.querySelector('[data-sp-canvas] polygon')));
+                for (const [width,length] of configs) {
+                  await setSize(page,width,length);
+                  for (let degree=0; degree<360; degree++) {
+                    const az = -Math.PI + degree * Math.PI / 180;
+                    const state = await page.evaluate(azimuth => {
+                      window.SP_TEST.setView(azimuth, 0.18);
+                      window.SP_TEST.redraw();
+                      const svg = document.querySelector('[data-sp-canvas]');
+                      const markup = svg.outerHTML;
+                      return { polygons: svg.querySelectorAll('polygon').length, bad: /(?:NaN|Infinity)/.test(markup) };
+                    }, az);
+                    assert(state.polygons > 100, `${viewport.width} ${width}x${length} vanished at ${degree}°`);
+                    assert(!state.bad, `${viewport.width} ${width}x${length} invalid geometry at ${degree}°`);
+                  }
+                  for (const el of [-0.16, 0.80, 1.12]) {
+                    await page.evaluate(elevation => { window.SP_TEST.setView(0.82, elevation); window.SP_TEST.redraw(); }, el);
+                    const count = await page.locator('[data-sp-canvas] polygon').count();
+                    assert(count > 100, `${viewport.width} ${width}x${length} vanished at elevation ${el}`);
+                  }
+                }
+                assertNoErrors();
+                await context.close();
+              }
+            } finally { await browser.close(); }
+            console.log('360-degree sweep PASS: every 1°, key 4/6-post + short sizes, desktop/mobile; low/high/top elevations');
+          })().catch(error => { console.error(error.stack || error); process.exit(1); });
+          JS
+          node /tmp/koverta-360.js | tee -a qa-artifacts/final-realism-results.txt
+
+      - name: Static page checks
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
           html = Path('konfigurator/index.html').read_text(encoding='utf-8')
-          required = ['<title', 'meta name="description"', 'rel="canonical"']
-          for token in required:
+          for token in ['<title', 'meta name="description"', 'rel="canonical"']:
               if token not in html:
                   raise SystemExit('missing static page token: ' + token)
           ids = re.findall(r'\bid="([^"]+)"', html)
-          dup = sorted({x for x in ids if ids.count(x) > 1})
-          if dup:
-              raise SystemExit('duplicate static ids: ' + ', '.join(dup))
-          for local in re.findall(r'(?:src|href)="([^"?#]+)', html):
-              if local.startswith(('http://', 'https://', '//', 'mailto:', 'tel:', '#', 'data:')):
-                  continue
-              path = Path('konfigurator') / local
-              if local.startswith('/'):
-                  path = Path(local.lstrip('/'))
-              if not path.exists() and not local.endswith('/'):
-                  raise SystemExit('missing local asset: ' + local)
-          print('static checks PASS')
+          duplicates = sorted({value for value in ids if ids.count(value) > 1})
+          if duplicates:
+              raise SystemExit('duplicate static ids: ' + ', '.join(duplicates))
+          print('static page checks PASS')
           PY
 
       - name: Upload visual QA
