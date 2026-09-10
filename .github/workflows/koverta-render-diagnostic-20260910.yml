@@ -1,0 +1,85 @@
+name: Koverta render diagnostic
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+
+permissions:
+  contents: read
+
+jobs:
+  isolate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, butt, no-strokes, no-seal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Apply diagnostic variant in checkout only
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('konfigurator/soltec-premium.js')
+          s = p.read_text(encoding='utf-8')
+          v = os.environ['VARIANT']
+          if v == 'butt':
+              old = 'put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
+              new = 'put(zav - 9 * dir, zav + 11 * dir, turnBottom, zTop - turnBottom);'
+              if s.count(old) != 1: raise SystemExit(f'butt marker count={s.count(old)}')
+              s = s.replace(old, new, 1)
+          elif v == 'no-strokes':
+              old = 'edge: o.edge !== false,'
+              new = 'edge: false,'
+              if s.count(old) != 1: raise SystemExit(f'edge marker count={s.count(old)}')
+              s = s.replace(old, new, 1)
+          elif v == 'no-seal':
+              old = 'if (!f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];'
+              new = 'if (true || !f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];'
+              if s.count(old) != 1: raise SystemExit(f'seal marker count={s.count(old)}')
+              s = s.replace(old, new, 1)
+          elif v != 'baseline':
+              raise SystemExit('unknown variant')
+          p.write_text(s, encoding='utf-8')
+          PY
+          node --check konfigurator/soltec-premium.js
+          git diff --check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+      - name: Render same accessory evidence
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: node konfigurator/test/koverta-accessories.js
+      - name: Keep only diagnostic views
+        if: always()
+        run: |
+          mkdir -p diagnostic
+          find qa-artifacts -maxdepth 1 -type f \( -name 'koverta-accessories-front-7000x6000-desktop.png' -o -name 'koverta-accessories-side-7000x6000-desktop.png' -o -name 'koverta-accessories-under-7000x6000-desktop.png' -o -name 'koverta-accessories-corner-7000x6000-desktop.png' \) -exec cp {} diagnostic/ \; || true
+      - name: Upload diagnostic views
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: koverta-diagnostic-${{ matrix.variant }}
+          path: diagnostic
+          if-no-files-found: error
