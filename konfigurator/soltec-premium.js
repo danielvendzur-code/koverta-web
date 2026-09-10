@@ -2789,13 +2789,18 @@
                 const po = Math.min(zB, KV_SLAT.po);
                 if (po - od < KV_SLAT.vyska) return;
                 const d = Math.min(KV_SLAT.hrubka, Math.max(12, gw * 0.62));
+                /* KV_SLAT.zapust seats each Koverta slat inside both vertical guides.
+                   Only the concealed ends grow; visible pitch/height stay unchanged. */
+                const embed = Math.min(KV_SLAT.zapust, Math.max(0, gw - 2)) / Math.max(1, uLen);
+                const slatT0 = Math.max(0, t0 - embed);
+                const slatT1 = Math.min(1, t1 + embed);
                 const n = Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
                 for (let i = 0; i < Math.min(n, 40); i++) {
                   const a = od + KV_SLAT.pitch * i;
                   const tone = mat === 'drevo' ? boardTone(i, KV_TONE.drevo)
                     : mat === 'wpc' ? boardTone(i * 7, KV_TONE.wpc)
                     : shade(sideHex, 0.10 + (i % 2 ? 0.03 : 0));
-                  memb(t0, t1, a, a + KV_SLAT.vyska, depth - d / 2, depth + d / 2, tone, [], SHAFT);
+                  memb(slatT0, slatT1, a, a + KV_SLAT.vyska, depth - d / 2, depth + d / 2, tone, [], SHAFT);
                 }
               };
 
@@ -3334,22 +3339,8 @@
                  at every rib and produced dots across the whole roof. The
                  concealed 1 mm clearance avoids both failure modes without
                  altering the outside flashing envelope. */
-              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
-              /* A narrow hidden closure caps the sight line beneath the
-                 corrugation crowns. Only its upward face exists: it is below
-                 the lowest sheet skin, cannot cut a facet or become a second
-                 soffit, and uses the roof material so the concealed perimeter
-                 pocket cannot appear as alternating bright/dark dashes. */
-              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);
-              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);
-              const uz = trapBot - 0.5;
-              const roofEdgeHex = model().trapezTopHex || frame;
-              const closure = axis === 'x'
-                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]
-                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];
-              quad(closure, roofEdgeHex, {
-                normal: [0, 0, 1], cull: true, raw: true, edge: false, seamless: true
-              });
+              const turnBottom = trapBot - 1;
+              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
@@ -3444,6 +3435,10 @@
                 const dl = Math.hypot(da, dz) || 1; da /= dl; dz /= dl;
                 const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
+                /* The upper C-profile flange is permanently covered by the sheet.
+                   Do not emit its +Z face: at the corrugation valleys it is exactly
+                   coplanar with trapLowerZ and only adds a BSP splitting plane. */
+                if (podStrechou && n[2] > 0.9) continue;
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
                      hex, { normal: n, cull: true, arris: false, edge: false, seamless: true });
               }
