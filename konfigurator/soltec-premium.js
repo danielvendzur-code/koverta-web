@@ -3397,8 +3397,6 @@
                sa kladú od druhého boku — posledná, tá pri nulovom boku, sa
                oreže. Tak to je v scéne 14069: sedem tabúľ, šesť rozostupov po
                1 023 mm a prvá zľava užšia. */
-            const tabule = Math.max(1, Math.ceil((ty1 - ty0) / TRAP_KRYT));
-            const tabulaY = (i) => [Math.max(ty0, ty1 - TRAP_KRYT * (i + 1)), ty1 - TRAP_KRYT * i];
             /* Vrch plechu ide cez celú plochu, aj pod ramená lemovania. Kým
                sa kreslil len po odkryté pole, ostala pod ramenom diera do
                tela plechu a pri plochom pohľade bolo cez ňu vidieť pod
@@ -3429,79 +3427,104 @@
                presvital podklad ako svetlý vlások — na streche z toho boli
                tenké čiary krížom cez vlnu. crispEdges ich posadí presne na
                seba. */
-            quad([[tx0, ty0, trapBot], [tx1, ty0, trapBot], [tx1, ty1, trapBot], [tx0, ty1, trapBot]],
-                 spodHex, { normal: [0, 0, -1], cull: true, edge: false, seamless: true });
-            if (vx1 > vx0 && vy1 > vy0) {
-              quad([[vx0, vy0, trapTop], [vx1, vy0, trapTop], [vx1, vy1, trapTop], [vx0, vy1, trapTop]],
-                   vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
-            }
-            /* Ryhy vlny. Rozteč je daná tabuľou, nie šírkou prístrešku, takže
-               vlna beží cez celú strechu rovnako a na spoji tabúľ nepreskočí.
-               Zhora idú len po odkryté pole, zdola po celej ploche. */
-            /* Vlna trapézu T35: rozteč 1 023 / 5 = 204,6 mm, hrebeň hore úzky.
-               Kým sa kreslil svetlý pruh široký polovicu rozteče, strecha
-               vyzerala ako žalúzia s lamelami — na antracitovom plechu je
-               pritom vidieť len tenký lesk na hrebeni a mäkký tieň v drážke.
-               Preto sú pruhy úzke a takmer priehľadné. */
-            const vlnRoztec = TRAP_KRYT / 5;
-            const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
-            const pruh = (y0, y1, z, nz, hex) => {
-              const a = Math.max(y0, nz > 0 ? vy0 : ty0), b = Math.min(y1, nz > 0 ? vy1 : ty1);
-              if (b <= a) return;
-              const x0 = nz > 0 ? vx0 : tx0, x1 = nz > 0 ? vx1 : tx1;
-              if (x1 <= x0) return;
-              /* Ryhy vlny sa nesmú kresliť s crispEdges: pri plochom pohľade
-                 sa pruh zúži pod pixel a bez vyhladzovania z neho ostanú
-                 zubaté kocky — na streche z toho boli tmavé fľaky. Vlások na
-                 ich spoji nevznikne, lebo pod nimi je jedna veľká plocha,
-                 nie ďalší priesvitný pruh. */
-              quad([[x0, a, z], [x1, a, z], [x1, b, z], [x0, b, z]],
-                   hex, { normal: [0, 0, nz], raw: true, edge: false, fit: false });
-            };
-            for (let k = 0; k < vlnPocet; k++) {
-              const va = ty1 - vlnRoztec * k;               // os hrebeňa
-              /* Hore: úzky lesk na hrebeni a tesne pri ňom tmavší nábeh. */
-              pruh(va - 17, va + 17, trapTop, 1, 'rgba(255,255,255,.075)');
-              pruh(va + 17, va + 44, trapTop, 1, 'rgba(10,12,14,.085)');
-              /* Zdola je vlna obrátená — hrebeň je dutina, takže tam je tieň
-                 a v drážke naopak svetlo. Na realizáciách je zdola sotva
-                 znateľná, preto je tento kontrast ešte menší. */
-              pruh(va - 15, va + 15, trapBot, -1, 'rgba(24,28,32,.035)');
-            }
-            /* Kontaktný tieň. Tam, kde sa plech dotýka väznice alebo rámu, sa
-               k nemu nedostane odrazené svetlo a podhľad tam stmavne. Bez toho
-               diely na podhľade vyzerali nalepené na plochu, nie zapustené
-               medzi ňu. Kreslí sa ako úzky pruh na rovine podhľadu. */
-            const tien = (y0, y1) => {
-              if (y1 <= y0) return;
-              quad([[tx0, y0, trapBot], [tx1, y0, trapBot], [tx1, y1, trapBot], [tx0, y1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
-            };
-            const tienX = (x0, x1) => {
-              if (x1 <= x0) return;
-              quad([[x0, ty0, trapBot], [x1, ty0, trapBot], [x1, ty1, trapBot], [x0, ty1, trapBot]],
-                   'rgba(24,30,36,.10)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
-            };
-            const TIEN = 55;
-            osi.forEach((os) => {
-              tienX(Math.max(tx0, os - VAZ_W - TIEN), os - VAZ_W);
-              tienX(os + VAZ_W, Math.min(tx1, os + VAZ_W + TIEN));
-            });
-            tien(ry0, Math.min(ty1, ry0 + TIEN));
-            tien(Math.max(ty0, ry1 - TIEN), ry1);
-            tienX(rx0, Math.min(tx1, rx0 + TIEN));
-            tienX(Math.max(tx0, rx1 - RAM_PAR - TIEN), rx1 - RAM_PAR);
+            /* Skutočný 3D profil podhľadu.
+               Predtým bol spodok trapézu jedna rovná plocha a vlny iba
+               priesvitné pásy. Výška a rozteč ostávajú výhradne z REF/Expivi
+               (TRAP_H, TRAP_KRYT). Šírky koruny a ramena sú tie isté
+               vizuálne hodnoty 15/44, ktoré už renderer používal na ryhy;
+               z fotografie sa tým nevytvára nový technický rozmer.
 
-            /* Presah tabúľ leží v drážke vlny a zhora ho vidieť nie je —
-               tabuľa sa prekrýva celým jedným hrebeňom. Kým sa kreslil ako
-               tmavý pruh cez celú strechu, boli z neho tie čiary krížom cez
-               plech. Zdola ho prezradí len vlások na spoji. */
-            for (let i = 1; i < tabule; i++) {
-              const ys = ty1 - TRAP_KRYT * i;
-              if (ys <= ty0 || ys >= ty1) continue;
-              quad([[tx0, ys - 1, trapBot], [tx1, ys - 1, trapBot], [tx1, ys + 1, trapBot], [tx0, ys + 1, trapBot]],
-                   'rgba(18,22,26,.16)', { normal: [0, 0, -1], raw: true, edge: false, fit: false, seamless: true });
+               Vrch zostáva jedna súvislá plocha v odkrytom poli. Reálny plech
+               je pod horným ramenom lemovania a pri nízkom pohľade zhora musí
+               zostať za ním. Rozdelenie vrchu na desiatky šikmých facetov
+               vytváralo v BSP štyri konkrétne pixely cez lemovanie, hoci
+               svetlá výška profilu bola správna. Podhľad sa pri pohľade nad
+               strechou vôbec negeneruje, takže sa nemôže zamiešať do painter
+               orderu vrchnej skladby. */
+            const vlnRoztec = TRAP_KRYT / 5;
+            const RIB_CROWN_VIS = 15;
+            const RIB_SHOULDER_VIS = 44;
+
+            const trapProfileZ = (y) => {
+              const raw = ty1 - y;
+              const phase = ((raw % vlnRoztec) + vlnRoztec) % vlnRoztec;
+              const d = Math.min(phase, vlnRoztec - phase);
+              if (d <= RIB_CROWN_VIS) return trapTop;
+              if (d >= RIB_SHOULDER_VIS) return trapBot;
+              const t = (d - RIB_CROWN_VIS) / (RIB_SHOULDER_VIS - RIB_CROWN_VIS);
+              return trapTop + (trapBot - trapTop) * t;
+            };
+
+            const trapBreaks = (y0, y1) => {
+              const cuts = [y0, y1];
+              const first = Math.floor((ty1 - y1) / vlnRoztec) - 1;
+              const last = Math.ceil((ty1 - y0) / vlnRoztec) + 1;
+              for (let k = first; k <= last; k++) {
+                const axis = ty1 - k * vlnRoztec;
+                [-RIB_SHOULDER_VIS, -RIB_CROWN_VIS, RIB_CROWN_VIS, RIB_SHOULDER_VIS].forEach((off) => {
+                  const y = axis + off;
+                  if (y > y0 + 1e-6 && y < y1 - 1e-6) cuts.push(y);
+                });
+              }
+              cuts.sort((a, b) => a - b);
+              return cuts.filter((v, i) => !i || Math.abs(v - cuts[i - 1]) > 1e-6);
+            };
+
+            if (!nadStrechou) {
+              const cuts = trapBreaks(ty0, ty1);
+              for (let i = 0; i < cuts.length - 1; i++) {
+                const a = cuts[i], b = cuts[i + 1];
+                const za = trapProfileZ(a), zb = trapProfileZ(b);
+                const pts = [[tx0, a, za], [tx0, b, zb], [tx1, b, zb], [tx1, a, za]];
+                quad(pts, spodHex, {
+                  normal: faceNormal(pts),
+                  edge: false,
+                  seamless: true
+                });
+              }
             }
+
+            /* Horné líce ostáva pod lemovaním v jednej fyzickej rovine.
+               Skutočné horné facety sa pri grazing uhle dostali projekciou do
+               toho istého raster pixela ako tenké horné rameno lemovania,
+               hoci sa world-space nepretínali. Namiesto posúvania alebo
+               zväčšovania lemovania sa rovina rozdelí na malé koplanárne
+               dlaždice, čo dá BSP lokálne hĺbky bez painter-order výnimky.
+               Rebrovanie zhora je iba súvislé vizuálne tieňovanie; pásy sa
+               zámerne NESegmentujú po X, preto na mobile nevzniká bodkovaný
+               raster. Technické rozmery plechu tým ostávajú nedotknuté. */
+            if (vx1 > vx0 && vy1 > vy0) {
+              const TOP_TILES_X = 4;
+              const TOP_TILES_Y = 4;
+              for (let ix = 0; ix < TOP_TILES_X; ix++) {
+                const x0 = vx0 + (vx1 - vx0) * (ix / TOP_TILES_X);
+                const x1 = vx0 + (vx1 - vx0) * ((ix + 1) / TOP_TILES_X);
+                for (let iy = 0; iy < TOP_TILES_Y; iy++) {
+                  const y0 = vy0 + (vy1 - vy0) * (iy / TOP_TILES_Y);
+                  const y1 = vy0 + (vy1 - vy0) * ((iy + 1) / TOP_TILES_Y);
+                  quad([[x0, y0, trapTop], [x1, y0, trapTop], [x1, y1, trapTop], [x0, y1, trapTop]],
+                       vrchHex, { normal: [0, 0, 1], cull: true, edge: false, seamless: true });
+                }
+              }
+
+              const topBand = (y0, y1, hex) => {
+                const a = Math.max(y0, vy0), b = Math.min(y1, vy1);
+                if (b <= a) return;
+                quad([[vx0, a, trapTop], [vx1, a, trapTop], [vx1, b, trapTop], [vx0, b, trapTop]],
+                     hex, { normal: [0, 0, 1], raw: true, edge: false, fit: false });
+              };
+              const vlnPocet = Math.ceil((ty1 - ty0) / vlnRoztec) + 1;
+              for (let k = 0; k < vlnPocet; k++) {
+                const va = ty1 - vlnRoztec * k;
+                topBand(va - 17, va + 17, 'rgba(255,255,255,.075)');
+                topBand(va + 17, va + 44, 'rgba(10,12,14,.085)');
+              }
+            }
+
+            /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
+               podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
+               tienenie; tie overlay pásy boli zdrojom falošných línií a
+               blikajúcich švov. */
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
                a žľab visí presne v tej kapse, hore pod lemovaním. Preto ho
