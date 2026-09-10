@@ -1,0 +1,81 @@
+name: Capture Soltec close-end visual sweep
+
+on:
+  push:
+    branches: [fix/soltec-louver-stability-20260910]
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/soltec-louver-stability-20260910
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start server
+        run: |
+          python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=bio' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Capture close-end frames
+        run: |
+          mkdir -p qa-artifacts/soltec-close
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage({viewport:{width:1440,height:980},deviceScaleFactor:1});
+            await page.goto('http://127.0.0.1:8901/konfigurator/?page=bio',{waitUntil:'domcontentloaded'});
+            await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.setView && document.querySelector('#SoltecPremium [data-sp-canvas] polygon'));
+            const stage = page.locator('#SoltecPremium .sp-stage');
+            await stage.scrollIntoViewIfNeeded();
+            const setValue = async (value, prefix) => {
+              await page.evaluate((v) => {
+                window.SP_TEST.setView(-0.62,-0.18);
+                const r=document.querySelector('#SoltecPremium [data-sp-louver-range]');
+                r.value=String(v); r.dispatchEvent(new Event('input',{bubbles:true}));
+              }, value);
+              await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+              await stage.screenshot({path:`qa-artifacts/soltec-close/${prefix}-${String(value).padStart(3,'0')}.png`});
+            };
+            for (const v of [15,12,10,8,6,4,3,2,1,0]) await setValue(v,'direct');
+
+            await page.evaluate(() => {
+              window.SP_TEST.setView(-0.62,-0.18);
+              const r=document.querySelector('#SoltecPremium [data-sp-louver-range]');
+              r.value='100'; r.dispatchEvent(new Event('input',{bubbles:true}));
+            });
+            await page.waitForTimeout(100);
+            const close=page.locator('#SoltecPremium [data-sp-louver="0"]');
+            await close.click();
+            for (let i=0;i<18;i++) {
+              await page.waitForTimeout(120);
+              await stage.screenshot({path:`qa-artifacts/soltec-close/anim-${String(i).padStart(2,'0')}.png`});
+            }
+            await page.waitForTimeout(300);
+            await stage.screenshot({path:'qa-artifacts/soltec-close/anim-final.png'});
+            const pct=await page.locator('#SoltecPremium [data-sp-louver-pct]').textContent();
+            fs.writeFileSync('qa-artifacts/soltec-close/state.json',JSON.stringify({pct},null,2));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soltec-close-visual-sweep
+          path: qa-artifacts/soltec-close
+          if-no-files-found: error
