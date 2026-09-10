@@ -39,9 +39,6 @@ if old not in s:
     raise SystemExit('hold start/stop anchor not found')
 s = s.replace(old, new, 1)
 
-# The current branch already flushes the final queued Soltec camera frame on
-# pointer release. Keep that verified behavior exactly as-is instead of
-# replacing it again.
 if "if (!model().kvGeom) flushStage();" not in s:
     raise SystemExit('camera release flush missing from current branch')
 
@@ -56,11 +53,11 @@ if old not in ts:
     raise SystemExit('test source-contract anchor not found')
 ts = ts.replace(old, new, 1)
 
-old = """  await page.mouse.up();\n  await page.waitForTimeout(120);\n\n  const motionMetrics = await page.evaluate(() => {\n"""
-new = """  await page.mouse.up();\n  const releaseAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));\n  await page.waitForTimeout(120);\n  const afterReleaseAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));\n  const releaseDrift = Math.hypot(afterReleaseAnchor.x - releaseAnchor.x, afterReleaseAnchor.y - releaseAnchor.y);\n  assert.ok(releaseDrift < 0.05, `Soltec camera settled after pointer release by ${releaseDrift.toFixed(3)} px`);\n\n  const motionMetrics = await page.evaluate(() => {\n"""
-if old not in ts:
-    raise SystemExit('camera release test anchor not found')
-ts = ts.replace(old, new, 1)
+# A release-settle assertion is already present on the current branch from the
+# previous verified pass. Keep it and require it to remain instead of adding a
+# duplicate test block.
+if "releaseSettle < 0.05" not in ts:
+    raise SystemExit('existing camera release-settle assertion missing')
 
 old = """  const minLouver = Math.min(...louverCounts.map((item) => item.count));\n  const maxLouver = Math.max(...louverCounts.map((item) => item.count));\n  assert.ok(minLouver > 0, 'Soltec scene disappeared during louver travel');\n  assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);\n\n  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });\n"""
 new = """  const minLouver = Math.min(...louverCounts.map((item) => item.count));\n  const maxLouver = Math.max(...louverCounts.map((item) => item.count));\n  assert.ok(minLouver > 0, 'Soltec scene disappeared during louver travel');\n  assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);\n\n  // Closing is the numerically hardest region because neighbouring blades\n  // approach parallel/coplanar planes. Inspect it at 1-3% increments rather\n  // than letting the ordinary 5% sweep skip over the problematic endpoint.\n  const closeCounts = [];\n  for (const value of [15, 12, 10, 8, 6, 4, 3, 2, 1, 0]) {\n    const count = await page.evaluate((nextValue) => {\n      const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');\n      range.value = String(nextValue);\n      range.dispatchEvent(new Event('input', { bubbles: true }));\n      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() =>\n        resolve(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length))));\n    }, value);\n    closeCounts.push({ value, count });\n  }\n  for (let i = 1; i < closeCounts.length; i += 1) {\n    const a = closeCounts[i - 1].count, b = closeCounts[i].count;\n    const jump = Math.abs(b - a) / Math.max(1, Math.max(a, b));\n    assert.ok(jump < 0.12, `Soltec close-end topology jumps at ${closeCounts[i].value}%: ${a} -> ${b}`);\n  }\n\n  // Run the real close button, then make sure no stale timer or queued stage\n  // frame changes the finished SVG after the endpoint has been reached.\n  const openButton = page.locator('#SoltecPremium [data-sp-louver="1"]');\n  const closeButton = page.locator('#SoltecPremium [data-sp-louver="0"]');\n  await openButton.click();\n  await page.waitForTimeout(2350);\n  await closeButton.click();\n  await page.waitForTimeout(2350);\n  const endpointA = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);\n  await page.waitForTimeout(180);\n  const endpointB = await page.evaluate(() => document.querySelector('#SoltecPremium [data-sp-canvas]').innerHTML);\n  assert.equal(endpointB, endpointA, 'Soltec SVG changed after the closing animation had already finished');\n\n  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });\n"""
