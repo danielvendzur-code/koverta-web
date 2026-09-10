@@ -14,7 +14,13 @@ function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
-  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false, cull: true \}\);/, 'Moving Soltec louvers must keep stable fitting and back-face visibility');
+  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
+  assert.match(source, /const topO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[-bladeUz, 0, bladeUx\] \}\);/, 'Only the broad louver top face is culled');
+  assert.match(source, /const underO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[bladeUz, 0, -bladeUx\] \}\);/, 'Only the broad louver underside is culled');
+  assert.match(source, /shade\(louv, -0\.48\), layO\);/, 'The louver edge thickness must remain double-sided and visible');
+  assert.match(source, /let stagePending = 0, stageTimer = 0, stageRaf = 0;/, 'Stage scheduling must own and cancel its pending animation frame');
+  assert.match(source, /const flushStage = \(\) => \{ if \(stagePending\) paintStage\(\); \};/, 'Final pointer state must flush synchronously');
+  assert.doesNotMatch(source, /moverTimer = window\.setTimeout\(step, 90\);/, 'Mover fallback must not race a queued animation frame');
   assert.match(source, /normal: \[bladeUz, 0, -bladeUx\]/, 'Louver-mounted LEDs must follow the rotating underside normal');
   assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');
   assert.match(source, /if \(\(H \/ 2 \+ se \* DIST\) > 0\)/, 'Ground visibility must use actual camera height');
@@ -141,7 +147,11 @@ function percentile(values, p) {
     await page.waitForTimeout(8);
   }
   await page.mouse.up();
+  const releaseAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));
   await page.waitForTimeout(120);
+  const settledAnchor = await page.evaluate(() => window.SP_TEST.project(0, 0, 0));
+  const releaseSettle = Math.hypot(settledAnchor.x - releaseAnchor.x, settledAnchor.y - releaseAnchor.y);
+  assert.ok(releaseSettle < 0.05, `Soltec stage moved after pointer release: ${releaseSettle.toFixed(3)} px`);
 
   const motionMetrics = await page.evaluate(() => {
     window.__soltecFrameActive = false;
@@ -182,7 +192,7 @@ function percentile(values, p) {
   assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);
 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, p95, maxFrame }, null, 2));
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, releaseSettle, p95, maxFrame }, null, 2));
 
   assert.deepEqual(pageErrors, [], `Browser errors:\n${pageErrors.join('\n')}`);
   await browser.close();

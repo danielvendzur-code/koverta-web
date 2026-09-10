@@ -4476,7 +4476,9 @@
                  in stage fitting. The fixed frame/posts define the camera
                  envelope, so opening/closing cannot zoom, wave or settle the
                  whole pergola. */
-              const layO = Object.assign({}, lay, obrys, { fit: false, cull: true });
+              const layO = Object.assign({}, lay, obrys, { fit: false });
+              const topO = Object.assign({}, layO, { cull: true, normal: [-bladeUz, 0, bladeUx] });
+              const underO = Object.assign({}, layO, { cull: true, normal: [bladeUz, 0, -bladeUx] });
               /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
                  lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
                  je to ten 17 mm lap, ktorým strecha tesní.
@@ -4492,8 +4494,8 @@
                  chyba, ktorou si táto scéna už prešla. */
               const lapF = 0.13;
               const jX = aX + (bX - aX) * lapF, jZ = aZ + (bZ - aZ) * lapF;
-              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), layO);
-              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), layO);
+              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), topO);
+              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), topO);
               /* Rub lamely nie je jeden tón. Horná hrana je zastrčená pod
                  susednou lamelou, takže tá polovica je v jej tieni; spodná
                  hrana je otvorená k oblohe a je svetlejšia. Rub sa preto
@@ -4501,8 +4503,8 @@
                  čo dá radu lamiel kontrast aj na antracite — na bielej bolo
                  všetko vidieť, na tmavej sa strecha zdola zlievala do dosky. */
               const sX = (fullAX + bX) / 2 + ox, sZ = (fullAZ + bZ) / 2 + oz;
-              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), layO);
-              quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), layO);
+              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), underO);
+              quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), underO);
               quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]], shade(louv, -0.48), layO);
               /* Pevný tesniaci podklad uzatvára skutočnú šírku profilu.
                  Pri zatvorení leží pod koncom susednej lamely, takže horné
@@ -5179,21 +5181,24 @@
         /* Snímok nemusí prísť — v skrytej karte prehliadač rAF nespustí vôbec.
            Bez záložného časovača by posuvník aj beh ticho nič neurobili, presne
            ako to už rieši  o kus vyššie. */
-        let stagePending = 0, stageTimer = 0;
+        let stagePending = 0, stageTimer = 0, stageRaf = 0;
+        const paintStage = () => {
+          if (!stagePending) return;
+          stagePending = 0;
+          if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
+          window.clearTimeout(stageTimer);
+          stageTimer = 0;
+          drawStage();
+          syncSideMove();
+          syncLouverReadout();
+        };
         const scheduleStage = () => {
           if (stagePending) return;
           stagePending = 1;
-          const run = () => {
-            if (!stagePending) return;
-            stagePending = 0;
-            window.clearTimeout(stageTimer);
-            drawStage();
-            syncSideMove();
-            syncLouverReadout();
-          };
-          window.requestAnimationFrame(run);
-          stageTimer = window.setTimeout(run, 60);
+          stageRaf = window.requestAnimationFrame(paintStage);
+          stageTimer = window.setTimeout(paintStage, 60);
         };
+        const flushStage = () => { if (stagePending) paintStage(); };
 
         let louverRun = 0, moverTimer = 0;
         const runMover = (ch, target, immediate) => {
@@ -5249,7 +5254,11 @@
             syncLouverReadout();
           };
           louverRun = requestAnimationFrame(step);
-          moverTimer = window.setTimeout(step, 90);
+          moverTimer = window.setTimeout(() => {
+            if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
+            moverTimer = 0;
+            step(clockNow());
+          }, 90);
         };
 
         /* Vonkajšia nadstavba (tlačidlá „Zavrieť všetko" / „Otvoriť všetko")
@@ -5451,8 +5460,12 @@
           if (event.target.closest && event.target.closest('[data-sp-louver-hold]')) stopHold();
         });
         document.addEventListener('visibilitychange', () => { if (document.hidden) stopHold(); });
-        window.addEventListener('pointerup', stopHold);
-        window.addEventListener('pointercancel', stopHold);
+        const finishPointerMotion = () => {
+          stopHold();
+          if (!model().kvGeom) flushStage();
+        };
+        window.addEventListener('pointerup', finishPointerMotion);
+        window.addEventListener('pointercancel', finishPointerMotion);
         window.addEventListener('blur', stopHold);
 
         cfgRoot.addEventListener('click', (event) => {
@@ -5762,7 +5775,12 @@
             if (model().kvGeom) scheduleRender();
             else scheduleStage();
           });
-          const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };
+          const stop = (e) => {
+            if (!dragging) return;
+            dragging = false;
+            if (!model().kvGeom) flushStage();
+            try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
+          };
           stageEl.addEventListener('pointerup', stop);
           stageEl.addEventListener('pointercancel', stop);
         }
