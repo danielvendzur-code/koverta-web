@@ -3335,12 +3335,21 @@
                  concealed 1 mm clearance avoids both failure modes without
                  altering the outside flashing envelope. */
               put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
-              /* A narrow folded return closes the sight line beneath the
-                 corrugation crowns. It sits below the lowest sheet skin, so it
-                 cannot cut the trapezoid facets or become a second soffit; it
-                 only masks the concealed perimeter pocket that otherwise
-                 revealed the zinc frame as a row of bright dashes. */
-              put(zav + 8 * dir, zav + 22 * dir, trapBot - 2, 1.5, true);
+              /* A narrow hidden closure caps the sight line beneath the
+                 corrugation crowns. Only its upward face exists: it is below
+                 the lowest sheet skin, cannot cut a facet or become a second
+                 soffit, and uses the roof material so the concealed perimeter
+                 pocket cannot appear as alternating bright/dark dashes. */
+              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);
+              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);
+              const uz = trapBot - 0.5;
+              const roofEdgeHex = model().trapezTopHex || frame;
+              const closure = axis === 'x'
+                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]
+                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];
+              quad(closure, roofEdgeHex, {
+                normal: [0, 0, 1], cull: true, raw: true, edge: false, seamless: true
+              });
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
