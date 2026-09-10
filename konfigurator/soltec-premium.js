@@ -3866,7 +3866,11 @@
                  bližšie k odkvapovej hrane. Polomer sa preto zhora obmedzí
                  voľným miestom po okraj strechy; rúra nesmie kvôli
                  realistickejšej hrúbke preraziť obrys aktuálnej zostavy. */
-              const rzPriestor = Math.max(22, (L - xLicStlp - 4) / 2.14);
+              /* Koeficient zahŕňa oba polomery plášťa, odstup od stĺpa aj
+                 vyhnutú pätku (0,92 × polomer kolena 2,25 r). Bez pätky v
+                 limite sa zvislá časť zmestila, ale ústie pri 7000 × 5200
+                 prešlo cez odkvapovú hranu. */
+              const rzPriestor = Math.max(22, (L - xLicStlp) / 4.22);
               const rz = Math.min(rzVizu, rzPriestor);
               const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               const yPost0 = vsunStlp;
