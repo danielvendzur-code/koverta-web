@@ -39,11 +39,11 @@ if old not in s:
     raise SystemExit('hold start/stop anchor not found')
 s = s.replace(old, new, 1)
 
-old = """          const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };\n"""
-new = """          const stop = (e) => {\n            if (!dragging) return;\n            dragging = false;\n            /* Apply the last mouse delta before release returns. Without this,\n               the final queued camera frame arrived just after pointerup and\n               looked like the whole pergola settling into place. */\n            if (!model().kvGeom) flushStage();\n            try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}\n          };\n"""
-if old not in s:
-    raise SystemExit('camera stop anchor not found')
-s = s.replace(old, new, 1)
+# The current branch already flushes the final queued Soltec camera frame on
+# pointer release. Keep that verified behavior exactly as-is instead of
+# replacing it again.
+if "if (!model().kvGeom) flushStage();" not in s:
+    raise SystemExit('camera release flush missing from current branch')
 
 p.write_text(s, encoding='utf-8')
 
