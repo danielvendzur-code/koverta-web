@@ -3333,14 +3333,13 @@
                  plochom pohľade cez ňu bolo vidieť pod strechu — pozdĺž hrany
                  svietil svetlý pruh. */
               const zav = outer + sirka * dir;
-              /* Keep the hidden turn and the visible sheet non-coplanar and
-                 non-intersecting. A butt joint at +11 mm rasterised as dots;
-                 extending the turn through the corrugation made BSP split it
-                 at every rib and produced dots across the whole roof. The
-                 concealed 1 mm clearance avoids both failure modes without
-                 altering the outside flashing envelope. */
+              /* The inner vertical turn must cover the open corrugation mouths.
+                 A 1 mm clearance exposed the dark rib cavities at grazing/top views,
+                 while the earlier 4 mm overlap created unnecessary BSP splitting.
+                 The existing turn therefore overlaps the visible sheet edge by only
+                 0.5 mm: no extra closure plane, no outside-envelope change. */
               const turnBottom = trapBot - 1;
-              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);
+              put(zav - 9 * dir, zav + 11.5 * dir, turnBottom, zTop - turnBottom);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
