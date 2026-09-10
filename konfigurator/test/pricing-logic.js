@@ -99,11 +99,10 @@ async function revealControl(page, selector) {
     assert(JSON.stringify(catalogue.sideOpts.filter(item => item.id !== 'open').map(item => item.id)) === JSON.stringify([
       'kvdrevo','kvwpc','kvhlinik'
     ]), 'Current supported Koverta side-wall material set changed');
-    const gutterNo = catalogue.gutter.opts.find(item => item.id === 'nie');
     const gutterYes = catalogue.gutter.opts.find(item => item.id === 'ano');
     assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
-    assert(gutterNo && gutterNo.tichy === true && gutterNo.cena == null, 'No-gutter selection must not create a fake 0 € line');
-    assert(catalogue.gutter.opts[0].id === 'nie', 'Optional gutter must not be preselected without a verified inclusion rule');
+    assert(catalogue.gutter.opts.length === 1 && catalogue.gutter.opts[0].id === 'ano',
+      'Koverta must expose mandatory drainage without a no-gutter alternative');
     assert(catalogue.anchoring && JSON.stringify(catalogue.anchoring.opts.map(item => item.id)) === JSON.stringify(['beton', 'ine']),
       'Unsupported concrete-footing/paving anchoring variants are still exposed');
     assert(catalogue.anchoring.opts[0].tichy === true && catalogue.anchoring.opts[0].cena == null,
@@ -138,11 +137,12 @@ async function revealControl(page, selector) {
     const initialLength = await page.locator('[data-sp-l-out]').textContent();
     assert(/2\s*500/.test(initialWidth), 'Unexpected initial Koverta width: ' + initialWidth);
     assert(/5\s*200/.test(initialLength), 'Unexpected initial Koverta depth: ' + initialLength);
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '4 497 €',
-      'Default Koverta state must be the verified base price with optional gutter off');
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 4 497 €',
+      'Mandatory unpriced drainage must preserve the verified catalogue subtotal as a starting price');
     const initialSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(initialSnapshot.price.open === false && initialSnapshot.price.total === 4497,
-      'Runtime and displayed default price state disagree');
+    assert(initialSnapshot.price.open === true && initialSnapshot.price.total === null &&
+      initialSnapshot.price.catalogueSubtotal === 4497,
+      'Runtime and displayed mandatory-drainage price state disagree');
 
     // Exercise all 54 published catalogue points through the real controls.
     for (let li = 0; li < expectedLengths.length; li++) {
@@ -167,9 +167,10 @@ async function revealControl(page, selector) {
           const totalText = total ? String(total.textContent || '').trim() : '';
           return snap.width === width
             && snap.length === length
-            && snap.price.total === price
-            && snap.price.open === false
-            && !/^od\s/i.test(totalText)
+            && snap.price.total === null
+            && snap.price.catalogueSubtotal === price
+            && snap.price.open === true
+            && /^od\s/i.test(totalText)
             && totalText.replace(/[^0-9]/g, '') === String(price);
         }, { width, length, price }, { timeout: 4000 });
       }
@@ -189,7 +190,7 @@ async function revealControl(page, selector) {
     await waitRender(page);
     assert(/6\s*200/.test(await page.locator('[data-sp-w-out]').textContent()), '6200 mm width is not selectable');
     assert(/6\s*000/.test(await page.locator('[data-sp-l-out]').textContent()), '6000 mm depth is not selectable');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '8 397 €',
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 8 397 €',
       '6200 × 6000 base price changed from the verified public catalogue');
     assert(/4\s+stĺpy/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
       'Current base renderer no longer uses the documented four-post visualization at 6200 mm');
@@ -202,7 +203,7 @@ async function revealControl(page, selector) {
     });
     await waitRender(page);
     assert(/6\s*600/.test(await page.locator('[data-sp-w-out]').textContent()), '6600 mm width is not selectable');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '10 897 €',
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 10 897 €',
       '6600 × 6000 base price changed from the verified public catalogue');
     assert(/6\s+stĺpov/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
       'Current base renderer no longer uses the documented six-post visualization at 6600 mm');
@@ -220,23 +221,18 @@ async function revealControl(page, selector) {
     });
     await waitRender(page);
 
-    // Optional gutter is off by default. Navigate to its real step before interacting.
+    // Drainage is mandatory, quote-only and has no misleading off state.
     await revealControl(page, '[data-sp-add-opt="pick:odkvap"]');
     const gutterButtons = page.locator('[data-sp-add-opt="pick:odkvap"]');
-    assert((await gutterButtons.filter({ hasText: 'Bez odkvapu' }).getAttribute('aria-pressed')) === 'true',
-      'No-gutter option is not the default state');
-    await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).click();
-    await waitRender(page);
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Selecting unpriced gutter did not mark total as open');
+    assert(await gutterButtons.count() === 1 &&
+      await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).getAttribute('aria-pressed') === 'true',
+      'Mandatory gutter/downpipe is not the sole selected drainage option');
+    assert(await gutterButtons.filter({ hasText: 'Bez odkvapu' }).count() === 0,
+      'Removed no-gutter option returned');
     assert((await page.locator('[data-sp-lines]').innerText()).includes('Odkvap a zvod'),
-      'Selected gutter is missing from the quote lines');
-    await gutterButtons.filter({ hasText: 'Bez odkvapu' }).click();
-    await waitRender(page);
-    assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Turning optional gutter off left stale quote-only price state');
+      'Mandatory gutter is missing from the quote lines');
 
-    // Alternative anchoring is request-only; returning to base concrete anchoring clears that state.
+    // Alternative anchoring is request-only; base concrete remains selected independently.
     const anchoringButtons = page.locator('[data-sp-add-opt="pick:kotvenie"]');
     await anchoringButtons.filter({ hasText: 'Iný podklad / príprava základov' }).click();
     await waitRender(page);
@@ -244,8 +240,8 @@ async function revealControl(page, selector) {
       'Unpriced foundation option did not mark total as open');
     await anchoringButtons.filter({ hasText: 'Do pripraveného betónu' }).click();
     await waitRender(page);
-    assert(!(await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Returning to verified base anchoring left stale quote-only state');
+    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
+      'Mandatory quote-only drainage was lost after returning to base anchoring');
 
     // Sourced Koverta accessories remain quote-only and must survive a compatible size change.
     const accessoryToggle = page.locator('[data-sp-add-on="x-kv"]');
@@ -335,7 +331,7 @@ async function revealControl(page, selector) {
     assert(payload.body.includes('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.'),
       'Payload omits unresolved transport/quote-only disclaimer');
     assert(payload.body.includes('Kotvenie stĺpov: Do pripraveného betónu'), 'Payload omits selected base anchoring');
-    assert(payload.body.includes('Odkvap a zvod: Bez odkvapu'), 'Payload omits selected gutter state');
+    assert(payload.body.includes('Odkvap a zvod: So žľabom a zvodom'), 'Payload omits mandatory drainage state');
     assert(!payload.body.includes('voda steká z hrany') && !payload.body.includes('kotvenie podľa podkladu'),
       'Payload leaks helper copy into selected-option values');
     assert((payload.body.match(/Umiestnenie:/g) || []).length === 1 && !payload.body.includes('Umiestnenie —'),
@@ -358,9 +354,10 @@ async function revealControl(page, selector) {
     assert(resetPayload.body.includes('Umiestnenie: Samostatne stojaci.'),
       'Reset payload did not restore the implicit standalone placement');
     const resetSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(resetSnapshot.price.total === 4497 && resetSnapshot.price.open === false,
-      'Reset left the Koverta base price open or stale');
-    assert(resetSnapshot.picks.odkvap === 'nie' && resetSnapshot.picks.kotvenie === 'beton',
+    assert(resetSnapshot.price.total === null && resetSnapshot.price.catalogueSubtotal === 4497 &&
+      resetSnapshot.price.open === true,
+      'Reset lost the catalogue subtotal or mandatory quote-only drainage state');
+    assert(resetSnapshot.picks.odkvap === 'ano' && resetSnapshot.picks.kotvenie === 'beton',
       'Reset did not restore default gutter/anchoring');
     assert(Object.values(resetSnapshot.extras).every(value => !value),
       'Reset left a selected Koverta accessory in runtime state');

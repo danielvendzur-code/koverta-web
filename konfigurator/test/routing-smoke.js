@@ -51,7 +51,13 @@ module.exports = async function routingSmoke(browser) {
       const initial = await snapshot();
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);
-      assert(initial.price.total > 0 && Number.isFinite(initial.price.total), `${route}: no numeric price`);
+      if (route === 'koverta') {
+        assert(initial.price.open === true && initial.price.total === null &&
+          initial.price.catalogueSubtotal > 0 && Number.isFinite(initial.price.catalogueSubtotal),
+          `${route}: mandatory quote-only drainage lost the numeric catalogue subtotal`);
+      } else {
+        assert(initial.price.total > 0 && Number.isFinite(initial.price.total), `${route}: no numeric price`);
+      }
       const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(await overflow() <= 4, `${route}/${device}: horizontal overflow`);
       await page.screenshot({path:`qa-artifacts/config-${route}-${device}.png`,fullPage:true});
@@ -61,7 +67,9 @@ module.exports = async function routingSmoke(browser) {
       await page.waitForTimeout(180);
       const resized = await snapshot();
       assert(resized.length !== initial.length, `${route}: length did not change`);
-      assert(resized.price.total !== initial.price.total, `${route}: dimension change did not change price`);
+      const initialComparable = route === 'koverta' ? initial.price.catalogueSubtotal : initial.price.total;
+      const resizedComparable = route === 'koverta' ? resized.price.catalogueSubtotal : resized.price.total;
+      assert(resizedComparable !== initialComparable, `${route}: dimension change did not change price`);
       const current = await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno');
       await page.locator('[data-sp-next]').click();
       assert(await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno') !== current, `${route}: next failed`);

@@ -25,7 +25,8 @@ function assertSourceContract() {
   // geometry and cause a pop when the view crosses the roof plane.
   assert.match(source, /const nadStrechou = \(H \/ 2 \+ se \* DIST\) >= H \+ beam;/, 'Koverta camera occlusion guard was unexpectedly changed');
   assert.match(source, /const podStrechu = true;/, 'Koverta under-roof components must remain camera-independent');
-  assert.match(source, /vaznice\.forEach\(\(os\) => \{[\s\S]*?cProfil\('x', os - VAZ_W,[\s\S]*?\);/, 'Koverta purlins must be generated at every camera elevation');
+  assert.match(source, /cProfil\('x', os - VAZ_W, VAZ_W \* 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true\);/, 'Koverta purlins must be generated at every camera elevation');
+  assert.doesNotMatch(source, /if \(!nadStrechou\)[\s\S]{0,160}cProfil\('x', os - VAZ_W/, 'Koverta purlins must not be hidden by a camera-elevation threshold');
   assert.doesNotMatch(source, /paintLast/, 'Painter-order overrides must not return');
 }
 

@@ -44,10 +44,6 @@ function patchRenderer(source) {
     [
       'if (maOdkvap()) {',
       'if (maOdkvap() && !window.__QA_HIDE_GUTTER) {'
-    ],
-    [
-      "const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';",
-      "const maOdkvap = () => Boolean(BIO.gutter);"
     ]
   ];
 

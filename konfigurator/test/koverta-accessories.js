@@ -60,13 +60,16 @@ async function snapshot(page) {
   return JSON.parse(JSON.stringify(await page.evaluate(() => window.SP_TEST.snapshot())));
 }
 
-async function selectDrainage(page, wanted) {
+async function assertMandatoryDrainage(page) {
   await gotoControl(page, '[data-sp-add-opt="pick:odkvap"]');
   const options = page.locator('[data-sp-add-opt="pick:odkvap"]');
-  const option = wanted === 'ano'
-    ? options.filter({ hasText: 'So žľabom a zvodom' }).first()
-    : options.filter({ hasText: 'Bez odkvapu' }).first();
-  await option.click();
+  assert(await options.count() === 1,
+    'Koverta must expose exactly one mandatory drainage configuration');
+  const option = options.filter({ hasText: 'So žľabom a zvodom' }).first();
+  assert(await option.count() === 1 && await option.getAttribute('aria-pressed') === 'true',
+    'Mandatory gutter/downpipe option is missing or not selected');
+  assert(await options.filter({ hasText: 'Bez odkvapu' }).count() === 0,
+    'Removed no-gutter option returned');
   await page.waitForTimeout(180);
 }
 
@@ -314,20 +317,15 @@ function validateAccessoryContacts(snap, label) {
       const initial = await snapshot(page);
       assert(initial.page === 'koverta', `${device}: wrong configurator route`);
 
-      await selectDrainage(page, 'ano');
+      await assertMandatoryDrainage(page);
       const drainageOn = await svgState(page);
       const drainageSnap = await snapshot(page);
-      assert(drainageSnap.picks.odkvap === 'ano', `${device}: drainage did not enable`);
-
-      await selectDrainage(page, 'nie');
-      const drainageOff = await svgState(page);
-      assert((await snapshot(page)).picks.odkvap === 'nie',
-        `${device}: drainage did not disable`);
-      assert(drainageOn.polygons > drainageOff.polygons,
-        `${device}: enabling gutter/downpipe did not add physical geometry`);
-      assert(drainageOn.markup !== drainageOff.markup,
-        `${device}: drainage selection did not change SVG`);
-      await selectDrainage(page, 'ano');
+      assert(drainageSnap.picks.odkvap === 'ano', `${device}: mandatory drainage is not active`);
+      assert(drainageSnap.geometry.accessories.gutter &&
+        drainageSnap.geometry.accessories.downpipe,
+        `${device}: mandatory gutter/downpipe has no physical geometry`);
+      assert(drainageOn.polygons > 100 && drainageOn.markup.includes('<polygon'),
+        `${device}: mandatory drainage render is empty`);
 
       /* Insulation is bonded to the roof underside, so verify it from an
          underside view instead of weakening culling just for the test. */

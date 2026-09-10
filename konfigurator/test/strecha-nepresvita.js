@@ -56,9 +56,40 @@ const BARVY = { rimSoffitHex: '#ffcc00', trapezSoffitHex: '#ff00ff' };
         for (const el of [0.30, 0.45, 0.70, 1.10]) {
           window.SP_TEST.setView(az, el); window.SP_TEST.redraw();
           await new Promise((r) => setTimeout(r, 30));
-          const d = (await snap()).data;
+          const image = await snap();
+          const d = image.data;
+          const model = window.SP_TEST.snapshot();
+          const roof = model.geometry.roof;
+          /* Kontrolujeme iba bezpečné vnútro projekcie strechy. Pôvodný test
+             počítal žltý pozink na celom plátne, takže po odstránení
+             kamerového ON/OFF skrývania správne našiel aj rám a väznice
+             viditeľné mimo obrysu strechy. To nie je presvitanie. */
+          const insetX = Math.min(model.length * 0.18, Math.max(320, model.length * 0.07));
+          const insetY = Math.min(model.width * 0.18, Math.max(320, model.width * 0.07));
+          const zRoof = model.height + 2 + roof.ramH + roof.trapH + 1;
+          const mask = [
+            window.SP_TEST.project(insetX, insetY, zRoof),
+            window.SP_TEST.project(model.length - insetX, insetY, zRoof),
+            window.SP_TEST.project(model.length - insetX, model.width - insetY, zRoof),
+            window.SP_TEST.project(insetX, model.width - insetY, zRoof)
+          ];
+          const inside = (x, y) => {
+            let hit = false;
+            for (let i = 0, j = mask.length - 1; i < mask.length; j = i++) {
+              const a = mask[i], b = mask[j];
+              if (((a.y > y) !== (b.y > y)) &&
+                  x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) hit = !hit;
+            }
+            return hit;
+          };
+          const minX = Math.max(0, Math.floor(Math.min(...mask.map(q => q.x))));
+          const maxX = Math.min(image.width - 1, Math.ceil(Math.max(...mask.map(q => q.x))));
+          const minY = Math.max(0, Math.floor(Math.min(...mask.map(q => q.y))));
+          const maxY = Math.min(image.height - 1, Math.ceil(Math.max(...mask.map(q => q.y))));
           let zlt = 0, mag = 0;
-          for (let i = 0; i < d.length; i += 4) {
+          for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+            if (!inside(x + 0.5, y + 0.5)) continue;
+            const i = (y * image.width + x) * 4;
             const r = d[i], g = d[i + 1], bl = d[i + 2];
             if (r > 200 && g > 140 && g < 230 && bl < 120) zlt += 1;          // pozink
             if (r > 200 && g < 120 && bl > 200) mag += 1;                     // podhľad

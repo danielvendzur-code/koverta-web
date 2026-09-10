@@ -3244,7 +3244,12 @@
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
                medzi nimi ostane škára a pri plochom pohľade cez ňu presvitá
                podhľad — presne ten svetlý pruh pozdĺž hrany. */
-            const LEM_ARM = 6;
+            /* Horné rameno je skutočný tenký lemovací plech. Pri hrúbke 6 mm
+               geometricky pretínalo vrchol 36 mm trapézu; BSP potom na
+               styku občas vytiahol zelený/testovací pixel cez čistý povrch
+               lemovania. Referenčný export uvádza približne 1,5 mm plech,
+               preto rameno končí tesne nad hrebeňom bez prieniku telies. */
+            const LEM_ARM = 1.5;
             const RAM_W = REF.ramW || 74, RAM_H = REF.ramH || 220;
             const RAM_BOK = REF.ramBok || 18;        // odsadenie rámu od boku
             const RAM_ZAD = REF.ramZad || 15;        // od zadného čela
