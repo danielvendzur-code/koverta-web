@@ -17,6 +17,8 @@ function assertSourceContract() {
   assert.match(source, /const overlap = Math\.max\(0, bladeW - Math\.min\(bladeW, pitch\)\);/, 'Soltec louvers must model the fixed sealing underlap without changing blade width');
   assert.doesNotMatch(source, /const najviac = \(pitch \/ 2\)/, 'Angle-dependent louver width deformation must be removed');
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
+  assert.match(source, /const BSP_MAX = model\(\)\.kvGeom \? 320 : 28;/, 'Soltec BSP must keep its bounded interactive-depth path');
+  assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
   assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
   assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
 

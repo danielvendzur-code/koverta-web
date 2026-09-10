@@ -103,21 +103,22 @@ async function renderProbe(page, az, el, sampleFascia) {
       const snapshot = window.SP_TEST.snapshot();
       const width = snapshot.width;
       const length = snapshot.length;
-      const zTop = snapshot.height + snapshot.geometry.roof.lemH;
+      const zFace = snapshot.height + snapshot.geometry.roof.lemH * 0.56;
+      const ca = Math.cos(az);
+      const sa = Math.sin(az);
+      const viewX = -sa * Math.cos(el);
+      const viewY = ca * Math.cos(el);
       const body = [];
-      for (let t = 0.025; t <= 0.985; t += 0.075) {
-        for (const d of [25, 70, 120, 165]) {
-          body.push([d, t * width]);
-          body.push([length - d, t * width]);
-        }
-        for (const d of [30, 70, 120, 165]) {
-          body.push([t * length, d]);
-          body.push([t * length, width - d]);
-        }
+      for (let t = 0.08; t <= 0.92; t += 0.06) {
+        /* Meraj plochu viditeľného zvislého líca, nie subpixelovú hornú
+           siluetu. Vzdialené líce je strechou legitímne zakryté, preto sa v
+           každej osi vyberá iba strana obrátená ku kamere. */
+        body.push([viewX >= 0 ? length : 0, t * width]);
+        body.push([t * length, viewY >= 0 ? width : 0]);
       }
 
       for (const [x, y] of body) {
-        const point = window.SP_TEST.project(x, y, zTop);
+        const point = window.SP_TEST.project(x, y, zFace);
         const px = Math.round(point.x);
         const py = Math.round(point.y);
         if (px < 1 || py < 1 || px >= vb[2] - 1 || py >= vb[3] - 1) continue;
@@ -137,7 +138,7 @@ async function renderProbe(page, az, el, sampleFascia) {
           fasciaBleed += 1;
           if (!firstBleed) {
             const offset = (py * vb[2] + px) * 4;
-            firstBleed = { world: [x, y, zTop], pixel: [px, py], rgb: Array.from(pixels.slice(offset, offset + 4)) };
+            firstBleed = { world: [x, y, zFace], pixel: [px, py], rgb: Array.from(pixels.slice(offset, offset + 4)) };
           }
         }
       }

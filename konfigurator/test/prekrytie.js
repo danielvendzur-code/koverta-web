@@ -54,12 +54,11 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
       await new Promise((r) => setTimeout(r, 120));
       const actual = window.SP_TEST.snapshot();
       if (actual.width !== W || actual.length !== L) throw new Error('Test dimensions differ from runtime: ' + JSON.stringify(actual));
-      const zTop = actual.height + actual.geometry.roof.lemH;      // horná hrana lemovania
-      const body = [];
-      for (let t = 0.02; t <= 0.99; t += 0.06) {
-        for (const d of [25, 70, 120, 165]) { body.push([d, t * W]); body.push([L - d, t * W]); }
-        for (const d of [30, 70, 120, 165]) { body.push([t * L, d]); body.push([t * L, W - d]); }
-      }
+      /* Kontroluje sa skutočné viditeľné zvislé líce lemovania, nie jeho
+         subpixelová horná silueta. Bod presne na hornej hrane sa pri nízkom
+         pohľade premietne do jediného antialiasovaného pixela vedľa strechy a
+         jeho farba preto nehovorí nič o fyzickom prekrytí. */
+      const zFace = actual.height + actual.geometry.roof.lemH * 0.56;
       for (let ai = 0; ai < 12; ai++) {
         for (const el of [-0.15, 0.15, 0.42, 0.75, 1.12]) {
           const az = -Math.PI + (ai * Math.PI * 2) / 12;
@@ -72,9 +71,20 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 1] > 150 && pixels[i] < 130 && pixels[i + 2] < 130) green++;
             if (green < 100) throw new Error('Positive control failed: contrasting roof is missing');
           }
+          const ca = Math.cos(az), sa = Math.sin(az);
+          const viewX = -sa * Math.cos(el);
+          const viewY = ca * Math.cos(el);
+          const body = [];
+          for (let t = 0.08; t <= 0.92; t += 0.06) {
+            /* V každej osi sa meria iba líce obrátené ku kamere. Vzdialené
+               líce je legitímne zakryté strechou a jeho premietnutý bod by
+               skončil uprostred zeleného plechu. */
+            body.push([viewX >= 0 ? L : 0, t * W]);
+            body.push([t * L, viewY >= 0 ? W : 0]);
+          }
           let zlych = 0, prvy = null, prvyPx = null, prvyRgb = null;
           for (const [x, y] of body) {
-            const q = window.SP_TEST.project(x, y, zTop);
+            const q = window.SP_TEST.project(x, y, zFace);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
             const d = s.g.getImageData(px - 1, py - 1, 3, 3).data;

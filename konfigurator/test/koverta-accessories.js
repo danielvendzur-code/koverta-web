@@ -259,6 +259,18 @@ function validateAccessoryContacts(snap, label) {
   assert(downpipe.start[2] >= gutter.zBottom - 0.01 &&
     downpipe.start[2] <= gutter.zTop + 0.01,
     `${label}: downpipe throat does not start inside the gutter section`);
+  assert(downpipe.concealedFeed && downpipe.visibleStart,
+    `${label}: gutter-to-post transition metadata is missing`);
+  assertClose(downpipe.concealedFeed.from[0], downpipe.outlet[0],
+    `${label}: concealed feed is detached from the gutter outlet`);
+  assertClose(downpipe.concealedFeed.from[1], downpipe.outlet[1],
+    `${label}: concealed feed moved off the gutter outlet centreline`);
+  assertClose(downpipe.concealedFeed.to[0], downpipe.visibleStart[0],
+    `${label}: concealed feed is detached from the visible throat`);
+  assertClose(downpipe.concealedFeed.to[1], downpipe.visibleStart[1],
+    `${label}: concealed feed is laterally detached from the visible throat`);
+  assert(downpipe.concealedFeed.status === 'renderer-concept-pending-offer',
+    `${label}: unverified drainage route is presented as technical fact`);
   assertClose(downpipe.pipeCenter[1], (downpipe.post.y0 + downpipe.post.y1) / 2,
     `${label}: downpipe no longer follows the active corner-post centreline`);
   assertClose(downpipe.pipeCenter[0] - downpipe.radius,
@@ -274,7 +286,9 @@ function validateAccessoryContacts(snap, label) {
     downpipe.radius * 2 <= postMin * 0.8,
     `${label}: downpipe visual diameter is disproportionate to its active host post`);
   assert(downpipe.topTransition &&
-    downpipe.topTransition.angleDeg >= 45,
+    downpipe.topTransition.angleDeg >= 45 &&
+    downpipe.topTransition.angleDeg <= 70 &&
+    downpipe.topTransition.run <= downpipe.radius * 3.01,
     `${label}: downpipe top transition looks like a structural brace`);
 
   const bounds = downpipe.pathBounds;

@@ -2007,10 +2007,19 @@
              pri veľkých plochách klame — na streche z toho vykukol pruh rámu.
              Prístrešok Koverta má cez tri tisíc plôch, tak potrebuje hlbší
              strom než Soltec. */
-          const BSP_MAX = model().kvGeom ? 320 : 96;
+          /* Soltec počas ťahania kamery prekresľuje scénu v každom frame.
+             Rekurzívne deliť posledných pár desiatok drobných, už lokálnych
+             plôch nepridáva viditeľnú presnosť, ale pri lamelách spôsobovalo
+             explóziu fragmentov a niekoľkosekundové záseky. Veľké prekrytia
+             ďalej rieši BSP; malé listy sa stabilne zoradia podľa hĺbky a
+             existujúceho Soltec detail biasu. Koverta si ponecháva plnú,
+             hlbokú cestu potrebnú pre veľké plochy trapézu a rámu. */
+          const BSP_MAX = model().kvGeom ? 320 : 28;
+          const BSP_LEAF = model().kvGeom ? 0 : 18;
           const buildBsp = (list, depth) => {
             if (!list.length) return null;
-            if (depth > BSP_MAX) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order) };
+            if (depth > BSP_MAX || list.length <= BSP_LEAF)
+              return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order) };
             const splitterIndex = chooseSplitter(list);
             const plane = planeFor(list[splitterIndex]);
             if (!plane) return { leaf: list.slice().sort((a, b) => a.depthAvg - b.depthAvg || (a.sortBias || 0) - (b.sortBias || 0) || a.order - b.order) };
@@ -3964,14 +3973,14 @@
                  stĺpa ani zostať na starej svetovej pozícii. */
               const standoff = Math.max(4, rz * 0.14);
               const xRura = xLicStlp + rz + standoff;
-              /* Výtok je v dne žľabu a krátke koleno ho privedie k rúre na
-                 stĺpe. Jeho poloha sa odvodzuje od aktuálneho prierezu žľabu. */
+              /* Skutočný odtok ostáva v dne žľabu. Pri štvorstĺpových
+                 zostavách však aktívne osi posúvajú krajný stĺp hlboko pod
+                 strechu. Kresliť celý rozdiel ako vonkajšiu diagonálu by zo
+                 zvodu spravilo nosnú vzperu. Nepotvrdený vodorovný prestup
+                 preto ostáva ukrytý v strešnej dutine a vo vizualizácii sa
+                 prizná až krátke šikmé koleno pri stĺpe. Je to rendererový
+                 koncept; konkrétnu montážnu trasu musí potvrdiť ponuka. */
               const xVytok = zlMid;
-              /* Výška prvého kolena sa odvodzuje od vodorovného
-                 presunu medzi výtokom a osou rúry. Nie je to kóta výrobku;
-                 cieľom je zachovať plynulé, fyzicky napojené koleno pri
-                 každom podporovanom rozmere. */
-              const prechodX = Math.abs(xVytok - xRura);
               const zPata = Math.max(140, Math.min(320, H * 0.12));
               const RP = Math.max(50, rz * 2.05);
 
@@ -3979,12 +3988,12 @@
                  rendererová proporcia, nie výrobná kóta; drží sa v úzkom
                  vizuálnom pásme a smeruje rovno k najbližšiemu stĺpu. */
               const targetElbow = 56 * Math.PI / 180;
-              const maxElbow = 68 * Math.PI / 180;
+              const availableToEave = Math.max(0, L - xRura - rz - 5);
+              const prechodX = Math.min(rz * 3.0, availableToEave);
+              const xViditelnyVytok = xRura + prechodX;
               const prechodZ = prechodX > 2
-                ? Math.min(Math.max(prechodX * Math.tan(targetElbow), rz * 0.45),
-                           prechodX * Math.tan(maxElbow))
+                ? prechodX * Math.tan(targetElbow)
                 : rz * 0.55;
-              const zKoleno = zBot - Math.max(rz * 0.9, prechodZ);
 
               /* Celý zvod je jedna dráha — od výtoku pod lemovaním, krátkym
                  šikmým kolenom k lícu stĺpa, po ňom dole a vyhnutou pätkou. */
@@ -4022,9 +4031,10 @@
                 return out;
               };
               const startZ = zlBot + Math.max(4, rz * 0.12);
-              const throatZ = startZ - Math.max(8, rz * 0.32);
-              const lom = [[xVytok, yZvod, startZ], [xVytok, yZvod, throatZ]];
-              if (Math.abs(xVytok - xRura) > 2) lom.push([xRura, yZvod, throatZ - prechodZ]);
+              const throatZ = zBot - Math.max(8, rz * 0.32);
+              const lom = [[xViditelnyVytok, yZvod, startZ],
+                           [xViditelnyVytok, yZvod, throatZ]];
+              if (prechodX > 2) lom.push([xRura, yZvod, throatZ - prechodZ]);
               lom.push([xRura, yZvod, zPata]);
 
               const footClear = Math.max(0, L - xRura - rz - 5);
@@ -4049,8 +4059,14 @@
               kvAccessoryGeometry.downpipe = {
                 enabled: true,
                 radius: rz,
-                start: lom[0].slice(),
+                start: [xVytok, yZvod, zlBot],
                 outlet: [xVytok, yZvod, zlBot],
+                visibleStart: lom[0].slice(),
+                concealedFeed: {
+                  from: [xVytok, yZvod, zlBot],
+                  to: [xViditelnyVytok, yZvod, startZ],
+                  status: 'renderer-concept-pending-offer'
+                },
                 pipeCenter: [xRura, yZvod],
                 standoff,
                 topTransition: {
@@ -4063,11 +4079,9 @@
                 clamps: []
               };
               tuba(draha, rz, zvodHex);
-              /* Hrdlo prechádza priamo cez dno žľabu do prvého kolena.
-                 Horný bod je vo vnútri žľabu, takže spoj nemôže levitovať. */
-              tuba([[xVytok, yZvod, zlBot + Math.max(3, rz * 0.10)],
-                    [xVytok, yZvod, zBot - rz * 0.82]], rz * 1.10,
-                   shade(zvodHex, -0.07), false);
+              /* Prvý úsek tej istej súvislej rúry je viditeľné hrdlo. Jeho
+                 horný bod ostáva v strešnej dutine, takže spoj nelevituje;
+                 samostatná prekrytá rúra by tu vytvorila z-fighting. */
 
               /* Príchytky. Na stavbe je to úzka objímka okolo rúry a pod ňou
                  krátky plochý pásik ku stĺpu. Pásik vedie po tom kúsku, kde sa
