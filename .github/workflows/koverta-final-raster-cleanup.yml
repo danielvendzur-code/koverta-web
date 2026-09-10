@@ -1,0 +1,95 @@
+name: Koverta final raster cleanup
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: koverta-final-raster-cleanup
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply exact renderer-only repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('konfigurator/soltec-premium.js')
+          s = p.read_text(encoding='utf-8')
+
+          old = """              seamless: cleanSurface === true || (seamlessTop === true && key === '+z')
+"""
+          new = """              seamless: cleanSurface === true || (seamlessTop === true && key === '+z'),
+              /* Seal only artificial BSP fragment edges on surfaces explicitly
+                 marked clean. This never strokes the source polygon boundary and
+                 does not change world-space geometry. */
+              sealSplits: cleanSurface === true
+"""
+          if old in s:
+              if s.count(old) != 1:
+                  raise SystemExit(f'unexpected cleanSurface marker count: {s.count(old)}')
+              s = s.replace(old, new, 1)
+          elif new not in s:
+              raise SystemExit('cleanSurface seal marker not found')
+
+          old_caps = """            drawTrapEndCap(vx0, vy0, vy1, frame);
+            drawTrapEndCap(vx1, vy0, vy1, frame);
+            drawTrapSideCap(vy0, vx0, vx1, frame);
+            drawTrapSideCap(vy1, vx0, vx1, frame);
+"""
+          new_caps = """            /* The finite sheet cut sits inside the opaque fascia pocket. Use
+               the sheet finish on that hidden cut: a dark frame-colour cap can
+               otherwise appear as one tiny notch per corrugation through the
+               intentional 1 mm clearance. Geometry and drainage stay unchanged. */
+            drawTrapEndCap(vx0, vy0, vy1, vrchHex);
+            drawTrapEndCap(vx1, vy0, vy1, vrchHex);
+            drawTrapSideCap(vy0, vx0, vx1, vrchHex);
+            drawTrapSideCap(vy1, vx0, vx1, vrchHex);
+"""
+          if old_caps in s:
+              if s.count(old_caps) != 1:
+                  raise SystemExit(f'unexpected roof cap block count: {s.count(old_caps)}')
+              s = s.replace(old_caps, new_caps, 1)
+          elif new_caps not in s:
+              raise SystemExit('roof cap block not found')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          node --check konfigurator/soltec-premium.js
+          git diff --check
+
+      - name: Guard scope
+        run: |
+          git diff --exit-code HEAD -- archiv-expivi konfigurator/test coordination/koverta assets/mapa/reca.jpg
+          python3 - <<'PY'
+          import subprocess
+          changed = [x for x in subprocess.check_output(['git','diff','--name-only','HEAD'], text=True).splitlines() if x]
+          allowed = ['konfigurator/soltec-premium.js']
+          if changed not in ([], allowed):
+              raise SystemExit(f'out-of-scope files: {changed}')
+          print('scope PASS', changed)
+          PY
+
+      - name: Commit renderer repair
+        run: |
+          if git diff --quiet -- konfigurator/soltec-premium.js; then
+            echo 'Renderer repair already present.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- konfigurator/soltec-premium.js
+          git commit -m 'fix: remove Koverta fascia raster seams'
+          git push origin HEAD:fix/koverta-final-repair-20260910
