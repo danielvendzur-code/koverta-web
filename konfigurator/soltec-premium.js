@@ -3328,12 +3328,13 @@
                  plochom pohľade cez ňu bolo vidieť pod strechu — pozdĺž hrany
                  svietil svetlý pruh. */
               const zav = outer + sirka * dir;
-              /* The inner turn must overlap the hidden edge of the sheet.
-                 A zero-width butt joint at +11 mm rasterised as a dotted white
-                 line at distant views (one gap at each corrugation crown).
-                 Four millimetres of concealed lap matches the purpose of a
-                 folded flashing and changes no exterior envelope. */
-              put(zav - 9 * dir, zav + 15 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
+              /* Keep the hidden turn and the visible sheet non-coplanar and
+                 non-intersecting. A butt joint at +11 mm rasterised as dots;
+                 extending the turn through the corrugation made BSP split it
+                 at every rib and produced dots across the whole roof. The
+                 concealed 1 mm clearance avoids both failure modes without
+                 altering the outside flashing envelope. */
+              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
