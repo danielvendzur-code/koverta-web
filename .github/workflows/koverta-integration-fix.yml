@@ -1,0 +1,57 @@
+name: Koverta integration fixer
+on:
+  push:
+    branches: [agent/06-koverta-final-integration]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'Add temporary Koverta integration fixer'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/06-koverta-final-integration
+          fetch-depth: 1
+      - name: Restore verified visual occlusion guard and strengthen gutter isolation setup
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('konfigurator/soltec-premium.js')
+          s=p.read_text()
+          reps=[
+          ("              seamless: o.seamless === true,\n              depthAvg,",
+           "              seamless: o.seamless === true,\n              /* Koverta-only occlusion guard for the thin top fascia arm.\n                 This flag is opt-in; no Soltec caller sets it. */\n              paintLast: o.paintLast === true,\n              depthAvg,"),
+          ("const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop) => {",
+           "const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast) => {"),
+          ("              seamless: seamlessTop === true && key === '+z'\n            }); };",
+           "              seamless: seamlessTop === true && key === '+z',\n              paintLast: paintLast === true\n            }); };"),
+          ("const put = (u0, u1, z, dz, seamlessTop) => {\n                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop);\n                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop);\n              };",
+           "const put = (u0, u1, z, dz, seamlessTop, paintLast) => {\n                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, paintLast);\n                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, paintLast);\n              };"),
+          ("put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno",
+           "put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true, nadStrechou);  // horné rameno"),
+          ("          const stavba = faces.filter((f) => !f.bg);\n          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {",
+           "          const stavba = faces.filter((f) => !f.bg);\n          const stavbaBezna = stavba.filter((f) => !f.paintLast);\n          const stavbaNeskor = stavba.filter((f) => f.paintLast);\n          bspPaintOrder(podklad).concat(bspPaintOrder(stavbaBezna), bspPaintOrder(stavbaNeskor)).forEach((f) => {")]
+          for old,new in reps:
+              n=s.count(old)
+              if n!=1: raise SystemExit(f'renderer patch target count {n}: {old[:80]}')
+              s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('coordination/koverta/02-component-visibility.js')
+          s=p.read_text()
+          needle="      'if (maOdkvap()) {',\n      'if (maOdkvap() && !window.__QA_HIDE_GUTTER) {'\n    ]"
+          repl="      'if (maOdkvap()) {',\n      'if (maOdkvap() && !window.__QA_HIDE_GUTTER) {'\n    ],\n    [\n      \"const maOdkvap = () => Boolean(BIO.gutter) && state.picks.odkvap !== 'nie';\",\n      \"const maOdkvap = () => Boolean(BIO.gutter);\"\n    ]"
+          if s.count(needle)!=1: raise SystemExit('gutter QA patch target missing')
+          p.write_text(s.replace(needle,repl))
+          PY
+          node --check konfigurator/soltec-premium.js
+          node --check coordination/koverta/02-component-visibility.js
+          git diff --check
+      - name: Commit verified integration repair
+        run: |
+          git config user.name 'koverta-integration-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js coordination/koverta/02-component-visibility.js
+          git commit -m 'Restore Koverta fascia occlusion guard and gutter QA setup'
+          git push origin HEAD:agent/06-koverta-final-integration
