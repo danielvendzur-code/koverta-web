@@ -14,14 +14,17 @@ function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
-  assert.match(source, /const renderLouverT = Math\.max\(0\.003, state\.louverT\);/, 'Closed Soltec louvers must avoid the exact coplanar BSP singularity');
+  assert.match(source, /const ang = louverAngle\(beam, bladeW, state\.louverT\);/, 'Closed Soltec louvers must render at the exact requested angle');
+  assert.doesNotMatch(source, /renderLouverT/, 'Soltec must not fake a partially open closed stop');
+  assert.match(source, /const underReveal = revealK \* revealK \* \(3 - 2 \* revealK\);/, 'Hidden sealing underlap must reveal smoothly instead of overlapping at the closed stop');
   assert.match(source, /const cancelStageQueue = \(\) =>/, 'Soltec moving interactions must be able to cancel stale queued stage frames');
-  assert.match(source, /if \(moverTimer\) \{ window\.clearTimeout\(moverTimer\); moverTimer = 0; \}/, 'Changing louver interaction mode must clear the stale mover fallback timer');
   assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
   assert.match(source, /const topO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[-bladeUz, 0, bladeUx\] \}\);/, 'Only the broad louver top face is culled');
   assert.match(source, /const underO = Object\.assign\(\{\}, layO, \{ cull: true, normal: \[bladeUz, 0, -bladeUx\] \}\);/, 'Only the broad louver underside is culled');
-  assert.match(source, /shade\(louv, -0\.48\), layO\);/, 'The louver edge thickness must remain double-sided and visible');
-  assert.match(source, /let stagePending = 0, stageTimer = 0, stageRaf = 0;/, 'Stage scheduling must own and cancel its pending animation frame');
+  assert.match(source, /shade\(louv, -0\.08\), underFlatO\);/, 'Louver underside must be one stable material tone');
+  assert.match(source, /shade\(louv, -0\.26\), edgeO\);/, 'Louver edge thickness must remain visible');
+  assert.match(source, /let stagePending = 0, stageRaf = 0;/, 'Stage scheduling must have one animation-frame owner');
+  assert.doesNotMatch(source, /stageTimer|moverTimer/, 'Soltec motion must not race animation frames against timeout clocks');
   assert.match(source, /const flushStage = \(\) => \{ if \(stagePending\) paintStage\(\); \};/, 'Final pointer state must flush synchronously');
   assert.doesNotMatch(source, /moverTimer = window\.setTimeout\(step, 90\);/, 'Mover fallback must not race a queued animation frame');
   assert.match(source, /normal: \[bladeUz, 0, -bladeUx\]/, 'Louver-mounted LEDs must follow the rotating underside normal');

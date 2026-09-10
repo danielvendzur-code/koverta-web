@@ -28,9 +28,13 @@ function assertSharedRendererContract() {
   // Bioclimatic louvers must remain rigid and use the stable stage-only motion
   // path. These are geometry/motion invariants, not assumptions about one model.
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Bioclimatic blades must keep their physical width while rotating');
-  assert.match(source, /const renderLouverT = Math\.max\(0\.003, state\.louverT\);/, 'Closed louvers must avoid the coplanar BSP singularity');
+  assert.match(source, /const ang = louverAngle\(beam, bladeW, state\.louverT\);/, 'Closed louvers must be exactly horizontal at 0%');
+  assert.doesNotMatch(source, /renderLouverT/, 'No fake closed-stop angle may remain');
   assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving louvers must not change the stage fit');
   assert.match(source, /const cancelStageQueue = \(\) =>/, 'Louver motion must cancel stale queued stage frames');
+  assert.match(source, /edge: model\(\)\.kvGeom \? o\.edge !== false : o\.edge === true/, 'Soltec structural faces must not receive synthetic outline strokes');
+  assert.match(source, /boxFaces\(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, \[\], SHAFT, 0, false, true\);/, 'Fixed Soltec secondary profiles must retain both end caps');
+  assert.match(source, /bg: model\(\)\.kvGeom \? layer < -ROOF_LAYER : layer < -1\.5 \* ROOF_LAYER/, 'Soltec under-roof structure must not be misclassified as background');
   assert.match(source, /const flushStage = \(\) => \{ if \(stagePending\) paintStage\(\); \};/, 'Final Soltec pointer state must flush synchronously');
 }
 

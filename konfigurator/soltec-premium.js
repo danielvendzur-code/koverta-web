@@ -1855,7 +1855,12 @@
           const quad = (pts, fill, opts) => {
             const o = opts || {};
             const normal = o.normal || faceNormal(pts);
-            if (o.cull && facing(normal) <= 0) return;
+            const faceView = facing(normal);
+            /* Soltec must not drop a face a fraction before its opposite face
+               becomes visible at a grazing angle. Koverta keeps its existing
+               strict rule; Soltec gets only a numerical epsilon, not disabled
+               culling, so polygon count and performance stay stable. */
+            if (o.cull && (model().kvGeom ? faceView <= 0 : faceView < -1e-7)) return;
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
@@ -1864,10 +1869,15 @@
               w: pts.map((point) => point.slice()),
               p: pp,
               fill: lit,
-              edge: o.edge !== false,
-              /* arris:false keeps the stroke but paints it in the face's own
-                 colour, so members merge into one surface without a gap */
-              edgeCol: o.edge === false ? null : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
+              /* Koverta keeps the established outline policy. Soltec
+                 extrusions are continuous surfaces: a default SVG stroke on
+                 every polygon created the diagonal/inner/outer lines visible
+                 on the perimeter frame. Soltec outlines only an explicitly
+                 requested seam. */
+              edge: model().kvGeom ? o.edge !== false : o.edge === true,
+              edgeCol: (model().kvGeom ? o.edge === false : o.edge !== true)
+                ? null
+                : (o.edgeHex || (o.arris === false ? lit : darken(lit, 0.72))),
               fit: o.fit !== false,
               /* Priesvitná plocha sa nesmie obťahovať: keď ju maliarske
                  triedenie rozdelí, obrysy susedných kusov sa na spoji sčítajú
@@ -1886,7 +1896,7 @@
                  obrovská plocha vycentrovaná pod modelom, takže jej priemer
                  vyjde bližšie než strecha a čiary dlažby sa prekreslili cez
                  ňu. Podklad sa preto vykreslí prvý a s modelom sa netriedi. */
-              bg: layer < -ROOF_LAYER,
+              bg: model().kvGeom ? layer < -ROOF_LAYER : layer < -1.5 * ROOF_LAYER,
               order: faces.length
             });
           };
@@ -3188,13 +3198,21 @@
             const T = zAt || (() => z + d);
             const B = (x) => T(x) - d;
             const spodok = soffitHex || hex;
-            const cap = (pts, n) => quad(pts, n[2] > 0 ? hex : spodok, { normal: n, cull: true });
+            const cap = (pts, n) => quad(pts, n[2] > 0 ? hex : spodok, {
+              normal: n, cull: true,
+              edge: model().kvGeom ? undefined : false,
+              seamless: !model().kvGeom
+            });
             /* Vonkajšie líce je to, ktoré leží na obryse rámu; vnútorné sedí
                o hrúbku profilu ďalej a lemovanie naň nesiaha. */
             const web = (pts, n) => {
               const px = pts[0][0], py = pts[0][1];
               const vonku = px === x0 || px === x1 || py === y0 || py === y1;
-              quad(pts, vonku ? hex : spodok, { normal: n, cull: true, arris: false });
+              quad(pts, vonku ? hex : spodok, {
+                normal: n, cull: true, arris: false,
+                edge: model().kvGeom ? undefined : false,
+                seamless: !model().kvGeom
+              });
             };
             // predný profil, y od y0 po iy0
             nearSide([0, -1, 0]);
@@ -4242,7 +4260,7 @@
             const drawSec = (x0, x1, zTop, hex) => {
               const w = x1 - x0;
               if (!twinC || w < 24) {
-                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, ['-y', '+y']);
+                boxFaces(x0, inY0, zTop - rd, w, inY1 - inY0, rd, hex, [], SHAFT, 0, false, true);
                 return;
               }
               const half = w / 2;
@@ -4299,10 +4317,10 @@
               const pane = glass ? { raw: true, bias: ON_SKIN } : { bias: integratedFall ? -20 : -600 };
               quad([[a, inY0, panelTopZ(a, inY0)], [b, inY0, panelTopZ(b, inY0)],
                     [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], skinTop,
-                   Object.assign({ cull: true, edgeHex: seamTop }, pane));
+                   Object.assign({ cull: true, edge: true, edgeHex: seamTop }, pane));
               quad([[a, inY1, panelBottomZ(a, inY1)], [b, inY1, panelBottomZ(b, inY1)],
                     [b, inY0, panelBottomZ(b, inY0)], [a, inY0, panelBottomZ(a, inY0)]], skinLow,
-                   Object.assign({ cull: true, edgeHex: seamLow }, pane));
+                   Object.assign({ cull: true, edge: true, edgeHex: seamLow }, pane));
               /* Odlesk oblohy. Skutočná panelová ani sklenená strecha nie je
                  jeden plochý tón — zbiera oblohu, najsvetlejšia je pri hrane
                  otočenej k slnku a smerom k divákovi zoslabne. Bez toho vyzerá
@@ -4427,14 +4445,10 @@
             const pitch = (i1 - i0) / n;
             const blade = louverSize();
             const bladeW = blade.w;                      // "lamela 200" or "lamela 270"
-            /* Exactly zero degrees makes every neighbouring underside plane
-               mathematically coplanar. The simplified sealing overlap then
-               gives BSP several valid paint orders and tiny camera changes can
-               reshuffle them. Keep the visual closed stop, but render it a
-               fraction of a degree off the singular plane. Across a 200 mm
-               blade this is sub-millimetre and not visually measurable. */
-            const renderLouverT = Math.max(0.003, state.louverT);
-            const ang = louverAngle(beam, bladeW, renderLouverT);
+            /* Closed means closed. At 0 % the lamella is exactly horizontal;
+               the hidden sealing underlap is clipped from the visible underside
+               instead of faking a partially open roof. */
+            const ang = louverAngle(beam, bladeW, state.louverT);
             const y0 = post, y1 = W - post;
             const lap = 30;   // blades tuck under the rails rather than butting them
             /* Lamela je tuhé teleso: jej fyzická šírka sa počas pohybu
@@ -4445,6 +4459,12 @@
             const fullHalf = bladeW / 2;
             const overlap = Math.max(0, bladeW - Math.min(bladeW, pitch));
             const topLeadS = -fullHalf + overlap;
+            /* The underlap is completely hidden when closed and becomes visible
+               continuously as the roof starts opening. This removes the broad
+               coplanar underside overlap that caused the last 15 -> 0 % jitter. */
+            const revealK = Math.max(0, Math.min(1, state.louverT / 0.12));
+            const underReveal = revealK * revealK * (3 - 2 * revealK);
+            const underLeadS = topLeadS + (-fullHalf - topLeadS) * underReveal;
             const bladeUx = Math.cos(ang), bladeUz = Math.sin(ang);
             const dx = fullHalf * bladeUx, dz = fullHalf * bladeUz;
             /* The roof plane finishes level with the top of the frame at every
@@ -4470,11 +4490,12 @@
               const x = i0 + pitch * (i + 0.5);
               const fullAX = x - dx, fullAZ = mid - dz;
               const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
+              const underAX = x + underLeadS * bladeUx, underAZ = mid + underLeadS * bladeUz;
               const bX = x + dx, bZ = mid + dz;
               /* Shut, the blades overlap and lie in one plane, so a centroid
                  cannot order them. Stepping the bias along the run makes each
                  blade lap the one before it, the way they actually close. */
-              const lay = { bias: i * 0.02 };
+              const lay = { bias: i * 2 };
               /* Zospodu je vidieť len rub lamiel a ich čelnú hranu. Rub mal
                  -0.20 a hrana -0.30, čo je na antracite rozdiel, ktorý oko
                  nerozozná: strecha zdola vyzerala ako jedna hladká doska a
@@ -4516,22 +4537,23 @@
               const jX = aX + (bX - aX) * lapF, jZ = aZ + (bZ - aZ) * lapF;
               quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), topO);
               quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), topO);
-              /* Rub lamely nie je jeden tón. Horná hrana je zastrčená pod
-                 susednou lamelou, takže tá polovica je v jej tieni; spodná
-                 hrana je otvorená k oblohe a je svetlejšia. Rub sa preto
-                 kreslí ako dva pásy. Je to skutočný jav a zároveň jediné,
-                 čo dá radu lamiel kontrast aj na antracite — na bielej bolo
-                 všetko vidieť, na tmavej sa strecha zdola zlievala do dosky. */
-              const sX = (fullAX + bX) / 2 + ox, sZ = (fullAZ + bZ) / 2 + oz;
-              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), underO);
-              quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), underO);
-              quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]], shade(louv, -0.48), layO);
-              /* Pevný tesniaci podklad uzatvára skutočnú šírku profilu.
-                 Pri zatvorení leží pod koncom susednej lamely, takže horné
-                 plochy sa iba stretnú na hrane a BSP nemusí deliť dve veľké
-                 koplanárne plochy. Celý tento profil sa potom iba otáča. */
+              /* One powder-coated underside, not two painted fake-shadow
+                 bands. From below the same lamella must not change colour merely
+                 because the camera moved. Geometry carries the depth cue. */
+              const underFlatO = Object.assign({}, underO, { raw: true, edge: false });
+              const edgeO = Object.assign({}, layO, { raw: true, edge: false });
+              quad([[underAX+ox,y1+lap,underAZ+oz],[bX+ox,y1+lap,bZ+oz],
+                    [bX+ox,y0-lap,bZ+oz],[underAX+ox,y0-lap,underAZ+oz]],
+                   shade(louv, -0.08), underFlatO);
+              quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]],
+                   shade(louv, -0.26), edgeO);
+              /* Always emit the physical underlap side. At 0 % it degenerates
+                 to zero width, which keeps topology/count stable without any
+                 visible coplanar surface; it opens continuously afterwards. */
               if (overlap > 0.5)
-                quad([[fullAX+ox,y0-lap,fullAZ+oz],[aX,y0-lap,aZ],[aX,y1+lap,aZ],[fullAX+ox,y1+lap,fullAZ+oz]], shade(louv, -0.40), layO);
+                quad([[underAX+ox,y0-lap,underAZ+oz],[aX,y0-lap,aZ],
+                      [aX,y1+lap,aZ],[underAX+ox,y1+lap,underAZ+oz]],
+                     shade(louv, -0.18), edgeO);
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */
@@ -5201,13 +5223,11 @@
         /* Snímok nemusí prísť — v skrytej karte prehliadač rAF nespustí vôbec.
            Bez záložného časovača by posuvník aj beh ticho nič neurobili, presne
            ako to už rieši  o kus vyššie. */
-        let stagePending = 0, stageTimer = 0, stageRaf = 0;
+        let stagePending = 0, stageRaf = 0;
         const paintStage = () => {
           if (!stagePending) return;
           stagePending = 0;
           if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
-          window.clearTimeout(stageTimer);
-          stageTimer = 0;
           drawStage();
           syncSideMove();
           syncLouverReadout();
@@ -5216,22 +5236,18 @@
           if (stagePending) return;
           stagePending = 1;
           stageRaf = window.requestAnimationFrame(paintStage);
-          stageTimer = window.setTimeout(paintStage, 60);
         };
         const flushStage = () => { if (stagePending) paintStage(); };
         const cancelStageQueue = () => {
           stagePending = 0;
           if (stageRaf) { window.cancelAnimationFrame(stageRaf); stageRaf = 0; }
-          window.clearTimeout(stageTimer);
-          stageTimer = 0;
         };
 
-        let louverRun = 0, moverTimer = 0;
+        let louverRun = 0;
         const runMover = (ch, target, immediate) => {
           const M = MOVER[ch];
           const to = Math.max(0, Math.min(1, target));
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
-          if (moverTimer) { window.clearTimeout(moverTimer); moverTimer = 0; }
           /* A slider/camera frame queued before this animation must never
              repaint an older state in the middle of the new motion. */
           cancelStageQueue();
@@ -5259,30 +5275,14 @@
             syncLouverReadout();
             if (k < 1) {
               louverRun = requestAnimationFrame(step);
-              window.clearTimeout(moverTimer);
-              moverTimer = window.setTimeout(() => {
-                /* rAF is the primary clock. The timeout is only a fallback for
-                   throttled/hidden tabs; if it wins, cancel the queued rAF so
-                   one physical instant can never be rendered twice. */
-                if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
-                moverTimer = 0;
-                step(clockNow());
-              }, 90);
               return;
             }
             louverRun = 0;
-            window.clearTimeout(moverTimer);
-            moverTimer = 0;
             /* k === 1 was already rendered above with M.set(to). Do not draw
                the identical endpoint a second time: near the closed coplanar
                state that redundant BSP pass was visible as a final settle. */
           };
           louverRun = requestAnimationFrame(step);
-          moverTimer = window.setTimeout(() => {
-            if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
-            moverTimer = 0;
-            step(clockNow());
-          }, 90);
         };
 
         /* Vonkajšia nadstavba (tlačidlá „Zavrieť všetko" / „Otvoriť všetko")
@@ -5331,10 +5331,6 @@
         const startHold = (dir, ch) => {
           if (hold) return;
           if (louverRun) { cancelAnimationFrame(louverRun); louverRun = 0; }
-          /* runMover has a timeout fallback as well as rAF. Cancelling only
-             rAF left that stale fallback alive and it could move the blades
-             backwards one frame after a new hold started. */
-          if (moverTimer) { window.clearTimeout(moverTimer); moverTimer = 0; }
           cancelStageQueue();
           holdCh = ch || 'louver';
           holdDir = dir;
