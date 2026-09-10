@@ -79,8 +79,12 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             /* V každej osi sa meria iba líce obrátené ku kamere. Vzdialené
                líce je legitímne zakryté strechou a jeho premietnutý bod by
                skončil uprostred zeleného plechu. */
-            body.push([viewX >= 0 ? L : 0, t * W]);
-            body.push([t * L, viewY >= 0 ? W : 0]);
+            /* A face viewed exactly edge-on has zero projected area. Sampling
+               its world coordinates measures the roof behind it, not fascia
+               coverage. Keep the same dense probes on every face that has a
+               real camera-facing component. */
+            if (Math.abs(viewX) > 1e-6) body.push([viewX >= 0 ? L : 0, t * W]);
+            if (Math.abs(viewY) > 1e-6) body.push([t * L, viewY >= 0 ? W : 0]);
           }
           let zlych = 0, prvy = null, prvyPx = null, prvyRgb = null;
           for (const [x, y] of body) {
