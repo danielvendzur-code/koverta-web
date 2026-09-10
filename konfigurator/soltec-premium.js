@@ -3853,7 +3853,12 @@
               /* Prierez zvodu nie je v dostupných podkladoch technicky
                  kótovaný. Pre vizualizáciu sa odvodí od skutočného prierezu
                  aktívneho rohového stĺpa, nie z generického 120 mm placeholdera. */
-              const rz = Math.max(22, Math.min(38, Math.min(rezZvod.w, rezZvod.d) * 0.22));
+              /* Na referenčných realizáciách je zvod čitateľný ako samostatná
+                 rúra aj pri pohľade popri stĺpe. Predošlý renderer ho pri
+                 štíhlejšom 110 mm stĺpe zmenšil na priemer 48 mm, takže
+                 horný úsek vyzeral ako tenká konštrukčná vzpera. Toto je
+                 stále iba vizuálny pomer (nie deklarovaný priemer výrobku). */
+              const rz = Math.max(34, Math.min(42, Math.min(rezZvod.w, rezZvod.d) * 0.28));
               const xStlp = rada.length ? rada[xiZvod] : L - rezZvod.d;
               const xLicStlp = xStlp + rezZvod.d;
               const vsunStlp = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
@@ -3952,8 +3957,9 @@
                  presunu medzi výtokom a osou rúry. Nie je to kóta výrobku;
                  cieľom je zachovať plynulé, fyzicky napojené koleno pri
                  každom podporovanom rozmere. */
-              const zKoleno = zBot -
-                Math.max(rz * 1.8, Math.abs(xVytok - xRura) * 0.7 + rz * 1.4);
+              const prechodX = Math.abs(xVytok - xRura);
+              const prechodZ = Math.max(rz * 2.2, prechodX * 1.15 + rz * 1.8);
+              const zKoleno = zBot - prechodZ;
               const zPata = Math.max(140, Math.min(320, H * 0.12));
               const RP = Math.max(55, rz * 2.25);
 
@@ -4017,6 +4023,13 @@
                 outlet: [xVytok, yZvod, zlBot],
                 pipeCenter: [xRura, yZvod],
                 standoff,
+                topTransition: {
+                  run: prechodX,
+                  drop: prechodZ,
+                  angleDeg: prechodX > 2
+                    ? Math.atan2(prechodZ, prechodX) * 180 / Math.PI
+                    : 90
+                },
                 post: { x0: xStlp, x1: xLicStlp, y0: yPost0, y1: yPost1 },
                 pathBounds: pipeBounds,
                 clamps: []

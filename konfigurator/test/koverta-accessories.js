@@ -261,6 +261,19 @@ function validateAccessoryContacts(snap, label) {
   assertClose(downpipe.pipeCenter[0] - downpipe.radius,
     downpipe.post.x1 + downpipe.standoff,
     `${label}: downpipe shell/standoff is detached from the active corner-post face`);
+  /* Priemer a uhol nie sú technické kóty: toto stráži iba vizuálnu regresiu,
+     pri ktorej sa rúra zmenila na tenkú, dlhú diagonálu podobnú vzpere. */
+  const postMin = Math.min(
+    downpipe.post.x1 - downpipe.post.x0,
+    downpipe.post.y1 - downpipe.post.y0
+  );
+  assert(downpipe.radius * 2 >= postMin * 0.5 &&
+    downpipe.radius * 2 <= postMin * 0.8,
+    `${label}: downpipe visual diameter is disproportionate to its active host post`);
+  assert(downpipe.topTransition &&
+    downpipe.topTransition.angleDeg >= 45 &&
+    downpipe.topTransition.angleDeg <= 75,
+    `${label}: downpipe top transition looks like a structural brace`);
 
   const bounds = downpipe.pathBounds;
   assert(bounds.xMin >= assembly.xMin - 0.01 &&
