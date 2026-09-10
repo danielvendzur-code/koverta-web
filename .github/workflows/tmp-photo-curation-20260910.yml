@@ -83,7 +83,6 @@ jobs:
                   raise SystemExit(f"Missing required asset: {path}")
               return image_size(path)
 
-          # Koverta carports: preserve the already-correct alternate-angle hero.
           p = "pristresky-pre-auta/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1nxq4twPeH1LSifkgS31HQGO4M3e4k2fs=w2000" fetchpriority="high">',
@@ -99,7 +98,6 @@ jobs:
               '<img src="../assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Dvojmiestny prístrešok pri rodinnom dome" loading="lazy" decoding="async">',
               f'<img src="../assets/koverta-pristresok-auto-trnava-hero.jpg" width="{w}" height="{h}" alt="Dvojmiestny prístrešok Koverta v Trnave — pohľad z iného uhla" title="Prístrešok Koverta pre dve autá — Trnava" loading="lazy" decoding="async">')
 
-          # Koverta garden canopy: keep the chosen hero, use a different Bratislava angle in body.
           p = "zahradne-pristresky/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1-f0lkIcKvJ2xBggzkDtgVhivR-Rl5haD=w2000" fetchpriority="high">',
@@ -109,15 +107,16 @@ jobs:
               '<img src="../assets/koverta-zahradny-pristresok-bratislava-detail.jpg" width="1600" height="1200" alt="Detail nosnej konštrukcie záhradného prístrešku Koverta v Bratislave" decoding="async" loading="lazy">',
               f'<img src="../assets/koverta-zahradny-pristresok-bratislava-hero.jpg" width="{w}" height="{h}" alt="Záhradný prístrešok Koverta v Bratislave — pohľad z iného uhla" title="Záhradný prístrešok Koverta — Bratislava" decoding="async" loading="lazy">')
 
-          # Soltec carport: professional photography becomes primary; customer photos stay supporting.
           p = "carport-soltec/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="../assets/soltec-carport-plavecky-03.jpg" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/soltec-carport-sl240-real.jpg" fetchpriority="high">')
           replace_exact(p,
-              'https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-plavecky-03.jpg',
-              'https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg',
-              expected=2)
+              '<meta property="og:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-plavecky-03.jpg">',
+              '<meta property="og:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg">')
+          replace_exact(p,
+              '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-plavecky-03.jpg">',
+              '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg">')
           w, h = dims("soltec-carport-sl240-real.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-carport-toth-nitra-clean.jpg" width="2200" height="1650" alt="Hliníkový carport Soltec SL 240 pre dve autá — realizácia Nitra" fetchpriority="high" decoding="async">',
@@ -131,14 +130,12 @@ jobs:
               '<img src="../assets/soltec-roof-glass.jpg" width="1600" height="1132" alt="Sklenená výplň strechy" decoding="async" loading="lazy">',
               f'<img src="../assets/soltec-roof-iso.jpg" width="{w}" height="{h}" alt="ISO panel strechy hliníkového carportu Soltec" title="Strecha carportu Soltec — ISO panel 30 mm" decoding="async" loading="lazy">')
 
-          # Fixed Soltec canopies: professional hero remains primary; gallery uses a real Slovak install.
           p = "pevne-prestresenia/index.html"
           w, h = dims("soltec-pevne-prestresenie-mokrance.jpg")
           replace_exact(p,
               '<img src="../assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Prístrešok s pevnou strechou nad terasou" loading="lazy" decoding="async">',
               f'<img src="../assets/soltec-pevne-prestresenie-mokrance.jpg" width="{w}" height="{h}" alt="Pevné hliníkové prestrešenie Soltec pri rodinnom dome v Mokranciach" title="Pevné prestrešenie Soltec — Mokrance" loading="lazy" decoding="async">')
 
-          # Bioclimatic pergola: replace only duplicates with semantically accurate alternatives.
           p = "bioklimaticke-pergoly/index.html"
           w, h = dims("soltec-accessory-walls.jpg")
           replace_exact(p,
@@ -149,26 +146,28 @@ jobs:
               '<img src="../assets/soltec-bio-vecer-led.jpg" alt="Bioklimatická pergola s LED osvetlením večer" width="1600" height="960" loading="lazy" decoding="async">',
               f'<img src="../assets/soltec-bioklimaticka-pergola-limbach.jpg" alt="Bioklimatická pergola Soltec pri rodinnom dome v Limbachu" title="Bioklimatická pergola Soltec — realizácia Limbach" width="{w}" height="{h}" loading="lazy" decoding="async">')
 
-          # SEO/social metadata points to the actual local hero, not stale Shopify assets.
           p = "tienenie/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1800" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/soltec-tienenie-lamely-velka-luka.jpg" fetchpriority="high">')
           replace_exact(p,
-              'https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1200',
-              'https://danielvendzur-code.github.io/koverta-web/assets/soltec-tienenie-lamely-velka-luka.jpg',
-              expected=2)
+              '<meta property="og:image" content="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1200">',
+              '<meta property="og:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-tienenie-lamely-velka-luka.jpg">')
+          replace_exact(p,
+              '<meta name="twitter:image" content="https://koverta.sk/cdn/shop/files/20250522_144820.jpg?width=1200">',
+              '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-tienenie-lamely-velka-luka.jpg">')
 
           p = "outdoor-kuchyne/index.html"
           replace_exact(p,
               '<link rel="preload" as="image" href="../assets/soltec-kuchyna-pergola.jpg" fetchpriority="high">',
               '<link rel="preload" as="image" href="../assets/soltec-outdoor-kuchyna-graz.jpg" fetchpriority="high">')
           replace_exact(p,
-              'https://koverta.sk/cdn/shop/files/Graz_Showroom_horizontal_1.png?width=1200',
-              'https://danielvendzur-code.github.io/koverta-web/assets/soltec-outdoor-kuchyna-graz.jpg',
-              expected=2)
+              '<meta property="og:image" content="https://koverta.sk/cdn/shop/files/Graz_Showroom_horizontal_1.png?width=1200">',
+              '<meta property="og:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-outdoor-kuchyna-graz.jpg">')
+          replace_exact(p,
+              '<meta name="twitter:image" content="https://koverta.sk/cdn/shop/files/Graz_Showroom_horizontal_1.png?width=1200">',
+              '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-outdoor-kuchyna-graz.jpg">')
 
-          # Validate every local asset reference in the changed pages.
           local_ref = re.compile(r'(?:src|href)="\.\./assets/([^"?#]+)')
           photo_src = re.compile(r'<img\b[^>]*\bsrc="\.\./assets/([^"?#]+\.(?:jpe?g|png|webp))"', re.I)
           for html in sorted(allowed_files):
@@ -178,7 +177,6 @@ jobs:
                   if not asset.is_file():
                       raise SystemExit(f"{html}: broken local asset reference: {asset}")
 
-              # User requirement: no exact photo repeats inside a product subpage's main content.
               start = text.find('<main class="k"')
               end = text.rfind('</main>')
               if start < 0 or end < start:
