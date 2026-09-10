@@ -10,35 +10,23 @@ permissions:
   contents: read
 
 jobs:
-  isolate:
+  pixel-owner:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [baseline, seal-clean-splits]
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-      - name: Apply diagnostic variant in checkout only
-        env:
-          VARIANT: ${{ matrix.variant }}
+      - name: Instrument checkout only
         run: |
           python3 - <<'PY'
-          import os
           from pathlib import Path
-          p = Path('konfigurator/soltec-premium.js')
-          s = p.read_text(encoding='utf-8')
-          v = os.environ['VARIANT']
-          if v == 'seal-clean-splits':
-              old = "            if (!f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];"
-              new = "            if (!f.sealSplits || !Array.isArray(f.sourceW)) return [];"
-              if s.count(old) != 1: raise SystemExit(f'seal guard count={s.count(old)}')
-              s = s.replace(old, new, 1)
-          elif v != 'baseline':
-              raise SystemExit('unknown variant')
-          p.write_text(s, encoding='utf-8')
+          p=Path('konfigurator/soltec-premium.js')
+          s=p.read_text(encoding='utf-8')
+          old="            const a = { points: pts, fill: f.fill };"
+          new="            const a = { points: pts, fill: f.fill, 'data-dbg-world': f.w.map((q) => q.map((v) => Number(v).toFixed(2)).join(',')).join(';'), 'data-dbg-order': String(f.order), 'data-dbg-depth': Number(f.depthAvg).toFixed(3), 'data-dbg-edge': String(Boolean(f.edge)), 'data-dbg-seal': String(Boolean(f.sealSplits)) };"
+          if s.count(old)!=1: raise SystemExit(f'paint marker count={s.count(old)}')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
           PY
           node --check konfigurator/soltec-premium.js
           git diff --check
@@ -50,28 +38,65 @@ jobs:
           sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Start static server
+      - name: Start server
         run: |
           python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
-            sleep 1
-          done
-          cat /tmp/koverta-http.log
-          exit 1
-      - name: Render same accessory evidence
-        env:
-          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
-        run: node konfigurator/test/koverta-accessories.js
-      - name: Keep only diagnostic views
-        if: always()
+          for i in {1..30}; do curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null && exit 0; sleep 1; done
+          cat /tmp/koverta-http.log; exit 1
+      - name: Identify exact pixel owners
         run: |
-          mkdir -p diagnostic
-          find qa-artifacts -maxdepth 1 -type f \( -name 'koverta-accessories-front-7000x6000-desktop.png' -o -name 'koverta-accessories-side-7000x6000-desktop.png' -o -name 'koverta-accessories-under-7000x6000-desktop.png' -o -name 'koverta-accessories-corner-7000x6000-desktop.png' \) -exec cp {} diagnostic/ \; || true
-      - name: Upload diagnostic views
+          cat > /tmp/pixel-owner.js <<'JS'
+          const fs=require('node:fs');
+          const {chromium}=require('playwright');
+          const URL='http://127.0.0.1:8901/konfigurator/?page=koverta';
+          async function gotoControl(page,selector){
+            const c=page.locator(selector).first(); await c.waitFor({state:'attached'});
+            const step=await c.evaluate(el=>{const h=el.closest('[data-sp-stepno]'); return h?Number(h.dataset.spStepno):null});
+            if(step!=null){await page.locator(`[data-sp-goto="${step}"]`).click(); await page.waitForTimeout(80)}
+          }
+          async function enableExtra(page,id){
+            await gotoControl(page,'[data-sp-add-on="x-kv"]');
+            const group=page.locator('[data-sp-add-on="x-kv"]').first();
+            if(!await group.isChecked()){await group.locator('xpath=ancestor::label[1]').click(); await page.waitForTimeout(100)}
+            const plus=page.locator(`[data-sp-x="${id}"][data-sp-xd="1"]`).first(); await plus.waitFor({state:'visible'}); await plus.click(); await page.waitForTimeout(180);
+          }
+          async function setSize(page,w,l){
+            await gotoControl(page,'[data-sp-w]');
+            await page.evaluate(({w,l})=>{for(const [sel,v] of [['[data-sp-w]',w],['[data-sp-l]',l]]){const el=document.querySelector(sel);el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}))}},{w,l});
+            await page.waitForTimeout(240);
+          }
+          (async()=>{
+            fs.mkdirSync('diagnostic',{recursive:true});
+            const browser=await chromium.launch({args:['--no-sandbox']});
+            const ctx=await browser.newContext({viewport:{width:1440,height:1000}}); const page=await ctx.newPage();
+            await page.goto(URL,{waitUntil:'load',timeout:60000});
+            const reject=page.getByRole('button',{name:'Iba nevyhnutné'}); if(await reject.count()) await reject.first().click();
+            await page.waitForFunction(()=>Boolean(window.SP_TEST&&document.querySelector('[data-sp-canvas] polygon')));
+            await page.locator('[data-sp-view="under"]').click(); await page.waitForTimeout(150);
+            await enableExtra(page,'kv-izol'); await enableExtra(page,'kv-led'); await setSize(page,7000,6000);
+            await page.locator('[data-sp-view="side"]').click(); await page.waitForTimeout(300);
+            const stage=page.locator('.sp-stage'); await stage.screenshot({path:'diagnostic/side.png'});
+            const result=await page.evaluate(()=>{
+              const stage=document.querySelector('.sp-stage'); const r=stage.getBoundingClientRect();
+              const targets=[[417,169],[402,182],[424,173],[397,179],[393,177]];
+              const polys=[...document.querySelectorAll('[data-sp-canvas] polygon')];
+              const hit=(el,sx,sy)=>{
+                try { const m=el.getScreenCTM(); if(!m||typeof el.isPointInFill!=='function') return false; const p=new DOMPoint(sx,sy).matrixTransform(m.inverse()); return el.isPointInFill(p); } catch(e){return false;}
+              };
+              return targets.map(([lx,ly])=>{
+                const sx=r.left+lx, sy=r.top+ly;
+                const hits=polys.filter(p=>hit(p,sx,sy)).map((p,i)=>({domIndex:polys.indexOf(p),fill:p.getAttribute('fill'),stroke:p.getAttribute('stroke'),world:p.getAttribute('data-dbg-world'),order:p.getAttribute('data-dbg-order'),depth:p.getAttribute('data-dbg-depth'),edge:p.getAttribute('data-dbg-edge'),seal:p.getAttribute('data-dbg-seal')}));
+                return {local:[lx,ly],screen:[sx,sy],topElement:(document.elementFromPoint(sx,sy)||{}).outerHTML?.slice(0,500)||null,hits:hits.slice(-12)};
+              });
+            });
+            fs.writeFileSync('diagnostic/pixel-owners.json',JSON.stringify(result,null,2)); console.log(JSON.stringify(result,null,2));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/pixel-owner.js
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: koverta-diagnostic5-${{ matrix.variant }}
+          name: koverta-pixel-owner
           path: diagnostic
           if-no-files-found: error
