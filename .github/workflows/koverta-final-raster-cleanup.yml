@@ -27,46 +27,38 @@ jobs:
           from pathlib import Path
           p = Path('konfigurator/soltec-premium.js')
           s = p.read_text(encoding='utf-8')
-
-          old = """              seamless: cleanSurface === true || (seamlessTop === true && key === '+z')
-"""
-          new = """              seamless: cleanSurface === true || (seamlessTop === true && key === '+z'),
-              /* Seal only artificial BSP fragment edges on surfaces explicitly
-                 marked clean. This never strokes the source polygon boundary and
-                 does not change world-space geometry. */
-              sealSplits: cleanSurface === true
-"""
+          old = "              seamless: cleanSurface === true || (seamlessTop === true && key === '+z')\n"
+          new = "              seamless: cleanSurface === true || (seamlessTop === true && key === '+z'),\n              /* Seal only artificial BSP fragment edges on surfaces explicitly\n                 marked clean. This never strokes the source polygon boundary and\n                 does not change world-space geometry. */\n              sealSplits: cleanSurface === true\n"
           if old in s:
               if s.count(old) != 1:
                   raise SystemExit(f'unexpected cleanSurface marker count: {s.count(old)}')
               s = s.replace(old, new, 1)
           elif new not in s:
               raise SystemExit('cleanSurface seal marker not found')
-
-          old_caps = """            drawTrapEndCap(vx0, vy0, vy1, frame);
-            drawTrapEndCap(vx1, vy0, vy1, frame);
-            drawTrapSideCap(vy0, vx0, vx1, frame);
-            drawTrapSideCap(vy1, vx0, vx1, frame);
-"""
-          new_caps = """            /* The finite sheet cut sits inside the opaque fascia pocket. Use
-               the sheet finish on that hidden cut: a dark frame-colour cap can
-               otherwise appear as one tiny notch per corrugation through the
-               intentional 1 mm clearance. Geometry and drainage stay unchanged. */
-            drawTrapEndCap(vx0, vy0, vy1, vrchHex);
-            drawTrapEndCap(vx1, vy0, vy1, vrchHex);
-            drawTrapSideCap(vy0, vx0, vx1, vrchHex);
-            drawTrapSideCap(vy1, vx0, vx1, vrchHex);
-"""
+          old_caps = "\n".join([
+              "            drawTrapEndCap(vx0, vy0, vy1, frame);",
+              "            drawTrapEndCap(vx1, vy0, vy1, frame);",
+              "            drawTrapSideCap(vy0, vx0, vx1, frame);",
+              "            drawTrapSideCap(vy1, vx0, vx1, frame);",
+          ]) + "\n"
+          new_caps = "\n".join([
+              "            /* The finite sheet cut sits inside the opaque fascia pocket. Use",
+              "               the sheet finish on that hidden cut: a dark frame-colour cap can",
+              "               otherwise appear as one tiny notch per corrugation through the",
+              "               intentional 1 mm clearance. Geometry and drainage stay unchanged. */",
+              "            drawTrapEndCap(vx0, vy0, vy1, vrchHex);",
+              "            drawTrapEndCap(vx1, vy0, vy1, vrchHex);",
+              "            drawTrapSideCap(vy0, vx0, vx1, vrchHex);",
+              "            drawTrapSideCap(vy1, vx0, vx1, vrchHex);",
+          ]) + "\n"
           if old_caps in s:
               if s.count(old_caps) != 1:
                   raise SystemExit(f'unexpected roof cap block count: {s.count(old_caps)}')
               s = s.replace(old_caps, new_caps, 1)
           elif new_caps not in s:
               raise SystemExit('roof cap block not found')
-
           p.write_text(s, encoding='utf-8')
           PY
-
           node --check konfigurator/soltec-premium.js
           git diff --check
 
