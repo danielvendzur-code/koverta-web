@@ -13,13 +13,15 @@ const ARTIFACT_DIR = path.join(ROOT, 'qa-artifacts', 'soltec-motion');
 function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
-  assert.match(source, /const half = bladeW \/ 2;/, 'Soltec louvers must keep their physical width while rotating');
+  assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
+  assert.match(source, /const overlap = Math\.max\(0, bladeW - Math\.min\(bladeW, pitch\)\);/, 'Soltec louvers must model the fixed sealing underlap without changing blade width');
   assert.doesNotMatch(source, /const najviac = \(pitch \/ 2\)/, 'Angle-dependent louver width deformation must be removed');
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
   assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
+  assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
 
   // The explicit request is to leave Koverta alone. Its hard occlusion guard
-  // must still exist in this experimental Soltec branch until a separate Koverta task changes it.
+  // stays intact in this Soltec-only branch.
   assert.match(source, /const nadStrechou = \(H \/ 2 \+ se \* DIST\) >= H \+ beam;/, 'Koverta camera occlusion guard was unexpectedly changed');
   assert.match(source, /if \(!nadStrechou\)\s*cProfil\('x'/, 'Koverta purlin guard was unexpectedly changed');
 }
@@ -43,19 +45,19 @@ function percentile(values, p) {
   const cfg = page.locator('#SoltecPremium [data-sp-cfg]');
   await cfg.scrollIntoViewIfNeeded();
   await cfg.dispatchEvent('pointerdown', { pointerId: 41, pointerType: 'mouse', clientX: 20, clientY: 20 });
-  await page.waitForFunction(() => window.SP_TEST && document.querySelector('#SoltecPremium [data-sp-canvas] polygon'), null, { timeout: 20_000 });
+  await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.redrawStage && document.querySelector('#SoltecPremium [data-sp-canvas] polygon'), null, { timeout: 20_000 });
 
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
 
-  // Camera sweep through the low-elevation region where Koverta has its hard
-  // nadStrechou threshold. Soltec must not show a comparable one-frame face-count collapse.
+  // Sweep directly through the low-elevation region. The test uses only the
+  // stage renderer so it measures geometry/render behavior rather than rebuilding UI.
   const cameraCounts = [];
   for (let i = 0; i <= 24; i += 1) {
     const el = -0.04 + i * 0.01;
     const count = await page.evaluate(([az, elevation]) => {
       window.SP_TEST.setView(az, elevation);
-      window.SP_TEST.redraw();
+      window.SP_TEST.redrawStage();
       return document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length;
     }, [-0.62, el]);
     cameraCounts.push({ el, count });
@@ -67,8 +69,7 @@ function percentile(values, p) {
     assert.ok(relativeJump < 0.22, `Abrupt Soltec face-count jump at elevation ${cameraCounts[i].el.toFixed(2)}: ${a} -> ${b}`);
   }
 
-  // A camera drag must not rebuild option/add-on DOM. Observe a controls-only
-  // subtree, then move through enough points to cross several view directions.
+  // A camera drag must not rebuild option/add-on DOM.
   await page.evaluate(() => {
     const host = document.querySelector('#SoltecPremium [data-sp-addons]');
     window.__soltecAddonMutations = 0;
@@ -121,12 +122,12 @@ function percentile(values, p) {
   assert.ok(measuredFrames.length >= 10, 'Not enough animation frames were measured');
   const p95 = percentile(measuredFrames, 0.95);
   const maxFrame = Math.max(...measuredFrames);
-  // CI is intentionally given headroom; this catches pathological stalls, not minor runner noise.
+  // CI is intentionally given headroom; this catches pathological stalls, not runner noise.
   assert.ok(p95 < 80, `Soltec camera p95 frame interval is too high: ${p95.toFixed(1)} ms`);
   assert.ok(maxFrame < 180, `Soltec camera had a severe frame stall: ${maxFrame.toFixed(1)} ms`);
 
-  // Exercise the actual louver slider through the full travel. The scene may
-  // gain the sealing-lip faces near closed, but it must not collapse or explode.
+  // Exercise the actual louver slider through the full travel. A rigid blade
+  // may expose a fixed sealing face, but the scene must never collapse/explode.
   const louverCounts = [];
   for (let value = 0; value <= 100; value += 5) {
     const count = await page.evaluate((nextValue) => {
