@@ -1,4 +1,4 @@
-name: Koverta render diagnostic
+name: Koverta side-frame repair
 
 on:
   push:
@@ -7,77 +7,61 @@ on:
       - .github/workflows/koverta-render-diagnostic-20260910.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  isolate:
+  apply-validated-repair:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [baseline, hide-side-outer-web]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-      - name: Apply diagnostic variant in checkout only
-        env:
-          VARIANT: ${{ matrix.variant }}
+          fetch-depth: 1
+      - name: Refuse concurrent branch movement
+        run: |
+          git fetch origin fix/koverta-final-repair-20260910 --depth=1
+          remote_sha="$(git rev-parse FETCH_HEAD)"
+          test "$remote_sha" = "$GITHUB_SHA" || {
+            echo "Branch moved: expected $GITHUB_SHA, remote is $remote_sha" >&2
+            exit 1
+          }
+      - name: Apply validated physical occlusion fix
         run: |
           python3 - <<'PY'
-          import os
           from pathlib import Path
-          p=Path('konfigurator/soltec-premium.js')
-          s=p.read_text(encoding='utf-8')
-          v=os.environ['VARIANT']
-          if v == 'hide-side-outer-web':
-              old = "const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];"
-              new = """const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
-                /* Diagnostic: the exterior web of both side perimeter C-rails is
-                   permanently behind the opaque side fascia. Do not let that
-                   invisible zinc plane enter BSP and leak through fascia splits. */
+          p = Path('konfigurator/soltec-premium.js')
+          s = p.read_text(encoding='utf-8')
+          old = "const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];"
+          new = """const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
+                /* The exterior web of both side perimeter C-rails sits 18 mm
+                   behind the opaque side fascia. It is permanently occluded in
+                   the real assembly, so do not emit that invisible zinc plane:
+                   keeping it in BSP made it leak through fascia split edges. */
                 const outsideA = single > 0 ? 0 : par;
                 if (podStrechou && axis === 'y' && single &&
                     Math.abs(A[0] - outsideA) < 1e-6 && Math.abs(B[0] - outsideA) < 1e-6) continue;"""
-              if s.count(old) != 1: raise SystemExit(f'c-profile marker count={s.count(old)}')
-              s=s.replace(old,new,1)
-          elif v != 'baseline':
-              raise SystemExit('unknown variant')
-          p.write_text(s,encoding='utf-8')
+          if s.count(old) != 1:
+              raise SystemExit(f'c-profile marker count={s.count(old)}')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
           PY
           node --check konfigurator/soltec-premium.js
           git diff --check
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install Playwright
+          changed="$(git diff --name-only)"
+          test "$changed" = "konfigurator/soltec-premium.js" || {
+            echo "Unexpected changed files:" >&2
+            printf '%s\n' "$changed" >&2
+            exit 1
+          }
+          if git diff --name-only | grep -E '(^|/)(archiv-expivi|konfigurator/test|coordination/koverta|assets/mapa/reca\.jpg)' >/dev/null; then
+            echo 'Forbidden scope touched' >&2
+            exit 1
+          fi
+      - name: Commit repair
         run: |
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
-      - name: Start static server
-        run: |
-          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
-            sleep 1
-          done
-          cat /tmp/koverta-http.log
-          exit 1
-      - name: Render same accessory evidence
-        env:
-          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
-        run: node konfigurator/test/koverta-accessories.js
-      - name: Keep diagnostic views
-        if: always()
-        run: |
-          mkdir -p diagnostic
-          find qa-artifacts -maxdepth 1 -type f \( -name 'koverta-accessories-front-7000x6000-desktop.png' -o -name 'koverta-accessories-side-7000x6000-desktop.png' -o -name 'koverta-accessories-under-7000x6000-desktop.png' -o -name 'koverta-accessories-corner-7000x6000-desktop.png' \) -exec cp {} diagnostic/ \; || true
-      - name: Upload diagnostic views
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: koverta-diagnostic-side-web-${{ matrix.variant }}
-          path: diagnostic
-          if-no-files-found: error
+          git config user.name 'koverta-qa-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js
+          git commit -m 'fix: hide occluded Koverta side-frame webs'
+          git push origin HEAD:fix/koverta-final-repair-20260910
