@@ -1,0 +1,86 @@
+name: Soltec smoothness clone
+
+on:
+  push:
+    branches: [fix/soltec-render-smoothness-20260910]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+
+      - name: Apply guarded Soltec renderer fix
+        run: python3 tools/apply-soltec-smoothness-fix.py
+
+      - name: Verify JavaScript syntax and Koverta isolation
+        run: |
+          node --check konfigurator/soltec-premium.js
+          node --check konfigurator/test/soltec-motion-regression.js
+          git diff --check
+          if git diff -U0 -- konfigurator/soltec-premium.js | grep -E '^[+-].*(nadStrechou|drawKovertaRoof|UHOL_|VAZ_|TRAP_)' ; then
+            echo 'ERROR: Koverta-specific geometry changed in a Soltec-only task.' >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/bioklimaticke-pergoly/' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/soltec-http.log
+          exit 1
+
+      - name: Soltec motion regression
+        env:
+          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
+        run: node konfigurator/test/soltec-motion-regression.js
+
+      - name: Koverta shared-renderer guard
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          node konfigurator/test/prekrytie.js
+          node konfigurator/test/strecha-nepresvita.js
+          node konfigurator/test/plynulost.js
+          node konfigurator/test/layout-smoke.js
+
+      - name: Upload motion QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soltec-motion-qa
+          path: qa-artifacts/soltec-motion
+          if-no-files-found: ignore
+
+      - name: Commit verified renderer fix to clone branch
+        if: success()
+        run: |
+          if git diff --quiet -- konfigurator/soltec-premium.js; then
+            echo 'Renderer already contains the verified Soltec fix.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js
+          git commit -m 'Fix Soltec motion stability and render scheduling'
+          git push origin HEAD:fix/soltec-render-smoothness-20260910
