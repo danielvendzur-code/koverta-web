@@ -1874,6 +1874,9 @@
                  a z hairline sa stane tmavá čiara. Namiesto obrysu jej
                  vypneme vyhladzovanie, takže kusy na seba sadnú presne. */
               seamless: o.seamless === true,
+              /* Opt-in only for large Koverta sheet facets whose artificial
+                 BSP fragment edges must not expose sub-pixel background. */
+              sealSplits: o.sealSplits === true,
               /* Soltec uses explicit painter bias for deliberately adjacent or
                  coplanar detail faces. Koverta keeps its existing ordering
                  exactly unchanged. */
@@ -1954,6 +1957,10 @@
             return Object.assign({}, face, {
               w,
               p,
+              /* Preserve the untouched source polygon through recursive BSP
+                 splits so a final fragment can distinguish a real product
+                 perimeter from an artificial clipping edge. */
+              sourceW: face.sourceW || face.w.map((point) => point.slice()),
               depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,
               order: face.order + fragmentOrder * 1e-5,
               // A split edge is artificial. Painting it in the face colour
@@ -2472,7 +2479,7 @@
                    šírky, mal stĺp cez celé líce mäkký prechod a čítal sa ako
                    rúra — na oficiálnych rendroch Koverty sú pritom dve rovné
                    líca a medzi nimi ostrá hrana. */
-                const r = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
+                const r = Math.max(4, Math.round(Math.min(pd, pw) * 0.05));
                 const zTopP = H + lift;
                 /* Obrys sa obchádza proti smeru hodinových ručičiek: rovné líce,
                    oblúk v rohu, rovné líce. Predtým sa body kládli po rohoch
@@ -2481,7 +2488,7 @@
                 /* Jeden skutočný úkos na rohu. Päť mikrofacetov na každom
                    rohu sa v mierke konfigurátora menilo na zvislé svetlé a
                    tmavé pruhy, hoci reálny jakl má čisté rovné líca. */
-                const SEG = 1;
+                const SEG = 2;
                 const cs = [];
                 [[px + r, py + r, Math.PI, 1.5 * Math.PI],
                  [px + pd - r, py + r, 1.5 * Math.PI, 2 * Math.PI],
@@ -3591,7 +3598,7 @@
               hostBottomZ: trapBot,
               renderZ: trapBot
             };
-            const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#8f9295');
+            const spodHex = maIzolaciu ? '#c7c4bb' : shade(zinok, -0.03);
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -3699,7 +3706,8 @@
                   cull: true,
                   edge: false,
                   raw: true,
-                  seamless: true
+                  seamless: true,
+                  sealSplits: true
                 });
               }
             };
@@ -4603,6 +4611,38 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
+          /* Raster seal for BSP-created edges inside opted-in Koverta roof
+             facets. It explicitly rejects every edge that belongs to the root
+             polygon, so no real roof perimeter, drainage opening or flashing
+             silhouette can be painted over. */
+          const pointOnSourceSegment = (point, a, b) => {
+            const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
+            const len2 = ux * ux + uy * uy + uz * uz;
+            if (len2 <= BSP_EPS * BSP_EPS) return false;
+            const vx = point[0] - a[0], vy = point[1] - a[1], vz = point[2] - a[2];
+            const t = (vx * ux + vy * uy + vz * uz) / len2;
+            if (t < -1e-10 || t > 1 + 1e-10) return false;
+            const qx = a[0] + ux * t, qy = a[1] + uy * t, qz = a[2] + uz * t;
+            return Math.hypot(point[0] - qx, point[1] - qy, point[2] - qz) <= BSP_EPS;
+          };
+          const edgeBelongsToSource = (a, b, source) => {
+            if (!Array.isArray(source) || source.length < 3) return true;
+            for (let i = 0; i < source.length; i++) {
+              const u = source[i], v = source[(i + 1) % source.length];
+              if (pointOnSourceSegment(a, u, v) && pointOnSourceSegment(b, u, v)) return true;
+            }
+            return false;
+          };
+          const internalSplitEdges = (f) => {
+            if (!f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];
+            const out = [];
+            for (let i = 0; i < f.w.length; i++) {
+              const j = (i + 1) % f.w.length;
+              if (!edgeBelongsToSource(f.w[i], f.w[j], f.sourceW)) out.push([f.p[i], f.p[j]]);
+            }
+            return out;
+          };
+
           bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
@@ -4613,6 +4653,14 @@
             if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
             if (f.seamless) a['shape-rendering'] = 'crispEdges';
             g.appendChild(svgEl('polygon', a));
+            internalSplitEdges(f).forEach((edge) => {
+              const u = edge[0], v = edge[1];
+              g.appendChild(svgEl('line', {
+                x1: (u.x * scale + ox).toFixed(2), y1: (u.y * scale + oy).toFixed(2),
+                x2: (v.x * scale + ox).toFixed(2), y2: (v.y * scale + oy).toFixed(2),
+                stroke: f.fill, 'stroke-width': '0.7', 'stroke-linecap': 'butt'
+              }));
+            });
           });
           /* A screen reader gets the configuration, not just "a visualisation". */
           const above = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
