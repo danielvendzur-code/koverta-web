@@ -4,6 +4,10 @@ on:
   push:
     branches: [fix/soltec-louver-stability-20260910]
 
+concurrency:
+  group: soltec-louver-stability-20260910
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
