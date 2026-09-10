@@ -3443,6 +3443,13 @@
                 let da = B[0] - A[0], dz = B[1] - A[1];
                 const dl = Math.hypot(da, dz) || 1; da /= dl; dz /= dl;
                 const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
+      /* The exterior web of both side perimeter C-rails sits 18 mm
+         behind the opaque side fascia. It is permanently occluded in
+         the real assembly, so do not emit that invisible zinc plane:
+         keeping it in BSP made it leak through fascia split edges. */
+      const outsideA = single > 0 ? 0 : par;
+      if (podStrechou && axis === 'y' && single &&
+          Math.abs(A[0] - outsideA) < 1e-6 && Math.abs(B[0] - outsideA) < 1e-6) continue;
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 /* The upper C-profile flange is permanently covered by the sheet.
                    Do not emit its +Z face: at the corrugation valleys it is exactly
