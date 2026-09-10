@@ -1,14 +1,16 @@
-name: Koverta guarded internal BSP seam repair
+name: Koverta guarded final render repair
 
 on:
   push:
-    branches: [fix/koverta-final-repair-20260910]
+    branches:
+      - fix/koverta-final-repair-20260910
 
 permissions:
   contents: write
 
 jobs:
   repair:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -19,81 +21,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Patch only internal BSP raster seams
+      - name: Apply guarded renderer repair
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('konfigurator/soltec-premium.js')
-          s = p.read_text(encoding='utf-8')
-          marker = 'const internalSplitEdges = (f) => {'
-          if marker not in s:
-              frag = "              p,\n              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"
-              frag_new = "              p,\n              /* Root polygon before the first BSP split. */\n              sourceW: face.sourceW || face.w.map((point) => point.slice()),\n              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"
-              paint = "          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {"
-              polygon = "            g.appendChild(svgEl('polygon', a));"
-              if s.count(frag) != 1: raise SystemExit(f'fragment anchor count={s.count(frag)}')
-              if s.count(paint) != 1: raise SystemExit(f'paint anchor count={s.count(paint)}')
-              if s.count(polygon) != 1: raise SystemExit(f'polygon anchor count={s.count(polygon)}')
-              helper = """          /* Seal only BSP-created interior fragment edges. Real perimeter
-             edges stay untouched, so drainage mouths and flashing silhouette
-             cannot be painted over. No BSP tolerance or painter order changes. */
-          const pointOnSourceSegment = (p, a, b) => {
-            const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
-            const len2 = ux * ux + uy * uy + uz * uz;
-            if (len2 <= BSP_EPS * BSP_EPS) return false;
-            const vx = p[0] - a[0], vy = p[1] - a[1], vz = p[2] - a[2];
-            const t = (vx * ux + vy * uy + vz * uz) / len2;
-            if (t < -1e-10 || t > 1 + 1e-10) return false;
-            const qx = a[0] + ux * t, qy = a[1] + uy * t, qz = a[2] + uz * t;
-            return Math.hypot(p[0] - qx, p[1] - qy, p[2] - qz) <= BSP_EPS;
-          };
-          const edgeBelongsToSource = (a, b, source) => {
-            if (!Array.isArray(source) || source.length < 3) return true;
-            for (let i = 0; i < source.length; i++) {
-              const u = source[i], v = source[(i + 1) % source.length];
-              if (pointOnSourceSegment(a, u, v) && pointOnSourceSegment(b, u, v)) return true;
-            }
-            return false;
-          };
-          const internalSplitEdges = (f) => {
-            if (!model().kvGeom || f.edge || !f.seamless || !Array.isArray(f.sourceW)) return [];
-            const out = [];
-            for (let i = 0; i < f.w.length; i++) {
-              const j = (i + 1) % f.w.length;
-              if (!edgeBelongsToSource(f.w[i], f.w[j], f.sourceW)) out.push([f.p[i], f.p[j]]);
-            }
-            return out;
-          };
-
-"""
-              seal = """            internalSplitEdges(f).forEach((edge) => {
-              const u = edge[0], v = edge[1];
-              g.appendChild(svgEl('line', {
-                x1: (u.x * scale + ox).toFixed(2), y1: (u.y * scale + oy).toFixed(2),
-                x2: (v.x * scale + ox).toFixed(2), y2: (v.y * scale + oy).toFixed(2),
-                stroke: f.fill, 'stroke-width': '0.7', 'stroke-linecap': 'butt',
-                'shape-rendering': 'crispEdges'
-              }));
-            });"""
-              s = s.replace(frag, frag_new, 1)
-              s = s.replace(paint, helper + paint, 1)
-              s = s.replace(polygon, polygon + "\n" + seal, 1)
-              p.write_text(s, encoding='utf-8')
-          else:
-              print('Internal BSP seam repair already present.')
-          PY
+          python3 .github/koverta-final-render-repair.py
           node --check konfigurator/soltec-premium.js
           git diff --check
+          test "$(git diff --name-only)" = "konfigurator/soltec-premium.js"
           git diff --exit-code -- archiv-expivi konfigurator/test coordination/koverta assets/mapa/reca.jpg
       - name: Commit renderer only
         run: |
           if git diff --quiet -- konfigurator/soltec-premium.js; then
-            echo 'Already committed.'
+            echo "No renderer change required."
             exit 0
           fi
-          test "$(git diff --name-only)" = "konfigurator/soltec-premium.js"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add konfigurator/soltec-premium.js
-          git commit -m 'fix: seal only internal Koverta BSP fragment edges'
+          git commit -m "fix: finish Koverta render surfaces"
           git push origin HEAD:fix/koverta-final-repair-20260910
