@@ -77,13 +77,21 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             const q = window.SP_TEST.project(x, y, zTop);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
-            const d = s.g.getImageData(px, py, 1, 1).data;
-            if (d[1] > 150 && d[0] < 130 && d[2] < 130) {
+            const d = s.g.getImageData(px - 1, py - 1, 3, 3).data;
+            let green = 0;
+            for (let i = 0; i < d.length; i += 4) {
+              if (d[i + 1] > 150 && d[i] < 130 && d[i + 2] < 130) green++;
+            }
+            /* Svetový bod sa pri rasterizácii môže zaokrúhliť na susedný
+               pixel presne za hranou. Reálny prienik musí zaberať väčšinu
+               3 × 3 okolia; jediný zelený subpixel na spoločnej siluete nie
+               je plocha plechu pretlačená cez lemovanie. */
+            if (green >= 5) {
               zlych++;
               if (!prvy) {
                 prvy = Math.round(x) + ',' + Math.round(y);
                 prvyPx = px + ',' + py;
-                prvyRgb = Array.from(d).join(',');
+                prvyRgb = Array.from(d.slice(12, 16)).join(',');
               }
             }
           }

@@ -84,12 +84,20 @@ module.exports = async function routingSmoke(browser) {
       await page.locator(route === 'koverta' ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
+      if (route === 'koverta') {
+        assert(withSide.price.open === true && withSide.price.total === null &&
+          withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
+          `${route}: quote-only side is missing from price lines`);
+      } else {
+        assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
+      }
 
       if (route === 'koverta') {
         await gotoControl('[data-sp-add-opt="pick:odkvap"]');
-        await page.locator('[data-sp-add-opt="pick:odkvap"]:not([aria-pressed="true"])').first().click();
-        assert((await snapshot()).picks.odkvap !== initial.picks.odkvap, 'Koverta gutter selection did not change');
+        const gutter = page.locator('[data-sp-add-opt="pick:odkvap"]');
+        assert(await gutter.count() === 1 && await gutter.getAttribute('aria-pressed') === 'true' &&
+          (await snapshot()).picks.odkvap === 'ano',
+          'Koverta mandatory gutter is missing or exposes an off state');
       } else {
         const extraGroup = route === 'bio' ? 'x-ovl' : 'x-konstr';
         const groupSelector = `[data-sp-add-on="${extraGroup}"]`;

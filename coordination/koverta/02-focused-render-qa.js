@@ -122,14 +122,22 @@ async function renderProbe(page, az, el, sampleFascia) {
         const py = Math.round(point.y);
         if (px < 1 || py < 1 || px >= vb[2] - 1 || py >= vb[3] - 1) continue;
         fasciaSamples += 1;
-        const offset = (py * vb[2] + px) * 4;
-        const r = pixels[offset];
-        const g = pixels[offset + 1];
-        const b = pixels[offset + 2];
-        if (g > 150 && r < 130 && b < 130) {
+        const isGreen = (sx, sy) => {
+          const offset = (sy * vb[2] + sx) * 4;
+          return pixels[offset + 1] > 150 && pixels[offset] < 130 && pixels[offset + 2] < 130;
+        };
+        let green = 0;
+        for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+          if (isGreen(px + ox, py + oy)) green++;
+        }
+        /* Projekcia svetového bodu môže po zaokrúhlení skončiť na susednom
+           pixeli za hranou. Skutočné presvitanie musí vyplniť väčšinu
+           lokálneho 3 × 3 okolia, nie jediný subpixel siluety. */
+        if (green >= 5) {
           fasciaBleed += 1;
           if (!firstBleed) {
-            firstBleed = { world: [x, y, zTop], pixel: [px, py], rgb: [r, g, b, pixels[offset + 3]] };
+            const offset = (py * vb[2] + px) * 4;
+            firstBleed = { world: [x, y, zTop], pixel: [px, py], rgb: Array.from(pixels.slice(offset, offset + 4)) };
           }
         }
       }
