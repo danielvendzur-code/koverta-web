@@ -2117,8 +2117,14 @@
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
-              normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
-              edge: cleanSurface === true ? false : undefined,
+              normal: n, cull: true,
+              /* A clean metal surface still needs a sub-pixel seal where BSP
+                 fragments meet.  Removing the stroke altogether exposed the
+                 roof behind the fascia at exact side views.  Keep the seal in
+                 the face's own colour: it closes raster gaps without drawing
+                 a dark outline or changing any world-space dimension. */
+              arris: cleanSurface === true ? false : fl.indexOf(key) < 0,
+              bias: bias || 0,
               /* Čistý plech nesmie po BSP rozdelení dostať vlasovú medzeru.
                  crispEdges sa preto pri cleanSurface týka každého jeho líca,
                  nie iba hornej plochy. Geometriu ani poradie nemení. */
@@ -2492,7 +2498,7 @@
                   const nx = b[1] - a[1], ny = a[0] - b[0];
                   const ln = Math.hypot(nx, ny) || 1;
                   quad([[a[0], a[1], 0], [b[0], b[1], 0], [b[0], b[1], zTopP], [a[0], a[1], zTopP]],
-                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false, edge: false, seamless: true });
+                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false, seamless: true });
                 }
               } else {
                 boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z', '-z'], SHAFT);
