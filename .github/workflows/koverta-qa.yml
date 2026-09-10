@@ -120,14 +120,14 @@ jobs:
         run: |
           python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
           for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/bioklimaticke-pergoly/' >/dev/null; then exit 0; fi
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=bio' >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/soltec-http.log
           exit 1
       - name: Soltec louver and camera motion regression
         env:
-          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
+          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
         run: node konfigurator/test/soltec-motion-regression.js
       - name: Upload Soltec motion evidence
         if: always()
