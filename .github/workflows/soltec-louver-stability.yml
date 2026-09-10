@@ -10,7 +10,7 @@ permissions:
 jobs:
   soltec-louver:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,7 +20,18 @@ jobs:
         with:
           node-version: 22
       - name: Apply Soltec-only patch
-        run: python3 .github/scripts/apply-soltec-louver-stability.py
+        run: |
+          python3 .github/scripts/apply-soltec-louver-stability.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('konfigurator/test/soltec-motion-regression.js')
+          s = p.read_text(encoding='utf-8')
+          old = "http://127.0.0.1:8901/bioklimaticke-pergoly/"
+          new = "http://127.0.0.1:8901/konfigurator/?page=bio"
+          if old not in s:
+              raise SystemExit('Expected stale Soltec test URL was not found')
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          PY
       - name: Syntax check
         run: |
           node --check konfigurator/soltec-premium.js
@@ -34,15 +45,15 @@ jobs:
         run: |
           python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
           for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/bioklimaticke-pergoly/' >/dev/null; then exit 0; fi
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=bio' >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/soltec-http.log
           exit 1
       - name: Soltec louver regression
         env:
-          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
-        run: node konfigurator/test/soltec-motion-regression.js
+          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
+        run: timeout 240s node konfigurator/test/soltec-motion-regression.js
       - name: Commit clean verified result
         run: |
           git config user.name 'github-actions[bot]'
