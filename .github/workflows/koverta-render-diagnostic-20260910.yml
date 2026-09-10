@@ -3,6 +3,8 @@ name: Koverta render diagnostic
 on:
   push:
     branches: [fix/koverta-final-repair-20260910]
+    paths:
+      - .github/workflows/koverta-render-diagnostic-20260910.yml
 
 permissions:
   contents: read
@@ -14,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, butt, no-strokes, no-seal]
+        variant: [baseline, no-turn, no-caps, no-turn-no-caps]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,22 +31,22 @@ jobs:
           p = Path('konfigurator/soltec-premium.js')
           s = p.read_text(encoding='utf-8')
           v = os.environ['VARIANT']
-          if v == 'butt':
+          if v in ('no-turn', 'no-turn-no-caps'):
               old = 'put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
-              new = 'put(zav - 9 * dir, zav + 11 * dir, turnBottom, zTop - turnBottom);'
-              if s.count(old) != 1: raise SystemExit(f'butt marker count={s.count(old)}')
+              new = '/* diagnostic: hidden flashing turn omitted */'
+              if s.count(old) != 1: raise SystemExit(f'turn marker count={s.count(old)}')
               s = s.replace(old, new, 1)
-          elif v == 'no-strokes':
-              old = 'edge: o.edge !== false,'
-              new = 'edge: false,'
-              if s.count(old) != 1: raise SystemExit(f'edge marker count={s.count(old)}')
-              s = s.replace(old, new, 1)
-          elif v == 'no-seal':
-              old = 'if (!f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];'
-              new = 'if (true || !f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];'
-              if s.count(old) != 1: raise SystemExit(f'seal marker count={s.count(old)}')
-              s = s.replace(old, new, 1)
-          elif v != 'baseline':
+          if v in ('no-caps', 'no-turn-no-caps'):
+              markers = [
+                  'drawTrapEndCap(vx0, vy0, vy1, vrchHex);',
+                  'drawTrapEndCap(vx1, vy0, vy1, vrchHex);',
+                  'drawTrapSideCap(vy0, vx0, vx1, vrchHex);',
+                  'drawTrapSideCap(vy1, vx0, vx1, vrchHex);'
+              ]
+              for old in markers:
+                  if s.count(old) != 1: raise SystemExit(f'cap marker count {old}={s.count(old)}')
+                  s = s.replace(old, '/* diagnostic: roof cut cap omitted */', 1)
+          if v not in ('baseline', 'no-turn', 'no-caps', 'no-turn-no-caps'):
               raise SystemExit('unknown variant')
           p.write_text(s, encoding='utf-8')
           PY
@@ -80,6 +82,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-diagnostic-${{ matrix.variant }}
+          name: koverta-diagnostic2-${{ matrix.variant }}
           path: diagnostic
           if-no-files-found: error
