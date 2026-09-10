@@ -3151,7 +3151,20 @@
           const bz = H;
           layer = fromAbove ? ROOF_LAYER : -ROOF_LAYER;
           const roofBase = layer;
-          const nearSide = (n) => { layer = roofBase + (facing(n) > 0 ? UNDER_SIDE : -UNDER_SIDE); };
+          const nearSide = (n) => {
+            /* Koverta still uses its established side-layer ordering. Soltec
+               must not do that: below the roof, `roofBase - UNDER_SIDE` falls
+               below `-ROOF_LAYER`, which is the renderer's background cutoff.
+               A perfectly valid perimeter member was therefore classified
+               like paving/shadow and painted before the pergola, so it could
+               disappear completely behind the louvers at certain camera
+               angles. Soltec already has BSP world-space occlusion; keep all
+               four fixed rim members in the structure set and let geometry
+               decide what is actually hidden. */
+            layer = model().kvGeom
+              ? roofBase + (facing(n) > 0 ? UNDER_SIDE : -UNDER_SIDE)
+              : roofBase;
+          };
 
           /* Obvodové profily sú v skutočnosti rezané na pokos, nie na zraz.
              Dva zrazené hranoly sa v rohu prekrývajú po celej dĺžke styku a ich

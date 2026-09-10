@@ -35,6 +35,7 @@ function assertSourceContract() {
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
   assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
   assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
+  assert.match(source, /layer = model\(\)\.kvGeom[\s\S]{0,120}\? roofBase \+ \(facing\(n\) > 0 \? UNDER_SIDE : -UNDER_SIDE\)[\s\S]{0,80}: roofBase;/, 'Soltec perimeter profiles must remain structural faces at every camera angle');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the
@@ -112,6 +113,24 @@ function percentile(values, p) {
     const relativeJump = Math.abs(b - a) / Math.max(1, Math.max(a, b));
     assert.ok(relativeJump < 0.22, `Abrupt Soltec face-count jump at elevation ${cameraCounts[i].el.toFixed(2)}: ${a} -> ${b}`);
   }
+
+  // The disappearing-rim regression was azimuth-dependent while looking
+  // slightly upward from below. Sweep a full orbit at that elevation and make
+  // sure the fixed scene never collapses into an anomalously small face set.
+  const rimOrbitCounts = [];
+  for (let i = 0; i <= 72; i += 1) {
+    const az = -Math.PI + (Math.PI * 2 * i) / 72;
+    const count = await page.evaluate(([azimuth, elevation]) => {
+      window.SP_TEST.setView(azimuth, elevation);
+      window.SP_TEST.redrawStage();
+      return document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length;
+    }, [az, -0.18]);
+    rimOrbitCounts.push({ az, count });
+  }
+  const orbitSorted = rimOrbitCounts.map((item) => item.count).sort((a, b) => a - b);
+  const orbitMedian = orbitSorted[Math.floor(orbitSorted.length / 2)];
+  const orbitMin = Math.min(...orbitSorted);
+  assert.ok(orbitMin >= orbitMedian * 0.78, `Soltec fixed rim/profile disappears during low orbit: min=${orbitMin}, median=${orbitMedian}`);
 
   // A camera drag must not rebuild option/add-on DOM.
   await page.evaluate(() => {
@@ -228,7 +247,7 @@ function percentile(values, p) {
   assert.equal(endpointB, endpointA, 'Soltec SVG changed after the closing animation had already finished');
 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, releaseSettle, p95, maxFrame }, null, 2));
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, rimOrbitCounts, louverCounts, framingSamples, frameDriftX, frameDriftY, releaseSettle, p95, maxFrame }, null, 2));
 
   assert.deepEqual(pageErrors, [], `Browser errors:\n${pageErrors.join('\n')}`);
   await browser.close();
