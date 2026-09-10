@@ -20,18 +20,7 @@ jobs:
         with:
           node-version: 22
       - name: Apply Soltec-only patch
-        run: |
-          python3 .github/scripts/apply-soltec-louver-stability.py
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('konfigurator/test/soltec-motion-regression.js')
-          s = p.read_text(encoding='utf-8')
-          old = "http://127.0.0.1:8901/bioklimaticke-pergoly/"
-          new = "http://127.0.0.1:8901/konfigurator/?page=bio"
-          if old not in s:
-              raise SystemExit('Expected stale Soltec test URL was not found')
-          p.write_text(s.replace(old, new), encoding='utf-8')
-          PY
+        run: python3 .github/scripts/apply-soltec-louver-stability.py
       - name: Syntax check
         run: |
           node --check konfigurator/soltec-premium.js
