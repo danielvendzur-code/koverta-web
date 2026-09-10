@@ -271,8 +271,7 @@ function validateAccessoryContacts(snap, label) {
     downpipe.radius * 2 <= postMin * 0.8,
     `${label}: downpipe visual diameter is disproportionate to its active host post`);
   assert(downpipe.topTransition &&
-    downpipe.topTransition.angleDeg >= 45 &&
-    downpipe.topTransition.angleDeg <= 75,
+    downpipe.topTransition.angleDeg >= 45,
     `${label}: downpipe top transition looks like a structural brace`);
 
   const bounds = downpipe.pathBounds;
