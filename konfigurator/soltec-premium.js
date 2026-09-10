@@ -3328,7 +3328,12 @@
                  plochom pohľade cez ňu bolo vidieť pod strechu — pozdĺž hrany
                  svietil svetlý pruh. */
               const zav = outer + sirka * dir;
-              put(zav - 9 * dir, zav + 11 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
+              /* The inner turn must overlap the hidden edge of the sheet.
+                 A zero-width butt joint at +11 mm rasterised as a dotted white
+                 line at distant views (one gap at each corrugation crown).
+                 Four millimetres of concealed lap matches the purpose of a
+                 folded flashing and changes no exterior envelope. */
+              put(zav - 9 * dir, zav + 15 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
