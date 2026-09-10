@@ -1,0 +1,87 @@
+name: Koverta guarded fascia closure repair
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+
+permissions:
+  contents: write
+
+jobs:
+  repair-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply exact Koverta fascia repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('konfigurator/soltec-premium.js')
+          text = path.read_text(encoding='utf-8')
+
+          old_turn = """              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);"""
+          new_turn = """              const turnBottom = trapBot - 1;
+              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);"""
+
+          old_closure = """              /* A narrow hidden closure caps the sight line beneath the
+                 corrugation crowns. Only its upward face exists: it is below
+                 the lowest sheet skin, cannot cut a facet or become a second
+                 soffit, and uses the roof material so the concealed perimeter
+                 pocket cannot appear as alternating bright/dark dashes. */
+              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);
+              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);
+              const uz = trapBot - 0.5;
+              const roofEdgeHex = model().trapezTopHex || frame;
+              const closure = axis === 'x'
+                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]
+                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];
+              quad(closure, roofEdgeHex, {
+                normal: [0, 0, 1], cull: true, raw: true,
+                edge: false, seamless: true
+              });
+"""
+
+          marker = 'const turnBottom = trapBot - 1;'
+          if marker in text:
+              if old_closure in text or 'const uz = trapBot - 0.5;' in text:
+                  raise SystemExit('partial fascia repair detected')
+              print('Guarded fascia repair already present.')
+          else:
+              if text.count(old_turn) != 1:
+                  raise SystemExit(f'expected one hidden-turn target, got {text.count(old_turn)}')
+              if text.count(old_closure) != 1:
+                  raise SystemExit(f'expected one horizontal closure target, got {text.count(old_closure)}')
+              text = text.replace(old_turn, new_turn, 1)
+              text = text.replace(old_closure, '', 1)
+              if 'const uz = trapBot - 0.5;' in text or 'const roofEdgeHex = model().trapezTopHex || frame;' in text:
+                  raise SystemExit('horizontal closure residue remains')
+              path.write_text(text, encoding='utf-8')
+              print('Replaced horizontal roof closure with extended vertical fascia turn.')
+          PY
+
+          node --check konfigurator/soltec-premium.js
+          git diff --check
+          git diff --exit-code -- archiv-expivi konfigurator/test coordination/koverta assets/mapa/reca.jpg
+
+      - name: Commit only verified renderer repair
+        run: |
+          if git diff --quiet -- konfigurator/soltec-premium.js; then
+            echo 'Renderer repair already committed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- konfigurator/soltec-premium.js
+          test "$(git diff --cached --name-only)" = "konfigurator/soltec-premium.js"
+          git commit -m 'fix: close Koverta roof sightline in fascia'
+          git push origin HEAD:fix/koverta-final-repair-20260910
