@@ -29,27 +29,26 @@ jobs:
           path = Path('konfigurator/soltec-premium.js')
           text = path.read_text(encoding='utf-8')
 
-          old_turn = """              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);"""
-          new_turn = """              const turnBottom = trapBot - 1;
-              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);"""
-
-          old_closure = """              /* A narrow hidden closure caps the sight line beneath the
-                 corrugation crowns. Only its upward face exists: it is below
-                 the lowest sheet skin, cannot cut a facet or become a second
-                 soffit, and uses the roof material so the concealed perimeter
-                 pocket cannot appear as alternating bright/dark dashes. */
-              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);
-              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);
-              const uz = trapBot - 0.5;
-              const roofEdgeHex = model().trapezTopHex || frame;
-              const closure = axis === 'x'
-                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]
-                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];
-              quad(closure, roofEdgeHex, {
-                normal: [0, 0, 1], cull: true, raw: true,
-                edge: false, seamless: true
-              });
-"""
+          old_turn = "              put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);"
+          new_turn = "              const turnBottom = trapBot - 1;\n              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);"
+          old_closure = "\n".join([
+              "              /* A narrow hidden closure caps the sight line beneath the",
+              "                 corrugation crowns. Only its upward face exists: it is below",
+              "                 the lowest sheet skin, cannot cut a facet or become a second",
+              "                 soffit, and uses the roof material so the concealed perimeter",
+              "                 pocket cannot appear as alternating bright/dark dashes. */",
+              "              const ua = Math.min(zav + 8 * dir, zav + 22 * dir);",
+              "              const ub = Math.max(zav + 8 * dir, zav + 22 * dir);",
+              "              const uz = trapBot - 0.5;",
+              "              const roofEdgeHex = model().trapezTopHex || frame;",
+              "              const closure = axis === 'x'",
+              "                ? [[ua, a, uz], [ub, a, uz], [ub, b, uz], [ua, b, uz]]",
+              "                : [[a, ua, uz], [b, ua, uz], [b, ub, uz], [a, ub, uz]];",
+              "              quad(closure, roofEdgeHex, {",
+              "                normal: [0, 0, 1], cull: true, raw: true,",
+              "                edge: false, seamless: true",
+              "              });",
+          ]) + "\n"
 
           marker = 'const turnBottom = trapBot - 1;'
           if marker in text:
