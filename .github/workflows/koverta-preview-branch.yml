@@ -1,0 +1,49 @@
+name: Koverta preview branch
+
+on:
+  push:
+    branches: [agent/koverta-final-realism]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-preview:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply guarded Koverta realism patch
+        run: |
+          python3 .github/scripts/apply-koverta-final-realism.py
+          node --check konfigurator/soltec-premium.js
+
+      - name: Verify preview changes are isolated
+        run: |
+          changed="$(git diff --name-only)"
+          if [ -z "$changed" ]; then
+            echo "No renderer changes required."
+            exit 0
+          fi
+          unexpected="$(printf '%s\n' "$changed" | grep -v '^konfigurator/soltec-premium.js$' || true)"
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected changed files:"
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
+          git diff --check
+
+      - name: Commit preview renderer
+        run: |
+          if git diff --quiet -- konfigurator/soltec-premium.js; then
+            echo "Preview renderer already present."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add konfigurator/soltec-premium.js
+          git commit -m "preview: apply Koverta final realism renderer"
+          git push origin HEAD:agent/koverta-final-realism
