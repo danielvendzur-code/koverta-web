@@ -3335,6 +3335,12 @@
                  concealed 1 mm clearance avoids both failure modes without
                  altering the outside flashing envelope. */
               put(zav - 9 * dir, zav + 10 * dir, zTop - LEM_ARM - 14, 14 + LEM_ARM);
+              /* A narrow folded return closes the sight line beneath the
+                 corrugation crowns. It sits below the lowest sheet skin, so it
+                 cannot cut the trapezoid facets or become a second soffit; it
+                 only masks the concealed perimeter pocket that otherwise
+                 revealed the zinc frame as a row of bright dashes. */
+              put(zav + 8 * dir, zav + 22 * dir, trapBot - 2, 1.5, true);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
