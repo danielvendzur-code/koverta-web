@@ -2119,7 +2119,10 @@
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
               normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
               edge: cleanSurface === true ? false : undefined,
-              seamless: seamlessTop === true && key === '+z'
+              /* Čistý plech nesmie po BSP rozdelení dostať vlasovú medzeru.
+                 crispEdges sa preto pri cleanSurface týka každého jeho líca,
+                 nie iba hornej plochy. Geometriu ani poradie nemení. */
+              seamless: cleanSurface === true || (seamlessTop === true && key === '+z')
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -2469,7 +2472,10 @@
                    oblúk v rohu, rovné líce. Predtým sa body kládli po rohoch
                    nezávisle, obrys sa krížil sám so sebou a na boku stĺpa z toho
                    vznikli nezmyselné fazety. */
-                const SEG = 5;
+                /* Jeden skutočný úkos na rohu. Päť mikrofacetov na každom
+                   rohu sa v mierke konfigurátora menilo na zvislé svetlé a
+                   tmavé pruhy, hoci reálny jakl má čisté rovné líca. */
+                const SEG = 1;
                 const cs = [];
                 [[px + r, py + r, Math.PI, 1.5 * Math.PI],
                  [px + pd - r, py + r, 1.5 * Math.PI, 2 * Math.PI],
@@ -2486,7 +2492,7 @@
                   const nx = b[1] - a[1], ny = a[0] - b[0];
                   const ln = Math.hypot(nx, ny) || 1;
                   quad([[a[0], a[1], 0], [b[0], b[1], 0], [b[0], b[1], zTopP], [a[0], a[1], zTopP]],
-                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false, edge: false });
+                       frame, { normal: [nx / ln, ny / ln, 0], cull: true, arris: false, edge: false, seamless: true });
                 }
               } else {
                 boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z', '-z'], SHAFT);
@@ -3412,14 +3418,14 @@
                 const n = axis === 'x' ? [dz, 0, -da] : [0, dz, -da];
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
-                     hex, { normal: n, cull: true, arris: false, edge: false });
+                     hex, { normal: n, cull: true, arris: false, edge: false, seamless: true });
               }
               (bokom ? cCela(par, vys, t, single) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
                   quad(e[1] > 0 ? pts : pts.slice().reverse(), hex,
-                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false, edge: false });
+                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false, edge: false, seamless: true });
                 });
               });
               /* Škáru medzi dvojicou profilov má zdola vidieť len väznica —
@@ -3661,8 +3667,12 @@
                   const mid = (a + b) / 2;
                   const flat = Math.abs(zb - za) < 0.01;
                   const high = trapProfile01(mid) > 0.5;
-                  tone = flat ? shade(hex, high ? 0.035 : -0.025)
-                              : shade(hex, zb > za ? -0.055 : 0.010);
+                  /* Profil ostáva fyzicky 3D, ale materiál je jeden plech.
+                     Predošlé kontrasty -5,5/+3,5 % vytvorili pri zmenšení
+                     interferenčné vlny a strecha vyzerala pokrčená. Jemný
+                     rozdiel zachová čitateľný smer rebier bez moiré. */
+                  tone = flat ? shade(hex, high ? 0.010 : -0.006)
+                              : shade(hex, zb > za ? -0.014 : 0.004);
                 }
                 quad(pts, tone, {
                   normal: faceNormal(pts),
