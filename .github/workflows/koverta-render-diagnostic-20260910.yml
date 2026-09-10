@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, open-z-turn, open-z-no-caps, no-axis-faces, no-end-faces]
+        variant: [baseline, seal-clean-splits]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,41 +31,13 @@ jobs:
           p = Path('konfigurator/soltec-premium.js')
           s = p.read_text(encoding='utf-8')
           v = os.environ['VARIANT']
-          old = '              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
-          repl = None
-          if v in ('open-z-turn', 'open-z-no-caps'):
-              repl = '''              {
-                const t0 = zav - 9 * dir, t1 = zav + 10 * dir;
-                if (axis === 'x') boxFaces(Math.min(t0, t1), a, turnBottom, Math.abs(t1 - t0), b - a, zTop - turnBottom, frame, ['+z', '-z'], SHAFT, 0, false, true);
-                else boxFaces(a, Math.min(t0, t1), turnBottom, b - a, Math.abs(t1 - t0), zTop - turnBottom, frame, ['+z', '-z'], SHAFT, 0, false, true);
-              }'''
-          elif v == 'no-axis-faces':
-              repl = '''              {
-                const t0 = zav - 9 * dir, t1 = zav + 10 * dir;
-                if (axis === 'x') boxFaces(Math.min(t0, t1), a, turnBottom, Math.abs(t1 - t0), b - a, zTop - turnBottom, frame, ['-x', '+x'], SHAFT, 0, false, true);
-                else boxFaces(a, Math.min(t0, t1), turnBottom, b - a, Math.abs(t1 - t0), zTop - turnBottom, frame, ['-y', '+y'], SHAFT, 0, false, true);
-              }'''
-          elif v == 'no-end-faces':
-              repl = '''              {
-                const t0 = zav - 9 * dir, t1 = zav + 10 * dir;
-                if (axis === 'x') boxFaces(Math.min(t0, t1), a, turnBottom, Math.abs(t1 - t0), b - a, zTop - turnBottom, frame, ['-y', '+y'], SHAFT, 0, false, true);
-                else boxFaces(a, Math.min(t0, t1), turnBottom, b - a, Math.abs(t1 - t0), zTop - turnBottom, frame, ['-x', '+x'], SHAFT, 0, false, true);
-              }'''
+          if v == 'seal-clean-splits':
+              old = "            if (!f.sealSplits || f.edge || !Array.isArray(f.sourceW)) return [];"
+              new = "            if (!f.sealSplits || !Array.isArray(f.sourceW)) return [];"
+              if s.count(old) != 1: raise SystemExit(f'seal guard count={s.count(old)}')
+              s = s.replace(old, new, 1)
           elif v != 'baseline':
               raise SystemExit('unknown variant')
-          if repl is not None:
-              if s.count(old) != 1: raise SystemExit(f'turn marker count={s.count(old)}')
-              s = s.replace(old, repl, 1)
-          if v == 'open-z-no-caps':
-              markers = [
-                  'drawTrapEndCap(vx0, vy0, vy1, vrchHex);',
-                  'drawTrapEndCap(vx1, vy0, vy1, vrchHex);',
-                  'drawTrapSideCap(vy0, vx0, vx1, vrchHex);',
-                  'drawTrapSideCap(vy1, vx0, vx1, vrchHex);'
-              ]
-              for cap in markers:
-                  if s.count(cap) != 1: raise SystemExit(f'cap marker count {cap}={s.count(cap)}')
-                  s = s.replace(cap, '/* diagnostic: cap omitted */', 1)
           p.write_text(s, encoding='utf-8')
           PY
           node --check konfigurator/soltec-premium.js
@@ -100,6 +72,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-diagnostic4-${{ matrix.variant }}
+          name: koverta-diagnostic5-${{ matrix.variant }}
           path: diagnostic
           if-no-files-found: error
