@@ -14452,3 +14452,46 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     padding-bottom: 24px !important;
   }
 }
+
+
+/* USER-CONTENT-RESTORE-20260910 */
+.k-model-section .k-head { margin-bottom: clamp(28px,4vw,54px); }
+.k-model-family + .k-model-family { margin-top: clamp(34px,5vw,64px); }
+.k-model-family__head { display:flex; align-items:end; justify-content:space-between; gap:24px; padding:0 0 14px; margin-bottom:18px; border-bottom:1px solid rgba(18,23,26,.18); }
+.k-model-family__head > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
+.k-model-family__head p { margin:0; max-width:560px; color:#596064; }
+.k-model-grid { display:grid; gap:18px; }
+.k-model-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.k-model-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.k-model-card { min-width:0; overflow:hidden; background:#fff; border:1px solid rgba(18,23,26,.16); border-radius:24px; box-shadow:0 14px 38px rgba(18,23,26,.06); }
+.k-model-card__media { margin:0; aspect-ratio:16/9; overflow:hidden; background:#ececeb; }
+.k-model-card__media img { width:100%; height:100%; display:block; object-fit:cover; }
+.k-model-card__body { padding:clamp(20px,2.5vw,32px); }
+.k-model-card__top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.k-model-card__code { display:inline-flex; align-items:center; min-height:34px; padding:0 12px; border:1px solid rgba(18,23,26,.24); border-radius:999px; font-weight:760; font-size:13px; letter-spacing:.04em; }
+.k-model-card__use { color:#6c7376; font-size:14px; font-weight:650; }
+.k-model-card__body h3 { margin:0 0 22px; font-size:clamp(23px,2.1vw,32px); line-height:1.05; letter-spacing:-.025em; }
+.k-model-facts { margin:0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
+.k-model-facts > div { display:flex; justify-content:space-between; gap:18px; padding:12px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+.k-model-facts dt { color:#687074; }
+.k-model-facts dd { margin:0; text-align:right; font-weight:730; }
+.k-model-note { display:flex; justify-content:space-between; gap:28px; padding:20px 0 0; margin:22px 0 0; border-top:1px solid rgba(18,23,26,.18); }
+.k-model-note span { max-width:680px; color:#62696c; }
+.kh-zost__panel { border:1px solid rgba(18,23,26,.14); border-radius:22px; box-shadow:0 12px 32px rgba(18,23,26,.05); overflow:hidden; }
+.kh-zost__vrstvy { margin:14px 0 22px; padding:0; list-style:none; border-top:1px solid rgba(18,23,26,.12); }
+.kh-zost__vrstva { display:grid; grid-template-columns:46px 1fr; gap:14px; align-items:start; padding:15px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+.kh-zost__cislo { font-size:12px; font-weight:800; letter-spacing:.06em; color:#8a6900; }
+.kh-zost__co { line-height:1.55; }
+.kh-pick__lane .k-link { display:inline-flex; align-items:center; min-height:42px; padding:0 15px; border:1px solid currentColor; border-radius:999px; }
+@media (min-width: 900px) {
+  .kh-kfg__typy { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:18px !important; }
+  .kh-kfg__typ, .kh-kfg__typ--siroky { grid-column:auto !important; grid-row:auto !important; width:auto !important; }
+  .kh-kfg__karta { height:100%; }
+  .kh-ponuka__mriezka { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .kh-ponuka__kus, .kh-ponuka__kus--hlavna, .kh-ponuka__kus--siroka { grid-column:auto !important; grid-row:auto !important; }
+}
+@media (max-width: 899px) {
+  .k-model-grid--2, .k-model-grid--3 { grid-template-columns:1fr; }
+  .k-model-family__head, .k-model-note { align-items:flex-start; flex-direction:column; gap:8px; }
+  .k-model-card { border-radius:18px; }
+}

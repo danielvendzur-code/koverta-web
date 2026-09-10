@@ -2988,8 +2988,7 @@
         header.classList.add('ma-rozperu');
         bar.classList.add('je-plava');
         const rozdiel = y - posledneY;
-        if (rozdiel > prah) bar.classList.add('je-schovana');
-        else if (rozdiel < -prah) bar.classList.remove('je-schovana');
+        bar.classList.remove('je-schovana');
         if (Math.abs(rozdiel) > prah) posledneY = y;
         void vyska;
       };
