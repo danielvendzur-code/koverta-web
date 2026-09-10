@@ -3333,13 +3333,12 @@
                  plochom pohľade cez ňu bolo vidieť pod strechu — pozdĺž hrany
                  svietil svetlý pruh. */
               const zav = outer + sirka * dir;
-              /* The inner vertical turn must cover the open corrugation mouths.
-                 A 1 mm clearance exposed the dark rib cavities at grazing/top views,
-                 while the earlier 4 mm overlap created unnecessary BSP splitting.
-                 The existing turn therefore overlaps the visible sheet edge by only
-                 0.5 mm: no extra closure plane, no outside-envelope change. */
+              /* Keep a real 1 mm clearance between the inner flashing turn and
+                 the visible corrugated shell. Any overlap makes the turn plane cut
+                 every roof facet in the BSP. The sheet is closed at its own exact
+                 boundary below, so this clearance cannot expose an open mouth. */
               const turnBottom = trapBot - 1;
-              put(zav - 9 * dir, zav + 11.5 * dir, turnBottom, zTop - turnBottom);
+              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
@@ -3705,11 +3704,42 @@
               }
             };
 
+            /* Close the finite-thickness corrugated shell on its exact geometric
+               boundary. The x-end caps follow the same breakpoints and the same
+               upper/lower Z functions as the long roof facets, so every shared
+               edge has identical vertices. These faces meet the roof only at its
+               boundary; they never cross a long rib and therefore add no BSP cut.
+               They are double-sided because a cut sheet edge can be seen from the
+               pocket side as well as from outside. */
+            const drawTrapEndCap = (x, y0, y1, hex) => {
+              const cuts = trapBreaks(y0, y1);
+              for (let i = 0; i < cuts.length - 1; i++) {
+                const a = cuts[i], b = cuts[i + 1];
+                const pts = [
+                  [x, a, trapLowerZ(a)], [x, b, trapLowerZ(b)],
+                  [x, b, trapUpperZ(b)], [x, a, trapUpperZ(a)]
+                ];
+                quad(pts, hex, {
+                  normal: [1, 0, 0], cull: false, edge: false, raw: true, seamless: true
+                });
+              }
+            };
+            const drawTrapSideCap = (y, x0, x1, hex) => {
+              const zl = trapLowerZ(y), zu = trapUpperZ(y);
+              quad([[x0, y, zl], [x1, y, zl], [x1, y, zu], [x0, y, zu]], hex, {
+                normal: [0, 1, 0], cull: false, edge: false, raw: true, seamless: true
+              });
+            };
+
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
             drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
+            drawTrapEndCap(vx0, vy0, vy1, frame);
+            drawTrapEndCap(vx1, vy0, vy1, frame);
+            drawTrapSideCap(vy0, vx0, vx1, frame);
+            drawTrapSideCap(vy1, vx0, vx1, frame);
 
             /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
                podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
