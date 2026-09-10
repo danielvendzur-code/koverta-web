@@ -1865,6 +1865,9 @@
                  a z hairline sa stane tmavá čiara. Namiesto obrysu jej
                  vypneme vyhladzovanie, takže kusy na seba sadnú presne. */
               seamless: o.seamless === true,
+              /* Koverta-only occlusion guard for the thin top fascia arm.
+                 This flag is opt-in; no Soltec caller sets it. */
+              paintLast: o.paintLast === true,
               depthAvg,
               /* Podklad — dlažba, jej škáry a vrhnutý tieň — leží celý v
                  rovine z = 0 pod konštrukciou a triedi sa zvlášť. V hustej
@@ -2084,12 +2087,13 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, paintLast) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
               normal: n, cull: true, arris: fl.indexOf(key) < 0, bias: bias || 0,
-              seamless: seamlessTop === true && key === '+z'
+              seamless: seamlessTop === true && key === '+z',
+              paintLast: paintLast === true
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -3248,16 +3252,16 @@
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
-              const put = (u0, u1, z, dz, seamlessTop) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop);
+              const put = (u0, u1, z, dz, seamlessTop, paintLast) => {
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, paintLast);
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
                  only to the +Z face; no world-space geometry is enlarged. */
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
+              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true, nadStrechou);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -4485,7 +4489,9 @@
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
+          const stavbaBezna = stavba.filter((f) => !f.paintLast);
+          const stavbaNeskor = stavba.filter((f) => f.paintLast);
+          bspPaintOrder(podklad).concat(bspPaintOrder(stavbaBezna), bspPaintOrder(stavbaNeskor)).forEach((f) => {
             const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
             const a = { points: pts, fill: f.fill };
             /* Two anti-aliased faces sharing an edge leave a hairline of
