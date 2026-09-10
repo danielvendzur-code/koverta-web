@@ -4,13 +4,17 @@ on:
   push:
     branches: [fix/soltec-render-smoothness-20260910]
 
+concurrency:
+  group: soltec-smoothness-clone-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
 jobs:
   patch-test-commit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,7 +57,7 @@ jobs:
       - name: Soltec motion regression
         env:
           SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
-        run: node konfigurator/test/soltec-motion-regression.js
+        run: timeout 240s node konfigurator/test/soltec-motion-regression.js
 
       - name: Koverta shared-renderer guard
         env:
