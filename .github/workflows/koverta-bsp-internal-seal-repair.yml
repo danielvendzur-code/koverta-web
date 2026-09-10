@@ -25,44 +25,18 @@ jobs:
           from pathlib import Path
           p = Path('konfigurator/soltec-premium.js')
           s = p.read_text(encoding='utf-8')
-
-          old_fragment = """            return Object.assign({}, face, {
-              w,
-              p,
-              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"""
-          new_fragment = """            return Object.assign({}, face, {
-              w,
-              p,
-              /* Preserve the root polygon before the first BSP split. Final
-                 fragments can then distinguish a real product edge from an
-                 artificial clipping edge without changing BSP tolerances. */
-              sourceW: face.sourceW || face.w.map((point) => point.slice()),
-              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"""
-
-          old_paint = """          const podklad = faces.filter((f) => f.bg);
-          const stavba = faces.filter((f) => !f.bg);
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
-            const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
-            const a = { points: pts, fill: f.fill };
-            /* Two anti-aliased faces sharing an edge leave a hairline of
-               background between them. Stroking each face in its own colour
-               closes it; the corner still reads, because the two sides are
-               genuinely lit differently. */
-            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
-            if (f.seamless) a['shape-rendering'] = 'crispEdges';
-            g.appendChild(svgEl('polygon', a));
-          });"""
-
-          new_paint = """          const podklad = faces.filter((f) => f.bg);
-          const stavba = faces.filter((f) => !f.bg);
-
-          /* A Koverta roof facet deliberately has edge:false so its real
-             perimeter can never bleed over the flashing. BSP clipping creates
-             new edges inside that facet, though, and those artificial edges
-             still need a sub-pixel seal. Classify final fragment edges against
-             the untouched root polygon and seal only edges that did not exist
-             on that source polygon. This changes no geometry, depth ordering or
-             BSP tolerance and cannot close the drainage/profile perimeter. */
+          marker = 'const internalSplitEdges = (f) => {'
+          if marker not in s:
+              frag = "              p,\n              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"
+              frag_new = "              p,\n              /* Root polygon before the first BSP split. */\n              sourceW: face.sourceW || face.w.map((point) => point.slice()),\n              depthAvg: depths.reduce((sum, value) => sum + value, 0) / depths.length,"
+              paint = "          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {"
+              polygon = "            g.appendChild(svgEl('polygon', a));"
+              if s.count(frag) != 1: raise SystemExit(f'fragment anchor count={s.count(frag)}')
+              if s.count(paint) != 1: raise SystemExit(f'paint anchor count={s.count(paint)}')
+              if s.count(polygon) != 1: raise SystemExit(f'polygon anchor count={s.count(polygon)}')
+              helper = """          /* Seal only BSP-created interior fragment edges. Real perimeter
+             edges stay untouched, so drainage mouths and flashing silhouette
+             cannot be painted over. No BSP tolerance or painter order changes. */
           const pointOnSourceSegment = (p, a, b) => {
             const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
             const len2 = ux * ux + uy * uy + uz * uz;
@@ -91,17 +65,8 @@ jobs:
             return out;
           };
 
-          bspPaintOrder(podklad).concat(bspPaintOrder(stavba)).forEach((f) => {
-            const pts = f.p.map((q) => (q.x * scale + ox).toFixed(2) + ',' + (q.y * scale + oy).toFixed(2)).join(' ');
-            const a = { points: pts, fill: f.fill };
-            /* Two anti-aliased faces sharing an edge leave a hairline of
-               background between them. Stroking each face in its own colour
-               closes it; the corner still reads, because the two sides are
-               genuinely lit differently. */
-            if (f.edge) { a.stroke = f.edgeCol; a['stroke-width'] = '0.7'; a['stroke-linejoin'] = 'round'; }
-            if (f.seamless) a['shape-rendering'] = 'crispEdges';
-            g.appendChild(svgEl('polygon', a));
-            internalSplitEdges(f).forEach((edge) => {
+"""
+              seal = """            internalSplitEdges(f).forEach((edge) => {
               const u = edge[0], v = edge[1];
               g.appendChild(svgEl('line', {
                 x1: (u.x * scale + ox).toFixed(2), y1: (u.y * scale + oy).toFixed(2),
@@ -109,20 +74,13 @@ jobs:
                 stroke: f.fill, 'stroke-width': '0.7', 'stroke-linecap': 'butt',
                 'shape-rendering': 'crispEdges'
               }));
-            });
-          });"""
-
-          marker = 'const internalSplitEdges = (f) => {'
-          if marker in s:
-              print('Internal BSP seam repair already present.')
-          else:
-              if s.count(old_fragment) != 1:
-                  raise SystemExit(f'faceFragment guard count={s.count(old_fragment)}')
-              if s.count(old_paint) != 1:
-                  raise SystemExit(f'paint guard count={s.count(old_paint)}')
-              s = s.replace(old_fragment, new_fragment, 1)
-              s = s.replace(old_paint, new_paint, 1)
+            });"""
+              s = s.replace(frag, frag_new, 1)
+              s = s.replace(paint, helper + paint, 1)
+              s = s.replace(polygon, polygon + "\n" + seal, 1)
               p.write_text(s, encoding='utf-8')
+          else:
+              print('Internal BSP seam repair already present.')
           PY
           node --check konfigurator/soltec-premium.js
           git diff --check
