@@ -14,7 +14,8 @@ function assertSourceContract() {
   const source = fs.readFileSync(SOURCE_PATH, 'utf8');
 
   assert.match(source, /const fullHalf = bladeW \/ 2;/, 'Soltec louvers must keep a rigid full-width profile while rotating');
-  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false \}\);/, 'Moving Soltec louvers must not change stage fitting');
+  assert.match(source, /const layO = Object\.assign\(\{\}, lay, obrys, \{ fit: false, cull: true \}\);/, 'Moving Soltec louvers must keep stable fitting and back-face visibility');
+  assert.match(source, /normal: \[bladeUz, 0, -bladeUx\]/, 'Louver-mounted LEDs must follow the rotating underside normal');
   assert.match(source, /raw: true, bias: bias, fit: false/, 'Louver-mounted LED geometry must not change stage fitting');
   assert.match(source, /if \(\(H \/ 2 \+ se \* DIST\) > 0\)/, 'Ground visibility must use actual camera height');
   assert.doesNotMatch(source, /if \(se > 0\.01\)/, 'Ground must not pop at an arbitrary camera elevation threshold');

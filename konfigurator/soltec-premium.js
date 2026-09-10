@@ -4476,7 +4476,7 @@
                  in stage fitting. The fixed frame/posts define the camera
                  envelope, so opening/closing cannot zoom, wave or settle the
                  whole pergola. */
-              const layO = Object.assign({}, lay, obrys, { fit: false });
+              const layO = Object.assign({}, lay, obrys, { fit: false, cull: true });
               /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
                  lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
                  je to ten 17 mm lap, ktorým strecha tesní.
@@ -4519,7 +4519,7 @@
                 const strip = (w, fill, bias) => quad([
                   [cx - bladeUx * w, yc - hy, cz - bladeUz * w], [cx + bladeUx * w, yc - hy, cz + bladeUz * w],
                   [cx + bladeUx * w, yc + hy, cz + bladeUz * w], [cx - bladeUx * w, yc + hy, cz - bladeUz * w]
-                ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias, fit: false });
+                ], fill, { normal: [bladeUz, 0, -bladeUx], cull: true, edge: false, raw: true, bias: bias, fit: false });
                 for (let k = 3; k >= 1; k--) strip(9 + k * 22, 'rgba(' + ledCol.spill + ',' + (0.06 * (4 - k)).toFixed(3) + ')', 380 + (3 - k));
                 strip(13, 'rgba(20,19,16,.5)', 396);
                 strip(8, ledCol.core, 400);
