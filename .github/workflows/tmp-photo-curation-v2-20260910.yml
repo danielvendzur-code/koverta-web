@@ -112,7 +112,6 @@ jobs:
                   raise SystemExit(f"Missing required asset: {path}")
               return image_size(path)
 
-          # Verify the three downloaded files are genuine raster images before touching HTML.
           for asset_path in sorted(added_assets):
               width, height = image_size(asset_path)
               if width < 1200 or height < 700:
@@ -120,8 +119,6 @@ jobs:
                       f"Downloaded realization image is unexpectedly small: {asset_path} = {width}x{height}"
                   )
 
-          # KOVER​TA — carports. Keep the already selected alternate-angle hero, fix stale metadata,
-          # and replace one repeated body image with another angle already present in the repo.
           p = "pristresky-pre-auta/index.html"
           replace_exact(
               p,
@@ -145,8 +142,6 @@ jobs:
               f'<img src="../assets/koverta-pristresok-auto-trnava-hero.jpg" width="{w}" height="{h}" alt="Dvojmiestny prístrešok Koverta v Trnave — pohľad z iného uhla" title="Prístrešok Koverta pre dve autá — Trnava" loading="lazy" decoding="async">',
           )
 
-          # KOVER​TA — garden canopy. Hero stays as selected; the repeated body photo becomes
-          # the other Bratislava angle already stored locally.
           p = "zahradne-pristresky/index.html"
           replace_exact(
               p,
@@ -160,8 +155,6 @@ jobs:
               f'<img src="../assets/koverta-zahradny-pristresok-bratislava-hero.jpg" width="{w}" height="{h}" alt="Záhradný prístrešok Koverta v Bratislave — pohľad z iného uhla" title="Záhradný prístrešok Koverta — Bratislava" decoding="async" loading="lazy">',
           )
 
-          # SOLTEC carport — professional Soltec photography is primary in hero/social preview;
-          # our real installation photos remain as supporting material.
           p = "carport-soltec/index.html"
           replace_exact(
               p,
@@ -197,7 +190,6 @@ jobs:
               f'<img src="../assets/soltec-roof-iso.jpg" width="{w}" height="{h}" alt="ISO panel strechy hliníkového carportu Soltec" title="Strecha carportu Soltec — ISO panel 30 mm" decoding="async" loading="lazy">',
           )
 
-          # SOLTEC fixed canopy — keep the professional hero; gallery uses a different real install.
           p = "pevne-prestresenia/index.html"
           w, h = dims("soltec-pevne-prestresenie-mokrance.jpg")
           replace_exact(
@@ -206,8 +198,6 @@ jobs:
               f'<img src="../assets/soltec-pevne-prestresenie-mokrance.jpg" width="{w}" height="{h}" alt="Pevné hliníkové prestrešenie Soltec pri rodinnom dome v Mokranciach" title="Pevné prestrešenie Soltec — Mokrance" loading="lazy" decoding="async">',
           )
 
-          # SOLTEC bioclimatic pergola — remove exact repeats only. Professional catalogue photos
-          # remain dominant; three visually verified real Slovak installations are supporting shots.
           p = "bioklimaticke-pergoly/index.html"
           w, h = dims("soltec-accessory-walls.jpg")
           replace_exact(
@@ -224,8 +214,8 @@ jobs:
           w, h = dims("soltec-bioklimaticka-pergola-limbach-detail.jpg")
           replace_exact(
               p,
-              '<div class="kh-mat__media"><img src="../assets/soltec-bio-fall-2024.jpg" width="1656" height="1190" alt="Pergola v daždi" loading="lazy" decoding="async"></div>',
-              f'<div class="kh-mat__media"><img src="../assets/soltec-bioklimaticka-pergola-limbach-detail.jpg" width="{w}" height="{h}" alt="Detail rámu, lamiel a stĺpa bioklimatickej pergoly Soltec v Limbachu" title="Detail konštrukcie pergoly Soltec — Limbach" loading="lazy" decoding="async"></div>',
+              '<img src="../assets/soltec-bio-fall-2024.jpg" width="1656" height="1190" alt="Pergola v daždi" decoding="async" loading="lazy">',
+              f'<img src="../assets/soltec-bioklimaticka-pergola-limbach-detail.jpg" width="{w}" height="{h}" alt="Detail rámu, lamiel a stĺpa bioklimatickej pergoly Soltec v Limbachu" title="Detail konštrukcie pergoly Soltec — Limbach" decoding="async" loading="lazy">',
           )
           w, h = dims("soltec-bioklimaticka-pergola-zilinska-lehota.jpg")
           replace_exact(
@@ -250,7 +240,6 @@ jobs:
               '<p class="k-copy">Realizácia bioklimatickej pergoly v Hliníku nad Hronom</p>',
           )
 
-          # SOLTEC shading + outdoor kitchens — only stale preload/social-image references.
           p = "tienenie/index.html"
           replace_exact(
               p,
@@ -285,7 +274,6 @@ jobs:
               '<meta name="twitter:image" content="https://danielvendzur-code.github.io/koverta-web/assets/soltec-outdoor-kuchyna-graz.jpg">',
           )
 
-          # Every local image/href on the touched pages must resolve.
           local_ref = re.compile(r'(?:src|href)="\.\./assets/([^"?#]+)')
           photo_src = re.compile(
               r'<img\b[^>]*\bsrc="\.\./assets/([^"?#]+\.(?:jpe?g|png|webp))"',
