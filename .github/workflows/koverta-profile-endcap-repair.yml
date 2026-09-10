@@ -1,0 +1,60 @@
+name: Koverta guarded trapezoid end-cap repair
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact shell-edge repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('konfigurator/soltec-premium.js')
+          s = p.read_text(encoding='utf-8')
+
+          old_turn_comment = '''              /* The inner vertical turn must cover the open corrugation mouths.\n                 A 1 mm clearance exposed the dark rib cavities at grazing/top views,\n                 while the earlier 4 mm overlap created unnecessary BSP splitting.\n                 The existing turn therefore overlaps the visible sheet edge by only\n                 0.5 mm: no extra closure plane, no outside-envelope change. */'''
+          new_turn_comment = '''              /* Keep a real 1 mm clearance between the inner flashing turn and\n                 the visible corrugated shell. Any overlap makes the turn plane cut\n                 every roof facet in the BSP. The sheet is closed at its own exact\n                 boundary below, so this clearance cannot expose an open mouth. */'''
+          old_turn_line = '              put(zav - 9 * dir, zav + 11.5 * dir, turnBottom, zTop - turnBottom);'
+          new_turn_line = '              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);'
+
+          anchor = '''            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.\n               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera\n               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */\n            drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);\n            drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);'''
+          replacement = '''            /* Close the finite-thickness corrugated shell on its exact geometric\n               boundary. The x-end caps follow the same breakpoints and the same\n               upper/lower Z functions as the long roof facets, so every shared\n               edge has identical vertices. These faces meet the roof only at its\n               boundary; they never cross a long rib and therefore add no BSP cut.\n               They are double-sided because a cut sheet edge can be seen from the\n               pocket side as well as from outside. */\n            const drawTrapEndCap = (x, y0, y1, hex) => {\n              const cuts = trapBreaks(y0, y1);\n              for (let i = 0; i < cuts.length - 1; i++) {\n                const a = cuts[i], b = cuts[i + 1];\n                const pts = [\n                  [x, a, trapLowerZ(a)], [x, b, trapLowerZ(b)],\n                  [x, b, trapUpperZ(b)], [x, a, trapUpperZ(a)]\n                ];\n                quad(pts, hex, {\n                  normal: [1, 0, 0], cull: false, edge: false, raw: true, seamless: true\n                });\n              }\n            };\n            const drawTrapSideCap = (y, x0, x1, hex) => {\n              const zl = trapLowerZ(y), zu = trapUpperZ(y);\n              quad([[x0, y, zl], [x1, y, zl], [x1, y, zu], [x0, y, zu]], hex, {\n                normal: [0, 1, 0], cull: false, edge: false, raw: true, seamless: true\n              });\n            };\n\n            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.\n               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera\n               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */\n            drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);\n            drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);\n            drawTrapEndCap(vx0, vy0, vy1, frame);\n            drawTrapEndCap(vx1, vy0, vy1, frame);\n            drawTrapSideCap(vy0, vx0, vx1, frame);\n            drawTrapSideCap(vy1, vx0, vx1, frame);'''
+
+          if s.count(old_turn_comment) != 1 or s.count(old_turn_line) != 1:
+              raise SystemExit('turn overlap guard did not match exact head')
+          if s.count(anchor) != 1:
+              raise SystemExit(f'roof-surface anchor count={s.count(anchor)}')
+          if 'const drawTrapEndCap = ' in s or 'const drawTrapSideCap = ' in s:
+              raise SystemExit('profile end caps already present')
+
+          s = s.replace(old_turn_comment, new_turn_comment, 1)
+          s = s.replace(old_turn_line, new_turn_line, 1)
+          s = s.replace(anchor, replacement, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          node --check konfigurator/soltec-premium.js
+          git diff --check
+          git diff --exit-code -- archiv-expivi konfigurator/test coordination/koverta assets/mapa/reca.jpg
+      - name: Commit renderer only
+        run: |
+          test -n "$(git diff --name-only -- konfigurator/soltec-premium.js)"
+          test "$(git diff --name-only)" = "konfigurator/soltec-premium.js"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add konfigurator/soltec-premium.js
+          git commit -m 'fix: close Koverta trapezoid shell at fascia pocket'
+          git push origin HEAD:fix/koverta-final-repair-20260910
