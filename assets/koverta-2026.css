@@ -14888,3 +14888,22 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     padding: 18px;
   }
 }
+
+
+/* BATCH7 SOLTEC MODEL DECISION 20260911 */
+.k-model-system { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin:0 0 18px; border-block:1px solid rgba(18,23,26,.16); }
+.k-model-system > div { min-width:0; padding:16px 18px; border-left:1px solid rgba(18,23,26,.12); }
+.k-model-system > div:first-child { border-left:0; padding-left:0; }
+.k-model-system span { display:block; margin-bottom:5px; color:#6b7275; font-size:12px; font-weight:650; letter-spacing:.02em; }
+.k-model-system strong { display:block; font-size:15px; line-height:1.35; }
+.k-model-card__lead { margin:-10px 0 20px; color:#646c70; font-size:14.5px; line-height:1.5; }
+.k-model-family__head > div { display:grid; gap:7px; }
+.k-model-family__head > div > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
+.k-model-family__head > div > strong { font-size:15px; line-height:1.35; font-weight:700; }
+@media (max-width:719px) {
+  .k-model-system { grid-template-columns:1fr 1fr; }
+  .k-model-system > div { padding:13px 12px; border-left:0; border-top:1px solid rgba(18,23,26,.1); }
+  .k-model-system > div:nth-child(-n+2) { border-top:0; }
+  .k-model-system > div:nth-child(odd) { padding-left:0; border-right:1px solid rgba(18,23,26,.1); }
+  .k-model-family__head > div > strong { font-size:14px; }
+}
