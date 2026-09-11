@@ -1,0 +1,116 @@
+name: Batch 5 realizacie menu repair
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-batch5-realizacie-fix-20260911.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply scoped CSS correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          css=Path('assets/koverta-2026.css')
+          s=css.read_text(encoding='utf-8')
+          marker='/* BATCH5 REALIZACIE WIDTH FIX 20260911 */'
+          if marker in s:
+              raise SystemExit('marker already present')
+          s += '''\n\n/* BATCH5 REALIZACIE WIDTH FIX 20260911\n   Staršie pravidlo `.kv-mega--uzke { width:max-content }` prežilo nový layout\n   a vizuálne stlačilo dve realizačné karty do úzkeho stĺpca. Desktopová\n   realizácia teraz používa rovnaký široký panelový jazyk ako ostatné menu. */\n@media (min-width: 1024px) {\n  .kv-header .kv-nav__item--uzke { position: static; }\n  .kv-header .kv-nav__item--uzke .kv-mega--uzke.kv-mega--real.kv-mega--batch5 {\n    left: calc(var(--k-gut) - 24px);\n    right: auto;\n    width: min(920px, calc(100vw - (2 * var(--k-gut))));\n    max-width: min(920px, calc(100vw - (2 * var(--k-gut))));\n    padding: 18px;\n  }\n}\n'''
+          css.write_text(s,encoding='utf-8')
+          version='2026091106'
+          changed=[]
+          for p in sorted(Path('.').rglob('*.html')):
+              if any(part in {'.git','node_modules','qa','artifacts'} for part in p.parts):
+                  continue
+              t=p.read_text(encoding='utf-8')
+              if 'koverta-2026.css' not in t and 'koverta-2026.js' not in t:
+                  continue
+              n=re.sub(r'(koverta-2026\.(?:css|js))(?:\?v=[^\"\'<>\s]*)?', rf'\1?v={version}', t)
+              if n!=t:
+                  p.write_text(n,encoding='utf-8'); changed.append(str(p))
+          if not changed: raise SystemExit('no html cache refs changed')
+          names=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          if 'assets/koverta-2026.css' not in names: raise SystemExit('css not changed')
+          if any(x!='assets/koverta-2026.css' and not x.endswith('.html') for x in names): raise SystemExit(f'unexpected scope {names}')
+          PY
+          git diff --check
+
+      - name: Install browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/koverta-b5r-pw qa-batch5r
+          cd /tmp/koverta-b5r-pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+
+      - name: Browser QA and screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8907 >/tmp/koverta-b5r-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          export NODE_PATH=/tmp/koverta-b5r-pw/node_modules
+          export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node - <<'JS'
+          const { chromium } = require('playwright');
+          const path=require('path'), p=require('node:process');
+          (async()=>{
+            const b=await chromium.launch({headless:true,executablePath:p.env.CHROME,args:['--no-sandbox','--disable-gpu']});
+            for(const cfg of [{w:1440,h:900,n:'1440'},{w:1280,h:800,n:'1280'}]){
+              const c=await b.newContext({viewport:{width:cfg.w,height:cfg.h}}); const page=await c.newPage();
+              await page.goto('http://127.0.0.1:8907/',{waitUntil:'domcontentloaded',timeout:30000}); await page.waitForTimeout(800);
+              const consent=page.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first(); if(await consent.count()) { try{await consent.click({timeout:600})}catch{} }
+              const trig=page.locator('[data-k-mega-trigger]').filter({hasText:'Realizácie'}).first(); await trig.click(); await page.waitForTimeout(300);
+              const item=trig.locator('xpath=ancestor::*[@data-k-mega-item][1]'); const panel=item.locator('.kv-mega');
+              const box=await panel.boundingBox(); if(!box) throw new Error('realizacie panel missing');
+              if(box.width<640) throw new Error('realizacie panel still too narrow '+box.width);
+              if(box.x<0 || box.x+box.width>cfg.w+1) throw new Error('realizacie panel clipped '+JSON.stringify(box));
+              if(await panel.locator('.kv-mega__real-grid > li').count()!==2) throw new Error('realizacie cards drift');
+              const cards=panel.locator('.kv-mega__real-grid > li');
+              for(let i=0;i<2;i++){ const cb=await cards.nth(i).boundingBox(); if(!cb || cb.width<260) throw new Error('realizacie card too narrow '+JSON.stringify(cb)); }
+              const imgs=panel.locator('img'); for(let i=0;i<await imgs.count();i++){ const s=await imgs.nth(i).evaluate(el=>({c:el.complete,w:el.naturalWidth,h:el.naturalHeight})); if(!s.c||s.w<40||s.h<16) throw new Error('broken menu image '+JSON.stringify(s)); }
+              const underline=await trig.evaluate(el=>getComputedStyle(el,'::after').height); if(underline!=='2px') throw new Error('nav underline thickness drift '+underline);
+              await page.screenshot({path:path.join(p.env.GITHUB_WORKSPACE,'qa-batch5r','realizacie-'+cfg.n+'.png')});
+              await c.close();
+            }
+            await b.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: batch5-realizacie-${{ github.sha }}
+          path: qa-batch5r/*.png
+          if-no-files-found: error
+
+      - name: Commit correction and cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/koverta-2026.css
+          git diff --name-only -- '*.html' | xargs -r git add
+          git commit -m 'fix: restore realizacie mega menu width'
+          git rm .github/workflows/tmp-batch5-realizacie-fix-20260911.yml
+          git commit -m 'ci: remove temporary realizacie menu QA'
+          git push origin HEAD:fix/koverta-final-repair-20260910
