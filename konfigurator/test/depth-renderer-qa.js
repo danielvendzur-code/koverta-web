@@ -54,6 +54,18 @@ const { prepareContext } = require('./browser-qa');
           times.sort((a,b)=>a-b);
           report.push({kind,key,mobile,medianMs:times[24],p95Ms:times[45],faces:await stage.getAttribute('data-face-count')});
         }
+        if(kind==='bio') {
+          await page.locator('[data-sp-side="rear"]').click({force:true});
+          await page.locator('[data-sp-side-opt="h50l"]').click({force:true});
+          const slider=page.locator('[data-sp-side-range]').first();
+          for(const value of [0,25,50,75,100]) {
+            await slider.evaluate((el,v)=>{el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);
+            await page.waitForTimeout(80);
+            await page.evaluate(()=>{window.SP_TEST.setView(.82,.28);window.SP_TEST.redrawStage();});
+            assert.equal(await stage.getAttribute('data-invalid-face-count'),'0','Invalid moving timber geometry');
+            await stage.screenshot({path:`qa-artifacts/depth/timber-${mobile?'mobile':'desktop'}-${value}.png`});
+          }
+        }
         assert.deepEqual(errors,[],'Runtime exceptions');
       }
       await context.close();

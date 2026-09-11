@@ -1,5 +1,35 @@
 # Koverta configurator: sources, measured geometry and open questions
 
+## Reference geometry repair — 2026-09-11
+
+Reopened catalogue 14069's original binary export from
+`https://data.expivi.net/teams/811/models/14069/b79e-1d7d-12a6-5dd3.zip`.
+Recovered drainage meshes `mesh_Body1_93_SteeleSatin_HHBAA.ebm` (six posts)
+and `mesh_Body1_51_SteeleSatin_OIBAA.ebm` (four posts) into
+`koverta-reference-geometry.js`, retaining original triangles and normals.
+Their tube diameter is 80 mm. The four-post model really has a longer diagonal
+run: the previous short-elbow-only requirement was incorrect. Width and
+post-station adaptation preserve the pipe section; source catalogue accuracy
+must not be confused with independent certification of every resized variant.
+
+The original roof mesh has approximately 204.56 mm rib pitch, 35.5 mm height,
+35.8 mm crowns and 0.5 mm skin. The renderer now uses that pitch/crown/shoulder
+instead of the earlier inferred five-ribs-per-cover-width proportions.
+
+Purlin connectors now sit at the paired C webs (axis ±5 mm), and their other
+arm touches the side-frame web, not the remote flange edge. Plate corners are
+rounded. Post-corner shading interpolates the actual corner normals.
+
+Soltec S-blade external profile follows the manufacturer's 200/28 drawing:
+https://www.soltec.si/wp-content/uploads/2022/10/pergola-sl-170-28-profil-soltec-1024x358.jpg
+Its trough, shoulder and sealing lip replace the flat rectangular slab.
+The 36/42/60 variants retain their declared envelope, with this profile family
+adapted proportionally; those variants do not yet have separately traced CAD
+cross-sections. The closed top datum now meets the frame.
+
+Timber uses solid 24 mm boards with open joints. Sliding leaves stay on fixed,
+separate tracks through the entire motion, with no end-stile visibility switch.
+
 ## Owner correction — equal column sections, 2026-09-11
 
 The owner explicitly confirmed that corner and intermediate posts have the
