@@ -55,7 +55,9 @@ const { prepareContext } = require('./browser-qa');
           report.push({kind,key,mobile,medianMs:times[24],p95Ms:times[45],faces:await stage.getAttribute('data-face-count')});
         }
         if(kind==='bio') {
-          await page.locator('[data-sp-side="rear"]').click({force:true});
+          const sideStep=await page.locator('[data-sp-side="rear"]').evaluate(el=>el.closest('[data-sp-stepno]').dataset.spStepno);
+          await page.locator('[data-sp-goto="'+sideStep+'"]').click();
+          await page.locator('[data-sp-side="rear"]').click();
           await page.locator('[data-sp-side-opt="h50l"]').click({force:true});
           const slider=page.locator('[data-sp-side-range]').first();
           for(const value of [0,25,50,75,100]) {

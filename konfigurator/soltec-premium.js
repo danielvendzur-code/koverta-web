@@ -4307,7 +4307,7 @@
               const left = -fullHalf;
               const bodyEnd = fullHalf - Math.max(17, overlap);
               const shoulder0 = left + bladeW * 0.31;
-              const shoulder1 = left + bladeW * 0.45;
+              const shoulder1 = left + bladeW * (bladeW > 250 ? 0.42 : 0.45);
               const profile = [
                 [left,-t],[bodyEnd,-t],[bodyEnd+3,-skin],
                 [fullHalf,-skin],[fullHalf,0],[shoulder1,0],
@@ -4320,7 +4320,22 @@
                 const pts=[P(A[0],A[1],y0-lap),P(B[0],B[1],y0-lap),P(B[0],B[1],y1+lap),P(A[0],A[1],y1+lap)];
                 quad(pts,louv,{normal:faceNormal(pts),edge:false,cull:false});
               }
-              // End closures are under the side frame, outside the visible opening.
+              // Triangulate the non-convex end cover without filling its trough.
+              const remaining=profile.map((_,j)=>j), caps=[];
+              const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+              for(let guard=0;remaining.length>3 && guard<100;guard++) {
+                let found=false;
+                for(let j=0;j<remaining.length;j++) {
+                  const a=remaining[(j+remaining.length-1)%remaining.length],b=remaining[j],c=remaining[(j+1)%remaining.length];
+                  if(cross(profile[a],profile[b],profile[c])<=1e-8)continue;
+                  const inside=remaining.some(k=>k!==a&&k!==b&&k!==c&&cross(profile[a],profile[b],profile[k])>=-1e-8&&cross(profile[b],profile[c],profile[k])>=-1e-8&&cross(profile[c],profile[a],profile[k])>=-1e-8);
+                  if(inside)continue;
+                  caps.push([a,b,c]);remaining.splice(j,1);found=true;break;
+                }
+                if(!found)break;
+              }
+              if(remaining.length===3)caps.push(remaining.slice());
+              for(const [y,ny] of [[y0-lap,-1],[y1+lap,1]])caps.forEach(ids=>quad(ids.map(j=>P(profile[j][0],profile[j][1],y)),louv,{normal:[0,ny,0],edge:false,cull:false}));
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */

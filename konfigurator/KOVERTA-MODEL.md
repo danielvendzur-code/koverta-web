@@ -23,9 +23,10 @@ rounded. Post-corner shading interpolates the actual corner normals.
 Soltec S-blade external profile follows the manufacturer's 200/28 drawing:
 https://www.soltec.si/wp-content/uploads/2022/10/pergola-sl-170-28-profil-soltec-1024x358.jpg
 Its trough, shoulder and sealing lip replace the flat rectangular slab.
-The 36/42/60 variants retain their declared envelope, with this profile family
-adapted proportionally; those variants do not yet have separately traced CAD
-cross-sections. The closed top datum now meets the frame.
+The XL 270/60 shoulder ratio is checked against the separate manufacturer
+XL profile drawing (pergola-sl-240-60-profil-soltec-1024x435.jpg). The 36/42
+variants retain their declared envelope with a proportionally adapted profile;
+those two variants do not yet have separately traced CAD cross-sections. The closed top datum now meets the frame.
 
 Timber uses solid 24 mm boards with open joints. Sliding leaves stay on fixed,
 separate tracks through the entire motion, with no end-stile visibility switch.
