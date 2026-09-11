@@ -5347,13 +5347,15 @@
             /* quick start and a calm settle, without the mechanical-looking
                midpoint acceleration or bounce */
             const e = 1 - Math.pow(1 - k, 3);
-            M.set(from + (to - from) * e);
+            const value = from + (to - from) * e;
+            const finished = k >= 1 || Math.abs(to - value) <= 1e-6;
+            M.set(finished ? to : value);
             scheduleStage();
             /* Počas behu má posuvník aj percentá bežať s ním, inak to vyzerá,
                že sa ovládanie prebralo až na konci. */
             syncSideMove();
             syncLouverReadout();
-            if (k < 1) {
+            if (!finished) {
               louverRun = requestAnimationFrame(step);
               window.clearTimeout(moverTimer);
 
