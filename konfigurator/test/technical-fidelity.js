@@ -78,8 +78,8 @@ for (const [size, expected] of Object.entries(exact)) {
 
   expected.postAxes.forEach((axis, index) => {
     const corner = index === 0 || index === expected.postAxes.length - 1;
-    const pd = corner ? R.postD : R.stredD;
-    const pw = corner ? R.postW : R.stredW;
+    const pd = R.postW;
+    const pw = R.postW;
     const px = axis - pd / 2;
     for (const py of [0, W - pw]) {
       const cy = py + pw / 2;
@@ -118,7 +118,7 @@ for (const [size, expected] of Object.entries(exact)) {
   const anchorHeadR = Math.max(5, Math.round(plate * 0.028));
   assert(anchorOffset + anchorHeadR < plateHalf,
     size + ': base anchor marker leaves the base plate');
-  for (const section of [[R.postD, R.postW], [R.stredD, R.stredW]]) {
+  for (const section of [[R.postW, R.postW], [100, 100]]) {
     assert(section[0] / 2 <= plateHalf && section[1] / 2 <= plateHalf,
       size + ': post section does not sit on the 250 mm base plate');
   }

@@ -58,7 +58,7 @@ const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
       const body = [];
       osi.forEach((os, i) => {
         const naVaznici = band.stlpyNaVaznici || (i !== 0 && i !== osi.length - 1);
-        const pd = naVaznici ? R.stredD : R.postD, pw = naVaznici ? R.stredW : R.postW;
+        const pd = R.postW, pw = R.postW;
         const x = Math.min(Math.max(os, pd / 2), L - pd / 2);
         for (const [y, nm] of [[vsun + pw/2, 'y0'], [W - vsun - pw/2, 'yW']])
           for (const z of [500, 1200, 2000]) body.push([x, y, z, `rad ${Math.round(os)} ${nm} z${z}`]);

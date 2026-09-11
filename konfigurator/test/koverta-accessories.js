@@ -120,6 +120,8 @@ function expectedWallAnchor(snap, side) {
   const axes = geometry.postAxes;
   const sections = geometry.postSections;
   assert(axes.length === sections.length && axes.length >= 2, 'Invalid Koverta post geometry');
+  assert(sections.every(section => section.d === section.w && section.w === sections[0].w),
+    'Corner and intermediate posts must have the same square section');
   const leftEdges = axes.map((axis, i) => axis - sections[i].d / 2);
   const inset = geometry.postInset;
 

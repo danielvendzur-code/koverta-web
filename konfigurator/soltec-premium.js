@@ -942,9 +942,9 @@
         const hasLoads = () => Boolean(loadList());
         const loadKg = () => (hasLoads() ? loadList()[state.load] : 100);
         const postSize = () => (String(state.model).indexOf('240') > -1 ? 150 : 120);
-        /* Stĺp nemusí byť štvorec. Odmerané z modelu Koverta v Expivi:
-           4-stĺpová varianta stojí na 150 × 150 mm, 6-stĺpová na 110 × 190 mm,
-           kde 190 je rozmer pozdĺž hĺbky. Soltec pole nemá a ostáva štvorcový. */
+        /* Owner correction, 2026-09-11: corner and intermediate columns use
+           the same square section within each assembly. Archived rectangular
+           mesh bounds are retained as source data, not rendered post sections. */
         /* Koverta: koľko stĺpov prístrešok má, aký majú prierez, kde stoja
            rady a kde ležia väznice — to všetko vyplýva zo šírky, nie z otázky
            na zákazníka. Pásma sú odmerané zo všetkých exportov Expivi: do
@@ -1054,11 +1054,11 @@
         const kvStlpRez = (i, n) => {
           const R = model().kvRef || {}, b = kvBand();
           const rohovy = i === 0 || i === n - 1;
-          if (kvExportPost100()) return { d: 100, w: 100, roh: rohovy };
-          const naVaznici = (b && b.stlpyNaVaznici) || !rohovy;
-          return naVaznici
-            ? { d: Number(R.stredD) || 190, w: Number(R.stredW) || 110, roh: false }
-            : { d: Number(R.postD) || 150, w: Number(R.postW) || 150, roh: true };
+          const side = kvExportPost100() ? 100 : (Number(R.postW) || 150);
+          // Connection role is independent of section: four-post cantilever
+          // assemblies still connect along the side beam, not the end frame.
+          const roh = rohovy && !(b && b.stlpyNaVaznici);
+          return { d: side, w: side, roh };
         };
         const postD = () => {
           const b = kvBand();
@@ -2682,7 +2682,7 @@
                 /* Rozhoduje skutočná rola stĺpa, nie jeho index v rade.
                    - Rohový 150 × 150 stĺp stojí pod stykom bočného a čelného
                      rámu: jedna platňa ide po bočnom ráme, druhá do čelného.
-                   - Nerohový 110 × 190 stĺp končí na spodku BOČNÉHO rámu.
+                   - Nerohový stĺp končí na spodku BOČNÉHO rámu.
                      Väznica je v aktívnych Expivi scénach o 40 mm vyššie a
                      pripája sa k bočnému rámu vlastnými uholníkmi. Preto má
                      nerohový stĺp iba platne vedené po bočnom ráme; žiadna
@@ -2719,7 +2719,7 @@
             const px = xs[xi];
             /* Koverta must anchor the brace to the actual post face. The old
                generic `post=120` is a Soltec-era visual scalar and is wrong
-               for Koverta's 150×150 and 190×110 sections. Keep the brace's
+               for Koverta's active square sections. Keep the brace's
                visual thickness heuristic, but derive every physical contact
                point from the active post section. */
             const kovertaContact = Boolean(kvBand());
@@ -5441,7 +5441,7 @@
                nevie, ako vysoko pod prístreškom prejde. */
             + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
           if (modelNote && m.kvGeom) modelNote.textContent = kvMeasured()
-            ? 'Zobrazená zostava: 4 rohové stĺpy 150 × 150 mm a 2 stredné 110 × 190 mm, výška pod rámom 2 398 mm. Osi podľa príslušného modelu Expivi.'
+            ? 'Zobrazená zostava: rovnaké stĺpy 150 × 150 mm v rohoch aj v strede, výška pod rámom 2 398 mm.'
             : 'Prierez a rozmiestnenie stĺpov závisia od konkrétnej zostavy. Nosnú konštrukciu a kotvenie potvrdíme pri návrhu.';
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */

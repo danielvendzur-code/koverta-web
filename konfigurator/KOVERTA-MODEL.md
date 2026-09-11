@@ -1,5 +1,23 @@
 # Koverta configurator: sources, measured geometry and open questions
 
+## Owner correction — equal column sections, 2026-09-11
+
+The owner explicitly confirmed that corner and intermediate posts have the
+same dimensions. This overrides the earlier interpretation of rectangular
+110 × 190 archive bounds. All rows now use the family's square corner section:
+150 × 150 for legacy assemblies, 100 × 100 for the already identified newer
+catalogues. Four-post assemblies follow the same rule. Connection roles and
+longitudinal axes are preserved; plates, side infills and drainage derive their
+contact points from the corrected section.
+
+Reviewed photographs: `assets/koverta-pristresok-auto-trnava-hero.jpg` and
+`assets/koverta-zahradny-pristresok-bratislava-detail.jpg`. These support square,
+rounded posts and consistent profiles. Their perspective and lack of a scale
+reference do not establish exact millimetres. The numerical size comes from
+the existing corner-section data, not a claimed photogrammetric measurement.
+Historical archive measurements below remain unchanged for provenance and do
+not override this owner correction.
+
 ## Rendering update — 2026-09-11
 
 The current renderer rasterises original faces with a perspective-correct
@@ -15,7 +33,7 @@ one light-grey material; differences in brightness come from face orientation.
 The current visual flashing gauge is 1.5 mm, replacing the former 15 mm visual
 envelope, and front/back top folds lap over the side folds by one gauge.
 This gauge is a rendering proportion, not a newly verified manufacturing value.
-The measured fascia reach, column sections and active axes remain unchanged.
+The measured fascia reach and active axes remain unchanged.
 The artificial base sleeve was removed at the owner's explicit request.
 
 Drainage now contains the previously metadata-only concealed connecting run.
