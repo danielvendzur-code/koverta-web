@@ -1,0 +1,209 @@
+name: Restore five-step process only
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-restore-5step-process-20260911.yml
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Restore only historical five-step process markup
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          HIST='13c43ae9a3c69d3d798e0b1bd67c9a92d9265661'
+          p=Path('index.html')
+          current=p.read_text(encoding='utf-8')
+          historical=subprocess.check_output(['git','show',f'{HIST}:index.html'],text=True)
+
+          def process_section(text):
+              start=text.find('<section class="k-band kh-proc"')
+              if start < 0:
+                  raise SystemExit('process section start not found')
+              end=text.find('</section>',start)
+              if end < 0:
+                  raise SystemExit('process section end not found')
+              return start,end+len('</section>'),text[start:end+len('</section>')]
+
+          ca,cb,cur=process_section(current)
+          ha,hb,old=process_section(historical)
+
+          current_rows=re.findall(r'data-k-step-row',cur)
+          old_rows=re.findall(r'data-k-step-row',old)
+          current_panels=re.findall(r'data-k-step(?:[ >])',cur)
+          old_panels=re.findall(r'data-k-step(?:[ >])',old)
+          if len(current_rows) != 3 or len(current_panels) != 3:
+              raise SystemExit(f'refusing blind restore: current process is not exactly 3 rows/3 panels ({len(current_rows)}/{len(current_panels)})')
+          if len(old_rows) != 5 or len(old_panels) != 5:
+              raise SystemExit(f'historical source is not 5 rows/5 panels ({len(old_rows)}/{len(old_panels)})')
+
+          expected=[
+              'Návrh alebo konfigurátor',
+              'Bezplatné zameranie',
+              'Výroba konštrukcie',
+              'Podklad a pätky',
+              'Montáž a odovzdanie',
+          ]
+          for label in expected:
+              if old.count(label) < 2:
+                  raise SystemExit(f'historical step missing in row/panel: {label}')
+
+          # Preserve the current anchor used by search/navigation; the historical
+          # presentation/animation markup otherwise stays exact.
+          old=old.replace(
+              '<section class="k-band kh-proc" aria-labelledby="procTitle">',
+              '<section class="k-band kh-proc" id="proces" aria-labelledby="procTitle">',
+              1,
+          )
+          if 'data-k-trio' not in old or 'kh-proc__media--trio' not in old:
+              raise SystemExit('historical animated final trio missing')
+
+          updated=current[:ca]+old+current[cb:]
+          p.write_text(updated,encoding='utf-8')
+
+          # Hard scope: only index.html may change at this stage.
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          if changed != {'index.html'}:
+              raise SystemExit(f'unexpected content scope: {sorted(changed)}')
+
+          # Animation infrastructure must already be present and must not be edited.
+          js=Path('assets/koverta-2026.js').read_text(encoding='utf-8')
+          css=Path('assets/koverta-2026.css').read_text(encoding='utf-8')
+          for needle in [
+              'function initProcess(root)',
+              "scope.querySelectorAll('[data-k-step]')",
+              "scope.querySelectorAll('[data-k-step-row]')",
+              "const trio = root.querySelector('[data-k-trio]')",
+          ]:
+              if needle not in js:
+                  raise SystemExit(f'animation JS invariant missing: {needle}')
+          for needle in [
+              '.kh-proc__panels.is-stacked',
+              '.kh-proc__panel.is-active',
+              'transition: opacity 180ms var(--k-ease)',
+          ]:
+              if needle not in css:
+                  raise SystemExit(f'animation CSS invariant missing: {needle}')
+
+          restored=p.read_text(encoding='utf-8')
+          _,_,sec=process_section(restored)
+          if sec.count('data-k-step-row') != 5:
+              raise SystemExit('restored row count is not 5')
+          if len(re.findall(r'data-k-step(?:[ >])',sec)) != 5:
+              raise SystemExit('restored panel count is not 5')
+          if 'id="proces"' not in sec:
+              raise SystemExit('process anchor was lost')
+          PY
+          git diff --check
+
+      - name: Browser interaction QA and screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8901 >/tmp/koverta-process-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+
+          mkdir -p /tmp/koverta-process-pw qa-process
+          cd /tmp/koverta-process-pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+          cd "$GITHUB_WORKSPACE"
+          export NODE_PATH=/tmp/koverta-process-pw/node_modules
+          export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+
+          cat >/tmp/koverta-process-pw/check.js <<'JS'
+          const { chromium } = require('playwright');
+          const path = require('path');
+          (async()=>{
+            const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME,args:['--no-sandbox','--disable-gpu']});
+            const ctx=await browser.newContext({viewport:{width:1440,height:1000}});
+            const page=await ctx.newPage();
+            await page.goto('http://127.0.0.1:8901/index.html#proces',{waitUntil:'load',timeout:60000});
+            const consent=page.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first();
+            if(await consent.count()) { try { await consent.click({timeout:1500}); } catch(e){} }
+            const process=page.locator('#proces');
+            await process.waitFor({state:'visible'});
+            await process.scrollIntoViewIfNeeded();
+            await page.waitForTimeout(500);
+
+            const rows=process.locator('[data-k-step-row]');
+            const panels=process.locator('[data-k-step]');
+            if(await rows.count()!==5) throw new Error('expected 5 process rows');
+            if(await panels.count()!==5) throw new Error('expected 5 process panels');
+
+            const labels=['Návrh alebo konfigurátor','Bezplatné zameranie','Výroba konštrukcie','Podklad a pätky','Montáž a odovzdanie'];
+            for(let i=0;i<5;i++){
+              const row=rows.nth(i);
+              if(!(await row.innerText()).includes(labels[i])) throw new Error('wrong row '+(i+1));
+              await row.click();
+              await page.waitForTimeout(260);
+              const active=process.locator('[data-k-step].is-active');
+              if(await active.count()!==1) throw new Error('expected exactly one active panel after click '+(i+1));
+              const text=await active.innerText();
+              if(!text.includes(labels[i])) throw new Error('active panel mismatch for step '+(i+1)+': '+text);
+              const box=await active.boundingBox();
+              if(!box || box.width<500 || box.height<250) throw new Error('active panel collapsed at step '+(i+1));
+            }
+
+            await rows.nth(0).click();
+            await page.waitForTimeout(260);
+            await process.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-1.png')});
+            await rows.nth(4).click();
+            await page.waitForTimeout(320);
+            await process.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-5.png')});
+
+            const mobile=await browser.newContext({viewport:{width:390,height:844}});
+            const mp=await mobile.newPage();
+            await mp.goto('http://127.0.0.1:8901/index.html#proces',{waitUntil:'load',timeout:60000});
+            const mc=mp.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first();
+            if(await mc.count()) { try { await mc.click({timeout:1500}); } catch(e){} }
+            const mproc=mp.locator('#proces');
+            await mproc.waitFor({state:'visible'});
+            await mproc.scrollIntoViewIfNeeded();
+            await mp.waitForTimeout(400);
+            if(await mproc.locator('[data-k-step-row]').count()!==5) throw new Error('mobile expected 5 rows');
+            await mproc.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','mobile-process.png')});
+            await mobile.close();
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/koverta-process-pw/check.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: five-step-process-review-${{ github.sha }}
+          path: qa-process/*.png
+          if-no-files-found: error
+
+      - name: Commit only index.html and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          test "$(git diff --cached --name-only)" = "index.html"
+          git commit -m 'fix: restore original five-step process presentation'
+          git rm .github/workflows/tmp-restore-5step-process-20260911.yml
+          git commit -m 'ci: remove temporary five-step process workflow'
+          git push origin HEAD:fix/koverta-final-repair-20260910
