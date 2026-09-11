@@ -1,4 +1,4 @@
-name: Koverta side-pixel owner diagnostic
+name: Koverta internal BSP seal diagnostic
 
 on:
   push:
@@ -13,16 +13,28 @@ jobs:
   diagnose:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [seal-1_0, seal-1_4, seal-1_8]
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
       - name: Instrument checkout only
+        env:
+          VARIANT: ${{ matrix.variant }}
         run: |
           python3 - <<'PY'
+          import os
           from pathlib import Path
           p=Path('konfigurator/soltec-premium.js')
           s=p.read_text(encoding='utf-8')
+          width={'seal-1_0':'1.0','seal-1_4':'1.4','seal-1_8':'1.8'}[os.environ['VARIANT']]
+          old_seal="stroke: f.fill, 'stroke-width': '0.7', 'stroke-linecap': 'butt'"
+          new_seal=f"stroke: f.fill, 'stroke-width': '{width}', 'stroke-linecap': 'butt'"
+          if s.count(old_seal)!=1: raise SystemExit(f'seal marker count={s.count(old_seal)}')
+          s=s.replace(old_seal,new_seal,1)
           old="            const a = { points: pts, fill: f.fill };"
           new="            const a = { points: pts, fill: f.fill, 'data-dbg-world': f.w.map((q) => q.map((v) => Number(v).toFixed(2)).join(',')).join(';'), 'data-dbg-source': (f.sourceW || f.w).map((q) => q.map((v) => Number(v).toFixed(2)).join(',')).join(';'), 'data-dbg-order': String(f.order), 'data-dbg-depth': Number(f.depthAvg).toFixed(3), 'data-dbg-edge': String(Boolean(f.edge)), 'data-dbg-seal': String(Boolean(f.sealSplits)) };"
           if s.count(old)!=1: raise SystemExit(f'paint marker count={s.count(old)}')
@@ -57,6 +69,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: koverta-side-pixel-owner
+          name: koverta-internal-seal-${{ matrix.variant }}
           path: diagnostic
           if-no-files-found: error
