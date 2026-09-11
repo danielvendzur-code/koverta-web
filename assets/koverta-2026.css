@@ -597,16 +597,17 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   content: "";
   position: absolute;
   left: 10px;
-  right: auto;
+  right: 10px;
   bottom: 3px;
-  width: 0;
   height: 2px;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--k-amber);
-  transition: width 240ms var(--k-ease-out);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 240ms var(--k-ease-out);
 }
 .kv-nav__item.is-open > .kv-nav__link::after,
-.kv-nav__link[aria-current="page"]::after { width: calc(100% - 20px); }
+.kv-nav__link[aria-current="page"]::after { transform: none; }
 .kv-nav__item.is-open > .kv-nav__link,
 .kv-nav__link[aria-current="page"] { color: var(--k-ink); }
 .kv-nav__item.is-open > .kv-nav__link svg { transform: rotate(180deg); opacity: 1; }
