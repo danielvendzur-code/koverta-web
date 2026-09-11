@@ -6,11 +6,7 @@ const root = p.env.GITHUB_WORKSPACE;
 const base = 'http://127.0.0.1:8906';
 
 async function dismissConsent(page) {
-  const candidates = [
-    /Iba nevyhnutné/i,
-    /Odmietnuť/i,
-    /Nevyhnutné/i,
-  ];
+  const candidates = [/Iba nevyhnutné/i, /Odmietnuť/i, /Nevyhnutné/i];
   for (const name of candidates) {
     const b = page.getByRole('button', { name }).first();
     if (await b.count()) {
@@ -28,11 +24,9 @@ async function assertImages(locator, label) {
   const imgs = locator.locator('img');
   const count = await imgs.count();
   if (!count) throw new Error(`${label}: no images found`);
+  await imgs.first().page().waitForTimeout(300);
   for (let i = 0; i < count; i++) {
-    const img = imgs.nth(i);
-    await img.scrollIntoViewIfNeeded().catch(() => {});
-    await img.page().waitForTimeout(80);
-    const s = await img.evaluate(el => ({
+    const s = await imgs.nth(i).evaluate(el => ({
       complete: el.complete,
       naturalWidth: el.naturalWidth,
       naturalHeight: el.naturalHeight,
@@ -48,7 +42,7 @@ async function assertImages(locator, label) {
 async function openMenu(page, label) {
   const trigger = page.locator('[data-k-mega-trigger]').filter({ hasText: label }).first();
   if (await trigger.count() !== 1) throw new Error(`missing trigger ${label}`);
-  await trigger.click();
+  await trigger.click({ timeout: 5000 });
   await page.waitForTimeout(240);
   if (await trigger.getAttribute('aria-expanded') !== 'true') throw new Error(`${label}: aria-expanded not true`);
   const item = trigger.locator('xpath=ancestor::*[@data-k-mega-item][1]');
@@ -61,11 +55,12 @@ async function openMenu(page, label) {
 async function desktopQA(browser, pagePath, width, height, suffix, screenshots) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(6000);
   const errors = [];
   const failedImages = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('requestfailed', r => { if (r.resourceType() === 'image') failedImages.push(r.url()); });
-  await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(900);
   await dismissConsent(page);
   await assertNoOverflow(page, `${suffix} closed`);
@@ -108,13 +103,11 @@ async function desktopQA(browser, pagePath, width, height, suffix, screenshots) 
   if (!box || box.height > height * 0.5 + 1) throw new Error(`${suffix}: realizacie panel too tall (${box && box.height})`);
   if (screenshots) await page.screenshot({ path: path.join(root, 'qa-batch5', `menu-realizacie-${suffix}.png`) });
 
-  // Clicking outside the header/panel must close it.
   const y = Math.min(height - 12, Math.max(130, box.y + box.height + 20));
   await page.mouse.click(12, y);
   await page.waitForTimeout(120);
   if (await real.trigger.getAttribute('aria-expanded') !== 'false') throw new Error(`${suffix}: outside click did not close realizacie`);
 
-  // Asset version must be the new global cache key on root and nested pages.
   const refs = await page.evaluate(() => [...document.querySelectorAll('link[href*="koverta-2026.css"],script[src*="koverta-2026.js"]')].map(x => x.getAttribute('href') || x.getAttribute('src')));
   if (!refs.length || refs.some(x => !x.includes('?v=2026091105'))) throw new Error(`${suffix}: stale asset key ${JSON.stringify(refs)}`);
 
@@ -127,14 +120,15 @@ async function desktopQA(browser, pagePath, width, height, suffix, screenshots) 
 async function mobileQA(browser, pagePath, suffix) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(6000);
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(800);
   await dismissConsent(page);
   if (await page.locator('.kv-nav').isVisible()) throw new Error(`${suffix}: desktop nav visible on mobile`);
   const burger = page.locator('[data-k-drawer-open]');
-  await burger.click();
+  await burger.click({ timeout: 5000 });
   await page.waitForTimeout(220);
   const drawer = page.locator('[data-k-drawer]');
   if (!(await drawer.evaluate(el => el.classList.contains('is-open')))) throw new Error(`${suffix}: drawer did not open`);
@@ -144,16 +138,17 @@ async function mobileQA(browser, pagePath, suffix) {
   for (let i = 0; i < await groups.count(); i++) {
     await groups.nth(i).evaluate(el => { el.open = true; });
   }
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(200);
 
   const real = groups.filter({ hasText: 'Realizácie' }).first();
   if (await real.locator('.kv-drawer__foto img').count() !== 2) throw new Error(`${suffix}: mobile realizacie thumbnails missing`);
 
   const imgs = drawer.locator('.kv-drawer__foto img');
+  await imgs.evaluateAll(els => els.forEach(el => { el.loading = 'eager'; }));
   for (let i = 0; i < await imgs.count(); i++) {
-    await imgs.nth(i).scrollIntoViewIfNeeded();
-    await page.waitForTimeout(80);
+    await imgs.nth(i).scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
   }
+  await page.waitForTimeout(600);
   await assertImages(drawer.locator('.kv-drawer__rad'), `${suffix} drawer`);
 
   const overflow = await drawer.evaluate(el => el.scrollWidth - el.clientWidth);
