@@ -64,7 +64,9 @@ Sprav z nej pokojný záverečný blok s jednou akciou na nezáväznú ponuku. N
 
 - Preferuj reálne lokálne Koverta fotografie z `assets/` pred externým obrázkom.
 - Pre 1 auto použi `koverta-pristresok-auto-trnava-sikmy.jpg`, ak pri QA sedí crop.
-- Na jednej podstránke zbytočne neopakuj rovnakú fotografiu. Ak sú obe lokálne záhradné bratislavské fotografie už použité na tej istej podstránke (`hero` aj `detail`), nevymieňaj jedinečný a produktovo správny obrázok v katalógu iba preto, aby bol lokálny. Najprv zachovaj vizuálnu rôznorodosť; neskôr ho možno nahradiť ďalším overeným lokálnym uhlom.
+- Na jednej podstránke zbytočne neopakuj rovnakú fotografiu. Ak sú obe lokálne záhradné bratislavské fotografie už použité na tej istej podstránke (`hero` aj `detail`), najprv hľadaj ďalší overený záber z vlastných Koverta podkladov.
+- Ak ďalší lokálny záber nie je k dispozícii, je prípustná fotografia z vlastného `koverta.sk/cdn` iba vtedy, ak ide preukázateľne o záhradný prístrešok Koverta a browser QA potvrdí `naturalWidth > 0`. Cudzí Googleusercontent zdroj bez spoľahlivého načítania je blocker.
+- Ak zlyhá načítanie externej fotografie, oprav ho ešte v tom istom batchi; screenshot s ikonou rozbitého obrázka nesmie byť akceptovaný ako úspešné QA.
 - Nikdy nepouži náhodnú fotografiu z `assets/mapa/` bez overenia, že naozaj zobrazuje správny typ produktu.
 - Fotografia nesmie deformovať pomer strán ani znižovať čitateľnosť katalógu.
 
@@ -89,6 +91,7 @@ Pred commitom automaticky a vizuálne over:
 7. `<details>` sa dá otvoriť a zobrazí všetky skryté šírky,
 8. rýchly výber 1/2/3 autá vedie na správnu skupinu,
 9. sekcia s jediným rozmerom je vizuálne kompaktná,
-10. screenshoty desktop + mobil pre obe podstránky sa ručne skontrolujú.
+10. všetky fotografie v kontrolovanej sekcii majú `complete === true` a `naturalWidth > 0`,
+11. screenshoty desktop + mobil pre obe podstránky sa ručne skontrolujú a rozbitý obrázok je blocker.
 
 Ak niektorý bod zlyhá, necommituj produktovú zmenu. Neoslabuj QA len preto, aby prešlo.
