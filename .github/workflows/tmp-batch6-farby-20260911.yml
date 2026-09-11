@@ -1,4 +1,5 @@
 name: Batch 6 color swatch QA
+# QA revision 2: inspect hidden hover copy through textContent
 
 on:
   push:
@@ -90,7 +91,7 @@ jobs:
                 const bg=await row.locator('i').evaluate(el=>getComputedStyle(el).backgroundColor);
                 if(bg!==expected[i][2]) throw new Error('swatch color drift '+i+': '+bg);
               }
-              const copy=(await sec.innerText()).replace(/\s+/g,' ');
+              const copy=(await sec.textContent()).replace(/\s+/g,' ');
               if(!/osem odtieňov je v cene/i.test(copy)) throw new Error('included-price statement missing');
               if(!/palety RAL.*objednávku|RAL.*na objednávku/i.test(copy)) throw new Error('RAL order statement missing');
               if(/hladký matný, alebo mikroštruktúra/i.test(copy)) throw new Error('contradictory finish copy remains');
