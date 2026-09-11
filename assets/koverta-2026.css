@@ -597,17 +597,16 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   content: "";
   position: absolute;
   left: 10px;
-  right: 10px;
+  right: auto;
   bottom: 3px;
+  width: 0;
   height: 2px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--k-amber);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 240ms var(--k-ease-out);
+  transition: width 240ms var(--k-ease-out);
 }
 .kv-nav__item.is-open > .kv-nav__link::after,
-.kv-nav__link[aria-current="page"]::after { transform: none; }
+.kv-nav__link[aria-current="page"]::after { width: calc(100% - 20px); }
 .kv-nav__item.is-open > .kv-nav__link,
 .kv-nav__link[aria-current="page"] { color: var(--k-ink); }
 .kv-nav__item.is-open > .kv-nav__link svg { transform: rotate(180deg); opacity: 1; }
@@ -14696,12 +14695,21 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     max-height: min(50vh, 390px);
   }
 
+  .kv-header .kv-mega--cars {
+    right: auto;
+    width: min(760px, calc(100vw - 32px));
+    max-width: 760px;
+  }
+
   .kv-header .kv-mega__brands {
     display: grid;
     gap: clamp(20px, 2vw, 30px);
     min-width: 0;
   }
-  .kv-header .kv-mega--cars .kv-mega__brands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kv-header .kv-mega--cars .kv-mega__brands {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
   .kv-header .kv-mega--home .kv-mega__brands { grid-template-columns: minmax(260px, .8fr) minmax(0, 1.7fr); }
 
   .kv-header .kv-mega__brand { min-width: 0; }
@@ -14709,12 +14717,26 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     border-left: 1px solid var(--k-hair);
     padding-left: clamp(20px, 2vw, 30px);
   }
+  .kv-header .kv-mega--cars .kv-mega__brand {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+  }
+  .kv-header .kv-mega--cars .kv-mega__brand + .kv-mega__brand {
+    margin-top: 12px;
+    padding-top: 12px;
+    padding-left: 0;
+    border-top: 1px solid var(--k-hair);
+    border-left: 0;
+  }
   .kv-header .kv-mega__brand-head {
     display: flex;
     align-items: center;
     min-height: 25px;
     margin-bottom: 12px;
   }
+  .kv-header .kv-mega--cars .kv-mega__brand-head { margin-bottom: 0; }
   .kv-header .kv-mega__brand-logo { display: inline-flex; align-items: center; }
   .kv-header .kv-mega__brand-logo img {
     display: block;
