@@ -3337,7 +3337,12 @@
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
                  only to the +Z face; no world-space geometry is enlarged. */
-              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
+              /* The roof shell begins 11 mm behind the inner flashing turn.
+                 Let the existing top arm continue across that concealed cut,
+                 with a small renderer overlap beyond it. Its underside stays
+                 0.5 mm above the corrugation crowns, so no roof facet is cut
+                 and the flashing—not a dark end cap—owns the top sight line. */
+              put(outer, outer + (sirka + 20) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
                  tam bola len škára medzi plechom strechy a lemovaním a pri
@@ -3755,14 +3760,15 @@
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
             drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
-            /* The finite sheet cut sits inside the opaque fascia pocket. Use
-               the sheet finish on that hidden cut: a dark frame-colour cap can
-               otherwise appear as one tiny notch per corrugation through the
-               intentional 1 mm clearance. Geometry and drainage stay unchanged. */
-            drawTrapEndCap(vx0, vy0, vy1, vrchHex);
-            drawTrapEndCap(vx1, vy0, vy1, vrchHex);
-            drawTrapSideCap(vy0, vx0, vx1, vrchHex);
-            drawTrapSideCap(vy1, vx0, vx1, vrchHex);
+            /* The cut sits in the concealed fascia pocket. From below it is
+               part of the soffit edge, so it must use the same single soffit
+               finish—not the anthracite top finish that appeared as one dark
+               dot per corrugation. The extended top flashing arm hides this
+               cut from above without intersecting the shell. */
+            drawTrapEndCap(vx0, vy0, vy1, spodHex);
+            drawTrapEndCap(vx1, vy0, vy1, spodHex);
+            drawTrapSideCap(vy0, vx0, vx1, spodHex);
+            drawTrapSideCap(vy1, vx0, vx1, spodHex);
 
             /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
                podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
