@@ -3277,6 +3277,9 @@
                not a verified 15 mm material thickness. Do not infer gauge
                from this value or from photographs. */
             const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
+            /* Renderer overlap inside the already concealed fascia pocket.
+               It does not alter the measured exterior flashing envelope. */
+            const LEM_COVER = 20;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
                medzi nimi ostane škára a pri plochom pohľade cez ňu presvitá
@@ -3337,18 +3340,18 @@
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
                  only to the +Z face; no world-space geometry is enlarged. */
-              /* The roof shell begins 11 mm behind the nominal flashing depth.
-                 Let the existing top arm continue across that concealed cut,
-                 with a small renderer overlap beyond it. Its underside stays
-                 0.5 mm above the corrugation crowns, so no roof facet is cut
-                 and the flashing—not a dark end cap—owns the top sight line. */
-              put(outer, outer + (sirka + 20) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
+              /* The roof shell begins at the concealed inner edge of this
+                 continuous top arm. Its underside stays 0.5 mm above the
+                 corrugation crowns, so no roof facet is cut and the flashing
+                 owns the complete top sight line. */
+              put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
-              /* Do not emit a second vertical turn at the inner edge. Even with
-                 clearance it alternately appeared between corrugation crowns as
-                 a row of short dark dashes. The continuous upper arm now spans
-                 across the closed sheet cut, so that turn has no exposed joint
-                 left to protect and no extra plane is needed. */
+              /* Close the pocket exactly at the inner edge of the top arm.
+                 The corrugated surfaces start on this same plane below, so the
+                 parts share a boundary instead of leaving a bright gap or
+                 crossing every rib. The nominal 19 mm fold remains concealed. */
+              const zav = outer + sirka * dir;
+              put(zav + dir, zav + LEM_COVER * dir, trapBot, zTop - trapBot);
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
@@ -3635,8 +3638,8 @@
             // Keep the complete sheet body and soffit, but omit the upper
             // surface hidden inside the fascia. Intersecting upper polygons
             // otherwise defeat the painter fallback and cover the fascia.
-            const vx0 = Math.max(tx0, LEM_CELO + 11), vx1 = Math.min(tx1, L - LEM_CELO - 11);
-            const vy0 = Math.max(ty0, LEM_BOK + 11), vy1 = Math.min(ty1, W - LEM_BOK - 11);
+            const vx0 = Math.max(tx0, LEM_CELO + LEM_COVER), vx1 = Math.min(tx1, L - LEM_CELO - LEM_COVER);
+            const vy0 = Math.max(ty0, LEM_BOK + LEM_COVER), vy1 = Math.min(ty1, W - LEM_BOK - LEM_COVER);
             // All four sheet end faces lie inside the opaque fascia. They
             // have no exposed edge in this assembly; emitting them creates
             // intersecting hidden polygons which the painter can misorder.
@@ -3722,47 +3725,14 @@
               }
             };
 
-            /* Close the finite-thickness corrugated shell on its exact geometric
-               boundary. The x-end caps follow the same breakpoints and the same
-               upper/lower Z functions as the long roof facets, so every shared
-               edge has identical vertices. These faces meet the roof only at its
-               boundary; they never cross a long rib and therefore add no BSP cut.
-               They are double-sided because a cut sheet edge can be seen from the
-               pocket side as well as from outside. */
-            const drawTrapEndCap = (x, y0, y1, hex) => {
-              const cuts = trapBreaks(y0, y1);
-              for (let i = 0; i < cuts.length - 1; i++) {
-                const a = cuts[i], b = cuts[i + 1];
-                const pts = [
-                  [x, a, trapLowerZ(a)], [x, b, trapLowerZ(b)],
-                  [x, b, trapUpperZ(b)], [x, a, trapUpperZ(a)]
-                ];
-                quad(pts, hex, {
-                  normal: [1, 0, 0], cull: false, edge: false, raw: true, seamless: true
-                });
-              }
-            };
-            const drawTrapSideCap = (y, x0, x1, hex) => {
-              const zl = trapLowerZ(y), zu = trapUpperZ(y);
-              quad([[x0, y, zl], [x1, y, zl], [x1, y, zu], [x0, y, zu]], hex, {
-                normal: [0, 1, 0], cull: false, edge: false, raw: true, seamless: true
-              });
-            };
-
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
             drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
-            /* The cut sits in the concealed fascia pocket. From below it is
-               part of the soffit edge, so it must use the same single soffit
-               finish—not the anthracite top finish that appeared as one dark
-               dot per corrugation. The extended top flashing arm hides this
-               cut from above without intersecting the shell. */
-            drawTrapEndCap(vx0, vy0, vy1, spodHex);
-            drawTrapEndCap(vx1, vy0, vy1, spodHex);
-            drawTrapSideCap(vy0, vx0, vx1, spodHex);
-            drawTrapSideCap(vy1, vx0, vx1, spodHex);
+            /* The continuous inner flashing turns above own these four cut
+               planes. Separate sheet end caps would be coplanar duplicates
+               here and would reintroduce the dotted z-fighting seam. */
 
             /* Žiadne plošné „kontaktné tiene“ ani 2 mm spojové pruhy na
                podhľade. Reálny profil, C-profily a svetlo vytvárajú vlastné
