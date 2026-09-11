@@ -21,40 +21,35 @@ jobs:
           cd /tmp/b7pick-pw
           npm init -y >/dev/null 2>&1
           npm install playwright@1.58.2 >/dev/null 2>&1
-      - name: Build and capture contact sheets
+      - name: Build and capture canopy contact sheet
         run: |
           set -euo pipefail
-          cat > /tmp/b7pick.html <<'HTML'
+          cat > b7pick.html <<'HTML'
           <!doctype html><meta charset="utf-8"><style>
-          body{margin:0;padding:24px;font:16px Arial;background:#eee;color:#111}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px #bbb}.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ddd}.card b{display:block;padding:10px 12px 12px;font-size:13px;word-break:break-all}
-          h1{font-size:24px;margin:0 0 18px}
-          </style><h1>Soltec carport candidates</h1><div class="grid">
-          <div class="card"><img src="/assets/soltec-carport-vstup-garaz.jpg"><b>soltec-carport-vstup-garaz.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-simko-trencin.jpg"><b>soltec-carport-simko-trencin.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-toth-nitra-hero.jpg"><b>soltec-carport-toth-nitra-hero.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-toth-nitra-clean.jpg"><b>soltec-carport-toth-nitra-clean.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-toth-nitra.jpg"><b>soltec-carport-toth-nitra.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-plavecky-02.jpg"><b>soltec-carport-plavecky-02.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-plavecky-03.jpg"><b>soltec-carport-plavecky-03.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-plavecky-04.jpg"><b>soltec-carport-plavecky-04.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-plavecky-05.jpg"><b>soltec-carport-plavecky-05.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-2cars-box.jpg"><b>soltec-carport-2cars-box.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-box-real.jpg"><b>soltec-carport-box-real.jpg</b></div>
-          <div class="card"><img src="/assets/soltec-carport-box-hi.jpg"><b>soltec-carport-box-hi.jpg</b></div>
+          body{margin:0;padding:24px;font:16px Arial;background:#eee;color:#111}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px #bbb}.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ddd}.card b{display:block;padding:10px 12px 12px;font-size:13px;word-break:break-all}h1{font-size:24px;margin:0 0 18px}
+          </style><h1>Soltec fixed-canopy candidates</h1><div class="grid">
+          <div class="card"><img src="/assets/soltec-canopy-f170-real.jpg"><b>soltec-canopy-f170-real.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-canopy-panels-real.jpg"><b>soltec-canopy-panels-real.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-canopy-hero.jpg"><b>soltec-canopy-hero.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-pevne-prestresenie-mokrance.jpg"><b>soltec-pevne-prestresenie-mokrance.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-roof-iso.jpg"><b>soltec-roof-iso.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-canopy-glassport-balkon.jpg"><b>soltec-canopy-glassport-balkon.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-canopy-glassport-pool.jpg"><b>soltec-canopy-glassport-pool.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-pevne-prestresenie-sklo-glassport.jpg"><b>soltec-pevne-prestresenie-sklo-glassport.jpg</b></div>
+          <div class="card"><img src="/assets/soltec-roof-glass.jpg"><b>soltec-roof-glass.jpg</b></div>
           </div>
           HTML
-          cp /tmp/b7pick.html b7pick.html
           python3 -m http.server 8910 >/tmp/b7pick-http.log 2>&1 &
           PID=$!; trap 'kill $PID || true' EXIT; sleep 1
           export NODE_PATH=/tmp/b7pick-pw/node_modules
           export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           node - <<'JS'
           const {chromium}=require('playwright');const path=require('path'),p=require('node:process');
-          (async()=>{const b=await chromium.launch({headless:true,executablePath:p.env.CHROME,args:['--no-sandbox','--disable-gpu']});const page=await b.newPage({viewport:{width:1500,height:1100}});await page.goto('http://127.0.0.1:8910/b7pick.html',{waitUntil:'networkidle'});const imgs=page.locator('img');for(let i=0;i<await imgs.count();i++){const s=await imgs.nth(i).evaluate(el=>({c:el.complete,w:el.naturalWidth,h:el.naturalHeight,src:el.src}));if(!s.c||s.w<100||s.h<100)throw new Error('broken '+JSON.stringify(s));}await page.screenshot({path:path.join(p.env.GITHUB_WORKSPACE,'qa-b7pick','carport-contact-sheet.png'),fullPage:true});await b.close()})().catch(e=>{console.error(e);process.exit(1)});
+          (async()=>{const b=await chromium.launch({headless:true,executablePath:p.env.CHROME,args:['--no-sandbox','--disable-gpu']});const page=await b.newPage({viewport:{width:1500,height:1100}});await page.goto('http://127.0.0.1:8910/b7pick.html',{waitUntil:'networkidle'});const imgs=page.locator('img');for(let i=0;i<await imgs.count();i++){const s=await imgs.nth(i).evaluate(el=>({c:el.complete,w:el.naturalWidth,h:el.naturalHeight,src:el.src}));if(!s.c||s.w<100||s.h<100)throw new Error('broken '+JSON.stringify(s));}await page.screenshot({path:path.join(p.env.GITHUB_WORKSPACE,'qa-b7pick','canopy-contact-sheet.png'),fullPage:true});await b.close()})().catch(e=>{console.error(e);process.exit(1)});
           JS
           rm b7pick.html
       - uses: actions/upload-artifact@v4
         with:
           name: batch7-photo-contact-${{ github.sha }}
-          path: qa-b7pick/carport-contact-sheet.png
+          path: qa-b7pick/canopy-contact-sheet.png
           if-no-files-found: error
