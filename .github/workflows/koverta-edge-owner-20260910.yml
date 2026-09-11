@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [front-arm]
+        variant: [baseline, bsp-640]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,20 +48,11 @@ jobs:
               if s.count(old_turn)!=1: raise SystemExit(f'turn marker count={s.count(old_turn)}')
               if s.count(old_bounds)!=1: raise SystemExit(f'bounds marker count={s.count(old_bounds)}')
               s=s.replace(old_turn,new_turn,1).replace(old_bounds,new_bounds,1)
-          elif v=='front-arm':
-              old_arm="""              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
-              new_arm="""              /* Diagnostic: extend the existing folded arm across the
-                 11 mm pocket and lap the sheet by its 1.5 mm thickness. */
-              const topReach = sirka + (axis === 'x' ? 11 + LEM_ARM : 0);
-              put(outer, outer + topReach * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
-              old_post="""                const r = Math.max(4, Math.round(Math.min(pd, pw) * 0.05));"""
-              old_seg="""                const SEG = 2;"""
-              if s.count(old_arm)!=1: raise SystemExit(f'arm marker count={s.count(old_arm)}')
-              if s.count(old_post)!=1: raise SystemExit(f'post marker count={s.count(old_post)}')
-              if s.count(old_seg)!=1: raise SystemExit(f'segment marker count={s.count(old_seg)}')
-              s=s.replace(old_arm,new_arm,1)
-              s=s.replace(old_post,"                const r = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));",1)
-              s=s.replace(old_seg,"                const SEG = 1;",1)
+          elif v=='bsp-640':
+              old="""          const BSP_MAX = model().kvGeom ? 320 : 28;"""
+              new="""          const BSP_MAX = model().kvGeom ? 640 : 28;"""
+              if s.count(old)!=1: raise SystemExit(f'BSP marker count={s.count(old)}')
+              s=s.replace(old,new,1)
           elif v!='baseline':
               raise SystemExit('unknown variant')
           p.write_text(s,encoding='utf-8')
