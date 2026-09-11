@@ -14941,3 +14941,66 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   margin: 0;
   z-index: 2;
 }
+
+/* USER HEADER REFINEMENT 20260911
+   Menu opäť používa kompaktné miniatúry. Linka sa odkrýva zľava doprava,
+   ale jej hrúbka je v každom frame rovnaká. */
+.kv-header .kv-nav__link::after {
+  height: 3px;
+  border-radius: 999px;
+}
+.kv-header .kv-topbar__usps { align-items: center; }
+.kv-header .kv-topbar__usps li {
+  min-height: 20px;
+  align-items: center;
+  line-height: 1.25;
+}
+.kv-header .kv-topbar__usps li::before {
+  width: 6px;
+  height: 6px;
+  align-self: center;
+}
+.kv-header .kv-topbar__side a[href^="mailto:"]::before {
+  content: "Napíšte nám";
+  color: rgba(255,255,255,.58);
+  font-weight: 500;
+}
+
+@media (min-width:1024px) {
+  .kv-header .kv-mega:not(.kv-mega--real) {
+    max-height: min(46vh, 330px);
+  }
+  .kv-header .kv-mega__rad {
+    flex-wrap: nowrap;
+    gap: clamp(10px, 1.15vw, 16px);
+  }
+  .kv-header .kv-mega__rad > li {
+    flex: 1 1 0;
+    max-width: 214px;
+  }
+  .kv-header .kv-mega__rad a { gap: 7px; }
+  .kv-header .kv-mega__foto { aspect-ratio: 16 / 8.5; }
+  .kv-header .kv-mega__desc {
+    display: block;
+    color: var(--k-grey-soft);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  /* Realizácie môžu zostať obrazové, no používajú rovnakú malú mierku. */
+  .kv-header .kv-mega--real {
+    width: min(620px, calc(100vw - (2 * var(--k-gut))));
+    max-width: min(620px, calc(100vw - (2 * var(--k-gut))));
+    padding: 14px;
+  }
+  .kv-header .kv-mega--real .kv-mega__real-grid { gap: 8px; }
+  .kv-header .kv-mega--real .kv-mega__real-grid a {
+    grid-template-columns: 112px minmax(0,1fr);
+    gap: 10px;
+    padding: 6px;
+  }
+  .kv-header .kv-mega--real .kv-mega__foto { width: 112px; }
+}
+
+@media (max-width:480px) {
+  .kv-header .kv-topbar__side a[href^="mailto:"]::before { display:none; }
+}

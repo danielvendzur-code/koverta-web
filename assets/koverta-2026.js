@@ -3114,7 +3114,10 @@
         setMenuPhoto(lis[1], 'soltec-carport-toth-nitra-hero.jpg');
         addDesc(lis[1], 'Prémiový hliníkový systém s čistou architektúrou.');
       }
-      enhanceProducts(autaItem, 'cars');
+      /* Ponechať pôvodný kompaktný rad malých navigačných kariet. Veľká
+         brandová prestavba z Batch 5 zaberala priveľa plochy a z menu robila
+         obsahovú sekciu. Fotografia každého odkazu sa nastaví vyššie presne
+         raz a pri ďalšom otvorení sa už nemení. */
     }
 
     if (domItem) {
@@ -3130,7 +3133,7 @@
       addDesc(byHref('bioklimaticke-pergoly'), 'Otočné lamely pre tienenie aj ochranu pred dažďom.');
       addDesc(byHref('tienenie'), 'ZIP rolety, panely a brisoleje.');
       addDesc(byHref('outdoor-kuchyne'), 'Modulové zostavy z nerezu a hliníka.');
-      enhanceProducts(domItem, 'home');
+      /* Pôvodný kompaktný rad je zámerný; pozri poznámku pri menu Pre autá. */
     }
 
     if (realItem && realItem.dataset.kBatch5 !== 'true') {
