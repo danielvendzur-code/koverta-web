@@ -1649,6 +1649,7 @@
           window.SP_TEST.redrawStage = () => { if (!model().kvGeom) drawStage(); else renderAll(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
+            louverT: state.louverT, sideOpen: { ...state.sideOpen },
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
             geometry: model().kvGeom ? {
