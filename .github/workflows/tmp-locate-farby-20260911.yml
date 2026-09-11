@@ -1,0 +1,20 @@
+name: Locate current color swatches
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+    paths: [.github/workflows/tmp-locate-farby-20260911.yml]
+jobs:
+  locate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Locate swatch markup
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '--- classes ---'
+          grep -R -n -E 'kh-(farby|odtien)' --include='*.html' . || true
+          echo '--- color names ---'
+          grep -R -n -E 'Antracitová sivá|DB703|Biely hliník|RAL 7016' --include='*.html' . || true
