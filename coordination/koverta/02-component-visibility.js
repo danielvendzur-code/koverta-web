@@ -26,8 +26,8 @@ function patchRenderer(source) {
       'if (BIO.basePlates && !window.__QA_HIDE_BASE_PLATES) {'
     ],
     [
-      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou)) {",
-      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou) && !window.__QA_HIDE_HEAD_PLATES) {"
+      "if (BIO.headPlates) {",
+      "if (BIO.headPlates && !window.__QA_HIDE_HEAD_PLATES) {"
     ],
     [
       'const uholnik = (px, sx, py, sy, zc) => {\n              if (!podStrechu) return;',

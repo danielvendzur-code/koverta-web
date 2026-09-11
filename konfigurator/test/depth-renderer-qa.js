@@ -16,13 +16,18 @@ const { prepareContext } = require('./browser-qa');
       page.on('pageerror',error=>errors.push(error.message));
       for (const kind of ['koverta','carport','canopy','bio']) {
         await page.goto('http://127.0.0.1:8901/konfigurator/?page='+kind,{waitUntil:'load'});
+        const consent = page.getByRole('button',{name:'Iba nevyhnutné',exact:true});
+        if(await consent.isVisible()) await consent.click();
         const stage = page.locator('[data-sp-canvas]').first();
         await stage.scrollIntoViewIfNeeded();
         await page.locator('[data-sp-cfg]').first().dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse'});
         await page.waitForFunction(()=>document.querySelector('[data-sp-canvas]')?.dataset.renderer==='webgl-depth');
         const models = await page.locator('[data-sp-model]').evaluateAll(nodes=>nodes.map(n=>n.dataset.spModel));
         for (const key of (models.length ? models : [null])) {
-          if (key) await page.locator('[data-sp-model="'+key+'"]').click({force:true});
+          if (key) {
+            await page.locator('[data-sp-model="'+key+'"]').click({force:true});
+            await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
+          }
           const times=[];
           for (let i=0;i<48;i++) {
             times.push(await page.evaluate(i=>{

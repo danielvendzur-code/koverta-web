@@ -166,7 +166,7 @@ assert(runtime.includes("const vsunBrace = kovertaContact") &&
   'Soltec cantilever fallback must preserve its historical zero inset');
 assert(!runtime.includes('Priemer odmeraný z oficiálneho rendru'),
   'Downpipe renderer size is still presented as a technical measurement from a render');
-assert(runtime.includes('not a verified 15 mm material thickness'),
+assert(runtime.includes('visual sheet gauge, not a manufacturer-certified dimension'),
   'Fascia renderer thickness provenance is not explicit');
 assert(runtime.includes('vodo ? cy0 : cy0 + sd * roz, zH - th);'),
   'Head fastener is not seated on the head-plate underside');

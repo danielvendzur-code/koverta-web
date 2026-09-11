@@ -20,7 +20,6 @@ function assertSourceContract() {
   assert.match(source, /const BSP_MAX = model\(\)\.kvGeom \? 320 : 28;/, 'Soltec BSP must keep its bounded interactive-depth path');
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
   assert.match(source, /scheduleStage\(\);/, 'Camera motion must use the stage-only render path');
-  assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the

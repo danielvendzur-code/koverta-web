@@ -50,7 +50,7 @@ async function setSize(page, width, length) {
 
 async function svgState(page) {
   return page.locator('[data-sp-canvas]').evaluate(svg => ({
-    markup: svg.outerHTML,
+    markup: window.SP_TEST.exportSVG(),
     polygons: Number(svg.dataset.faceCount || svg.querySelectorAll('polygon').length),
     paths: svg.querySelectorAll('path').length
   }));
@@ -338,7 +338,7 @@ function validateAccessoryContacts(snap, label) {
       assert(drainageSnap.geometry.accessories.gutter &&
         drainageSnap.geometry.accessories.downpipe,
         `${device}: mandatory gutter/downpipe has no physical geometry`);
-      assert(drainageOn.polygons > 100 && (drainageOn.markup.includes('<polygon') || drainageOn.markup.includes('foreignObject')),
+      assert(drainageOn.polygons > 100 && (drainageOn.markup.includes('<polygon') || drainageOn.markup.includes('<image')),
         `${device}: mandatory drainage render is empty`);
 
       /* Insulation is bonded to the roof underside, so verify it from an

@@ -1646,7 +1646,7 @@
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { renderAll(); };
-          window.SP_TEST.redrawStage = () => { if (!model().kvGeom) drawStage(); else renderAll(); };
+          window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
@@ -3363,11 +3363,8 @@
                a spod strechy len trochu. */
             const REF = kvRoofRef();
             const LEM_CELO = REF.lemCelo || 190, LEM_BOK = REF.lemBok || 240;
-            /* Active Expivi component bounds establish the fascia envelope
-               (reach/height), not sheet gauge. LEM_T=15 is therefore a
-               renderer envelope used to construct the folded L silhouette,
-               not a verified 15 mm material thickness. Do not infer gauge
-               from this value or from photographs. */
+            /* Preserve measured fascia reach/height. The 1.5 mm fold is a
+               visual sheet gauge, not a manufacturer-certified dimension. */
             const LEM_H = REF.lemH || 260, LEM_T = 1.5, LEM_LIP = 16;
             /* Renderer overlap inside the already concealed fascia pocket.
                It does not alter the measured exterior flashing envelope. */
@@ -3422,7 +3419,6 @@
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
-            const innerClosures = [];
             const lemL = (axis, outer, dir, a, b, sirka) => {
               const put = (u0, u1, z, dz, seamlessTop) => {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true);
@@ -3442,7 +3438,6 @@
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
                  side faces which alternately win against every corrugation. */
-              innerClosures.push({ axis, u: outer + (sirka + LEM_COVER) * dir, a, b });
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
@@ -3540,7 +3535,6 @@
          behind the opaque side fascia. It is permanently occluded in
          the real assembly, so do not emit that invisible zinc plane:
          keeping it in BSP made it leak through fascia split edges. */
-      const outsideA = single > 0 ? 0 : par;
 
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 /* The upper C-profile flange is permanently covered by the sheet.
