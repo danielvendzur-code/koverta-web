@@ -175,7 +175,6 @@ jobs:
             if(await proc.locator('[data-k-trio]').count()) throw new Error('flying review-photo trigger still exists');
             await proc.screenshot({path:path.join(root,'qa-batch2','process-step-5-fixed.png')});
 
-            // Stress the exact old failure mode: leave the section, move reviews, return.
             await page.locator('#recenzie').scrollIntoViewIfNeeded();
             await page.waitForTimeout(900);
             await proc.scrollIntoViewIfNeeded();
@@ -183,7 +182,6 @@ jobs:
             const srcAfter=await trio.evaluateAll(imgs=>imgs.map(i=>i.getAttribute('src')));
             if(JSON.stringify(srcBefore)!==JSON.stringify(srcAfter)) throw new Error(`step 5 images changed during scroll animation: ${srcBefore} -> ${srcAfter}`);
             if(await page.locator('.kh-rev__flight').count()) throw new Error('review flight clones still created');
-
             if(errors.length) throw new Error('page errors: '+errors.join(' | '));
 
             const mobile=await browser.newContext({viewport:{width:390,height:844}});
