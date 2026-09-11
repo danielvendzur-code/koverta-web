@@ -52,6 +52,7 @@ async function svgState(page) {
   return page.locator('[data-sp-canvas]').evaluate(svg => ({
     markup: window.SP_TEST.exportSVG(),
     materials: window.SP_TEST.renderMaterials,
+    invalidFaces: Number(svg.dataset.invalidFaceCount || 0),
     polygons: Number(svg.dataset.faceCount || svg.querySelectorAll('polygon').length),
     paths: svg.querySelectorAll('path').length
   }));
@@ -108,7 +109,7 @@ async function rotateAndValidate(page, device, label, steps = 24) {
     await page.waitForTimeout(12);
     const state = await svgState(page);
     assert(state.polygons > 100, `${device}/${label}: model vanished at azimuth ${az}`);
-    assert(!/(?:NaN|Infinity)/.test(state.markup),
+    assert(state.invalidFaces === 0,
       `${device}/${label}: non-finite geometry at azimuth ${az}`);
   }
 }
@@ -387,7 +388,7 @@ function validateAccessoryContacts(snap, label) {
           `${device}: rear side did not switch to ${material}`);
         validateWallAnchor(snap, 'rear', `${device}/6200x6000/${material}`);
         const rendered = await svgState(page);
-        assert(rendered.polygons > 100 && !/(?:NaN|Infinity)/.test(rendered.markup),
+        assert(rendered.polygons > 100 && rendered.invalidFaces === 0,
           `${device}: ${material} produced invalid wall geometry`);
         if (previousMaterialMarkup !== null) {
           assert(rendered.markup !== previousMaterialMarkup,

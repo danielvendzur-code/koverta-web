@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SOURCE_PATH = path.join(ROOT, 'konfigurator', 'soltec-premium.js');
-const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/bioklimaticke-pergoly/';
+const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/konfigurator/?page=bio';
 const ARTIFACT_DIR = path.join(ROOT, 'qa-artifacts', 'soltec-motion');
 
 function assertSourceContract() {
@@ -47,6 +47,8 @@ function percentile(values, p) {
   page.on('pageerror', (error) => pageErrors.push(error.stack || error.message));
 
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  const consent = page.getByRole('button', { name: 'Iba nevyhnutné', exact: true });
+  if (await consent.isVisible()) await consent.click();
   const cfg = page.locator('#SoltecPremium [data-sp-cfg]');
   await cfg.scrollIntoViewIfNeeded();
   await cfg.dispatchEvent('pointerdown', { pointerId: 41, pointerType: 'mouse', clientX: 20, clientY: 20 });

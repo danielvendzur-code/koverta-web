@@ -131,7 +131,7 @@ jobs:
           exit 1
       - name: Soltec louver and camera motion regression
         env:
-          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
+          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
         run: node konfigurator/test/soltec-motion-regression.js
       - name: Upload Soltec motion evidence
         if: always()
