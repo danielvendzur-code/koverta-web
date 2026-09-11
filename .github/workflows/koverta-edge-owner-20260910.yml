@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, integrated-arm]
+        variant: [front-arm]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,11 +48,11 @@ jobs:
               if s.count(old_turn)!=1: raise SystemExit(f'turn marker count={s.count(old_turn)}')
               if s.count(old_bounds)!=1: raise SystemExit(f'bounds marker count={s.count(old_bounds)}')
               s=s.replace(old_turn,new_turn,1).replace(old_bounds,new_bounds,1)
-          elif v=='integrated-arm':
+          elif v=='front-arm':
               old_arm="""              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
               new_arm="""              /* Diagnostic: extend the existing folded arm across the
                  11 mm pocket and lap the sheet by its 1.5 mm thickness. */
-              const topReach = sirka + 11 + LEM_ARM;
+              const topReach = sirka + (axis === 'x' ? 11 + LEM_ARM : 0);
               put(outer, outer + topReach * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
               old_post="""                const r = Math.max(4, Math.round(Math.min(pd, pw) * 0.05));"""
               old_seg="""                const SEG = 2;"""
