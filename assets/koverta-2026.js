@@ -2999,6 +2999,213 @@
       prekresli();
     }
 
+    /* BATCH 5 · HEADER MENU INFORMATION ARCHITECTURE */
+    /*
+       HTML zostáva funkčný aj bez skriptu. Tu sa iba preskupí už existujúci
+       obsah do značiek Koverta / Soltec, doplnia sa orientačné vety a
+       obrazové položky realizácií. Odkazy sa nemenia.
+    */
+    const menuAsset = (name) => {
+      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const href = link ? (link.getAttribute('href') || '') : '';
+      const base = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      return base + name;
+    };
+
+    const menuLabel = (item) => {
+      const t = item && item.querySelector('[data-k-mega-trigger]');
+      return t ? t.textContent.replace(/\s+/g, ' ').trim() : '';
+    };
+
+    const setMenuPhoto = (li, filename) => {
+      const img = li && li.querySelector('.kv-mega__foto img');
+      if (!img || !filename) return;
+      img.removeAttribute('src');
+      img.removeAttribute('srcset');
+      img.setAttribute('data-k-menu-src', menuAsset(filename));
+    };
+
+    const setDrawerPhoto = (hrefPart, filename) => {
+      header.querySelectorAll('.kv-drawer__rad a').forEach((a) => {
+        if (!(a.getAttribute('href') || '').includes(hrefPart)) return;
+        const img = a.querySelector('.kv-drawer__foto img');
+        if (img) img.setAttribute('src', menuAsset(filename));
+      });
+    };
+
+    const addDesc = (li, text) => {
+      if (!li || !text) return;
+      const a = li.querySelector(':scope > a');
+      const strong = a && a.querySelector(':scope > strong');
+      if (!a || !strong || a.querySelector('.kv-mega__desc')) return;
+      const d = document.createElement('span');
+      d.className = 'kv-mega__desc';
+      d.textContent = text;
+      strong.insertAdjacentElement('afterend', d);
+    };
+
+    const makeBrand = (name, lis) => {
+      if (!lis.length) return null;
+      const section = document.createElement('section');
+      section.className = 'kv-mega__brand kv-mega__brand--' + name.toLowerCase();
+      section.setAttribute('aria-label', name);
+
+      const head = document.createElement('div');
+      head.className = 'kv-mega__brand-head';
+      const sourceLogo = lis[0].querySelector('.kv-mega__znacka img');
+      if (sourceLogo) {
+        const logoWrap = document.createElement('span');
+        logoWrap.className = 'kv-mega__brand-logo';
+        const logo = sourceLogo.cloneNode(true);
+        logo.alt = name;
+        logoWrap.appendChild(logo);
+        head.appendChild(logoWrap);
+      } else {
+        const label = document.createElement('strong');
+        label.textContent = name;
+        head.appendChild(label);
+      }
+      section.appendChild(head);
+
+      const list = document.createElement('ul');
+      list.className = 'kv-mega__brand-grid';
+      lis.forEach((li) => list.appendChild(li));
+      section.appendChild(list);
+      return section;
+    };
+
+    const enhanceProducts = (item, kind) => {
+      if (!item || item.dataset.kBatch5 === 'true') return;
+      const panel = item.querySelector('.kv-mega');
+      const oldList = panel && panel.querySelector(':scope > .kv-mega__rad');
+      if (!panel || !oldList) return;
+      const lis = [].slice.call(oldList.children).filter((n) => n.tagName === 'LI');
+      if (!lis.length) return;
+
+      const groups = { Koverta: [], Soltec: [] };
+      lis.forEach((li) => {
+        const logo = li.querySelector('.kv-mega__znacka img');
+        const brand = logo && /soltec/i.test(logo.alt || '') ? 'Soltec' : 'Koverta';
+        groups[brand].push(li);
+      });
+
+      const wrap = document.createElement('div');
+      wrap.className = 'kv-mega__brands';
+      const k = makeBrand('Koverta', groups.Koverta);
+      const s = makeBrand('Soltec', groups.Soltec);
+      if (k) wrap.appendChild(k);
+      if (s) wrap.appendChild(s);
+      panel.insertBefore(wrap, oldList);
+      oldList.remove();
+      panel.classList.add('kv-mega--batch5', 'kv-mega--' + kind);
+      item.dataset.kBatch5 = 'true';
+    };
+
+    const megaItemsBatch5 = [].slice.call(header.querySelectorAll('[data-k-mega-item]'));
+    const autaItem = megaItemsBatch5.find((item) => /^Pre autá$/.test(menuLabel(item)));
+    const domItem = megaItemsBatch5.find((item) => /^Pre dom a záhradu$/.test(menuLabel(item)));
+    const realItem = megaItemsBatch5.find((item) => /^Realizácie$/.test(menuLabel(item)));
+
+    if (autaItem) {
+      const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
+      if (lis[0]) {
+        setMenuPhoto(lis[0], 'koverta-pristresok-auto-trnava-sikmy.jpg');
+        addDesc(lis[0], 'Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby.');
+      }
+      if (lis[1]) {
+        setMenuPhoto(lis[1], 'soltec-carport-toth-nitra-hero.jpg');
+        addDesc(lis[1], 'Prémiový hliníkový systém s čistou architektúrou.');
+      }
+      enhanceProducts(autaItem, 'cars');
+    }
+
+    if (domItem) {
+      const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
+      const byHref = (part) => lis.find((li) => ((li.querySelector('a') || {}).href || '').includes(part));
+      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pevne-prestresenie-mokrance.jpg');
+      setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-accessory-zip.jpg');
+      setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
+      addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
+      addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
+      addDesc(byHref('bioklimaticke-pergoly'), 'Otočné lamely pre tienenie aj ochranu pred dažďom.');
+      addDesc(byHref('tienenie'), 'ZIP rolety, panely a brisoleje.');
+      addDesc(byHref('outdoor-kuchyne'), 'Modulové zostavy z nerezu a hliníka.');
+      enhanceProducts(domItem, 'home');
+    }
+
+    if (realItem && realItem.dataset.kBatch5 !== 'true') {
+      const panel = realItem.querySelector('.kv-mega');
+      const list = panel && panel.querySelector('.kv-pod');
+      if (panel && list) {
+        const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+        [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
+          const a = li.querySelector(':scope > a');
+          if (!a) return;
+          const photo = document.createElement('span');
+          photo.className = 'kv-mega__foto';
+          const img = document.createElement('img');
+          img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = i === 0 ? 'Realizácia prístrešku Koverta pri rodinnom dome' : 'Detail realizácie prístrešku Koverta';
+          photo.appendChild(img);
+          a.insertBefore(photo, a.firstChild);
+
+          const text = document.createElement('span');
+          text.className = 'kv-mega__real-text';
+          while (photo.nextSibling) text.appendChild(photo.nextSibling);
+          a.appendChild(text);
+        });
+        list.classList.remove('kv-pod');
+        list.classList.add('kv-mega__real-grid');
+        panel.classList.remove('kv-mega--uzke');
+        panel.classList.add('kv-mega--batch5', 'kv-mega--real');
+        realItem.dataset.kBatch5 = 'true';
+      }
+    }
+
+    /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-auto-trnava-sikmy.jpg');
+    setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
+    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+    setDrawerPhoto('pevne-prestresenia', 'soltec-pevne-prestresenie-mokrance.jpg');
+    setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
+    setDrawerPhoto('tienenie', 'soltec-accessory-zip.jpg');
+    setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
+
+    const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
+      const s = d.querySelector(':scope > summary');
+      return s && /^Realizácie/.test(s.textContent.trim());
+    });
+    if (drawerReal && drawerReal.dataset.kBatch5 !== 'true') {
+      const list = drawerReal.querySelector('.kv-drawer__rad');
+      const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+      if (list) {
+        list.classList.remove('kv-drawer__rad--text');
+        list.classList.add('kv-drawer__rad--real');
+        [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
+          const a = li.querySelector(':scope > a');
+          if (!a || a.querySelector('.kv-drawer__foto')) return;
+          const photo = document.createElement('span');
+          photo.className = 'kv-drawer__foto';
+          const img = document.createElement('img');
+          img.src = menuAsset(photos[i] || photos[0]);
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = i === 0 ? 'Realizácia prístrešku Koverta' : 'Detail realizácie prístrešku Koverta';
+          photo.appendChild(img);
+          const body = document.createElement('span');
+          body.className = 'kv-drawer__telo';
+          while (a.firstChild) body.appendChild(a.firstChild);
+          a.appendChild(photo);
+          a.appendChild(body);
+        });
+      }
+      drawerReal.dataset.kBatch5 = 'true';
+    }
+
     /* mega menu — otvára sa hoverom aj klávesnicou, zatvára Escapom */
     const items = [...header.querySelectorAll('[data-k-mega-item]')];
     let hoverTimer;
