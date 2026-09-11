@@ -3330,6 +3330,7 @@
                celú šírku. Čelné ležia na bočných, takže presah je presne ten
                roh a spredu ho vidieť nie je. Profil je otočené L: zvislé
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
+            const innerClosures = [];
             const lemL = (axis, outer, dir, a, b, sirka) => {
               const put = (u0, u1, z, dz, seamlessTop) => {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true);
@@ -3346,12 +3347,10 @@
                  owns the complete top sight line. */
               put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
-              /* Close the pocket exactly at the inner edge of the top arm.
-                 The corrugated surfaces start on this same plane below, so the
-                 parts share a boundary instead of leaving a bright gap or
-                 crossing every rib. The nominal 19 mm fold remains concealed. */
-              const zav = outer + sirka * dir;
-              put(zav + dir, zav + LEM_COVER * dir, trapBot, zTop - trapBot);
+              /* The single closure plane is emitted with the roof materials
+                 after they are resolved below. A box here adds two redundant
+                 side faces which alternately win against every corrugation. */
+              innerClosures.push({ axis, u: outer + (sirka + LEM_COVER) * dir, a, b });
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
@@ -3724,6 +3723,24 @@
                 });
               }
             };
+
+            /* One exact cut plane closes each concealed sheet edge. Its upper
+               half belongs visually to the roof top and its lower half to the
+               single-colour soffit. Raw material colours avoid normal-based
+               dark/light dashes; the shared boundary is geometric, not a
+               painter-order override. */
+            const closureMidZ = trapBot + TRAP_H * 0.5;
+            innerClosures.forEach((c) => {
+              const plane = (za, zb, hex) => {
+                const pts = c.axis === 'x'
+                  ? [[c.u, c.a, za], [c.u, c.b, za], [c.u, c.b, zb], [c.u, c.a, zb]]
+                  : [[c.a, c.u, za], [c.b, c.u, za], [c.b, c.u, zb], [c.a, c.u, zb]];
+                quad(pts, hex, { normal: c.axis === 'x' ? [1, 0, 0] : [0, 1, 0],
+                  cull: false, edge: false, raw: true, seamless: true });
+              };
+              plane(trapBot, closureMidZ, spodHex);
+              plane(closureMidZ, zTop, vrchHex);
+            });
 
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
