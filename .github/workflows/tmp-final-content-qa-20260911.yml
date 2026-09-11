@@ -1,0 +1,207 @@
+name: Final content visual QA
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-final-content-qa-20260911.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Fix final garden photo mapping and validate content
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, struct
+
+          path = Path('zahradne-pristresky/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def jpeg_size(p):
+              data = Path(p).read_bytes()
+              i = 2
+              sof = {0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF}
+              if data[:2] != b'\xff\xd8': raise SystemExit(f'not JPEG: {p}')
+              while i + 9 < len(data):
+                  if data[i] != 0xFF: i += 1; continue
+                  while i < len(data) and data[i] == 0xFF: i += 1
+                  marker = data[i]; i += 1
+                  if marker in {0xD8,0xD9} or 0xD0 <= marker <= 0xD7: continue
+                  if i + 2 > len(data): break
+                  ln = int.from_bytes(data[i:i+2], 'big')
+                  if marker in sof and ln >= 7:
+                      return int.from_bytes(data[i+5:i+7],'big'), int.from_bytes(data[i+3:i+5],'big')
+                  i += ln
+              raise SystemExit(f'no JPEG dimensions: {p}')
+
+          def replace_article_img(source, marker, img_src, alt):
+              pos = source.find(marker)
+              if pos < 0: raise SystemExit(f'marker missing: {marker}')
+              start = source.rfind('<article', 0, pos)
+              end = source.find('</article>', pos)
+              if start < 0 or end < 0: raise SystemExit(f'article missing: {marker}')
+              end += len('</article>')
+              article = source[start:end]
+              m = re.search(r'<img\b[^>]*>', article, re.S)
+              if not m: raise SystemExit(f'image missing: {marker}')
+              rel = img_src.replace('../assets/','')
+              w,h = jpeg_size(Path('assets')/rel)
+              old = m.group(0)
+              attrs = re.sub(r'\s(?:src|alt|title|width|height)="[^"]*"', '', old)
+              attrs = attrs[:-1].rstrip() if attrs.endswith('>') else attrs
+              new = f'{attrs} src="{img_src}" alt="{alt}" title="{alt}" width="{w}" height="{h}">'
+              article = article[:m.start()] + new + article[m.end():]
+              return source[:start] + article + source[end:]
+
+          text = replace_article_img(text, '<p class="kh-mat__label">Rám</p>', '../assets/koverta-carport-pri-garazi.jpg', 'Oceľová nosná konštrukcia prístrešku Koverta pri dome')
+          text = replace_article_img(text, '<h3 class="kh-mat__title">Na hotovej ploche</h3>', '../assets/koverta-pristresok-garaz.jpg', 'Prístrešok Koverta osadený pri hotovej spevnenej ploche')
+          text = replace_article_img(text, '<h3 class="kh-mat__title">Pri dome</h3>', '../assets/koverta-zahradny-pristresok-bratislava-detail.jpg', 'Detail záhradného prístrešku Koverta pri fasáde rodinného domu')
+          path.write_text(text, encoding='utf-8')
+
+          # Hard postconditions: exact user-facing mapping, no accidental same-photo repetition on this subpage.
+          text = path.read_text(encoding='utf-8')
+          assert '../assets/koverta-zahradny-pristresok-bratislava-hero.jpg' in text
+          assert text.count('../assets/koverta-zahradny-pristresok-bratislava-hero.jpg') == 1, 'garden hero is duplicated'
+          for img in ['../assets/koverta-carport-pri-garazi.jpg','../assets/koverta-pristresok-garaz.jpg','../assets/koverta-zahradny-pristresok-bratislava-detail.jpg']:
+              assert text.count(img) == 1, f'duplicate or missing mapped photo: {img}'
+          assert '<h3 class="kh-mat__title">Na zelenej ploche</h3>' in text and '../assets/kh-faq-podklad.jpg' in text
+
+          home = Path('index.html').read_text(encoding='utf-8')
+          assert home.count('data-k-step-row') == 3
+          assert '<em>03</em><strong>Montáž a odovzdanie</strong>' in home
+          assert 'Podklad a pätky</strong>' not in home
+          assert 'koverta-pristresok-auto-trnava-hero.jpg' not in home[home.find('kh-ponuka__mriezka'):home.find('kh-kviz')]
+
+          carport = Path('carport-soltec/index.html').read_text(encoding='utf-8')
+          assert 'id="modely-carport"' in carport and 'SL 170' in carport and 'SL 240' in carport
+          assert 'Rozdiel vidíte v jednej tabuľke' not in carport
+          bio = Path('bioklimaticke-pergoly/index.html').read_text(encoding='utf-8')
+          for model in ['SL 170/28','SL 170/36','SL 170/42','SL 240/36','SL 240/42','SL 240/60']:
+              assert model in bio
+          fixed = Path('pevne-prestresenia/index.html').read_text(encoding='utf-8')
+          for model in ['F170','F240','G170','G240']:
+              assert model in fixed
+          js = Path('assets/koverta-2026.js').read_text(encoding='utf-8')
+          assert "bar.classList.add('je-schovana')" not in js
+          PY
+          git diff --check
+
+      - name: Install browser driver outside repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/koverta-pw
+          cd /tmp/koverta-pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+
+      - name: Exact-section desktop and mobile visual QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          export CHROME
+          export NODE_PATH=/tmp/koverta-pw/node_modules
+          mkdir -p qa-final-content
+          cat >/tmp/koverta-pw/qa.js <<'JS'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          const base = 'http://127.0.0.1:8901/';
+          const targets = [
+            ['home-process','index.html','#proces'],
+            ['auto-materials','pristresky-pre-auta/index.html','section:has(#anaTitle)'],
+            ['auto-structure','pristresky-pre-auta/index.html','section:has(#skladbaTitle)'],
+            ['garden-hero','zahradne-pristresky/index.html','section.kh-hero'],
+            ['garden-base','zahradne-pristresky/index.html','section:has(#podkladTitle)'],
+            ['soltec-carport','carport-soltec/index.html','#modely-carport'],
+            ['bio-models','bioklimaticke-pergoly/index.html','#typy-bio'],
+            ['fixed-models','pevne-prestresenia/index.html','#typy-prestresenia']
+          ];
+          const sizes = [['desktop',1440,1000],['mobile',390,844]];
+          (async()=>{
+            const browser = await chromium.launch({headless:true, executablePath:process.env.CHROME, args:['--no-sandbox','--disable-gpu']});
+            for (const [mode,width,height] of sizes) {
+              const ctx = await browser.newContext({viewport:{width,height}, reducedMotion:'reduce'});
+              const page = await ctx.newPage();
+              for (const [name,url,selector] of targets) {
+                await page.goto(base+url,{waitUntil:'domcontentloaded',timeout:30000});
+                await page.waitForTimeout(500);
+                const only = page.getByRole('button',{name:/Iba nevyhnutné/i}).first();
+                if (await only.count()) { try { await only.click({timeout:1000}); } catch {} }
+                await page.addStyleTag({content:`
+                  html{scroll-behavior:auto!important}
+                  .k-rise,.k-reveal,.k-js .k-rise,.k-js .k-reveal{opacity:1!important;transform:none!important;visibility:visible!important;filter:none!important;clip-path:none!important;transition:none!important}
+                  [data-k-headline], [data-k-headline] *{opacity:1!important;transform:none!important;visibility:visible!important;transition:none!important}
+                `});
+                await page.evaluate(()=>{
+                  document.querySelectorAll('.k-rise,.k-reveal').forEach(el=>el.classList.add('is-in'));
+                  [...document.querySelectorAll('body *')].forEach(el=>{
+                    const s=getComputedStyle(el); const t=(el.textContent||'').slice(0,400);
+                    if(s.position==='fixed' && /cookie|cookies|súbor.*cookie|súbory cookie/i.test(t) && el.getBoundingClientRect().height>80) el.style.display='none';
+                  });
+                });
+                const loc = page.locator(selector).first();
+                if (!(await loc.count())) throw new Error(`${name}: target missing ${selector}`);
+                await loc.scrollIntoViewIfNeeded();
+                await page.waitForTimeout(250);
+                const box = await loc.boundingBox();
+                if (!box || box.width < 300 || box.height < 100) throw new Error(`${name}: invalid bounds ${JSON.stringify(box)}`);
+                await loc.screenshot({path:`qa-final-content/${mode}-${name}.png`});
+              }
+              // Sticky-nav evidence after a deep scroll.
+              await page.goto(base+'zahradne-pristresky/index.html',{waitUntil:'domcontentloaded'});
+              await page.evaluate(()=>window.scrollTo(0, Math.max(1200,document.body.scrollHeight*0.55)));
+              await page.waitForTimeout(350);
+              const header = page.locator('header.kv-header').first();
+              const hbox = await header.boundingBox();
+              if (!hbox || hbox.height < 40) throw new Error(`${mode}: sticky header not visible after deep scroll`);
+              await page.screenshot({path:`qa-final-content/${mode}-sticky-header.png`, fullPage:false});
+              await ctx.close();
+            }
+            await browser.close();
+            const pngs=fs.readdirSync('qa-final-content').filter(x=>x.endsWith('.png'));
+            if(pngs.length!==18) throw new Error(`expected 18 screenshots, got ${pngs.length}`);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/koverta-pw/qa.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final-content-visual-qa-${{ github.sha }}
+          path: qa-final-content/*.png
+          if-no-files-found: error
+
+      - name: Commit final mapping and remove temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f -- \
+            .github/workflows/tmp-content-recovery-20260910.yml \
+            .github/workflows/tmp-user-content-finish-20260910.yml \
+            .github/workflows/tmp-final-content-qa-20260911.yml
+          git add -- zahradne-pristresky/index.html
+          git diff --cached --check
+          changed="$(git diff --cached --name-only | sort)"
+          printf '%s\n' "$changed"
+          test "$(printf '%s\n' "$changed" | grep -v -E '^(zahradne-pristresky/index.html|\.github/workflows/tmp-(content-recovery-20260910|user-content-finish-20260910|final-content-qa-20260911)\.yml)$' | wc -l)" -eq 0
+          git commit -m 'fix: finalize photo mapping and content visual QA'
+          git push origin HEAD:fix/koverta-final-repair-20260910
