@@ -212,5 +212,5 @@ function percentile(values, p) {
   console.log(JSON.stringify({ ok: true, p95, maxFrame, cameraCounts, louverCounts }, null, 2));
 })().catch((error) => {
   console.error(error.stack || error);
-  process.exitCode = 1;
+  process.exit(1);
 });

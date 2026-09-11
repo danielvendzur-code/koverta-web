@@ -1685,8 +1685,8 @@
               return shader;
             };
             const program = gl.createProgram();
-            const vs = compile(gl.VERTEX_SHADER, 'attribute vec4 position; attribute vec4 color; varying lowp vec4 tint; void main(){gl_Position=position;tint=color;}');
-            const fs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; varying lowp vec4 tint; void main(){gl_FragColor=tint;}');
+            const vs = compile(gl.VERTEX_SHADER, 'attribute vec4 position; attribute vec4 color; attribute float pattern; varying lowp vec4 tint; varying lowp float mesh; void main(){gl_Position=position;tint=color;mesh=pattern;}');
+            const fs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; varying lowp vec4 tint; varying lowp float mesh; void main(){vec4 c=tint;if(mesh>0.5){vec2 uv=fract(gl_FragCoord.xy/vec2(14.0,8.0));float d=abs(uv.x-0.5)+abs(uv.y-0.5);c.rgb*=mix(0.65,1.18,1.0-smoothstep(0.045,0.09,abs(d-0.5)));}gl_FragColor=c;}');
             gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
             gl.deleteShader(vs); gl.deleteShader(fs);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
@@ -1698,9 +1698,9 @@
             });
             surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
             depthPainter = { gl, program, host, surface, buffer: gl.createBuffer(),
-              position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color') };
+              position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern') };
           }
-          const { gl, program, host, surface, buffer, position, color } = depthPainter;
+          const { gl, program, host, surface, buffer, position, color, pattern } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           const ratio = Math.min(2, window.devicePixelRatio || 1);
           const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
@@ -1714,9 +1714,10 @@
           gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
           gl.disable(gl.CULL_FACE);
           gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
-          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 32, 0);
-          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 32, 16);
+          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color); gl.enableVertexAttribArray(pattern);
+          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 36, 0);
+          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 36, 16);
+          gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 36, 32);
           const rgba = (fill) => {
             if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
@@ -1733,7 +1734,7 @@
                 const w = Math.max(DIST * 0.45, DIST - p.d);
                 data.push(((p.x * scale + ox) / VW * 2 - 1) * w,
                   (1 - (p.y * scale + oy) / VH * 2) * w,
-                  (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...tint);
+                  (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...tint, String(f.sourceFill).startsWith('url(') ? 1 : 0);
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0]); vertex(f.p[i]); vertex(f.p[i+1]); }
             }
@@ -1741,7 +1742,7 @@
             if (transparent) { gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
             else gl.disable(gl.BLEND);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
-            gl.drawArrays(gl.TRIANGLES, 0, data.length / 8);
+            gl.drawArrays(gl.TRIANGLES, 0, data.length / 9);
           };
           // Ground and its coplanar decorative overlays remain a background.
           const background = faces.filter(f => f.bg);
@@ -2266,8 +2267,10 @@
               const a = (Math.PI * 2 * i) / 6 + Math.PI / 6;
               const b = (Math.PI * 2 * (i + 1)) / 6 + Math.PI / 6;
               cap.push(P(h, a));
-              quad([P(0, a), P(h, a), P(h, b), P(0, b)], shade(hex, -0.10),
-                   { normal: n, cull: false, bias: ON_SKIN });
+              const c = Math.cos((a + b) / 2), d = Math.sin((a + b) / 2);
+              const sideNormal = os === 'x' ? [0,c,d] : os === 'y' ? [c,0,d] : [c,d,0];
+              quad([P(0, a), P(h, a), P(h, b), P(0, b)], hex,
+                   { normal: sideNormal, cull: false, bias: ON_SKIN });
             }
             quad(cap, hex, { normal: n, bias: ON_SKIN });
           };
@@ -5302,6 +5305,11 @@
         };
 
         let louverRun = 0, moverTimer = 0;
+        const stopAutomatedMove = () => {
+          if (louverRun) cancelAnimationFrame(louverRun);
+          if (moverTimer) window.clearTimeout(moverTimer);
+          louverRun = 0; moverTimer = 0;
+        };
         const runMover = (ch, target, immediate) => {
           const M = MOVER[ch];
           const to = Math.max(0, Math.min(1, target));
@@ -5324,7 +5332,7 @@
                midpoint acceleration or bounce */
             const e = 1 - Math.pow(1 - k, 3);
             M.set(from + (to - from) * e);
-            drawStage();
+            scheduleStage();
             /* Počas behu má posuvník aj percentá bežať s ním, inak to vyzerá,
                že sa ovládanie prebralo až na konci. */
             syncSideMove();
@@ -5733,8 +5741,8 @@
         });
         cfgRoot.addEventListener('input', (event) => {
           const t = event.target;
-          if (t.hasAttribute('data-sp-louver-range')) { MOVER.louver.set(Number(t.value) / 100); scheduleStage(); return; }
-          if (t.hasAttribute('data-sp-side-range')) { MOVER.side.set(Number(t.value) / 100); scheduleStage(); return; }
+          if (t.hasAttribute('data-sp-louver-range')) { stopAutomatedMove(); MOVER.louver.set(Number(t.value) / 100); scheduleStage(); return; }
+          if (t.hasAttribute('data-sp-side-range')) { stopAutomatedMove(); MOVER.side.set(Number(t.value) / 100); scheduleStage(); return; }
           if (t.hasAttribute('data-sp-w')) state.widthValue = Number(t.value);
           else if (t.hasAttribute('data-sp-l')) state.lengthValue = Number(t.value);
           else if (t.hasAttribute('data-sp-h')) state.height = Number(t.value);
