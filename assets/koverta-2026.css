@@ -14930,3 +14930,17 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k-model-system > div:nth-child(odd) { padding-left:0; border-right:1px solid rgba(18,23,26,.1); }
   .k-model-family__head > div > strong { font-size:14px; }
 }
+
+/* USER-BREADCRUMB-POSITION-20260911
+   Omrvinková navigácia je orientačný prvok celej stránky, preto zostáva pri
+   hornom okraji hero na každej šírke a nepohybuje sa spolu s blokom nadpisu. */
+.k .kh-hero { position: relative; }
+.k .kh-hero__inner { position: static; }
+.k .kh-hero__box > .kh-crumbs {
+  position: absolute;
+  top: clamp(16px, 2.2vw, 28px);
+  left: max(var(--k-gut), calc((100vw - var(--k-max)) / 2 + var(--k-gut)));
+  right: var(--k-gut);
+  margin: 0;
+  z-index: 2;
+}
