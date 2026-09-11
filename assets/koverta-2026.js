@@ -659,7 +659,7 @@
   // vidia nezmenený. Základný stav je VIDITEĽNÉ; animácia s fill-mode:
   // backwards skrýva len počas oneskorenia.
   function initHeadline(root) {
-    root.querySelectorAll('[data-k-headline]').forEach((title) => {
+    root.querySelectorAll('.kh-hero [data-k-headline]').forEach((title) => {
       /* Nadpis sekcie nemá hero box; maska slov mu patrí rovnako, len po ňom
          niet čo ďalej odkrývať. */
       const box = title.closest('[data-k-hero-box]');
@@ -2006,6 +2006,19 @@
     const zoznam = root.querySelector('.kh-rev__list[data-k-scrub]');
     const trio = root.querySelector('[data-k-trio]');
     if (!zoznam || !trio) return;
+
+    /* Tri prvé recenzie používajú presne tie isté realizácie ako krok 05.
+       Je to aj statický mobilný/reduced-motion fallback, nielen zdroj pre
+       desktopový prelet. Obsah fotografie sa počas pohybu nikdy nevymení. */
+    const trioImgs = [...trio.querySelectorAll('.kh-proc__trio-kus img')];
+    const reviewImgs = [...zoznam.querySelectorAll('.kh-rev__card .kh-rev__foto img')].slice(0, trioImgs.length);
+    reviewImgs.forEach((img, i) => {
+      const source = trioImgs[i];
+      if (!source) return;
+      img.src = source.currentSrc || source.src;
+      img.removeAttribute('srcset');
+    });
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(min-width: 1000px)').matches) return;
 

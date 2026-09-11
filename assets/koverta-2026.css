@@ -15004,3 +15004,47 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 @media (max-width:480px) {
   .kv-header .kv-topbar__side a[href^="mailto:"]::before { display:none; }
 }
+
+/* HOMEPAGE DECISION REFINEMENT 20260911 */
+.k .kh-ponuka__akcia {
+  min-height: 40px; padding: 0 16px;
+  border: 1px solid #b78900; border-radius: 999px;
+  background: var(--k-amber); color: var(--k-ink); font-weight: 750;
+}
+.k .kh-ponuka__karta:hover .kh-ponuka__akcia,
+.k .kh-ponuka__karta:focus-visible .kh-ponuka__akcia {
+  border-color: var(--k-ink); background: var(--k-ink); color: #fff;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta {
+  position: relative; overflow: hidden;
+  background: var(--k-amber); border-color: #d4a800;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta::before {
+  content: "03"; position: absolute; right: 16px; top: 6px;
+  font-family: var(--k-head); font-size: clamp(74px,8vw,118px);
+  font-weight: 800; line-height: 1; color: rgba(18,23,26,.08);
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__telo { position: relative; z-index: 1; }
+.k .kh-ponuka__volby { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 2px; }
+.k .kh-ponuka__volby span {
+  padding:5px 9px; border:1px solid rgba(18,23,26,.28);
+  border-radius:999px; font-size:11px; font-weight:750;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia {
+  border-color: var(--k-ink); background: var(--k-ink); color:#fff;
+}
+.k .kh-kfg__typy { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.k .kh-kfg__typ { grid-column:auto !important; }
+.k .kh-kfg__foto { aspect-ratio:16/9; }
+.k .kh-proc__media--navrh { background:#f1efe8; }
+.k .kh-proc__media--navrh img { object-fit:contain; padding:clamp(18px,3vw,38px); }
+.k .kh-proc__media--zameranie { position:relative; }
+.k .kh-proc__kota {
+  position:absolute; left:12%; right:12%; bottom:14%;
+  display:flex; align-items:center; justify-content:center;
+  height:28px; border-inline:2px solid var(--k-amber);
+  border-bottom:2px solid var(--k-amber); color:#fff;
+  font-size:11px; font-weight:750; letter-spacing:.04em;
+  text-shadow:0 1px 3px rgba(0,0,0,.75);
+}
+@media (max-width:719px) { .k .kh-kfg__typy { grid-template-columns:1fr; } }
