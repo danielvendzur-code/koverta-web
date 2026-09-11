@@ -1668,6 +1668,93 @@
             } : null
           });
         } catch (e) {}
+        /* Rasterise original faces with a perspective-correct depth buffer.
+           No BSP fragments, centroid ordering or expanded polygon strokes can
+           reveal a hidden steel member through another opaque member. */
+        let depthPainter = null;
+        const paintDepth = (faces, camera) => {
+          if (depthPainter === false) return false;
+          if (!depthPainter) {
+            const surface = document.createElement('canvas');
+            const gl = surface.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
+            if (!gl) { depthPainter = false; return false; }
+            const compile = (type, source) => {
+              const shader = gl.createShader(type);
+              gl.shaderSource(shader, source); gl.compileShader(shader);
+              if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+              return shader;
+            };
+            const program = gl.createProgram();
+            const vs = compile(gl.VERTEX_SHADER, 'attribute vec4 position; attribute vec4 color; varying lowp vec4 tint; void main(){gl_Position=position;tint=color;}');
+            const fs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; varying lowp vec4 tint; void main(){gl_FragColor=tint;}');
+            gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
+            gl.deleteShader(vs); gl.deleteShader(fs);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+            const host = svgEl('foreignObject', { x: 0, y: 0 });
+            surface.style.cssText = 'display:block;width:100%;height:100%;pointer-events:none';
+            host.style.pointerEvents = 'none'; host.appendChild(surface);
+            surface.addEventListener('webglcontextlost', (event) => {
+              event.preventDefault(); depthPainter = false; scheduleStage();
+            });
+            surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
+            depthPainter = { gl, program, host, surface, buffer: gl.createBuffer(),
+              position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color') };
+          }
+          const { gl, program, host, surface, buffer, position, color } = depthPainter;
+          const { VW, VH, scale, ox, oy, DIST } = camera;
+          const ratio = Math.min(2, window.devicePixelRatio || 1);
+          const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
+          const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
+          if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
+          host.setAttribute('width', VW); host.setAttribute('height', VH);
+          if (host.parentNode !== canvas) canvas.replaceChildren(host);
+          gl.viewport(0, 0, width, height); gl.useProgram(program);
+          gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+          gl.disable(gl.CULL_FACE);
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
+          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 32, 0);
+          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 32, 16);
+          const rgba = (fill) => {
+            if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
+            const m = fill.match(/[\d.]+/g) || [];
+            return [(+m[0] || 0)/255, (+m[1] || 0)/255, (+m[2] || 0)/255, m.length > 3 ? +m[3] : 1];
+          };
+          const near = DIST * 0.05, far = DIST * 4;
+          const batch = (items, transparent) => {
+            if (!items.length) return;
+            const data = [];
+            for (const f of items) {
+              const tint = rgba(f.fill);
+              const vertex = (p) => {
+                const w = Math.max(DIST * 0.45, DIST - p.d);
+                data.push(((p.x * scale + ox) / VW * 2 - 1) * w,
+                  (1 - (p.y * scale + oy) / VH * 2) * w,
+                  (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...tint);
+              };
+              for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0]); vertex(f.p[i]); vertex(f.p[i+1]); }
+            }
+            gl.depthMask(!transparent);
+            if (transparent) { gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
+            else gl.disable(gl.BLEND);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+            gl.drawArrays(gl.TRIANGLES, 0, data.length / 8);
+          };
+          // Ground and its coplanar decorative overlays remain a background.
+          const background = faces.filter(f => f.bg);
+          gl.disable(gl.DEPTH_TEST); batch(background, true); gl.enable(gl.DEPTH_TEST);
+          const solid = [], transparent = [];
+          for (const face of faces) if (!face.bg) (rgba(face.fill)[3] < 1 ? transparent : solid).push(face);
+          batch(solid, false);
+          transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
+          batch(transparent, true); gl.depthMask(true);
+          canvas.dataset.renderer = 'webgl-depth';
+          canvas.dataset.faceCount = String(solid.length + transparent.length);
+          return true;
+        };
+
         const drawStage = () => {
           lastKvAccessoryGeometry = null;
           const L = lengthMM(), W = widthMM(), H = state.height;
@@ -1856,7 +1943,10 @@
           const quad = (pts, fill, opts) => {
             const o = opts || {};
             const normal = o.normal || faceNormal(pts);
-            if (o.cull && facing(normal) <= 0) return;
+            // Perspective culling uses the eye relative to this face, not a
+            // parallel direction at the scene origin (which popped roof faces).
+            const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
+            if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
@@ -2467,7 +2557,7 @@
                 /* Medzi doskou a stĺpom je krátka pozinkovaná objímka. Na
                    rendroch je z nej vidieť pás asi na tretinu šírky stĺpa —
                    celých 615 mm z modelu Expivi na fotkách realizácií nie je. */
-                const objH = Number(model().plateSleeve) || Math.round(Math.min(pd, pw) * 0.36);
+                const objH = model().roofKit === 'koverta' ? 0 : (Number(model().plateSleeve) || 0);
                 if (objH) {
                   const g = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));
                   boxFaces(px - g, py - g, pth, pd + 2 * g, pw + 2 * g, objH,
@@ -2493,7 +2583,7 @@
                 /* Jeden skutočný úkos na rohu. Päť mikrofacetov na každom
                    rohu sa v mierke konfigurátora menilo na zvislé svetlé a
                    tmavé pruhy, hoci reálny jakl má čisté rovné líca. */
-                const SEG = 2;
+                const SEG = 6;
                 const cs = [];
                 [[px + r, py + r, Math.PI, 1.5 * Math.PI],
                  [px + pd - r, py + r, 1.5 * Math.PI, 2 * Math.PI],
@@ -2528,7 +2618,7 @@
               /* Platne hlavy sú pod strechou a za lemovaním — zhora ich vidieť
                  nemôže. Kreslili sa ale aj vtedy a na spoji, kde maliarske
                  triedenie rozdelí veľkú plochu strechy, im vykukol pixel. */
-              if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou)) {
+              if (BIO.headPlates) {
                 /* Expivi complete scenes put the column top exactly at the
                    bottom of the side perimeter frame. The renderer lifts that
                    frame by 2 mm only to avoid coplanar BSP artefacts, so the
@@ -3277,10 +3367,10 @@
                renderer envelope used to construct the folded L silhouette,
                not a verified 15 mm material thickness. Do not infer gauge
                from this value or from photographs. */
-            const LEM_H = REF.lemH || 260, LEM_T = 15, LEM_LIP = 16;
+            const LEM_H = REF.lemH || 260, LEM_T = 1.5, LEM_LIP = 16;
             /* Renderer overlap inside the already concealed fascia pocket.
                It does not alter the measured exterior flashing envelope. */
-            const LEM_COVER = 20;
+            const LEM_COVER = 0;
             /* Horné rameno lemovania je tenký plech, ktorý leží na hrebeňoch
                trapézu. Jeho spodné líce musí byť pod vrchom plechu, inak
                medzi nimi ostane škára a pri plochom pohľade cez ňu presvitá
@@ -3346,7 +3436,7 @@
                  continuous top arm. Its underside stays 0.5 mm above the
                  corrugation crowns, so no roof facet is cut and the flashing
                  owns the complete top sight line. */
-              put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
+              put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
@@ -3450,8 +3540,7 @@
          the real assembly, so do not emit that invisible zinc plane:
          keeping it in BSP made it leak through fascia split edges. */
       const outsideA = single > 0 ? 0 : par;
-      if (podStrechou && axis === 'y' && single &&
-          Math.abs(A[0] - outsideA) < 1e-6 && Math.abs(B[0] - outsideA) < 1e-6) continue;
+
                 if (!bokom && Math.abs(n[2]) < 0.4) continue;
                 /* The upper C-profile flange is permanently covered by the sheet.
                    Do not emit its +Z face: at the corrugation valleys it is exactly
@@ -3611,7 +3700,7 @@
               hostBottomZ: trapBot,
               renderZ: trapBot
             };
-            const spodHex = maIzolaciu ? '#c7c4bb' : shade(zinok, -0.03);
+            const spodHex = maIzolaciu ? '#c7c4bb' : '#d9dcdd';
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -3718,7 +3807,7 @@
                   normal: faceNormal(pts),
                   cull: true,
                   edge: false,
-                  raw: true,
+                  raw: false,
                   seamless: true,
                   sealSplits: true
                 });
@@ -3730,19 +3819,15 @@
                and therefore keeps one roof/flashing finish through its height.
                Splitting it into light and dark halves exposed the light half
                through every valley when viewed from above. */
-            innerClosures.forEach((c) => {
-              const pts = c.axis === 'x'
-                ? [[c.u, c.a, trapBot], [c.u, c.b, trapBot], [c.u, c.b, zTop], [c.u, c.a, zTop]]
-                : [[c.a, c.u, trapBot], [c.b, c.u, trapBot], [c.b, c.u, zTop], [c.a, c.u, zTop]];
-              quad(pts, vrchHex, { normal: c.axis === 'x' ? [1, 0, 0] : [0, 1, 0],
-                cull: false, edge: false, raw: true, seamless: true });
-            });
+            // The L flashing stays open beneath its horizontal arm. Artificial
+            // vertical closure curtains hid the corrugated sheet's actual ends.
+
 
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
-            drawTrapSurface(vx0, vx1, vy0, vy1, trapLowerZ, spodHex, false);
-            drawTrapSurface(vx0, vx1, vy0, vy1, trapUpperZ, vrchHex, true);
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
                here and would reintroduce the dotted z-fighting seam. */
@@ -4099,7 +4184,8 @@
               };
               const startZ = zlBot + Math.max(4, rz * 0.12);
               const throatZ = zBot - Math.max(8, rz * 0.32);
-              const lom = [[xViditelnyVytok, yZvod, startZ],
+              const lom = [[xVytok, yZvod, zlBot],
+                           [xViditelnyVytok, yZvod, startZ],
                            [xViditelnyVytok, yZvod, throatZ]];
               if (prechodX > 2) lom.push([xRura, yZvod, throatZ - prechodZ]);
               lom.push([xRura, yZvod, zPata]);
@@ -4128,7 +4214,7 @@
                 radius: rz,
                 start: [xVytok, yZvod, zlBot],
                 outlet: [xVytok, yZvod, zlBot],
-                visibleStart: lom[0].slice(),
+                visibleStart: lom[1].slice(),
                 concealedFeed: {
                   from: [xVytok, yZvod, zlBot],
                   to: [xViditelnyVytok, yZvod, startZ],
@@ -4495,7 +4581,7 @@
                the blades lie flat and overlap by the 17 mm the pitch leaves
                over, which is the seal; there is no separate closed state to
                jump to, it is simply this one at nought degrees. */
-            const mid = bz + beam - dz;
+            const mid = bz + beam - blade.t; // fixed physical pivot; no vertical travel during rotation
             const t = blade.t;                     // blade thickness, along its own normal
             const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
@@ -4514,61 +4600,17 @@
               const fullAX = x - dx, fullAZ = mid - dz;
               const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
               const bX = x + dx, bZ = mid + dz;
-              /* Shut, the blades overlap and lie in one plane, so a centroid
-                 cannot order them. Stepping the bias along the run makes each
-                 blade lap the one before it, the way they actually close. */
-              const lay = { bias: i * 0.02 };
-              /* Zospodu je vidieť len rub lamiel a ich čelnú hranu. Rub mal
-                 -0.20 a hrana -0.30, čo je na antracite rozdiel, ktorý oko
-                 nerozozná: strecha zdola vyzerala ako jedna hladká doska a
-                 lamely z nej zmizli. Na bielej farbe bolo pritom všetko
-                 vidieť, takže nešlo o poradie kreslenia, ale o tón. Hrana je
-                 preto výrazne tmavšia a každá lamela dostane vlastný obrys —
-                 tak sa rad číta na každej farbe aj z každého uhla. */
-              /* Obrys lamely sa nesmie kresliť inou farbou než jej plocha.
-                 Maliarske triedenie delí plochy rovinami ostatných dielov a
-                 rozdelený kúsok dostáva obrys vo farbe výplne, aby cez neho
-                 nebolo vidieť rez. Nerozdelený kúsok mal ale obrys tmavý —
-                 a keďže sa počas pohybu delí zakaždým niečo iné, obrysy
-                 lamiel medzi snímkami blikali. Teraz je obrys vždy vo farbe
-                 vlastnej plochy: rozdelený aj nerozdelený kus vyzerá rovnako,
-                 vlasové škáry medzi plochami sa aj tak zatvoria a kontrast
-                 nesie geometria — dva pásy na rube a tmavšia čelná hrana. */
-              const obrys = { arris: false };
-              const layO = Object.assign({}, lay, obrys);
-              /* Vrchná plocha lamely nie je jeden tón. Pri okraji, ktorým
-                 lamela zapadá pod susednú, je pás v jej tieni — v skutočnosti
-                 je to ten 17 mm lap, ktorým strecha tesní.
-
-                 Bez neho splynuli zavreté lamely zhora do jednej hladkej
-                 dosky: plochy susedných lamiel na seba priamo nadväzujú a
-                 obrys sa kreslí vo farbe výplne, takže medzi nimi nebolo nič.
-                 Pohľad zhora tak nemal vôbec žiadnu textúru a spoje zmizli.
-
-                 Pás sa kreslí ako samostatná plocha, ktorá na hlavnú presne
-                 nadväzuje — neprekrýva ju. Prekryté plochy v jednej rovine sa
-                 medzi snímkami preraďujú a lamely by preblikávali, čo je
-                 chyba, ktorou si táto scéna už prešla. */
-              const lapF = 0.13;
-              const jX = aX + (bX - aX) * lapF, jZ = aZ + (bZ - aZ) * lapF;
-              quad([[aX,y0-lap,aZ],[jX,y0-lap,jZ],[jX,y1+lap,jZ],[aX,y1+lap,aZ]], shade(louv, -0.16), layO);
-              quad([[jX,y0-lap,jZ],[bX,y0-lap,bZ],[bX,y1+lap,bZ],[jX,y1+lap,jZ]], shade(louv, 0.16), layO);
-              /* Rub lamely nie je jeden tón. Horná hrana je zastrčená pod
-                 susednou lamelou, takže tá polovica je v jej tieni; spodná
-                 hrana je otvorená k oblohe a je svetlejšia. Rub sa preto
-                 kreslí ako dva pásy. Je to skutočný jav a zároveň jediné,
-                 čo dá radu lamiel kontrast aj na antracite — na bielej bolo
-                 všetko vidieť, na tmavej sa strecha zdola zlievala do dosky. */
-              const sX = (fullAX + bX) / 2 + ox, sZ = (fullAZ + bZ) / 2 + oz;
-              quad([[fullAX+ox,y1+lap,fullAZ+oz],[sX,y1+lap,sZ],[sX,y0-lap,sZ],[fullAX+ox,y0-lap,fullAZ+oz]], shade(louv, -0.04), layO);
-              quad([[sX,y1+lap,sZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz],[sX,y0-lap,sZ]], shade(louv, -0.40), layO);
-              quad([[bX,y0-lap,bZ],[bX,y1+lap,bZ],[bX+ox,y1+lap,bZ+oz],[bX+ox,y0-lap,bZ+oz]], shade(louv, -0.48), layO);
-              /* Pevný tesniaci podklad uzatvára skutočnú šírku profilu.
-                 Pri zatvorení leží pod koncom susednej lamely, takže horné
-                 plochy sa iba stretnú na hrane a BSP nemusí deliť dve veľké
-                 koplanárne plochy. Celý tento profil sa potom iba otáča. */
-              if (overlap > 0.5)
-                quad([[fullAX+ox,y0-lap,fullAZ+oz],[aX,y0-lap,aZ],[aX,y1+lap,aZ],[fullAX+ox,y1+lap,fullAZ+oz]], shade(louv, -0.40), layO);
+              // One rigid, closed extrusion, one powder-coat material. A
+              // recessed tongue seals the neighbour without coplanar bottoms.
+              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, mid + u * bladeUz + z * bladeUx];
+              const section = (u0, u1, z0, z1) => {
+                const A=P(u0,z1,y0-lap), B=P(u1,z1,y0-lap), C=P(u1,z1,y1+lap), D=P(u0,z1,y1+lap);
+                const E=P(u0,z0,y0-lap), F=P(u1,z0,y0-lap), G=P(u1,z0,y1+lap), J=P(u0,z0,y1+lap);
+                [[A,B,C,D],[J,G,F,E],[A,E,F,B],[D,C,G,J],[A,D,J,E],[B,F,G,C]].forEach(pts =>
+                  quad(pts, louv, { edge:false, cull:false }));
+              };
+              section(topLeadS + 0.5, fullHalf - 0.5, -t, 0);
+              if (overlap > 0.5) section(-fullHalf, topLeadS + 0.5, -t * 0.65, -t * 0.35);
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */
@@ -4597,15 +4639,23 @@
           canvas.setAttribute('viewBox', '0 0 ' + VW + ' ' + VH);
           const pad = Math.round(Math.min(VW, VH) * 0.08);
           let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-          faces.forEach((f) => { if (!f.fit) return; f.p.forEach((q) => {
-            if (q.x < minX) minX = q.x; if (q.x > maxX) maxX = q.x;
-            if (q.y < minY) minY = q.y; if (q.y > maxY) maxY = q.y;
-          }); });
+          // Fit a stable assembly envelope, including the full louver sweep.
+          // Rotating blades must never zoom or recenter the whole structure.
+          const fitTop = H + beam + (panelRoof ? fall : louverSize().w / 2);
+          [-180, L + 180].forEach(x => [-180, W + 180].forEach(y => [0, fitTop].forEach(z => {
+            const q = cam(x, y, z);
+            minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
+            minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
+          })));
           const scale = Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
           const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2;
           const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2;
 
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
+          const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
+          canvas.setAttribute('aria-label', `${model().label || state.model}, ${widthMM()} krát ${lengthMM()} milimetrov, ${state.frameColor.name}, pohľad ${aboveDepth}`);
+          if (paintDepth(faces, { VW, VH, scale, ox, oy, DIST })) return;
+          canvas.dataset.renderer = 'svg-fallback';
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
           const stavba = faces.filter((f) => !f.bg);
@@ -5325,7 +5375,7 @@
             if (k < 1) {
               louverRun = requestAnimationFrame(step);
               window.clearTimeout(moverTimer);
-              moverTimer = window.setTimeout(step, 90);
+
               return;
             }
             louverRun = 0;
@@ -5341,7 +5391,7 @@
             syncLouverReadout();
           };
           louverRun = requestAnimationFrame(step);
-          moverTimer = window.setTimeout(step, 90);
+
         };
 
         /* Vonkajšia nadstavba (tlačidlá „Zavrieť všetko" / „Otvoriť všetko")
@@ -5851,8 +5901,7 @@
             /* Camera drag changes only the view. Rebuilding all controls, price
                rows and option groups on every pointer frame is unnecessary for
                Soltec. Koverta deliberately keeps its existing full-render path. */
-            if (model().kvGeom) scheduleRender();
-            else scheduleStage();
+            scheduleStage();
           });
           const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };
           stageEl.addEventListener('pointerup', stop);
