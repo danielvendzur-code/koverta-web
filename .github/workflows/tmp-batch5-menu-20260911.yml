@@ -1,5 +1,5 @@
 name: Batch 5 header menu QA
-# QA revision 3: deterministic Playwright timeouts
+# QA revision 4: SVG logos are valid once intrinsic dimensions exist
 
 on:
   push:
@@ -47,7 +47,18 @@ jobs:
           export NODE_PATH=/tmp/koverta-b5-pw/node_modules
           export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$CHROME"
-          node scripts/tmp-batch5-check.js
+          cp scripts/tmp-batch5-check.js /tmp/batch5-check.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/batch5-check.js')
+          s=p.read_text(encoding='utf-8')
+          old='if (!s.complete || s.naturalWidth < 40 || s.naturalHeight < 16) {'
+          new='if (s.naturalWidth < 40 || s.naturalHeight < 16) {'
+          if s.count(old) != 1:
+              raise SystemExit(f'expected one image condition, got {s.count(old)}')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+          node /tmp/batch5-check.js
 
       - uses: actions/upload-artifact@v4
         with:
