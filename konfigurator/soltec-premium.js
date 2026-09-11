@@ -3724,22 +3724,17 @@
               }
             };
 
-            /* One exact cut plane closes each concealed sheet edge. Its upper
-               half belongs visually to the roof top and its lower half to the
-               single-colour soffit. Raw material colours avoid normal-based
-               dark/light dashes; the shared boundary is geometric, not a
-               painter-order override. */
-            const closureMidZ = trapBot + TRAP_H * 0.5;
+            /* One exact cut plane closes each concealed sheet edge. It belongs
+               to the flashing pocket, not to the visible single-colour soffit,
+               and therefore keeps one roof/flashing finish through its height.
+               Splitting it into light and dark halves exposed the light half
+               through every valley when viewed from above. */
             innerClosures.forEach((c) => {
-              const plane = (za, zb, hex) => {
-                const pts = c.axis === 'x'
-                  ? [[c.u, c.a, za], [c.u, c.b, za], [c.u, c.b, zb], [c.u, c.a, zb]]
-                  : [[c.a, c.u, za], [c.b, c.u, za], [c.b, c.u, zb], [c.a, c.u, zb]];
-                quad(pts, hex, { normal: c.axis === 'x' ? [1, 0, 0] : [0, 1, 0],
-                  cull: false, edge: false, raw: true, seamless: true });
-              };
-              plane(trapBot, closureMidZ, spodHex);
-              plane(closureMidZ, zTop, vrchHex);
+              const pts = c.axis === 'x'
+                ? [[c.u, c.a, trapBot], [c.u, c.b, trapBot], [c.u, c.b, zTop], [c.u, c.a, zTop]]
+                : [[c.a, c.u, trapBot], [c.b, c.u, trapBot], [c.b, c.u, zTop], [c.a, c.u, zTop]];
+              quad(pts, vrchHex, { normal: c.axis === 'x' ? [1, 0, 0] : [0, 1, 0],
+                cull: false, edge: false, raw: true, seamless: true });
             });
 
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
