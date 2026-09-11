@@ -1,0 +1,81 @@
+name: Final core regression 20260911
+
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+    paths: [.github/workflows/tmp-final-core-regression-20260911.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply validated gallery correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('carport-soltec/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='''<article class="kh-cat__item k-reveal" data-k-delay="2"><div class="kh-cat__media"><img src="../assets/soltec-canopy-f170-real.jpg" width="2000" height="1239" alt="SL 170 pre jedno auto" loading="lazy" decoding="async"></div><div class="kh-cat__body"><p class="k-copy">SL 170 pre jedno auto</p></div></article>'''
+          new='''<article class="kh-cat__item k-reveal" data-k-delay="2"><div class="kh-cat__media"><img src="../assets/soltec-carport-plavecky-03.jpg" alt="Hliníkový carport Soltec s otvoreným státím pri rodinnom dome" loading="lazy" decoding="async"></div><div class="kh-cat__body"><p class="k-copy">Carport Soltec s otvoreným státím</p></div></article>'''
+          if old in s:
+              if s.count(old)!=1: raise SystemExit('ambiguous gallery anchor')
+              s=s.replace(old,new,1)
+          elif new not in s: raise SystemExit('gallery correction anchor missing')
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install exact Playwright runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/final-core-pw
+          cd /tmp/final-core-pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null
+
+      - name: Run core regression suite
+        shell: bash
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8901 >/tmp/final-core-http.log 2>&1 &
+          PID=$!; trap 'kill $PID || true' EXIT
+          for i in {1..30}; do curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null && break; sleep 1; done
+          export NODE_PATH=/tmp/final-core-pw/node_modules
+          export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
+          for t in pricing-logic osnova-podla-expivi technical-fidelity layout-smoke routing-smoke browser-qa; do
+            echo "=== $t ==="
+            node "konfigurator/test/$t.js"
+          done
+
+      - name: Commit validated correction and clean temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet -- carport-soltec/index.html; then
+            git add carport-soltec/index.html
+            git commit -m 'fix: remove misleading SL170 gallery claim'
+          fi
+          git rm -f .github/workflows/tmp-final-site-audit-20260911.yml .github/workflows/tmp-final-site-audit-rerun-20260911.yml .github/workflows/tmp-final-core-regression-20260911.yml
+          git commit -m 'ci: remove temporary final audit workflows'
+          git push origin HEAD:fix/koverta-final-repair-20260910
