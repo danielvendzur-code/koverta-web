@@ -14470,6 +14470,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k-model-card__code { display:inline-flex; align-items:center; min-height:34px; padding:0 12px; border:1px solid rgba(18,23,26,.24); border-radius:999px; font-weight:760; font-size:13px; letter-spacing:.04em; }
 .k-model-card__use { color:#6c7376; font-size:14px; font-weight:650; }
 .k-model-card__body h3 { margin:0 0 22px; font-size:clamp(23px,2.1vw,32px); line-height:1.05; letter-spacing:-.025em; }
+.k-model-card__explain { margin:-8px 0 24px; color:#596064; font-size:15px; line-height:1.55; }
 .k-model-facts { margin:auto 0 0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
 .k-model-facts > div { display:flex; justify-content:space-between; gap:18px; padding:12px 0; border-bottom:1px solid rgba(18,23,26,.11); }
 .k-model-facts dt { color:#687074; }
