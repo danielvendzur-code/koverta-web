@@ -51,6 +51,7 @@ async function setSize(page, width, length) {
 async function svgState(page) {
   return page.locator('[data-sp-canvas]').evaluate(svg => ({
     markup: window.SP_TEST.exportSVG(),
+    materials: window.SP_TEST.renderMaterials,
     polygons: Number(svg.dataset.faceCount || svg.querySelectorAll('polygon').length),
     paths: svg.querySelectorAll('path').length
   }));
@@ -360,7 +361,7 @@ function validateAccessoryContacts(snap, label) {
       assert(ledSnap.extras['kv-led'] === 1, `${device}: LED state missing`);
       assert(withLed.markup !== beforeLed.markup,
         `${device}: LED selection did not change the physical SVG render`);
-      assert(/f5e8c5/i.test(withLed.markup),
+      assert(withLed.materials.some(fill => /f5e8c5/i.test(fill)),
         `${device}: LED diffuser surface is missing from the rendered SVG`);
 
       /* Preserve visual evidence for manual QA in the workflow artifact. */

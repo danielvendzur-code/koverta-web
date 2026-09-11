@@ -1,5 +1,38 @@
 # Koverta configurator: sources, measured geometry and open questions
 
+## Rendering update — 2026-09-11
+
+The current renderer rasterises original faces with a perspective-correct
+WebGL depth buffer and multisample antialiasing. BSP remains a compatibility
+fallback when WebGL is unavailable. Historical BSP-specific descriptions below
+are retained as audit history, not as a description of the primary renderer.
+Camera culling uses the actual eye-to-face vector. Koverta geometry is cached
+between camera-only updates; changes to configuration invalidate that cache.
+
+The roof retains its measured corrugation height and pitch. Both surfaces run
+under the L flashing and are separated by one sheet thickness. The soffit has
+one light-grey material; differences in brightness come from face orientation.
+The current visual flashing gauge is 1.5 mm, replacing the former 15 mm visual
+envelope, and front/back top folds lap over the side folds by one gauge.
+This gauge is a rendering proportion, not a newly verified manufacturing value.
+The measured fascia reach, column sections and active axes remain unchanged.
+The artificial base sleeve was removed at the owner's explicit request.
+
+Drainage now contains the previously metadata-only concealed connecting run.
+It slopes down to the exposed tube, and the gutter floor is raised within the
+existing pocket to contain that run. These are illustrative installation
+proportions; the precise gutter section, pipe diameter and routing for every
+variant still require a manufacturer drawing. Do not claim all sizes are 1:1.
+
+Soltec louvers use closed rigid extrusions with a recessed overlap tongue,
+one material and a fixed pivot. Neither their section nor camera fit changes
+with the opening angle. Motion has one requestAnimationFrame chain. Artificial
+painted sheen bands and transverse ISO-soffit stripes have been removed.
+
+Pixel tests export the actual raster through SP_TEST.exportSVG instead of
+serialising an empty canvas element. Existing pixel tolerances are retained.
+
+
 Audit date: 2026-09-09. Working branch: `fix/final-koverta-audit-20260909`.
 
 Expivi dimensions and column positions are the technical baseline. Photographs

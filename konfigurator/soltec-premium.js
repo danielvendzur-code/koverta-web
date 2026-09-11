@@ -1645,7 +1645,7 @@
         try {
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
-          window.SP_TEST.redraw = () => { renderAll(); };
+          window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
@@ -1671,7 +1671,7 @@
         /* Rasterise original faces with a perspective-correct depth buffer.
            No BSP fragments, centroid ordering or expanded polygon strokes can
            reveal a hidden steel member through another opaque member. */
-        let depthPainter = null;
+        let depthPainter = null, cachedGeometry = null;
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
           if (!depthPainter) {
@@ -1718,6 +1718,7 @@
           gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 32, 0);
           gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 32, 16);
           const rgba = (fill) => {
+            if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
             const m = fill.match(/[\d.]+/g) || [];
             return [(+m[0] || 0)/255, (+m[1] || 0)/255, (+m[2] || 0)/255, m.length > 3 ? +m[3] : 1];
@@ -1752,6 +1753,7 @@
           batch(transparent, true); gl.depthMask(true);
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
+          if (window.SP_TEST) window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
           canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
           return true;
         };
@@ -1941,12 +1943,16 @@
             const s = v.slice(0, 3).map((x, i) => Math.round(x + (HAZE_TO[i] - x) * t)).join(',');
             return v[3] == null ? 'rgb(' + s + ')' : 'rgba(' + s + ',' + v[3] + ')';
           };
+          const geometryKey = JSON.stringify(state) + '|' + [se > 0.01, fromAbove, VIEWDIR[0] > 0, VIEWDIR[1] > 0].join(',');
+          const cacheHit = model().kvGeom && cachedGeometry && cachedGeometry.key === geometryKey;
+          const rawFaces = [];
+          const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
+            if (!cacheHit && model().kvGeom) rawFaces.push({ pts, fill, opts, layer });
             const o = opts || {};
             const normal = o.normal || faceNormal(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
-            const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
             if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
@@ -1955,7 +1961,7 @@
             faces.push({
               w: pts.map((point) => point.slice()),
               p: pp,
-              fill: lit,
+              fill: lit, sourceFill: fill,
               edge: o.edge !== false,
               /* arris:false keeps the stroke but paints it in the face's own
                  colour, so members merge into one surface without a gap */
@@ -1981,7 +1987,7 @@
                  obrovská plocha vycentrovaná pod modelom, takže jej priemer
                  vyjde bližšie než strecha a čiary dlažby sa prekreslili cez
                  ňu. Podklad sa preto vykreslí prvý a s modelom sa netriedi. */
-              bg: layer < -ROOF_LAYER,
+              bg: layer <= -3 * ROOF_LAYER + 1000,
               order: faces.length
             });
           };
@@ -2272,6 +2278,10 @@
           };
 
 
+          if (cacheHit) {
+            lastKvAccessoryGeometry = cachedGeometry.accessories;
+            for (const face of cachedGeometry.faces) { layer = face.layer; quad(face.pts, face.fill, face.opts); }
+          } else {
           /* Cast shadow: the roof footprint dropped to the ground and pushed
              along the light. The throw is compressed so it grounds the model
              without pulling the framing off the structure. */
@@ -3957,7 +3967,7 @@
               const zlX1 = L - LEM_T - LEM_LIP - Math.max(4, RAM_W * 0.08);
               const zlSpan = zlX1 - zlX0;
               const zlWall = Math.max(3, Math.min(7, zlSpan * 0.045));
-              const zlBot = zBot + Math.max(5, Math.min(12, RAM_H * 0.04));
+              const zlBot = zBot + Math.max(40, Math.min(70, RAM_H * 0.25));
               const zlRise = Math.max(48, Math.min(128, zlSpan * 0.78));
               const zlTop = Math.min(zlBot + zlRise, ramTop - Math.max(8, RAM_H * 0.04));
               const zlY0 = LEM_T, zlY1 = W - LEM_T;
@@ -3992,7 +4002,7 @@
                   const A = section[i], B = section[i + 1];
                   const pts = [[A[0], zlY0, A[1]], [A[0], zlY1, A[1]],
                                [B[0], zlY1, B[1]], [B[0], zlY0, B[1]]];
-                  quad(pts, zlHex, { normal: faceNormal(pts), cull: true, arris: false, edge: false });
+                  quad(pts, zlHex, { normal: faceNormal(pts), cull: false, arris: false, edge: false });
                 }
                 /* Čelá a horné perá ležia natrvalo za bočným/čelným
                    lemovaním. V SVG ich zámerne nevysielame: nie sú z nijakého
@@ -4177,7 +4187,7 @@
                 out.push(body[body.length - 1]);
                 return out;
               };
-              const startZ = zlBot + Math.max(4, rz * 0.12);
+              const startZ = zlBot - Math.max(4, rz * 0.12);
               const throatZ = zBot - Math.max(8, rz * 0.32);
               const lom = [[xVytok, yZvod, zlBot],
                            [xViditelnyVytok, yZvod, startZ],
@@ -4434,27 +4444,8 @@
               quad([[a, inY1, panelBottomZ(a, inY1)], [b, inY1, panelBottomZ(b, inY1)],
                     [b, inY0, panelBottomZ(b, inY0)], [a, inY0, panelBottomZ(a, inY0)]], skinLow,
                    Object.assign({ cull: true, edgeHex: seamLow }, pane));
-              /* Odlesk oblohy. Skutočná panelová ani sklenená strecha nie je
-                 jeden plochý tón — zbiera oblohu, najsvetlejšia je pri hrane
-                 otočenej k slnku a smerom k divákovi zoslabne. Bez toho vyzerá
-                 paluba ako papier. Pruhy, lebo vykresľovač maľuje plné plochy;
-                 krok priehľadnosti je taký malý, že sa pásy nedajú rozoznať. */
-              if (fromAbove) {
-                const savedSheen = layer;
-                layer = roofBase + ON_SKIN;
-                const BANDS = 12;
-                for (let i = 0; i < BANDS; i++) {
-                  const ya = inY0 + ((inY1 - inY0) * i) / BANDS;
-                  const yb = inY0 + ((inY1 - inY0) * (i + 1)) / BANDS;
-                  const t = (i + 0.5) / BANDS;
-                  const al = (0.012 + 0.062 * t * t).toFixed(4);
-                  quad([[a, ya, panelTopZ(a, ya)], [b, ya, panelTopZ(b, ya)],
-                        [b, yb, panelTopZ(b, yb)], [a, yb, panelTopZ(a, yb)]],
-                       'rgba(255,255,255,' + al + ')',
-                       { normal: [0, 0, 1], raw: true, edge: false, fit: false });
-                }
-                layer = savedSheen;
-              }
+              // Powder-coat response comes from the face lighting. Coplanar
+              // painted sheen bands caused view-dependent depth interference.
               /* Trapézový profil Koverta. Podhľad nie je hladká doska — na
                  fotkách zdola je vidno vlnu, ktorá beží po spáde, teda pozdĺž
                  dĺžky, a priečne väznice ju krížia. Rebrá sa kreslia ako pásy
@@ -4493,33 +4484,6 @@
                       [b,inY1,panelBottomZ(b,inY1)],[b,inY0,panelBottomZ(b,inY0)]], edgeHex, Object.assign({ normal:[1,0,0] }, edge));
               }
             });
-            /* The deck sits down inside the frame, and a rail standing that
-               proud of it throws a line of shade along its own foot. Without
-               it the deck reads as painted onto the opening rather than set
-               into it - a flat fill meeting a flat fill at a hard edge, which
-               is exactly what makes a render look drawn. Four soft bands, one
-               per rail, stacked so they fade away from the metal. */
-            if (!integratedFall && fromAbove && !glass) {
-              const ao = Math.min(340, Math.max(120, beam * 1.1));
-              const savedAO = layer;
-              layer = roofBase + ON_SKIN;
-              for (let i = 5; i >= 1; i--) {
-                const g = (ao * i) / 5;
-                const al = (0.030 * (1 - (i - 1) / 5)).toFixed(4);
-                const band = (pts) => quad(pts, 'rgba(24,27,24,' + al + ')',
-                  { normal: [0, 0, 1], raw: true, edge: false, fit: false });
-                band([[inX0, inY0, panelTopZ(inX0,inY0)], [inX1, inY0, panelTopZ(inX1,inY0)],
-                      [inX1, inY0 + g, panelTopZ(inX1,inY0+g)], [inX0, inY0 + g, panelTopZ(inX0,inY0+g)]]);
-                band([[inX0, inY1 - g, panelTopZ(inX0,inY1-g)], [inX1, inY1 - g, panelTopZ(inX1,inY1-g)],
-                      [inX1, inY1, panelTopZ(inX1,inY1)], [inX0, inY1, panelTopZ(inX0,inY1)]]);
-                band([[inX0, inY0, panelTopZ(inX0,inY0)], [inX0 + g, inY0, panelTopZ(inX0+g,inY0)],
-                      [inX0 + g, inY1, panelTopZ(inX0+g,inY1)], [inX0, inY1, panelTopZ(inX0,inY1)]]);
-                band([[inX1 - g, inY0, panelTopZ(inX1-g,inY0)], [inX1, inY0, panelTopZ(inX1,inY0)],
-                      [inX1, inY1, panelTopZ(inX1,inY1)], [inX1 - g, inY1, panelTopZ(inX1-g,inY1)]]);
-              }
-              layer = savedAO;
-            }
-
             /* the four edges of the slab, so it is a solid and not two sheets */
             if (!integratedFall) {
               quad([[inX0,inY0,panelTopZ(inX0,inY0)],[inX1,inY0,panelTopZ(inX1,inY0)],[inX1,inY0,panelBottomZ(inX1,inY0)],[inX0,inY0,panelBottomZ(inX0,inY0)]], edgeHex, { normal:[0,-1,0], cull:true, edge:false, bias:-600 });
@@ -4528,24 +4492,9 @@
               quad([[inX1,inY0,panelTopZ(inX1,inY0)],[inX1,inY1,panelTopZ(inX1,inY1)],[inX1,inY1,panelBottomZ(inX1,inY1)],[inX1,inY0,panelBottomZ(inX1,inY0)]], edgeHex, { normal:[1,0,0], cull:true, edge:false, bias:-600 });
             }
 
-            if (!fromAbove) {
-              const rib = 'rgba(120,126,118,.30)';
-              /* Rebrá podhľadu bežia po celej doske v stálom rastri. Kreslili
-                 sa po poliach a rozdelené na rovnaké diely, takže rozostup
-                 vnútri poľa bol iný ako cez spoj a na dvoch miestach zrazu
-                 vznikla širšia medzera — vyzeralo to ako chyba, nie ako profil.
-                 Teraz je raster jeden na celú dosku a rebro, ktoré by padlo na
-                 nosník, sa jednoducho vynechá. */
-              const RIB_BUDGET = 110;
-              const run = inX1 - inX0;
-              const pitchRib = Math.max(run / RIB_BUDGET, 250);
-              for (let x = inX0 + pitchRib * 0.5; x < inX1 - 20; x += pitchRib) {
-                if (beamRuns.some((r) => x > r.a - rw * 0.6 && x < r.b + rw * 0.6)) continue;
-                quad([[x - 4,inY1 - 45,panelBottomZ(x - 4,inY1 - 45)], [x + 4,inY1 - 45,panelBottomZ(x + 4,inY1 - 45)],
-                      [x + 4,inY0 + 45,panelBottomZ(x + 4,inY0 + 45)], [x - 4,inY0 + 45,panelBottomZ(x - 4,inY0 + 45)]], rib,
-                     { bias: ON_SKIN, edge: false, raw: true });
-              }
-            }
+            // ISO sandwich soffits are smooth: only real module joints and
+            // secondary profiles divide them, never decorative transverse ribs.
+
           } else {
             mitreRing(0, 0, L, W, bz, post, beam, frame);
             layer = roofBase;
@@ -4624,6 +4573,8 @@
 
           }
 
+            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, accessories: lastKvAccessoryGeometry };
+          }
           layer = 0;
 
           // fit and paint
