@@ -1610,6 +1610,22 @@
         let viewTouched = false;
         let lastRoofKind = null;
         const view = { az: -0.62, el: 0.42 };
+        let cameraRun = 0;
+        const stopCamera = () => { if (cameraRun) cancelAnimationFrame(cameraRun); cameraRun = 0; };
+        const animateCamera = (az, el) => {
+          stopCamera();
+          const a0 = view.az, e0 = view.el;
+          const delta = Math.atan2(Math.sin(az - a0), Math.cos(az - a0));
+          if (reducedMotion) { view.az = a0 + delta; view.el = el; scheduleStage(); return; }
+          const start = performance.now();
+          const tick = now => {
+            const t = Math.min(1, (now - start) / 180), ease = t * t * (3 - 2 * t);
+            view.az = a0 + delta * ease; view.el = e0 + (el - e0) * ease;
+            scheduleStage();
+            cameraRun = t < 1 ? requestAnimationFrame(tick) : 0;
+          };
+          cameraRun = requestAnimationFrame(tick);
+        };
         /* Otvárací pohľad si berie ten, ktorý patrí modelu. */
         const otvorPohlad = () => { const v = VIEWS_FOR().front; view.az = v.az; view.el = v.el; };
         const VIEWS_SOLTEC = {
@@ -1644,7 +1660,7 @@
            Test je v konfigurator/test/prekrytie.js. */
         try {
           window.SP_TEST = window.SP_TEST || {};
-          window.SP_TEST.setView = (az, el) => { view.az = az; view.el = el; viewTouched = true; };
+          window.SP_TEST.setView = (az, el) => { stopCamera(); view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
@@ -5835,6 +5851,7 @@
           hint.textContent = 'Ťahaním alebo šípkami otočíte model';
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
+            stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
             viewTouched = true;
@@ -5852,6 +5869,7 @@
         if (stageEl) {
           stageEl.addEventListener('pointerdown', (e) => {
             if (e.target.closest('button, input, select, textarea, label, [role="group"]')) return;
+            stopCamera();
             dragging = true; lastX = e.clientX; lastY = e.clientY;
             stageEl.setPointerCapture(e.pointerId);
           });
@@ -5878,10 +5896,8 @@
           const preset = VIEWS[v.dataset.spView];
           if (!preset) return;
           viewTouched = true;
-          view.az = preset.az;
-          view.el = Math.max(EL_FLOOR(), v.dataset.spView === 'front' ? FRONT_EL() : preset.el);
+          animateCamera(preset.az, Math.max(EL_FLOOR(), v.dataset.spView === 'front' ? FRONT_EL() : preset.el));
           cfgRoot.querySelectorAll('[data-sp-view]').forEach((b) => b.setAttribute('aria-pressed', String(b === v)));
-          drawStage();
         });
 
         /* Which car stands under it. How many is not a choice - it follows the
