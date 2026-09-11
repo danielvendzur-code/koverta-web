@@ -23,20 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp scripts/tmp-batch5-apply.py /tmp/batch5-apply.py
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('/tmp/batch5-apply.py')
-          s=p.read_text(encoding='utf-8')
-          bad="r'(koverta-2026\\.(?:css|js))(?:\\?v=[^\"\\\\'<>\\s]*)?'"
-          good='r"(koverta-2026\\.(?:css|js))(?:\\?v=[^\\\"\'<>\\s]*)?"'
-          if s.count(bad) != 2:
-              raise SystemExit(f'expected two regex literals to repair, got {s.count(bad)}')
-          s=s.replace(bad,good)
-          p.write_text(s,encoding='utf-8')
-          PY
-          python3 -m py_compile /tmp/batch5-apply.py
-          python3 /tmp/batch5-apply.py
+          python3 scripts/tmp-batch5-run.py
           git diff --check
 
       - name: Install browser QA
@@ -82,6 +69,6 @@ jobs:
             exit 1
           fi
           git commit -m 'feat: refine header navigation menu'
-          git rm .github/workflows/tmp-batch5-menu-20260911.yml scripts/tmp-batch5-apply.py scripts/tmp-batch5-check.js
+          git rm .github/workflows/tmp-batch5-menu-20260911.yml scripts/tmp-batch5-apply.py scripts/tmp-batch5-run.py scripts/tmp-batch5-check.js
           git commit -m 'ci: remove temporary batch 5 QA files'
           git push origin HEAD:fix/koverta-final-repair-20260910
