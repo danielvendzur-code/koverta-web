@@ -1,0 +1,102 @@
+name: Unobstructed content visual evidence
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-clean-content-evidence2-20260911.yml
+
+permissions:
+  contents: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Install Playwright controller
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+      - name: Capture unobstructed evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8901 >/tmp/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          export NODE_PATH=/tmp/pw/node_modules
+          mkdir -p qa-unobstructed
+          cat >/tmp/pw/capture.js <<'JS'
+          const { chromium }=require('playwright');
+          const fs=require('fs');
+          const base='http://127.0.0.1:8901/';
+          const targets=[
+            ['home-process','index.html','#proces'],
+            ['auto-materials','pristresky-pre-auta/index.html','section:has(#anaTitle)'],
+            ['auto-structure','pristresky-pre-auta/index.html','section:has(#skladbaTitle)'],
+            ['garden-hero','zahradne-pristresky/index.html','section.kh-hero'],
+            ['garden-base','zahradne-pristresky/index.html','section:has(#podkladTitle)'],
+            ['soltec-carport','carport-soltec/index.html','#modely-carport'],
+            ['bio-models','bioklimaticke-pergoly/index.html','#typy-bio'],
+            ['fixed-models','pevne-prestresenia/index.html','#typy-prestresenia']
+          ];
+          async function clean(page){
+            await page.addStyleTag({content:`html{scroll-behavior:auto!important}.k-rise,.k-reveal,.k-js .k-rise,.k-js .k-reveal,[data-k-headline],[data-k-headline] *{opacity:1!important;transform:none!important;visibility:visible!important;filter:none!important;clip-path:none!important;transition:none!important}`});
+            await page.evaluate(()=>{
+              document.querySelectorAll('.k-rise,.k-reveal').forEach(el=>el.classList.add('is-in'));
+              const hit=[...document.querySelectorAll('body *')].filter(el=>{
+                const t=(el.innerText||'');
+                return t.includes('Nevyhnutné')&&t.includes('Analytika')&&t.includes('Marketing')&&t.includes('Preferencie')&&t.includes('Prijať všetko');
+              });
+              hit.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);
+              if(hit.length){
+                let n=hit[0], removed=false;
+                for(let i=0;i<8&&n&&n!==document.body;i++,n=n.parentElement){
+                  const t=n.innerText||''; const s=getComputedStyle(n); const r=n.getBoundingClientRect();
+                  if(t.includes('Prijať všetko')&&t.includes('Nevyhnutné')&&(s.position==='fixed'||s.position==='absolute'||r.width<800)) { n.remove(); removed=true; break; }
+                }
+                if(!removed) hit[0].remove();
+              }
+              document.querySelectorAll('[role="dialog"]').forEach(el=>{const t=el.innerText||'';if(t.includes('Prijať všetko')&&t.includes('Nevyhnutné'))el.remove();});
+            });
+            const body=await page.locator('body').innerText();
+            if(body.includes('Prijať všetko')&&body.includes('Analytika')&&body.includes('Marketing')) throw new Error('consent panel still present');
+          }
+          (async()=>{
+            const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME,args:['--no-sandbox','--disable-gpu']});
+            for(const [mode,width,height] of [['desktop',1440,1000],['mobile',390,844]]){
+              const ctx=await browser.newContext({viewport:{width,height},reducedMotion:'reduce'});
+              const page=await ctx.newPage();
+              for(const [name,url,sel] of targets){
+                await page.goto(base+url,{waitUntil:'domcontentloaded',timeout:30000});
+                await page.waitForTimeout(250); await clean(page);
+                const loc=page.locator(sel).first(); if(!(await loc.count())) throw new Error(`${name}: missing`);
+                await loc.scrollIntoViewIfNeeded(); await page.waitForTimeout(100);
+                await loc.screenshot({path:`qa-unobstructed/${mode}-${name}.png`});
+              }
+              await ctx.close();
+            }
+            await browser.close();
+            if(fs.readdirSync('qa-unobstructed').filter(x=>x.endsWith('.png')).length!==16) throw new Error('wrong screenshot count');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/pw/capture.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unobstructed-content-evidence-${{ github.sha }}
+          path: qa-unobstructed/*.png
+          if-no-files-found: error
+      - name: Remove temporary evidence workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/tmp-clean-content-evidence2-20260911.yml
+          git commit -m 'ci: remove temporary unobstructed evidence workflow'
+          git push origin HEAD:fix/koverta-final-repair-20260910
