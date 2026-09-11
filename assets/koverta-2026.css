@@ -15048,3 +15048,13 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   text-shadow:0 1px 3px rgba(0,0,0,.75);
 }
 @media (max-width:719px) { .k .kh-kfg__typy { grid-template-columns:1fr; } }
+
+/* FOUR SOLTEC CARPORTS · compact enough for one desktop decision view */
+.k .k-model-grid--carports { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.k .k-model-grid--carports .k-model-card__media { aspect-ratio:16/8; max-height:150px; }
+.k .k-model-grid--carports .k-model-card__body { padding:16px; }
+.k .k-model-grid--carports h3 { margin:10px 0 8px; font-size:clamp(18px,1.35vw,22px); }
+.k .k-model-grid--carports .k-model-card__lead { min-height:3em; margin:0 0 10px; font-size:13px; }
+.k .k-model-grid--carports .k-model-facts div { padding:8px 0; font-size:12.5px; }
+@media (max-width:1099px) { .k .k-model-grid--carports { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:619px) { .k .k-model-grid--carports { grid-template-columns:1fr; } }
