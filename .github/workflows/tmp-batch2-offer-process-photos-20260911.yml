@@ -1,0 +1,230 @@
+name: Batch 2 offer and process photo QA
+
+on:
+  push:
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-batch2-offer-process-photos-20260911.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Apply only batch 2 homepage changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          html_path=Path('index.html')
+          css_path=Path('assets/koverta-2026.css')
+          html=html_path.read_text(encoding='utf-8')
+          css=css_path.read_text(encoding='utf-8')
+
+          # Guard the process section restored in the previous approved batch.
+          assert html.count('data-k-step-row') >= 5
+          proc_start=html.index('<section class="k-band kh-proc" id="proces"')
+          proc_end=html.index('</section>', proc_start)+len('</section>')
+          proc=html[proc_start:proc_end]
+          assert proc.count('data-k-step-row') == 5
+          assert proc.count('data-k-step>') == 5
+          assert 'data-k-trio' in proc
+
+          replacements={
+            '<img src="./assets/koverta-navrh-pristresku-technicky-vykres.svg" alt="Technický návrh prístrešku Koverta s rozmerovými kótami" loading="lazy" decoding="async">':
+            '<img src="./assets/soltec-carport-toth-nitra-clean.jpg" alt="Hotový hliníkový carport Soltec pri modernom rodinnom dome" loading="lazy" decoding="async">',
+            '<img src="./assets/koverta-carport-pri-garazi.jpg" width="1600" height="1200" alt="Hotová konštrukcia prístrešku Koverta pri rodinnom dome" loading="lazy" decoding="async">':
+            '<img src="./assets/koverta-pristresok-auto-trnava-sikmy.jpg" width="1600" height="1200" alt="Oceľový prístrešok Koverta pri rodinnom dome v Trnave" loading="lazy" decoding="async">',
+            '<img src="./assets/kh-faq-podklad.jpg" alt="Príprava podkladu a kotvenia pre prístrešok Koverta" loading="lazy" decoding="async">':
+            '<img src="./assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Prístrešok Koverta osadený pri garáži rodinného domu" loading="lazy" decoding="async">',
+            '<span class="kh-proc__media kh-proc__media--trio" data-k-trio>':
+            '<span class="kh-proc__media kh-proc__media--trio">',
+            '<img src="./assets/soltec-bio-lifestyle.jpg" alt="Bioklimatická pergola Soltec s otočnými lamelami" loading="lazy" decoding="async" width="1656" height="1190">':
+            '<img src="./assets/soltec-bioklimaticka-pergola-limbach.jpg" alt="Bioklimatická pergola Soltec pri rodinnom dome v Limbachu" loading="lazy" decoding="async">',
+          }
+          for old,new in replacements.items():
+            if html.count(old) != 1:
+              raise SystemExit(f'expected exactly one homepage match for: {old[:90]!r}, got {html.count(old)}')
+            html=html.replace(old,new,1)
+
+          # Restore the intended offer mosaic by removing only the later equal-grid override.
+          flat_grid='  .kh-ponuka__mriezka { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }\n'
+          flat_items='  .kh-ponuka__kus, .kh-ponuka__kus--hlavna, .kh-ponuka__kus--siroka { grid-column:auto !important; grid-row:auto !important; }\n'
+          if css.count(flat_grid) != 1 or css.count(flat_items) != 1:
+            raise SystemExit(f'offer flattening override count changed: grid={css.count(flat_grid)} items={css.count(flat_items)}')
+          css=css.replace(flat_grid,'',1).replace(flat_items,'',1)
+
+          # Cache-bust only the stylesheet we changed.
+          old_css_ref='./assets/koverta-2026.css?v=1788846952174'
+          new_css_ref='./assets/koverta-2026.css?v=2026091102'
+          if html.count(old_css_ref) != 1:
+            raise SystemExit(f'expected one CSS cache ref, got {html.count(old_css_ref)}')
+          html=html.replace(old_css_ref,new_css_ref,1)
+
+          html_path.write_text(html,encoding='utf-8')
+          css_path.write_text(css,encoding='utf-8')
+
+          # Hard postconditions for this batch.
+          final=html_path.read_text(encoding='utf-8')
+          a=final.index('<section class="k-band kh-proc" id="proces"')
+          b=final.index('</section>',a)+len('</section>')
+          sec=final[a:b]
+          if sec.count('data-k-step-row') != 5 or sec.count('data-k-step>') != 5:
+            raise SystemExit('five-step process changed structurally')
+          if 'data-k-trio' in sec:
+            raise SystemExit('review-flight trigger still present in process')
+          trio=sec[sec.index('kh-proc__media--trio'):]
+          trio=trio[:trio.index('</span></span>')+14]
+          if trio.count('<img ') != 3 or trio.count('./assets/koverta-') != 2 or trio.count('./assets/soltec-') != 1:
+            raise SystemExit('final trio is not exactly 2 Koverta + 1 Soltec')
+
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          if changed != {'index.html','assets/koverta-2026.css'}:
+            raise SystemExit(f'unexpected batch 2 scope: {sorted(changed)}')
+          PY
+          git diff --check
+
+      - name: Browser QA and visual evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8902 >/tmp/koverta-b2-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+
+          mkdir -p /tmp/koverta-b2-pw qa-batch2
+          cd /tmp/koverta-b2-pw
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.58.2 >/dev/null 2>&1
+          cd "$GITHUB_WORKSPACE"
+          export NODE_PATH=/tmp/koverta-b2-pw/node_modules
+          export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+
+          cat >/tmp/koverta-b2-pw/check.js <<'JS'
+          const { chromium } = require('playwright');
+          const path = require('path');
+          const nodeProcess = require('node:process');
+          const root = nodeProcess.env.GITHUB_WORKSPACE;
+          const URL='http://127.0.0.1:8902/index.html';
+          async function dismiss(page){
+            const c=page.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first();
+            if(await c.count()) try{await c.click({timeout:1200})}catch(e){}
+          }
+          (async()=>{
+            const browser=await chromium.launch({headless:true,executablePath:nodeProcess.env.CHROME,args:['--no-sandbox','--disable-gpu']});
+            const ctx=await browser.newContext({viewport:{width:1440,height:1000}});
+            const page=await ctx.newPage();
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            await page.goto(URL+'#riesenia',{waitUntil:'load',timeout:60000});
+            await dismiss(page);
+
+            const offer=page.locator('#riesenia');
+            await offer.scrollIntoViewIfNeeded();
+            await page.waitForTimeout(650);
+            const cards=offer.locator('.kh-ponuka__kus:not(.kh-ponuka__kus--vstup)');
+            if(await cards.count()!==7) throw new Error('offer must still contain seven product cards');
+            const main=await cards.nth(0).boundingBox();
+            const wide=await cards.nth(1).boundingBox();
+            const regular=await cards.nth(2).boundingBox();
+            if(!main||!wide||!regular) throw new Error('offer card geometry unavailable');
+            if(!(main.width > regular.width*1.6 && main.height > regular.height*1.45)) throw new Error(`main offer card is not dominant: ${JSON.stringify({main,regular})}`);
+            if(!(wide.width > regular.width*1.6)) throw new Error(`wide bio card lost its span: ${JSON.stringify({wide,regular})}`);
+            await offer.screenshot({path:path.join(root,'qa-batch2','offer-desktop.png')});
+
+            const proc=page.locator('#proces');
+            await proc.scrollIntoViewIfNeeded();
+            await page.waitForTimeout(500);
+            const rows=proc.locator('[data-k-step-row]');
+            if(await rows.count()!==5) throw new Error('process no longer has 5 rows');
+            const expected=[
+              'soltec-carport-toth-nitra-clean.jpg',
+              null,
+              'koverta-pristresok-auto-trnava-sikmy.jpg',
+              'koverta-pristresok-garaz.jpg'
+            ];
+            for(const i of [0,2,3]){
+              await rows.nth(i).click();
+              await page.waitForTimeout(260);
+              const active=proc.locator('[data-k-step].is-active');
+              if(await active.count()!==1) throw new Error('process active panel count != 1 for '+(i+1));
+              const src=await active.locator('.kh-proc__media img').first().getAttribute('src');
+              if(!src || !src.endsWith(expected[i])) throw new Error(`wrong process photo ${i+1}: ${src}`);
+              await proc.screenshot({path:path.join(root,'qa-batch2',`process-step-${i+1}.png`)});
+            }
+
+            await rows.nth(4).click();
+            await page.waitForTimeout(320);
+            const trio=proc.locator('.kh-proc__media--trio img');
+            if(await trio.count()!==3) throw new Error('step 5 must have three fixed images');
+            const srcBefore=await trio.evaluateAll(imgs=>imgs.map(i=>i.getAttribute('src')));
+            if(srcBefore.filter(x=>/\/koverta-/.test(x)).length!==2 || srcBefore.filter(x=>/\/soltec-/.test(x)).length!==1) throw new Error('step 5 ratio is not 2 Koverta + 1 Soltec');
+            if(await proc.locator('[data-k-trio]').count()) throw new Error('flying review-photo trigger still exists');
+            await proc.screenshot({path:path.join(root,'qa-batch2','process-step-5-fixed.png')});
+
+            // Stress the exact old failure mode: leave the section, move reviews, return.
+            await page.locator('#recenzie').scrollIntoViewIfNeeded();
+            await page.waitForTimeout(900);
+            await proc.scrollIntoViewIfNeeded();
+            await page.waitForTimeout(500);
+            const srcAfter=await trio.evaluateAll(imgs=>imgs.map(i=>i.getAttribute('src')));
+            if(JSON.stringify(srcBefore)!==JSON.stringify(srcAfter)) throw new Error(`step 5 images changed during scroll animation: ${srcBefore} -> ${srcAfter}`);
+            if(await page.locator('.kh-rev__flight').count()) throw new Error('review flight clones still created');
+
+            if(errors.length) throw new Error('page errors: '+errors.join(' | '));
+
+            const mobile=await browser.newContext({viewport:{width:390,height:844}});
+            const mp=await mobile.newPage();
+            const merrors=[]; mp.on('pageerror',e=>merrors.push(String(e)));
+            await mp.goto(URL+'#riesenia',{waitUntil:'load',timeout:60000});
+            await dismiss(mp);
+            const mo=mp.locator('#riesenia');
+            await mo.scrollIntoViewIfNeeded(); await mp.waitForTimeout(500);
+            const overflow=await mp.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+            if(overflow>2) throw new Error('mobile horizontal overflow '+overflow);
+            await mo.screenshot({path:path.join(root,'qa-batch2','offer-mobile.png')});
+            const mproc=mp.locator('#proces');
+            await mproc.scrollIntoViewIfNeeded(); await mp.waitForTimeout(450);
+            if(await mproc.locator('[data-k-step-row]').count()!==5) throw new Error('mobile process lost five steps');
+            await mproc.locator('[data-k-step-row]').nth(4).click(); await mp.waitForTimeout(300);
+            await mproc.screenshot({path:path.join(root,'qa-batch2','process-mobile-step-5.png')});
+            if(merrors.length) throw new Error('mobile page errors: '+merrors.join(' | '));
+            await mobile.close();
+            await browser.close();
+          })().catch(e=>{console.error(e);nodeProcess.exit(1)});
+          JS
+          node /tmp/koverta-b2-pw/check.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: batch2-offer-process-${{ github.sha }}
+          path: qa-batch2/*.png
+          if-no-files-found: error
+
+      - name: Commit batch 2 only and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html assets/koverta-2026.css
+          staged="$(git diff --cached --name-only | sort)"
+          expected="$(printf '%s\n' assets/koverta-2026.css index.html)"
+          test "$staged" = "$expected"
+          git commit -m 'fix: restore offer hierarchy and stabilize process photos'
+          git rm .github/workflows/tmp-batch2-offer-process-photos-20260911.yml
+          git commit -m 'ci: remove temporary batch 2 QA workflow'
+          git push origin HEAD:fix/koverta-final-repair-20260910
