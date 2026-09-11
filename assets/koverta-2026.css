@@ -14872,3 +14872,19 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   }
   .kv-drawer__rad--real .kv-drawer__telo { gap: 4px; }
 }
+
+
+/* BATCH5 REALIZACIE WIDTH FIX 20260911
+   Staršie pravidlo `.kv-mega--uzke { width:max-content }` prežilo nový layout
+   a vizuálne stlačilo dve realizačné karty do úzkeho stĺpca. Desktopová
+   realizácia teraz používa rovnaký široký panelový jazyk ako ostatné menu. */
+@media (min-width: 1024px) {
+  .kv-header .kv-nav__item--uzke { position: static; }
+  .kv-header .kv-nav__item--uzke .kv-mega--uzke.kv-mega--real.kv-mega--batch5 {
+    left: calc(var(--k-gut) - 24px);
+    right: auto;
+    width: min(920px, calc(100vw - (2 * var(--k-gut))));
+    max-width: min(920px, calc(100vw - (2 * var(--k-gut))));
+    padding: 18px;
+  }
+}
