@@ -1,4 +1,5 @@
 name: Batch 5 header menu QA
+# QA revision 3: deterministic Playwright timeouts
 
 on:
   push:
