@@ -65,7 +65,7 @@ async function renderProbe(page, az, el, sampleFascia) {
     await new Promise(resolve => setTimeout(resolve, 18));
 
     const polygons = Array.from(svg.querySelectorAll('polygon'));
-    let invalidPolygons = 0;
+    let invalidPolygons = Number(svg.dataset.invalidFaceCount || 0);
     for (const polygon of polygons) {
       const points = (polygon.getAttribute('points') || '').trim().split(/\s+/).filter(Boolean);
       if (points.length < 3 || points.some(point => {
@@ -74,7 +74,7 @@ async function renderProbe(page, az, el, sampleFascia) {
       })) invalidPolygons += 1;
     }
 
-    const xml = new XMLSerializer().serializeToString(svg);
+    const xml = window.SP_TEST.exportSVG();
     const image = new Image();
     await new Promise((resolve, reject) => {
       image.onload = resolve;
@@ -148,7 +148,7 @@ async function renderProbe(page, az, el, sampleFascia) {
     }
 
     return {
-      polygonCount: polygons.length,
+      polygonCount: Number(svg.dataset.faceCount || polygons.length),
       invalidPolygons,
       silhouetteArea,
       greenPixels,

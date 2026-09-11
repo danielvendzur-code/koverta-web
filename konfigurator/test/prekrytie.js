@@ -36,7 +36,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
   const zle = await p.evaluate(async () => {
     const svg = document.querySelector('[data-sp-canvas]');
     const snap = async () => {
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const img = new Image();
       await new Promise((res, rej) => {
         img.onload = res; img.onerror = rej;
@@ -109,7 +109,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
               }
             }
           }
-          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, firstPx: prvyPx, firstRgb: prvyRgb, svg: new XMLSerializer().serializeToString(svg) });
+          if (zlych) nalezy.push({ W, L, az, el, count: zlych, first: prvy, firstPx: prvyPx, firstRgb: prvyRgb, svg: window.SP_TEST.exportSVG() });
         }
       }
     }

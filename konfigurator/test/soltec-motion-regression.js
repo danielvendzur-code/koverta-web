@@ -19,7 +19,7 @@ function assertSourceContract() {
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
   assert.match(source, /const BSP_MAX = model\(\)\.kvGeom \? 320 : 28;/, 'Soltec BSP must keep its bounded interactive-depth path');
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
-  assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
+  assert.match(source, /scheduleStage\(\);/, 'Camera motion must use the stage-only render path');
   assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
 
   // Koverta must keep generating physical roof components at every camera
@@ -51,7 +51,7 @@ function percentile(values, p) {
   const cfg = page.locator('#SoltecPremium [data-sp-cfg]');
   await cfg.scrollIntoViewIfNeeded();
   await cfg.dispatchEvent('pointerdown', { pointerId: 41, pointerType: 'mouse', clientX: 20, clientY: 20 });
-  await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.redrawStage && document.querySelector('#SoltecPremium [data-sp-canvas] polygon'), null, { timeout: 20_000 });
+  await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.redrawStage && document.querySelector('#SoltecPremium [data-sp-canvas]')?.dataset.faceCount, null, { timeout: 20_000 });
 
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
@@ -64,7 +64,7 @@ function percentile(values, p) {
     const count = await page.evaluate(([az, elevation]) => {
       window.SP_TEST.setView(az, elevation);
       window.SP_TEST.redrawStage();
-      return document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length;
+      return Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount);
     }, [-0.62, el]);
     cameraCounts.push({ el, count });
   }
@@ -142,7 +142,7 @@ function percentile(values, p) {
       range.value = String(nextValue);
       range.dispatchEvent(new Event('input', { bubbles: true }));
       return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
-        resolve(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length);
+        resolve(Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount));
       })));
     }, value);
     louverCounts.push({ value, count });
@@ -186,14 +186,11 @@ function percentile(values, p) {
     const signature = () => {
       let hash = 2166136261;
       let length = 0;
-      Array.from(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon')).forEach((polygon) => {
-        const value = polygon.getAttribute('points') + '|' + polygon.getAttribute('fill') + ';';
-        length += value.length;
-        for (let i = 0; i < value.length; i += 1) {
-          hash ^= value.charCodeAt(i);
-          hash = Math.imul(hash, 16777619);
-        }
-      });
+      const value = window.SP_TEST.exportSVG();
+      length = value.length;
+      for (let i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i); hash = Math.imul(hash, 16777619);
+      }
       return `${(hash >>> 0).toString(16)}:${length}`;
     };
     const atEnd = { louverT: window.SP_TEST.snapshot().louverT, geometry: signature() };

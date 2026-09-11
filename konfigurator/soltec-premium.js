@@ -1752,6 +1752,7 @@
           batch(transparent, true); gl.depthMask(true);
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
+          canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
           return true;
         };
 
@@ -4729,6 +4730,17 @@
             canvas.appendChild(defs);
           }
           canvas.appendChild(g);
+        };
+
+        // Tests sample the actual raster, including the WebGL depth buffer.
+        // Serialising a canvas element alone would silently export a blank image.
+        if (window.SP_TEST) window.SP_TEST.exportSVG = () => {
+          drawStage();
+          if (!depthPainter) return new XMLSerializer().serializeToString(canvas);
+          const vb = canvas.getAttribute('viewBox').split(' ').map(Number);
+          const svg = svgEl('svg', { xmlns: 'http://www.w3.org/2000/svg', width: vb[2], height: vb[3], viewBox: canvas.getAttribute('viewBox') });
+          svg.appendChild(svgEl('image', { width: vb[2], height: vb[3], href: depthPainter.surface.toDataURL('image/png') }));
+          return new XMLSerializer().serializeToString(svg);
         };
 
         /* ------------------------------------------------------------ panel */

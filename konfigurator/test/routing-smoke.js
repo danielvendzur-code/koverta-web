@@ -47,7 +47,7 @@ module.exports = async function routingSmoke(browser) {
       await page.goto(`http://127.0.0.1:8901/konfigurator/?page=${route}`, {waitUntil:'load',timeout:60000});
       const consent = page.getByRole('button', {name:'Iba nevyhnutné'});
       if (await consent.count()) await consent.first().click();
-      await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas] polygon')));
+      await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas]')?.dataset.faceCount));
       const initial = await snapshot();
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);

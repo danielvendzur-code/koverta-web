@@ -32,7 +32,7 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
   const nalezy = await p.evaluate(async ([PRAH]) => {
     const svg = document.querySelector('[data-sp-canvas]');
     const plocha = async () => {
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const img = new Image();
       await new Promise((r, j) => { img.onload = r; img.onerror = j;
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml))); });

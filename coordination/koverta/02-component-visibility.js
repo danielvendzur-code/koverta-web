@@ -87,7 +87,7 @@ async function componentDiff(page, flag, az, el) {
       window.SP_TEST.redraw();
       await new Promise(resolve => setTimeout(resolve, 12));
 
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const image = new Image();
       await new Promise((resolve, reject) => {
         image.onload = resolve;

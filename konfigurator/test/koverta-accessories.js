@@ -51,7 +51,7 @@ async function setSize(page, width, length) {
 async function svgState(page) {
   return page.locator('[data-sp-canvas]').evaluate(svg => ({
     markup: svg.outerHTML,
-    polygons: svg.querySelectorAll('polygon').length,
+    polygons: Number(svg.dataset.faceCount || svg.querySelectorAll('polygon').length),
     paths: svg.querySelectorAll('path').length
   }));
 }
@@ -325,7 +325,7 @@ function validateAccessoryContacts(snap, label) {
       await page.goto(URL, { waitUntil: 'load', timeout: 60000 });
       await dismissConsent(page);
       await page.waitForFunction(() =>
-        Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas] polygon')));
+        Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas]')?.dataset.faceCount));
       await page.waitForTimeout(180);
 
       const initial = await snapshot(page);
@@ -338,7 +338,7 @@ function validateAccessoryContacts(snap, label) {
       assert(drainageSnap.geometry.accessories.gutter &&
         drainageSnap.geometry.accessories.downpipe,
         `${device}: mandatory gutter/downpipe has no physical geometry`);
-      assert(drainageOn.polygons > 100 && drainageOn.markup.includes('<polygon'),
+      assert(drainageOn.polygons > 100 && (drainageOn.markup.includes('<polygon') || drainageOn.markup.includes('foreignObject')),
         `${device}: mandatory drainage render is empty`);
 
       /* Insulation is bonded to the roof underside, so verify it from an

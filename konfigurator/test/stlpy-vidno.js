@@ -14,7 +14,7 @@ const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
   const out = await p.evaluate(async () => {
     const svg = document.querySelector('[data-sp-canvas]');
     const snap = async () => {
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const img = new Image();
       await new Promise((r, j) => { img.onload = r; img.onerror = j;
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml))); });
