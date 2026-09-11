@@ -62,9 +62,10 @@ Sprav z nej pokojný záverečný blok s jednou akciou na nezáväznú ponuku. N
 
 ## Fotografie
 
-- Použi iba reálne lokálne Koverta fotografie z `assets/`, nie externý Googleusercontent obrázok.
-- Pre 1 auto preferuj `koverta-pristresok-auto-trnava-sikmy.jpg`, ak pri QA sedí crop.
-- Pre záhradný katalóg použi lokálnu bratislavskú realizáciu; ak je rovnaká fotografia už tesne nad alebo pod sekciou, použi druhý uhol (`hero` vs `detail`).
+- Preferuj reálne lokálne Koverta fotografie z `assets/` pred externým obrázkom.
+- Pre 1 auto použi `koverta-pristresok-auto-trnava-sikmy.jpg`, ak pri QA sedí crop.
+- Na jednej podstránke zbytočne neopakuj rovnakú fotografiu. Ak sú obe lokálne záhradné bratislavské fotografie už použité na tej istej podstránke (`hero` aj `detail`), nevymieňaj jedinečný a produktovo správny obrázok v katalógu iba preto, aby bol lokálny. Najprv zachovaj vizuálnu rôznorodosť; neskôr ho možno nahradiť ďalším overeným lokálnym uhlom.
+- Nikdy nepouži náhodnú fotografiu z `assets/mapa/` bez overenia, že naozaj zobrazuje správny typ produktu.
 - Fotografia nesmie deformovať pomer strán ani znižovať čitateľnosť katalógu.
 
 ## Vizuálny jazyk
