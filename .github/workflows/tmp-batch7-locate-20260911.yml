@@ -1,0 +1,28 @@
+name: Locate batch 7 Soltec model sections
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+    paths: [.github/workflows/tmp-batch7-locate-20260911.yml]
+jobs:
+  locate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Print exact model sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          for f, marker in [('carport-soltec/index.html','id="modely-carport"'),('pevne-prestresenia/index.html','id="typy-prestresenia"')]:
+              s=Path(f).read_text(encoding='utf-8')
+              i=s.index(marker)
+              start=s.rfind('<section',0,i)
+              end=s.find('</section>',i)+len('</section>')
+              print('\n===== '+f+' =====')
+              print(s[start:end])
+          PY
+          echo '===== related CSS selectors ====='
+          grep -n -E '^\.k \.k-model|^\.k-model|k-model-(section|family|grid|card|facts)' assets/koverta-2026.css | head -160 || true
