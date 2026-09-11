@@ -141,13 +141,13 @@ jobs:
             await page.goto('http://127.0.0.1:8901/index.html#proces',{waitUntil:'load',timeout:60000});
             const consent=page.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first();
             if(await consent.count()) { try { await consent.click({timeout:1500}); } catch(e){} }
-            const process=page.locator('#proces');
-            await process.waitFor({state:'visible'});
-            await process.scrollIntoViewIfNeeded();
+            const proc=page.locator('#proces');
+            await proc.waitFor({state:'visible'});
+            await proc.scrollIntoViewIfNeeded();
             await page.waitForTimeout(500);
 
-            const rows=process.locator('[data-k-step-row]');
-            const panels=process.locator('[data-k-step]');
+            const rows=proc.locator('[data-k-step-row]');
+            const panels=proc.locator('[data-k-step]');
             if(await rows.count()!==5) throw new Error('expected 5 process rows');
             if(await panels.count()!==5) throw new Error('expected 5 process panels');
 
@@ -157,7 +157,7 @@ jobs:
               if(!(await row.innerText()).includes(labels[i])) throw new Error('wrong row '+(i+1));
               await row.click();
               await page.waitForTimeout(260);
-              const active=process.locator('[data-k-step].is-active');
+              const active=proc.locator('[data-k-step].is-active');
               if(await active.count()!==1) throw new Error('expected exactly one active panel after click '+(i+1));
               const text=await active.innerText();
               if(!text.includes(labels[i])) throw new Error('active panel mismatch for step '+(i+1)+': '+text);
@@ -167,10 +167,10 @@ jobs:
 
             await rows.nth(0).click();
             await page.waitForTimeout(260);
-            await process.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-1.png')});
+            await proc.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-1.png')});
             await rows.nth(4).click();
             await page.waitForTimeout(320);
-            await process.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-5.png')});
+            await proc.screenshot({path:path.join(process.env.GITHUB_WORKSPACE,'qa-process','desktop-step-5.png')});
 
             const mobile=await browser.newContext({viewport:{width:390,height:844}});
             const mp=await mobile.newPage();
