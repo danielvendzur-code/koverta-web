@@ -603,7 +603,6 @@
       if (bezScrollu) return;
       if (REDUCED.matches) return;
       let lockedUntil = 0;
-      let poslednaZmena = 0;
       rows.forEach((row) => row.addEventListener('click', () => { lockedUntil = Date.now() + 4000; }));
 
       let ticking = false;
@@ -636,12 +635,11 @@
              posledný bol práve ten, z ktorého fotografie odchádzali. */
           const tt = Math.min(t, 0.999);
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(tt * panels.length)));
-          /* Aj pri prudkom scrollovaní musí krok chvíľu vydržať, inak sa
-             fotky len mihnú. */
-          if (idx !== index && Date.now() - poslednaZmena > 260) {
-            poslednaZmena = Date.now();
-            setActive(idx);
-          }
+          /* Scroll už zlučuje requestAnimationFrame vyššie. Ďalšia časová
+             brzda tu nesmie byť: pri rýchlom dojazde vedela zahodiť posledný
+             index a Zima potom zostala nahradená Jesenou až do ďalšieho
+             pohybu stránky. */
+          if (idx !== index) setActive(idx);
         });
       };
       window.addEventListener('scroll', onScroll, { passive: true });

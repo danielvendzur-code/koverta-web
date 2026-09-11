@@ -14462,15 +14462,15 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k-model-grid { display:grid; gap:18px; }
 .k-model-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .k-model-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
-.k-model-card { min-width:0; overflow:hidden; background:#fff; border:1px solid rgba(18,23,26,.16); border-radius:24px; box-shadow:0 14px 38px rgba(18,23,26,.06); }
+.k-model-card { display:grid; grid-template-rows:auto 1fr; min-width:0; overflow:hidden; background:#fff; border:1px solid rgba(18,23,26,.16); border-radius:24px; box-shadow:0 14px 38px rgba(18,23,26,.06); }
 .k-model-card__media { margin:0; aspect-ratio:16/9; overflow:hidden; background:#ececeb; }
 .k-model-card__media img { width:100%; height:100%; display:block; object-fit:cover; }
-.k-model-card__body { padding:clamp(20px,2.5vw,32px); }
+.k-model-card__body { display:flex; flex-direction:column; padding:clamp(20px,2.5vw,32px); }
 .k-model-card__top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .k-model-card__code { display:inline-flex; align-items:center; min-height:34px; padding:0 12px; border:1px solid rgba(18,23,26,.24); border-radius:999px; font-weight:760; font-size:13px; letter-spacing:.04em; }
 .k-model-card__use { color:#6c7376; font-size:14px; font-weight:650; }
 .k-model-card__body h3 { margin:0 0 22px; font-size:clamp(23px,2.1vw,32px); line-height:1.05; letter-spacing:-.025em; }
-.k-model-facts { margin:0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
+.k-model-facts { margin:auto 0 0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
 .k-model-facts > div { display:flex; justify-content:space-between; gap:18px; padding:12px 0; border-bottom:1px solid rgba(18,23,26,.11); }
 .k-model-facts dt { color:#687074; }
 .k-model-facts dd { margin:0; text-align:right; font-weight:730; }
