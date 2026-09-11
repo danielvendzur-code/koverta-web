@@ -3337,24 +3337,18 @@
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
                  only to the +Z face; no world-space geometry is enlarged. */
-              /* The roof shell begins 11 mm behind the inner flashing turn.
+              /* The roof shell begins 11 mm behind the nominal flashing depth.
                  Let the existing top arm continue across that concealed cut,
                  with a small renderer overlap beyond it. Its underside stays
                  0.5 mm above the corrugation crowns, so no roof facet is cut
                  and the flashing—not a dark end cap—owns the top sight line. */
               put(outer, outer + (sirka + 20) * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
-              /* Vnútorná hrana horného ramena má krátky zahyb nadol. Bez neho
-                 tam bola len škára medzi plechom strechy a lemovaním a pri
-                 plochom pohľade cez ňu bolo vidieť pod strechu — pozdĺž hrany
-                 svietil svetlý pruh. */
-              const zav = outer + sirka * dir;
-              /* Keep a real 1 mm clearance between the inner flashing turn and
-                 the visible corrugated shell. Any overlap makes the turn plane cut
-                 every roof facet in the BSP. The sheet is closed at its own exact
-                 boundary below, so this clearance cannot expose an open mouth. */
-              const turnBottom = trapBot - 1;
-              put(zav - 9 * dir, zav + 10 * dir, turnBottom, zTop - turnBottom);
+              /* Do not emit a second vertical turn at the inner edge. Even with
+                 clearance it alternately appeared between corrugation crowns as
+                 a row of short dark dashes. The continuous upper arm now spans
+                 across the closed sheet cut, so that turn has no exposed joint
+                 left to protect and no extra plane is needed. */
             };
             /* Čelné kusy idú cez celú šírku a bočné sa pod ne zatiahnu. Kým
                išli oba cez celý rozmer, mali v rohu dve líca presne na sebe a
