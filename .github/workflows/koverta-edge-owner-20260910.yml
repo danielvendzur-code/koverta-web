@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, thin-turn-butt, thin-turn-gap, raised-cover]
+        variant: [baseline, integrated-arm]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,17 +48,20 @@ jobs:
               if s.count(old_turn)!=1: raise SystemExit(f'turn marker count={s.count(old_turn)}')
               if s.count(old_bounds)!=1: raise SystemExit(f'bounds marker count={s.count(old_bounds)}')
               s=s.replace(old_turn,new_turn,1).replace(old_bounds,new_bounds,1)
-          elif v=='raised-cover':
-              # Keep every current body/turn dimension. Add only a non-intersecting
-              # continuation of the existing 1.5 mm top arm over the exposed cut;
-              # its lower face remains 0.5 mm above the 36 mm corrugation crown.
-              marker="""            lemL('x', L, -1, 0, W, LEM_CELO);"""
-              add="""            lemL('x', L, -1, 0, W, LEM_CELO);
-            const edgeCover = 13;
-            boxFaces(LEM_CELO, 0, zTop - LEM_ARM, edgeCover, W, LEM_ARM, frame, [], SHAFT, 0, true, true);
-            boxFaces(L - LEM_CELO - edgeCover, 0, zTop - LEM_ARM, edgeCover, W, LEM_ARM, frame, [], SHAFT, 0, true, true);"""
-              if s.count(marker)!=1: raise SystemExit(f'cover marker count={s.count(marker)}')
-              s=s.replace(marker,add,1)
+          elif v=='integrated-arm':
+              old_arm="""              put(outer, outer + sirka * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
+              new_arm="""              /* Diagnostic: extend the existing folded arm across the
+                 11 mm pocket and lap the sheet by its 1.5 mm thickness. */
+              const topReach = sirka + 11 + LEM_ARM;
+              put(outer, outer + topReach * dir, zTop - LEM_ARM, LEM_ARM, true);  // horné rameno"""
+              old_post="""                const r = Math.max(4, Math.round(Math.min(pd, pw) * 0.05));"""
+              old_seg="""                const SEG = 2;"""
+              if s.count(old_arm)!=1: raise SystemExit(f'arm marker count={s.count(old_arm)}')
+              if s.count(old_post)!=1: raise SystemExit(f'post marker count={s.count(old_post)}')
+              if s.count(old_seg)!=1: raise SystemExit(f'segment marker count={s.count(old_seg)}')
+              s=s.replace(old_arm,new_arm,1)
+              s=s.replace(old_post,"                const r = Math.max(3, Math.round(Math.min(pd, pw) * 0.035));",1)
+              s=s.replace(old_seg,"                const SEG = 1;",1)
           elif v!='baseline':
               raise SystemExit('unknown variant')
           p.write_text(s,encoding='utf-8')
