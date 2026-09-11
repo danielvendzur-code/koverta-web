@@ -2,8 +2,10 @@ name: Batch 7 Soltec model QA
 
 on:
   push:
-    branches: [fix/koverta-final-repair-20260910]
-    paths: [.github/workflows/tmp-batch7-typorady-20260911.yml]
+    branches:
+      - fix/koverta-final-repair-20260910
+    paths:
+      - .github/workflows/tmp-batch7-typorady-20260911.yml
 
 permissions:
   contents: write
@@ -17,123 +19,13 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Apply scoped model-section refinement
-        shell: bash
+      - name: Apply scoped model refinement
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re, json, subprocess
-
-          car=Path('carport-soltec/index.html')
-          can=Path('pevne-prestresenia/index.html')
-          css=Path('assets/koverta-2026.css')
-          c=car.read_text(encoding='utf-8')
-          p=can.read_text(encoding='utf-8')
-          s=css.read_text(encoding='utf-8')
-
-          # Snapshot all model facts before editing so QA can prove no technical
-          # value or model identity moved.
-          def model_snapshot(text, section_id):
-              i=text.index(f'id="{section_id}"')
-              a=text.rfind('<section',0,i); b=text.index('</section>',i)+10
-              sec=text[a:b]
-              cards=[]
-              for m in re.finditer(r'<article class="k-model-card[^>]*>(.*?)</article>',sec,re.S):
-                  h=m.group(1)
-                  code=re.search(r'k-model-card__code">([^<]+)',h)
-                  facts=re.findall(r'<dt>([^<]+)</dt><dd>([^<]+)</dd>',h)
-                  cards.append([code.group(1).strip() if code else '', facts])
-              return cards
-          before={'car':model_snapshot(c,'modely-carport'),'can':model_snapshot(p,'typy-prestresenia')}
-          Path('/tmp/b7-before.json').write_text(json.dumps(before,ensure_ascii=False),encoding='utf-8')
-
-          old='''        <p class="k-copy"><strong>SL 170 je pre jedno auto.</strong> <strong>SL 240 je pre dve autá.</strong> Box je samostatný doplnok a do základného porovnania modelov ho nemiešame.</p>'''
-          new='''        <p class="k-copy"><strong>SL 170 je pre jedno auto.</strong> <strong>SL 240 je pre dve autá.</strong> Oba používajú 30 mm ISO panel; spád môže byť podľa zostavy skrytý alebo priznaný a voda odchádza v stĺpoch. Box, boky, osvetlenie a zásuvka v stĺpe sú doplnky.</p>'''
-          if c.count(old)!=1: raise SystemExit('carport header copy anchor drift')
-          c=c.replace(old,new,1)
-
-          anchor='''    <div class="k-model-grid k-model-grid--2">'''
-          strip='''    <div class="k-model-system" aria-label="Spoločné vlastnosti radu SL">
-      <div><span>Strecha</span><strong>ISO panel 30 mm</strong></div>
-      <div><span>Spád</span><strong>skrytý alebo priznaný</strong></div>
-      <div><span>Odvodnenie</span><strong>vedené v stĺpoch</strong></div>
-      <div><span>Doplnky</span><strong>box · boky · LED · zásuvka</strong></div>
-    </div>
-    <div class="k-model-grid k-model-grid--2">'''
-          if c.count(anchor)<1: raise SystemExit('carport grid anchor missing')
-          # only first grid in this exact section after its id
-          i=c.index('id="modely-carport"'); j=c.index(anchor,i)
-          c=c[:j]+c[j:].replace(anchor,strip,1)
-
-          c=c.replace('<span class="k-model-card__code">SL 170</span><span class="k-model-card__use">1 auto</span></div><h3>Úspornejší pôdorys pre jedno auto</h3>',
-                      '<span class="k-model-card__code">SL 170</span><span class="k-model-card__use">1 auto</span></div><h3>Úspornejší pôdorys pre jedno auto</h3><p class="k-model-card__lead">Jedno kryté státie bez zbytočnej šírky navyše.</p>',1)
-          c=c.replace('<span class="k-model-card__code">SL 240</span><span class="k-model-card__use">2 autá</span></div><h3>Širší systém pre dve autá</h3>',
-                      '<span class="k-model-card__code">SL 240</span><span class="k-model-card__use">2 autá</span></div><h3>Širší systém pre dve autá</h3><p class="k-model-card__lead">Dve vozidlá vedľa seba alebo širšia zostava s doplnkami.</p>',1)
-          oldnote='''<div class="k-model-note k-rise" data-k-delay="3"><strong>Box sa rieši samostatne.</strong><span>Jeho poloha a nadväzujúce prvky sa majú zahrnúť už do návrhu konkrétnej zostavy.</span></div>'''
-          newnote='''<div class="k-model-note k-rise" data-k-delay="3"><strong>Doplnky riešte už pri návrhu.</strong><span>Box, bočné výplne, osvetlenie a zásuvka v stĺpe menia konkrétnu zostavu; box nie je tretí model a jeho polohu je najlepšie určiť pred objednávkou.</span></div>'''
-          if c.count(oldnote)!=1: raise SystemExit('carport note anchor drift')
-          c=c.replace(oldnote,newnote,1)
-
-          oldh='''<p class="k-copy"><strong>F používa ISO panel.</strong> <strong>G je pre sklo alebo zelenú strechu.</strong> Štyri modely sú zobrazené priamo, bez širokej technickej tabuľky.</p>'''
-          newh='''<p class="k-copy"><strong>F používa 30 mm ISO panel — lacnejšiu strešnú výplň než sklo.</strong> <strong>G je pre sklo alebo zelenú strechu.</strong> Najprv zvoľte typ strechy, potom model podľa potrebného rozponu.</p>'''
-          if p.count(oldh)!=1: raise SystemExit('canopy header copy anchor drift')
-          p=p.replace(oldh,newh,1)
-          p=p.replace('<div class="k-model-family__head"><span>Rad F</span><p>ISO panel 30 mm, maximálna výška 2,8 m.</p></div>',
-                      '<div class="k-model-family__head"><div><span>Rad F</span><strong>Praktickejšia voľba s nepriehľadnou strechou</strong></div><p>ISO panel 30 mm · lacnejšia strešná výplň než sklo · max. výška 2,8 m.</p></div>',1)
-          p=p.replace('<div class="k-model-family__head"><span>Rad G</span><p>Sklo alebo zelená strecha, maximálna výška 3,0 m.</p></div>',
-                      '<div class="k-model-family__head"><div><span>Rad G</span><strong>Keď chcete svetlo alebo zelenú strechu</strong></div><p>Sklo alebo zelená strecha · pri skle vyššia cena výplne než pri ISO paneli · max. výška 3,0 m.</p></div>',1)
-
-          marker='/* BATCH7 SOLTEC MODEL DECISION 20260911 */'
-          if marker in s: raise SystemExit('batch7 css already present')
-          s += '''\n\n/* BATCH7 SOLTEC MODEL DECISION 20260911 */
-.k-model-system {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:0;
-  margin:0 0 18px;
-  border-block:1px solid rgba(18,23,26,.16);
-}
-.k-model-system > div { min-width:0; padding:16px 18px; border-left:1px solid rgba(18,23,26,.12); }
-.k-model-system > div:first-child { border-left:0; padding-left:0; }
-.k-model-system span { display:block; margin-bottom:5px; color:#6b7275; font-size:12px; font-weight:650; letter-spacing:.02em; }
-.k-model-system strong { display:block; font-size:15px; line-height:1.35; }
-.k-model-card__lead { margin:-10px 0 20px; color:#646c70; font-size:14.5px; line-height:1.5; }
-.k-model-family__head > div { display:grid; gap:7px; }
-.k-model-family__head > div > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
-.k-model-family__head > div > strong { font-size:15px; line-height:1.35; font-weight:700; }
-@media (max-width:719px) {
-  .k-model-system { grid-template-columns:1fr 1fr; }
-  .k-model-system > div { padding:13px 12px; border-left:0; border-top:1px solid rgba(18,23,26,.1); }
-  .k-model-system > div:nth-child(-n+2) { border-top:0; }
-  .k-model-system > div:nth-child(odd) { padding-left:0; border-right:1px solid rgba(18,23,26,.1); }
-  .k-model-family__head > div > strong { font-size:14px; }
-}
-'''
-
-          car.write_text(c,encoding='utf-8'); can.write_text(p,encoding='utf-8'); css.write_text(s,encoding='utf-8')
-
-          after={'car':model_snapshot(c,'modely-carport'),'can':model_snapshot(p,'typy-prestresenia')}
-          if before!=after: raise SystemExit('model technical facts changed: '+json.dumps({'before':before,'after':after},ensure_ascii=False))
-
-          # cache bust global stylesheet only; content remains untouched.
-          ver='2026091107'
-          for path in sorted(Path('.').rglob('*.html')):
-              if any(part in {'.git','node_modules','qa','artifacts'} for part in path.parts): continue
-              t=path.read_text(encoding='utf-8')
-              if 'koverta-2026.css' not in t: continue
-              n=re.sub(r'(koverta-2026\.css)(?:\?v=[^\"\'<>\s]*)?',rf'\1?v={ver}',t)
-              if n!=t: path.write_text(n,encoding='utf-8')
-
-          names=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
-          required={'carport-soltec/index.html','pevne-prestresenia/index.html','assets/koverta-2026.css'}
-          if not required.issubset(names): raise SystemExit('missing scope '+str(required-names))
-          if any(x not in required and not x.endswith('.html') for x in names): raise SystemExit('unexpected scope '+str(names))
-          PY
+          python3 scripts/tmp-batch7-apply.py
           git diff --check
 
       - name: Install browser QA
-        shell: bash
         run: |
           set -euo pipefail
           mkdir -p /tmp/koverta-b7-pw qa-batch7
@@ -142,43 +34,16 @@ jobs:
           npm install playwright@1.58.2 >/dev/null 2>&1
 
       - name: Browser QA and screenshots
-        shell: bash
         run: |
           set -euo pipefail
           python3 -m http.server 8909 >/tmp/koverta-b7-http.log 2>&1 &
-          PID=$!; trap 'kill $PID || true' EXIT; sleep 1
+          PID=$!
+          trap 'kill $PID || true' EXIT
+          sleep 1
           export NODE_PATH=/tmp/koverta-b7-pw/node_modules
           export CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          node - <<'JS'
-          const {chromium}=require('playwright'); const path=require('path'),p=require('node:process');
-          const cases=[
-            {url:'/carport-soltec/#modely-carport',sec:'#modely-carport',codes:['SL 170','SL 240'],name:'carport'},
-            {url:'/pevne-prestresenia/#typy-prestresenia',sec:'#typy-prestresenia',codes:['F170','F240','G170','G240'],name:'canopy'}
-          ];
-          (async()=>{const b=await chromium.launch({headless:true,executablePath:p.env.CHROME,args:['--no-sandbox','--disable-gpu']});
-          for(const vp of [{w:1440,h:1000,n:'desktop'},{w:390,h:844,n:'mobile'}]) for(const x of cases){
-            const c=await b.newContext({viewport:{width:vp.w,height:vp.h}}),page=await c.newPage(); const errs=[]; page.on('pageerror',e=>errs.push(String(e)));
-            await page.goto('http://127.0.0.1:8909'+x.url,{waitUntil:'domcontentloaded',timeout:30000}); await page.waitForTimeout(850);
-            const consent=page.getByRole('button',{name:/Iba nevyhnutné|Odmietnuť|Nevyhnutné/i}).first(); if(await consent.count()){try{await consent.click({timeout:500})}catch{}}
-            const sec=page.locator(x.sec); await sec.scrollIntoViewIfNeeded(); await page.waitForTimeout(250);
-            const text=(await sec.textContent()).replace(/\s+/g,' ');
-            for(const code of x.codes) if(!text.includes(code)) throw new Error(x.name+' missing '+code);
-            if(x.name==='carport'){
-              for(const t of ['ISO panel 30 mm','skrytý alebo priznaný','vedené v stĺpoch','box · boky · LED · zásuvka']) if(!text.includes(t)) throw new Error('carport missing '+t);
-              if(!/Box.*dopln/i.test(text)&&!/doplnk/i.test(text)) throw new Error('box/addons clarity missing');
-            } else {
-              if(!text.includes('lacnejšia strešná výplň než sklo')) throw new Error('F/G price distinction missing');
-              if(!text.includes('Sklo alebo zelená strecha')) throw new Error('G decision copy missing');
-            }
-            const imgs=sec.locator('.k-model-card__media img'); for(let i=0;i<await imgs.count();i++){await imgs.nth(i).scrollIntoViewIfNeeded().catch(()=>{}); await page.waitForTimeout(80); const st=await imgs.nth(i).evaluate(el=>({c:el.complete,w:el.naturalWidth,h:el.naturalHeight})); if(!st.c||st.w<100||st.h<100) throw new Error(x.name+' broken image '+JSON.stringify(st));}
-            const ov=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth); if(ov>2) throw new Error(x.name+' '+vp.n+' overflow '+ov);
-            if(vp.n==='desktop'){
-              const cards=sec.locator('.k-model-card'); for(let i=0;i+1<await cards.count();i+=2){const a=await cards.nth(i).boundingBox(),d=await cards.nth(i+1).boundingBox(); if(a&&d&&Math.abs(a.height-d.height)>3) throw new Error(x.name+' unequal card pair heights '+a.height+' '+d.height);}
-            }
-            if(errs.length) throw new Error(errs.join(' | '));
-            await sec.screenshot({path:path.join(p.env.GITHUB_WORKSPACE,'qa-batch7',x.name+'-'+vp.n+'.png')}); await c.close();
-          } await b.close();})().catch(e=>{console.error(e);process.exit(1)});
-          JS
+          test -n "$CHROME"
+          node scripts/tmp-batch7-check.js
 
       - uses: actions/upload-artifact@v4
         with:
@@ -186,8 +51,7 @@ jobs:
           path: qa-batch7/*.png
           if-no-files-found: error
 
-      - name: Commit validated model refinement and cleanup
-        shell: bash
+      - name: Commit validated change and cleanup
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
@@ -195,6 +59,6 @@ jobs:
           git add carport-soltec/index.html pevne-prestresenia/index.html assets/koverta-2026.css
           git diff --name-only -- '*.html' | xargs -r git add
           git commit -m 'feat: clarify Soltec model choices'
-          git rm .github/workflows/tmp-batch7-typorady-20260911.yml .github/workflows/tmp-batch7-locate-20260911.yml
+          git rm .github/workflows/tmp-batch7-typorady-20260911.yml .github/workflows/tmp-batch7-locate-20260911.yml scripts/tmp-batch7-apply.py scripts/tmp-batch7-check.js
           git commit -m 'ci: remove temporary batch 7 QA files'
           git push origin HEAD:fix/koverta-final-repair-20260910
