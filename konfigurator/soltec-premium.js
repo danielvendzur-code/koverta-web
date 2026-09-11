@@ -1740,7 +1740,17 @@
             const m = fill.match(/[\d.]+/g) || [];
             return [(+m[0] || 0)/255, (+m[1] || 0)/255, (+m[2] || 0)/255, m.length > 3 ? +m[3] : 1];
           };
-          const near = DIST * 0.05, far = DIST * 4;
+          // Fit the depth interval to the actual assembly. The former 80:1
+          // interval wasted precision on empty space and let opposite faces of
+          // a 0.5 mm sheet compete, especially on 16-bit mobile depth buffers.
+          // Include every submitted solid vertex, without changing visibility.
+          let nearest = Infinity, furthest = 0;
+          for (const f of faces) if (!f.bg) for (const p of f.p) {
+            const w = Math.max(DIST * 0.45, DIST - p.d);
+            nearest = Math.min(nearest, w); furthest = Math.max(furthest, w);
+          }
+          const near = Number.isFinite(nearest) ? nearest * 0.98 : DIST * 0.45;
+          const far = Math.max(near + 1, furthest * 1.02);
           const batch = (items, transparent) => {
             if (!items.length) return;
             const data = [];
@@ -3451,6 +3461,19 @@
             lemL('y', W, -1, LEM_T, L - LEM_T, LEM_BOK);
             lemL('x', 0, 1, 0, W, LEM_CELO);                 // čelné, cez celú šírku
             lemL('x', L, -1, 0, W, LEM_CELO);
+
+            /* Folded corner returns belong to the two end flashings. They
+               lap over the side pieces, never share their exterior plane.
+               The small exposed cut edge makes all four assembled corners
+               legible without painted lines or floating seam overlays.
+               Return length is a visual allowance, not a fabrication spec. */
+            const LEM_RETURN = 28;
+            [0, L - LEM_RETURN].forEach(x => {
+              boxFaces(x, -LEM_T, zBot, LEM_RETURN, LEM_T, LEM_H,
+                frame, [], SHAFT, 0, true, true);
+              boxFaces(x, W, zBot, LEM_RETURN, LEM_T, LEM_H,
+                frame, [], SHAFT, 0, true, true);
+            });
 
             /* --- obvodový rám. Jeden C profil 74 × 220, nie dvojica —
                v kompletnej scéne 14069 sú na každej strane presne dva kusy
