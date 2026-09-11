@@ -14487,8 +14487,6 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .kh-kfg__typy { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:18px !important; }
   .kh-kfg__typ, .kh-kfg__typ--siroky { grid-column:auto !important; grid-row:auto !important; width:auto !important; }
   .kh-kfg__karta { height:100%; }
-  .kh-ponuka__mriezka { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-  .kh-ponuka__kus, .kh-ponuka__kus--hlavna, .kh-ponuka__kus--siroka { grid-column:auto !important; grid-row:auto !important; }
 }
 @media (max-width: 899px) {
   .k-model-grid--2, .k-model-grid--3 { grid-template-columns:1fr; }
