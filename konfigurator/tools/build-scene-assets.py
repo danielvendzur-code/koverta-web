@@ -33,6 +33,22 @@ def surface(fn, nu, nv, color, mat=0, reverse=False):
                 if reverse: ids.reverse()
                 tri([grid[a][b] for a,b in ids],color,mat,[norms[a][b] for a,b in ids])
 
+def mesh(grid,color,mat=0,flip=False,tint=None):
+    """Quad grid whose normals come from its own tangents. Each patch shades on
+    its own, so a seam between two patches stays a crisp edge instead of being
+    averaged away — that is what draws a shoulder line on a car body."""
+    P=np.asarray(grid,dtype=float)
+    N=np.cross(np.gradient(P,axis=0),np.gradient(P,axis=1))
+    if flip: N=-N
+    N=N/np.maximum(np.linalg.norm(N,axis=2,keepdims=True),1e-9)
+    for i in range(P.shape[0]-1):
+        for j in range(P.shape[1]-1):
+            c,m=tint(i,j) if tint else (color,mat)
+            if c is None: continue
+            for ids in [[(i,j),(i+1,j),(i+1,j+1)],[(i,j),(i+1,j+1),(i,j+1)]]:
+                if flip: ids=ids[::-1]
+                tri([P[a][b] for a,b in ids],c,m,[N[a][b] for a,b in ids])
+
 def ellipsoid(c,r,color,mat=0,nu=32,nv=16):
     surface(lambda u,v: np.array(c)+np.array(r)*[math.cos(u*math.tau)*math.sin(v*math.pi),
         math.sin(u*math.tau)*math.sin(v*math.pi),math.cos(v*math.pi)],nu,nv,color,mat,True)
@@ -55,141 +71,277 @@ def save(name):
     print(name,len(V)//3,'triangles',len(data),'bytes',p.min(axis=0).round(1),p.max(axis=0).round(1))
     V.clear()
 
-# A touring sedan, 4720 mm long, with a 2790 mm wheelbase. Sculpted continuous
-# surfaces, real open wheel arches, dished alloy rims and separate glazing.
-paint=(155,162,165); glass=(40,55,64); rubber=(27,29,31); alloy=(174,182,188)
-stations=np.array([[0,780,610],[180,865,690],[600,910,795],[930,926,850],
-    [1330,916,875],[1750,900,885],[2800,904,887],[3660,930,866],[4250,910,840],[4570,865,795],[4720,790,690]])
+# ---------------------------------------------------------------------------
+# A generic modern liftback saloon: 4790 mm long, 1905 over the body, 2840 mm
+# wheelbase, on 19" wheels. Not a manufacturer model.
+#
+# The body is lofted along x from a handful of longitudinal profiles. Each
+# cross-section is a set of splined patches rather than one polyline, so the
+# surface is smooth where a car is smooth and keeps a hard edge exactly where
+# a car has one: the sill, the shoulder crease, the deck edge and the roof
+# rail. Both ends are closed by a domed cap driven by the same section, which
+# is what makes the bumper faces read as bumpers instead of cut-off plates.
+paint=(150,157,161); glass=(28,38,46); rubber=(26,28,30); alloy=(178,185,191)
+chrome=(198,205,210); trim=(24,26,28); lens=(232,238,242); tail=(146,30,32)
+inner=(44,47,51); floorpan=(36,39,42); mesh_dark=(26,29,32)
 
-def spline(x,k):
-    i=max(0,min(len(stations)-2,np.searchsorted(stations[:,0],x)-1));a=stations[i];b=stations[i+1];t=(x-a[0])/(b[0]-a[0]);t=max(0,min(1,t))
-    def slope(j):
-        lo=max(0,j-1);hi=min(len(stations)-1,j+1)
-        return (stations[hi,k]-stations[lo,k])/(stations[hi,0]-stations[lo,0])
-    return (2*t**3-3*t*t+1)*a[k]+(t**3-2*t*t+t)*slope(i)*(b[0]-a[0])+(-2*t**3+3*t*t)*b[k]+(t**3-t*t)*slope(i+1)*(b[0]-a[0])
+LEN=4760; FA=960; RA=3870; WR=372; TW=126; ARCH=410
+COWL=1640; ROOF_F=2320; ROOF_R=3400; DECK_R=4040
+BPILLAR=(2650,2724)
+
+def curve(x,xs,ys): return float(np.interp(x,xs,ys))
+
+def smooth(t):
+    t=max(0.,min(1.,t));return t*t*(3-2*t)
+
+def spline(pts,n):
+    """Catmull-Rom through the control points, sampled n+1 times."""
+    p=[pts[0]]+list(pts)+[pts[-1]]
+    out=[]
+    segs=len(pts)-1
+    for i in range(n+1):
+        t=i/n*segs;k=min(segs-1,int(t));f=t-k
+        p0,p1,p2,p3=p[k],p[k+1],p[k+2],p[k+3]
+        out.append(tuple(.5*((2*p1[d])+(-p0[d]+p2[d])*f+(2*p0[d]-5*p1[d]+4*p2[d]-p3[d])*f*f
+                             +(-p0[d]+3*p1[d]-3*p2[d]+p3[d])*f*f*f) for d in (0,1)))
+    return out
+
+def hw(x):
+    """Half width at the shoulder crease, with haunches over both axles."""
+    base=curve(x,[0,30,80,160,280,500,900,1400,1900,2900,3600,4150,4450,4620,4700,LEN],
+                 [592,648,708,768,818,862,900,924,930,930,926,908,870,812,756,690])
+    for axle in (FA,RA):
+        d=abs(x-axle)/660.
+        if d<1: base+=13*math.cos(d*math.pi/2)**2
+    return base
 
 def sill(x):
-    # Bottom edge of the flank. The bare arch circle stops at z=340 while the
-    # rocker sits at 190, so max() left a 150 mm vertical step within a few
-    # millimetres of x and the side surface stretched a thin pale triangle
-    # across it, just ahead of each wheel. The opening now fades into the
-    # rocker over the last 90 mm and the edge is continuous.
-    z=190.
-    for axle in [930,3720]:
+    """Bottom edge of the flank; over an axle it becomes the wheel opening."""
+    z=curve(x,[0,60,200,400,4400,4580,4690,LEN],[298,264,244,240,240,256,288,330])
+    for axle in (FA,RA):
         d=abs(x-axle)
-        if d<470:
-            arch=340+380*math.sqrt(max(0.,1-(d/380.)**2)) if d<380 else 340.
-            fade=min(1.,max(0.,(470-d)/90.))
-            z=max(z,190+(arch-190)*fade)
+        if d<ARCH: z=max(z,WR+ARCH*(1-(d/ARCH)**2.3)**(1/2.3))
+        elif d<ARCH+130: z=max(z,240+(WR-240)*(1-smooth((d-ARCH)/130.)))
     return z
 
-for sign in [-1,1]:
-    def side(u,v,s=sign):
-        x=u*4720;w=spline(x,1);top=spline(x,2);bottom=sill(x)
-        return [x,s*(w-35*(1-v)**2+14*math.sin(math.pi*v)-19*v**8),bottom+(top-bottom)*v]
-    surface(side,180,8,paint,1,sign<0)
-    # Sculpted arch lips follow the actual opening, not an overlaid black disc.
-    for axle in [930,3720]:
-        surface(lambda u,v,axle=axle,s=sign:[axle+(380+14*v)*math.cos(u*math.pi),s*(spline(axle+(380+14*v)*math.cos(u*math.pi),1)-32+10*v),340+(380+14*v)*math.sin(u*math.pi)],36,2,paint,1,sign<0)
-    # Wheel houses. Without them the arch opening looked straight through the
-    # car to the inside of the far flank, which read as a stray pale panel
-    # sitting behind the wheel. A dark tunnel closes the opening.
-    for axle in [930,3720]:
-        depth=250
-        surface(lambda u,v,axle=axle,s=sign,depth=depth:[axle+394*math.cos(u*math.pi),
-            s*(spline(axle+394*math.cos(u*math.pi),1)-30-v*depth),
-            340+394*math.sin(u*math.pi)],36,3,(38,41,44),0,sign>0)
-        surface(lambda u,v,axle=axle,s=sign,depth=depth:[axle+394*v*math.cos(u*math.pi),
-            s*(spline(axle,1)-30-depth),340+394*v*math.sin(u*math.pi)],36,2,(30,33,36),0,sign<0)
-    # Lower rocker rail between the wheels.
-    tube([1340,sign*891,200],[3290,sign*897,200],14,(55,61,65),0)
+def crease(x):
+    return curve(x,[0,120,400,900,1400,2500,3500,4200,4550,LEN],
+                   [688,712,762,788,798,802,804,800,776,734])
 
-# Hood and boot have a gentle crown across their width.
-for x0,x1 in [(0,1540),(3440,4720)]:
-    surface(lambda u,v,x0=x0,x1=x1:[x0+(x1-x0)*u,(v*2-1)*(spline(x0+(x1-x0)*u,1)-19),spline(x0+(x1-x0)*u,2)+28*math.sin(v*math.pi)],40,20,paint,1)
+def deck(x):
+    """Top of the bodyshell: bonnet, belt line, boot lid."""
+    return curve(x,[0,60,200,600,1100,COWL,2200,3200,DECK_R,4400,4620,LEN],
+                   [836,860,890,924,944,956,960,960,1004,1016,1000,952])
 
-# Cabin: front/rear windscreens join the metal roof with a constant pillar gap.
-def cabin(x,y):
-    # Four stations gave a straight windscreen meeting a flat roof at a hard
-    # corner, so the cabin read as a box. These stations ease the screens into
-    # the roof, taper the greenhouse towards the rear and give the roof a
-    # crown you can actually see.
-    height=float(np.interp(x,[1500,1680,1900,2090,2450,2800,3010,3230,3450],
-                             [900,1128,1330,1424,1446,1442,1386,1168,900]))
-    width=float(np.interp(x,[1500,1680,1900,2090,2450,2800,3010,3230,3450],
-                            [868,796,742,720,714,716,732,796,870]))
-    return [x,y*width,height+34*(1-y*y)*(1-.28*y*y)]
-for a,b,c,m in [(1500,1550,paint,1),(1550,2050,glass,2),(2050,2100,paint,1),(2100,2800,paint,1),(2800,2840,paint,1),(2840,3400,glass,2),(3400,3450,paint,1)]:
-    surface(lambda u,v,a=a,b=b:cabin(a+(b-a)*u,v*2-1),18,20,c,m)
-for sign in [-1,1]:
-    # Separate doors and B pillar. Roof side profile has a curved shoulder.
-    for a,b in [(1560,2410),(2460,3370)]:
-        def window(u,v,a=a,b=b,s=sign):
-            x=a+(b-a)*u;top=cabin(x,s);bottom=915
-            return [x,s*(884+(abs(top[1])-884)*v),bottom+(top[2]-bottom-16)*v]
-        surface(window,24,8,glass,2,sign>0)
-    for a,b in [(1500,1560),(2410,2460),(3370,3450)]:
-        surface(lambda u,v,a=a,b=b,s=sign:[a+(b-a)*u,s*(884+(abs(cabin(a+(b-a)*u,s)[1])-884)*v),892+(cabin(a+(b-a)*u,s)[2]-892)*v],8,8,paint,1,sign>0)
-    # Window seals/chrome and restrained door seams and flush handles.
-    tube([1530,sign*886,909],[3420,sign*886,909],5,(135,145,150),3)
-    for x in [2435,3400]:
-        tube([x,sign*(spline(x,1)+1),735],[x,sign*(spline(x,1)-24),245],2.4,(71,78,82),0)
-    for x in [2240,3190]:ellipsoid([x,sign*920,825],[65,8,12],alloy,3,20,8)
-    # Mirror housing rather than a ball on a stick: a wider shell on a short
-    # flattened stalk, with the glass recessed into its trailing face.
-    tube([1726,sign*881,968],[1684,sign*966,1002],17,(35,39,43))
-    ellipsoid([1652,sign*1004,1028],[122,54,52],paint,1)
-    ellipsoid([1686,sign*1006,1030],[4,44,40],(90,111,126),2,22,12)
+def dhw(x):
+    """Half width of that top surface."""
+    return curve(x,[0,60,200,600,1100,COWL,2200,3200,DECK_R,4400,4620,LEN],
+                   [510,572,640,734,816,866,876,872,856,818,754,688])
 
-# Bumpers, intake and slim lamps, all closed surfaces.
-for x,sgn in [(0,-1),(4720,1)]:
-    # The end cap used to be a flat full-width plate 200..690 mm high with a
-    # fixed 780 mm half-width. At both ends it stood proud of the bodywork and
-    # read as a loose sheet hanging off the car. It now closes onto the body's
-    # own silhouette, using exactly the section that side() draws, so the cap
-    # and the flanks meet along one edge.
-    _w=spline(x,1);_top=spline(x,2);_bot=sill(x)
-    def cap(u,v,x=x,sgn=sgn,w=_w,top=_top,bot=_bot):
-        y=u*2-1
-        section=w-35*(1-v)**2+14*math.sin(math.pi*v)-19*v**8
-        bulge=26*math.sin(math.pi*v)*math.sqrt(max(0.,1-y*y))
-        return [x+sgn*bulge,y*section,bot+(top-bot)*v]
-    surface(cap,30,14,paint,1,sgn<0)
-    # Only the front carries a cooling intake. The rear used to get the same
-    # wide dark oval with a pale oval inside it, which read as a hole punched
-    # in the bumper. It now gets what a rear actually has: a slim low
-    # diffuser, a plate and two reflectors.
-    if sgn<0:
-        ellipsoid([x-24,0,392],[14,548,80],(24,29,32),0)
-        ellipsoid([x-38,0,286],[5,172,46],(206,209,203),0,24,8)
-    else:
-        ellipsoid([x+20,0,262],[11,462,31],(28,32,35),0)
-        ellipsoid([x+35,0,432],[5,172,46],(206,209,203),0,24,8)
-        for s in [-1,1]:
-            ellipsoid([x+19,s*486,284],[8,54,16],(150,36,32),4,16,8)
-    for s in [-1,1]:
-        ellipsoid([x+sgn*21,s*652,608],[18,137,26],(220,229,222) if sgn<0 else (141,27,28),4,28,10)
-        if sgn>0:tube([4690,s*628,212],[4760,s*628,212],34,(103,112,119),3,20)
+def crown(x):
+    return curve(x,[0,600,1400,COWL,DECK_R,4400,LEN],[10,22,30,26,22,18,10])
 
-# Four real tyres, alloy barrels, ventilated discs and ten slender spokes.
-for axle in [930,3720]:
-    for sign in [-1,1]:
-        yc=sign*825
-        surface(lambda u,v,axle=axle,yc=yc:[axle+(282+57*math.cos(v*math.tau))*math.cos(u*math.tau),yc+112*math.sin(v*math.tau),340+(282+57*math.cos(v*math.tau))*math.sin(u*math.tau)],64,16,rubber,0)
-        outer=sign*939
-        tube([axle,outer-sign*70,340],[axle,outer,340],240,(47,53,59),3,48)
-        tube([axle,outer-sign*32,340],[axle,outer-sign*27,340],190,(111,116,117),3,48)
-        for j in range(10):
-            a=j*math.tau/10
-            tube([axle+48*math.cos(a),outer+sign*2,340+48*math.sin(a)],
-                 [axle+231*math.cos(a+.1),outer,340+231*math.sin(a+.1)],13,alloy,3,6)
-        tube([axle,outer,340],[axle,outer+sign*9,340],57,alloy,3,24)
+def section(x):
+    """Half section as splined patches: smooth where a car is smooth, with a
+    tangent break exactly at the sill, the door feature line, the shoulder
+    crease and the deck edge — those four breaks are the highlights that make
+    a body panel read as sheet metal."""
+    w=hw(x);s=sill(x);c=crease(x);d=deck(x);t=dhw(x);k=crown(x);h=max(1.,d-c)
+    f=s+(c-s)*.58
+    return [
+        [(0,172),(w*.42,168),(w*.74,s-56),(w*.86,s-20)],                     # underbody
+        [(w*.86,s-20),(w*.926,s-6),(w*.947,s)],                              # sill lip
+        [(w*.947,s),(w*.984,s+(f-s)*.44),(w*.998,f-8),(w,f)],                # lower door
+        [(w,f),(w*.997,f+(c-f)*.40),(w*.999,f+(c-f)*.76),(w,c)],             # upper door
+        [(w,c),(w*.993,c+h*.24),(w*.973,c+h*.54),(t+24,d-54),(t,d-8)],       # shoulder
+        [(t,d-8),(t*.90,d+k*.30),(t*.58,d+k*.76),(0,d+k)],                   # deck
+    ]
+
+def flank_y(x,z):
+    """Half width of the painted flank at a height, for trims that must sit on it."""
+    pts=spline(section(x)[2],10)+spline(section(x)[3],10)+spline(section(x)[4],14)
+    best=min(pts,key=lambda p:abs(p[1]-z))
+    return best[0]
+
+def build(xs,spec,sign,sec=section):
+    secs=[sec(x) for x in xs]
+    for k,item in enumerate(spec):
+        if item is None: continue
+        color,mat,n=item
+        grid=[[[x,sign*p[0],p[1]] for p in spline(sc[k],n)] for x,sc in zip(xs,secs)]
+        mesh(grid,color,mat,flip=sign>0)
+
+def endcap(x0,sgn,depth,tint,sec=section):
+    """Closes the loft with a dome driven by the same section: the loop keeps
+    its height, narrows towards the centre and steps forward, so the bumper
+    face is a surface and not a lid. `tint(z,v)` paints grille, lamps, plate."""
+    loop=[]
+    for patch in sec(x0): loop+=spline(patch,8)[:-1]
+    loop.append(sec(x0)[-1][-1])
+    full=[(-y,z) for y,z in reversed(loop)]+loop
+    cols=9
+    grid=[]
+    for y,z in full:
+        row=[]
+        for j in range(cols):
+            v=j/(cols-1)
+            ins=tint(z,v)[2] if tint else 0
+            row.append([x0+sgn*(depth*math.sin(v*math.pi/2)-ins),y*(1-v),z])
+        grid.append(row)
+    def cell(i,j):
+        z=(full[i][1]+full[i+1][1])/2;v=(j+.5)/(cols-1)
+        c=tint(z,v) if tint else (paint,1,0)
+        return (c[0],c[1])
+    mesh(grid,paint,1,flip=sgn>0,tint=cell)
+
+# stations: dense at the ends and around the wheel openings
+_xs={0,LEN,COWL,ROOF_F,ROOF_R,DECK_R,BPILLAR[0],BPILLAR[1]}
+for a,b,st in [(0,400,16),(400,1500,30),(1500,4300,36),(4300,LEN,20)]:
+    v=a
+    while v<b: _xs.add(round(v,1)); v+=st
+for axle in (FA,RA):
+    v=axle-ARCH-160
+    while v<axle+ARCH+160: _xs.add(round(v,1)); v+=15
+XS=sorted(x for x in _xs if 0<=x<=LEN)
+FRONT=[x for x in XS if x<=COWL];CABIN=[x for x in XS if COWL<=x<=DECK_R];REAR=[x for x in XS if x>=DECK_R]
+
+for sign in (-1,1):
+    build(XS,[(floorpan,0,3),(trim,0,2),(paint,1,6),(paint,1,5),(paint,1,9),None],sign)
+    build(FRONT,[None]*5+[(paint,1,6)],sign)
+    build(CABIN,[None]*5+[(inner,0,3)],sign)
+    build(REAR,[None]*5+[(paint,1,6)],sign)
+
+for sign in (-1,1):
+    xs=[x for x in XS if x>=DECK_R-40]
+    mesh([[[x,sign*(dhw(x)*t),deck(x)-6+curve(x,[DECK_R-40,DECK_R+90,DECK_R+240,LEN],[0,26,14,4])] for t in (0,.34,.68,1.0)] for x in xs],paint,1,flip=sign>0)
+
+def front_tint(z,v):
+    if z<214: return (floorpan,0,0)
+    if 236<=z<=372: return (mesh_dark,0,34)               # lower intake
+    if 424<=z<=642: return (mesh_dark,0,44)               # main grille
+    if 300<=z<=404 and v>.72: return ((226,228,222),0,10) # number plate
+    if 700<=z<=734 and v<.46: return (lens,4,10)          # headlamp signature
+    if 666<=z<=776 and v<.5: return ((40,44,48),0,12)     # lamp housing
+    return (paint,1,0)
+
+def rear_tint(z,v):
+    if z<210: return (floorpan,0,0)
+    if 232<=z<=330: return (mesh_dark,0,26)               # diffuser
+    if 596<=z<=712 and v>.70: return ((226,228,222),0,8)  # plate recess
+    if 844<=z<=898: return (tail,4,10)                    # tail signature
+    if 818<=z<=930: return ((54,27,29),0,12)
+    return (paint,1,0)
+
+endcap(0,-1,74,front_tint)
+endcap(LEN,1,66,rear_tint)
+
+# Wheel houses: the opening must not look straight through the car.
+for axle in (FA,RA):
+    xs=[x for x in XS if abs(x-axle)<ARCH+130 and sill(x)>248]
+    for sign in (-1,1):
+        grid=[]
+        for x in xs:
+            w=hw(x)*.947;s=sill(x);row=[]
+            for j in range(5):
+                t=j/4.
+                row.append([x,sign*(w-10-t*250),s-4-t*44*(1-t*.6)])
+            grid.append(row)
+        mesh(grid,(42,45,48),0,flip=sign<0)
+        edge=[[x,sign*(hw(x)*.947-260),sill(x)-30] for x in xs]
+        mesh([edge,[[p[0],p[1],184] for p in edge]],(34,37,40),0,flip=sign>0)
+
+# ---- greenhouse -----------------------------------------------------------
+def roofz(x):
+    return curve(x,[COWL,1830,2050,ROOF_F,2800,ROOF_R,3700,3900,DECK_R],
+                   [deck(COWL),1196,1358,1462,1472,1454,1330,1168,deck(DECK_R)])
+
+def ghw(x):
+    return curve(x,[COWL,1960,ROOF_F,2800,ROOF_R,3800,DECK_R],
+                   [dhw(COWL),786,734,726,716,730,762])
+
+def gsection(x):
+    b=dhw(x);d=deck(x);r=roofz(x);g=ghw(x);h=max(1.,r-d);k=min(24.,h*.09)
+    rail=r-min(150.,h*.30)
+    return [
+        [(b,d),(b*.998,d+h*.20),(g*1.012,d+h*.60),(g,rail)],
+        [(g,rail),(g*.945,r-min(58.,h*.13)),(g*.79,r-min(15.,h*.045)),(g*.44,r+k*.55),(0,r+k)],
+    ]
+
+def gxs(a,b,step=16):
+    v=a;out=[]
+    while v<b-1e-6: out.append(round(v,1)); v+=step
+    out.append(b);return out
+
+pillar=(26,28,30)
+for sign in (-1,1):
+    build(gxs(COWL,ROOF_F),[(paint,1,5),(glass,2,7)],sign,gsection)            # A pillar + windscreen
+    for a,b in [(ROOF_F,BPILLAR[0]),(BPILLAR[1],ROOF_R)]:
+        build(gxs(a,b),[(glass,2,5),(paint,1,7)],sign,gsection)                # side glass + roof
+    build(gxs(*BPILLAR,step=12),[(pillar,0,5),(paint,1,7)],sign,gsection)      # B pillar
+    build(gxs(ROOF_R,DECK_R),[(paint,1,5),(glass,2,7)],sign,gsection)          # C pillar + backlight
+    # bright surround along the belt and over the roof rail
+    tube([COWL+70,sign*(dhw(COWL)-4),deck(COWL)+22],[DECK_R-90,sign*(dhw(DECK_R)-4),deck(DECK_R)+18],6,chrome,3,8)
+    for a,b in [(ROOF_F+40,BPILLAR[0]),(BPILLAR[1],ROOF_R-30)]:
+        tube([a,sign*(ghw(a)-2),roofz(a)-min(150.,(roofz(a)-deck(a))*.30)],
+             [b,sign*(ghw(b)-2),roofz(b)-min(150.,(roofz(b)-deck(b))*.30)],6,chrome,3,8)
+    # seats and head restraints, seen through the glass
+    for x in (2380,3010):
+        mesh([[[x-40,sign*130,958],[x-40,sign*420,958]],[[x+34,sign*140,1226],[x+34,sign*400,1226]]],(54,57,62),0,flip=sign<0)
+        ellipsoid([x+18,sign*272,1262],[88,124,68],(48,51,56),0,14,8)
+mesh([[[COWL+70,-820,958],[COWL+70,820,958]],[[COWL+520,-792,1046],[COWL+520,792,1046]]],(50,53,58),0)
+ellipsoid([3440,0,1476],[148,26,52],paint,1,14,8)
+
+# ---- lamps that wrap onto the flanks, shut lines, handles, mirrors --------
+for sign in (-1,1):
+    xs=[x for x in XS if x<=440]
+    mesh([[[x,sign*(flank_y(x,z)-3),z] for z in (674,696,740,770)] for x in xs],(40,44,48),0,flip=sign>0)
+    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (706,728)] for x in xs],lens,4,flip=sign>0)
+    xs=[x for x in XS if x>=LEN-280]
+    mesh([[[x,sign*(flank_y(x,z)-3),z] for z in (818,842,902,930)] for x in xs],(52,26,28),0,flip=sign>0)
+    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (848,894)] for x in xs],tail,4,flip=sign>0)
+    for x in (2380,3260):
+        pts=[[x,sign*(flank_y(x,sill(x)+40)-2),sill(x)+40],[x,sign*(flank_y(x,crease(x))-2),crease(x)],
+             [x,sign*(dhw(x)+4),deck(x)-16]]
+        for a,b in zip(pts,pts[1:]): tube(a,b,2.2,(78,84,89),0,5)
+    for x in (2250,3130):
+        ellipsoid([x,sign*(flank_y(x,crease(x)+46)+2),crease(x)+46],[76,9,14],chrome,3,18,8)
+    # mirror: a tapered shell on a short stalk, its rear face the glass
+    tube([1782,sign*886,1006],[1744,sign*962,1034],16,(34,38,42),0,10)
+    def shell(u,v,sign=sign):
+        a=u*math.tau;w=1.-.34*(1.-v)
+        return [1706+v*172,sign*(1004+36*math.cos(a)*w),1052+48*math.sin(a)*w]
+    mesh([[shell(i/16,j/4) for j in range(5)] for i in range(17)],paint,1,flip=sign<0)
+    mesh([[shell(i/16,0) for i in range(17)],[[1706,sign*1004,1052] for i in range(17)]],paint,1,flip=sign>0)
+    mesh([[shell(i/16,1) for i in range(17)],[[1878,sign*1004,1052] for i in range(17)]],(88,108,124),2,flip=sign<0)
+
+# ---- wheels ---------------------------------------------------------------
+for axle in (FA,RA):
+    for sign in (-1,1):
+        yc=sign*808
+        def tyre(u,v,axle=axle,yc=yc):
+            a=u*math.tau
+            prof=[(-TW,WR-108),(-TW+18,WR-50),(-TW+9,WR-9),(-TW*.52,WR),
+                  (TW*.52,WR),(TW-9,WR-9),(TW-18,WR-50),(TW,WR-108)]
+            i=min(len(prof)-2,int(v*(len(prof)-1)));t=v*(len(prof)-1)-i
+            oy=prof[i][0]+(prof[i+1][0]-prof[i][0])*t;r=prof[i][1]+(prof[i+1][1]-prof[i][1])*t
+            return [axle+r*math.cos(a),yc+oy,WR+r*math.sin(a)]
+        mesh([[tyre(i/54,j/7) for j in range(8)] for i in range(55)],rubber,0,flip=sign<0)
+        outer=yc+sign*TW
+        tube([axle,outer-sign*86,WR],[axle,outer-sign*4,WR],252,(50,56,62),3,44)
+        tube([axle,outer-sign*30,WR],[axle,outer-sign*24,WR],210,(122,126,128),3,40)
         for j in range(5):
-            a=j*math.tau/5
-            ellipsoid([axle+37*math.cos(a),outer+sign*10,340+37*math.sin(a)],[6,4,6],(35,38,41),3,8,4)
-        # Fine tread shoulders rather than high-contrast stripes.
-        for offset in [-65,65]:
-            surface(lambda u,v,axle=axle,yc=yc,offset=offset:[axle+(330+v*2)*math.cos(u*math.tau),yc+offset,340+(330+v*2)*math.sin(u*math.tau)],64,1,(36,38,39),0)
+            for off in (-.17,.17):
+                a=j*math.tau/5+off
+                tube([axle+58*math.cos(a+off*.5),outer-sign*4,WR+58*math.sin(a+off*.5)],
+                     [axle+238*math.cos(a),outer+sign*2,WR+238*math.sin(a)],11,alloy,3,6)
+        tube([axle,outer-sign*2,WR],[axle,outer+sign*10,WR],62,alloy,3,22)
+        ellipsoid([axle,outer+sign*13,WR],[32,6,32],(66,70,74),3,16,8)
+        for j in range(5):
+            a=j*math.tau/5+.31
+            ellipsoid([axle+40*math.cos(a),outer+sign*9,WR+40*math.sin(a)],[6,5,6],(38,41,44),3,8,4)
+        tube([axle,yc-sign*10,WR],[axle,yc+sign*16,WR],178,(112,116,120),3,26)
+        mesh([[[axle-54,yc+sign*42,WR+158],[axle+54,yc+sign*42,WR+158]],
+              [[axle-54,yc+sign*42,WR+210],[axle+54,yc+sign*42,WR+210]]],(128,44,40),0,flip=sign<0)
 save('touring-sedan')
 
 if len(sys.argv)>1:
@@ -215,3 +367,71 @@ if len(sys.argv)>1:
     floor=min(v[0][2] for v in V)
     for v in V:v[0][2]-=floor
     save('patio-bistro')
+
+# ---------------------------------------------------------------------------
+# A garden lounge set, original design: a three seater, two armchairs, a low
+# table and an outdoor rug, laid out as one arrangement so a wide pergola does
+# not stand around a single bistro table. Sizes follow ordinary catalogue
+# outdoor furniture: 2280 mm sofa, 900 mm deep, seats 400 mm off the ground.
+frame=(58,62,66); fabric=(206,201,190); fabric2=(178,172,160); teak=(148,116,78)
+slate=(96,101,106); rugA=(196,192,182); rugB=(168,166,158); cushion=(120,132,138)
+
+def rbox(c,s,e,color,mat=0,nu=22,nv=14):
+    """A rounded box. e near 0 is a sharp frame, e near .5 a soft cushion."""
+    def p(t,ex):
+        return math.copysign(abs(math.cos(t))**ex,math.cos(t)),math.copysign(abs(math.sin(t))**ex,math.sin(t))
+    def f(u,v):
+        a=u*math.tau;b=v*math.pi
+        ca,sa=p(a,e);cb,sb=p(b,e)
+        return [c[0]+s[0]*ca*sb,c[1]+s[1]*sa*sb,c[2]+s[2]*cb]
+    surface(f,nu,nv,color,mat,True)
+
+def leg(x,y,z0,z1,r=26):
+    tube([x,y,z0],[x,y,z1],r,frame,0,8)
+
+def seat_unit(cx,cy,width,face):
+    """One sofa or armchair: frame plinth, arms, seat and back cushions."""
+    depth=850.;seat=400.;armh=600.;backh=780.
+    y0=cy-face*depth/2   # front edge
+    y1=cy+face*depth/2   # back edge
+    rbox([cx,cy,255],[width/2-40,depth/2-60,95],.14,frame,0)
+    for sx in (-1,1):
+        for sy in (-1,1):
+            leg(cx+sx*(width/2-110),cy+sy*(depth/2-130),0,180)
+    # arms
+    for sx in (-1,1):
+        rbox([cx+sx*(width/2-70),cy+face*40,(350+armh)/2],[68,depth/2-90,(armh-350)/2],.18,frame,0)
+    # seat cushions
+    n=max(1,int(round(width/780)))
+    for i in range(n):
+        w=(width-300)/n
+        rbox([cx-width/2+150+w*(i+.5),cy-face*70,seat+10],[w/2-14,depth/2-150,92],.42,fabric,0)
+    # back cushions, leaning into the frame
+    for i in range(n):
+        w=(width-300)/n
+        rbox([cx-width/2+150+w*(i+.5),y1-face*150,(seat+backh)/2+40],[w/2-14,110,(backh-seat)/2],.40,fabric2,0)
+    # a throw cushion at one end
+    rbox([cx-width/2+300,cy-face*90,seat+180],[150,60,140],.45,cushion,0,16,10)
+
+def table(cx,cy):
+    rbox([cx,cy,368],[620,350,22],.10,slate,0)
+    rbox([cx,cy,300],[560,300,60],.12,teak,0)
+    for sx in (-1,1):
+        for sy in (-1,1): leg(cx+sx*540,cy+sy*280,0,300,24)
+    # a tray with two glasses reads as somebody actually sitting here
+    rbox([cx+120,cy,398],[170,120,10],.12,(236,232,222),0)
+    for dx in (-70,70):
+        tube([cx+120+dx,cy,404],[cx+120+dx,cy,506],38,(214,226,230),2,12)
+
+# rug: two tones so it does not read as a painted rectangle
+for i in range(9):
+    t0=-1150+i*2300/9;t1=-1150+(i+1)*2300/9
+    mesh([[[-1580,t0,4],[1580,t0,4]],[[-1580,t1,4],[1580,t1,4]]],rugA if i%2 else rugB,0)
+mesh([[[-1580,-1150,3],[-1580,1150,3]],[[-1510,-1085,7],[-1510,1085,7]]],(150,148,140),0)
+mesh([[[1580,-1150,3],[1580,1150,3]],[[1510,-1085,7],[1510,1085,7]]],(150,148,140),0,flip=True)
+
+seat_unit(0,-700,2280,1)
+seat_unit(-690,690,880,-1)
+seat_unit(690,690,880,-1)
+table(0,0)
+save('patio-lounge')

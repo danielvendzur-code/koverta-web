@@ -9,8 +9,9 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    car: { file:'touring-sedan.bin.gz', bounds:[-43,-1058,1,4760,1058,1480] },
-    bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] }
+    car: { file:'touring-sedan.bin.gz', bounds:[-74,-1040,1,4826,1040,1528] },
+    bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
+    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1150,0,1580,1150,820] }
   };
   function load(key) {
     if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file,base)).then(r => {
@@ -45,20 +46,33 @@
     const box=x1>x0?[x0,y0,x1,y1,b[5]]:null;
     decks.set(key,box);return box;
   }
-  function plan(c, mode, count) {
+  function plan(c, mode, count, allow) {
+    if(allow && !allow(mode)) return {items:[],capacity:0,reason:''};
     const margin = Math.max(230,c.post+100), x0=c.boxDepth+margin, x1=c.L-margin;
     const available=c.L-c.boxDepth-2*margin;
     const result=[];
     if(mode==='car') {
-      const capacity=available>=4808 && c.H>1610 ? clamp(Math.floor((c.W-2*margin+360)/(2124+360)),0,3) : 0;
+      /* Nároky sa počítajú z obálky siete, nie z ručne prepísaných čísel — po
+         prekreslení modelu sa posunú samy. K dĺžke ide 60 mm vôle, k šírke
+         360 mm na otvorenie dverí a odstup od stĺpa, a nad strechu auta 120 mm. */
+      const bb=models.car.bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
+      const needL=carL+60,needW=carW+360;
+      const capacity=available>=needL && c.H>carH+120 ? clamp(Math.floor((c.W-2*margin+360)/needW),0,3) : 0;
       const n=count==='auto'?capacity:Math.min(Number(count),capacity);
-      for(let i=0;i<n;i++)result.push({key:'car',x:(x0+x1)/2-2360,y:c.W*(i+.5)/n,z:2,rotation:0});
-      return {items:result,capacity,reason:capacity?'':'Auto potrebuje voľný priestor aspoň 5,27 × 2,59 m. Zohľadňuje sa aj box.'};
+      for(let i=0;i<n;i++)result.push({key:'car',x:(x0+x1)/2-carL/2-bb[0],y:c.W*(i+.5)/n,z:2,rotation:0});
+      const m=v=>(v/1000).toFixed(2).replace('.',',');
+      return {items:result,capacity,reason:capacity?'':`Auto potrebuje voľný priestor aspoň ${m(needL)} × ${m(needW)} m a ${m(carH+120)} m výšky. Zohľadňuje sa aj box.`};
     }
     if(mode==='bistro') {
-      /* Požiadavka vychádza z obálky samotnej zostavy plus 300 mm na každú
-         stranu na odsunutie stoličky, nie z ručne dopísaného čísla — pri
-         výmene siete sa posunie sama. */
+      /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
+         kreslá, stolík a koberec — nie jeden stolík uprostred prázdna. Lounge
+         potrebuje okrem svojej obálky ešte 250 mm na každú stranu na obídenie;
+         kde sa nezmestí, ostáva bistro. */
+      const lb=models.lounge.bounds;
+      if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+500) {
+        result.push({key:'lounge',x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
+        return {items:result,capacity:1,reason:''};
+      }
       const bb=models.bistro.bounds, need=y=>(y?bb[4]-bb[1]:bb[3]-bb[0])+600;
       if(available<need(false) || c.W-2*margin<need(true))return {items:[],capacity:0,reason:'Pre posedenie a odsunutie stoličiek tu nie je dosť voľného miesta.'};
       result.push({key:'bistro',x:(x0+x1)/2+55,y:c.W/2+47,z:2,rotation:0});
@@ -165,6 +179,9 @@
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
     const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:false,paint:'silver',family:String(family||'')};
+    /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
+       sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
+    const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
     let context=null,frame=null,raf=0,visible=true,lastTime=0,time=0,currentPlan={items:[],capacity:0},gpu=null,loading=new Set(),loaded=new Map(),failure='';
     /* flowKey je podpis tvaru vody; prestaví sa len keď sa zmení konštrukcia
        alebo pohľad, nie na každom snímku. animates ostane false, kým hostiteľ
@@ -192,6 +209,8 @@
        konfigurátora a odsunul ich do druhého riadku pod plátno, kde ich
        spodné voľby prekryla lišta súhlasu. */
     stage.appendChild(panel);
+    panel.querySelector('[data-scene-mode="car"]').hidden=!forCar;
+    panel.querySelector('[data-scene-mode="bistro"]').hidden=!forSeat;
     const diagram=document.createElement('aside');diagram.className='sp-drain-guide';diagram.hidden=true;
     diagram.innerHTML=`<strong>Ako odteká voda</strong><ol><li><i>1</i><span data-drain-roof>Strecha zachytí dážď</span></li><li><i>2</i><span data-drain-gutter>Žľab zvedie vodu k výpustu</span></li><li><i>3</i><span data-drain-pipe>Zvod odvedie vodu nadol</span></li></ol><small>Popis skrytej trasy. V 3D sa kreslí len voda, ktorú naozaj vidno — vnútro zvodu a rozvod v profile ostávajú zakryté.</small>`;
     panel.appendChild(diagram);
@@ -224,8 +243,11 @@
       const flat=Boolean(context&&context.renderer&&context.renderer!=='webgl-depth');
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres — vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
-        (state.mode==='car'?`${currentPlan.items.length} × Touring sedan · dĺžka 4,81 m vrátane detailov · šírka 2,13 m so zrkadlami`:
-         state.mode==='bistro'?`${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`:''));
+        (state.mode==='car'?(()=>{const b=models.car.bounds,m=v=>(v/1000).toFixed(2).replace('.',',');
+          return `${currentPlan.items.length} × Touring sedan · dĺžka ${m(b[3]-b[0])} m vrátane nárazníkov · šírka ${m(b[4]-b[1])} m so zrkadlami`;})():
+         state.mode==='bistro'?(currentPlan.items[0]&&currentPlan.items[0].key==='lounge'
+           ?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec'
+           :`${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`):''));
       /* Počasie povie, čo naozaj vidno. Bez hĺbkového rendereru sa dážď
          nekreslí vôbec a mlčať o tom by znamenalo tváriť sa, že prší. */
       const weather=state.weather!=='rain'?'':
@@ -251,7 +273,7 @@
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
     function prepare(c) {
-      context=c;currentPlan=plan(c,state.mode,state.count);
+      context=c;currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat));
       /* Po strate a obnove WebGL kontextu hostiteľ znova kreslí hĺbkovo —
          dážď sa má vrátiť s ním, nie ostať vypnutý do konca návštevy. */
       if(!animates&&c.renderer==='webgl-depth'){animates=true;run();}
@@ -299,8 +321,10 @@
           if(kind>2.5&&kind<3.5){spec=.4;gloss=45.;}
           vec3 result=base*l;
           float fres=pow(1.-max(0.,dot(n,v)),4.);
-          if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);vec3 env=mix(vec3(.12,.14,.16),vec3(.82,.87,.9),smoothstep(-.12,.7,r.z));
-            result=mix(result,env,(kind>1.5&&kind<2.5?.38:.09)+fres*.25);}
+          /* Odraz berie tmavú oblohu: vybavenie stojí pod strechou, nie na
+             lúke. Kým sklo zrkadlilo jasnú oblohu, čítalo sa ako plech. */
+          if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);vec3 env=mix(vec3(.08,.09,.11),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
+            result=mix(result,env,(kind>1.5&&kind<2.5?.30:.15)+fres*.22);}
           result+=spec*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
           if(kind>3.5)result=mix(result,base,.7);
           gl_FragColor=vec4(clamp(result,0.,1.),alpha);}`);

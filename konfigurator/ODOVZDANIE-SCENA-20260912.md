@@ -8,6 +8,21 @@ softvérové WebGL), nie na fyzickom mobile.
 ## Čo je hotové
 
 ### Vybavenie priestoru
+- Ponuka závisí od konštrukcie: auto len pri prístreškoch pre auto (`carport`,
+  `koverta`), posedenie len pri záhradných pergolách (`bio`, `canopy`).
+  Tlačidlo, ktoré k rodine nepatrí, sa nezobrazí a `plan()` ho odmietne aj keby
+  ho niekto nastavil zvonku.
+- Auto je prekreslené: karoséria je vyloftovaná z pozdĺžnych profilov a prierez
+  je rozdelený na plátky, takže hrana vzniká presne na prahu, na línii dverí, na
+  ramene a na hrane veka — inde je povrch hladký. Oba konce zatvára kupola
+  riadená tým istým prierezom, takže nárazník je plocha, nie odrezaná doska;
+  mriežka, svetlá, značka aj difúzor sú farbené riadky tej istej kupoly.
+  Rázvor 2,91 m, kolesá 19", 63 674 trojuholníkov.
+- Posedenie: kde je miesto, kreslí sa vlastná lounge zostava — trojmiestna
+  pohovka, dve kreslá, stolík s podnosom a koberec (obálka 3,16 × 2,30 m).
+  Kde sa nezmestí, ostáva pôvodná bistro zostava.
+- Nálepka Koverta je na čelnom líci stĺpa pri vjazde (v dátach Koverty je tá
+  strana „Predná", interne `right`, stena na x = L), nie na bočnom líci.
 - Panel „Vybavenie priestoru" je v stĺpci s vizualizáciou, hneď pod lištou
   pohľadov. Ako priamy potomok mriežky bol druhou bunkou prvého riadku a
   odsúval kroky konfigurátora do druhého riadku pod plátno — spodné voľby
@@ -96,7 +111,9 @@ nie je voda ani v stĺpe, ani v priereze zvodu. Je v matici oboch QA workflowov.
 2. Tri autá sa do katalógu nezmestia: potrebujú 8 000 mm šírky, najširší
    rozmer v katalógu je 7 000 mm. Voľba „3" je preto v paneli nedostupná.
    Nie je to chyba, ale ani to nie je odskúšané v praxi.
-3. Gril a väčšie lounge posedenie nie sú pripravené.
+3. Gril nie je pripravený. Ďalšie kolo na kvalite modelov je rozpísané v
+   `PROMPT-VYBAVENIE-DALSI-MODEL.md`: karosérii chýba lem blatníka, hlbšia
+   spára dverí a zlom nad zadným sklom, a auto má 591 kB gzip.
 4. SVG záloha vybavenie ani dážď nekreslí; zobrazí sa vysvetlenie.
 5. Voda v žľabe je vo svojej kapse za lemovaním, takže z väčšiny pohľadov ju
    zakrýva profil — tak to má byť, ale znamená to, že reťaz „strecha → žľab →

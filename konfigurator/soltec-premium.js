@@ -2684,16 +2684,19 @@
                    vidno zo strany, kde parkuje auto — nie do polovice výšky,
                    kde sa strácala za autom aj za očami. Jej horná hrana je
                    preto tesne pod hlavou stĺpa. */
-                /* Nálepka patrí na stĺp pri strane, kadiaľ sa vchádza a parkuje,
-                   nie na zadný rad. Zadný rad stojí pri stene alebo plote a logo
-                   tam nikto nevidí. Berie sa preto odkvapový rad — posledná os
-                   v poli — a z neho líce otočené von. Ak má byť na inom stĺpe,
-                   je to zmena tejto jednej podmienky. */
+                /* Nálepka patrí na líce, ktoré vidno pri vjazde. Vchádza sa
+                   od odkvapu: v dátach Koverty je práve tá strana pomenovaná
+                   „Predná" (interne `right`, stena na x = L). Doteraz bola
+                   nálepka na bočnom líci toho istého stĺpa, teda kolmo na
+                   pohľad vodiča — ten ju videl až keď prešiel okolo. Sedí
+                   preto na čelnom líci posledného radu, tesne pod hlavou. */
                 if(px===xs[xs.length-1] && py>W/2){
-                  const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6;
+                  const w=pw*.86,h=w/4.4,y=py+(pw-w)/2,x=px+pd+0.6;
                   const z=H+lift-h-Math.max(70,Math.round(H*0.04));
-                  quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
-                    {normal:[0,1,0],cull:true,edge:false,decal:true});
+                  /* Poradie rohov určuje, ako sadne textúra: pri pohľade
+                     zvonku ide prvý roh doprava, inak sa nápis zrkadlí. */
+                  quad([[x,y+w,z],[x,y,z],[x,y,z+h],[x,y+w,z+h]],'#ffffff',
+                    {normal:[1,0,0],cull:true,edge:false,decal:true});
                 }
                 /* Pri päte stĺpa nie je nič. Majiteľ si kotviace krytky
                    výslovne neželá: na fotkách realizácií je od pätky po hlavu
