@@ -14493,19 +14493,56 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 
 
 /* BATCH 3 · KITCHEN + SHADING DECISION LAYER */
-.k .kh-kitchen-specs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:clamp(24px,3vw,42px) 0 0; border:1px solid var(--k-hair); border-radius:var(--k-r-sm); overflow:hidden; background:var(--k-white); box-shadow:var(--k-shadow-xs); }
-.k .kh-kitchen-spec { display:grid; align-content:start; gap:5px; min-height:126px; padding:clamp(18px,2vw,28px); border-left:1px solid var(--k-hair-soft); }
-.k .kh-kitchen-spec:first-child { border-left:0; }
-.k .kh-kitchen-spec span { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--k-grey-soft); }
-.k .kh-kitchen-spec strong { font-family:var(--k-head); font-size:clamp(20px,1.65vw,25px); line-height:1.15; letter-spacing:-.025em; color:var(--k-ink); }
-.k .kh-kitchen-spec small { font-size:13px; line-height:1.4; color:var(--k-muted); }
 .k .kh-modul__mieru--refined { margin-top:14px; }
-.k .kh-kitchen-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; border-top:1px solid var(--k-hair); border-bottom:1px solid var(--k-hair); }
-.k .kh-kitchen-facts > li { min-width:0; padding:22px 20px; border-top:0; border-right:1px solid var(--k-hair-soft); }
-.k .kh-kitchen-facts > li:nth-child(4n) { border-right:0; }
-.k .kh-kitchen-facts > li:nth-child(n+5) { border-top:1px solid var(--k-hair-soft); }
-.k .kh-kitchen-facts strong { display:block; margin-bottom:7px; font-size:clamp(18px,1.45vw,23px); line-height:1.12; }
-.k .kh-kitchen-facts span { display:block; max-width:27ch; font-size:13.5px; line-height:1.45; color:var(--k-muted); }
+.k .kh-kitchen-guide {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-top:18px;
+  border:1px solid var(--k-hair);
+  border-radius:var(--k-r-sm);
+  overflow:hidden;
+  background:var(--k-white);
+  box-shadow:var(--k-shadow-xs);
+}
+.k .kh-kitchen-guide__panel {
+  min-width:0;
+  padding:clamp(26px,3.2vw,48px);
+}
+.k .kh-kitchen-guide__panel + .kh-kitchen-guide__panel {
+  border-left:1px solid var(--k-hair-soft);
+}
+.k .kh-kitchen-guide__panel .k-eyebrow {
+  margin:0 0 14px;
+}
+.k .kh-kitchen-guide__panel h3 {
+  max-width:18ch;
+  margin:0 0 16px;
+  font-family:var(--k-head);
+  font-size:clamp(24px,2.2vw,34px);
+  line-height:1.04;
+  letter-spacing:-.035em;
+}
+.k .kh-kitchen-guide__panel > p:last-child {
+  max-width:58ch;
+  margin:0;
+  color:var(--k-muted);
+  font-size:clamp(15px,1.1vw,17px);
+  line-height:1.62;
+}
+.k .kh-kitchen-guide__panel--dark {
+  border-color:var(--k-ink);
+  background:var(--k-ink);
+  color:var(--k-white);
+}
+.k .kh-kitchen-guide__panel--dark .k-eyebrow {
+  color:var(--k-amber);
+}
+.k .kh-kitchen-guide__panel--dark .k-eyebrow::before {
+  background:var(--k-amber);
+}
+.k .kh-kitchen-guide__panel--dark > p:last-child {
+  color:rgba(255,255,255,.74);
+}
 .k .kh-shade-needs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:clamp(26px,3vw,42px) 0; }
 .k .kh-shade-needs a { display:grid; align-content:start; gap:8px; min-height:150px; padding:22px; border:1px solid rgba(18,23,26,.15); border-top:4px solid var(--k-amber); border-radius:14px; background:#fff; color:var(--k-ink); text-decoration:none; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
 .k .kh-shade-needs a:hover, .k .kh-shade-needs a:focus-visible { transform:translateY(-3px); border-color:rgba(18,23,26,.32); box-shadow:0 14px 34px rgba(18,23,26,.09); }
@@ -14548,13 +14585,8 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .kh-shade-product__head > span { margin-bottom:0; }
   .k .kh-shade-product__head h3 { margin:24px 0 8px; }
   .k .kh-shade-product__facts { grid-column:1; }
-  .k .kh-kitchen-specs { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .k .kh-kitchen-spec:nth-child(3) { border-left:0; }
-  .k .kh-kitchen-spec:nth-child(n+3) { border-top:1px solid var(--k-hair-soft); }
-  .k .kh-kitchen-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .k .kh-kitchen-facts > li:nth-child(4n) { border-right:1px solid var(--k-hair-soft); }
-  .k .kh-kitchen-facts > li:nth-child(2n) { border-right:0; }
-  .k .kh-kitchen-facts > li:nth-child(n+3) { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-kitchen-guide { grid-template-columns:minmax(0,1fr); }
+  .k .kh-kitchen-guide__panel + .kh-kitchen-guide__panel { border-left:0; border-top:1px solid var(--k-hair-soft); }
   .k .kh-shade-guide { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .k .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
   .k .kh-shade-guide__item:nth-child(1), .k .kh-shade-guide__item:nth-child(2) { border-top:0; }
@@ -14568,11 +14600,11 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .kh-shade-product__story, .k .kh-shade-product__facts { grid-template-columns:1fr; }
   .k .kh-shade-product__story > div, .k .kh-shade-product__facts > div { border-left:0; }
   .k .kh-shade-product__story > div + div, .k .kh-shade-product__facts > div + div { border-top:1px solid var(--k-hair-soft); }
-  .k .kh-kitchen-specs, .k .kh-kitchen-facts, .k .kh-shade-guide { grid-template-columns:minmax(0,1fr); }
-  .k .kh-kitchen-spec, .k .kh-kitchen-facts > li, .k .kh-shade-guide__item { border-left:0; border-right:0; }
-  .k .kh-kitchen-spec + .kh-kitchen-spec, .k .kh-kitchen-facts > li + li, .k .kh-shade-guide__item + .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-shade-guide { grid-template-columns:minmax(0,1fr); }
+  .k .kh-shade-guide__item { border-left:0; border-right:0; }
+  .k .kh-shade-guide__item + .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
   .k .kh-shade-guide__item:last-child { grid-column:auto; }
-  .k .kh-kitchen-spec, .k .kh-shade-guide__item { min-height:0; }
+  .k .kh-shade-guide__item { min-height:0; }
 }
 
 
