@@ -37,3 +37,9 @@ Obálka 3,16 × 2,30 m. 14 610 trojuholníkov, 111 788 bajtov gzip.
 Kandidáti zo Sketchfabu ani Ferrari z príkladov Three.js neboli importovaní do
 projektu. Pri Generic Sedan Car bola overená CC BY 4.0, ale stiahnutie
 vyžadovalo prihlásenie. Pri Ferrari nebola overená licencia pôvodného modelu.
+
+## Refinement 12. 9. 2026
+
+Aktuálny sedan má 34 902 trojuholníkov a 335 330 bajtov gzip. Lounge má 23 790 trojuholníkov a 186 757 bajtov gzip; rozmery 3,16 × 2,90 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
+
+Pôvodné vstupy bistro zostavy sa dajú obnoviť skriptom `../tools/fetch-bistro-source.py`; manifest obsahuje presné URL aj SHA-256.

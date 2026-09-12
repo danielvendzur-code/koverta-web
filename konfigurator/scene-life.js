@@ -11,10 +11,10 @@
   const models = {
     car: { file:'touring-sedan.bin.gz', bounds:[-74,-1040,1,4826,1040,1528] },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
-    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1150,0,1580,1150,820] }
+    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1450,0,1580,1450,822] }
   };
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file,base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-2',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -27,41 +27,43 @@
     }).catch(e => { assets.delete(key); throw e; }));
     return assets.get(key);
   }
-  /* Kde má vybavenie naozaj vodorovné „veko". Obálka celého auta by dvihla
-     dážď na výšku strechy aj nad kapotu a kvapky by dopadali do vzduchu.
-     Preto sa z načítanej siete odmeria pôdorys jej najvyšších plôch — pri
-     aute strecha kabíny, pri posedení doska stola — a dážď sa zastaví len
-     tam. Zvyšok tela vyrieši hĺbkový test: čo je za autom, to nevidno. */
-  const decks=new Map();
-  function deck(key, data) {
-    if(decks.has(key))return decks.get(key);
-    const b=models[key].bounds, cut=b[2]+(b[5]-b[2])*.86;
-    const view=new DataView(data);
-    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-    for(let i=0;i<data.byteLength;i+=16) {
-      if(view.getInt16(i+4,true)<cut)continue;
-      const x=view.getInt16(i,true),y=view.getInt16(i+2,true);
-      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
-    }
-    const box=x1>x0?[x0,y0,x1,y1,b[5]]:null;
-    decks.set(key,box);return box;
-  }
+  const surfaces=new Map();
+  const particleSeeds=[];
+  let seedState=9307;
+  const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
+  for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
   function plan(c, mode, count, allow) {
     if(allow && !allow(mode)) return {items:[],capacity:0,reason:''};
     const margin = Math.max(230,c.post+100), x0=c.boxDepth+margin, x1=c.L-margin;
     const available=c.L-c.boxDepth-2*margin;
     const result=[];
     if(mode==='car') {
-      /* Nároky sa počítajú z obálky siete, nie z ručne prepísaných čísel — po
-         prekreslení modelu sa posunú samy. K dĺžke ide 60 mm vôle, k šírke
-         360 mm na otvorenie dverí a odstup od stĺpa, a nad strechu auta 120 mm. */
       const bb=models.car.bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
-      const needL=carL+60,needW=carW+360;
-      const capacity=available>=needL && c.H>carH+120 ? clamp(Math.floor((c.W-2*margin+360)/needW),0,3) : 0;
-      const n=count==='auto'?capacity:Math.min(Number(count),capacity);
-      for(let i=0;i<n;i++)result.push({key:'car',x:(x0+x1)/2-carL/2-bb[0],y:c.W*(i+.5)/n,z:2,rotation:0});
-      const m=v=>(v/1000).toFixed(2).replace('.',',');
-      return {items:result,capacity,reason:capacity?'':`Auto potrebuje voľný priestor aspoň ${m(needL)} × ${m(needW)} m a ${m(carH+120)} m výšky. Zohľadňuje sa aj box.`};
+      const side=Math.max(350,c.post+200),rear=c.boxDepth+(c.boxDepth?750:300),front=c.L-300,gap=600;
+      const parkedX=(rear+front-carL)/2;
+      let intervals=[[side+carW/2,c.W-side-carW/2]];
+      if(front-rear<carL||c.H<carH+150)intervals=[];
+      for(const o of c.obstacles||[]) {
+        if(o[2]+80<parkedX||o[0]-80>parkedX+carL)continue;
+        const a=o[1]-80-carW/2,b=o[3]+80+carW/2,next=[];
+        for(const [lo,hi] of intervals){if(b<lo||a>hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
+        intervals=next;
+      }
+      intervals=intervals.filter(i=>i[1]>=i[0]);
+      const place=n=>{
+        const ys=[];let last=-Infinity;
+        for(const [lo,hi] of intervals)for(let y=Math.max(lo,last+carW+gap);y<=hi+.01&&ys.length<n;y+=carW+gap){ys.push(y);last=y;}
+        if(ys.length!==n)return [];
+        const shift=c.W/2-(ys[0]+ys[ys.length-1])/2;
+        if(ys.every(y=>intervals.some(([lo,hi])=>y+shift>=lo&&y+shift<=hi)))return ys.map(y=>y+shift);
+        return ys;
+      };
+      let capacity=0;for(let n=1;n<=3;n++)if(place(n).length===n)capacity=n;
+      const wanted=count==='auto'?capacity:Math.min(Number(count)||1,capacity);
+      const ys=place(wanted);
+      ys.forEach(y=>result.push({key:'car',x:parkedX-bb[0],y,z:2,rotation:0}));
+      return {items:result,capacity,clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0},
+        reason:capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
     }
     if(mode==='bistro') {
       /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
@@ -97,7 +99,7 @@
       for(const i of [0,1,2,0,2,3])v.push(pts[i][0],pts[i][1],pts[i][2],uv[i][0],uv[i][1],kind,alpha);
     };
     const UV=[[0,-1],[1,-1],[1,1],[0,1]];
-    const roofTop=x=>c.roofZ+(c.roofRise||0)*(1-clamp(x/Math.max(1,c.L),0,1));
+    const roofTop=(x,y)=>{const hit=c.roofAt&&c.roofAt(x,y);return hit==null?c.roofZ+(c.roofRise||0)*(1-clamp(x/Math.max(1,c.L),0,1)):hit;};
     const g=c.drainage&&c.drainage.gutter&&c.drainage.gutter.enabled?c.drainage.gutter:null;
     const d=c.drainage&&c.drainage.downpipe&&c.drainage.downpipe.enabled?c.drainage.downpipe:null;
     const eave=g?g.x0:c.L-24;
@@ -108,12 +110,12 @@
       const n=Math.max(7,Math.min(26,Math.round(c.W/380))),x0=Math.min(340,c.L*.1);
       for(let i=0;i<n;i++) {
         const y=c.W*(i+.5)/n+(rnd(i+7,17)-.5)*(c.W/n)*.6,w=14+rnd(i+3,9)*18;
-        quad([[x0,y-w,roofTop(x0)+8],[eave,y-w,roofTop(eave)+8],[eave,y+w,roofTop(eave)+8],[x0,y+w,roofTop(x0)+8]],UV,0,1);
+        quad([[x0,y-w,roofTop(x0,y-w)+2],[eave,y-w,roofTop(eave,y-w)+2],[eave,y+w,roofTop(eave,y+w)+2],[x0,y+w,roofTop(x0,y+w)+2]],UV,0,1);
       }
     } else if(c.louverZone) {
       /* Otvorená lamela vodu nezachytí — prší rovno pod strechu. Až ako sa
          zatvára, rozbehne sa po jej žliabku prúžok k rámu. */
-      const shut=clamp(1-(c.louverT||0)/.45,0,1),z=c.louverZone;
+      const shut=(c.louverT||0)<.01?1:0,z=c.louverZone;
       if(shut>.02) {
         const n=Math.max(1,Math.round((z.x1-z.x0)/Math.max(1,c.pitch)));
         for(let i=0;i<n;i++) {
@@ -140,7 +142,7 @@
     } else if(c.panelRoof) {
       /* Bez žľabu prepadá voda cez odkvapovú hranu. Kvapky sú obrátené
          k pozorovateľovi, aby nezmizli pri pohľade zboku. */
-      const n=Math.max(6,Math.min(22,Math.round(c.W/380))),zTop=roofTop(c.L);
+      const n=Math.max(6,Math.min(22,Math.round(c.W/380))),zTop=roofTop(c.L,c.W/2);
       for(let i=0;i<n;i++) {
         const y=c.W*(i+.5)/n+(rnd(i+11,13)-.5)*70,w=8+rnd(i+5,7)*7,len=240+rnd(i+2,11)*260;
         const cx=c.L+6,dx=dir[0]*w,dy=dir[1]*w;
@@ -178,7 +180,7 @@
        predvoľba podľa rodiny otvárala panel rovno na hlásení „nezmestí sa".
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
-    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:false,paint:'silver',family:String(family||'')};
+    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:false,paint:'silver',intensity:'steady',family:String(family||'')};
     /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
        sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
     const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
@@ -187,7 +189,7 @@
        alebo pohľad, nie na každom snímku. animates ostane false, kým hostiteľ
        nepotvrdí, že snímok dažďa vie prekresliť — na SVG zálohe sa dážď
        neanimuje a panel to povie namiesto toho, aby ticho nič nerobil. */
-    let flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0;
+    let planningKey='',rainKey='',rainData=null,roofSurface=null,roofKey='',flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const stage=root.querySelector('.sp-stage');
     const panel=document.createElement('details');panel.className='sp-scene';
@@ -199,8 +201,9 @@
         <label class="sp-scene__paint">Lak auta <select aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></label></div>
         <div class="sp-scene__row" data-scene-weatherrow><span class="sp-scene__label">Počasie</span><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
-        <div class="sp-scene__rain" hidden><button type="button" data-scene-pause>Pozastaviť dážď</button><label><input type="checkbox" data-scene-flow> Ukázať odtok vody</label></div>
+        <div class="sp-scene__rain" hidden><label>Sila dažďa <select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select></label><button type="button" data-scene-pause>Pozastaviť dážď</button><label><input type="checkbox" data-scene-flow> Ukázať odtok vody</label></div>
         <p class="sp-scene__status" role="status" aria-live="polite"></p>
+        <p class="sp-scene__clearance" data-scene-clearance hidden>Parkovanie ponecháva 60 cm medzi autami a pri boxe 75 cm na prístup. Obálka auta zahŕňa zrkadlá.</p>
         <p class="sp-scene__note">Vybavenie slúži na predstavu o priestore a nie je súčasťou ceny.</p>
         <a class="sp-scene__credits" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
@@ -216,11 +219,13 @@
     panel.appendChild(diagram);
     const status=panel.querySelector('[role="status"]'),countSelect=panel.querySelector('#sp-scene-count'),paintSelect=panel.querySelector('[aria-label="Lak auta"]');
     function sync() {
+      stage.dataset.weather=state.weather;
       panel.querySelectorAll('[data-scene-mode]').forEach(b=>b.setAttribute('aria-pressed',String(state.mode===b.dataset.sceneMode)));
       panel.querySelectorAll('[data-scene-weather]').forEach(b=>b.setAttribute('aria-pressed',String(state.weather===b.dataset.sceneWeather)));
       panel.querySelector('[data-scene-countrow]').hidden=state.mode==='none';
       panel.querySelector('.sp-scene__paint').hidden=state.mode!=='car';
       panel.querySelector('.sp-scene__rain').hidden=state.weather!=='rain';
+      panel.querySelector('[data-scene-clearance]').hidden=state.mode!=='car'||!currentPlan.items.length;
       countSelect.value=state.count;
       [...countSelect.options].forEach(o=>{o.disabled=o.value!=='auto' && Number(o.value)>currentPlan.capacity;});
       panel.querySelector('[data-scene-pause]').textContent=state.paused?'Spustiť dážď':'Pozastaviť dážď';
@@ -271,9 +276,12 @@
     });
     countSelect.addEventListener('change',()=>{state.count=countSelect.value;update();});
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
+    panel.querySelector('[data-scene-intensity]').addEventListener('change',e=>{state.intensity=e.target.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
     function prepare(c) {
-      context=c;currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat));
+      context=c;
+      const pk=JSON.stringify([c.L,c.W,c.H,c.post,c.boxDepth,c.obstacles,state.mode,state.count]);
+      if(pk!==planningKey){currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat));planningKey=pk;}
       /* Po strate a obnove WebGL kontextu hostiteľ znova kreslí hĺbkovo —
          dážď sa má vrátiť s ním, nie ostať vypnutý do konca návštevy. */
       if(!animates&&c.renderer==='webgl-depth'){animates=true;run();}
@@ -284,6 +292,28 @@
         loading.add(item.key);load(item.key).then(data=>{loaded.set(item.key,data);loading.delete(item.key);changed();sync();},()=>{
           loading.delete(item.key);failure='3D model sa nenačítal. Skúste znova vybrať vybavenie.';sync();
         });
+      }
+      if(state.weather==='rain' && window.SP_SURFACE) {
+        if(roofKey!==c.weatherKey || !roofSurface) {
+          roofSurface=window.SP_SURFACE.build(c.weatherSolids||[]);roofKey=c.weatherKey;
+        }
+        c.roofAt=(x,y)=>{const h=roofSurface.hit(x,y);return h?h.z:null;};
+        const key=c.weatherKey+'|'+JSON.stringify(currentPlan.items)+'|'+[...loaded.keys()].join(',');
+        if(key!==rainKey || !rainData) {
+          const items=currentPlan.items.filter(i=>loaded.has(i.key));
+          for(const item of items)if(!surfaces.has(item.key))surfaces.set(item.key,window.SP_SURFACE.packed(loaded.get(item.key)));
+          const values=[];
+          for(const seed of particleSeeds) {
+            const x=seed[0]*(c.L+2600)-1300,y=seed[1]*(c.W+2600)-1300;
+            let hit=roofSurface.hit(x,y)||{z:0,normal:[0,0,1]};
+            for(const item of items) {
+              const h=surfaces.get(item.key).hit(x-item.x,y-item.y);
+              if(h && h.z+item.z>hit.z)hit={z:h.z+item.z,normal:h.normal};
+            }
+            for(const xy of [[-1,0],[1,0],[1,1],[-1,0],[1,1],[-1,1]])values.push(...seed,...xy,Math.max(0,hit.z),...hit.normal);
+          }
+          rainData=new Float32Array(values);rainKey=key;
+        }
       }
       sync();
     }
@@ -326,45 +356,35 @@
           if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);vec3 env=mix(vec3(.08,.09,.11),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
             result=mix(result,env,(kind>1.5&&kind<2.5?.30:.15)+fres*.22);}
           result+=spec*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
-          if(kind>3.5)result=mix(result,base,.7);
+          if(kind>3.5&&kind<4.5)result=mix(result,base,.7);
+          if(kind>4.5&&kind<5.5){float weave=sin(world.x*1.8)*sin(world.y*1.7+world.z*1.6);result=base*l*(.99+.01*weave);}
+          if(kind>5.5){float grain=sin(world.x*.075+sin(world.y*.31)*.8);result=base*l*(.97+.03*grain);}
           gl_FragColor=vec4(clamp(result,0.,1.),alpha);}`);
       /* Dážď. Každá kvapka pozná, čo je pod ňou: pultovú rovinu strechy aj
          s jej stúpaním, plný rám okolo pásma lamiel, krytie lamely podľa jej
          uhla — otvorenou medzerou prejde na zem, na zatvorenej sa zastaví —
          a obálku vybavenia, takže na streche auta neprepadne cez plech.
          Dopad nie je zmiznutie: pruh sa stiahne do striešky a dohasne. */
-      const rain=program(gl,`precision highp float;attribute vec4 seed;attribute vec2 corner;uniform float viewportHeight;${projection}
-        uniform float clock;uniform float roofBase;uniform float roofRise;uniform vec4 foot;uniform vec4 blade;uniform vec4 zone;
-        uniform vec4 blockA;uniform vec4 blockB;uniform vec4 blockC;uniform vec3 blockTop;
-        varying float opacity;varying float splash;
+      const rain=program(gl,`precision highp float;attribute vec4 seed;attribute vec2 corner;attribute vec4 impact;uniform float viewportHeight;${projection}
+        uniform float clock;uniform float roofBase;uniform float roofRise;uniform float density;
+        varying float opacity;varying float splash;varying vec2 vUv;
         void main(){
-          float x=seed.x*(extent.x+2600.)-1300.;
-          float y=seed.y*(extent.y+2600.)-1300.;
-          float roofZ=roofBase+roofRise*(1.-clamp(x/max(1.,extent.x),0.,1.));
-          bool under=x>foot.x&&x<foot.z&&y>foot.y&&y<foot.w;
-          bool blocked=false;
-          if(under){
-            if(blade.w<.5)blocked=true;
-            else if(x<zone.x||x>zone.z||y<zone.y||y>zone.w)blocked=true;
-            else blocked=abs(fract((x-blade.x)/blade.y)-.5)*blade.y<=blade.z*.5;
-          }
-          float stopZ=blocked?roofZ:0.;
-          if(!blocked){
-            if(x>blockA.x&&x<blockA.z&&y>blockA.y&&y<blockA.w)stopZ=max(stopZ,blockTop.x);
-            if(x>blockB.x&&x<blockB.z&&y>blockB.y&&y<blockB.w)stopZ=max(stopZ,blockTop.y);
-            if(x>blockC.x&&x<blockC.z&&y>blockC.y&&y<blockC.w)stopZ=max(stopZ,blockTop.z);
-          }
-          float top=roofBase+roofRise+2400.;
-          float phase=fract(seed.z+clock*(.62+seed.w*.30));
-          float z=mix(top,stopZ,phase);
-          float len=150.+seed.w*130.;
-          float land=smoothstep(.955,1.,phase);
-          vec3 fall=vec3(x+corner.x*(4.+2.5*seed.w),y,z+corner.y*len*(1.-land));
-          vec3 pool=vec3(x+corner.x*(58.+70.*seed.w)*land,y+(corner.y-.5)*(38.+46.*seed.w)*land,stopZ+6.);
-          gl_Position=project(mix(fall,pool,land));
-          opacity=(.24+seed.w*.24)*(1.-land*.8);splash=land;}`,
-        `precision mediump float;varying float opacity;varying float splash;
-        void main(){gl_FragColor=vec4(mix(vec3(.54,.71,.82),vec3(.85,.92,.96),splash),opacity);}`);
+          float x=seed.x*(extent.x+2600.)-1300.;float y=seed.y*(extent.y+2600.)-1300.;
+          float top=roofBase+roofRise+2400.;float stopZ=impact.x;
+          float phase=fract(seed.z+clock*(4300.+seed.w*1800.)/max(300.,top-stopZ));
+          float z=mix(top,stopZ,phase);float land=smoothstep(.965,1.,phase);
+          vec3 across=vec3(orbit.x,orbit.y,0.);
+          vec3 fall=vec3(x,y,z)+across*corner.x*(2.5+2.*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
+          vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
+          vec3 b=cross(n,t);
+          vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
+          gl_Position=project(mix(fall,pool,land));vUv=vec2(corner.x,corner.y*2.-1.);
+          opacity=(.25+seed.w*.23)*(1.-land*.65)*density;splash=land;}`,
+        `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
+        void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
+          float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
+          float a=opacity*mix(edge,ring,splash);if(a<.005)discard;
+          gl_FragColor=vec4(mix(vec3(.60,.73,.81),vec3(.82,.89,.94),splash),a);}`);
       /* Voda z odtoku. Rovnaký program pre film na streche, hladinu v žľabe,
          padajúci prúd aj kruhy na dlažbe — líšia sa len druhom a rýchlosťou. */
       const flowProg=program(gl,`precision highp float;attribute vec3 p;attribute vec2 uv;attribute float kind;attribute float alpha;
@@ -400,14 +420,11 @@
       const contactBuffer=gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER,contactBuffer);
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,1,1,-1,-1,1,1,-1,1]),gl.STATIC_DRAW);
-      const rainBuffer=gl.createBuffer(),seeds=[];
-      let rand=9307;const random=()=>{rand=(rand*1664525+1013904223)>>>0;return rand/4294967296;};
-      for(let i=0;i<360;i++){const s=[random(),random(),random(),random()];for(const xy of [[-1,0],[1,0],[1,1],[-1,0],[1,1],[-1,1]])seeds.push(...s,...xy);}
-      gl.bindBuffer(gl.ARRAY_BUFFER,rainBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(seeds),gl.STATIC_DRAW);
+      const rainBuffer=gl.createBuffer();
       /* Miesta uniformov a atribútov si drží modul sám. Ovládač ich hľadá
          podľa reťazca a v snímku ich je vyše dvadsať — pri každom otočení
          modelu to bola zbytočná práca navyše. */
-      gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:seeds.length/6,places:new Map()};
+      gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:particleSeeds.length*6,rainData:null,places:new Map()};
     }
     function draw(gl,camera,weatherOnly=false) {
       if(!context)return;init(gl);
@@ -417,32 +434,14 @@
         gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
         const p=gpu.rain;gl.useProgram(p);uniformCamera(gl,p,camera);gl.bindBuffer(gl.ARRAY_BUFFER,gpu.rainBuffer);
-        const a=A(p,'seed'),b=A(p,'corner');
-        gl.enableVertexAttribArray(a);gl.enableVertexAttribArray(b);gl.vertexAttribPointer(a,4,gl.FLOAT,false,24,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,24,16);
-        gl.uniform1f(U(p,'clock'),time);
-        gl.uniform1f(U(p,'roofBase'),c.roofZ);
-        gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
-        gl.uniform4f(U(p,'foot'),0,0,c.L,c.W);
-        /* blade = [prvá os, rozteč, krytie, 1 = lamely]. Panelová strecha
-           dostane nulu v poslednej zložke a zadrží všetko. */
-        const zone=c.louverZone;
-        gl.uniform4f(U(p,'blade'),
-          zone?zone.x0:0,Math.max(1,c.pitch||183),Math.min(c.cover===undefined?0:c.cover,1e5),zone?1:0);
-        gl.uniform4f(U(p,'zone'),zone?zone.x0:0,zone?zone.y0:0,zone?zone.x1:c.L,zone?zone.y1:c.W);
-        /* Obálky vybavenia zastavia kvapku na streche auta alebo na stolíku
-           namiesto toho, aby prepadla plechom. Prázdne miesto dostane
-           nemožný obdĺžnik, takže test nikdy neprejde. */
-        const boxes=currentPlan.items.filter(i=>loaded.has(i.key)).slice(0,3);
-        const empty=[0,0,-1,-1],tops=[0,0,0];
-        ['blockA','blockB','blockC'].forEach((name,i)=>{
-          const item=boxes[i],box=item&&deck(item.key,loaded.get(item.key));
-          if(!box){gl.uniform4f(U(p,name),...empty);return;}
-          gl.uniform4f(U(p,name),item.x+box[0],item.y+box[1],item.x+box[2],item.y+box[3]);
-          tops[i]=item.z+box[4];
-        });
-        gl.uniform3f(U(p,'blockTop'),tops[0],tops[1],tops[2]);
-        gl.drawArrays(gl.TRIANGLES,0,gpu.rainVertices);
-        gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);
+        if(gpu.rainData!==rainData && rainData){gl.bufferData(gl.ARRAY_BUFFER,rainData,gl.STATIC_DRAW);gpu.rainData=rainData;}
+        const a=A(p,'seed'),b=A(p,'corner'),h=A(p,'impact');
+        gl.enableVertexAttribArray(a);gl.enableVertexAttribArray(b);gl.enableVertexAttribArray(h);
+        gl.vertexAttribPointer(a,4,gl.FLOAT,false,40,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,40,16);gl.vertexAttribPointer(h,4,gl.FLOAT,false,40,24);
+        gl.uniform1f(U(p,'clock'),time);gl.uniform1f(U(p,'roofBase'),c.roofZ);gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
+        gl.uniform1f(U(p,'density'),state.intensity==='light'?.72:state.intensity==='heavy'?1.1:1);
+        if(rainData)gl.drawArrays(gl.TRIANGLES,0,(state.intensity==='light'?180:state.intensity==='heavy'?600:360)*6);
+        gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);gl.disableVertexAttribArray(h);
         if(state.flow) {
           const f=gpu.flow;gl.useProgram(f);uniformCamera(gl,f,camera);
           if(gpu.flowKey!==flowKey) {
@@ -542,8 +541,8 @@
     if(window.IntersectionObserver)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;run();},{threshold:0}).observe(stage);
     sync();
     return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
-      snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,
-        weather:state.weather,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
+      snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
+        weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
         pace:Math.round(pace),
         frameCost:Math.round(budget*100)/100,clock:Math.round(time*1000)/1000,
         roof:context?{z:context.roofZ,rise:context.roofRise||0,panel:Boolean(context.panelRoof),

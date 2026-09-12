@@ -76,7 +76,7 @@ const HELPERS = () => {
     return { page, assertNoErrors };
   };
   const weather = async (page, on) => {
-    await page.getByRole('button', { name: on ? 'Dážď' : 'Slnečno', exact: true }).click();
+    await page.getByRole('button', { name: on ? 'Dážď' : 'Zamračené', exact: true }).click();
     await page.waitForTimeout(600);
   };
   const pause = async (page) => {

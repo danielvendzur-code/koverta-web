@@ -1611,6 +1611,7 @@
         let lastRoofKind = null;
         const view = { az: -0.62, el: 0.42 };
         let manualZoom = 1;
+        const zoomPan = { x:0, y:0 };
         let cameraRun = 0;
         const stopCamera = () => { if (cameraRun) cancelAnimationFrame(cameraRun); cameraRun = 0; };
         const animateCamera = (az, el) => {
@@ -1947,7 +1948,8 @@
              and putting it into the key opens the gap between a face turned to
              the sun and one turned away, which is what makes the section look
              like metal with a form rather than a cut-out. */
-          const AMB = 0.36, KEY_I = 0.56, FILL_I = 0.22, BOUNCE_I = 0.34, SKY_I = 0.13;
+          const overcast = Boolean(sceneLife && sceneLife.state.weather !== 'sun');
+          const AMB = overcast ? .51 : .36, KEY_I = overcast ? .22 : .56, FILL_I = overcast ? .19 : .22, BOUNCE_I = overcast ? .29 : .34, SKY_I = .13;
           const toRGB = (c) => {
             if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
             const m = c.match(/[\d.]+/g) || [];
@@ -2032,10 +2034,13 @@
           const geometryKey = JSON.stringify(state) + '|' + [se > 0.01, fromAbove, VIEWDIR[0] > 0, VIEWDIR[1] > 0].join(',');
           const cacheHit = model().kvGeom && cachedGeometry && cachedGeometry.key === geometryKey;
           const rawFaces = [];
+          const weatherSolids = [];
+          let sceneryObstacles = [];
           const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
             if (!cacheHit && model().kvGeom) rawFaces.push({ pts, fill, opts, layer });
             const o = opts || {};
+            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             const normal = o.normal || faceNormal(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
@@ -2043,7 +2048,11 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            const lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
+              const tint=toRGB(fill);
+              if(tint[0]<80 && tint[1]<80 && tint[2]<80)lit='rgba('+tint.slice(0,3).join(',')+','+(tint[3]*.48)+')';
+            }
             faces.push({
               w: pts.map((point) => point.slice()),
               p: pp,
@@ -2368,6 +2377,7 @@
 
           if (cacheHit) {
             lastKvAccessoryGeometry = cachedGeometry.accessories;
+            sceneryObstacles = cachedGeometry.sceneryObstacles || [];
             for (const face of cachedGeometry.faces) { layer = face.layer; quad(face.pts, face.fill, face.opts); }
           } else {
           /* Cast shadow: the roof footprint dropped to the ground and pushed
@@ -2624,6 +2634,7 @@
               if (plc.cantilever === 'left' && xi === 0) return;
               if (plc.cantilever === 'right' && xi === xs.length - 1) return;
               if (plc.freePosts && xi !== 0 && xi !== xs.length - 1) return;
+              sceneryObstacles.push([px,py,px+pd,py+pw]);
               // the head of a post is always under the roof, never in view
               // where the post meets the ground, tight and dark
               const g0 = Math.round(Math.max(pd, pw) * 0.16);
@@ -4531,7 +4542,7 @@
 
           }
 
-            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, accessories: lastKvAccessoryGeometry };
+            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
           }
           layer = 0;
 
@@ -4555,6 +4566,7 @@
               louverZone:panelRoof?null:{x0:post,x1:L-post,y0:post,y1:W-post},
               roofZ:H+beam,roofRise:(fallShown&&panelRoof?fall:0),
               renderer:canvas.dataset.renderer||'',
+              weatherSolids, obstacles:sceneryObstacles, weatherKey:JSON.stringify(state),
               drainage:lastKvAccessoryGeometry
             });
           }
@@ -4575,8 +4587,8 @@
             minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
           })));
           const scale = manualZoom * Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
-          const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2;
-          const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2;
+          const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2 + zoomPan.x*VW;
+          const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2 + zoomPan.y*VH;
 
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
@@ -5829,9 +5841,30 @@
            Vypnutie vráti model na celý záber. */
         let zoomOn = false;
         const zoomUI = document.createElement('button');
-        const setZoom = value => {
-          manualZoom = Math.max(0.9, Math.min(3, value));
-          scheduleStage();
+        const zoomTools=document.createElement('div');
+        zoomTools.className='sp-zoom-tools';zoomTools.hidden=true;
+        zoomTools.innerHTML='<button type="button" data-zoom-step="out" aria-label="Oddialiť model">−</button><output aria-label="Priblíženie">100 %</output><button type="button" data-zoom-step="in" aria-label="Priblížiť model">+</button><button type="button" data-zoom-step="reset">Celý model</button>';
+        let zoomTarget=1,zoomRun=0,zoomAnchor={x:0,y:0},zoomLast=0,setZoomMode=()=>{};
+        const syncZoom=()=>{zoomTools.querySelector('output').value=Math.round(manualZoom*100)+' %';};
+        const anchorAt=(x,y)=>{const r=canvas.getBoundingClientRect();return {x:(x-r.left)/r.width-.5,y:(y-r.top)/r.height-.5};};
+        const applyZoom=value=>{
+          const ratio=value/manualZoom;
+          zoomPan.x=zoomAnchor.x-(zoomAnchor.x-zoomPan.x)*ratio;
+          zoomPan.y=zoomAnchor.y-(zoomAnchor.y-zoomPan.y)*ratio;
+          manualZoom=value;
+          const limit=Math.max(0,manualZoom-1)*.55;
+          zoomPan.x=Math.max(-limit,Math.min(limit,zoomPan.x));zoomPan.y=Math.max(-limit,Math.min(limit,zoomPan.y));
+          syncZoom();scheduleStage();
+        };
+        const setZoom=(value,anchor={x:0,y:0},immediate=false)=>{
+          zoomTarget=Math.max(.75,Math.min(3.5,value));zoomAnchor=anchor;
+          if(immediate||reducedMotion){if(zoomRun)cancelAnimationFrame(zoomRun);zoomRun=0;applyZoom(zoomTarget);return;}
+          if(zoomRun)return;zoomLast=performance.now();
+          const tick=now=>{const dt=Math.min(50,now-zoomLast);zoomLast=now;
+            if(Math.abs(Math.log(zoomTarget/manualZoom))<.001){zoomRun=0;applyZoom(zoomTarget);return;}
+            applyZoom(Math.exp(Math.log(manualZoom)+(Math.log(zoomTarget)-Math.log(manualZoom))*(1-Math.exp(-dt/55))));
+            zoomRun=requestAnimationFrame(tick);
+          };zoomRun=requestAnimationFrame(tick);
         };
         if (stageEl) {
           zoomUI.type = 'button';
@@ -5840,29 +5873,33 @@
           zoomUI.setAttribute('aria-pressed', 'false');
           zoomUI.setAttribute('aria-label', 'Zapnúť priblíženie modelu');
           zoomUI.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20.5 20.5M7.8 10.5h5.4M10.5 7.8v5.4"/></svg><span>Priblížiť</span>';
-          stageEl.appendChild(zoomUI);
-          const setZoomMode = (on) => {
-            zoomOn = on;
+          stageEl.appendChild(zoomUI);stageEl.appendChild(zoomTools);
+          setZoomMode = (on) => {
+            zoomOn = on;zoomTools.hidden=!on;
             zoomUI.setAttribute('aria-pressed', String(on));
             zoomUI.setAttribute('aria-label', on ? 'Vypnúť priblíženie modelu' : 'Zapnúť priblíženie modelu');
-            if (!on) setZoom(1);
+            if (!on) {zoomPan.x=0;zoomPan.y=0;setZoom(1);}
           };
           zoomUI.addEventListener('click', () => setZoomMode(!zoomOn));
+          zoomTools.addEventListener('click',e=>{const b=e.target.closest('[data-zoom-step]');if(!b)return;
+            if(b.dataset.zoomStep==='reset'){zoomPan.x=0;zoomPan.y=0;setZoom(1);}
+            else setZoom(zoomTarget*(b.dataset.zoomStep==='in'?1.15:1/1.15));
+          });
           canvas.addEventListener('wheel',e=>{
             if(!zoomOn)return;
-            e.preventDefault();setZoom(manualZoom*Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*0.003));
+            e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);setZoom(zoomTarget*Math.exp(-Math.max(-100,Math.min(100,delta))*.0016),anchorAt(e.clientX,e.clientY));
           },{passive:false});
           /* Turning the model is part of the product, so it cannot be mouse-only.
              Arrow keys orbit, Home returns to the opening view. */
           const hint = document.createElement('p');
           hint.className = 'sp-stage__hint';
           hint.setAttribute('aria-hidden', 'true');
-          hint.textContent = 'Ťahaním otočíte · priblíženie zapnete tlačidlom';
+          hint.textContent = 'Ťahaním otočíte · dvoma prstami priblížite · Shift + ťah posunie detail';
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
             if(e.target.closest('button,input,select,textarea'))return;
-            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom*1.2);return;}
-            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom/1.2);return;}
+            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget*1.15);return;}
+            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget/1.15);return;}
             stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
@@ -5871,7 +5908,7 @@
             else if (e.key === 'ArrowRight') view.az += step;
             else if (e.key === 'ArrowUp') view.el = Math.min(1.45, view.el + step * 0.7);
             else if (e.key === 'ArrowDown') view.el = Math.max(EL_FLOOR(), view.el - step * 0.7);
-            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); setZoom(1); }
+            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); zoomPan.x=0;zoomPan.y=0;setZoom(1); }
             else used = false;
             if (!used) return;
             e.preventDefault();
@@ -5880,10 +5917,10 @@
         }
         if (stageEl) {
           stageEl.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('button, input, select, textarea, label, [role="group"]')) return;
+            if (!canvas.contains(e.target)) return;
             stopCamera();
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
-            if(orbitPointers.size===2){const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
+            if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
             dragging = true; lastX = e.clientX; lastY = e.clientY;
             stageEl.setPointerCapture(e.pointerId);
           });
@@ -5892,11 +5929,17 @@
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size>1){
               const p=[...orbitPointers.values()],distance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);
-              if(pinchDistance>0&&zoomOn)setZoom(manualZoom*distance/pinchDistance);
+              if(pinchDistance>0&&zoomOn)setZoom(manualZoom*distance/pinchDistance,anchorAt((p[0][0]+p[1][0])/2,(p[0][1]+p[1][1])/2),true);
               pinchDistance=distance;return;
             }
             // Drag right, model turns right: the point under the cursor has to
             // follow the cursor, and increasing az moves it right on screen.
+            if(e.shiftKey&&zoomOn&&manualZoom>1){
+              const r=canvas.getBoundingClientRect(),limit=(manualZoom-1)*.55;
+              zoomPan.x=Math.max(-limit,Math.min(limit,zoomPan.x+(e.clientX-lastX)/r.width));
+              zoomPan.y=Math.max(-limit,Math.min(limit,zoomPan.y+(e.clientY-lastY)/r.height));
+              lastX=e.clientX;lastY=e.clientY;scheduleStage();return;
+            }
             viewTouched = true;
             view.az += (e.clientX - lastX) * 0.006;
             view.el = Math.max(EL_FLOOR(), Math.min(1.45, view.el + (e.clientY - lastY) * 0.005));

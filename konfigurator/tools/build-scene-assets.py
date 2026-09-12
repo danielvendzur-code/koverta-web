@@ -196,17 +196,17 @@ def endcap(x0,sgn,depth,tint,sec=section):
 
 # stations: dense at the ends and around the wheel openings
 _xs={0,LEN,COWL,ROOF_F,ROOF_R,DECK_R,BPILLAR[0],BPILLAR[1]}
-for a,b,st in [(0,400,16),(400,1500,30),(1500,4300,36),(4300,LEN,20)]:
+for a,b,st in [(0,400,32),(400,1500,75),(1500,4300,105),(4300,LEN,40)]:
     v=a
     while v<b: _xs.add(round(v,1)); v+=st
 for axle in (FA,RA):
     v=axle-ARCH-160
-    while v<axle+ARCH+160: _xs.add(round(v,1)); v+=15
+    while v<axle+ARCH+160: _xs.add(round(v,1)); v+=28
 XS=sorted(x for x in _xs if 0<=x<=LEN)
 FRONT=[x for x in XS if x<=COWL];CABIN=[x for x in XS if COWL<=x<=DECK_R];REAR=[x for x in XS if x>=DECK_R]
 
 for sign in (-1,1):
-    build(XS,[(floorpan,0,3),(trim,0,2),(paint,1,6),(paint,1,5),(paint,1,9),None],sign)
+    build(XS,[(floorpan,0,3),(trim,0,2),(paint,1,4),(paint,1,4),(paint,1,6),None],sign)
     build(FRONT,[None]*5+[(paint,1,6)],sign)
     build(CABIN,[None]*5+[(inner,0,3)],sign)
     build(REAR,[None]*5+[(paint,1,6)],sign)
@@ -250,6 +250,12 @@ for axle in (FA,RA):
         edge=[[x,sign*(hw(x)*.947-260),sill(x)-30] for x in xs]
         mesh([edge,[[p[0],p[1],184] for p in edge]],(34,37,40),0,flip=sign>0)
 
+# Rolled 12 mm wheel-arch lip: a small formed edge seated on the opening.
+for axle in (FA,RA):
+    xs=[x for x in XS if abs(x-axle)<ARCH+120 and sill(x)>255]
+    for sign in (-1,1):
+        mesh([[[x,sign*(hw(x)*.947+off),sill(x)+dz] for off,dz in [(-2,0),(3,2),(5,9),(2,15)]] for x in xs],paint,1,flip=sign>0)
+
 # ---- greenhouse -----------------------------------------------------------
 def roofz(x):
     return curve(x,[COWL,1830,2050,ROOF_F,2800,ROOF_R,3700,3900,DECK_R],
@@ -267,18 +273,18 @@ def gsection(x):
         [(g,rail),(g*.945,r-min(58.,h*.13)),(g*.79,r-min(15.,h*.045)),(g*.44,r+k*.55),(0,r+k)],
     ]
 
-def gxs(a,b,step=16):
+def gxs(a,b,step=40):
     v=a;out=[]
     while v<b-1e-6: out.append(round(v,1)); v+=step
     out.append(b);return out
 
 pillar=(26,28,30)
 for sign in (-1,1):
-    build(gxs(COWL,ROOF_F),[(paint,1,5),(glass,2,7)],sign,gsection)            # A pillar + windscreen
+    build(gxs(COWL,ROOF_F),[(paint,1,4),(glass,2,6)],sign,gsection)            # A pillar + windscreen
     for a,b in [(ROOF_F,BPILLAR[0]),(BPILLAR[1],ROOF_R)]:
-        build(gxs(a,b),[(glass,2,5),(paint,1,7)],sign,gsection)                # side glass + roof
-    build(gxs(*BPILLAR,step=12),[(pillar,0,5),(paint,1,7)],sign,gsection)      # B pillar
-    build(gxs(ROOF_R,DECK_R),[(paint,1,5),(glass,2,7)],sign,gsection)          # C pillar + backlight
+        build(gxs(a,b),[(glass,2,4),(paint,1,6)],sign,gsection)                # side glass + roof
+    build(gxs(*BPILLAR,step=28),[(pillar,0,4),(paint,1,6)],sign,gsection)      # B pillar
+    build(gxs(ROOF_R,DECK_R),[(paint,1,4),(glass,2,6)],sign,gsection)          # C pillar + backlight
     # bright surround along the belt and over the roof rail
     tube([COWL+70,sign*(dhw(COWL)-4),deck(COWL)+22],[DECK_R-90,sign*(dhw(DECK_R)-4),deck(DECK_R)+18],6,chrome,3,8)
     for a,b in [(ROOF_F+40,BPILLAR[0]),(BPILLAR[1],ROOF_R-30)]:
@@ -300,9 +306,9 @@ for sign in (-1,1):
     mesh([[[x,sign*(flank_y(x,z)-3),z] for z in (818,842,902,930)] for x in xs],(52,26,28),0,flip=sign>0)
     mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (848,894)] for x in xs],tail,4,flip=sign>0)
     for x in (2380,3260):
-        pts=[[x,sign*(flank_y(x,sill(x)+40)-2),sill(x)+40],[x,sign*(flank_y(x,crease(x))-2),crease(x)],
+        pts=[[x,sign*(flank_y(x,sill(x)+40)+2),sill(x)+40],[x,sign*(flank_y(x,crease(x))+2),crease(x)],
              [x,sign*(dhw(x)+4),deck(x)-16]]
-        for a,b in zip(pts,pts[1:]): tube(a,b,2.2,(78,84,89),0,5)
+        for a,b in zip(pts,pts[1:]): tube(a,b,1.8,(58,64,68),0,5)
     for x in (2250,3130):
         ellipsoid([x,sign*(flank_y(x,crease(x)+46)+2),crease(x)+46],[76,9,14],chrome,3,18,8)
     # mirror: a tapered shell on a short stalk, its rear face the glass
@@ -320,20 +326,20 @@ for axle in (FA,RA):
         yc=sign*808
         def tyre(u,v,axle=axle,yc=yc):
             a=u*math.tau
-            prof=[(-TW,WR-108),(-TW+18,WR-50),(-TW+9,WR-9),(-TW*.52,WR),
-                  (TW*.52,WR),(TW-9,WR-9),(TW-18,WR-50),(TW,WR-108)]
+            prof=[(-TW,WR-131),(-TW+18,WR-50),(-TW+9,WR-9),(-TW*.52,WR),
+                  (TW*.52,WR),(TW-9,WR-9),(TW-18,WR-50),(TW,WR-131)]
             i=min(len(prof)-2,int(v*(len(prof)-1)));t=v*(len(prof)-1)-i
             oy=prof[i][0]+(prof[i+1][0]-prof[i][0])*t;r=prof[i][1]+(prof[i+1][1]-prof[i][1])*t
             return [axle+r*math.cos(a),yc+oy,WR+r*math.sin(a)]
         mesh([[tyre(i/54,j/7) for j in range(8)] for i in range(55)],rubber,0,flip=sign<0)
         outer=yc+sign*TW
-        tube([axle,outer-sign*86,WR],[axle,outer-sign*4,WR],252,(50,56,62),3,44)
+        tube([axle,outer-sign*86,WR],[axle,outer-sign*4,WR],239,(50,56,62),3,44)
         tube([axle,outer-sign*30,WR],[axle,outer-sign*24,WR],210,(122,126,128),3,40)
         for j in range(5):
             for off in (-.17,.17):
                 a=j*math.tau/5+off
                 tube([axle+58*math.cos(a+off*.5),outer-sign*4,WR+58*math.sin(a+off*.5)],
-                     [axle+238*math.cos(a),outer+sign*2,WR+238*math.sin(a)],11,alloy,3,6)
+                     [axle+228*math.cos(a),outer+sign*2,WR+228*math.sin(a)],11,alloy,3,6)
         tube([axle,outer-sign*2,WR],[axle,outer+sign*10,WR],62,alloy,3,22)
         ellipsoid([axle,outer+sign*13,WR],[32,6,32],(66,70,74),3,16,8)
         for j in range(5):
@@ -376,62 +382,98 @@ if len(sys.argv)>1:
 frame=(58,62,66); fabric=(206,201,190); fabric2=(178,172,160); teak=(148,116,78)
 slate=(96,101,106); rugA=(196,192,182); rugB=(168,166,158); cushion=(120,132,138)
 
-def rbox(c,s,e,color,mat=0,nu=22,nv=14):
+def rbox(c,s,e,color,mat=0,nu=22,nv=14,lean=0):
     """A rounded box. e near 0 is a sharp frame, e near .5 a soft cushion."""
     def p(t,ex):
         return math.copysign(abs(math.cos(t))**ex,math.cos(t)),math.copysign(abs(math.sin(t))**ex,math.sin(t))
     def f(u,v):
         a=u*math.tau;b=v*math.pi
         ca,sa=p(a,e);cb,sb=p(b,e)
-        return [c[0]+s[0]*ca*sb,c[1]+s[1]*sa*sb,c[2]+s[2]*cb]
+        y=s[1]*sa*sb;z=s[2]*cb
+        return [c[0]+s[0]*ca*sb,c[1]+y*math.cos(lean)-z*math.sin(lean),c[2]+y*math.sin(lean)+z*math.cos(lean)]
     surface(f,nu,nv,color,mat,True)
 
-def leg(x,y,z0,z1,r=26):
+def leg(x,y,z0,z1,r=17):
     tube([x,y,z0],[x,y,z1],r,frame,0,8)
+
+def stitched(c,s,e):
+    # Upper welt, with tiny stitches in the same fabric tone.
+    v=.62;sb=math.sin(v)**e;cb=math.cos(v)**e
+    pts=[]
+    for i in range(49):
+        a=i*math.tau/48
+        pts.append([c[0]+s[0]*math.copysign(abs(math.cos(a))**e,math.cos(a))*sb,
+                    c[1]+s[1]*math.copysign(abs(math.sin(a))**e,math.sin(a))*sb,c[2]+s[2]*cb])
+    for i,(a,b) in enumerate(zip(pts,pts[1:])):
+        tube(a,b,1.4,(170,166,155),5,4)
+        if i%2==0:
+            p=np.array(a)*.35+np.array(b)*.65;q=np.array(a)*.25+np.array(b)*.75
+            p[2]+=1.5;q[2]+=1.5;tube(p,q,.6,(224,218,202),5,3)
 
 def seat_unit(cx,cy,width,face):
     """One sofa or armchair: frame plinth, arms, seat and back cushions."""
-    depth=850.;seat=400.;armh=600.;backh=780.
+    depth=760.;seat=400.;armh=600.;backh=780.
     y0=cy-face*depth/2   # front edge
     y1=cy+face*depth/2   # back edge
-    rbox([cx,cy,255],[width/2-40,depth/2-60,95],.14,frame,0)
+    rbox([cx,cy,265],[width/2-50,depth/2-55,35],.14,frame,0)
     for sx in (-1,1):
         for sy in (-1,1):
-            leg(cx+sx*(width/2-110),cy+sy*(depth/2-130),0,180)
+            leg(cx+sx*(width/2-110),cy+sy*(depth/2-130),0,250)
     # arms
     for sx in (-1,1):
-        rbox([cx+sx*(width/2-70),cy+face*40,(350+armh)/2],[68,depth/2-90,(armh-350)/2],.18,frame,0)
+        rbox([cx+sx*(width/2-42),cy+face*40,(350+armh)/2],[24,depth/2-90,(armh-350)/2],.18,frame,0)
     # seat cushions
     n=max(1,int(round(width/780)))
     for i in range(n):
         w=(width-300)/n
-        rbox([cx-width/2+150+w*(i+.5),cy-face*70,seat+10],[w/2-14,depth/2-150,92],.42,fabric,0)
+        rbox([cx-width/2+150+w*(i+.5),cy-face*70,seat+10],[w/2-14,depth/2-110,78],.42,fabric,5)
+        stitched([cx-width/2+150+w*(i+.5),cy-face*70,seat+10],[w/2-14,depth/2-110,78],.42)
     # back cushions, leaning into the frame
     for i in range(n):
         w=(width-300)/n
-        rbox([cx-width/2+150+w*(i+.5),y1-face*150,(seat+backh)/2+40],[w/2-14,110,(backh-seat)/2],.40,fabric2,0)
+        rbox([cx-width/2+150+w*(i+.5),y1-face*150,(seat+backh)/2+40],[w/2-14,85,(backh-seat)/2],.40,fabric2,5,lean=-face*.12)
     # a throw cushion at one end
-    rbox([cx-width/2+300,cy-face*90,seat+180],[150,60,140],.45,cushion,0,16,10)
+    rbox([cx-width/2+300,cy-face*90,seat+180],[150,60,140],.45,cushion,5,16,10)
 
 def table(cx,cy):
-    rbox([cx,cy,368],[620,350,22],.10,slate,0)
-    rbox([cx,cy,300],[560,300,60],.12,teak,0)
+    # Slim aluminium base and separate teak slats; enough knee room at the seats.
+    rbox([cx,cy,326],[540,248,12],.10,frame,0)
+    for j in range(7):
+        rbox([cx,cy-240+j*80,356],[575,38,16],.08,tuple(v+(j%3-1)*4 for v in teak),6,16,10)
     for sx in (-1,1):
-        for sy in (-1,1): leg(cx+sx*540,cy+sy*280,0,300,24)
-    # a tray with two glasses reads as somebody actually sitting here
-    rbox([cx+120,cy,398],[170,120,10],.12,(236,232,222),0)
-    for dx in (-70,70):
-        tube([cx+120+dx,cy,404],[cx+120+dx,cy,506],38,(214,226,230),2,12)
+        for sy in (-1,1):leg(cx+sx*508,cy+sy*226,0,328,14)
+    rbox([cx+180,cy,387],[160,103,10],.12,(70,75,76),0,16,8)
+    for dx in (-60,60):tube([cx+180+dx,cy,398],[cx+180+dx,cy,476],29,(188,207,212),2,12)
+    # Open-frame lantern, glass and a candle. Small, deliberately quiet detail.
+    lx=cx-260;ly=cy+30
+    rbox([lx,ly,382],[65,65,8],.1,frame,0,12,8)
+    rbox([lx,ly,575],[65,65,6],.1,frame,0,12,8)
+    for sx in (-1,1):
+        for sy in (-1,1):tube([lx+sx*60,ly+sy*60,388],[lx+sx*60,ly+sy*60,575],3.5,frame,0,6)
+    tube([lx,ly,390],[lx,ly,495],25,(224,215,187),0,16)
+    ellipsoid([lx,ly,503],[4,4,9],(239,179,95),4,8,6)
+    tube([lx-22,ly,581],[lx-22,ly,608],3,frame,0,6)
+    tube([lx-22,ly,608],[lx+22,ly,608],3,frame,0,6)
+    tube([lx+22,ly,608],[lx+22,ly,581],3,frame,0,6)
 
 # rug: two tones so it does not read as a painted rectangle
 for i in range(9):
-    t0=-1150+i*2300/9;t1=-1150+(i+1)*2300/9
+    t0=-1450+i*2900/9;t1=-1450+(i+1)*2900/9
     mesh([[[-1580,t0,4],[1580,t0,4]],[[-1580,t1,4],[1580,t1,4]]],rugA if i%2 else rugB,0)
-mesh([[[-1580,-1150,3],[-1580,1150,3]],[[-1510,-1085,7],[-1510,1085,7]]],(150,148,140),0)
-mesh([[[1580,-1150,3],[1580,1150,3]],[[1510,-1085,7],[1510,1085,7]]],(150,148,140),0,flip=True)
+mesh([[[-1580,-1450,3],[-1580,1450,3]],[[-1510,-1385,7],[-1510,1385,7]]],(150,148,140),0)
+mesh([[[1580,-1450,3],[1580,1450,3]],[[1510,-1385,7],[1510,1385,7]]],(150,148,140),0,flip=True)
 
-seat_unit(0,-700,2280,1)
-seat_unit(-690,690,880,-1)
-seat_unit(690,690,880,-1)
+seat_unit(0,-1000,2280,-1)
+seat_unit(-690,1000,880,1)
+seat_unit(690,1000,880,1)
 table(0,0)
+# Planter stays within the rug envelope and clear of the table/seat approaches.
+tube([1360,-950,0],[1360,-950,345],115,(116,117,109),0,24)
+ellipsoid([1360,-950,347],[107,107,7],(62,54,44),0,24,6)
+tube([1360,-950,350],[1360,-950,700],9,(102,85,62),6,8)
+for j in range(12):
+    a=j*2.39996;z=450+j*20
+    end=[1360+math.cos(a)*120,-950+math.sin(a)*100,z+55]
+    tube([1360,-950,z-25],end,2.5,(101,99,65),0,5)
+    ellipsoid(end,[48,20,12],(82+j%3*6,101+j%4*4,69),0,12,6)
 save('patio-lounge')
