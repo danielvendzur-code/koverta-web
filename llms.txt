@@ -36,7 +36,7 @@
 - Strecha: ISO panel, sklo alebo otočné lamely podľa konkrétneho produktu. Pri carportoch má rad F integrovaný spád, rad SL viditeľný spád a rozdielnu výšku stĺpov.
 - Odvodnenie sa rieši podľa konkrétneho systému a zostavy; nemožno ho opisovať jednou univerzálnou vetou pre celý sortiment Soltec.
 - Záruka: 7 rokov na konštrukciu, 10 rokov na ISO panely a na vonkajšie kuchyne.
-- Bioklimatická pergola: patentované otočné lamely (SI 24401), norma EN 13561, jeden modul do 45 m².
+- Bioklimatická pergola: patentované otočné lamely (SI 24401), norma EN 13561, vybrané zostavy jedného modulu do 40 m².
 - Modely carportov: F170, F240, SL170, SL240. Typorady pergol: SL 170/28 až SL 240/60.
 
 ## Povolenia
@@ -63,9 +63,9 @@ Mapa s rozpisom je na stránke [Realizácie](https://danielvendzur-code.github.i
 - [Úvod](https://danielvendzur-code.github.io/koverta-web/): prehľad riešení, ceny, realizácie, recenzie.
 - [Prístrešky pre autá](https://danielvendzur-code.github.io/koverta-web/pristresky-pre-auta/): katalógové rozmery a ceny, skladba konštrukcie, podklad a kotvenie.
 - [Záhradné prístrešky](https://danielvendzur-code.github.io/koverta-web/zahradne-pristresky/): zastrešenie terasy, vstupu a posedenia.
-- [Bioklimatické pergoly](https://danielvendzur-code.github.io/koverta-web/bioklimaticke-pergoly/): typorady, nosnosti, farby, doplnky.
+- [Bioklimatické pergoly](https://danielvendzur-code.github.io/koverta-web/bioklimaticke-pergoly/): šesť modelov podľa rozpätia a zaťaženia, porovnanie radov 170/240, farby a doplnky.
 - [Pevné prestrešenia](https://danielvendzur-code.github.io/koverta-web/pevne-prestresenia/): rady F a G, ISO panel a sklo.
-- [Tienenie](https://danielvendzur-code.github.io/koverta-web/tienenie/): ZIP rolety, posuvné panely, lamelové clony, brisoleje.
+- [Tienenie](https://danielvendzur-code.github.io/koverta-web/tienenie/): ZIP K130, posuvné H50, pevné FW25/FI30, sklo G1/G2 a otočné brisoleje E300 podľa použitia.
 - [Carport Soltec](https://danielvendzur-code.github.io/koverta-web/carport-soltec/): hliníkové carporty a uzamykateľný box.
 - [Vonkajšie kuchyne](https://danielvendzur-code.github.io/koverta-web/outdoor-kuchyne/): moduly Chef a Station, výbava, príprava rozvodov.
 - [Realizácie](https://danielvendzur-code.github.io/koverta-web/realizacie/): fotografie z montáží.
