@@ -366,7 +366,7 @@
          a obálku vybavenia, takže na streche auta neprepadne cez plech.
          Dopad nie je zmiznutie: pruh sa stiahne do striešky a dohasne. */
       const rain=program(gl,`precision highp float;attribute vec4 seed;attribute vec2 corner;attribute vec4 impact;uniform float viewportHeight;${projection}
-        uniform float clock;uniform float roofBase;uniform float roofRise;uniform float density;
+        uniform float clock;uniform float roofBase;uniform float roofRise;uniform float density;uniform vec3 eye;
         varying float opacity;varying float splash;varying vec2 vUv;
         void main(){
           float x=seed.x*(extent.x+2600.)-1300.;float y=seed.y*(extent.y+2600.)-1300.;
@@ -379,7 +379,10 @@
           vec3 b=cross(n,t);
           vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
           gl_Position=project(mix(fall,pool,land));vUv=vec2(corner.x,corner.y*2.-1.);
-          opacity=(.25+seed.w*.23)*(1.-land*.65)*density;splash=land;}`,
+          // A contact ring belongs to the wet side of its surface. Seen from
+          // underneath, it must not shine through a thin sheet or the ground.
+          float facing=smoothstep(0.,.12,dot(n,normalize(eye-vec3(x,y,stopZ))));
+          opacity=(.25+seed.w*.23)*(1.-land*.65)*density*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
@@ -439,6 +442,7 @@
         gl.enableVertexAttribArray(a);gl.enableVertexAttribArray(b);gl.enableVertexAttribArray(h);
         gl.vertexAttribPointer(a,4,gl.FLOAT,false,40,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,40,16);gl.vertexAttribPointer(h,4,gl.FLOAT,false,40,24);
         gl.uniform1f(U(p,'clock'),time);gl.uniform1f(U(p,'roofBase'),c.roofZ);gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
+        gl.uniform3f(U(p,'eye'),c.L/2-Math.sin(c.az)*Math.cos(c.el)*camera.DIST,c.W/2+Math.cos(c.az)*Math.cos(c.el)*camera.DIST,c.H/2+Math.sin(c.el)*camera.DIST);
         gl.uniform1f(U(p,'density'),state.intensity==='light'?.72:state.intensity==='heavy'?1.1:1);
         if(rainData)gl.drawArrays(gl.TRIANGLES,0,(state.intensity==='light'?180:state.intensity==='heavy'?600:360)*6);
         gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);gl.disableVertexAttribArray(h);
