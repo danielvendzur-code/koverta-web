@@ -1462,8 +1462,7 @@
 #SoltecPremium .sp-cfg :focus-visible { outline: 3px solid #b98d00; outline-offset: 3px; }
 #SoltecPremium .sp-result__price { font-weight: 700; letter-spacing: -.04em; }
 #SoltecPremium .sp-stage__hint { max-width: calc(100% - 3rem); font-size: 1.1rem; background: rgba(18,23,26,.7); }
-/* Jeden prepínač, nie ovládací panel. Priblíženie je doplnok, takže tu nie sú
-   percentá ani +/− a tlačidlo drží typografiu a paletu zvyšku webu. */
+/* Zoom stays opt-in; its detail controls sit below the toggle. */
 #SoltecPremium .sp-zoom {
   position: absolute; top: 5.5rem; right: 1.4rem; z-index: 3;
   display: inline-flex; align-items: center; gap: .6rem;
@@ -1525,10 +1524,10 @@
   #SoltecPremium .sp-scene__paint { margin-left: 0; }
   #SoltecPremium .sp-drain-guide ol { flex-direction: column; }
 }
-#SoltecPremium .sp-zoom-tools { position: absolute; z-index: 8; right: 1.2rem; top: 5.2rem; display: flex; align-items: center; gap: .4rem; padding: .4rem; border: 1px solid #d8ddda; border-radius: 10px; background: rgba(255,255,253,.96); box-shadow: 0 3px 14px #26332f12; }
+#SoltecPremium .sp-zoom-tools { position: absolute; z-index: 8; right: 1.2rem; top: 9.8rem; display: flex; align-items: center; gap: .4rem; padding: .4rem; border: 1px solid #d8ddda; border-radius: 10px; background: rgba(255,255,253,.96); box-shadow: 0 3px 14px #26332f12; }
 #SoltecPremium .sp-zoom-tools[hidden] { display: none; }
-#SoltecPremium .sp-zoom-tools button { min-width: 40px; min-height: 40px; border: 0; border-radius: 7px; background: #f0f2ed; color: #303c40; font: inherit; font-size: 1.6rem; cursor: pointer; }
+#SoltecPremium .sp-zoom-tools button { min-width: 44px; min-height: 44px; border: 0; border-radius: 7px; background: #f0f2ed; color: #303c40; font: inherit; font-size: 1.6rem; cursor: pointer; }
 #SoltecPremium .sp-zoom-tools button:last-child { padding: 0 1rem; font-size: 1.2rem; }
 #SoltecPremium .sp-zoom-tools output { min-width: 5rem; text-align: center; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 #SoltecPremium .sp-zoom-tools button:focus-visible { outline: 2px solid #c18e22; outline-offset: 2px; }
-@media(max-width:749px) { #SoltecPremium .sp-zoom-tools { top: 8.8rem; right: .8rem; } }
+@media(max-width:749px) { #SoltecPremium .sp-zoom-tools { top: 9.8rem; right: .8rem; } }
