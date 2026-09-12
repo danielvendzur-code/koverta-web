@@ -810,24 +810,11 @@
       if (next) next.addEventListener('click', (e) => step(e, 1));
       if (count) count.textContent = '1 / ' + srcs.length;
 
-      /* Fotografie sa striedajú, len kým je karta pod myšou alebo pod
-         zameraním. Bez toho stoja — striedanie samo od seba odvádzalo
-         pozornosť a nikto oň nežiadal. Šípky na preklikávanie sú preč,
-         fotku netreba hľadať klikaním. */
+      /* Karta má vždy jednu stabilnú fotografiu. Predchádzajúce automatické
+         striedanie pri hoveri menilo obsah pod kurzorom a pôsobilo ako pohyb
+         obrázka; po odstránení šípok preto nie je dôvod spúšťať slideshow. */
       if (prev) prev.remove();
       if (next) next.remove();
-      if (REDUCED.matches) return;
-
-      let samocinne = 0;
-      const spusti = () => { if (!samocinne) samocinne = window.setInterval(() => show(i + 1), 2600); };
-      const zastav = () => {
-        if (samocinne) { window.clearInterval(samocinne); samocinne = 0; }
-        if (i !== 0) show(0);          // po odchode sa vráti prvá fotka
-      };
-      card.addEventListener('mouseenter', spusti);
-      card.addEventListener('mouseleave', zastav);
-      card.addEventListener('focusin', spusti);
-      card.addEventListener('focusout', zastav);
     });
   }
 
@@ -1737,11 +1724,11 @@
 
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
-        foto: './assets/koverta-pristresok-auto-trnava-sikmy.jpg',
-        preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha; odvodnenie a vedenie zvodu sa riešia podľa konkrétnej zostavy.' },
+        foto: './assets/koverta-pristresok-vahovce-takac-upscaled.jpg',
+        preco: 'Oceľová konštrukcia z vlastnej výroby. Pultová strecha z trapézového profilu má lemovanie, odkvap a izoláciu proti prehrievaniu a hluku dažďa; voda odchádza odkvapom a zvodom.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
         foto: './assets/soltec-carport-sl240-real.jpg',
-        preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má širšiu výbavu, rad SL vyššiu nosnosť; box je samostatný doplnok.' },
+        preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
@@ -1936,6 +1923,82 @@
       spustac.focus();
     });
     panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri.click(); });
+  }
+
+  /* --- 4f · Značka nie je produkt ---------------------------------------
+     Odkaz „Zobraziť ponuku“ pri značke nesmie poslať návštevníka na jednu
+     náhodnú podstránku. Otvorí preto krátky rozcestník riešení danej značky.
+     Bez skriptu odkazy stále smerujú na sekciu Naša ponuka. */
+  function initBrandDialog(root) {
+    const dialog = root.querySelector('[data-k-brand-dialog]');
+    const triggers = [].slice.call(root.querySelectorAll('[data-k-brand-jump]'));
+    if (!dialog || !triggers.length) return;
+    const title = dialog.querySelector('[data-k-brand-title]');
+    const label = dialog.querySelector('[data-k-brand-label]');
+    const intro = dialog.querySelector('[data-k-brand-intro]');
+    const links = dialog.querySelector('[data-k-brand-links]');
+    const closeButton = dialog.querySelector('.kh-brand-dialog__close');
+    let returnTo = null;
+
+    const choices = {
+      koverta: {
+        label: 'Vlastná výroba Koverta',
+        title: 'Čo chcete zastrešiť?',
+        intro: 'Vyberte prístrešok pre auto alebo riešenie pre terasu a záhradu.',
+        links: [
+          ['./pristresky-pre-auta/', 'Prístrešky pre autá', 'Katalógové aj atypické oceľové konštrukcie pre 1 až 3 autá.'],
+          ['./zahradne-pristresky/', 'Záhradné prístrešky', 'Prestrešenie terasy, vstupu alebo záhradného posedenia.']
+        ]
+      },
+      soltec: {
+        label: 'Hliníkový systém Soltec',
+        title: 'Vyberte riešenie Soltec',
+        intro: 'Carport, strecha terasy, regulovateľný tieň, bočné uzavretie alebo kuchyňa do exteriéru.',
+        links: [
+          ['./carport-soltec/', 'Carporty pre autá', 'Štyri modely F170, F240, SL170 a SL240.'],
+          ['./bioklimaticke-pergoly/', 'Bioklimatické pergoly', 'Otočné lamely pre tieň, vetranie a ochranu pred dažďom.'],
+          ['./pevne-prestresenia/', 'Pevné prestrešenia', 'ISO panel, sklo alebo zelená strecha podľa typového radu.'],
+          ['./tienenie/', 'Tienenie a bočné uzavretie', 'ZIP rolety, pevné a posuvné panely alebo sklo.'],
+          ['./outdoor-kuchyne/', 'Vonkajšie kuchyne', 'Modulové kuchyne a grilovacie stanice do exteriéru.']
+        ]
+      }
+    };
+
+    const close = () => {
+      dialog.hidden = true;
+      document.documentElement.classList.remove('k-dialog-open');
+      if (returnTo) returnTo.focus();
+    };
+    const open = (key, trigger) => {
+      const data = choices[key];
+      if (!data) return;
+      returnTo = trigger;
+      label.textContent = data.label;
+      title.textContent = data.title;
+      intro.textContent = data.intro;
+      links.textContent = '';
+      data.links.forEach((item) => {
+        const a = document.createElement('a');
+        a.href = item[0];
+        const strong = document.createElement('strong');
+        strong.textContent = item[1];
+        const span = document.createElement('span');
+        span.textContent = item[2];
+        a.appendChild(strong);
+        a.appendChild(span);
+        links.appendChild(a);
+      });
+      dialog.hidden = false;
+      document.documentElement.classList.add('k-dialog-open');
+      closeButton.focus();
+    };
+
+    triggers.forEach((trigger) => trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      open(trigger.dataset.kBrandJump, trigger);
+    }));
+    dialog.querySelectorAll('[data-k-brand-close]').forEach((node) => node.addEventListener('click', close));
+    dialog.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
   }
 
 
@@ -3120,7 +3183,7 @@
     if (autaItem) {
       const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
       if (lis[0]) {
-        setMenuPhoto(lis[0], 'koverta-pristresok-auto-trnava-sikmy.jpg');
+        setMenuPhoto(lis[0], 'koverta-pristresok-vahovce-takac-upscaled.jpg');
         addDesc(lis[0], 'Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby.');
       }
       if (lis[1]) {
@@ -3139,7 +3202,7 @@
       setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
       setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pevne-prestresenie-mokrance.jpg');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
-      setMenuPhoto(byHref('tienenie'), 'soltec-canopy-panels-real.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-tienenie-posuvne-panely-h50.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
       addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
       addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
@@ -3181,12 +3244,12 @@
     }
 
     /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
-    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-auto-trnava-sikmy.jpg');
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-vahovce-takac-upscaled.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pevne-prestresenie-mokrance.jpg');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
-    setDrawerPhoto('tienenie', 'soltec-canopy-panels-real.jpg');
+    setDrawerPhoto('tienenie', 'soltec-tienenie-posuvne-panely-h50.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
 
     const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
@@ -3269,7 +3332,7 @@
 
       item.addEventListener('mouseenter', open);
       item.addEventListener('mouseleave', () => {
-        hoverTimer = setTimeout(close, 140);
+        hoverTimer = setTimeout(close, 260);
       });
       trigger.addEventListener('click', (e) => {
         e.preventDefault();
@@ -3389,7 +3452,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initTyp2];
+                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
 
   const davkuj = (ulohy) => {
     let i = 0;

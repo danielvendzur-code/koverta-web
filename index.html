@@ -107,7 +107,7 @@
   }
 </style>
 </head>
-<body>
+<body class="k-home">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <a class="kv-skip" href="#obsah">Preskočiť na obsah</a>
 
@@ -325,8 +325,8 @@
 <!-- ============================================================ 01 · HERO -->
 <section class="kh-hero" aria-labelledby="heroTitle">
   <div class="kh-hero__bg">
-    <img src="./assets/koverta-hero-poster.jpg" width="1920" height="1080" alt="Bioklimatická pergola so sedením na terase pri bazéne" fetchpriority="high" decoding="async">
-    <video class="kh-hero__video" data-k-video="./assets/koverta-hero.mp4" data-k-video-webm="./assets/koverta-hero.webm" poster="./assets/koverta-hero-poster.jpg" autoplay muted loop playsinline preload="none" tabindex="-1" aria-hidden="true"></video>
+    <img src="./assets/koverta-hero-sibenik-poster.jpg" width="1920" height="1080" alt="Bioklimatická pergola Soltec na kamennom dome v Šibeniku" fetchpriority="high" decoding="async">
+    <video class="kh-hero__video" data-k-video="./assets/koverta-hero-sibenik.mp4" data-k-video-webm="./assets/koverta-hero-sibenik.webm" poster="./assets/koverta-hero-sibenik-poster.jpg" autoplay muted loop playsinline preload="none" tabindex="-1" aria-hidden="true"></video>
     <span class="kh-hero__scrim" aria-hidden="true"></span>
   </div>
 
@@ -429,7 +429,7 @@
     <ul class="kh-ponuka__mriezka">
       <li class="kh-ponuka__kus kh-ponuka__kus--hlavna k-rise" data-k-delay="1">
         <a class="kh-ponuka__karta" href="./pristresky-pre-auta/">
-          <span class="kh-ponuka__foto"><img loading="lazy" decoding="async" src="./assets/koverta-pristresok-auto-trnava-hero.jpg" alt="Prístrešok Koverta pre dve autá pri rodinnom dome v Trnave" title="Prístrešok Koverta — realizácia Trnava" width="1600" height="1200"></span>
+          <span class="kh-ponuka__foto"><img loading="lazy" decoding="async" src="./assets/koverta-pristresok-vahovce-takac-upscaled.jpg" alt="Prístrešok Koverta pre auto vo Váhovciach, realizácia Takáč" title="Prístrešok Koverta — Váhovce, realizácia Takáč" width="1680" height="945"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--koverta"><img src="./assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Prístrešky pre autá</span>
@@ -484,7 +484,7 @@
       </li>
       <li class="kh-ponuka__kus k-rise" data-k-delay="2">
         <a class="kh-ponuka__karta" href="./tienenie/">
-          <span class="kh-ponuka__foto"><img class="k-photo-crop--tienenie" src="./assets/soltec-canopy-panels-real.jpg" width="1280" height="960" alt="Pergola s bočnou ZIP roletou a lamelovým panelom" loading="lazy" decoding="async" title="Vonkajšie tienenie Soltec — ZIP a lamelové panely"></span>
+          <span class="kh-ponuka__foto"><img class="k-photo-crop--tienenie" src="./assets/soltec-tienenie-posuvne-panely-h50.jpg" width="1200" height="900" alt="Posuvné tieniace panely Soltec H50 pri presklenej terase" loading="lazy" decoding="async" title="Vonkajšie tienenie Soltec — posuvné panely H50"></span>
           <span class="kh-ponuka__telo">
             <span class="kh-ponuka__znacky"><span class="kh-znacka kh-znacka--soltec"><img src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
             <span class="kh-ponuka__nazov">Tienenie</span>
@@ -645,7 +645,7 @@
   </div>
 
   <div class="kh-pick__lanes">
-    <a class="kh-pick__lane" href="./pristresky-pre-auta/">
+    <a class="kh-pick__lane" href="#riesenia" data-k-brand-jump="koverta" aria-haspopup="dialog">
       <span class="kh-pick__mark"><svg
   class="k-logo k-logo--mono"
   viewBox="196 406 524 85"
@@ -670,7 +670,7 @@
       </span>
     </a>
 
-    <a class="kh-pick__lane is-premium" href="./bioklimaticke-pergoly/">
+    <a class="kh-pick__lane is-premium" href="#riesenia" data-k-brand-jump="soltec" aria-haspopup="dialog">
       <span class="kh-pick__mark"><span class="kh-pick__wordmark"><img class="k-brand k-brand--soltec-img" src="./assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span></span>
       <span class="kh-pick__lane-rule"></span>
       <p>Dodávame a montujeme prémiový hliníkový systém pre carporty, pevné aj bioklimatické prestrešenia, tienenie a kuchyne.</p>
@@ -679,6 +679,17 @@
         <span class="k-link">Zobraziť ponuku <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </span>
     </a>
+  </div>
+
+  <div class="kh-brand-dialog" data-k-brand-dialog hidden>
+    <div class="kh-brand-dialog__scrim" data-k-brand-close></div>
+    <section class="kh-brand-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="brandDialogTitle">
+      <button class="kh-brand-dialog__close" type="button" data-k-brand-close aria-label="Zavrieť výber ponuky">×</button>
+      <p class="k-eyebrow" data-k-brand-label>Ponuka</p>
+      <h2 id="brandDialogTitle" class="k-h3" data-k-brand-title>Vyberte riešenie</h2>
+      <p class="k-copy" data-k-brand-intro></p>
+      <nav class="kh-brand-dialog__links" data-k-brand-links aria-label="Výber produktovej kategórie"></nav>
+    </section>
   </div>
 </section>
 
@@ -702,11 +713,11 @@
 
       <div class="kh-proc__panels k-reveal">
           <article class="kh-proc__panel" data-k-step>
-            <span class="kh-proc__media kh-proc__media--navrh"><img src="./assets/koverta-navrh-pristresku-technicky-vykres.svg" alt="Technický návrh prístrešku Koverta s rozmerovými kótami" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__media kh-proc__media--navrh"><img src="./assets/koverta-navrh-pristresku-konzultacia.jpg" width="1680" height="945" alt="Konzultácia nad vytlačeným návrhom prístrešku" loading="lazy" decoding="async"></span>
             <span class="kh-proc__body">
               <span class="kh-proc__num">01</span>
               <h3 class="k-h3">Návrh alebo konfigurátor</h3>
-              <p class="k-copy">Poviete nám, čo chcete zastrešiť — alebo si zostavu rovno vyskladáte v 3D konfigurátore a pošlete nám ju.</p>
+              <p class="k-copy">Pošlete nám základné rozmery a poviete, čo chcete chrániť. Môžete priložiť aj uloženú zostavu z 3D konfigurátora; návrh pred cenovou ponukou technicky skontrolujeme.</p>
             </span>
           </article>
           <article class="kh-proc__panel" data-k-step>
@@ -714,15 +725,15 @@
             <span class="kh-proc__body">
               <span class="kh-proc__num">02</span>
               <h3 class="k-h3">Bezplatné zameranie</h3>
-              <p class="k-copy">Prídeme k vám, odmeriame priestor a overíme podklad. Potom dostanete presnú cenovú ponuku.</p>
+              <p class="k-copy">Na mieste zmeriame priestor, skontrolujeme typ podkladu, výšky a prístup na montáž. Zameranie je bezplatné; potom pripravíme presnú cenovú ponuku.</p>
             </span>
           </article>
           <article class="kh-proc__panel" data-k-step>
-            <span class="kh-proc__media"><img src="./assets/koverta-pristresok-auto-trnava-hero.jpg" width="1600" height="1200" alt="Detail oceľového rámu, väzníc a strechy prístrešku Koverta" loading="lazy" decoding="async"></span>
+            <span class="kh-proc__media"><img src="./assets/koverta-pristresok-auto-trnava-sikmy.jpg" width="1600" height="1200" alt="Detail stĺpov, rámu a oceľových väzníc prístrešku Koverta pred dokončením" loading="lazy" decoding="async"></span>
             <span class="kh-proc__body">
               <span class="kh-proc__num">03</span>
               <h3 class="k-h3">Výroba konštrukcie</h3>
-              <p class="k-copy">Konštrukciu vyrobíme podľa odsúhlaseného návrhu, vo vybranom odtieni a s výbavou, na ktorej sme sa dohodli.</p>
+              <p class="k-copy">Oceľové konštrukcie Koverta vyrábame na Slovensku. Pri produktoch Soltec výrobu zabezpečuje výrobca; pred zadaním výroby kontrolujeme objednaný model, rozmer, farbu a kompatibilnú výbavu.</p>
             </span>
           </article>
           <article class="kh-proc__panel" data-k-step>
@@ -730,7 +741,7 @@
             <span class="kh-proc__body">
               <span class="kh-proc__num">04</span>
               <h3 class="k-h3">Podklad a pätky</h3>
-              <p class="k-copy">Pätky vykopeme a vybetónujeme ako doplnkovú službu. Máte platňu alebo dlažbu? Kotvíme priamo do nej.</p>
+              <p class="k-copy">Na zelenej ploche vieme vykopať a vybetónovať pätky ako samostatnú službu. Pri hotovej ploche najprv overíme, či je existujúci základ vhodný na bezpečné kotvenie.</p>
             </span>
           </article>
           <article class="kh-proc__panel" data-k-step>
@@ -742,7 +753,7 @@
             <span class="kh-proc__body">
               <span class="kh-proc__num">05</span>
               <h3 class="k-h3">Montáž a odovzdanie</h3>
-              <p class="k-copy">Dovezieme, osadíme, ukotvíme. Bežný prístrešok stojí za jeden deň.</p>
+              <p class="k-copy">Konštrukciu dovezieme, osadíme a ukotvíme. Po montáži skontrolujeme strechu, odvodnenie a objednané doplnky a hotové riešenie vám odovzdáme.</p>
             </span>
           </article>
       </div>
