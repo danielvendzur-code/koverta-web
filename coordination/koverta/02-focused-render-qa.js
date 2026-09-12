@@ -65,7 +65,7 @@ async function renderProbe(page, az, el, sampleFascia) {
     await new Promise(resolve => setTimeout(resolve, 18));
 
     const polygons = Array.from(svg.querySelectorAll('polygon'));
-    let invalidPolygons = 0;
+    let invalidPolygons = Number(svg.dataset.invalidFaceCount || 0);
     for (const polygon of polygons) {
       const points = (polygon.getAttribute('points') || '').trim().split(/\s+/).filter(Boolean);
       if (points.length < 3 || points.some(point => {
@@ -74,7 +74,7 @@ async function renderProbe(page, az, el, sampleFascia) {
       })) invalidPolygons += 1;
     }
 
-    const xml = new XMLSerializer().serializeToString(svg);
+    const xml = window.SP_TEST.exportSVG();
     const image = new Image();
     await new Promise((resolve, reject) => {
       image.onload = resolve;
@@ -113,8 +113,11 @@ async function renderProbe(page, az, el, sampleFascia) {
         /* Meraj plochu viditeľného zvislého líca, nie subpixelovú hornú
            siluetu. Vzdialené líce je strechou legitímne zakryté, preto sa v
            každej osi vyberá iba strana obrátená ku kamere. */
-        body.push([viewX >= 0 ? length : 0, t * width]);
-        body.push([t * length, viewY >= 0 ? width : 0]);
+        /* Do not treat an exactly edge-on face as a visible surface. Its
+           projected area is zero and that pixel legitimately belongs to the
+           roof behind it; all camera-facing fascia surfaces remain sampled. */
+        if (Math.abs(viewX) > 1e-6) body.push([viewX >= 0 ? length : 0, t * width]);
+        if (Math.abs(viewY) > 1e-6) body.push([t * length, viewY >= 0 ? width : 0]);
       }
 
       for (const [x, y] of body) {
@@ -145,7 +148,7 @@ async function renderProbe(page, az, el, sampleFascia) {
     }
 
     return {
-      polygonCount: polygons.length,
+      polygonCount: Number(svg.dataset.faceCount || polygons.length),
       invalidPolygons,
       silhouetteArea,
       greenPixels,

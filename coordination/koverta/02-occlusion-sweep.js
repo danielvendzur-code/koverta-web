@@ -90,7 +90,7 @@ async function renderMetrics(page, az, el) {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     const polygons = Array.from(svg.querySelectorAll('polygon'));
-    let invalidPolygons = 0;
+    let invalidPolygons = Number(svg.dataset.invalidFaceCount || 0);
     for (const polygon of polygons) {
       const points = (polygon.getAttribute('points') || '').trim().split(/\s+/).filter(Boolean);
       if (points.length < 3 || points.some(point => {
@@ -99,7 +99,7 @@ async function renderMetrics(page, az, el) {
       })) invalidPolygons += 1;
     }
 
-    const xml = new XMLSerializer().serializeToString(svg);
+    const xml = window.SP_TEST.exportSVG();
     const image = new Image();
     await new Promise((resolve, reject) => {
       image.onload = resolve;
@@ -123,7 +123,7 @@ async function renderMetrics(page, az, el) {
 
     return {
       silhouetteArea,
-      polygonCount: polygons.length,
+      polygonCount: Number(svg.dataset.faceCount || polygons.length),
       invalidPolygons,
       svg: xml
     };
@@ -136,10 +136,10 @@ async function checkDeterministicRedraw(page) {
     window.SP_TEST.setView(0.82, 0.22);
     window.SP_TEST.redraw();
     await new Promise(resolve => setTimeout(resolve, 15));
-    const first = new XMLSerializer().serializeToString(svg);
+    const first = window.SP_TEST.exportSVG();
     window.SP_TEST.redraw();
     await new Promise(resolve => setTimeout(resolve, 15));
-    const second = new XMLSerializer().serializeToString(svg);
+    const second = window.SP_TEST.exportSVG();
     return first === second;
   });
 }

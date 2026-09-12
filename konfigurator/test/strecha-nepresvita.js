@@ -37,7 +37,7 @@ const BARVY = { rimSoffitHex: '#ffcc00', trapezSoffitHex: '#ff00ff' };
   const zle = await p.evaluate(async () => {
     const snap = async () => {
       const svg = document.querySelector('[data-sp-canvas]');
-      const txt = new XMLSerializer().serializeToString(svg);
+      const txt = window.SP_TEST.exportSVG();
       const img = new Image();
       await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt))); });
       const vb = svg.getAttribute('viewBox').split(' ').map(Number);

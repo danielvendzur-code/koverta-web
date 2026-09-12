@@ -14,7 +14,7 @@ const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
   const out = await p.evaluate(async () => {
     const svg = document.querySelector('[data-sp-canvas]');
     const snap = async () => {
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const img = new Image();
       await new Promise((r, j) => { img.onload = r; img.onerror = j;
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml))); });
@@ -58,7 +58,7 @@ const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
       const body = [];
       osi.forEach((os, i) => {
         const naVaznici = band.stlpyNaVaznici || (i !== 0 && i !== osi.length - 1);
-        const pd = naVaznici ? R.stredD : R.postD, pw = naVaznici ? R.stredW : R.postW;
+        const pd = R.postW, pw = R.postW;
         const x = Math.min(Math.max(os, pd / 2), L - pd / 2);
         for (const [y, nm] of [[vsun + pw/2, 'y0'], [W - vsun - pw/2, 'yW']])
           for (const z of [500, 1200, 2000]) body.push([x, y, z, `rad ${Math.round(os)} ${nm} z${z}`]);

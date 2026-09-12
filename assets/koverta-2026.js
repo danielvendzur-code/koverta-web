@@ -603,7 +603,6 @@
       if (bezScrollu) return;
       if (REDUCED.matches) return;
       let lockedUntil = 0;
-      let poslednaZmena = 0;
       rows.forEach((row) => row.addEventListener('click', () => { lockedUntil = Date.now() + 4000; }));
 
       let ticking = false;
@@ -636,12 +635,11 @@
              posledný bol práve ten, z ktorého fotografie odchádzali. */
           const tt = Math.min(t, 0.999);
           const idx = Math.min(panels.length - 1, Math.max(0, Math.floor(tt * panels.length)));
-          /* Aj pri prudkom scrollovaní musí krok chvíľu vydržať, inak sa
-             fotky len mihnú. */
-          if (idx !== index && Date.now() - poslednaZmena > 260) {
-            poslednaZmena = Date.now();
-            setActive(idx);
-          }
+          /* Scroll už zlučuje requestAnimationFrame vyššie. Ďalšia časová
+             brzda tu nesmie byť: pri rýchlom dojazde vedela zahodiť posledný
+             index a Zima potom zostala nahradená Jesenou až do ďalšieho
+             pohybu stránky. */
+          if (idx !== index) setActive(idx);
         });
       };
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -661,7 +659,7 @@
   // vidia nezmenený. Základný stav je VIDITEĽNÉ; animácia s fill-mode:
   // backwards skrýva len počas oneskorenia.
   function initHeadline(root) {
-    root.querySelectorAll('[data-k-headline]').forEach((title) => {
+    root.querySelectorAll('.kh-hero [data-k-headline]').forEach((title) => {
       /* Nadpis sekcie nemá hero box; maska slov mu patrí rovnako, len po ňom
          niet čo ďalej odkrývať. */
       const box = title.closest('[data-k-hero-box]');
@@ -812,24 +810,11 @@
       if (next) next.addEventListener('click', (e) => step(e, 1));
       if (count) count.textContent = '1 / ' + srcs.length;
 
-      /* Fotografie sa striedajú, len kým je karta pod myšou alebo pod
-         zameraním. Bez toho stoja — striedanie samo od seba odvádzalo
-         pozornosť a nikto oň nežiadal. Šípky na preklikávanie sú preč,
-         fotku netreba hľadať klikaním. */
+      /* Karta má vždy jednu stabilnú fotografiu. Predchádzajúce automatické
+         striedanie pri hoveri menilo obsah pod kurzorom a pôsobilo ako pohyb
+         obrázka; po odstránení šípok preto nie je dôvod spúšťať slideshow. */
       if (prev) prev.remove();
       if (next) next.remove();
-      if (REDUCED.matches) return;
-
-      let samocinne = 0;
-      const spusti = () => { if (!samocinne) samocinne = window.setInterval(() => show(i + 1), 2600); };
-      const zastav = () => {
-        if (samocinne) { window.clearInterval(samocinne); samocinne = 0; }
-        if (i !== 0) show(0);          // po odchode sa vráti prvá fotka
-      };
-      card.addEventListener('mouseenter', spusti);
-      card.addEventListener('mouseleave', zastav);
-      card.addEventListener('focusin', spusti);
-      card.addEventListener('focusout', zastav);
     });
   }
 
@@ -1165,7 +1150,7 @@
     const dotiahni = () => {
       if (cely || stahujem || !window.fetch) return;
       stahujem = true;
-      window.fetch(cestaIndexu(), { credentials: 'omit' })
+      window.fetch(cestaIndexu(), { credentials: 'omit', cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           if (!d || !d.polozky || !d.polozky.length) return;
@@ -1739,11 +1724,11 @@
 
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
-        foto: './assets/koverta-pristresok-garaz.jpg',
-        preco: 'Oceľová konštrukcia s hliníkovým obkladom z vlastnej výroby. Pevná strecha; odvodnenie a vedenie zvodu sa riešia podľa konkrétnej zostavy.' },
+        foto: './assets/koverta-pristresok-vahovce-takac-upscaled.jpg',
+        preco: 'Oceľová konštrukcia z vlastnej výroby. Pultová strecha z trapézového profilu má lemovanie, odkvap a izoláciu proti prehrievaniu a hluku dažďa; voda odchádza odkvapom a zvodom.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
         foto: './assets/soltec-carport-sl240-real.jpg',
-        preco: 'Celohliníkový systém SL 170 alebo SL 240. Bez údržby, dĺžka do 8,5 m, uzamykateľný box pod tou istou strechou.' },
+        preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
@@ -1754,11 +1739,11 @@
         foto: './assets/soltec-canopy-hero.jpg',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
-        foto: './assets/soltec-accessory-zip.jpg',
+        foto: './assets/soltec-canopy-panels-real.jpg',
         preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou — jedna dodávka zo Slovinska a jedna montáž.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
         foto: './assets/soltec-kuchyna-terasa.jpg',
-        preco: 'Hliníkové korpusy s práškovým lakom, doska z nerezu, kameňa alebo betónu. Zostava sa skladá z modulov.' }
+        preco: 'Hliníková konštrukcia s exteriérovým kompozitným obkladom a pracovnou doskou z technického kameňa. Zostava sa skladá z modulov.' }
     };
 
     const ZNACKY = {
@@ -1794,8 +1779,8 @@
            systému, preto vedú na carport; inak rozhoduje cenová hladina. */
         var premium = o.hladina === 'vyssi' || o.auta === 'box' || o.strechaAuto === 'svetlo';
         var pozn = null;
-        if (o.auta === 'box') pozn = 'Uzamykateľný box je súčasťou radu SL: má vlastné dvere a rovnaký obklad ako prístrešok.';
-        else if (o.strechaAuto === 'bok') pozn = 'Bok zakryje lamelová stena alebo ZIP roleta. Zahrňte ju rovno do návrhu — dodatočná objednávka zo Slovinska je samostatná dodávka aj montáž.';
+        if (o.auta === 'box') pozn = 'Uzamykateľný box je samostatný doplnok. Jeho kompatibilitu, rozmery a cenu treba potvrdiť spolu s konkrétnym modelom carportu.';
+        else if (o.strechaAuto === 'bok') pozn = 'Rad F umožňuje širší výber bočných panelov a ZIP tienenia. Pri rade SL treba kompatibilitu potvrdiť podľa konkrétnej zostavy a jej spádu.';
         else if (o.strechaAuto === 'svetlo') pozn = 'Presvetlenú strechu rieši hliníkový systém so sklom alebo so svetlopriepustnou výplňou.';
         return { hlavne: premium ? 'carport' : 'auta', doplnok: pozn };
       }
@@ -1940,6 +1925,82 @@
     panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri.click(); });
   }
 
+  /* --- 4f · Značka nie je produkt ---------------------------------------
+     Odkaz „Zobraziť ponuku“ pri značke nesmie poslať návštevníka na jednu
+     náhodnú podstránku. Otvorí preto krátky rozcestník riešení danej značky.
+     Bez skriptu odkazy stále smerujú na sekciu Naša ponuka. */
+  function initBrandDialog(root) {
+    const dialog = root.querySelector('[data-k-brand-dialog]');
+    const triggers = [].slice.call(root.querySelectorAll('[data-k-brand-jump]'));
+    if (!dialog || !triggers.length) return;
+    const title = dialog.querySelector('[data-k-brand-title]');
+    const label = dialog.querySelector('[data-k-brand-label]');
+    const intro = dialog.querySelector('[data-k-brand-intro]');
+    const links = dialog.querySelector('[data-k-brand-links]');
+    const closeButton = dialog.querySelector('.kh-brand-dialog__close');
+    let returnTo = null;
+
+    const choices = {
+      koverta: {
+        label: 'Vlastná výroba Koverta',
+        title: 'Čo chcete zastrešiť?',
+        intro: 'Vyberte prístrešok pre auto alebo riešenie pre terasu a záhradu.',
+        links: [
+          ['./pristresky-pre-auta/', 'Prístrešky pre autá', 'Katalógové aj atypické oceľové konštrukcie pre 1 až 3 autá.'],
+          ['./zahradne-pristresky/', 'Záhradné prístrešky', 'Prestrešenie terasy, vstupu alebo záhradného posedenia.']
+        ]
+      },
+      soltec: {
+        label: 'Hliníkový systém Soltec',
+        title: 'Vyberte riešenie Soltec',
+        intro: 'Carport, strecha terasy, regulovateľný tieň, bočné uzavretie alebo kuchyňa do exteriéru.',
+        links: [
+          ['./carport-soltec/', 'Carporty pre autá', 'Štyri modely F170, F240, SL170 a SL240.'],
+          ['./bioklimaticke-pergoly/', 'Bioklimatické pergoly', 'Otočné lamely pre tieň, vetranie a ochranu pred dažďom.'],
+          ['./pevne-prestresenia/', 'Pevné prestrešenia', 'ISO panel, sklo alebo zelená strecha podľa typového radu.'],
+          ['./tienenie/', 'Tienenie a bočné uzavretie', 'ZIP rolety, pevné a posuvné panely alebo sklo.'],
+          ['./outdoor-kuchyne/', 'Vonkajšie kuchyne', 'Modulové kuchyne a grilovacie stanice do exteriéru.']
+        ]
+      }
+    };
+
+    const close = () => {
+      dialog.hidden = true;
+      document.documentElement.classList.remove('k-dialog-open');
+      if (returnTo) returnTo.focus();
+    };
+    const open = (key, trigger) => {
+      const data = choices[key];
+      if (!data) return;
+      returnTo = trigger;
+      label.textContent = data.label;
+      title.textContent = data.title;
+      intro.textContent = data.intro;
+      links.textContent = '';
+      data.links.forEach((item) => {
+        const a = document.createElement('a');
+        a.href = item[0];
+        const strong = document.createElement('strong');
+        strong.textContent = item[1];
+        const span = document.createElement('span');
+        span.textContent = item[2];
+        a.appendChild(strong);
+        a.appendChild(span);
+        links.appendChild(a);
+      });
+      dialog.hidden = false;
+      document.documentElement.classList.add('k-dialog-open');
+      closeButton.focus();
+    };
+
+    triggers.forEach((trigger) => trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      open(trigger.dataset.kBrandJump, trigger);
+    }));
+    dialog.querySelectorAll('[data-k-brand-close]').forEach((node) => node.addEventListener('click', close));
+    dialog.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+  }
+
 
   /* --- 4e · Typorady: najprv rad, potom čísla -----------------------------
      Tabuľka so šiestimi stĺpcami bola prvé, čo zákazník uvidel, a rozdiel
@@ -2008,6 +2069,19 @@
     const zoznam = root.querySelector('.kh-rev__list[data-k-scrub]');
     const trio = root.querySelector('[data-k-trio]');
     if (!zoznam || !trio) return;
+
+    /* Tri prvé recenzie používajú presne tie isté realizácie ako krok 05.
+       Je to aj statický mobilný/reduced-motion fallback, nielen zdroj pre
+       desktopový prelet. Obsah fotografie sa počas pohybu nikdy nevymení. */
+    const trioImgs = [...trio.querySelectorAll('.kh-proc__trio-kus img')];
+    const reviewImgs = [...zoznam.querySelectorAll('.kh-rev__card .kh-rev__foto img')].slice(0, trioImgs.length);
+    reviewImgs.forEach((img, i) => {
+      const source = trioImgs[i];
+      if (!source) return;
+      img.src = source.currentSrc || source.src;
+      img.removeAttribute('srcset');
+    });
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(min-width: 1000px)').matches) return;
 
@@ -2988,8 +3062,7 @@
         header.classList.add('ma-rozperu');
         bar.classList.add('je-plava');
         const rozdiel = y - posledneY;
-        if (rozdiel > prah) bar.classList.add('je-schovana');
-        else if (rozdiel < -prah) bar.classList.remove('je-schovana');
+        bar.classList.remove('je-schovana');
         if (Math.abs(rozdiel) > prah) posledneY = y;
         void vyska;
       };
@@ -2998,6 +3071,216 @@
       window.addEventListener('scroll', naplan, { passive: true });
       window.addEventListener('resize', naplan, { passive: true });
       prekresli();
+    }
+
+    /* BATCH 5 · HEADER MENU INFORMATION ARCHITECTURE */
+    /*
+       HTML zostáva funkčný aj bez skriptu. Tu sa iba preskupí už existujúci
+       obsah do značiek Koverta / Soltec, doplnia sa orientačné vety a
+       obrazové položky realizácií. Odkazy sa nemenia.
+    */
+    const menuAsset = (name) => {
+      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const href = link ? (link.getAttribute('href') || '') : '';
+      const base = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      return base + name;
+    };
+
+    const menuLabel = (item) => {
+      const t = item && item.querySelector('[data-k-mega-trigger]');
+      return t ? t.textContent.replace(/\s+/g, ' ').trim() : '';
+    };
+
+    const setMenuPhoto = (li, filename) => {
+      const img = li && li.querySelector('.kv-mega__foto img');
+      if (!img || !filename) return;
+      img.removeAttribute('src');
+      img.removeAttribute('srcset');
+      img.setAttribute('data-k-menu-src', menuAsset(filename));
+    };
+
+    const setDrawerPhoto = (hrefPart, filename) => {
+      header.querySelectorAll('.kv-drawer__rad a').forEach((a) => {
+        if (!(a.getAttribute('href') || '').includes(hrefPart)) return;
+        const img = a.querySelector('.kv-drawer__foto img');
+        if (img) img.setAttribute('src', menuAsset(filename));
+      });
+    };
+
+    const addDesc = (li, text) => {
+      if (!li || !text) return;
+      const a = li.querySelector(':scope > a');
+      const strong = a && a.querySelector(':scope > strong');
+      if (!a || !strong || a.querySelector('.kv-mega__desc')) return;
+      const d = document.createElement('span');
+      d.className = 'kv-mega__desc';
+      d.textContent = text;
+      strong.insertAdjacentElement('afterend', d);
+    };
+
+    const makeBrand = (name, lis) => {
+      if (!lis.length) return null;
+      const section = document.createElement('section');
+      section.className = 'kv-mega__brand kv-mega__brand--' + name.toLowerCase();
+      section.setAttribute('aria-label', name);
+
+      const head = document.createElement('div');
+      head.className = 'kv-mega__brand-head';
+      const sourceLogo = lis[0].querySelector('.kv-mega__znacka img');
+      if (sourceLogo) {
+        const logoWrap = document.createElement('span');
+        logoWrap.className = 'kv-mega__brand-logo';
+        const logo = sourceLogo.cloneNode(true);
+        logo.alt = name;
+        logoWrap.appendChild(logo);
+        head.appendChild(logoWrap);
+      } else {
+        const label = document.createElement('strong');
+        label.textContent = name;
+        head.appendChild(label);
+      }
+      section.appendChild(head);
+
+      const list = document.createElement('ul');
+      list.className = 'kv-mega__brand-grid';
+      lis.forEach((li) => list.appendChild(li));
+      section.appendChild(list);
+      return section;
+    };
+
+    const enhanceProducts = (item, kind) => {
+      if (!item || item.dataset.kBatch5 === 'true') return;
+      const panel = item.querySelector('.kv-mega');
+      const oldList = panel && panel.querySelector(':scope > .kv-mega__rad');
+      if (!panel || !oldList) return;
+      const lis = [].slice.call(oldList.children).filter((n) => n.tagName === 'LI');
+      if (!lis.length) return;
+
+      const groups = { Koverta: [], Soltec: [] };
+      lis.forEach((li) => {
+        const logo = li.querySelector('.kv-mega__znacka img');
+        const brand = logo && /soltec/i.test(logo.alt || '') ? 'Soltec' : 'Koverta';
+        groups[brand].push(li);
+      });
+
+      const wrap = document.createElement('div');
+      wrap.className = 'kv-mega__brands';
+      const k = makeBrand('Koverta', groups.Koverta);
+      const s = makeBrand('Soltec', groups.Soltec);
+      if (k) wrap.appendChild(k);
+      if (s) wrap.appendChild(s);
+      panel.insertBefore(wrap, oldList);
+      oldList.remove();
+      panel.classList.add('kv-mega--batch5', 'kv-mega--' + kind);
+      item.dataset.kBatch5 = 'true';
+    };
+
+    const megaItemsBatch5 = [].slice.call(header.querySelectorAll('[data-k-mega-item]'));
+    const autaItem = megaItemsBatch5.find((item) => /^Pre autá$/.test(menuLabel(item)));
+    const domItem = megaItemsBatch5.find((item) => /^Pre dom a záhradu$/.test(menuLabel(item)));
+    const realItem = megaItemsBatch5.find((item) => /^Realizácie$/.test(menuLabel(item)));
+
+    if (autaItem) {
+      const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
+      if (lis[0]) {
+        setMenuPhoto(lis[0], 'koverta-pristresok-vahovce-takac-upscaled.jpg');
+        addDesc(lis[0], 'Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby.');
+      }
+      if (lis[1]) {
+        setMenuPhoto(lis[1], 'soltec-carport-toth-nitra-hero.jpg');
+        addDesc(lis[1], 'Prémiový hliníkový systém s čistou architektúrou.');
+      }
+      /* Ponechať pôvodný kompaktný rad malých navigačných kariet. Veľká
+         brandová prestavba z Batch 5 zaberala priveľa plochy a z menu robila
+         obsahovú sekciu. Fotografia každého odkazu sa nastaví vyššie presne
+         raz a pri ďalšom otvorení sa už nemení. */
+    }
+
+    if (domItem) {
+      const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
+      const byHref = (part) => lis.find((li) => ((li.querySelector('a') || {}).href || '').includes(part));
+      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pevne-prestresenie-mokrance.jpg');
+      setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-tienenie-posuvne-panely-h50.jpg');
+      setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
+      addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
+      addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
+      addDesc(byHref('bioklimaticke-pergoly'), 'Otočné lamely pre tienenie aj ochranu pred dažďom.');
+      addDesc(byHref('tienenie'), 'ZIP rolety, panely a brisoleje.');
+      addDesc(byHref('outdoor-kuchyne'), 'Modulové zostavy z nerezu a hliníka.');
+      /* Pôvodný kompaktný rad je zámerný; pozri poznámku pri menu Pre autá. */
+    }
+
+    if (realItem && realItem.dataset.kBatch5 !== 'true') {
+      const panel = realItem.querySelector('.kv-mega');
+      const list = panel && panel.querySelector('.kv-pod');
+      if (panel && list) {
+        const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+        [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
+          const a = li.querySelector(':scope > a');
+          if (!a) return;
+          const photo = document.createElement('span');
+          photo.className = 'kv-mega__foto';
+          const img = document.createElement('img');
+          img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = i === 0 ? 'Realizácia prístrešku Koverta pri rodinnom dome' : 'Detail realizácie prístrešku Koverta';
+          photo.appendChild(img);
+          a.insertBefore(photo, a.firstChild);
+
+          const text = document.createElement('span');
+          text.className = 'kv-mega__real-text';
+          while (photo.nextSibling) text.appendChild(photo.nextSibling);
+          a.appendChild(text);
+        });
+        list.classList.remove('kv-pod');
+        list.classList.add('kv-mega__real-grid');
+        panel.classList.remove('kv-mega--uzke');
+        panel.classList.add('kv-mega--batch5', 'kv-mega--real');
+        realItem.dataset.kBatch5 = 'true';
+      }
+    }
+
+    /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-vahovce-takac-upscaled.jpg');
+    setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
+    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+    setDrawerPhoto('pevne-prestresenia', 'soltec-pevne-prestresenie-mokrance.jpg');
+    setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
+    setDrawerPhoto('tienenie', 'soltec-tienenie-posuvne-panely-h50.jpg');
+    setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
+
+    const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
+      const s = d.querySelector(':scope > summary');
+      return s && /^Realizácie/.test(s.textContent.trim());
+    });
+    if (drawerReal && drawerReal.dataset.kBatch5 !== 'true') {
+      const list = drawerReal.querySelector('.kv-drawer__rad');
+      const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+      if (list) {
+        list.classList.remove('kv-drawer__rad--text');
+        list.classList.add('kv-drawer__rad--real');
+        [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
+          const a = li.querySelector(':scope > a');
+          if (!a || a.querySelector('.kv-drawer__foto')) return;
+          const photo = document.createElement('span');
+          photo.className = 'kv-drawer__foto';
+          const img = document.createElement('img');
+          img.src = menuAsset(photos[i] || photos[0]);
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = i === 0 ? 'Realizácia prístrešku Koverta' : 'Detail realizácie prístrešku Koverta';
+          photo.appendChild(img);
+          const body = document.createElement('span');
+          body.className = 'kv-drawer__telo';
+          while (a.firstChild) body.appendChild(a.firstChild);
+          a.appendChild(photo);
+          a.appendChild(body);
+        });
+      }
+      drawerReal.dataset.kBatch5 = 'true';
     }
 
     /* mega menu — otvára sa hoverom aj klávesnicou, zatvára Escapom */
@@ -3049,7 +3332,7 @@
 
       item.addEventListener('mouseenter', open);
       item.addEventListener('mouseleave', () => {
-        hoverTimer = setTimeout(close, 140);
+        hoverTimer = setTimeout(close, 260);
       });
       trigger.addEventListener('click', (e) => {
         e.preventDefault();
@@ -3169,7 +3452,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initTyp2];
+                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
 
   const davkuj = (ulohy) => {
     let i = 0;

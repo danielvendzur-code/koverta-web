@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SOURCE_PATH = path.join(ROOT, 'konfigurator', 'soltec-premium.js');
-const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/bioklimaticke-pergoly/';
+const URL = process.env.SOLTEC_URL || 'http://127.0.0.1:8901/konfigurator/?page=bio';
 const ARTIFACT_DIR = path.join(ROOT, 'qa-artifacts', 'soltec-motion');
 
 function assertSourceContract() {
@@ -19,8 +19,7 @@ function assertSourceContract() {
   assert.match(source, /sortBias: model\(\)\.kvGeom \? 0 :/, 'Painter bias must be Soltec-only');
   assert.match(source, /const BSP_MAX = model\(\)\.kvGeom \? 320 : 28;/, 'Soltec BSP must keep its bounded interactive-depth path');
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
-  assert.match(source, /if \(model\(\)\.kvGeom\) scheduleRender\(\);\s*else scheduleStage\(\);/, 'Soltec camera drag must use the stage-only render path');
-  assert.match(source, /window\.SP_TEST\.redrawStage = \(\) => \{ if \(!model\(\)\.kvGeom\) drawStage\(\); else renderAll\(\); \};/, 'Soltec test hook must exercise the stage-only renderer');
+  assert.match(source, /scheduleStage\(\);/, 'Camera motion must use the stage-only render path');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the
@@ -48,10 +47,12 @@ function percentile(values, p) {
   page.on('pageerror', (error) => pageErrors.push(error.stack || error.message));
 
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  const consent = page.getByRole('button', { name: 'Iba nevyhnutné', exact: true });
+  if (await consent.isVisible()) await consent.click();
   const cfg = page.locator('#SoltecPremium [data-sp-cfg]');
   await cfg.scrollIntoViewIfNeeded();
   await cfg.dispatchEvent('pointerdown', { pointerId: 41, pointerType: 'mouse', clientX: 20, clientY: 20 });
-  await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.redrawStage && document.querySelector('#SoltecPremium [data-sp-canvas] polygon'), null, { timeout: 20_000 });
+  await page.waitForFunction(() => window.SP_TEST && window.SP_TEST.redrawStage && document.querySelector('#SoltecPremium [data-sp-canvas]')?.dataset.faceCount, null, { timeout: 20_000 });
 
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
@@ -64,7 +65,7 @@ function percentile(values, p) {
     const count = await page.evaluate(([az, elevation]) => {
       window.SP_TEST.setView(az, elevation);
       window.SP_TEST.redrawStage();
-      return document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length;
+      return Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount);
     }, [-0.62, el]);
     cameraCounts.push({ el, count });
   }
@@ -142,7 +143,7 @@ function percentile(values, p) {
       range.value = String(nextValue);
       range.dispatchEvent(new Event('input', { bubbles: true }));
       return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
-        resolve(document.querySelectorAll('#SoltecPremium [data-sp-canvas] polygon').length);
+        resolve(Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount));
       })));
     }, value);
     louverCounts.push({ value, count });
@@ -152,13 +153,66 @@ function percentile(values, p) {
   assert.ok(minLouver > 0, 'Soltec scene disappeared during louver travel');
   assert.ok(maxLouver / minLouver < 1.45, `Soltec polygon count is unstable during louver travel: ${minLouver}..${maxLouver}`);
 
+  // Reproduce the customer-visible endpoint defect: after the animated close
+  // reached zero, a full UI rebuild used to draw one extra, different frame.
+  // The geometry at the endpoint must remain byte-identical for subsequent
+  // frames and the add-on controls must not be rebuilt during the settle.
+  const endpoint = await page.evaluate(async () => {
+    const root = document.querySelector('#SoltecPremium [data-sp-cfg]');
+    const range = document.querySelector('#SoltecPremium [data-sp-louver-range]');
+    const addons = document.querySelector('#SoltecPremium [data-sp-addons]');
+    if (!root || !range || !addons) throw new Error('Soltec endpoint controls not found');
+
+    range.value = '100';
+    range.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    let mutations = 0;
+    const observer = new MutationObserver((records) => {
+      mutations += records.filter((record) => record.type === 'childList').length;
+    });
+    observer.observe(addons, { childList: true, subtree: true });
+
+    root.dispatchEvent(new CustomEvent('sp:move', { detail: { channel: 'louver', to: 0 } }));
+    const deadline = performance.now() + 6000;
+    await new Promise((resolve, reject) => {
+      const poll = () => {
+        if (window.SP_TEST.snapshot().louverT <= 1e-6) { resolve(); return; }
+        if (performance.now() > deadline) { reject(new Error('Soltec close animation did not reach zero')); return; }
+        requestAnimationFrame(poll);
+      };
+      requestAnimationFrame(poll);
+    });
+
+    const signature = () => {
+      let hash = 2166136261;
+      let length = 0;
+      const value = window.SP_TEST.exportSVG();
+      length = value.length;
+      for (let i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i); hash = Math.imul(hash, 16777619);
+      }
+      return `${(hash >>> 0).toString(16)}:${length}`;
+    };
+    const atEnd = { louverT: window.SP_TEST.snapshot().louverT, geometry: signature() };
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const settled = { louverT: window.SP_TEST.snapshot().louverT, geometry: signature() };
+    observer.disconnect();
+    return { mutations, atEnd, settled };
+  });
+
+  assert.equal(endpoint.mutations, 0, 'Soltec rebuilt controls after the close animation reached its endpoint');
+  assert.equal(endpoint.atEnd.louverT, 0, 'Soltec close animation did not finish at exactly zero');
+  assert.equal(endpoint.settled.louverT, 0, 'Soltec louvers moved again after reaching the closed endpoint');
+  assert.equal(endpoint.settled.geometry, endpoint.atEnd.geometry, 'Soltec louver geometry jumped after the close animation completed');
+
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'soltec-motion-final.png'), fullPage: false });
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, p95, maxFrame }, null, 2));
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'metrics.json'), JSON.stringify({ cameraCounts, louverCounts, endpoint, p95, maxFrame }, null, 2));
 
   assert.deepEqual(pageErrors, [], `Browser errors:\n${pageErrors.join('\n')}`);
   await browser.close();
   console.log(JSON.stringify({ ok: true, p95, maxFrame, cameraCounts, louverCounts }, null, 2));
 })().catch((error) => {
   console.error(error.stack || error);
-  process.exitCode = 1;
+  process.exit(1);
 });

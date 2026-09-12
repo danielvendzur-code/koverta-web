@@ -1,22 +1,18 @@
-name: Koverta configurator QA
+name: Koverta exact final QA
 
 on:
   push:
-    branches: [master, fix/final-koverta-audit-20260909, agent/05-koverta-technical-fidelity, agent/06-koverta-final-integration]
-  pull_request:
-    branches: [master]
+    branches: [fix/koverta-final-repair-20260910]
+    paths:
+      - .github/workflows/koverta-final-qa-20260910.yml
 
 permissions:
   contents: read
 
-concurrency:
-  group: koverta-qa-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   configurator:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -24,9 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Verify QA files
+          ref: ${{ github.sha }}
+      - name: Verify exact source
         run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test -f "konfigurator/test/${{ matrix.test }}.js"
           node --check konfigurator/soltec-premium.js
           node --check konfigurator/koverta-cfg-enhance.js
@@ -55,15 +52,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-visual-qa-${{ matrix.test }}
+          name: exact-koverta-${{ matrix.test }}
           path: qa-artifacts
           if-no-files-found: ignore
 
-  occlusion-deep:
+  deep:
     runs-on: ubuntu-24.04
-    # 02-occlusion-sweep renders ~7000 views across 54 dimensions and needs
-    # more than 35 minutes on a hosted runner; at 35 it was cancelled mid-run
-    # and never reported. It passes when allowed to finish.
+    # Same budget as koverta-qa: the occlusion sweep does not fit in 40 min.
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -72,15 +67,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Verify deep QA script
-        run: test -f "coordination/koverta/${{ matrix.script }}.js"
+          ref: ${{ github.sha }}
+      - name: Verify exact source
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -f "coordination/koverta/${{ matrix.script }}.js"
+          node --check konfigurator/soltec-premium.js
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install Playwright
         run: |
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start static server
@@ -96,11 +94,11 @@ jobs:
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
         run: node "coordination/koverta/${{ matrix.script }}.js"
-      - name: Upload deep QA
+      - name: Upload deep evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-deep-qa-${{ matrix.script }}
+          name: exact-koverta-${{ matrix.script }}
           path: qa-artifacts
           if-no-files-found: ignore
 
@@ -110,9 +108,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Verify renderer and motion test syntax
+          ref: ${{ github.sha }}
+      - name: Verify syntax
         run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           node --check konfigurator/soltec-premium.js
           node --check konfigurator/test/soltec-motion-regression.js
       - uses: actions/setup-node@v4
@@ -120,10 +119,10 @@ jobs:
           node-version: 22
       - name: Install Playwright
         run: |
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Start static server
+      - name: Start server
         run: |
           python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
           for i in {1..30}; do
@@ -134,12 +133,12 @@ jobs:
           exit 1
       - name: Soltec louver and camera motion regression
         env:
-          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
+          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
         run: node konfigurator/test/soltec-motion-regression.js
-      - name: Upload Soltec motion evidence
+      - name: Upload Soltec evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: soltec-motion-qa
+          name: exact-soltec-motion
           path: qa-artifacts/soltec-motion
           if-no-files-found: ignore

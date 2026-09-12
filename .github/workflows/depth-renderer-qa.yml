@@ -1,0 +1,36 @@
+name: Depth renderer visual QA
+on:
+  push:
+    branches: [fix/koverta-final-repair-20260910]
+    paths:
+      - konfigurator/soltec-premium.js
+      - konfigurator/test/depth-renderer-qa.js
+      - .github/workflows/depth-renderer-qa.yml
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check konfigurator/soltec-premium.js
+      - run: node konfigurator/test/technical-fidelity.js
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - name: Render all model families on desktop and mobile
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-server.log 2>&1 &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8901/konfigurator/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node konfigurator/test/depth-renderer-qa.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: depth-renderer-visuals
+          path: qa-artifacts/depth

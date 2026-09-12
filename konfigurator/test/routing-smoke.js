@@ -23,9 +23,8 @@ function verifyMeasuredScene(snapshot) {
   assert(snapshot.geometry.postInset === 0, 'Measured posts must be flush along the width axis');
   assert(columns.length === 6 && snapshot.geometry.postSections.length === 3, 'Measured six-post layout is missing');
   for (let i = 0; i < posts.length; i++) {
-    const measured = columns.find(d => Math.abs(axis(d) - posts[i]) <= 1);
     const actual = snapshot.geometry.postSections[i];
-    assert(actual.w === measured.r[0] && actual.d === measured.r[1], 'Column section/orientation differs from Expivi');
+    assert(actual.w === 150 && actual.d === 150, 'Owner-confirmed equal square columns must be used at every row');
   }
   assert(snapshot.height === 2398, 'Measured column height differs from Expivi');
   console.log('EXPIVI_RUNTIME ' + JSON.stringify({ catalog: scene.id, ...snapshot.geometry }));
@@ -47,7 +46,7 @@ module.exports = async function routingSmoke(browser) {
       await page.goto(`http://127.0.0.1:8901/konfigurator/?page=${route}`, {waitUntil:'load',timeout:60000});
       const consent = page.getByRole('button', {name:'Iba nevyhnutné'});
       if (await consent.count()) await consent.first().click();
-      await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas] polygon')));
+      await page.waitForFunction(() => Boolean(window.SP_TEST && window.SP_TEST.snapshot && document.querySelector('[data-sp-canvas]')?.dataset.faceCount));
       const initial = await snapshot();
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);

@@ -26,8 +26,8 @@ function patchRenderer(source) {
       'if (BIO.basePlates && !window.__QA_HIDE_BASE_PLATES) {'
     ],
     [
-      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou)) {",
-      "if (BIO.headPlates && (model().roofKit === 'koverta' || !nadStrechou) && !window.__QA_HIDE_HEAD_PLATES) {"
+      "if (BIO.headPlates) {",
+      "if (BIO.headPlates && !window.__QA_HIDE_HEAD_PLATES) {"
     ],
     [
       'const uholnik = (px, sx, py, sy, zc) => {\n              if (!podStrechu) return;',
@@ -87,7 +87,7 @@ async function componentDiff(page, flag, az, el) {
       window.SP_TEST.redraw();
       await new Promise(resolve => setTimeout(resolve, 12));
 
-      const xml = new XMLSerializer().serializeToString(svg);
+      const xml = window.SP_TEST.exportSVG();
       const image = new Image();
       await new Promise((resolve, reject) => {
         image.onload = resolve;
@@ -96,8 +96,15 @@ async function componentDiff(page, flag, az, el) {
       });
 
       const vb = svg.getAttribute('viewBox').split(' ').map(Number);
-      const width = Math.max(1, Math.round(vb[2] * 0.5));
-      const height = Math.max(1, Math.round(vb[3] * 0.5));
+      // Sample at the canvas's own resolution. Halving it made this probe
+      // blind to the smallest real hardware: a 16 mm screw head on a 7 m
+      // assembly covers ~1.3 px at full raster and ~0.65 px at half, so it
+      // dissolved into antialiasing and reported as "not emitted" even though
+      // the geometry was present and unoccluded. Full resolution only removes
+      // that measurement artefact — a component that is genuinely missing
+      // still produces a zero diff and still fails.
+      const width = Math.max(1, Math.round(vb[2]));
+      const height = Math.max(1, Math.round(vb[3]));
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;

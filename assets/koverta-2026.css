@@ -597,17 +597,16 @@ a.k-score:hover { border-color: rgba(18, 23, 26, 0.3); box-shadow: var(--k-shado
   content: "";
   position: absolute;
   left: 10px;
-  right: 10px;
+  right: auto;
   bottom: 3px;
+  width: 0;
   height: 2px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--k-amber);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 240ms var(--k-ease-out);
+  transition: width 240ms var(--k-ease-out);
 }
 .kv-nav__item.is-open > .kv-nav__link::after,
-.kv-nav__link[aria-current="page"]::after { transform: none; }
+.kv-nav__link[aria-current="page"]::after { width: calc(100% - 20px); }
 .kv-nav__item.is-open > .kv-nav__link,
 .kv-nav__link[aria-current="page"] { color: var(--k-ink); }
 .kv-nav__item.is-open > .kv-nav__link svg { transform: rotate(180deg); opacity: 1; }
@@ -14386,8 +14385,8 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .kv-icon-btn { width: 42px; height: 42px; }
   .kv-logo .k-logo { height: 25px; }
 
-  /* Prvá obrazovka má jednu dominantnú akciu. Konfigurátor ostáva priamo
-     dostupný, ale ako tichý textový odkaz namiesto druhého veľkého tlačidla. */
+  /* Prvá obrazovka má jednu dominantnú a jednu jasne ohraničenú sekundárnu
+     akciu. Aj na telefóne musí byť zrejmé, že ide o tlačidlo. */
   .k .kh-hero__actions {
     display: flex;
     align-items: center;
@@ -14400,23 +14399,20 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     padding: 0 17px;
   }
   .k .kh-hero__actions .k-btn:nth-child(n+2) {
-    min-height: 40px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: rgba(255,255,255,.9);
+    min-height: 44px;
+    padding: 0 17px;
+    border: 1px solid rgba(255,255,255,.68);
+    border-radius: var(--k-r-pill);
+    background: rgba(9,12,14,.2);
+    color: #fff;
     font-size: 13.5px;
-    text-decoration: underline;
-    text-decoration-color: rgba(255,255,255,.42);
-    text-underline-offset: 4px;
+    text-decoration: none;
   }
   .k .kh-hero__actions .k-btn:nth-child(n+2):hover,
   .k .kh-hero__actions .k-btn:nth-child(n+2):focus-visible {
-    border: 0;
-    background: transparent;
+    border-color: #fff;
+    background: rgba(9,12,14,.32);
     color: #fff;
-    text-decoration-color: #fff;
   }
 
   /* Google dôkaz ostáva, ale už nie ako ďalšia veľká karta pod tlačidlami. */
@@ -14452,3 +14448,965 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
     padding-bottom: 24px !important;
   }
 }
+
+
+/* USER-CONTENT-RESTORE-20260910 */
+.k-model-section .k-head { margin-bottom: clamp(28px,4vw,54px); }
+.k-model-family + .k-model-family { margin-top: clamp(34px,5vw,64px); }
+.k-model-family__head { display:flex; align-items:end; justify-content:space-between; gap:24px; padding:0 0 14px; margin-bottom:18px; border-bottom:1px solid rgba(18,23,26,.18); }
+.k-model-family__head > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
+.k-model-family__head p { margin:0; max-width:560px; color:#596064; }
+.k-model-grid { display:grid; gap:18px; }
+.k-model-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.k-model-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.k-model-card { display:grid; grid-template-rows:auto 1fr; min-width:0; overflow:hidden; background:#fff; border:1px solid rgba(18,23,26,.16); border-radius:24px; box-shadow:0 14px 38px rgba(18,23,26,.06); }
+.k-model-card__media { margin:0; aspect-ratio:16/9; overflow:hidden; background:#ececeb; }
+.k-model-card__media img { width:100%; height:100%; display:block; object-fit:cover; }
+.k-model-card__body { display:flex; flex-direction:column; padding:clamp(20px,2.5vw,32px); }
+.k-model-card__top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.k-model-card__code { display:inline-flex; align-items:center; min-height:34px; padding:0 12px; border:1px solid rgba(18,23,26,.24); border-radius:999px; font-weight:760; font-size:13px; letter-spacing:.04em; }
+.k-model-card__use { color:#6c7376; font-size:14px; font-weight:650; }
+.k-model-card__body h3 { margin:0 0 22px; font-size:clamp(23px,2.1vw,32px); line-height:1.05; letter-spacing:-.025em; }
+.k-model-card__explain { margin:-8px 0 24px; color:#596064; font-size:15px; line-height:1.55; }
+.k-model-facts { margin:auto 0 0; display:grid; border-top:1px solid rgba(18,23,26,.14); }
+.k-model-facts > div { display:flex; justify-content:space-between; gap:18px; padding:12px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+.k-model-facts dt { color:#687074; }
+.k-model-facts dd { margin:0; text-align:right; font-weight:730; }
+.k-model-note { display:flex; justify-content:space-between; gap:28px; padding:20px 0 0; margin:22px 0 0; border-top:1px solid rgba(18,23,26,.18); }
+.k-model-note span { max-width:680px; color:#62696c; }
+.kh-zost__panel { border:1px solid rgba(18,23,26,.14); border-radius:22px; box-shadow:0 12px 32px rgba(18,23,26,.05); overflow:hidden; }
+.kh-zost__vrstvy { margin:14px 0 22px; padding:0; list-style:none; border-top:1px solid rgba(18,23,26,.12); }
+.kh-zost__vrstva { display:grid; grid-template-columns:46px 1fr; gap:14px; align-items:start; padding:15px 0; border-bottom:1px solid rgba(18,23,26,.11); }
+.kh-zost__cislo { font-size:12px; font-weight:800; letter-spacing:.06em; color:#8a6900; }
+.kh-zost__co { line-height:1.55; }
+.kh-pick__lane .k-link { display:inline-flex; align-items:center; min-height:42px; padding:0 15px; border:1px solid currentColor; border-radius:999px; }
+@media (min-width: 900px) {
+  .kh-kfg__typy { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:18px !important; }
+  .kh-kfg__typ, .kh-kfg__typ--siroky { grid-column:auto !important; grid-row:auto !important; width:auto !important; }
+  .kh-kfg__karta { height:100%; }
+}
+@media (max-width: 899px) {
+  .k-model-grid--2, .k-model-grid--3 { grid-template-columns:1fr; }
+  .k-model-family__head, .k-model-note { align-items:flex-start; flex-direction:column; gap:8px; }
+  .k-model-card { border-radius:18px; }
+}
+
+
+/* BATCH 3 · KITCHEN + SHADING DECISION LAYER */
+.k .kh-kitchen-specs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:clamp(24px,3vw,42px) 0 0; border:1px solid var(--k-hair); border-radius:var(--k-r-sm); overflow:hidden; background:var(--k-white); box-shadow:var(--k-shadow-xs); }
+.k .kh-kitchen-spec { display:grid; align-content:start; gap:5px; min-height:126px; padding:clamp(18px,2vw,28px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-kitchen-spec:first-child { border-left:0; }
+.k .kh-kitchen-spec span { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--k-grey-soft); }
+.k .kh-kitchen-spec strong { font-family:var(--k-head); font-size:clamp(20px,1.65vw,25px); line-height:1.15; letter-spacing:-.025em; color:var(--k-ink); }
+.k .kh-kitchen-spec small { font-size:13px; line-height:1.4; color:var(--k-muted); }
+.k .kh-modul__mieru--refined { margin-top:14px; }
+.k .kh-kitchen-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; border-top:1px solid var(--k-hair); border-bottom:1px solid var(--k-hair); }
+.k .kh-kitchen-facts > li { min-width:0; padding:22px 20px; border-top:0; border-right:1px solid var(--k-hair-soft); }
+.k .kh-kitchen-facts > li:nth-child(4n) { border-right:0; }
+.k .kh-kitchen-facts > li:nth-child(n+5) { border-top:1px solid var(--k-hair-soft); }
+.k .kh-kitchen-facts strong { display:block; margin-bottom:7px; font-size:clamp(18px,1.45vw,23px); line-height:1.12; }
+.k .kh-kitchen-facts span { display:block; max-width:27ch; font-size:13.5px; line-height:1.45; color:var(--k-muted); }
+.k .kh-shade-needs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:clamp(26px,3vw,42px) 0; }
+.k .kh-shade-needs a { display:grid; align-content:start; gap:8px; min-height:150px; padding:22px; border:1px solid rgba(18,23,26,.15); border-top:4px solid var(--k-amber); border-radius:14px; background:#fff; color:var(--k-ink); text-decoration:none; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+.k .kh-shade-needs a:hover, .k .kh-shade-needs a:focus-visible { transform:translateY(-3px); border-color:rgba(18,23,26,.32); box-shadow:0 14px 34px rgba(18,23,26,.09); }
+.k .kh-shade-needs span { color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; }
+.k .kh-shade-needs strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.1; }
+.k .kh-shade-needs small { color:var(--k-muted); font-size:13px; line-height:1.5; }
+.k .kh-shade-subtitle { margin:clamp(34px,4vw,54px) 0 0; font-family:var(--k-head); font-size:clamp(20px,2vw,30px); line-height:1.15; }
+.k .kh-shade-guide { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); margin:clamp(24px,3vw,40px) 0 clamp(18px,2vw,30px); border:1px solid var(--k-hair); border-radius:var(--k-r-sm); overflow:hidden; background:var(--k-bone); }
+.k .kh-shade-guide__item { display:grid; align-content:start; gap:5px; min-height:136px; padding:clamp(18px,1.8vw,26px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-shade-guide__item:first-child { border-left:0; }
+.k .kh-shade-guide__item > span { width:max-content; padding-bottom:5px; border-bottom:2px solid var(--k-amber); font-size:12px; font-weight:800; letter-spacing:.08em; }
+.k .kh-shade-guide__item strong { font-family:var(--k-head); font-size:clamp(17px,1.35vw,20px); line-height:1.18; letter-spacing:-.02em; }
+.k .kh-shade-guide__item small { font-size:13px; line-height:1.45; color:var(--k-muted); }
+.k .kh-shade-products { display:grid; gap:14px; margin:clamp(22px,3vw,38px) 0 0; }
+.k .kh-shade-product { display:grid; grid-template-columns:minmax(190px,.72fr) minmax(0,2fr); overflow:hidden; border:1px solid rgba(18,23,26,.16); border-radius:20px; background:#fff; box-shadow:0 12px 34px rgba(18,23,26,.045); }
+.k .kh-shade-product__head { display:flex; flex-direction:column; align-items:flex-start; padding:clamp(22px,2.6vw,34px); border-right:1px solid var(--k-hair-soft); background:linear-gradient(145deg,#151a1d 0%,#273036 100%); color:#fff; }
+.k .kh-shade-product__head > span { display:inline-flex; align-items:center; min-height:31px; padding:0 10px; margin-bottom:auto; border:1px solid rgba(255,255,255,.38); border-radius:999px; color:var(--k-amber); font-size:12px; font-weight:850; letter-spacing:.08em; }
+.k .kh-shade-product__head h3 { margin:clamp(28px,3vw,48px) 0 9px; font-family:var(--k-head); font-size:clamp(22px,2vw,31px); line-height:1.03; letter-spacing:-.025em; }
+.k .kh-shade-product__head p { margin:0; color:rgba(255,255,255,.74); font-size:14px; line-height:1.5; }
+.k .kh-shade-product__story { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.k .kh-shade-product__story > div { padding:clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-shade-product__story > div:first-child { border-left:0; }
+.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+.k .kh-shade-product__story p { margin:0; color:#50585c; font-size:14px; line-height:1.58; }
+.k .kh-shade-product__facts { grid-column:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; border-top:1px solid var(--k-hair-soft); background:var(--k-bone); }
+.k .kh-shade-product__facts > div { display:grid; gap:5px; padding:15px clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-shade-product__facts > div:first-child { border-left:0; }
+.k .kh-shade-product__facts dt { color:#747b7e; font-size:11px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+.k .kh-shade-product__facts dd { margin:0; color:var(--k-ink); font-size:14px; font-weight:760; line-height:1.35; }
+.k .kh-typ--refined .kh-typ__riadok--prvy { padding-block:inherit; border-color:var(--k-hair); background:var(--k-white); box-shadow:none; }
+.k .kh-typ--refined .kh-typ__riadok--prvy .kh-pojem { color:var(--k-grey-soft); }
+.k .kh-typ--refined .kh-typ__riadok--prvy .kh-typ__model { font-size:inherit; color:var(--k-ink); }
+.k .kh-typ--refined .kh-typ__riadok--prvy .kh-typ__lamela, .k .kh-typ--refined .kh-typ__riadok--prvy .kh-typ__udaj, .k .kh-typ--refined .kh-typ__riadok--prvy .kh-typ__kotva { color:inherit; }
+.k .kh-typ--refined .kh-typ__riadok--prvy .kh-pas__draha { background:var(--k-hair); }
+.k .kh-typ--refined .kh-typ__riadok--prvy .kh-pas__kota { color:var(--k-ink); }
+@media (max-width:999px) {
+  .k .kh-shade-needs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .k .kh-shade-product { grid-template-columns:1fr; }
+  .k .kh-shade-product__head { border-right:0; }
+  .k .kh-shade-product__head > span { margin-bottom:0; }
+  .k .kh-shade-product__head h3 { margin:24px 0 8px; }
+  .k .kh-shade-product__facts { grid-column:1; }
+  .k .kh-kitchen-specs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .k .kh-kitchen-spec:nth-child(3) { border-left:0; }
+  .k .kh-kitchen-spec:nth-child(n+3) { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-kitchen-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .k .kh-kitchen-facts > li:nth-child(4n) { border-right:1px solid var(--k-hair-soft); }
+  .k .kh-kitchen-facts > li:nth-child(2n) { border-right:0; }
+  .k .kh-kitchen-facts > li:nth-child(n+3) { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-shade-guide { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .k .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-shade-guide__item:nth-child(1), .k .kh-shade-guide__item:nth-child(2) { border-top:0; }
+  .k .kh-shade-guide__item:nth-child(odd) { border-left:0; }
+  .k .kh-shade-guide__item:last-child { grid-column:1/-1; }
+}
+@media (max-width:599px) {
+  .k .kh-shade-needs { grid-template-columns:minmax(0,1fr); }
+  .k .kh-shade-needs a { min-height:0; }
+  .k .kh-shade-product { border-radius:16px; }
+  .k .kh-shade-product__story, .k .kh-shade-product__facts { grid-template-columns:1fr; }
+  .k .kh-shade-product__story > div, .k .kh-shade-product__facts > div { border-left:0; }
+  .k .kh-shade-product__story > div + div, .k .kh-shade-product__facts > div + div { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-kitchen-specs, .k .kh-kitchen-facts, .k .kh-shade-guide { grid-template-columns:minmax(0,1fr); }
+  .k .kh-kitchen-spec, .k .kh-kitchen-facts > li, .k .kh-shade-guide__item { border-left:0; border-right:0; }
+  .k .kh-kitchen-spec + .kh-kitchen-spec, .k .kh-kitchen-facts > li + li, .k .kh-shade-guide__item + .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
+  .k .kh-shade-guide__item:last-child { grid-column:auto; }
+  .k .kh-kitchen-spec, .k .kh-shade-guide__item { min-height:0; }
+}
+
+
+/* BATCH 4 · CATALOG SIZE DECISION FLOW */
+.k .kh-size-pick {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:clamp(24px,3vw,40px);
+}
+.k .kh-size-pick > a {
+  display:grid;
+  gap:3px;
+  min-width:0;
+  padding:16px 18px;
+  border:1px solid var(--k-hair);
+  border-radius:14px;
+  background:var(--k-white);
+  box-shadow:var(--k-shadow-xs);
+  transition:border-color 180ms var(--k-ease), transform 180ms var(--k-ease), background 180ms var(--k-ease);
+}
+.k .kh-size-pick > a:hover { border-color:rgba(18,23,26,.28); background:#fffdf5; transform:translateY(-1px); }
+.k .kh-size-pick span { font-size:13px; font-weight:700; letter-spacing:.03em; color:var(--k-grey); }
+.k .kh-size-pick strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.15; letter-spacing:-.02em; }
+.k .kh-size-pick small { font-size:12px; color:var(--k-muted); }
+.k .kh-size-guide {
+  margin-top:14px;
+  font-size:13px;
+  line-height:1.55;
+  color:var(--k-muted);
+}
+.k .kh-size-guide strong { color:var(--k-ink); }
+.k .kh-size--decision { scroll-margin-top:110px; }
+
+/* Size is the primary signal. Price is secondary and 3D is a quiet utility. */
+.k .kh-size--decision .kh-size__dlzky { gap:10px; }
+.k .kh-size--decision .kh-size__kus {
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--k-hair);
+  border-radius:12px;
+  background:var(--k-white);
+  box-shadow:none;
+  transition:border-color 170ms var(--k-ease), background 170ms var(--k-ease), transform 170ms var(--k-ease);
+}
+.k .kh-size--decision .kh-size__kus:hover { border-color:rgba(18,23,26,.28); background:#fffdf8; transform:translateY(-1px); }
+.k .kh-size--decision .kh-size__chip {
+  display:grid;
+  align-content:center;
+  gap:2px;
+  min-width:0;
+  min-height:54px;
+  padding:8px 10px 8px 12px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  text-align:left !important;
+}
+.k .kh-size--decision .kh-size__chip > span {
+  font-family:var(--k-head);
+  font-size:16px !important;
+  font-weight:650;
+  line-height:1.15;
+  letter-spacing:-.01em;
+  color:var(--k-ink);
+}
+.k .kh-size--decision .kh-size__chip small {
+  font-size:11.5px !important;
+  font-weight:500;
+  line-height:1.25;
+  color:var(--k-muted) !important;
+}
+.k .kh-size--decision .kh-size__cfg {
+  min-width:44px;
+  min-height:54px;
+  padding:0 10px !important;
+  border-left:1px solid var(--k-hair) !important;
+  font-size:11px !important;
+  font-weight:750;
+  letter-spacing:.04em;
+  color:var(--k-grey) !important;
+  background:rgba(246,245,242,.72);
+}
+.k .kh-size--decision .kh-size__cfg:hover { color:var(--k-ink) !important; background:var(--k-bone); }
+.k .kh-size--single .kh-size__dlzky { grid-template-columns:minmax(170px,240px) !important; justify-content:start; }
+
+.k .kh-size-custom {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:24px clamp(28px,4vw,64px);
+  margin-top:clamp(28px,4vw,52px);
+  padding-top:clamp(24px,3vw,36px);
+  border-top:1px solid var(--k-hair);
+}
+.k .kh-size-custom__eyebrow {
+  margin:0 0 8px;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--k-grey);
+}
+.k .kh-size-custom__text {
+  margin:0;
+  max-width:72ch;
+  font-family:var(--k-head);
+  font-size:clamp(18px,1.6vw,23px);
+  font-weight:500;
+  line-height:1.38;
+  letter-spacing:-.015em;
+}
+.k .kh-size-custom__note { margin:10px 0 0; max-width:76ch; font-size:13px; line-height:1.55; color:var(--k-muted); }
+.k .kh-size-custom .k-btn { justify-self:end; white-space:nowrap; }
+
+@media (max-width:819px) {
+  .k .kh-size-custom { grid-template-columns:minmax(0,1fr); align-items:start; }
+  .k .kh-size-custom .k-btn { justify-self:start; }
+}
+@media (max-width:619px) {
+  .k .kh-size-pick { gap:7px; margin-top:20px; }
+  .k .kh-size-pick > a { gap:2px; padding:12px 10px; border-radius:12px; }
+  .k .kh-size-pick span { font-size:11.5px; }
+  .k .kh-size-pick strong { font-size:15px; }
+  .k .kh-size-pick small { font-size:10.5px; }
+  .k .kh-size--decision .kh-size__dlzky { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:7px; }
+  .k .kh-size--decision .kh-size__chip { min-height:56px; padding:8px 8px 8px 10px !important; }
+  .k .kh-size--decision .kh-size__chip > span { font-size:14px !important; }
+  .k .kh-size--decision .kh-size__chip small { font-size:10.5px !important; }
+  .k .kh-size--decision .kh-size__cfg { min-width:44px; min-height:56px; padding:0 7px !important; font-size:10px !important; }
+  .k .kh-size--single .kh-size__dlzky { grid-template-columns:minmax(0,1fr) !important; }
+  .k .kh-size-custom .k-btn { width:100%; }
+}
+@media (max-width:359px) {
+  .k .kh-size--decision .kh-size__dlzky { grid-template-columns:minmax(0,1fr) !important; }
+}
+
+
+/* BATCH 5 · HEADER MENU INFORMATION ARCHITECTURE */
+@media (min-width: 1024px) {
+  .kv-header .kv-mega--batch5 {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    top: calc(100% + 8px);
+    padding: clamp(18px, 1.8vw, 24px);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(18, 23, 26, .11);
+    overflow: auto;
+    max-height: min(50vh, 390px);
+  }
+
+  .kv-header .kv-mega--cars {
+    right: auto;
+    width: min(760px, calc(100vw - 32px));
+    max-width: 760px;
+  }
+
+  .kv-header .kv-mega__brands {
+    display: grid;
+    gap: clamp(20px, 2vw, 30px);
+    min-width: 0;
+  }
+  .kv-header .kv-mega--cars .kv-mega__brands {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .kv-header .kv-mega--home .kv-mega__brands { grid-template-columns: minmax(260px, .8fr) minmax(0, 1.7fr); }
+
+  .kv-header .kv-mega__brand { min-width: 0; }
+  .kv-header .kv-mega__brand + .kv-mega__brand {
+    border-left: 1px solid var(--k-hair);
+    padding-left: clamp(20px, 2vw, 30px);
+  }
+  .kv-header .kv-mega--cars .kv-mega__brand {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+  }
+  .kv-header .kv-mega--cars .kv-mega__brand + .kv-mega__brand {
+    margin-top: 12px;
+    padding-top: 12px;
+    padding-left: 0;
+    border-top: 1px solid var(--k-hair);
+    border-left: 0;
+  }
+  .kv-header .kv-mega__brand-head {
+    display: flex;
+    align-items: center;
+    min-height: 25px;
+    margin-bottom: 12px;
+  }
+  .kv-header .kv-mega--cars .kv-mega__brand-head { margin-bottom: 0; }
+  .kv-header .kv-mega__brand-logo { display: inline-flex; align-items: center; }
+  .kv-header .kv-mega__brand-logo img {
+    display: block;
+    width: auto;
+    max-width: 108px;
+    height: 18px;
+    object-fit: contain;
+    object-position: left center;
+  }
+  .kv-header .kv-mega__brand--soltec .kv-mega__brand-logo img { height: 20px; max-width: 94px; }
+
+  .kv-header .kv-mega__brand-grid,
+  .kv-header .kv-mega__real-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kv-header .kv-mega__brand-grid > li,
+  .kv-header .kv-mega__real-grid > li { margin: 0; min-width: 0; }
+  .kv-header .kv-mega__brand-grid > li::before,
+  .kv-header .kv-mega__real-grid > li::before { content: none; }
+  .kv-header .kv-mega__brand-grid .kv-mega__znacka { display: none; }
+
+  .kv-header .kv-mega__brand-grid a,
+  .kv-header .kv-mega__real-grid a {
+    color: var(--k-ink);
+    border-radius: 12px;
+    transition: background-color 170ms var(--k-ease), transform 170ms var(--k-ease);
+  }
+  .kv-header .kv-mega__brand-grid a:hover,
+  .kv-header .kv-mega__brand-grid a:focus-visible,
+  .kv-header .kv-mega__real-grid a:hover,
+  .kv-header .kv-mega__real-grid a:focus-visible {
+    background: var(--k-bone);
+    transform: translateY(-1px);
+  }
+
+  .kv-header .kv-mega--cars .kv-mega__brand-grid a {
+    display: grid;
+    grid-template-columns: minmax(150px, 42%) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 14px;
+    padding: 8px;
+  }
+  .kv-header .kv-mega--cars .kv-mega__foto {
+    grid-row: 1 / 3;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    border-radius: 9px;
+    background: var(--k-bone-deep);
+  }
+  .kv-header .kv-mega--cars .kv-mega__foto img,
+  .kv-header .kv-mega--home .kv-mega__foto img,
+  .kv-header .kv-mega--real .kv-mega__foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .kv-header .kv-mega__brand-grid strong,
+  .kv-header .kv-mega__real-grid strong {
+    display: block;
+    min-width: 0;
+    font-family: var(--k-head);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.22;
+    letter-spacing: -.015em;
+  }
+  .kv-header .kv-mega__desc,
+  .kv-header .kv-mega__real-text > span {
+    display: block;
+    margin-top: 4px;
+    color: var(--k-muted);
+    font-size: 12px;
+    line-height: 1.38;
+  }
+
+  .kv-header .kv-mega--home .kv-mega__brand--koverta .kv-mega__brand-grid a {
+    display: grid;
+    gap: 10px;
+    padding: 8px;
+  }
+  .kv-header .kv-mega--home .kv-mega__brand--koverta .kv-mega__foto {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 8.6;
+    border-radius: 9px;
+    background: var(--k-bone-deep);
+  }
+  .kv-header .kv-mega--home .kv-mega__brand--soltec .kv-mega__brand-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .kv-header .kv-mega--home .kv-mega__brand--soltec .kv-mega__brand-grid a {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 11px;
+    padding: 7px;
+    min-height: 82px;
+  }
+  .kv-header .kv-mega--home .kv-mega__brand--soltec .kv-mega__foto {
+    grid-row: 1 / 3;
+    display: block;
+    overflow: hidden;
+    width: 104px;
+    height: 68px;
+    border-radius: 8px;
+    background: var(--k-bone-deep);
+  }
+  .kv-header .kv-mega--home .kv-mega__brand--soltec .kv-mega__desc {
+    margin-top: 2px;
+    font-size: 11.5px;
+  }
+
+  .kv-header .kv-mega--real { max-width: 920px; right: auto; }
+  .kv-header .kv-mega__real-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .kv-header .kv-mega__real-grid a {
+    display: grid;
+    grid-template-columns: 156px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 8px;
+  }
+  .kv-header .kv-mega--real .kv-mega__foto {
+    display: block;
+    overflow: hidden;
+    width: 156px;
+    aspect-ratio: 16 / 9;
+    border-radius: 9px;
+    background: var(--k-bone-deep);
+  }
+  .kv-header .kv-mega__real-text { display: block; min-width: 0; }
+
+  /* Staré ploché menu sa po JS transformácii nesmie presadiť neskoršími
+     historickými override pravidlami. */
+  .kv-header .kv-mega--batch5 .kv-mega__brand-grid > li { max-width: none; flex: none; }
+}
+
+/* Mobil ostáva zásuvka: rovnaká navigácia, kratší vizuálny rytmus. */
+@media (max-width: 1023px) {
+  .kv-drawer__rad--real a {
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 7px;
+  }
+  .kv-drawer__rad--real .kv-drawer__telo { gap: 4px; }
+}
+
+
+/* BATCH5 REALIZACIE WIDTH FIX 20260911
+   Staršie pravidlo `.kv-mega--uzke { width:max-content }` prežilo nový layout
+   a vizuálne stlačilo dve realizačné karty do úzkeho stĺpca. Desktopová
+   realizácia teraz používa rovnaký široký panelový jazyk ako ostatné menu. */
+@media (min-width: 1024px) {
+  .kv-header .kv-nav__item--uzke { position: static; }
+  .kv-header .kv-nav__item--uzke .kv-mega--uzke.kv-mega--real.kv-mega--batch5 {
+    left: calc(var(--k-gut) - 24px);
+    right: auto;
+    width: min(920px, calc(100vw - (2 * var(--k-gut))));
+    max-width: min(920px, calc(100vw - (2 * var(--k-gut))));
+    padding: 18px;
+  }
+}
+
+
+/* BATCH7 SOLTEC MODEL DECISION 20260911 */
+.k-model-system { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin:0 0 18px; border-block:1px solid rgba(18,23,26,.16); }
+.k-model-system > div { min-width:0; padding:16px 18px; border-left:1px solid rgba(18,23,26,.12); }
+.k-model-system > div:first-child { border-left:0; padding-left:0; }
+.k-model-system span { display:block; margin-bottom:5px; color:#6b7275; font-size:12px; font-weight:650; letter-spacing:.02em; }
+.k-model-system strong { display:block; font-size:15px; line-height:1.35; }
+.k-model-card__lead { margin:-10px 0 20px; color:#646c70; font-size:14.5px; line-height:1.5; }
+.k-model-family__head > div { display:grid; gap:7px; }
+.k-model-family__head > div > span { font-size:clamp(28px,3vw,44px); line-height:.95; font-weight:780; letter-spacing:-.035em; }
+.k-model-family__head > div > strong { font-size:15px; line-height:1.35; font-weight:700; }
+@media (max-width:719px) {
+  .k-model-system { grid-template-columns:1fr 1fr; }
+  .k-model-system > div { padding:13px 12px; border-left:0; border-top:1px solid rgba(18,23,26,.1); }
+  .k-model-system > div:nth-child(-n+2) { border-top:0; }
+  .k-model-system > div:nth-child(odd) { padding-left:0; border-right:1px solid rgba(18,23,26,.1); }
+  .k-model-family__head > div > strong { font-size:14px; }
+}
+
+/* USER-BREADCRUMB-POSITION-20260911
+   Omrvinková navigácia je orientačný prvok celej stránky, preto zostáva pri
+   hornom okraji hero na každej šírke a nepohybuje sa spolu s blokom nadpisu. */
+.k .kh-hero { position: relative; }
+.k .kh-hero__inner { position: static; }
+.k .kh-hero__box > .kh-crumbs {
+  position: absolute;
+  top: clamp(16px, 2.2vw, 28px);
+  left: max(var(--k-gut), calc((100vw - var(--k-max)) / 2 + var(--k-gut)));
+  right: var(--k-gut);
+  margin: 0;
+  z-index: 2;
+}
+
+/* USER HEADER REFINEMENT 20260911
+   Menu opäť používa kompaktné miniatúry. Linka sa odkrýva zľava doprava,
+   ale jej hrúbka je v každom frame rovnaká. */
+.kv-header .kv-nav__link::after {
+  height: 3px;
+  border-radius: 999px;
+}
+.kv-header .kv-topbar__usps { align-items: center; }
+.kv-header .kv-topbar__usps li {
+  min-height: 20px;
+  align-items: center;
+  line-height: 1.25;
+}
+.kv-header .kv-topbar__usps li::before {
+  width: 6px;
+  height: 6px;
+  align-self: center;
+}
+.kv-header .kv-topbar__side a[href^="mailto:"]::before {
+  content: "Napíšte nám";
+  color: rgba(255,255,255,.58);
+  font-weight: 500;
+}
+
+@media (min-width:1024px) {
+  .kv-header .kv-mega:not(.kv-mega--real) {
+    max-height: min(46vh, 330px);
+  }
+  .kv-header .kv-mega__rad {
+    flex-wrap: nowrap;
+    gap: clamp(10px, 1.15vw, 16px);
+  }
+  .kv-header .kv-mega__rad > li {
+    flex: 1 1 0;
+    max-width: 214px;
+  }
+  .kv-header .kv-mega__rad a { gap: 7px; }
+  .kv-header .kv-mega__foto { aspect-ratio: 16 / 8.5; }
+  .kv-header .kv-mega__desc {
+    display: block;
+    color: var(--k-grey-soft);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  /* Realizácie môžu zostať obrazové, no používajú rovnakú malú mierku. */
+  .kv-header .kv-mega--real {
+    width: min(620px, calc(100vw - (2 * var(--k-gut))));
+    max-width: min(620px, calc(100vw - (2 * var(--k-gut))));
+    padding: 14px;
+  }
+  .kv-header .kv-mega--real .kv-mega__real-grid { gap: 8px; }
+  .kv-header .kv-mega--real .kv-mega__real-grid a {
+    grid-template-columns: 112px minmax(0,1fr);
+    gap: 10px;
+    padding: 6px;
+  }
+  .kv-header .kv-mega--real .kv-mega__foto { width: 112px; }
+}
+
+@media (max-width:480px) {
+  .kv-header .kv-topbar__side a[href^="mailto:"]::before { display:none; }
+}
+
+/* HOMEPAGE DECISION REFINEMENT 20260911 */
+.k .kh-ponuka__akcia {
+  min-height: 40px; padding: 0 16px;
+  border: 1px solid #b78900; border-radius: 999px;
+  background: var(--k-amber); color: var(--k-ink); font-weight: 750;
+}
+.k .kh-ponuka__karta:hover .kh-ponuka__akcia,
+.k .kh-ponuka__karta:focus-visible .kh-ponuka__akcia {
+  border-color: var(--k-ink); background: var(--k-ink); color: #fff;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta {
+  position: relative; overflow: hidden;
+  background: var(--k-amber); border-color: #d4a800;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta::before {
+  content: "03"; position: absolute; right: 16px; top: 6px;
+  font-family: var(--k-head); font-size: clamp(74px,8vw,118px);
+  font-weight: 800; line-height: 1; color: rgba(18,23,26,.08);
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__telo { position: relative; z-index: 1; }
+.k .kh-ponuka__volby { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 2px; }
+.k .kh-ponuka__volby span {
+  padding:5px 9px; border:1px solid rgba(18,23,26,.28);
+  border-radius:999px; font-size:11px; font-weight:750;
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia {
+  border-color: var(--k-ink); background: var(--k-ink); color:#fff;
+}
+.k .kh-kfg__typy { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.k .kh-kfg__typ { grid-column:auto !important; }
+.k .kh-kfg__foto { aspect-ratio:16/9; }
+.k .kh-proc__media--navrh { background:#f1efe8; }
+.k .kh-proc__media--navrh img { object-fit:contain; padding:clamp(18px,3vw,38px); }
+.k .kh-proc__media--zameranie { position:relative; }
+.k .kh-proc__kota {
+  position:absolute; left:12%; right:12%; bottom:14%;
+  display:flex; align-items:center; justify-content:center;
+  height:28px; border-inline:2px solid var(--k-amber);
+  border-bottom:2px solid var(--k-amber); color:#fff;
+  font-size:11px; font-weight:750; letter-spacing:.04em;
+  text-shadow:0 1px 3px rgba(0,0,0,.75);
+}
+@media (max-width:719px) { .k .kh-kfg__typy { grid-template-columns:1fr; } }
+
+/* FOUR SOLTEC CARPORTS · compact enough for one desktop decision view */
+.k .k-model-grid--carports { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.k .k-model-grid--carports .k-model-card__media { aspect-ratio:16/8; max-height:150px; }
+.k .k-model-grid--carports .k-model-card__body { padding:16px; }
+.k .k-model-grid--carports h3 { margin:10px 0 8px; font-size:clamp(18px,1.35vw,22px); }
+.k .k-model-grid--carports .k-model-card__lead { min-height:3em; margin:0 0 10px; font-size:13px; }
+.k .k-model-grid--carports .k-model-facts div { padding:8px 0; font-size:12.5px; }
+@media (max-width:1099px) { .k .k-model-grid--carports { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:619px) { .k .k-model-grid--carports { grid-template-columns:1fr; } }
+
+/* SOLTEC CARPORT · first choose the construction family, then its size */
+.k .k-carport-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.k .k-carport-series {
+  overflow: hidden;
+  border: 1px solid rgba(18, 23, 26, .14);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(18, 23, 26, .07);
+}
+.k .k-carport-series__head {
+  display: grid;
+  grid-template-columns: minmax(150px, 42%) 1fr;
+  min-height: 185px;
+  background: var(--k-ink);
+  color: #fff;
+}
+.k .k-carport-series__head figure { min-height: 185px; margin: 0; overflow: hidden; }
+.k .k-carport-series__head img { width: 100%; height: 100%; object-fit: cover; }
+.k .k-carport-series__head > div { align-self: center; padding: 20px; }
+.k .k-carport-series__code {
+  display: inline-flex;
+  margin-bottom: 9px;
+  color: var(--k-amber);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.k .k-carport-series__head h3 { margin: 0 0 8px; font-size: clamp(20px, 1.75vw, 27px); line-height: 1.05; }
+.k .k-carport-series__head p { margin: 0; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.48; }
+.k .k-carport-series__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 14px 18px 4px;
+}
+.k .k-carport-series__facts div { min-height: 84px; padding: 12px; border-bottom: 1px solid rgba(18,23,26,.1); }
+.k .k-carport-series__facts div:nth-child(odd) { border-right: 1px solid rgba(18,23,26,.1); }
+.k .k-carport-series__facts dt { margin-bottom: 5px; color: var(--k-grey); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.k .k-carport-series__facts dd { margin: 0; color: var(--k-ink); font-size: 12.5px; font-weight: 650; line-height: 1.38; }
+.k .k-carport-series__extras {
+  margin: 10px 18px 0;
+  padding: 15px 16px;
+  border-left: 3px solid var(--k-amber);
+  background: rgba(232, 165, 0, .09);
+}
+.k .k-carport-series__extras > strong { display: block; margin-bottom: 8px; color: var(--k-ink); font-size: 13px; }
+.k .k-carport-series__extras p { margin: 5px 0 0; color: var(--k-grey); font-size: 11.5px; line-height: 1.48; }
+.k .k-carport-series__extras b { color: var(--k-ink); }
+.k .k-carport-series__models { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px 18px 18px; }
+.k .k-carport-series .k-model-card--mini { border-radius: 14px; background: var(--k-bone); box-shadow: none; }
+.k .k-carport-series .k-model-card--mini .k-model-card__body { padding: 14px; }
+.k .k-carport-series .k-model-card--mini .k-model-card__lead { min-height: 3.1em; margin: 9px 0; font-size: 12px; line-height: 1.48; }
+.k .k-carport-series .k-model-card--mini .k-model-facts div { padding: 6px 0; font-size: 11.5px; }
+.k .k-carport-series .k-model-card--mini .k-model-facts div:first-child dd { color: #9a6200; font-weight: 850; }
+@media (max-width: 1020px) {
+  .k .k-carport-compare { grid-template-columns: 1fr; }
+}
+@media (max-width: 619px) {
+  .k .k-carport-series__head { grid-template-columns: 1fr; }
+  .k .k-carport-series__head figure { min-height: 170px; aspect-ratio: 16 / 9; }
+  .k .k-carport-series__facts,
+  .k .k-carport-series__models { grid-template-columns: 1fr; }
+  .k .k-carport-series__facts div:nth-child(odd) { border-right: 0; }
+  .k .k-carport-series .k-model-card--mini .k-model-card__lead { min-height: 0; }
+}
+
+/* GARDEN CONSTRUCTION · visual 2 × 4 decision cards */
+.k .kh-skl--garden .kh-skl__hlava { display: none; }
+.k .kh-skl--garden .kh-skl__zoznam {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.k .kh-skl--garden .kh-skl__riadok {
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 12px;
+  min-height: 230px;
+  padding: clamp(20px, 2.2vw, 30px);
+  border: 1px solid rgba(18, 23, 26, .12);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(18, 23, 26, .05);
+}
+.k .kh-skl--garden .kh-skl__zcoho { font-size: 15px; line-height: 1.58; }
+.k .kh-skl--garden .kh-skl__kedy {
+  align-self: end;
+  justify-self: start;
+  margin: auto 0 0;
+  padding: 6px 10px;
+  border: 1px solid rgba(18, 23, 26, .18);
+  border-radius: 999px;
+  color: var(--k-ink);
+  font-size: 11px;
+  font-weight: 750;
+  text-align: left;
+}
+.k .kh-skl--garden .kh-skl__riadok--dolezite {
+  border-color: #c69b00;
+  background: linear-gradient(145deg, #fff7d0, #fff);
+}
+@media (max-width: 719px) {
+  .k .kh-skl--garden .kh-skl__zoznam { grid-template-columns: 1fr; }
+  .k .kh-skl--garden .kh-skl__riadok { min-height: 0; }
+}
+
+/* FINAL WEB REPAIR · navigation, rhythm and reusable product sections */
+@media (min-width:1024px) {
+  /* Panel touches the trigger hit-area. The transparent bridge prevents the
+     menu from closing while the pointer crosses the last visual pixels. */
+  .kv-header .kv-mega--batch5 { top:calc(100% - 1px); }
+  .kv-header .kv-nav__item[data-k-mega-item] > .kv-nav__link::before {
+    content:""; position:absolute; left:0; right:0; top:100%; height:24px;
+  }
+  .kv-header .kv-mega--real,
+  .kv-header .kv-nav__item--uzke .kv-mega--uzke.kv-mega--real.kv-mega--batch5 {
+    width:min(920px,calc(100vw - (2 * var(--k-gut))));
+    max-width:min(920px,calc(100vw - (2 * var(--k-gut))));
+    padding:18px;
+  }
+  .kv-header .kv-mega--real .kv-mega__real-grid { gap:10px; }
+  .kv-header .kv-mega--real .kv-mega__real-grid a {
+    grid-template-columns:156px minmax(0,1fr); gap:14px; padding:8px;
+  }
+  .kv-header .kv-mega--real .kv-mega__foto { width:156px; }
+}
+
+/* The underline grows only in X. Its 3px height and rounded ends never
+   change, including the first and last frame. */
+.kv-header .kv-nav__link::after {
+  height:3px; border-radius:999px; transform:none; clip-path:inset(0 100% 0 0 round 999px);
+  transition:clip-path 220ms var(--k-ease);
+}
+.kv-header .kv-nav__item:hover > .kv-nav__link::after,
+.kv-header .kv-nav__item.is-open > .kv-nav__link::after,
+.kv-header .kv-nav__link:focus-visible::after { transform:none; clip-path:inset(0 0 0 0 round 999px); }
+
+/* Cards no longer recolour their CTA when only the photograph/body is
+   hovered. The button changes only under the pointer or keyboard focus. */
+.k .kh-ponuka__karta:hover .kh-ponuka__akcia,
+.k .kh-ponuka__karta:focus-visible .kh-ponuka__akcia {
+  border-color:#b78900; background:var(--k-amber); color:var(--k-ink);
+}
+.k .kh-ponuka__akcia:hover,
+.k .kh-ponuka__akcia:focus-visible { border-color:var(--k-ink); background:var(--k-ink); color:#fff; }
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta::before { content:none; }
+
+/* Brand offer router */
+.kh-brand-dialog[hidden] { display:none; }
+.kh-brand-dialog { position:fixed; inset:0; z-index:1200; display:grid; place-items:center; padding:20px; }
+.kh-brand-dialog__scrim { position:absolute; inset:0; background:rgba(10,14,16,.58); backdrop-filter:blur(7px); }
+.kh-brand-dialog__panel {
+  position:relative; width:min(760px,100%); max-height:min(760px,calc(100svh - 40px)); overflow:auto;
+  padding:clamp(26px,4vw,46px); border-radius:22px; background:#fff; box-shadow:0 30px 90px rgba(0,0,0,.28);
+}
+.kh-brand-dialog__close {
+  position:absolute; top:14px; right:14px; display:grid; place-items:center; width:42px; height:42px;
+  border:1px solid rgba(18,23,26,.2); border-radius:50%; background:#eef0ef; color:var(--k-ink);
+  font:500 27px/1 var(--k-head); cursor:pointer;
+}
+.kh-brand-dialog__panel .k-h3 { margin:10px 48px 10px 0; font-size:clamp(28px,4vw,44px); }
+.kh-brand-dialog__panel > .k-copy { max-width:62ch; }
+.kh-brand-dialog__links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:24px; }
+.kh-brand-dialog__links a {
+  display:grid; gap:5px; min-height:94px; padding:17px 18px; border:1px solid rgba(18,23,26,.16);
+  border-radius:14px; background:#f4f4f1; color:var(--k-ink); text-decoration:none;
+  transition:border-color 160ms var(--k-ease),transform 160ms var(--k-ease),background-color 160ms var(--k-ease);
+}
+.kh-brand-dialog__links a:hover,.kh-brand-dialog__links a:focus-visible { border-color:#b78900; background:#fff7cf; transform:translateY(-2px); }
+.kh-brand-dialog__links strong { font:750 16px/1.25 var(--k-head); }
+.kh-brand-dialog__links span { color:var(--k-grey); font-size:12.5px; line-height:1.45; }
+.k-dialog-open { overflow:hidden; }
+
+/* Consistent, shorter subpage hero. Homepage keeps its own cinematic height. */
+body:not(.k-home) .k .kh-hero { min-height:clamp(520px,66svh,650px); }
+body:not(.k-home) .k .kh-hero__box { padding-top:clamp(82px,10vh,112px); padding-bottom:clamp(34px,5vh,54px); }
+body:not(.k-home) .k .kh-hero .k-display { max-width:15ch; font-size:clamp(42px,5vw,68px); line-height:.98; }
+body:not(.k-home) .k .kh-hero__lead { max-width:58ch; font-size:clamp(16px,1.35vw,19px); line-height:1.55; }
+body:not(.k-home) .k .kh-hero__trust { gap:0; margin-top:24px; }
+body:not(.k-home) .k .kh-hero__chip { padding:9px 28px 9px 0; margin-right:28px; }
+body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
+  left:max(var(--k-gut),calc((100vw - var(--k-max)) / 2 + var(--k-gut)));
+  top:clamp(18px,2vw,26px); max-width:calc(var(--k-max) - (2 * var(--k-gut)));
+}
+
+/* Secondary CTA is grey, never a floating white pill. */
+.k .k-btn--line { background:#e8eae8; border-color:#969c9f; color:var(--k-ink); }
+.k .kh-hero .k-btn--line { background:rgba(67,74,78,.78); border-color:rgba(255,255,255,.5); color:#fff; backdrop-filter:blur(5px); }
+.k .k-btn--line:hover,.k .k-btn--line:focus-visible { background:#d9ddda; border-color:var(--k-ink); }
+.k .kh-hero .k-btn--line:hover,.k .kh-hero .k-btn--line:focus-visible { background:#555d61; border-color:#fff; }
+
+/* Tighten oversized empty gaps without collapsing the hierarchy. */
+.k .k-band { padding-block:clamp(58px,6.5vw,96px); }
+.k .k-band + .k-band { scroll-margin-top:96px; }
+.k .k-head { margin-bottom:clamp(28px,4vw,54px); }
+
+/* Bespoke sizes: one calm information band, not a block of competing text. */
+.k .kh-size-custom {
+  grid-template-columns:minmax(0,1.35fr) minmax(230px,.65fr); gap:clamp(24px,4vw,54px);
+  margin-top:28px; padding:clamp(24px,3.4vw,42px); border:0; border-left:5px solid var(--k-amber);
+  border-radius:0 18px 18px 0; background:#e8ebe9; box-shadow:none;
+}
+.k .kh-size-custom__eyebrow { color:#596164; }
+.k .kh-size-custom__text { max-width:58ch; font-size:clamp(18px,1.5vw,22px); }
+.k .kh-size-custom__note { margin-top:12px; max-width:68ch; font-size:12.5px; }
+
+/* “Čo je v cene” is an editorial checklist rather than a wall of white cards. */
+.k .kh-vcene { background:var(--k-ink); color:#fff; }
+.k .kh-vcene__rad { gap:0; border-top:1px solid rgba(255,255,255,.18); border-bottom:1px solid rgba(255,255,255,.18); }
+.k .kh-vcene__polozka {
+  min-height:0; padding:clamp(24px,3vw,38px); border:0; border-left:1px solid rgba(255,255,255,.14);
+  border-radius:0; background:transparent; box-shadow:none;
+}
+.k .kh-vcene__polozka:first-child { border-left:0; }
+.k .kh-vcene__nazov { color:#fff; font-size:clamp(18px,1.6vw,24px); }
+.k .kh-vcene__nazov::before { background:var(--k-amber); }
+.k .kh-vcene__body li { color:rgba(255,255,255,.7); border-color:rgba(255,255,255,.12); }
+
+@media (max-width:719px) {
+  .kh-brand-dialog__links { grid-template-columns:1fr; }
+  body:not(.k-home) .k .kh-hero { min-height:620px; }
+  body:not(.k-home) .k .kh-hero__box { padding-top:88px; }
+  body:not(.k-home) .k .kh-hero .k-display { font-size:clamp(38px,11vw,52px); }
+  body:not(.k-home) .k .kh-hero__chip { width:100%; padding:8px 0; margin:0; }
+  .k .kh-size-custom { grid-template-columns:1fr; border-left-width:4px; }
+  .k .kh-vcene__polozka { border-left:0; border-top:1px solid rgba(255,255,255,.14); }
+  .k .kh-vcene__polozka:first-child { border-top:0; }
+}
+
+/* SOLTEC CARPORT · compact, readable family-first decision */
+.k .k-carport-series__head { min-height:172px; }
+.k .k-carport-series__head figure { min-height:172px; }
+.k .k-carport-series__facts { padding:8px 16px 0; }
+.k .k-carport-series__facts div { min-height:78px; padding:11px 12px; }
+.k .k-carport-series__extras { margin:10px 18px 0; padding:13px 15px; }
+.k .k-carport-series__models { padding-top:12px; }
+.k details.k-model-card--mini { overflow:hidden; }
+.k details.k-model-card--mini > summary {
+  position:relative; display:grid; grid-template-columns:auto 1fr; align-items:center; gap:7px 10px;
+  min-height:128px; padding:14px 36px 14px 14px; list-style:none; cursor:pointer;
+}
+.k details.k-model-card--mini > summary::-webkit-details-marker { display:none; }
+.k details.k-model-card--mini > summary::after {
+  content:"+"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  color:#8b6200; font:500 22px/1 var(--k-head);
+}
+.k details.k-model-card--mini[open] > summary::after { content:"−"; }
+.k details.k-model-card--mini summary .k-model-card__use { justify-self:end; }
+.k details.k-model-card--mini summary strong { grid-column:1 / -1; font:750 15px/1.25 var(--k-head); }
+.k details.k-model-card--mini summary small { grid-column:1 / -1; color:var(--k-grey); font-size:12px; }
+.k .k-model-card__detail { padding:0 14px 14px; border-top:1px solid rgba(18,23,26,.1); }
+.k .k-model-card__detail > p { margin:12px 0 6px; color:var(--k-grey); font-size:12px; line-height:1.45; }
+
+@media (min-width:1180px) {
+  .k .k-model-section .k-head { margin-bottom:30px; }
+  .k .k-carport-compare { gap:18px; }
+}
+
+/* FIXED CANOPIES · same family-first language as carports */
+.k .k-canopy-compare { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.k .k-canopy-compare .k-model-family {
+  margin:0; overflow:hidden; border:1px solid rgba(18,23,26,.14); border-radius:22px;
+  background:#fff; box-shadow:0 16px 44px rgba(18,23,26,.07);
+}
+.k .k-canopy-compare .k-model-family__head {
+  min-height:166px; margin:0; padding:24px; background:var(--k-ink); color:#fff;
+}
+.k .k-canopy-compare .k-model-family__head > div > span { color:var(--k-amber); font-size:clamp(24px,2.2vw,34px); }
+.k .k-canopy-compare .k-model-family__head > div > strong { color:#fff; }
+.k .k-canopy-compare .k-model-family__head > p { color:rgba(255,255,255,.7); font-size:12.5px; line-height:1.48; }
+.k .k-canopy-compare .k-model-grid { gap:10px; padding:14px 16px 16px; }
+.k .k-canopy-compare .k-model-card { border-radius:14px; background:var(--k-bone); box-shadow:none; }
+.k .k-canopy-compare .k-model-card__media { aspect-ratio:16/7.5; max-height:132px; }
+.k .k-canopy-compare .k-model-card__body { padding:14px; }
+.k .k-canopy-compare .k-model-card h3 { margin:9px 0 7px; font-size:17px; line-height:1.18; }
+.k .k-canopy-compare .k-model-card__explain { min-height:4.2em; margin:0 0 8px; color:var(--k-grey); font-size:11.5px; line-height:1.42; }
+.k .k-canopy-compare .k-model-facts { display:grid; grid-template-columns:1fr 1fr; column-gap:12px; }
+.k .k-canopy-compare .k-model-facts div { padding:6px 0; font-size:11px; }
+@media (max-width:1080px) { .k .k-canopy-compare { grid-template-columns:1fr; } }
+@media (max-width:619px) {
+  .k .k-canopy-compare .k-model-grid { grid-template-columns:1fr; }
+  .k .k-canopy-compare .k-model-card__explain { min-height:0; }
+}
+
+/* Subpage hero facts stay together on the photograph, including phones. */
+@media (max-width:719px) {
+  body:not(.k-home) .k .kh-hero__trust {
+    display:flex; flex-wrap:nowrap; align-items:stretch; width:100%; gap:0; margin-top:18px;
+  }
+  body:not(.k-home) .k .kh-hero__chip {
+    display:block; flex:1 1 0; width:auto; min-width:0; margin:0 10px 0 0;
+    padding:0 10px 0 0; border-right:1px solid rgba(255,255,255,.26);
+    font-size:8.5px; line-height:1.35; letter-spacing:.075em;
+  }
+  body:not(.k-home) .k .kh-hero__chip:last-child { margin-right:0; padding-right:0; border-right:0; }
+  body:not(.k-home) .k .kh-hero__chip strong {
+    margin-bottom:3px; font-size:clamp(12px,3.5vw,14px); line-height:1.12;
+  }
+}
+
+/* Hover never moves or swaps a photograph. Feedback stays on borders, text
+   and arrows, so the image remains visually anchored under the pointer. */
+.k .kh-kfg__karta:hover,
+.k .kh-kfg__karta:focus-visible { transform:none; }
+.k .kh-ponuka__foto img,
+.k .kh-kfg__foto img,
+.k .kh-cat__media img,
+.k .kh-work__media img,
+.k .kh-mat__media img,
+.k .kh-soltec__media img,
+.k .k-model-card__media img { object-position:center; }
