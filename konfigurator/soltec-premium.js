@@ -2318,35 +2318,6 @@
             }
             quad(cap, hex, { normal: n, bias: ON_SKIN });
           };
-          /* Krytka na päte stĺpa nie je spojovací prvok, takže ju nesmie
-             kresliť skrutkuj: šesťhranná hlava sa na tejto pozícii čítala ako
-             matica. Kryt je plochý okrúhly diel — valcový obvod, po ňom úkos
-             a mierne zapustené čelo, takže svetlo po ňom obieha dokola a
-             nemá žiadnu hranu, ktorá by pripomínala kľúč. Priemer aj výška
-             sú vizuálne proporcie, nie výrobný údaj. */
-          const krytka = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
-            const r = R || 11, sd = sgn || 1, h = dlzka || 3;
-            const SEG = 16, rim = r * 0.78, lip = h * 0.45;
-            const P = (t, rad, a) => {
-              const c = Math.cos(a) * rad, d = Math.sin(a) * rad;
-              if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
-              if (os === 'y') return [cx0 + c, cy0 + sd * t, cz0 + d];
-              return [cx0 + c, cy0 + d, cz0 + sd * t];
-            };
-            const n = os === 'x' ? [sd, 0, 0] : os === 'y' ? [0, sd, 0] : [0, 0, sd];
-            const face = [];
-            for (let i = 0; i < SEG; i++) {
-              const a = (Math.PI * 2 * i) / SEG, b = (Math.PI * 2 * (i + 1)) / SEG;
-              face.push(P(h, rim, a));
-              const c = Math.cos((a + b) / 2), d = Math.sin((a + b) / 2);
-              const sideNormal = os === 'x' ? [0, c, d] : os === 'y' ? [c, 0, d] : [c, d, 0];
-              quad([P(0, r, a), P(lip, r, a), P(lip, r, b), P(0, r, b)], hex,
-                   { normal: sideNormal, cull: false, bias: ON_SKIN });
-              const skos = [P(lip, r, a), P(h, rim, a), P(h, rim, b), P(lip, r, b)];
-              quad(skos, shade(hex, 0.05), { normal: faceNormal(skos), cull: false, bias: ON_SKIN });
-            }
-            quad(face, shade(hex, 0.03), { normal: n, bias: ON_SKIN });
-          };
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
             const zin = model().rimSoffitHex || '#c2c7cb';
@@ -2392,7 +2363,12 @@
             }
           }
 
-          layer = -2 * ROOF_LAYER;
+          /* Tieň aj svetlo prepadnuté cez lamely ležia na zemi, takže patria
+             k podkladu — kreslia sa v background dávke bez hĺbkového testu,
+             hneď za dlažbou. Kým boli o vrstvu vyššie, brali sa ako bežné
+             priehľadné plochy: pri pohľade spod horizontu vyšla rovina zeme
+             pred stĺpy a pruhované svetlo sa kreslilo cez ne. */
+          layer = -3 * ROOF_LAYER;
           const shadow = (grow, alpha) => quad([
             [-grow + shX, -grow + shY, 0], [L + grow + shX, -grow + shY, 0],
             [L + grow + shX, W + grow + shY, 0], [-grow + shX, W + grow + shY, 0]
@@ -2425,7 +2401,11 @@
                 quad([
                   [a + shX, post + shY, 0], [b + shX, post + shY, 0],
                   [b + shX, W - post + shY, 0], [a + shX, W - post + shY, 0]
-                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 1000 });
+                /* Pruh svetla leží na zemi, takže musí prehrať iba závoje
+                   tieňa pod sebou (bias 1 a 2) — nič viac. Bias 1000 ho
+                   posadil až za stĺpy a svetlo z podlahy sa potom kreslilo
+                   cez ne; na zábere bolo pruhovanie priamo na stĺpe. */
+                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 3 });
               }
             }
           }
@@ -2632,7 +2612,9 @@
                 const pth = Math.max(8, Math.round(pl * 0.05));
                 const cx = px + pd / 2, cy = py + pw / 2;
                 const plateHex = model().roofKit === 'koverta' ? frame : '#c9ccce';
-                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, ['-z'], SHAFT, 0, false, true);
+                /* Spodok pätky sa musí uzavrieť. Kamera ide pod prístrešok a
+                   do otvorenej dosky bolo vidieť zvnútra. */
+                boxFaces(cx - pl / 2, cy - pl / 2, 0, pl, pl, pth, plateHex, [], SHAFT, 0, false, true);
                 /* Na oficiálnych rendroch sú v doske štyri skrutky do betónu,
                    po jednej v každom rohu. Bez nich vyzerala doska ako
                    podložený plech. */
@@ -2657,17 +2639,20 @@
                  štyri rovné líca a v každom rohu dva krátke úkosy, čo v tejto
                  mierke zaoblenie prečíta. */
               if (model().roofKit === 'koverta') {
+                /* Nálepka s logom patrí takmer na vrch stĺpa, na líce, ktoré
+                   vidno zo strany, kde parkuje auto — nie do polovice výšky,
+                   kde sa strácala za autom aj za očami. Jej horná hrana je
+                   preto tesne pod hlavou stĺpa. */
                 if(px===xs[0] && py>W/2){
-                  const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6,z=Math.min(1450,H*.62);
+                  const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6;
+                  const z=H+lift-h-Math.max(70,Math.round(H*0.04));
                   quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
                     {normal:[0,1,0],cull:true,edge:false,decal:true});
                 }
-                /* Pri päte stĺpa sú krytky, nie skrutky — kreslí ich preto
-                   krytka a nie skrutkuj. */
-                for (const z of [55, 115]) for (const side of [-1, 1]) {
-                  krytka(px + pd / 2, side < 0 ? py - 0.4 : py + pw + 0.4, z,
-                    'y', shade(frame, 0.04), 10, side, 3.4);
-                }
+                /* Pri päte stĺpa nie je nič. Majiteľ si kotviace krytky
+                   výslovne neželá: na fotkách realizácií je od pätky po hlavu
+                   čistý jakl a všetko, čo tam renderer dokresľoval, pôsobilo
+                   ako navlečená matica. */
               }
               if (BIO.roundPosts) {
                 /* Jakl má hrany len zrazené, nie oblé. Kým bol polomer 16 %
@@ -2703,7 +2688,10 @@
                        frame, { normal: [nx / ln, ny / ln, 0], vertexNormals: [[a[2],a[3],0],[b[2],b[3],0],[b[2],b[3],0],[a[2],a[3],0]], cull: true, arris: false, seamless: true });
                 }
               } else {
-                boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z', '-z'], SHAFT);
+                /* Stĺp bez kotevnej dosky stojí priamo na zemi, takže jeho
+                   spodok je zdola vidieť. Kým sa dno vynechávalo, bol z
+                   podhľadu otvorený profil. Hlavu zakrýva hlavová platňa. */
+                boxFaces(px, py, 0, pd, pw, H + lift, frame, ['+z'], SHAFT);
               }
               /* Skrutky. Sedia hore, kde stĺp dosadá na obvodový profil —
                  nie na jeho hranách. Na každej z dvoch protiľahlých strán sú
@@ -4040,7 +4028,12 @@
                   : p[1]+near+(W-7000-near)*(p[1]-150)/6700;
                 const z = p[2] < 200 ? p[2] : p[2] > 2300 ? p[2]+H-2398
                   : p[2]+(H-2398)*(p[2]-200)/2100;
-                const radial = (radius - 40) * Math.max(0, Math.min(1, (2543.5 - p[2]) / 83.5));
+                /* Zvod musí mať jeden priemer po celej dĺžke. Pôvodne sa
+                   prírastok nad 80 mm rozpúšťal na 83,5 mm pod žľabom, takže
+                   rúra menila hrúbku. Teraz sa mení jedinou hranou v rovine
+                   dna žľabu — tá je celá v kapse za lemovaním — a celý
+                   odkrytý úsek má rovnaký prierez. */
+                const radial = p[2] < 2543.5 ? (radius - 40) : 0;
                 const n = ref.normals[index];
                 return [p[0]+dx+n[0]*radial,wy+n[1]*radial,z+n[2]*radial];
               };
@@ -4355,12 +4348,20 @@
               const bodyEnd = fullHalf - Math.max(17, overlap) - 2;
               const shoulder0 = left + bladeW * 0.31;
               const shoulder1 = left + bladeW * (bladeW > 250 ? 0.42 : 0.45);
+              /* Zatvorená strecha má zhora ukázať na každej lamele dve časti:
+                 dlhé horné líce a pri spoji kratší prúžok posadený nižšie, cez
+                 ktorý susedná lamela presahuje. Kým ležali obe v rovine 0,
+                 splynuli do jednej plochy a zhora bola strecha bez členenia.
+                 Krycia rovina lamely zostáva na 0, znižuje sa iba ten prúžok. */
+              const lipEnd = left + Math.max(skin * 7, bladeW * 0.11);
+              const lipZ = -Math.max(4, t * 0.16);
+              const lipNotch = lipZ - Math.max(1.5, skin * 0.8);
               const sharpProfile = [
                 [left,-t],[bodyEnd,-t],[bodyEnd+3,-skin],
                 [fullHalf,-skin],[fullHalf,0],[shoulder1,0],
                 [shoulder0,-t+skin],[left+skin*2,-t+skin],
-                [left+skin*3,-skin*2],[left+skin*7,-skin*2],
-                [left+skin*7,0],[left+skin,0]
+                [left+skin*3,lipNotch],[lipEnd,lipNotch],
+                [lipEnd,lipZ],[left+skin,lipZ]
               ];
               // Small formed edge radius, shared by every blade and angle.
               const profile = [];
@@ -4401,7 +4402,15 @@
               for(let j=0;j<profile.length;j++) {
                 const A=profile[j], B=profile[(j+1)%profile.length];
                 const pts=[P(A[0],A[1],y0-lap),P(A[0],A[1],y1+lap),P(B[0],B[1],y1+lap),P(B[0],B[1],y0-lap)];
-                quad(pts,louv,{normal:faceNormal(pts),edge:false,cull:false});
+                /* Spoj medzi lamelami. Stupienok z tela na tesniaci jazyk je
+                   jediné miesto, kde na seba susedné lamely dosadajú, a pri
+                   zatvorenej streche má byť zdola vidieť práve túto jednu
+                   čiaru. Materiál ani farba sa nemenia — do zapusteného kúta
+                   spoja len dopadá menej svetla, rovnako ako do kanála
+                   trapézového podhľadu. */
+                const um = (A[0] + B[0]) / 2;
+                const spoj = um > bodyEnd - 1 && um < bodyEnd + 4;
+                quad(pts,spoj?shade(louv,-0.20):louv,{normal:faceNormal(pts),edge:false,cull:false});
               }
               for(const [y,ny] of [[y0-lap,-1],[y1+lap,1]])caps.forEach(ids=>quad(ids.map(j=>P(profile[j][0],profile[j][1],y)),louv,{normal:[0,ny,0],edge:false,cull:false}));
 
@@ -5177,13 +5186,17 @@
             syncLouverReadout();
             return;
           }
-          const ms = 380 + Math.abs(to - from) * 1750;
+          const ms = 420 + Math.abs(to - from) * 1900;
           const t0 = (window.performance || Date).now();
           const step = (now) => {
             const k = Math.min(1, ((now || (window.performance || Date).now()) - t0) / ms);
-            /* quick start and a calm settle, without the mechanical-looking
-               midpoint acceleration or bounce */
-            const e = 1 - Math.pow(1 - k, 3);
+            /* Pohon lamely sa rozbieha aj dobrzďuje. Doterajšie 1-(1-k)^3 malo
+               najvyššiu rýchlosť hneď v prvom snímku, takže strecha vyrazila
+               trhnutím a potom sa dlho doťahovala. Smootherstep má nulovú
+               rýchlosť aj zrýchlenie na oboch koncoch: rozbeh je mäkký,
+               najviac dráhy prejde v strede a posledné stupne zatvárania
+               dosadnú pokojne, bez dorážania. */
+            const e = k * k * k * (k * (k * 6 - 15) + 10);
             const value = from + (to - from) * e;
             const finished = k >= 1 || Math.abs(to - value) <= 1e-6;
             M.set(finished ? to : value);

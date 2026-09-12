@@ -671,8 +671,12 @@ body { background: var(--k-white); color: var(--k-ink); }
    na mobile o kúsok viac výšky a lištu poskladať do jedného posuvného
    riadku namiesto troch. */
 #SoltecPremium .sp-stage__canvas { min-height: min(200px, 24vh); }
-/* Celoobrazovkový režim má vlastné, špecifickejšie pravidlo s min-height: 0. */
-#SoltecPremium .sp-cfg.is-full .sp-stage__canvas { min-height: min(200px, 24vh); }
+/* Celoobrazovkový režim má vlastné, špecifickejšie pravidlo s min-height: 0.
+   Odkedy je zoom na mobile v toku nad modelom, ubral z plátna asi 61 px a
+   pri 200 px minime spadla scéna vo fullscreene na 208 px zo 844 — na
+   telefóne sa už na modeli nedalo nič rozoznať. Minimum je preto vyššie a
+   drží použiteľnú scénu aj na najmenších displejoch. */
+#SoltecPremium .sp-cfg.is-full .sp-stage__canvas { min-height: min(320px, 46vh); }
 
 @media screen and (max-width: 989px) {
   #SoltecPremium .sp-cfg.is-full .sp-cfg__grid { grid-template-rows: minmax(0, 46vh) minmax(0, 1fr); }

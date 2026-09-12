@@ -1077,7 +1077,7 @@
     #SoltecPremium .sp-cfg.is-full .sp-stage { position: relative; top: 0; display: flex; flex-direction: column; min-height: 0; border-radius: 0; }
     #SoltecPremium .sp-cfg.is-full .sp-stage__canvas { flex: 1 1 auto; min-height: 0; aspect-ratio: auto; }
     #SoltecPremium .sp-cfg.is-full .sp-panel { overflow-y: auto; border-left: 1px solid var(--sp-line); border-radius: 0; -webkit-overflow-scrolling: touch; }
-    #SoltecPremium .sp-cfg.is-full .sp-cfg__close { position: absolute; top: 1.6rem; right: 1.6rem; z-index: 2; display: grid; width: 4.4rem; height: 4.4rem; place-items: center; border: 1px solid var(--sp-line); border-radius: 50%; background: rgba(255,255,255,.94); color: var(--sp-ink); cursor: pointer; }
+    #SoltecPremium .sp-cfg.is-full .sp-cfg__close { position: absolute; top: 1.6rem; right: 1.6rem; z-index: 5; display: grid; width: 4.4rem; height: 4.4rem; place-items: center; border: 1px solid var(--sp-line); border-radius: 50%; background: rgba(255,255,255,.94); color: var(--sp-ink); cursor: pointer; }
     #SoltecPremium .sp-cfg.is-full .sp-cfg__close svg { width: 1.8rem; height: 1.8rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
     #SoltecPremium .sp-cfg.is-full .sp-cfg__close:hover { border-color: var(--sp-ink); background: var(--sp-ink); color: #fff; }
     #SoltecPremium .sp-cfg.is-full .sp-cfg__open { display: none; }
@@ -1484,4 +1484,9 @@
 @media (max-width: 749px) {
   #SoltecPremium .sp-zoom { position: relative; top: auto; right: auto; order: -1; align-self: flex-end; margin: .8rem .8rem 0; box-shadow: none; }
   #SoltecPremium .sp-stage__hint { display: none; }
+  /* Vo fullscreene sedí zatvárací krížik v pravom hornom rohu scény. Odkedy je
+     zoom v toku nad modelom a zarovnaný vpravo, dostal sa presne pod krížik a
+     ako prvý bral kliknutie — konfigurátor sa na mobile nedal zavrieť. Zoom mu
+     preto uvoľní miesto a krížik ostáva navrchu. */
+  #SoltecPremium .sp-cfg.is-full .sp-zoom { margin-right: 6.6rem; }
 }

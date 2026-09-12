@@ -58,7 +58,8 @@ jobs:
 
   deep:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    # Same budget as koverta-qa: the occlusion sweep does not fit in 40 min.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

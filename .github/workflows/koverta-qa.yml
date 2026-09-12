@@ -61,7 +61,10 @@ jobs:
 
   occlusion-deep:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    # 02-occlusion-sweep renders ~7000 views across 54 dimensions and needs
+    # more than 35 minutes on a hosted runner; at 35 it was cancelled mid-run
+    # and never reported. It passes when allowed to finish.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
