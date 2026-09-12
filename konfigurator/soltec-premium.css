@@ -1476,3 +1476,7 @@
   #SoltecPremium .sp-zoom { top: 5rem; right: .8rem; }
   #SoltecPremium .sp-stage__hint { font-size: .95rem; }
 }
+
+@media (max-width: 989px) {
+  #SoltecPremium .sp-stage { position: relative; top: auto; }
+}

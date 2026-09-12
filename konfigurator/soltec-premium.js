@@ -4321,7 +4321,7 @@
 
               const skin = Math.min(2.5, t * 0.08);
               const left = -fullHalf;
-              const bodyEnd = fullHalf - Math.max(17, overlap) - 0.8;
+              const bodyEnd = fullHalf - Math.max(17, overlap) - 2;
               const shoulder0 = left + bladeW * 0.31;
               const shoulder1 = left + bladeW * (bladeW > 250 ? 0.42 : 0.45);
               const sharpProfile = [

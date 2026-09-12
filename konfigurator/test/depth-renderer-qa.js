@@ -28,6 +28,8 @@ const { prepareContext } = require('./browser-qa');
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
           }
+          const zoomBox=await page.locator('.sp-zoom').boundingBox(),stageBox=await page.locator('.sp-stage').boundingBox();
+          assert(zoomBox.y>=stageBox.y && zoomBox.y+zoomBox.height<=stageBox.y+stageBox.height,'Zoom controls escaped model stage');
           await page.locator('[data-sp-zoom="in"]').click();
           assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family');
           await page.locator('[data-sp-zoom="reset"]').click();
