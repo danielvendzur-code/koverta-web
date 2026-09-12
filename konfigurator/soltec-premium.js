@@ -1610,6 +1610,7 @@
         let viewTouched = false;
         let lastRoofKind = null;
         const view = { az: -0.62, el: 0.42 };
+        let manualZoom = 1;
         let cameraRun = 0;
         const stopCamera = () => { if (cameraRun) cancelAnimationFrame(cameraRun); cameraRun = 0; };
         const animateCamera = (az, el) => {
@@ -1664,7 +1665,7 @@
           window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
-            page: BIO.page, model: state.model, width: widthMM(), length: lengthMM(), height: state.height,
+            page: BIO.page, model: state.model, zoom: manualZoom, width: widthMM(), length: lengthMM(), height: state.height,
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
@@ -1702,8 +1703,8 @@
               return shader;
             };
             const program = gl.createProgram();
-            const vs = compile(gl.VERTEX_SHADER, 'attribute vec4 position; attribute vec4 color; attribute float pattern; varying lowp vec4 tint; varying lowp float mesh; void main(){gl_Position=position;tint=color;mesh=pattern;}');
-            const fs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; varying lowp vec4 tint; varying lowp float mesh; void main(){vec4 c=tint;if(mesh>0.5){vec2 uv=fract(gl_FragCoord.xy/vec2(14.0,8.0));float d=abs(uv.x-0.5)+abs(uv.y-0.5);c.rgb*=mix(0.65,1.18,1.0-smoothstep(0.045,0.09,abs(d-0.5)));}gl_FragColor=c;}');
+            const vs = compile(gl.VERTEX_SHADER, 'attribute vec4 position; attribute vec4 color; attribute float pattern; attribute vec2 texUV; varying mediump vec2 uv; varying lowp vec4 tint; varying lowp float mesh; void main(){gl_Position=position;tint=color;mesh=pattern;uv=texUV;}');
+            const fs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; uniform sampler2D decal; varying mediump vec2 uv; varying lowp vec4 tint; varying lowp float mesh; void main(){vec4 c=tint;if(mesh>1.5){gl_FragColor=texture2D(decal,uv);return;}if(mesh>0.5){vec2 uv=fract(gl_FragCoord.xy/vec2(14.0,8.0));float d=abs(uv.x-0.5)+abs(uv.y-0.5);c.rgb*=mix(0.65,1.18,1.0-smoothstep(0.045,0.09,abs(d-0.5)));}gl_FragColor=c;}');
             gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
             gl.deleteShader(vs); gl.deleteShader(fs);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
@@ -1715,9 +1716,20 @@
             });
             surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
             depthPainter = { gl, program, host, surface, buffer: gl.createBuffer(),
-              position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern') };
+              position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern'), texUV: gl.getAttribLocation(program, 'texUV') };
+            const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+            const logo=new Image();logo.onload=()=>{
+              gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+              gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,logo);scheduleStage();
+            };
+            logo.src=new URL('koverta-decal.svg',document.querySelector('script[src*="soltec-premium.js"]').src).href;
           }
-          const { gl, program, host, surface, buffer, position, color, pattern } = depthPainter;
+          const { gl, program, host, surface, buffer, position, color, pattern, texUV } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           // Supersample even on 1x desktop displays: long folded-sheet edges
           // and 1.5 mm flashing laps otherwise collapse to broken pixels.
@@ -1733,10 +1745,11 @@
           gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
           gl.disable(gl.CULL_FACE);
           gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color); gl.enableVertexAttribArray(pattern);
-          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 36, 0);
-          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 36, 16);
-          gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 36, 32);
+          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color); gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
+          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 44, 0);
+          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 44, 16);
+          gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
+          gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
           const rgba = (fill) => {
             if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
@@ -1764,7 +1777,7 @@
                 const w = Math.max(DIST * 0.45, DIST - p.d);
                 data.push(((p.x * scale + ox) / VW * 2 - 1) * w,
                   (1 - (p.y * scale + oy) / VH * 2) * w,
-                  f.bg ? 0 : (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...vertexTint, String(f.sourceFill).startsWith('url(') ? 1 : 0);
+                  f.bg ? 0 : (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...vertexTint, f.decal ? 2 : String(f.sourceFill).startsWith('url(') ? 1 : 0, ...([[0,0],[1,0],[1,1],[0,1]][index] || [0,0]));
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0], 0); vertex(f.p[i], i); vertex(f.p[i+1], i+1); }
             }
@@ -1772,7 +1785,7 @@
             if (transparent) { gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
             else gl.disable(gl.BLEND);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
-            gl.drawArrays(gl.TRIANGLES, 0, data.length / 9);
+            gl.drawArrays(gl.TRIANGLES, 0, data.length / 11);
           };
           // Ground and its coplanar decorative overlays remain a background.
           const background = faces.filter(f => f.bg);
@@ -1916,13 +1929,14 @@
              lofted body, where dozens of small facets step through the mirror
              angle one after another and each one flashed. */
           const SPEC_I = 0.16, SPEC_P = 7;
-          const litFill = (c, n) => {
+          const litFill = (c, n, material) => {
             const base = toRGB(c);
             const kd = Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
             const fd = Math.max(0, n[0] * FILL[0] + n[1] * FILL[1] + n[2] * FILL[2]);
             const l = AMB + KEY_I * kd + FILL_I * fd + BOUNCE_I * Math.max(0, -n[2]) + SKY_I * Math.max(0, n[2]);
             const hn = Math.max(0, n[0] * HALF[0] + n[1] * HALF[1] + n[2] * HALF[2]);
-            const spec = kd > 0 ? SPEC_I * Math.pow(hn, SPEC_P) * 255 : 0;
+            const satin = material === 'zinc';
+            const spec = kd > 0 ? (satin ? 0.28 : SPEC_I) * Math.pow(hn, satin ? 18 : SPEC_P) * 255 : 0;
             const v = base.slice(0, 3).map((x) => Math.max(0, Math.min(255, Math.round(x * l + spec))));
             return base[3] == null
               ? 'rgb(' + v[0] + ',' + v[1] + ',' + v[2] + ')'
@@ -1988,11 +2002,11 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            const lit = o.raw ? fill : haze(litFill(fill, normal), depthAvg);
+            const lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
             faces.push({
               w: pts.map((point) => point.slice()),
               p: pp,
-              fill: lit, sourceFill: fill,
+              fill: lit, sourceFill: fill, decal: o.decal || false,
               vertexFills: o.vertexNormals ? o.vertexNormals.map(n => litFill(fill, n)) : null,
               edge: o.edge !== false,
               /* arris:false keeps the stroke but paints it in the face's own
@@ -2235,16 +2249,15 @@
           const ledRect = (x0, x1, y0, y1, z, tint) => {
             const c = LED_TINT[tint] || LED_TINT.warm;
             const alongX = x1 - x0 >= y1 - y0;
-            const put = (m, fill, bias) => quad(
-              [[x0 - (alongX ? 0 : m), y0 - (alongX ? m : 0), z],
-               [x1 + (alongX ? 0 : m), y0 - (alongX ? m : 0), z],
-               [x1 + (alongX ? 0 : m), y1 + (alongX ? m : 0), z],
-               [x0 - (alongX ? 0 : m), y1 + (alongX ? m : 0), z]],
+            const put = (m, fill, bias, drop = 0) => quad(
+              [[x0 - (alongX ? 0 : m), y0 - (alongX ? m : 0), z - drop],
+               [x1 + (alongX ? 0 : m), y0 - (alongX ? m : 0), z - drop],
+               [x1 + (alongX ? 0 : m), y1 + (alongX ? m : 0), z - drop],
+               [x0 - (alongX ? 0 : m), y1 + (alongX ? m : 0), z - drop]],
               fill, { normal: [0,0,-1], cull: true, edge: false, raw: true, bias: bias });
             const n = Math.min(x1 - x0, y1 - y0);
-            for (let i = 4; i >= 1; i--) put(n * i * 2.6, 'rgba(' + c.spill + ',' + (0.055 * (5 - i)).toFixed(3) + ')', 380 + (4 - i));
-            put(n * 0.55, 'rgba(20,19,16,.5)', 396);
-            put(0, c.core, 400);
+            put(2, '#35393b', 396, 0.5);
+            put(0, c.core.replace('.98', '1'), 400, 1.2);
           };
 
           /* bias: a member laid on a face that is drawn as one long quad sorts
@@ -2614,6 +2627,17 @@
                  vidno hneď. Kreslí sa ako hranol s dvanásťuholníkovým prierezom:
                  štyri rovné líca a v každom rohu dva krátke úkosy, čo v tejto
                  mierke zaoblenie prečíta. */
+              if (model().roofKit === 'koverta') {
+                if(px===xs[0] && py>W/2){
+                  const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6,z=Math.min(1450,H*.62);
+                  quad([[x+w,y,z],[x,y,z],[x,y,z+h],[x+w,y,z+h]],'#ffffff',
+                    {normal:[0,1,0],cull:true,edge:false,decal:true});
+                }
+                for (const z of [55, 115]) for (const side of [-1, 1]) {
+                  skrutkuj(px + pd / 2, side < 0 ? py - 0.4 : py + pw + 0.4, z,
+                    'y', frame, 9, side, 3);
+                }
+              }
               if (BIO.roundPosts) {
                 /* Jakl má hrany len zrazené, nie oblé. Kým bol polomer 16 %
                    šírky, mal stĺp cez celé líce mäkký prechod a čítal sa ako
@@ -3139,73 +3163,32 @@
                 boxFaces(fitX(x, dx), fitY(y, dy), 0, dx, dy, bodyTop, frame, ['+z', '-z'], SHAFT, bias || 0);
               };
               const fillFace = (pts, normal, kind = state.box.fin) => {
-                if (kind === 'l44es') {
-                  quad(pts, shade(skin, -0.34), { normal, cull: true, raw: true, edge: false });
-                  quad(pts, `url(#${meshPatternId})`, { normal, cull: true, raw: true, edge: false, bias: 60 });
-                  return;
-                }
-                if (kind === 'l44alu') {
-                  const z0 = Math.min(...pts.map((p)=>p[2])), z1 = Math.max(...pts.map((p)=>p[2]));
-                  quad(pts, shade(skin, -0.40), { normal, cull: true, raw: true, edge: false });
-                  const steps = Math.max(8, Math.round((z1-z0)/115));
-                  for (let i=0;i<steps;i++) {
-                    const za=z0+(z1-z0)*i/steps, zb=Math.min(z1,za+46);
-                    const q=pts.map((p)=>[p[0],p[1],p[2]===z0?za:zb]);
-                    quad(q, shade(skin, 0.24), { normal, cull:true, edge:false, bias: 60 });
+                const at=(a,b,f)=>a.map((v,i)=>v+(b[i]-v)*f);
+                const solid=(q,depth,color,pattern=false)=>{
+                  const back=q.map(p=>p.map((v,i)=>v-normal[i]*depth));
+                  quad(q,pattern ? `url(#${meshPatternId})` : color,{normal,edge:false,cull:true});
+                  quad(back.slice().reverse(),color,{normal:normal.map(v=>-v),edge:false,cull:true});
+                  for(let i=0;i<4;i++){
+                    const j=(i+1)%4, side=[q[i],q[j],back[j],back[i]];
+                    quad(side,color,{normal:faceNormal(side),edge:false,cull:false});
+                  }
+                };
+                if(kind==='wood'||kind==='l44alu'){
+                  const z0=pts[0][2],z1=pts[3][2],pitch=kind==='wood'?82:115;
+                  for(let z=z0,k=0;z<z1;z+=pitch,k++){
+                    const top=Math.min(z1,z+(kind==='wood'?70:46));
+                    const q=[[pts[0][0],pts[0][1],z],[pts[1][0],pts[1][1],z],
+                      [pts[1][0],pts[1][1],top],[pts[0][0],pts[0][1],top]];
+                    solid(q,kind==='wood'?24:35,kind==='wood'?boardTone(k):skin);
                   }
                   return;
                 }
-                if (kind === 'wood') {
-                  /* "Wood rhomb 70/24" is an angled batten, so a course is not a
-                     flat band with a line ruled across it: it is a lit face, the
-                     part of the batten falling away below it, and the shadow of
-                     the gap onto the one underneath. Courses are still set out
-                     from the ground, so they run through across every face.
-                     Lighting is left to the face normal - drawing them raw made
-                     all four sides of the box the same brightness, which is what
-                     read as flat. */
-                  const z0 = Math.min(...pts.map((q) => q[2])), z1 = Math.max(...pts.map((q) => q[2]));
-                  const at = (z) => pts.map((q) => [q[0], q[1], z]);
-                  const k0 = Math.floor(z0 / COURSE), k1 = Math.ceil(z1 / COURSE);
-                  const REVEAL = 0.16, CHAMFER = 0.34;
-                  const band = (p, q, hex) => {
-                    const a = Math.max(z0, p), b = Math.min(z1, q);
-                    if (b - a < 0.5) return;
-                    const lo = at(a), hi = at(b);
-                    quad([lo[0], lo[1], hi[1], hi[0]], hex, { normal, cull: true, edgeHex: hex });
-                  };
-                  for (let k = k0; k < k1; k++) {
-                    const za = Math.max(z0, k * COURSE), zb = Math.min(z1, (k + 1) * COURSE);
-                    if (zb - za < 2) continue;
-                    const tone = boardTone(k);
-                    const gap = za + (zb - za) * REVEAL;
-                    const mid = gap + (zb - gap) * CHAMFER;
-                    band(za, gap, shade(tone, -0.52));
-                    band(gap, mid, shade(tone, -0.16));
-                    band(mid, zb, tone);
-                  }
-                  return;
-                }
-                /* ISO panel. The sandwich panels come in a fixed module and
-                   meet in a tongue-and-groove joint, so a face is a run of
-                   panels with a fine shadow line between them. Drawn as one
-                   blank quad it read as a slab of sheet metal with nothing on
-                   it, which is not what the box is made of. The joints run the
-                   way the panel does - vertically on a wall - and no rail is
-                   added, because a panel joint is not a rail and the catalogue
-                   drawings show none. */
-                const runLen = Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]);
-                const modules = Math.max(1, Math.round(runLen / PANEL_MODULE));
-                if (modules === 1) {
-                  quad(pts, panelHex, { normal, cull: true, edge: true });
-                  return;
-                }
-                const at = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-                for (let i = 0; i < modules; i++) {
-                  const t0 = i / modules, t1 = (i + 1) / modules;
-                  quad([at(pts[0], pts[1], t0), at(pts[0], pts[1], t1),
-                        at(pts[3], pts[2], t1), at(pts[3], pts[2], t0)],
-                       panelHex, { normal, cull: true, edge: true });
+                const run=Math.hypot(pts[1][0]-pts[0][0],pts[1][1]-pts[0][1]);
+                const count=Math.max(1,Math.ceil(run/PANEL_MODULE)),gap=1.2/Math.max(1,run);
+                for(let i=0;i<count;i++){
+                  const a=i/count+(i?gap:0),b=(i+1)/count;
+                  solid([at(pts[0],pts[1],a),at(pts[0],pts[1],b),at(pts[3],pts[2],b),at(pts[3],pts[2],a)],
+                    kind==='l44es'?3:30,kind==='l44es'?skin:panelHex,kind==='l44es');
                 }
               };
 
@@ -3573,7 +3556,7 @@
                    coplanar with trapLowerZ and only adds a BSP splitting plane. */
                 // Keep the upper flange: corrugation valleys only touch its crests.
                 quad([P(A[0], A[1], u0), P(B[0], B[1], u0), P(B[0], B[1], u1), P(A[0], A[1], u1)],
-                     hex, { normal: n, cull: true, arris: false, edge: false, seamless: true });
+                     hex, { normal: n, material: 'zinc', cull: true, arris: false, edge: false, seamless: true });
               }
               (bokom ? cCela(par, vys, t, single) : []).forEach((r) => {
                 const [ca, cz, cw, ch] = r;
@@ -3583,6 +3566,16 @@
                        { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false, edge: false, seamless: true });
                 });
               });
+              if (!single) {
+                const count = Math.max(1, Math.round((u1 - u0) / 1000));
+                for (let k = 0; k <= count; k++) {
+                  const u = u0 + 65 + (u1 - u0 - 130) * k / count;
+                  for (const sign of [-1, 1]) for (const z of [24, vys - 24]) {
+                    const q = P(par / 2 + sign * t, z, u);
+                    skrutkuj(q[0], q[1], q[2], axis, hex, 7, sign, 4);
+                  }
+                }
+              }
               /* Škáru medzi dvojicou profilov má zdola vidieť len väznica —
                  obvodový rám má spodok čistý. */
               if (spara) {
@@ -3838,8 +3831,13 @@
                   tone = flat ? shade(hex, high ? 0.010 : -0.006)
                               : shade(hex, zb > za ? -0.014 : 0.004);
                 }
+                const cavity = upward ? 0 : trapProfile01((a + b) / 2);
+                // Less skylight reaches the recessed upper channel. The paint
+                // stays identical; only incident light changes with depth.
+                const surfaceNormal = faceNormal(pts);
+                if (!upward) tone = shade(hex, -0.16 * cavity);
                 quad(pts, tone, {
-                  normal: faceNormal(pts),
+                  normal: surfaceNormal,
                   cull: true,
                   edge: false,
                   raw: false,
@@ -3900,7 +3898,7 @@
                 const iy = dy > dx ? ledW * 0.18 : 0;
                 const lx = x + ix, ly = y + iy;
                 const ldx = Math.max(1, dx - ix * 2), ldy = Math.max(1, dy - iy * 2);
-                boxFaces(lx, ly, ledZ - diffT, ldx, ldy, diffT, ledLight, [], SHAFT);
+                boxFaces(lx, ly, ledZ - diffT, ldx, ldy, diffT, ledLight, ['-z'], SHAFT);
                 quad([[lx, ly, ledZ - diffT], [lx + ldx, ly, ledZ - diffT],
                       [lx + ldx, ly + ldy, ledZ - diffT], [lx, ly + ldy, ledZ - diffT]],
                      ledLight, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
@@ -3995,12 +3993,12 @@
               const section = kvStlpRez(row, rows.length);
               const postX = rows[row], postFace = postX + section.d;
               const inset = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
-              const radius = 40, standoff = 17;
+              const radius = section.w * 0.93 / 2, standoff = 17;
               const pipeX = postFace + radius + standoff, pipeY = inset + section.w / 2;
               const sourcePipeX = four ? 4973 : 5916;
               const gutterShift = L - 6000;
               const pipeShift = pipeX - sourcePipeX;
-              const mapPoint = p => {
+              const mapPoint = (p, index) => {
                 // Preserve the circular straight leg and gutter cross section;
                 // adapt only the intervening run to the active post station.
                 const transition = four ? Math.max(0,Math.min(1,(p[0]-sourcePipeX-50)/(5916-sourcePipeX-100)))
@@ -4011,7 +4009,9 @@
                   : p[1]+near+(W-7000-near)*(p[1]-150)/6700;
                 const z = p[2] < 200 ? p[2] : p[2] > 2300 ? p[2]+H-2398
                   : p[2]+(H-2398)*(p[2]-200)/2100;
-                return [p[0]+dx,wy,z];
+                const radial = (radius - 40) * Math.max(0, Math.min(1, (2543.5 - p[2]) / 83.5));
+                const n = ref.normals[index];
+                return [p[0]+dx+n[0]*radial,wy+n[1]*radial,z+n[2]*radial];
               };
               const vertices = ref.vertices.map(mapPoint);
               ref.triangles.forEach(tri => {
@@ -4030,7 +4030,7 @@
                 const seg=24;
                 for(let k=0;k<seg;k++){
                   const aa=k*Math.PI*2/seg,bb=(k+1)*Math.PI*2/seg;
-                  const A=[pipeX+Math.cos(aa)*41,pipeY+Math.sin(aa)*41], B=[pipeX+Math.cos(bb)*41,pipeY+Math.sin(bb)*41];
+                  const A=[pipeX+Math.cos(aa)*(radius+1.5),pipeY+Math.sin(aa)*(radius+1.5)], B=[pipeX+Math.cos(bb)*(radius+1.5),pipeY+Math.sin(bb)*(radius+1.5)];
                   quad([[...A,z-7],[...B,z-7],[...B,z+7],[...A,z+7]],shade(frame,-.08),{normal:[Math.cos((aa+bb)/2),Math.sin((aa+bb)/2),0],edge:false,cull:false});
                 }
                 clamps.push({z,bridgeX0:postFace-2,bridgeX1:postFace+standoff+2,postFaceX:postFace,pipeNearX:pipeX-radius});
@@ -4319,33 +4319,28 @@
             if (ledOn) for (let q = 0; q < ledQty; q++) ledLit.add(Math.round(((n - 1) * (q + 0.5)) / ledQty));
             const ledCol = LED_TINT[(state.ledSet || {}).type] || LED_TINT.warm;
 
-            for (let i = 0; i < n; i++) {
-              const x = i0 + pitch * (i + 0.5);
-              const fullAX = x - dx, fullAZ = mid - dz;
-              const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
-              const bX = x + dx, bZ = mid + dz;
-              // One rigid, closed extrusion, one powder-coat material. A
-              // recessed tongue seals the neighbour without coplanar bottoms.
-              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, mid + u * bladeUz + z * bladeUx];
-              // Soltec S section: a full-depth box, sloped shoulder, low
-              // drainage trough and overlapping sealing lip (200/28 drawing).
               const skin = Math.min(2.5, t * 0.08);
               const left = -fullHalf;
-              const bodyEnd = fullHalf - Math.max(17, overlap);
+              const bodyEnd = fullHalf - Math.max(17, overlap) - 0.8;
               const shoulder0 = left + bladeW * 0.31;
               const shoulder1 = left + bladeW * (bladeW > 250 ? 0.42 : 0.45);
-              const profile = [
+              const sharpProfile = [
                 [left,-t],[bodyEnd,-t],[bodyEnd+3,-skin],
                 [fullHalf,-skin],[fullHalf,0],[shoulder1,0],
                 [shoulder0,-t+skin],[left+skin*2,-t+skin],
                 [left+skin*3,-skin*2],[left+skin*7,-skin*2],
                 [left+skin*7,0],[left+skin,0]
               ];
-              for(let j=0;j<profile.length;j++) {
-                const A=profile[j], B=profile[(j+1)%profile.length];
-                const pts=[P(A[0],A[1],y0-lap),P(B[0],B[1],y0-lap),P(B[0],B[1],y1+lap),P(A[0],A[1],y1+lap)];
-                quad(pts,louv,{normal:faceNormal(pts),edge:false,cull:false});
-              }
+              // Small formed edge radius, shared by every blade and angle.
+              const profile = [];
+              sharpProfile.forEach((b,j) => {
+                const a=sharpProfile[(j+sharpProfile.length-1)%sharpProfile.length], c=sharpProfile[(j+1)%sharpProfile.length];
+                const ab=Math.hypot(a[0]-b[0],a[1]-b[1]), cb=Math.hypot(c[0]-b[0],c[1]-b[1]);
+                const r=Math.min(0.65,ab*.2,cb*.2);
+                const A=[b[0]+(a[0]-b[0])*r/ab,b[1]+(a[1]-b[1])*r/ab];
+                const C=[b[0]+(c[0]-b[0])*r/cb,b[1]+(c[1]-b[1])*r/cb];
+                for(const f of [0,0.5,1])profile.push([(1-f)*(1-f)*A[0]+2*f*(1-f)*b[0]+f*f*C[0],(1-f)*(1-f)*A[1]+2*f*(1-f)*b[1]+f*f*C[1]]);
+              });
               // Triangulate the non-convex end cover without filling its trough.
               const remaining=profile.map((_,j)=>j), caps=[];
               const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
@@ -4361,20 +4356,35 @@
                 if(!found)break;
               }
               if(remaining.length===3)caps.push(remaining.slice());
+
+            for (let i = 0; i < n; i++) {
+              const x = i0 + pitch * (i + 0.5);
+              const fullAX = x - dx, fullAZ = mid - dz;
+              const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
+              const bX = x + dx, bZ = mid + dz;
+              // One rigid, closed extrusion, one powder-coat material. A
+              // recessed tongue seals the neighbour without coplanar bottoms.
+              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, mid + u * bladeUz + z * bladeUx];
+              // Soltec S section: a full-depth box, sloped shoulder, low
+              // drainage trough and overlapping sealing lip (200/28 drawing).
+              for(let j=0;j<profile.length;j++) {
+                const A=profile[j], B=profile[(j+1)%profile.length];
+                const pts=[P(A[0],A[1],y0-lap),P(B[0],B[1],y0-lap),P(B[0],B[1],y1+lap),P(A[0],A[1],y1+lap)];
+                quad(pts,louv,{normal:faceNormal(pts),edge:false,cull:false});
+              }
               for(const [y,ny] of [[y0-lap,-1],[y1+lap,1]])caps.forEach(ids=>quad(ids.map(j=>P(profile[j][0],profile[j][1],y)),louv,{normal:[0,ny,0],edge:false,cull:false}));
 
               /* the strip lies in the underside of this blade, along it, so it
                  tilts with the blade instead of floating at a fixed height */
               if (ledLit.has(i)) {
-                const cx = x + ox, cz = mid + oz;
+                const cx = x + (t + 0.8) * bladeUz, cz = mid - (t + 0.8) * bladeUx;
                 const yc = (y0 + y1) / 2, hy = Math.min((y1 - y0) / 2 - 30, ledLen / 2);
-                const strip = (w, fill, bias) => quad([
-                  [cx - bladeUx * w, yc - hy, cz - bladeUz * w], [cx + bladeUx * w, yc - hy, cz + bladeUz * w],
-                  [cx + bladeUx * w, yc + hy, cz + bladeUz * w], [cx - bladeUx * w, yc + hy, cz - bladeUz * w]
-                ], fill, { normal: [0, 0, -1], cull: true, edge: false, raw: true, bias: bias });
-                for (let k = 3; k >= 1; k--) strip(9 + k * 22, 'rgba(' + ledCol.spill + ',' + (0.06 * (4 - k)).toFixed(3) + ')', 380 + (3 - k));
-                strip(13, 'rgba(20,19,16,.5)', 396);
-                strip(8, ledCol.core, 400);
+                const strip = (w, fill, bias, gap = 0) => quad([
+                  [cx + gap * bladeUz - bladeUx * w, yc - hy, cz - gap * bladeUx - bladeUz * w], [cx + gap * bladeUz + bladeUx * w, yc - hy, cz - gap * bladeUx + bladeUz * w],
+                  [cx + gap * bladeUz + bladeUx * w, yc + hy, cz - gap * bladeUx + bladeUz * w], [cx + gap * bladeUz - bladeUx * w, yc + hy, cz - gap * bladeUx - bladeUz * w]
+                ], fill, { normal: [bladeUz, 0, -bladeUx], cull: true, edge: false, raw: true, bias: bias });
+                strip(11, '#35393b', 396);
+                strip(8, ledCol.core.replace('.98', '1'), 400, 0.7);
               }
             }
 
@@ -4400,7 +4410,7 @@
             minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
             minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
           })));
-          const scale = Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
+          const scale = manualZoom * Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
           const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2;
           const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2;
 
@@ -5639,16 +5649,40 @@
         openingSize();
         // drag to orbit; the model can be inspected from above and from below
         let dragging = false, lastX = 0, lastY = 0;
+        const orbitPointers = new Map();
+        let pinchDistance = 0;
         const stageEl = cfgRoot.querySelector('.sp-stage');
+        const zoomUI = document.createElement('div');
+        const setZoom = value => {
+          manualZoom = Math.max(0.65, Math.min(3.5, value));
+          const output=zoomUI.querySelector('output');
+          if(output)output.value=Math.round(manualZoom*100)+' %';
+          scheduleStage();
+        };
         if (stageEl) {
+          zoomUI.className='sp-zoom';
+          zoomUI.setAttribute('role','group');
+          zoomUI.setAttribute('aria-label','Priblíženie modelu');
+          zoomUI.innerHTML='<button type="button" data-sp-zoom="out" aria-label="Oddialiť model">−</button><output aria-live="polite">100 %</output><button type="button" data-sp-zoom="in" aria-label="Priblížiť model">+</button><button type="button" data-sp-zoom="reset" aria-label="Obnoviť celý model">Celý model</button>';
+          stageEl.appendChild(zoomUI);
+          zoomUI.addEventListener('click',e=>{
+            const b=e.target.closest('[data-sp-zoom]');if(!b)return;
+            setZoom(b.dataset.spZoom==='reset'?1:manualZoom*(b.dataset.spZoom==='in'?1.2:1/1.2));
+          });
+          canvas.addEventListener('wheel',e=>{
+            e.preventDefault();setZoom(manualZoom*Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*0.003));
+          },{passive:false});
           /* Turning the model is part of the product, so it cannot be mouse-only.
              Arrow keys orbit, Home returns to the opening view. */
           const hint = document.createElement('p');
           hint.className = 'sp-stage__hint';
           hint.setAttribute('aria-hidden', 'true');
-          hint.textContent = 'Ťahaním alebo šípkami otočíte model';
+          hint.textContent = 'Ťahaním otočíte · kolieskom alebo dvoma prstami priblížite';
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
+            if(e.target.closest('button,input,select,textarea'))return;
+            if(e.key==='+'||e.key==='='){e.preventDefault();setZoom(manualZoom*1.2);return;}
+            if(e.key==='-'){e.preventDefault();setZoom(manualZoom/1.2);return;}
             stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
@@ -5657,7 +5691,7 @@
             else if (e.key === 'ArrowRight') view.az += step;
             else if (e.key === 'ArrowUp') view.el = Math.min(1.45, view.el + step * 0.7);
             else if (e.key === 'ArrowDown') view.el = Math.max(EL_FLOOR(), view.el - step * 0.7);
-            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); }
+            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); setZoom(1); }
             else used = false;
             if (!used) return;
             e.preventDefault();
@@ -5668,11 +5702,19 @@
           stageEl.addEventListener('pointerdown', (e) => {
             if (e.target.closest('button, input, select, textarea, label, [role="group"]')) return;
             stopCamera();
+            orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
+            if(orbitPointers.size===2){const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
             dragging = true; lastX = e.clientX; lastY = e.clientY;
             stageEl.setPointerCapture(e.pointerId);
           });
           stageEl.addEventListener('pointermove', (e) => {
             if (!dragging) return;
+            orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
+            if(orbitPointers.size>1){
+              const p=[...orbitPointers.values()],distance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);
+              if(pinchDistance>0)setZoom(manualZoom*distance/pinchDistance);
+              pinchDistance=distance;return;
+            }
             // Drag right, model turns right: the point under the cursor has to
             // follow the cursor, and increasing az moves it right on screen.
             viewTouched = true;
@@ -5684,7 +5726,12 @@
                Soltec. Koverta deliberately keeps its existing full-render path. */
             scheduleStage();
           });
-          const stop = (e) => { if (!dragging) return; dragging = false; try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {} };
+          const stop = (e) => {
+            orbitPointers.delete(e.pointerId);pinchDistance=0;
+            dragging=orbitPointers.size>0;
+            if(dragging){const p=[...orbitPointers.values()][0];lastX=p[0];lastY=p[1];}
+            try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
+          };
           stageEl.addEventListener('pointerup', stop);
           stageEl.addEventListener('pointercancel', stop);
         }

@@ -28,6 +28,10 @@ const { prepareContext } = require('./browser-qa');
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
           }
+          await page.locator('[data-sp-zoom="in"]').click();
+          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family');
+          await page.locator('[data-sp-zoom="reset"]').click();
+          assert.equal(await page.evaluate(()=>SP_TEST.snapshot().zoom),1);
           const times=[];
           for (let i=0;i<48;i++) {
             times.push(await page.evaluate(i=>{
@@ -44,6 +48,10 @@ const { prepareContext } = require('./browser-qa');
             await stage.screenshot({path:`qa-artifacts/depth/${kind}-${key||'K'}-${mobile?'mobile':'desktop'}-${name}.png`});
           }
           if(kind==='bio') {
+            const led=page.locator('[data-sp-add-on="led"]');
+            if(await led.count()) {
+              await led.evaluate(el=>{el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));});
+            }
             const range=page.locator('[data-sp-louver-range]').first();
             for(const value of [100,50,10,1,0]) {
               await range.evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));},value);
@@ -51,9 +59,27 @@ const { prepareContext } = require('./browser-qa');
               await stage.screenshot({path:`qa-artifacts/depth/bio-${key}-${mobile?'mobile':'desktop'}-louver-${value}.png`});
             }
           }
+          if(kind==='bio') {
+            await page.waitForTimeout(220);
+            await page.evaluate(()=>{SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
+            const before=await stage.screenshot();
+            await page.evaluate(()=>{SP_TEST.setView(2.1,.7);SP_TEST.redrawStage();SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
+            const after=await stage.screenshot();
+            assert(before.equals(after),'Closed lamellas and lighting must return to identical pixels after orbit');
+          }
+          if(kind==='carport') {
+            const box=page.locator('[data-sp-add-on="box"]');
+            if(await box.count() && await box.isEnabled()){
+              await box.evaluate(el=>{el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));});
+              await page.waitForTimeout(220);
+              await stage.screenshot({path:`qa-artifacts/depth/box-${key}-${mobile?'mobile':'desktop'}.png`});
+              await box.evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});
+            }
+          }
           times.sort((a,b)=>a-b);
           report.push({kind,key,mobile,medianMs:times[24],p95Ms:times[45],faces:await stage.getAttribute('data-face-count')});
         }
+        await page.screenshot({path:`qa-artifacts/depth/ui-${kind}-${mobile?'mobile':'desktop'}.png`});
         if(kind==='bio') {
           const sideStep=await page.locator('[data-sp-side="rear"]').evaluate(el=>el.closest('[data-sp-stepno]').dataset.spStepno);
           await page.locator('[data-sp-goto="'+sideStep+'"]').click();
