@@ -1,33 +1,95 @@
-# Odovzdanie scény po 1ab8011
+# Odovzdanie scény, počasia a odtoku — 20260912
 
-Používateľ požiadal o skoršie odovzdanie Claude Code. Toto je pracovný medzikrok, nie schválený finálny vizuál.
+Nadväzuje na pracovný medzikrok po `1ab8011` (vybavenie priestoru) a dopĺňa
+to, čo v ňom chýbalo: overený vizuál, dážď napojený na skutočnú strechu a
+znázornenie odtoku vody. Vizuál je overený v živom prehliadači (Playwright,
+softvérové WebGL), nie na fyzickom mobile.
 
-## Napojené
+## Čo je hotové
 
-- `scene-life.js`: samostatné ovládanie vybavenia pod plátnom, 1–3 autá podľa dostupnej šírky, jedna/dve bistro zostavy. Voľný priestor rešpektuje box a okrajovú rezervu. Žiadne zmeny ceny alebo auto-fit kamery.
-- Nový shader kreslí vybavenie priamo do rovnakého WebGL kontextu s identickou projekciou, near/far a hĺbkovým testom ako prístrešok. Poradie: nepriehľadná stavba → vybavenie → priesvitné výplne. Obnovuje pôvodné atribúty a buffer pred výplňami. Siete sa nahrávajú do GPU raz; počas orbitu sa menia uniformy.
-- Generický Touring sedan: pôvodná tvarovaná sieť, disky, pneumatiky, sklá, zrkadlá, svetlá. 40 288 trojuholníkov. Nie je to stiahnutý model konkrétnej značky.
-- Bistro Poly Haven CC0: pôvodná 3D zostava so zachovanými normálami a farbami vzorkovanými z diffuse textúr. 9 828 trojuholníkov. Zdroje a úpravy v `scene-assets/CREDITS.md`.
-- Komprimované siete spolu približne 470 kB; načítanie až pri použití. Vyžaduje DecompressionStream. Pri chybe načítania sa zobrazuje stavová správa.
-- Predvolene sa ponúkne auto na Koverta/carport, posedenie na ostatných rodinách; ak sa nezmestí, nevykreslí sa a zobrazí dôvod.
+### Vybavenie priestoru
+- Panel „Vybavenie priestoru" je v stĺpci s vizualizáciou, hneď pod lištou
+  pohľadov. Ako priamy potomok mriežky bol druhou bunkou prvého riadku a
+  odsúval kroky konfigurátora do druhého riadku pod plátno — spodné voľby
+  potom prekrývala lišta súhlasu a `pricing-logic` na tom padal.
+- Auto (Touring sedan, 42 616 trojuholníkov) a bistro zostava sa kreslia do
+  toho istého WebGL kontextu s rovnakou projekciou aj hĺbkovým testom.
+  Cez zasklené posuvné panely je auto vidieť sklom, nie pred ním.
+- Kontaktné tiene: mäkká elipsa na úrovni dlažby, posunutá podľa hlavného
+  svetla shadera. Bez nich vybavenie viselo nad podlahou.
+- Obálky sietí sú merané z binárnych dát; `test/scene-assets.js` číta siete a
+  padá, keď sa deklarované rozmery rozídu so skutočnými.
 
-## Nedokončené / preveriť ako prvé
+### Počasie
+- Ovládanie počasia už nie je odložené (`data-scene-weather-pending` je preč).
+- Snímok dažďa prekresľuje uložené GPU buffery. Hĺbkový renderer si od tejto
+  zmeny drží batch v troch vlastných bufferoch a `depthPainter.replay()` ich
+  vykreslí bez jediného prepočtu geometrie: postaviť Kovertu odznova stojí
+  ~45 ms na snímok, prekreslenie ~0,3 ms.
+- Dážď pozná skutočnú strechu: pultovú rovinu aj s jej stúpaním, plný rám
+  okolo pásma lamiel, krytie lamely podľa jej uhla (`bladeWidth * cos(uhol)`)
+  a obálku vybavenia z jeho najvyšších plôch. Otvorenými lamelami prší pod
+  strechu, zatvorené aj panelová strecha zadržia všetko.
+- Kvapka nekončí zmiznutím: pri dopade sa stiahne do striešky a dohasne.
+- Tempo: najviac 30 snímkov za sekundu. Keď meraný odstup medzi snímkami
+  presiahne 48 ms, dážď si vypýta pohybové rozlíšenie (to isté, aké beží pri
+  otáčaní), a keď nestačí ani to, animácia zastane a panel to napíše.
+  Po vypnutí dažďa sa scéna dokreslí ostro.
+- Bez hĺbkového rendereru (SVG záloha, stratený kontext) sa animácia vypne a
+  panel to povie namiesto toho, aby ticho nič nerobil. To isté platí pre
+  vybavenie.
 
-1. Vizuál v živom prehliadači ešte NEBOL overený. Cloud Browser odmietol lokálny port 8912 (`ERR_BLOCKED_BY_CLIENT`); nepoužil sa iný browser na obídenie. Spusti projektový preview/QA vo svojom prostredí. Over shader, karosériu, normály, otáčanie, zasklené steny, mobil a viac áut. Ak to vyzerá nepresvedčivo, vylepši alebo vymeň auto za licencovaný detailný model.
-2. Over výkon 40k trojuholníkov × 3 autá na mobile, kontakt pneumatiky/podlahy, kontaktné tiene, správne umiestnenie aj pri všetkých kotveniach a posuvných stenách. Test rezervy voči obálke nie je úplný collision detector stĺpov/dverí.
-3. SVG fallback zatiaľ nezobrazuje nové vybavenie. Treba doplniť jasnú správu/fallback. Životný cyklus GPU pri context loss treba overiť.
-4. V module sú pracovné funkcie pre dážď a jednoduchá schéma odtoku, ale ovládanie počasia je zámerne `hidden data-scene-weather-pending`. `setFrame` nie je napojený: dážď NIE JE hotová funkcia. Najprv implementuj opakované vykreslenie uložených GPU bufferov bez CPU prestavby celej konštrukcie na každom snímku.
-5. Dážď musí rešpektovať skutočný profil/spád strechy a medzery pohybujúcich sa lamiel, priechody, vybavenie a steny. Súčasný pracovný shader má iba zjednodušenú horizontálnu výšku a odhad otvorenia; nestačí ho len zapnúť.
-6. Odtok napoj na aktuálne `lastKvAccessoryGeometry.gutter/downpipe`, ktoré sú sprístupnené v kontexte modulu. Pri Soltec over konkrétne odvodnenie podľa variantu. Voda nemá byť viditeľná cez nepriehľadné profily. Skryté trasy vysvetli oddelenou označenou schémou alebo riadeným rezom. Aktuálna statická schéma sama o sebe nepredstavuje simuláciu.
-7. Doplnkové vybavenie typu gril alebo väčšie lounge posedenie ešte nie je pripravené. Počasie a odtok robiť až po kvalitnom vybavení, podľa priority používateľa.
-8. Zmeny nie sú nasadené na starý Sites preview. Verejné master/Pages ani PR sa nemajú automaticky mergovať.
+### Odtok vody (voľba „Ukázať odtok vody")
+- Vychádza z `lastKvAccessoryGeometry`: hladina leží v priereze žľabu
+  (x od `gutter.x0` po `x1`, výška medzi `zBottom` a `zTop`) a tečie k výpustu
+  pod zvodom. Po panelovej streche tečie voda k odkvapu, po zatvorených
+  lamelách ich žliabkom do rámu; otvorená lamela vodu neudrží a nekreslí sa
+  po nej nič.
+- Skryté trasy sa nekreslia. Vnútro zvodu ani rozvod v stĺpe nemá cez plný
+  profil presvitať; vidno až vodu, ktorá z ústia vytečie na dlažbu (mokrá
+  škvrna s kruhmi). Trasu pomenúva popisná schéma pod ovládaním a mení sa
+  podľa toho, či je žľab objednaný a či sú lamely otvorené.
+- Bez žľabu (panelová strecha bez doplnku) voda prepadá cez odkvapovú hranu
+  ako kvapkací záves obrátený k pozorovateľovi.
+
+### Mobil
+- Panel aj počasie sa na telefóne vojdú, tlačidlá majú 44 px, stránka
+  nepretečie do šírky.
+- V režime celej obrazovky mal riadok scény pevných 46 vh a `overflow:hidden`,
+  takže lišta pohľadov aj panel vybavenia sa orezali a nedalo sa k nim dostať.
+  Výšku teraz určuje kresba, riadok rastie podľa obsahu, otvorený panel si
+  vezme najviac 22 vh a kresba mu požičia kúsok výšky.
 
 ## Overenie
 
-`node --check konfigurator/scene-life.js`
-`node --check konfigurator/soltec-premium.js`
-`node konfigurator/test/scene-assets.js`
-`node konfigurator/test/technical-fidelity.js`
-`git diff --check`
+Lokálny statický server `python3 -m http.server 8901`, Playwright 1.55,
+Chromium bez GPU (softvérové WebGL — absolútne časy sú preto pesimistické).
 
-Kontrola syntaxe, binárnych dát a priestorových obálok nenahrádza vizuálnu kontrolu ani meranie výkonu.
+| test | výsledok |
+| --- | --- |
+| scene-assets, technical-fidelity, osnova-podla-expivi, koverta-accessories | PASS |
+| stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke | PASS |
+| browser-qa, pricing-logic, soltec-motion-regression, depth-renderer-qa | PASS |
+| **pocasie-odtok** (nový) | PASS |
+| layout-smoke | FAIL aj na čistom strome — `.kh-hero__rating` má na mobile 117,66 px proti prahu 120 px, lebo v tejto piesočnici je zablokovaná CDN s písmami a text sa vysádza náhradným rezom. Nie je to regresia tejto vetvy. |
+
+`konfigurator/test/pocasie-odtok.js` meria dážď pohľadom spod podhľadu —
+porovnáva ten istý záber s dažďom a bez neho. Otvorené lamely: 114 bodov
+rozdielu, zatvorené 0, panelová strecha 0. Ďalej kontroluje, že hladina leží
+v priereze žľabu, kaluž na ústí zvodu (± 3 mm) a že medzi dlažbou a žľabom
+nie je voda ani v stĺpe, ani v priereze zvodu. Je v matici oboch QA workflowov.
+
+## Čo ostáva
+
+1. Merania sú zo softvérového WebGL. Na skutočnom telefóne treba potvrdiť, že
+   dážď beží plynulo a že sa nespúšťa pohybové rozlíšenie zbytočne.
+2. Tri autá sa do katalógu nezmestia: potrebujú 8 000 mm šírky, najširší
+   rozmer v katalógu je 7 000 mm. Voľba „3" je preto v paneli nedostupná.
+   Nie je to chyba, ale ani to nie je odskúšané v praxi.
+3. Gril a väčšie lounge posedenie nie sú pripravené.
+4. SVG záloha vybavenie ani dážď nekreslí; zobrazí sa vysvetlenie.
+5. Voda v žľabe je vo svojej kapse za lemovaním, takže z väčšiny pohľadov ju
+   zakrýva profil — tak to má byť, ale znamená to, že reťaz „strecha → žľab →
+   zvod" je zvonku vidieť len na streche a na dlažbe. Riadený rez alebo
+   priehľadný režim profilov by ju ukázal celú; nie je urobený.
+6. Nasadenie: vetva nie je na verejnom Pages. Ten stále obsluhuje `master`.

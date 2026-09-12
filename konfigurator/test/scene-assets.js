@@ -4,16 +4,29 @@ const root=path.resolve(__dirname,'..');
 const sandbox={URL,document:{currentScript:{src:'https://example.test/konfigurator/scene-life.js'}},window:{}};
 vm.runInNewContext(fs.readFileSync(path.join(root,'scene-life.js'),'utf8'),sandbox);
 const plan=sandbox.window.SP_SCENE.plan;
-for(const file of ['touring-sedan','patio-bistro']) {
+const models=sandbox.window.SP_SCENE.models;
+// Measure the meshes and hold scene-life.js to them. The declared bounds drive
+// every clearance decision, so a rebuilt mesh that silently outgrows them would
+// otherwise park a car through a post.
+const dimensions={};
+for(const [key,model] of Object.entries(models)) {
+  const file=model.file.replace(/\.bin\.gz$/,'');
   const data=zlib.gunzipSync(fs.readFileSync(path.join(root,'scene-assets',file+'.bin.gz')));
   assert.equal(data.length%48,0);assert(data.length>100000);
+  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<data.length;i+=16){
     const n=Math.hypot(data.readInt16LE(i+6),data.readInt16LE(i+8),data.readInt16LE(i+10))/32767;
     assert(Math.abs(n-1)<.002,`${file}: malformed normal at ${i}`);
     assert(data.readInt16LE(i+4)>=0,`${file}: geometry below floor`);
+    for(let k=0;k<3;k++){const v=data.readInt16LE(i+k*2);if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
   }
+  const measured=[...lo,...hi];
+  // model.bounds comes from the vm context, so spread it into this realm
+  // before comparing: deepStrictEqual also checks the prototype.
+  assert.deepEqual([...model.bounds],measured,
+    `${file}: scene-life.js bounds ${JSON.stringify(model.bounds)} do not match the mesh ${JSON.stringify(measured)}`);
+  dimensions[key]=measured;
 }
-const dimensions={car:[-44,-1062,0,4764,1062,1462],bistro:[-426,-907,0,317,812,894]};
 for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto']) {
   const c={L,W,H:2400,post:150,boxDepth};const r=plan(c,mode,count);
   const bounds=r.items.map(i=>{const b=dimensions[i.key];return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];});

@@ -69,10 +69,18 @@ def spline(x,k):
     return (2*t**3-3*t*t+1)*a[k]+(t**3-2*t*t+t)*slope(i)*(b[0]-a[0])+(-2*t**3+3*t*t)*b[k]+(t**3-t*t)*slope(i+1)*(b[0]-a[0])
 
 def sill(x):
-    z=190
+    # Bottom edge of the flank. The bare arch circle stops at z=340 while the
+    # rocker sits at 190, so max() left a 150 mm vertical step within a few
+    # millimetres of x and the side surface stretched a thin pale triangle
+    # across it, just ahead of each wheel. The opening now fades into the
+    # rocker over the last 90 mm and the edge is continuous.
+    z=190.
     for axle in [930,3720]:
         d=abs(x-axle)
-        if d<380:z=max(z,340+math.sqrt(380**2-d*d))
+        if d<470:
+            arch=340+380*math.sqrt(max(0.,1-(d/380.)**2)) if d<380 else 340.
+            fade=min(1.,max(0.,(470-d)/90.))
+            z=max(z,190+(arch-190)*fade)
     return z
 
 for sign in [-1,1]:
@@ -83,6 +91,16 @@ for sign in [-1,1]:
     # Sculpted arch lips follow the actual opening, not an overlaid black disc.
     for axle in [930,3720]:
         surface(lambda u,v,axle=axle,s=sign:[axle+(380+14*v)*math.cos(u*math.pi),s*(spline(axle+(380+14*v)*math.cos(u*math.pi),1)-32+10*v),340+(380+14*v)*math.sin(u*math.pi)],36,2,paint,1,sign<0)
+    # Wheel houses. Without them the arch opening looked straight through the
+    # car to the inside of the far flank, which read as a stray pale panel
+    # sitting behind the wheel. A dark tunnel closes the opening.
+    for axle in [930,3720]:
+        depth=250
+        surface(lambda u,v,axle=axle,s=sign,depth=depth:[axle+394*math.cos(u*math.pi),
+            s*(spline(axle+394*math.cos(u*math.pi),1)-30-v*depth),
+            340+394*math.sin(u*math.pi)],36,3,(38,41,44),0,sign>0)
+        surface(lambda u,v,axle=axle,s=sign,depth=depth:[axle+394*v*math.cos(u*math.pi),
+            s*(spline(axle,1)-30-depth),340+394*v*math.sin(u*math.pi)],36,2,(30,33,36),0,sign<0)
     # Lower rocker rail between the wheels.
     tube([1340,sign*891,200],[3290,sign*897,200],14,(55,61,65),0)
 
@@ -92,9 +110,15 @@ for x0,x1 in [(0,1540),(3440,4720)]:
 
 # Cabin: front/rear windscreens join the metal roof with a constant pillar gap.
 def cabin(x,y):
-    height=float(np.interp(x,[1500,2070,2800,3450],[900,1435,1440,900]))
-    width=float(np.interp(x,[1500,2070,2800,3450],[868,718,718,870]))
-    return [x,y*width,height+22*(1-y*y)]
+    # Four stations gave a straight windscreen meeting a flat roof at a hard
+    # corner, so the cabin read as a box. These stations ease the screens into
+    # the roof, taper the greenhouse towards the rear and give the roof a
+    # crown you can actually see.
+    height=float(np.interp(x,[1500,1680,1900,2090,2450,2800,3010,3230,3450],
+                             [900,1128,1330,1424,1446,1442,1386,1168,900]))
+    width=float(np.interp(x,[1500,1680,1900,2090,2450,2800,3010,3230,3450],
+                            [868,796,742,720,714,716,732,796,870]))
+    return [x,y*width,height+34*(1-y*y)*(1-.28*y*y)]
 for a,b,c,m in [(1500,1550,paint,1),(1550,2050,glass,2),(2050,2100,paint,1),(2100,2800,paint,1),(2800,2840,paint,1),(2840,3400,glass,2),(3400,3450,paint,1)]:
     surface(lambda u,v,a=a,b=b:cabin(a+(b-a)*u,v*2-1),18,20,c,m)
 for sign in [-1,1]:
@@ -111,15 +135,38 @@ for sign in [-1,1]:
     for x in [2435,3400]:
         tube([x,sign*(spline(x,1)+1),735],[x,sign*(spline(x,1)-24),245],2.4,(71,78,82),0)
     for x in [2240,3190]:ellipsoid([x,sign*920,825],[65,8,12],alloy,3,20,8)
-    tube([1720,sign*883,970],[1680,sign*979,1005],13,(35,39,43))
-    ellipsoid([1660,sign*1000,1030],[108,62,41],paint,1)
-    ellipsoid([1687,sign*1003,1032],[3,46,27],(90,111,126),2,20,10)
+    # Mirror housing rather than a ball on a stick: a wider shell on a short
+    # flattened stalk, with the glass recessed into its trailing face.
+    tube([1726,sign*881,968],[1684,sign*966,1002],17,(35,39,43))
+    ellipsoid([1652,sign*1004,1028],[122,54,52],paint,1)
+    ellipsoid([1686,sign*1006,1030],[4,44,40],(90,111,126),2,22,12)
 
 # Bumpers, intake and slim lamps, all closed surfaces.
 for x,sgn in [(0,-1),(4720,1)]:
-    surface(lambda u,v,x=x,sgn=sgn:[x+sgn*(22*math.sin(u*math.pi)*math.sin(v*math.pi)),(u*2-1)*(780+45*math.sin(v*math.pi)),200+490*v],28,12,paint,1,sgn<0)
-    ellipsoid([x+sgn*24,0,385],[14,560,92],(24,29,32),0)
-    ellipsoid([x+sgn*39,0,410],[5,255,55],(206,209,203),0,24,8)
+    # The end cap used to be a flat full-width plate 200..690 mm high with a
+    # fixed 780 mm half-width. At both ends it stood proud of the bodywork and
+    # read as a loose sheet hanging off the car. It now closes onto the body's
+    # own silhouette, using exactly the section that side() draws, so the cap
+    # and the flanks meet along one edge.
+    _w=spline(x,1);_top=spline(x,2);_bot=sill(x)
+    def cap(u,v,x=x,sgn=sgn,w=_w,top=_top,bot=_bot):
+        y=u*2-1
+        section=w-35*(1-v)**2+14*math.sin(math.pi*v)-19*v**8
+        bulge=26*math.sin(math.pi*v)*math.sqrt(max(0.,1-y*y))
+        return [x+sgn*bulge,y*section,bot+(top-bot)*v]
+    surface(cap,30,14,paint,1,sgn<0)
+    # Only the front carries a cooling intake. The rear used to get the same
+    # wide dark oval with a pale oval inside it, which read as a hole punched
+    # in the bumper. It now gets what a rear actually has: a slim low
+    # diffuser, a plate and two reflectors.
+    if sgn<0:
+        ellipsoid([x-24,0,392],[14,548,80],(24,29,32),0)
+        ellipsoid([x-38,0,286],[5,172,46],(206,209,203),0,24,8)
+    else:
+        ellipsoid([x+20,0,262],[11,462,31],(28,32,35),0)
+        ellipsoid([x+35,0,432],[5,172,46],(206,209,203),0,24,8)
+        for s in [-1,1]:
+            ellipsoid([x+19,s*486,284],[8,54,16],(150,36,32),4,16,8)
     for s in [-1,1]:
         ellipsoid([x+sgn*21,s*652,608],[18,137,26],(220,229,222) if sgn<0 else (141,27,28),4,28,10)
         if sgn>0:tube([4690,s*628,212],[4760,s*628,212],34,(103,112,119),3,20)

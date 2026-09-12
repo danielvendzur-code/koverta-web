@@ -1715,7 +1715,7 @@
               event.preventDefault(); depthPainter = false; scheduleStage();
             });
             surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
-            depthPainter = { gl, program, host, surface, buffer: gl.createBuffer(),
+            depthPainter = { gl, program, host, surface,
               position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern'), texUV: gl.getAttribLocation(program, 'texUV') };
             const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
@@ -1729,7 +1729,7 @@
             };
             logo.src=new URL('koverta-decal.svg',document.querySelector('script[src*="soltec-premium.js"]').src).href;
           }
-          const { gl, program, host, surface, buffer, position, color, pattern, texUV } = depthPainter;
+          const { gl, program, host, surface, position, color, pattern, texUV } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           /* Kreslí sa nad natívnym rozlíšením displeja, nie nad CSS pixelmi.
              Pevný dvojnásobok znamenal na 2× displeji presne natívne rozlíšenie
@@ -1748,17 +1748,6 @@
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
           host.setAttribute('width', VW); host.setAttribute('height', VH);
           if (host.parentNode !== canvas) canvas.replaceChildren(host);
-          gl.viewport(0, 0, width, height); gl.useProgram(program);
-          gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
-          gl.disable(gl.CULL_FACE);
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color); gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
-          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 44, 0);
-          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 44, 16);
-          gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
-          gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
           const rgba = (fill) => {
             if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
@@ -1776,8 +1765,25 @@
           }
           const near = Number.isFinite(nearest) ? nearest * 0.98 : DIST * 0.45;
           const far = Math.max(near + 1, furthest * 1.02);
-          const batch = (items, transparent) => {
-            if (!items.length) return;
+          /* Každý batch má vlastný GPU buffer, nie jeden zdieľaný. Dážď
+             potrebuje prekresliť scénu desiatky ráz za sekundu a postaviť
+             pritom celú konštrukciu odznova stojí na Koverte okolo 45 ms na
+             snímok. Uložené buffery sa dajú prekresliť bez jediného prepočtu
+             geometrie — to je celý rozdiel medzi plynulým dažďom a trhaním. */
+          const slots = depthPainter.slots || (depthPainter.slots = {});
+          const bindStage = () => {
+            gl.useProgram(program);
+            gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
+            gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
+          };
+          const pointers = () => {
+            gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 44, 0);
+            gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 44, 16);
+            gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
+            gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
+          };
+          const upload = (name, items) => {
+            const slot = slots[name] || (slots[name] = { buffer: gl.createBuffer(), count: 0 });
             const data = [];
             for (const f of items) {
               const tint = rgba(f.fill);
@@ -1790,32 +1796,46 @@
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0], 0); vertex(f.p[i], i); vertex(f.p[i+1], i+1); }
             }
+            slot.count = data.length / 11;
+            if (slot.count) {
+              gl.bindBuffer(gl.ARRAY_BUFFER, slot.buffer);
+              gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+            }
+            return slot;
+          };
+          const drawSlot = (slot, transparent) => {
+            if (!slot || !slot.count) return;
+            gl.bindBuffer(gl.ARRAY_BUFFER, slot.buffer); pointers();
             gl.depthMask(!transparent);
             if (transparent) { gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
             else gl.disable(gl.BLEND);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
-            gl.drawArrays(gl.TRIANGLES, 0, data.length / 11);
+            gl.drawArrays(gl.TRIANGLES, 0, slot.count);
           };
           // Ground and its coplanar decorative overlays remain a background.
           const background = faces.filter(f => f.bg);
-          gl.disable(gl.DEPTH_TEST); batch(background, true); gl.enable(gl.DEPTH_TEST);
           const solid = [], transparent = [];
           for (const face of faces) if (!face.bg) (rgba(face.fill)[3] < 1 ? transparent : solid).push(face);
-          batch(solid, false);
-          // Scenery uses the exact projection and depth interval of the canopy.
-          // Render before transparent infills, then restore every original binding.
-          if (sceneLife) {
-            sceneLife.draw(gl, { ...camera, near, far });
-            gl.useProgram(program); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
-            gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
-            gl.vertexAttribPointer(position,4,gl.FLOAT,false,44,0);
-            gl.vertexAttribPointer(color,4,gl.FLOAT,false,44,16);
-            gl.vertexAttribPointer(pattern,1,gl.FLOAT,false,44,32);
-            gl.vertexAttribPointer(texUV,2,gl.FLOAT,false,44,36);
-          }
           transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
-          batch(transparent, true); gl.depthMask(true);
+          upload('background', background); upload('solid', solid); upload('transparent', transparent);
+          const paint = () => {
+            gl.viewport(0, 0, surface.width, surface.height);
+            bindStage();
+            gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE);
+            gl.disable(gl.DEPTH_TEST); drawSlot(slots.background, true); gl.enable(gl.DEPTH_TEST);
+            drawSlot(slots.solid, false);
+            // Scenery uses the exact projection and depth interval of the canopy.
+            // Render before transparent infills, then restore every original binding.
+            if (sceneLife) {
+              sceneLife.draw(gl, { ...camera, near, far });
+              sceneLife.draw(gl, { ...camera, near, far }, true);
+              bindStage();
+            }
+            drawSlot(slots.transparent, true); gl.depthMask(true);
+          };
+          depthPainter.replay = paint;
+          paint();
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
           if (window.SP_TEST) window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
@@ -4512,14 +4532,29 @@
           }
           layer = 0;
 
-          if (sceneLife) sceneLife.prepare({
-            L,W,H,post,boxDepth:boxDepthMM(),az:view.az,el:view.el,
-            kv:Boolean(model().kvGeom),panelRoof,louverT:state.louverT,
-            louverAngle:panelRoof?0:louverAngle(beam,louverSize().w,state.louverT),
-            bladeWidth:panelRoof?200:louverSize().w,
-            pitch:panelRoof?183:(L-2*post)/((model().lamellas||[])[state.length]||Math.max(4,Math.round((L-2*post)/183))),
-            roofZ:H+beam,drainage:lastKvAccessoryGeometry
-          });
+          if (sceneLife) {
+            /* Dážď potrebuje skutočnú strechu, nie vodorovnú rovinu: rozteč a
+               krytie lamely podľa jej uhla, pásmo lamiel medzi stĺpmi (mimo
+               neho je plný rám) a stúpanie pultovej roviny. Rovnaké čísla
+               kreslia lamely aj rám o pár riadkov vyššie. */
+            const bladeW = panelRoof ? 200 : louverSize().w;
+            const lamels = (model().lamellas || [])[state.length] || Math.max(4, Math.round((L - 2 * post) / 183));
+            const ang = panelRoof ? 0 : louverAngle(beam, bladeW, state.louverT);
+            sceneLife.prepare({
+              L,W,H,post,boxDepth:boxDepthMM(),az:view.az,el:view.el,
+              kv:Boolean(model().kvGeom),panelRoof,louverT:state.louverT,
+              louverAngle:ang,bladeWidth:bladeW,
+              pitch:panelRoof?183:(L-2*post)/lamels,
+              /* Krytie je priemet lamely do pôdorysu. Zatvorená kryje celú
+                 šírku, otvorená len jej kosínus — presne tou medzerou padá
+                 dážď na zem. */
+              cover:panelRoof?Infinity:bladeW*Math.cos(ang),
+              louverZone:panelRoof?null:{x0:post,x1:L-post,y0:post,y1:W-post},
+              roofZ:H+beam,roofRise:(fallShown&&panelRoof?fall:0),
+              renderer:canvas.dataset.renderer||'',
+              drainage:lastKvAccessoryGeometry
+            });
+          }
           // fit and paint
           const boxW = canvas.clientWidth || 900;
           const boxH = canvas.clientHeight || 675;
@@ -5911,6 +5946,25 @@
 
         if (window.SP_SCENE) {
           sceneLife=window.SP_SCENE.create(cfgRoot,()=>drawStage(),BIO.page||'bio');
+          /* Snímok dažďa prekreslí uložené buffery. Konštrukcia sa medzi
+             snímkami nemení, tak sa ani nepočíta znova; vracia sa false, keď
+             hĺbkový renderer nebeží (SVG záloha, stratený kontext) a modul si
+             podľa toho animáciu vypne, namiesto aby staval scénu 60× za
+             sekundu na procesore. */
+          sceneLife.setFrame((fast) => {
+            if (!depthPainter || depthPainter === false || !depthPainter.replay) return false;
+            /* Slabšie zariadenie dostane dážď v pohybovom rozlíšení — v tom
+               istom, v akom beží otáčanie. Prepína sa raz, nie na každom
+               snímku, a po zastavení dažďa sa scéna dokreslí ostro. */
+            if (Boolean(fast) !== motionDetail) {
+              window.clearTimeout(detailTimer);
+              motionDetail = Boolean(fast);
+              drawStage();
+              return true;
+            }
+            try { depthPainter.replay(); } catch (e) { return false; }
+            return true;
+          });
           if(window.SP_TEST) window.SP_TEST.scene=()=>sceneLife.snapshot();
         }
         buildModels();

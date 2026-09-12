@@ -1506,6 +1506,14 @@
 #SoltecPremium .sp-scene__note, #SoltecPremium .sp-scene__status { font-size: 1.2rem; line-height: 1.55; margin: .8rem 0; color: #657174; }
 #SoltecPremium .sp-scene__credits { color: #526368; font-size: 1.1rem; text-underline-offset: 3px; }
 #SoltecPremium .sp-scene__rain { display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; font-size: 1.3rem; }
+/* Panel žije v stĺpci s vizualizáciou, priamo pod lištou plátna: bez
+   vlastného okraja splynie so scénou. Otvorené telo dostane vlastné
+   rolovanie, aby v pevnej výške mriežky nezožralo plátno. */
+#SoltecPremium .sp-stage > .sp-scene { flex: 0 0 auto; margin: 0; border: 0; border-top: 1px solid var(--sp-line); border-radius: 0; background: #fff; }
+/* Mriežka rastie do výšky, tak panel plátno neokráda a rolovať netreba.
+   Na celej obrazovke je ale stĺpec presne taký vysoký ako okno — tam si
+   otvorené telo vezme najviac tretinu a zvyšok si odroluje samo. */
+#SoltecPremium .sp-cfg.is-full .sp-stage > .sp-scene[open] .sp-scene__body { max-height: 34vh; overflow-y: auto; overscroll-behavior: contain; }
 #SoltecPremium .sp-drain-guide { padding: 1.4rem 1.6rem; border-top: 1px solid #d7dbd7; font-size: 1.3rem; }
 #SoltecPremium .sp-drain-guide ol { display: flex; gap: 1.4rem; list-style: none; padding: 0; }
 #SoltecPremium .sp-drain-guide li { flex: 1; }
