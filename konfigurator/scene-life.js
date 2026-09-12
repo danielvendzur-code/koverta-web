@@ -13,6 +13,10 @@
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] }
   };
+  /* Obálka po otočení o štvrť otáčky okolo zvislej osi: (x,y) → (-y,x).
+     Vybavenie sa inak otáčať nedá a ani nemá — stolík postavený našikmo by
+     v pravouhlom prístrešku pôsobil ako nedorozumenie. */
+  const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
     if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-3',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
@@ -76,14 +80,22 @@
         result.push({key:'lounge',x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
         return {items:result,capacity:1,reason:''};
       }
-      const bb=models.bistro.bounds, need=y=>(y?bb[4]-bb[1]:bb[3]-bb[0])+600;
-      if(available<need(false) || c.W-2*margin<need(true))return {items:[],capacity:0,reason:'Pre posedenie a odsunutie stoličiek tu nie je dosť voľného miesta.'};
-      /* Dve kompletné bistro zostavy len vtedy, keď sa ich použiteľné obálky
-         nestretnú. Prednastavené „podľa priestoru" ich rozloží po dĺžke, aby
+      /* Stolík so stoličkami sa zmestí pozdĺž aj naprieč. Užšia pergola ho
+         vezme otočený o štvrť otáčky: pri prednastavenej šírke 2,5 m by inak
+         pod strechou nestálo vôbec nič, hoci na dĺžku je miesta dosť. 600 mm
+         navyše je na odsunutie stoličiek. */
+      const bb=models.bistro.bounds;
+      const fits=r=>{const t=turned(bb,r);return available>=(t[3]-t[0])+600 && c.W-2*margin>=(t[4]-t[1])+600;};
+      const rotation=fits(0)?0:fits(Math.PI/2)?Math.PI/2:null;
+      if(rotation===null)return {items:[],capacity:0,reason:'Pre posedenie a odsunutie stoličiek tu nie je dosť voľného miesta.'};
+      /* Dve kompletné zostavy len vtedy, keď sa ich použiteľné obálky
+         nestretnú; medzi nimi ostáva aspoň 1,5 m, aby to nebola jedna dlhá
+         tabuľa. Prednastavené „podľa priestoru" ich rozloží po dĺžke, aby
          dlhý prístrešok nestál okolo jediného stolíka. */
-      const seats=available>=3000?2:1, wantSeats=count==='auto'?seats:Math.min(Number(count)||1,seats);
-      const mid=(x0+x1)/2+55;
-      for(let i=0;i<wantSeats;i++)result.push({key:'bistro',x:mid+(wantSeats===2?(i?750:-750):0),y:c.W/2+47,z:2,rotation:0});
+      const tb=turned(bb,rotation), pitch=Math.max(1500,(tb[3]-tb[0])+600);
+      const seats=available>=2*pitch?2:1, wantSeats=count==='auto'?seats:Math.min(Number(count)||1,seats);
+      const mid=(x0+x1)/2-(tb[0]+tb[3])/2, y=c.W/2-(tb[1]+tb[4])/2;
+      for(let i=0;i<wantSeats;i++)result.push({key:'bistro',x:mid+(wantSeats===2?(i?pitch/2:-pitch/2):0),y,z:2,rotation});
       return {items:result,capacity:seats,reason:''};
     }
     return {items:[],capacity:0,reason:''};
@@ -310,8 +322,13 @@
             const x=seed[0]*(c.L+2600)-1300,y=seed[1]*(c.W+2600)-1300;
             let hit=roofSurface.hit(x,y)||{z:0,normal:[0,0,1]};
             for(const item of items) {
-              const h=surfaces.get(item.key).hit(x-item.x,y-item.y);
-              if(h && h.z+item.z>hit.z)hit={z:h.z+item.z,normal:h.normal};
+              /* Sieť sa pýta vo vlastnej sústave: bod sa otočí naspäť o uhol
+                 zostavy a nájdená normála zas dopredu, inak by kvapka dopadla
+                 na tvar, ktorý v scéne nikde nestojí. */
+              const cs=Math.cos(item.rotation||0),sn=Math.sin(item.rotation||0),dx=x-item.x,dy=y-item.y;
+              const h=surfaces.get(item.key).hit(dx*cs+dy*sn,dy*cs-dx*sn);
+              if(h && h.z+item.z>hit.z)hit={z:h.z+item.z,
+                normal:[h.normal[0]*cs-h.normal[1]*sn,h.normal[0]*sn+h.normal[1]*cs,h.normal[2]]};
             }
             for(const xy of [[-1,0],[1,0],[1,1],[-1,0],[1,1],[-1,1]])values.push(...seed,...xy,Math.max(0,hit.z),...hit.normal);
           }
@@ -340,8 +357,11 @@
     function init(gl) {
       if(gpu&&gpu.gl===gl)return;
       const main=program(gl,`precision highp float;attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute float material;
-        uniform float viewportHeight;${projection}uniform vec3 offset;varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
-        void main(){world=p+offset;normal=n;color=c;kind=material;gl_Position=project(world);}`,
+        uniform float viewportHeight;${projection}uniform vec3 offset;uniform vec2 spin;
+        varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
+        vec2 turn(vec2 v){return vec2(v.x*spin.x-v.y*spin.y,v.x*spin.y+v.y*spin.x);}
+        void main(){world=vec3(turn(p.xy),p.z)+offset;normal=vec3(turn(n.xy),n.z);
+          color=c;kind=material;gl_Position=project(world);}`,
         `precision highp float;varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
         uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
         void main(){vec3 n=normalize(normal);vec3 v=normalize(eye-world);if(dot(n,v)<0.)n=-n;
@@ -479,7 +499,7 @@
         gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
         for(const item of drawn) {
-          const b=models[item.key].bounds;
+          const b=turned(models[item.key].bounds,item.rotation);
           /* Svetlo v shaderi vybavenia prichádza z (-.25,.62,.74), takže tieň
              padá na +x a -y. Pod strechou je to len mierne posunutý kontaktný
              tieň, nie ostrý slnečný. */
@@ -508,6 +528,7 @@
           const loc=A(p,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,type,norm,16,offset);
         }
         gl.uniform3f(U(p,'offset'),item.x,item.y,item.z);
+        gl.uniform2f(U(p,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
         gl.drawArrays(gl.TRIANGLES,0,m.count);
       }
     }

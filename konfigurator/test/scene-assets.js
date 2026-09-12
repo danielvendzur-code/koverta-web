@@ -27,9 +27,15 @@ for(const [key,model] of Object.entries(models)) {
     `${file}: scene-life.js bounds ${JSON.stringify(model.bounds)} do not match the mesh ${JSON.stringify(measured)}`);
   dimensions[key]=measured;
 }
+// Vybavenie sa smie postaviť aj otočené o štvrť otáčky; obálka sa vtedy otočí
+// s ním. Kontroly odstupov musia počítať s tou istou obálkou ako scene-life.js,
+// inak by otočený stolík prešiel testom aj keby stál v stĺpe.
+const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
+const footprint=(i)=>{const b=turned(dimensions[i.key],i.rotation);return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];};
 for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto']) {
   const c={L,W,H:2400,post:150,boxDepth};const r=plan(c,mode,count);
-  const bounds=r.items.map(i=>{const b=dimensions[i.key];return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];});
+  for(const i of r.items)assert(i.rotation===0||Math.abs(i.rotation-Math.PI/2)<1e-9,`neznáme otočenie ${i.rotation}`);
+  const bounds=r.items.map(footprint);
   bounds.forEach(b=>{assert(b[0]>=boxDepth+200);assert(b[2]<=L-200);assert(b[1]>=200);assert(b[3]<=W-200);});
   for(let i=0;i<bounds.length;i++)for(let j=i+1;j<bounds.length;j++) {
     const a=bounds[i],b=bounds[j];assert(a[2]<b[0]||b[2]<a[0]||a[3]<b[1]||b[3]<a[1],'scenery overlaps');
@@ -40,7 +46,7 @@ assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2').items
 // Interior posts must reduce capacity or split rows, never pierce a car.
 for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,4400,4350,4550]]]) {
   const r=plan({L:6000,W:8000,H:2400,post:150,boxDepth:0,obstacles},'car','auto');
-  const bounds=r.items.map(i=>{const b=dimensions.car;return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];});
+  const bounds=r.items.map(footprint);
   for(const a of bounds)for(const b of obstacles)assert(a[2]<=b[0]-79||a[0]>=b[2]+79||a[3]<=b[1]-79||a[1]>=b[3]+79,'car hits a post');
   for(let i=1;i<bounds.length;i++)assert(bounds[i][1]-bounds[i-1][3]>=599,'door clearance lost');
 }
