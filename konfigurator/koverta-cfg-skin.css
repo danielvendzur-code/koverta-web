@@ -42,6 +42,11 @@
   --sp-muted: var(--k-muted);
   --sp-line: var(--k-hair);
   --sp-soft: var(--k-bone);
+  /* Polomer rohov si nástroj držal vlastný (14 px) a boxy v ňom preto vyzerali
+     inak než karty na zvyšku webu (18 px). Berie sa tá istá hodnota. */
+  --media-radius: var(--k-r);
+  --font-heading-family: var(--k-head);
+  --font-body-family: var(--k-body);
 }
 
 /* --- 2 · Rám stránky ----------------------------------------------------- */
@@ -1037,28 +1042,14 @@ body { background: var(--k-white); color: var(--k-ink); }
   border-color: var(--k-ink);
   color: var(--k-white);
 }
-.k .kv-cfg__eshop {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-left: auto;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--k-ink);
-  text-decoration: none;
-  border-bottom: 1px solid var(--k-hair);
-  padding-bottom: 2px;
-  transition: border-color 200ms var(--k-ease);
-}
-.k .kv-cfg__eshop:hover { border-color: var(--k-ink); }
-.k .kv-cfg__eshop svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; }
+/* Odkaz na katalóg a ceny majiteľ z tohto pásu odstránil, takže tu po ňom
+   nezostáva ani štýl. */
 /* Na telefóne sa pás rozpadol na štyri riadky a nástroj začínal až hlboko
-   pod zlomom. Popis a odkaz do e-shopu idú do jedného riadku, produkty pod
-   ne do jedného posuvného pásu. */
+   pod zlomom. Popis ide na prvý riadok, produkty pod neho do jedného
+   posuvného pásu. */
 @media (max-width: 699px) {
-  .k .kv-cfg__in { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; }
+  .k .kv-cfg__in { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 14px; }
   .k .kv-cfg__label { grid-column: 1; grid-row: 1; align-self: center; }
-  .k .kv-cfg__eshop { grid-column: 2; grid-row: 1; margin-left: 0; font-size: 12.5px; }
   .k .kv-cfg__tabs {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -1103,3 +1094,40 @@ body { background: var(--k-white); color: var(--k-ink); }
 #SoltecPremium .kv-linkbtn::before,
 #SoltecPremium .kv-linkbtn::after { content: none; }
 #SoltecPremium .kv-linkbtn:hover { transform: none; text-decoration-thickness: 2px; }
+
+/* --- 14 · Spodný riadok kroku a hlavná akcia ----------------------------- */
+/* Riadok stál na desktope v jednom rade Späť | cena | Ďalej. Stĺpec ovládania
+   je úzky, takže poznámka „orientačne, s DPH a montážou" sa zlomila na tri
+   riadky vtesnané medzi tlačidlá. Cena má preto vlastný riadok nad tlačidlami
+   pri každej šírke, nielen na mobile. */
+#SoltecPremium .sp-navrow {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem 1rem;
+}
+#SoltecPremium .sp-navrow__price {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem 0.8rem;
+  text-align: center;
+}
+#SoltecPremium .sp-navrow__price b { white-space: nowrap; }
+#SoltecPremium .sp-navrow button[data-sp-back] { grid-column: 1; grid-row: 2; }
+#SoltecPremium .sp-navrow button[data-sp-next] { grid-column: 2; grid-row: 2; }
+#SoltecPremium .sp-navrow button { width: 100%; min-width: 0; }
+
+/* Hlavná akcia kroku je tá istá jantárová pilulka ako CTA na zvyšku webu.
+   Čierne tlačidlo tu stálo pár pixelov nad jantárovou „Nezáväznou ponukou",
+   takže na jednej stránke boli dve odlišné hlavné akcie. */
+#SoltecPremium .sp-navrow button[data-sp-next] {
+  border-color: var(--k-amber);
+  background: var(--k-amber);
+  color: var(--k-ink);
+  font-weight: 700;
+  box-shadow: var(--k-shadow-sm);
+}
+#SoltecPremium .sp-navrow button[data-sp-next]:hover { border-color: var(--k-amber); }
+#SoltecPremium .sp-navrow button[data-sp-next]:disabled { box-shadow: none; }

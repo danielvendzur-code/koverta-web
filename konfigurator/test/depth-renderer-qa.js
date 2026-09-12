@@ -28,12 +28,26 @@ const { prepareContext } = require('./browser-qa');
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
           }
+          // Zoom is an opt-in extra: one toggle, no percentage or +/- buttons.
+          // While it is off the wheel must leave the page scrolling alone.
           const zoomBox=await page.locator('.sp-zoom').boundingBox(),stageBox=await page.locator('.sp-stage').boundingBox();
-          assert(zoomBox.y>=stageBox.y && zoomBox.y+zoomBox.height<=stageBox.y+stageBox.height,'Zoom controls escaped model stage');
-          await page.locator('[data-sp-zoom="in"]').click();
-          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family');
-          await page.locator('[data-sp-zoom="reset"]').click();
-          assert.equal(await page.evaluate(()=>SP_TEST.snapshot().zoom),1);
+          assert(zoomBox.y>=stageBox.y && zoomBox.y+zoomBox.height<=stageBox.y+stageBox.height,'Zoom control escaped model stage');
+          const toggle=page.locator('[data-sp-zoom-toggle]');
+          assert.equal(await toggle.getAttribute('aria-pressed'),'false','Zoom must start switched off');
+          await page.locator('[data-sp-canvas]').hover();
+          await page.mouse.wheel(0,-240);
+          assert.equal(await page.evaluate(()=>SP_TEST.snapshot().zoom),1,'Wheel must not zoom while the toggle is off');
+          await toggle.click();
+          assert.equal(await toggle.getAttribute('aria-pressed'),'true');
+          // Clicking the toggle parks the pointer on the button, which is a
+          // sibling of the canvas, so put it back over the model first.
+          await page.locator('[data-sp-canvas]').hover();
+          await page.mouse.wheel(0,-240);
+          await page.waitForTimeout(60);
+          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family once enabled');
+          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))<=3,'Manual zoom must stay inside its limit');
+          await toggle.click();
+          assert.equal(await page.evaluate(()=>SP_TEST.snapshot().zoom),1,'Switching zoom off returns the whole model');
           const times=[];
           for (let i=0;i<48;i++) {
             times.push(await page.evaluate(i=>{

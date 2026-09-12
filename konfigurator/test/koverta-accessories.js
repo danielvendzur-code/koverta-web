@@ -260,7 +260,12 @@ function validateAccessoryContacts(snap, label) {
     `${label}: original Expivi drainage variant missing`);
   assert(downpipe.vertexCount > 1800 && downpipe.triangleCount > 2800,
     `${label}: source drainage mesh was replaced by an incomplete placeholder`);
-  assertClose(downpipe.radius * 2, (downpipe.post.y1 - downpipe.post.y0) * 0.93, `${label}: requested 93% post-width tube ratio changed`);
+  // The owner withdrew the 93 % post-width tube after seeing it rendered: at
+  // that size the downpipe reads exactly as wide as the post. It is back to
+  // the diameter of the recovered original Expivi mesh.
+  assert(downpipe.radius * 2 <= 80.01, `${label}: downpipe exceeds the recovered 80 mm source tube`);
+  assert(downpipe.radius * 2 < (downpipe.post.y1 - downpipe.post.y0) * 0.7,
+    `${label}: downpipe must stay clearly narrower than the post`);
   assertClose(downpipe.pipeCenter[1], (downpipe.post.y0 + downpipe.post.y1) / 2,
     `${label}: downpipe no longer follows the active corner-post centreline`);
   assertClose(downpipe.pipeCenter[0] - downpipe.radius,
