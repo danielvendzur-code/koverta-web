@@ -31,6 +31,8 @@ softvérové WebGL), nie na fyzickom mobile.
   a obálku vybavenia z jeho najvyšších plôch. Otvorenými lamelami prší pod
   strechu, zatvorené aj panelová strecha zadržia všetko.
 - Kvapka nekončí zmiznutím: pri dopade sa stiahne do striešky a dohasne.
+- Dážď padá zvisle. Zatvorená stena či ZIP roleta ho preto neodkláňa — bráni
+  len pohľadu, nie pádu. Šikmý dážď hnaný vetrom v scéne nie je.
 - Tempo: najviac 30 snímkov za sekundu. Keď meraný odstup medzi snímkami
   presiahne 48 ms, dážď si vypýta pohybové rozlíšenie (to isté, aké beží pri
   otáčaní), a keď nestačí ani to, animácia zastane a panel to napíše.
