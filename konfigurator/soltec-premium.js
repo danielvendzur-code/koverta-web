@@ -1688,7 +1688,7 @@
         /* Rasterise original faces with a perspective-correct depth buffer.
            No BSP fragments, centroid ordering or expanded polygon strokes can
            reveal a hidden steel member through another opaque member. */
-        let depthPainter = null, cachedGeometry = null;
+        let depthPainter = null, cachedGeometry = null, sceneLife = null;
         let motionDetail = false, detailTimer = 0;
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
@@ -1802,6 +1802,18 @@
           const solid = [], transparent = [];
           for (const face of faces) if (!face.bg) (rgba(face.fill)[3] < 1 ? transparent : solid).push(face);
           batch(solid, false);
+          // Scenery uses the exact projection and depth interval of the canopy.
+          // Render before transparent infills, then restore every original binding.
+          if (sceneLife) {
+            sceneLife.draw(gl, { ...camera, near, far });
+            gl.useProgram(program); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
+            gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
+            gl.vertexAttribPointer(position,4,gl.FLOAT,false,44,0);
+            gl.vertexAttribPointer(color,4,gl.FLOAT,false,44,16);
+            gl.vertexAttribPointer(pattern,1,gl.FLOAT,false,44,32);
+            gl.vertexAttribPointer(texUV,2,gl.FLOAT,false,44,36);
+          }
           transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
           batch(transparent, true); gl.depthMask(true);
           canvas.dataset.renderer = 'webgl-depth';
@@ -4500,6 +4512,14 @@
           }
           layer = 0;
 
+          if (sceneLife) sceneLife.prepare({
+            L,W,H,post,boxDepth:boxDepthMM(),az:view.az,el:view.el,
+            kv:Boolean(model().kvGeom),panelRoof,louverT:state.louverT,
+            louverAngle:panelRoof?0:louverAngle(beam,louverSize().w,state.louverT),
+            bladeWidth:panelRoof?200:louverSize().w,
+            pitch:panelRoof?183:(L-2*post)/((model().lamellas||[])[state.length]||Math.max(4,Math.round((L-2*post)/183))),
+            roofZ:H+beam,drainage:lastKvAccessoryGeometry
+          });
           // fit and paint
           const boxW = canvas.clientWidth || 900;
           const boxH = canvas.clientHeight || 675;
@@ -5889,6 +5909,10 @@
           drawStage();
         });
 
+        if (window.SP_SCENE) {
+          sceneLife=window.SP_SCENE.create(cfgRoot,()=>drawStage(),BIO.page||'bio');
+          if(window.SP_TEST) window.SP_TEST.scene=()=>sceneLife.snapshot();
+        }
         buildModels();
         renderAll();
         showStep(1, true);

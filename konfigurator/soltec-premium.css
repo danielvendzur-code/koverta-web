@@ -1490,3 +1490,30 @@
 @media (max-width: 749px) {
   #SoltecPremium .sp-stage__hint { display: none; }
 }
+/* Display-only scenery controls, below the orbit surface. */
+#SoltecPremium .sp-scene { margin: 1rem 0 1.5rem; border: 1px solid #deded8; border-radius: 14px; background: #fafaf7; color: #303839; font-family: inherit; overflow: hidden; }
+#SoltecPremium .sp-scene [hidden] { display: none !important; }
+#SoltecPremium .sp-scene summary { cursor: pointer; padding: 1.4rem 1.6rem; font-weight: 600; font-size: 1.4rem; }
+#SoltecPremium .sp-scene__summary { float: right; font-weight: 400; color: #697173; font-size: 1.2rem; }
+#SoltecPremium .sp-scene__body { padding: .2rem 1.6rem 1.4rem; }
+#SoltecPremium .sp-scene__row { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin: 1rem 0; }
+#SoltecPremium .sp-scene__label { min-width: 11rem; font-size: 1.3rem; }
+#SoltecPremium .sp-scene__choices { display: flex; flex-wrap: wrap; gap: .5rem; }
+#SoltecPremium .sp-scene button, #SoltecPremium .sp-scene select { min-height: 44px; padding: .6rem 1.2rem; border: 1px solid #d7dbd7; border-radius: 8px; background: #fff; color: #303839; font: inherit; font-size: 1.3rem; cursor: pointer; }
+#SoltecPremium .sp-scene button[aria-pressed="true"] { background: #354348; border-color: #354348; color: white; }
+#SoltecPremium .sp-scene button:focus-visible, #SoltecPremium .sp-scene select:focus-visible, #SoltecPremium .sp-scene summary:focus-visible { outline: 2px solid #d49b26; outline-offset: 3px; }
+#SoltecPremium .sp-scene__paint { display: flex; gap: .8rem; align-items: center; margin-left: auto; font-size: 1.3rem; }
+#SoltecPremium .sp-scene__note, #SoltecPremium .sp-scene__status { font-size: 1.2rem; line-height: 1.55; margin: .8rem 0; color: #657174; }
+#SoltecPremium .sp-scene__credits { color: #526368; font-size: 1.1rem; text-underline-offset: 3px; }
+#SoltecPremium .sp-scene__rain { display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; font-size: 1.3rem; }
+#SoltecPremium .sp-drain-guide { padding: 1.4rem 1.6rem; border-top: 1px solid #d7dbd7; font-size: 1.3rem; }
+#SoltecPremium .sp-drain-guide ol { display: flex; gap: 1.4rem; list-style: none; padding: 0; }
+#SoltecPremium .sp-drain-guide li { flex: 1; }
+#SoltecPremium .sp-drain-guide i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #dceaf0; margin-right: 6px; font-style: normal; }
+#SoltecPremium .sp-drain-guide small { color: #657174; }
+@media(max-width:749px) {
+  #SoltecPremium .sp-scene__label { width: 100%; }
+  #SoltecPremium .sp-scene__summary { float: none; display: block; margin: .5rem 0 0 1.7rem; }
+  #SoltecPremium .sp-scene__paint { margin-left: 0; }
+  #SoltecPremium .sp-drain-guide ol { flex-direction: column; }
+}
