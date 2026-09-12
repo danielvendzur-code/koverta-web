@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Orientačný odhad betónových pätiek | Koverta</title>
+  <style>
+    :root{--ink:#111719;--muted:#667075;--bone:#f3f2ee;--line:#d8dcda;--amber:#ffcc00;--white:#fff}
+    *{box-sizing:border-box}html{color-scheme:light}body{margin:0;background:var(--bone);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+    button,input{font:inherit}.shell{width:min(1160px,100%);margin:auto;padding:24px 22px 64px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 0 24px;border-bottom:1px solid var(--line)}
+    .brand{font-size:25px;font-weight:800;letter-spacing:.08em}.brand::before{content:"[";color:var(--amber);font-size:34px;margin-right:2px}
+    .preview{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#e2e4e2;color:#3f474a;font-size:12px;font-weight:800}
+    .preview::before{width:7px;height:7px;border-radius:50%;background:#9c7700;content:""}.hero{padding:44px 0 32px}
+    .eyebrow{margin:0 0 9px;color:#846500;font-size:12px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    h1{max-width:800px;margin:0;font-size:clamp(36px,5vw,64px);line-height:1;letter-spacing:-.05em}.lead{max-width:720px;margin:17px 0 0;color:var(--muted);font-size:16px}
+    .grid{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(340px,.82fr);gap:18px;align-items:start}
+    .panel{border:1px solid var(--line);border-radius:22px;background:var(--white);box-shadow:0 16px 48px rgba(18,23,26,.06);overflow:hidden}
+    .controls{padding:clamp(22px,3vw,34px)}h2{margin:0;font-size:23px;letter-spacing:-.03em}.intro{margin:7px 0 25px;color:var(--muted);font-size:13px}
+    fieldset{min-width:0;margin:0;padding:23px 0;border:0;border-top:1px solid var(--line)}fieldset:first-of-type{padding-top:0;border-top:0}
+    legend{display:flex;width:100%;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 13px;padding:0;font-size:14px;font-weight:800}legend output{color:#866700;font-size:13px;font-weight:800}
+    .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.choice{position:relative}.choice input{position:absolute;opacity:0;pointer-events:none}
+    .choice label{display:flex;min-height:58px;align-items:center;justify-content:center;padding:9px;border:1px solid #bdc3c0;border-radius:12px;background:#fff;text-align:center;font-weight:800;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+    .choice input:checked+label{border-color:#866700;background:#fff8d7;box-shadow:inset 0 0 0 1px #866700}.choice input:focus-visible+label{outline:3px solid rgba(255,204,0,.42);outline-offset:2px}
+    .custom{display:grid;grid-template-columns:1fr 120px;align-items:center;gap:16px;margin-top:12px}.custom label{color:var(--muted);font-size:12px}.custom input{width:100%;height:44px;padding:0 12px;border:1px solid #bdc3c0;border-radius:10px;text-align:right;font-weight:800}
+    .hint{display:flex;gap:10px;margin:15px 0 0;padding:13px 14px;border-radius:12px;background:#f3f4f2;color:#596166;font-size:12px}.hint strong{color:var(--ink)}
+    .result{position:sticky;top:18px;background:var(--ink);color:#fff}.result-main{padding:clamp(24px,3vw,34px)}.result .eyebrow{color:var(--amber)}
+    .price{margin:9px 0 8px;color:var(--amber);font-size:clamp(38px,5vw,56px);font-weight:850;line-height:1;letter-spacing:-.045em}.price-note{margin:0;color:rgba(255,255,255,.65);font-size:12px}
+    .facts{display:grid;grid-template-columns:1fr 1fr;margin-top:26px;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16)}
+    .fact{padding:16px 0}.fact:nth-child(odd){padding-right:15px;border-right:1px solid rgba(255,255,255,.16)}.fact:nth-child(even){padding-left:15px}.fact:nth-child(n+3){border-top:1px solid rgba(255,255,255,.16)}
+    .fact span{display:block;color:rgba(255,255,255,.58);font-size:11px}.fact strong{display:block;margin-top:3px;font-size:17px}
+    .included{padding:22px 28px;background:#1c2326}.included h3{margin:0 0 11px;font-size:15px}.included ul{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:0;padding:0;list-style:none;color:rgba(255,255,255,.75);font-size:12px}.included li::before{margin-right:7px;color:var(--amber);content:"✓"}
+    .benchmark{margin:17px 0 0;padding:13px;border-left:3px solid var(--amber);background:rgba(255,255,255,.06);color:rgba(255,255,255,.68);font-size:11px}
+    .actions{display:flex;gap:9px;margin-top:16px}.actions button{min-height:44px;padding:0 16px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:#333b3e;color:#fff;font-weight:800;cursor:pointer}.actions .primary{border-color:var(--amber);background:var(--amber);color:var(--ink)}
+    .fineprint{max-width:870px;margin:23px auto 0;color:#6d7578;text-align:center;font-size:11px}
+    @media(max-width:820px){.grid{grid-template-columns:1fr}.result{position:static}.hero{padding-top:34px}.included ul{grid-template-columns:1fr}}
+    @media(max-width:520px){.shell{padding-inline:14px}.preview{font-size:10px}.choices{grid-template-columns:1fr}.choice label{min-height:48px}.custom{grid-template-columns:1fr 105px}.facts{grid-template-columns:1fr}.fact,.fact:nth-child(odd),.fact:nth-child(even){padding:13px 0;border-right:0}.fact:nth-child(n+2){border-top:1px solid rgba(255,255,255,.16)}header{align-items:flex-start;flex-direction:column;gap:10px}}
+    @media print{body{background:#fff}.shell{width:100%;padding:0}.preview,.actions,.fineprint{display:none}.grid{grid-template-columns:1fr 1fr}.panel{box-shadow:none}.result{position:static}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="brand">Koverta</div><div class="preview">Skrytý pracovný náhľad</div></header>
+    <section class="hero">
+      <p class="eyebrow">Doplnková služba k montáži</p>
+      <h1>Koľko betónu a približne koľko budú stáť pätky?</h1>
+      <p class="lead">Zvoľte počet a orientačný rozmer štvorcových pätiek. Výsledok sa prepočíta hneď; konečný rozmer aj cenu potvrdíme podľa konštrukcie, podložia a prístupu na pozemok.</p>
+    </section>
+
+    <div class="grid">
+      <form class="panel controls" id="calc">
+        <h2>Váš prístrešok</h2>
+        <p class="intro">Tri krátke voľby, bez technického cenníka a zbytočných položiek.</p>
+
+        <fieldset>
+          <legend>1. Koľko pätiek bude treba?</legend>
+          <div class="choices">
+            <div class="choice"><input type="radio" name="countChoice" id="count4" value="4" checked><label for="count4">4 pätky</label></div>
+            <div class="choice"><input type="radio" name="countChoice" id="count6" value="6"><label for="count6">6 pätiek</label></div>
+            <div class="choice"><input type="radio" name="countChoice" id="count8" value="8"><label for="count8">8 pätiek</label></div>
+          </div>
+          <div class="custom"><label for="count">Alebo zadajte vlastný počet</label><input id="count" type="number" min="1" max="30" step="1" value="4" inputmode="numeric" aria-label="Vlastný počet pätiek"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span>2. Šírka štvorcovej pätky</span><output id="widthOut">50 × 50 cm</output></legend>
+          <div class="choices">
+            <div class="choice"><input type="radio" name="width" id="width40" value="40"><label for="width40">40 × 40 cm</label></div>
+            <div class="choice"><input type="radio" name="width" id="width50" value="50" checked><label for="width50">50 × 50 cm</label></div>
+            <div class="choice"><input type="radio" name="width" id="width60" value="60"><label for="width60">60 × 60 cm</label></div>
+          </div>
+          <p class="hint"><span aria-hidden="true">□</span><span><strong>Iba štvorcové pätky.</strong> V náhľade začíname širším rozmerom 50 × 50 cm; finálnu šírku určí konkrétna zostava a podložie.</span></p>
+        </fieldset>
+
+        <fieldset>
+          <legend><span>3. Hĺbka pätky</span><output id="depthOut">100 cm</output></legend>
+          <div class="choices">
+            <div class="choice"><input type="radio" name="depth" id="depth80" value="80"><label for="depth80">80 cm</label></div>
+            <div class="choice"><input type="radio" name="depth" id="depth100" value="100" checked><label for="depth100">100 cm</label></div>
+            <div class="choice"><input type="radio" name="depth" id="depth120" value="120"><label for="depth120">120 cm</label></div>
+          </div>
+          <p class="hint"><span aria-hidden="true">↓</span><span>Pätka musí siahať do <strong>nezámrznej hĺbky</strong>. Tá závisí od lokality a zeminy; 80 cm je iba najnižšia orientačná voľba, nie univerzálny údaj.</span></p>
+        </fieldset>
+      </form>
+
+      <aside class="panel result" aria-live="polite">
+        <div class="result-main">
+          <p class="eyebrow">Orientačný zákaznícky odhad</p>
+          <h2>Kompletné pätky</h2>
+          <div class="price" id="price">—</div>
+          <p class="price-note">pracovný rozsah s DPH · nie je schválený cenník Koverta</p>
+          <div class="facts">
+            <div class="fact"><span>Počet</span><strong id="factCount">—</strong></div>
+            <div class="fact"><span>Jedna pätka</span><strong id="factSize">—</strong></div>
+            <div class="fact"><span>Čistý objem</span><strong id="volume">—</strong></div>
+            <div class="fact"><span>Betón s 10 % rezervou</span><strong id="concrete">—</strong></div>
+          </div>
+          <p class="benchmark">Cenový rozsah je zatiaľ testovací benchmark podľa verejných cien realizácie pätiek, nie firemná ponuka. Pred zverejnením treba potvrdiť cenu za hotovú pätku a presný obsah služby.</p>
+          <div class="actions"><button class="primary" type="button" id="copy">Skopírovať odhad</button><button type="button" onclick="window.print()">Vytlačiť</button></div>
+        </div>
+        <div class="included">
+          <h3>S čím pracovný odhad počíta</h3>
+          <ul><li>vytýčenie a výkop</li><li>betón</li><li>betonáž pätiek</li><li>osadenie kotvenia</li></ul>
+        </div>
+      </aside>
+    </div>
+    <p class="fineprint">Výpočet objemu je presný pre zadaný štvorcový rozmer. Statické riešenie, nezámrznú hĺbku, cenu, prístup techniky a prípadný odvoz zeminy treba potvrdiť pre konkrétne miesto.</p>
+  </main>
+  <script>
+    (()=>{
+      const count=document.getElementById('count');
+      const countChoices=[...document.querySelectorAll('[name="countChoice"]')];
+      const widthChoices=[...document.querySelectorAll('[name="width"]')];
+      const depthChoices=[...document.querySelectorAll('[name="depth"]')];
+      const getChecked=items=>Number(items.find(item=>item.checked)?.value||0);
+      const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
+      const number=(value,digits=2)=>new Intl.NumberFormat('sk-SK',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(value);
+      const money=value=>new Intl.NumberFormat('sk-SK',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(value);
+      let current={};
+
+      function calculate(){
+        const quantity=clamp(Math.round(Number(count.value)||1),1,30);
+        const width=getChecked(widthChoices);
+        const depth=getChecked(depthChoices);
+        const one=Math.pow(width/100,2)*(depth/100);
+        const total=one*quantity;
+        const withReserve=total*1.1;
+
+        /* Verejný benchmark 2026: hotová pätka 30 × 30 × 90 cm približne
+           125–225 € s DPH. Väčší objem pridáva len materiál a prácu navyše;
+           presné sadzby Koverta musia byť pred zverejnením nahradené. */
+        const benchmarkVolume=.3*.3*.9;
+        const extra=Math.max(0,one-benchmarkVolume);
+        const lowEach=125+extra*120;
+        const highEach=225+extra*200;
+        const low=Math.round(quantity*lowEach/10)*10;
+        const high=Math.round(quantity*highEach/10)*10;
+
+        current={quantity,width,depth,total,withReserve,low,high};
+        document.getElementById('widthOut').textContent=`${width} × ${width} cm`;
+        document.getElementById('depthOut').textContent=`${depth} cm`;
+        document.getElementById('price').textContent=`${money(low)} – ${money(high)}`;
+        document.getElementById('factCount').textContent=`${quantity} pätiek`;
+        document.getElementById('factSize').textContent=`${width} × ${width} × ${depth} cm`;
+        document.getElementById('volume').textContent=`${number(total,3)} m³`;
+        document.getElementById('concrete').textContent=`${number(withReserve,3)} m³`;
+      }
+
+      countChoices.forEach(input=>input.addEventListener('change',()=>{count.value=input.value;calculate()}));
+      count.addEventListener('input',()=>{countChoices.forEach(input=>input.checked=Number(input.value)===Number(count.value));calculate()});
+      [...widthChoices,...depthChoices].forEach(input=>input.addEventListener('change',calculate));
+      document.getElementById('copy').addEventListener('click',async event=>{
+        const text=`Koverta — orientačný odhad pätiek\n${current.quantity} × ${current.width} × ${current.width} × ${current.depth} cm\nBetón s 10 % rezervou: ${number(current.withReserve,3)} m³\nPracovný cenový rozsah: ${money(current.low)} – ${money(current.high)} s DPH`;
+        try{await navigator.clipboard.writeText(text);event.currentTarget.textContent='Odhad skopírovaný';setTimeout(()=>event.currentTarget.textContent='Skopírovať odhad',1800)}catch(e){event.currentTarget.textContent='Kopírovanie zlyhalo'}
+      });
+      calculate();
+    })();
+  </script>
+</body>
+</html>

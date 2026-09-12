@@ -1,0 +1,8 @@
+# Playwright a jeho závislosti sa inštalujú za behu (`npm install --no-save
+# playwright` v každom QA workflowe), do repozitára nepatria.
+node_modules/
+
+# Výstup vizuálnych kontrol: snímky, rastre a JSON nálezy. Generujú ho testy
+# v konfigurator/test a coordination/koverta a workflowy ho nahrávajú ako
+# artefakt behu, nie ako obsah repozitára.
+qa-artifacts/

@@ -1611,6 +1611,7 @@
         let lastRoofKind = null;
         const view = { az: -0.62, el: 0.42 };
         let manualZoom = 1;
+        const zoomPan = { x:0, y:0 };
         let cameraRun = 0;
         const stopCamera = () => { if (cameraRun) cancelAnimationFrame(cameraRun); cameraRun = 0; };
         const animateCamera = (az, el) => {
@@ -1688,7 +1689,7 @@
         /* Rasterise original faces with a perspective-correct depth buffer.
            No BSP fragments, centroid ordering or expanded polygon strokes can
            reveal a hidden steel member through another opaque member. */
-        let depthPainter = null, cachedGeometry = null;
+        let depthPainter = null, cachedGeometry = null, sceneLife = null;
         let motionDetail = false, detailTimer = 0;
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
@@ -1715,7 +1716,7 @@
               event.preventDefault(); depthPainter = false; scheduleStage();
             });
             surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
-            depthPainter = { gl, program, host, surface, buffer: gl.createBuffer(),
+            depthPainter = { gl, program, host, surface,
               position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern'), texUV: gl.getAttribLocation(program, 'texUV') };
             const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
@@ -1729,7 +1730,7 @@
             };
             logo.src=new URL('koverta-decal.svg',document.querySelector('script[src*="soltec-premium.js"]').src).href;
           }
-          const { gl, program, host, surface, buffer, position, color, pattern, texUV } = depthPainter;
+          const { gl, program, host, surface, position, color, pattern, texUV } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           /* Kreslí sa nad natívnym rozlíšením displeja, nie nad CSS pixelmi.
              Pevný dvojnásobok znamenal na 2× displeji presne natívne rozlíšenie
@@ -1748,17 +1749,6 @@
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
           host.setAttribute('width', VW); host.setAttribute('height', VH);
           if (host.parentNode !== canvas) canvas.replaceChildren(host);
-          gl.viewport(0, 0, width, height); gl.useProgram(program);
-          gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
-          gl.disable(gl.CULL_FACE);
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-          gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color); gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
-          gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 44, 0);
-          gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 44, 16);
-          gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
-          gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
           const rgba = (fill) => {
             if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
@@ -1776,8 +1766,25 @@
           }
           const near = Number.isFinite(nearest) ? nearest * 0.98 : DIST * 0.45;
           const far = Math.max(near + 1, furthest * 1.02);
-          const batch = (items, transparent) => {
-            if (!items.length) return;
+          /* Každý batch má vlastný GPU buffer, nie jeden zdieľaný. Dážď
+             potrebuje prekresliť scénu desiatky ráz za sekundu a postaviť
+             pritom celú konštrukciu odznova stojí na Koverte okolo 45 ms na
+             snímok. Uložené buffery sa dajú prekresliť bez jediného prepočtu
+             geometrie — to je celý rozdiel medzi plynulým dažďom a trhaním. */
+          const slots = depthPainter.slots || (depthPainter.slots = {});
+          const bindStage = () => {
+            gl.useProgram(program);
+            gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(color);
+            gl.enableVertexAttribArray(pattern); gl.enableVertexAttribArray(texUV);
+          };
+          const pointers = () => {
+            gl.vertexAttribPointer(position, 4, gl.FLOAT, false, 44, 0);
+            gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 44, 16);
+            gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
+            gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
+          };
+          const upload = (name, items) => {
+            const slot = slots[name] || (slots[name] = { buffer: gl.createBuffer(), count: 0 });
             const data = [];
             for (const f of items) {
               const tint = rgba(f.fill);
@@ -1790,20 +1797,46 @@
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0], 0); vertex(f.p[i], i); vertex(f.p[i+1], i+1); }
             }
+            slot.count = data.length / 11;
+            if (slot.count) {
+              gl.bindBuffer(gl.ARRAY_BUFFER, slot.buffer);
+              gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+            }
+            return slot;
+          };
+          const drawSlot = (slot, transparent) => {
+            if (!slot || !slot.count) return;
+            gl.bindBuffer(gl.ARRAY_BUFFER, slot.buffer); pointers();
             gl.depthMask(!transparent);
             if (transparent) { gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
             else gl.disable(gl.BLEND);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
-            gl.drawArrays(gl.TRIANGLES, 0, data.length / 11);
+            gl.drawArrays(gl.TRIANGLES, 0, slot.count);
           };
           // Ground and its coplanar decorative overlays remain a background.
           const background = faces.filter(f => f.bg);
-          gl.disable(gl.DEPTH_TEST); batch(background, true); gl.enable(gl.DEPTH_TEST);
           const solid = [], transparent = [];
           for (const face of faces) if (!face.bg) (rgba(face.fill)[3] < 1 ? transparent : solid).push(face);
-          batch(solid, false);
           transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
-          batch(transparent, true); gl.depthMask(true);
+          upload('background', background); upload('solid', solid); upload('transparent', transparent);
+          const paint = () => {
+            gl.viewport(0, 0, surface.width, surface.height);
+            bindStage();
+            gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE);
+            gl.disable(gl.DEPTH_TEST); drawSlot(slots.background, true); gl.enable(gl.DEPTH_TEST);
+            drawSlot(slots.solid, false);
+            // Scenery uses the exact projection and depth interval of the canopy.
+            // Render before transparent infills, then restore every original binding.
+            if (sceneLife) {
+              sceneLife.draw(gl, { ...camera, near, far });
+              sceneLife.draw(gl, { ...camera, near, far }, true);
+              bindStage();
+            }
+            drawSlot(slots.transparent, true); gl.depthMask(true);
+          };
+          depthPainter.replay = paint;
+          paint();
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
           if (window.SP_TEST) window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
@@ -1915,7 +1948,8 @@
              and putting it into the key opens the gap between a face turned to
              the sun and one turned away, which is what makes the section look
              like metal with a form rather than a cut-out. */
-          const AMB = 0.36, KEY_I = 0.56, FILL_I = 0.22, BOUNCE_I = 0.34, SKY_I = 0.13;
+          const overcast = Boolean(sceneLife && sceneLife.state.weather !== 'sun');
+          const AMB = overcast ? .51 : .36, KEY_I = overcast ? .22 : .56, FILL_I = overcast ? .19 : .22, BOUNCE_I = overcast ? .29 : .34, SKY_I = .13;
           const toRGB = (c) => {
             if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
             const m = c.match(/[\d.]+/g) || [];
@@ -2000,10 +2034,13 @@
           const geometryKey = JSON.stringify(state) + '|' + [se > 0.01, fromAbove, VIEWDIR[0] > 0, VIEWDIR[1] > 0].join(',');
           const cacheHit = model().kvGeom && cachedGeometry && cachedGeometry.key === geometryKey;
           const rawFaces = [];
+          const weatherSolids = [];
+          let sceneryObstacles = [];
           const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
             if (!cacheHit && model().kvGeom) rawFaces.push({ pts, fill, opts, layer });
             const o = opts || {};
+            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             const normal = o.normal || faceNormal(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
@@ -2011,7 +2048,11 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            const lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
+              const tint=toRGB(fill);
+              if(tint[0]<80 && tint[1]<80 && tint[2]<80)lit='rgba('+tint.slice(0,3).join(',')+','+(tint[3]*.48)+')';
+            }
             faces.push({
               w: pts.map((point) => point.slice()),
               p: pp,
@@ -2336,6 +2377,7 @@
 
           if (cacheHit) {
             lastKvAccessoryGeometry = cachedGeometry.accessories;
+            sceneryObstacles = cachedGeometry.sceneryObstacles || [];
             for (const face of cachedGeometry.faces) { layer = face.layer; quad(face.pts, face.fill, face.opts); }
           } else {
           /* Cast shadow: the roof footprint dropped to the ground and pushed
@@ -2592,6 +2634,7 @@
               if (plc.cantilever === 'left' && xi === 0) return;
               if (plc.cantilever === 'right' && xi === xs.length - 1) return;
               if (plc.freePosts && xi !== 0 && xi !== xs.length - 1) return;
+              sceneryObstacles.push([px,py,px+pd,py+pw]);
               // the head of a post is always under the roof, never in view
               // where the post meets the ground, tight and dark
               const g0 = Math.round(Math.max(pd, pw) * 0.16);
@@ -2652,16 +2695,19 @@
                    vidno zo strany, kde parkuje auto — nie do polovice výšky,
                    kde sa strácala za autom aj za očami. Jej horná hrana je
                    preto tesne pod hlavou stĺpa. */
-                /* Nálepka patrí na stĺp pri strane, kadiaľ sa vchádza a parkuje,
-                   nie na zadný rad. Zadný rad stojí pri stene alebo plote a logo
-                   tam nikto nevidí. Berie sa preto odkvapový rad — posledná os
-                   v poli — a z neho líce otočené von. Ak má byť na inom stĺpe,
-                   je to zmena tejto jednej podmienky. */
+                /* Nálepka patrí na líce, ktoré vidno pri vjazde. Vchádza sa
+                   od odkvapu: v dátach Koverty je práve tá strana pomenovaná
+                   „Predná" (interne `right`, stena na x = L). Doteraz bola
+                   nálepka na bočnom líci toho istého stĺpa, teda kolmo na
+                   pohľad vodiča — ten ju videl až keď prešiel okolo. Sedí
+                   preto na čelnom líci posledného radu, tesne pod hlavou. */
                 if(px===xs[xs.length-1] && py>W/2){
-                  const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6;
+                  const w=pw*.86,h=w/4.4,y=py+(pw-w)/2,x=px+pd+0.6;
                   const z=H+lift-h-Math.max(70,Math.round(H*0.04));
-                  quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
-                    {normal:[0,1,0],cull:true,edge:false,decal:true});
+                  /* Poradie rohov určuje, ako sadne textúra: pri pohľade
+                     zvonku ide prvý roh doprava, inak sa nápis zrkadlí. */
+                  quad([[x,y+w,z],[x,y,z],[x,y,z+h],[x,y+w,z+h]],'#ffffff',
+                    {normal:[1,0,0],cull:true,edge:false,decal:true});
                 }
                 /* Pri päte stĺpa nie je nič. Majiteľ si kotviace krytky
                    výslovne neželá: na fotkách realizácií je od pätky po hlavu
@@ -4496,10 +4542,34 @@
 
           }
 
-            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, accessories: lastKvAccessoryGeometry };
+            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
           }
           layer = 0;
 
+          if (sceneLife) {
+            /* Dážď potrebuje skutočnú strechu, nie vodorovnú rovinu: rozteč a
+               krytie lamely podľa jej uhla, pásmo lamiel medzi stĺpmi (mimo
+               neho je plný rám) a stúpanie pultovej roviny. Rovnaké čísla
+               kreslia lamely aj rám o pár riadkov vyššie. */
+            const bladeW = panelRoof ? 200 : louverSize().w;
+            const lamels = (model().lamellas || [])[state.length] || Math.max(4, Math.round((L - 2 * post) / 183));
+            const ang = panelRoof ? 0 : louverAngle(beam, bladeW, state.louverT);
+            sceneLife.prepare({
+              L,W,H,post,boxDepth:boxDepthMM(),az:view.az,el:view.el,
+              kv:Boolean(model().kvGeom),panelRoof,louverT:state.louverT,
+              louverAngle:ang,bladeWidth:bladeW,
+              pitch:panelRoof?183:(L-2*post)/lamels,
+              /* Krytie je priemet lamely do pôdorysu. Zatvorená kryje celú
+                 šírku, otvorená len jej kosínus — presne tou medzerou padá
+                 dážď na zem. */
+              cover:panelRoof?Infinity:bladeW*Math.cos(ang),
+              louverZone:panelRoof?null:{x0:post,x1:L-post,y0:post,y1:W-post},
+              roofZ:H+beam,roofRise:(fallShown&&panelRoof?fall:0),
+              renderer:canvas.dataset.renderer||'',
+              weatherSolids, obstacles:sceneryObstacles, weatherKey:JSON.stringify(state),
+              drainage:lastKvAccessoryGeometry
+            });
+          }
           // fit and paint
           const boxW = canvas.clientWidth || 900;
           const boxH = canvas.clientHeight || 675;
@@ -4517,8 +4587,8 @@
             minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
           })));
           const scale = manualZoom * Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
-          const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2;
-          const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2;
+          const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2 + zoomPan.x*VW;
+          const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2 + zoomPan.y*VH;
 
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
@@ -5764,16 +5834,35 @@
         const orbitPointers = new Map();
         let pinchDistance = 0;
         const stageEl = cfgRoot.querySelector('.sp-stage');
-        /* Priblíženie je doplnková funkcia, nie povinné ovládanie. Percentá,
-           „+", „−" ani „Celý model" tu preto nie sú — je tu jeden prepínač.
-           Kým je vypnutý, koliesko nad modelom normálne roluje stránku;
-           predtým mu model rolovanie zobral a návštevník sa nedostal nižšie.
-           Vypnutie vráti model na celý záber. */
+        /* Zoom is opt-in so the wheel scrolls the page until enabled.
+           Pointer anchoring preserves the inspected detail; reset eases both
+           scale and the bounded pan back to the complete model. */
         let zoomOn = false;
         const zoomUI = document.createElement('button');
-        const setZoom = value => {
-          manualZoom = Math.max(0.9, Math.min(3, value));
-          scheduleStage();
+        const zoomTools=document.createElement('div');
+        zoomTools.className='sp-zoom-tools';zoomTools.hidden=true;
+        zoomTools.innerHTML='<button type="button" data-zoom-step="out" aria-label="Oddialiť model">−</button><output aria-label="Priblíženie">100 %</output><button type="button" data-zoom-step="in" aria-label="Priblížiť model">+</button><button type="button" data-zoom-step="reset">Celý model</button>';
+        let zoomTarget=1,zoomRun=0,zoomAnchor={x:0,y:0},zoomLast=0,setZoomMode=()=>{};
+        const syncZoom=()=>{zoomTools.querySelector('output').value=Math.round(manualZoom*100)+' %';};
+        const anchorAt=(x,y)=>{const r=canvas.getBoundingClientRect();return {x:(x-r.left)/r.width-.5,y:(y-r.top)/r.height-.5};};
+        const applyZoom=value=>{
+          const ratio=value/manualZoom;
+          zoomPan.x=zoomAnchor.x-(zoomAnchor.x-zoomPan.x)*ratio;
+          zoomPan.y=zoomAnchor.y-(zoomAnchor.y-zoomPan.y)*ratio;
+          manualZoom=value;
+          const limit=Math.max(0,manualZoom-1)*.55;
+          zoomPan.x=Math.max(-limit,Math.min(limit,zoomPan.x));zoomPan.y=Math.max(-limit,Math.min(limit,zoomPan.y));
+          syncZoom();scheduleStage();
+        };
+        const setZoom=(value,anchor={x:0,y:0},immediate=false)=>{
+          zoomTarget=Math.max(.75,Math.min(3.5,value));zoomAnchor=anchor;
+          if(immediate||reducedMotion){if(zoomRun)cancelAnimationFrame(zoomRun);zoomRun=0;applyZoom(zoomTarget);return;}
+          if(zoomRun)return;zoomLast=performance.now();
+          const tick=now=>{const dt=Math.min(50,now-zoomLast);zoomLast=now;
+            if(Math.abs(Math.log(zoomTarget/manualZoom))<.001){zoomRun=0;applyZoom(zoomTarget);return;}
+            applyZoom(Math.exp(Math.log(manualZoom)+(Math.log(zoomTarget)-Math.log(manualZoom))*(1-Math.exp(-dt/55))));
+            zoomRun=requestAnimationFrame(tick);
+          };zoomRun=requestAnimationFrame(tick);
         };
         if (stageEl) {
           zoomUI.type = 'button';
@@ -5782,29 +5871,33 @@
           zoomUI.setAttribute('aria-pressed', 'false');
           zoomUI.setAttribute('aria-label', 'Zapnúť priblíženie modelu');
           zoomUI.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20.5 20.5M7.8 10.5h5.4M10.5 7.8v5.4"/></svg><span>Priblížiť</span>';
-          stageEl.appendChild(zoomUI);
-          const setZoomMode = (on) => {
-            zoomOn = on;
+          stageEl.appendChild(zoomUI);stageEl.appendChild(zoomTools);
+          setZoomMode = (on) => {
+            zoomOn = on;zoomTools.hidden=!on;
             zoomUI.setAttribute('aria-pressed', String(on));
             zoomUI.setAttribute('aria-label', on ? 'Vypnúť priblíženie modelu' : 'Zapnúť priblíženie modelu');
-            if (!on) setZoom(1);
+            if (!on) {setZoom(1);}
           };
           zoomUI.addEventListener('click', () => setZoomMode(!zoomOn));
+          zoomTools.addEventListener('click',e=>{const b=e.target.closest('[data-zoom-step]');if(!b)return;
+            if(b.dataset.zoomStep==='reset'){setZoom(1);}
+            else setZoom(zoomTarget*(b.dataset.zoomStep==='in'?1.15:1/1.15));
+          });
           canvas.addEventListener('wheel',e=>{
             if(!zoomOn)return;
-            e.preventDefault();setZoom(manualZoom*Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*0.003));
+            e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);setZoom(zoomTarget*Math.exp(-Math.max(-100,Math.min(100,delta))*.0016),anchorAt(e.clientX,e.clientY));
           },{passive:false});
           /* Turning the model is part of the product, so it cannot be mouse-only.
              Arrow keys orbit, Home returns to the opening view. */
           const hint = document.createElement('p');
           hint.className = 'sp-stage__hint';
           hint.setAttribute('aria-hidden', 'true');
-          hint.textContent = 'Ťahaním otočíte · priblíženie zapnete tlačidlom';
+          hint.textContent = 'Ťahaním otočíte · dvoma prstami priblížite · Shift + ťah posunie detail';
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
             if(e.target.closest('button,input,select,textarea'))return;
-            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom*1.2);return;}
-            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom/1.2);return;}
+            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget*1.15);return;}
+            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget/1.15);return;}
             stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
@@ -5822,10 +5915,10 @@
         }
         if (stageEl) {
           stageEl.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('button, input, select, textarea, label, [role="group"]')) return;
+            if (!canvas.contains(e.target)) return;
             stopCamera();
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
-            if(orbitPointers.size===2){const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
+            if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
             dragging = true; lastX = e.clientX; lastY = e.clientY;
             stageEl.setPointerCapture(e.pointerId);
           });
@@ -5834,11 +5927,17 @@
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size>1){
               const p=[...orbitPointers.values()],distance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);
-              if(pinchDistance>0&&zoomOn)setZoom(manualZoom*distance/pinchDistance);
+              if(pinchDistance>0&&zoomOn)setZoom(manualZoom*distance/pinchDistance,anchorAt((p[0][0]+p[1][0])/2,(p[0][1]+p[1][1])/2),true);
               pinchDistance=distance;return;
             }
             // Drag right, model turns right: the point under the cursor has to
             // follow the cursor, and increasing az moves it right on screen.
+            if(e.shiftKey&&zoomOn&&manualZoom>1){
+              const r=canvas.getBoundingClientRect(),limit=(manualZoom-1)*.55;
+              zoomPan.x=Math.max(-limit,Math.min(limit,zoomPan.x+(e.clientX-lastX)/r.width));
+              zoomPan.y=Math.max(-limit,Math.min(limit,zoomPan.y+(e.clientY-lastY)/r.height));
+              lastX=e.clientX;lastY=e.clientY;scheduleStage();return;
+            }
             viewTouched = true;
             view.az += (e.clientX - lastX) * 0.006;
             view.el = Math.max(EL_FLOOR(), Math.min(1.45, view.el + (e.clientY - lastY) * 0.005));
@@ -5889,6 +5988,29 @@
           drawStage();
         });
 
+        if (window.SP_SCENE) {
+          sceneLife=window.SP_SCENE.create(cfgRoot,()=>drawStage(),BIO.page||'bio');
+          /* Snímok dažďa prekreslí uložené buffery. Konštrukcia sa medzi
+             snímkami nemení, tak sa ani nepočíta znova; vracia sa false, keď
+             hĺbkový renderer nebeží (SVG záloha, stratený kontext) a modul si
+             podľa toho animáciu vypne, namiesto aby staval scénu 60× za
+             sekundu na procesore. */
+          sceneLife.setFrame((fast) => {
+            if (!depthPainter || depthPainter === false || !depthPainter.replay) return false;
+            /* Slabšie zariadenie dostane dážď v pohybovom rozlíšení — v tom
+               istom, v akom beží otáčanie. Prepína sa raz, nie na každom
+               snímku, a po zastavení dažďa sa scéna dokreslí ostro. */
+            if (Boolean(fast) !== motionDetail) {
+              window.clearTimeout(detailTimer);
+              motionDetail = Boolean(fast);
+              drawStage();
+              return true;
+            }
+            try { depthPainter.replay(); } catch (e) { return false; }
+            return true;
+          });
+          if(window.SP_TEST) window.SP_TEST.scene=()=>sceneLife.snapshot();
+        }
         buildModels();
         renderAll();
         showStep(1, true);

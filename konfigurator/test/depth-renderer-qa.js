@@ -28,7 +28,7 @@ const { prepareContext } = require('./browser-qa');
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
           }
-          // Zoom is an opt-in extra: one toggle, no percentage or +/- buttons.
+          // Zoom is opt-in; detail controls appear only after enabling it.
           // While it is off the wheel must leave the page scrolling alone.
           const zoomBox=await page.locator('.sp-zoom').boundingBox(),stageBox=await page.locator('.sp-stage').boundingBox();
           assert(zoomBox.y>=stageBox.y && zoomBox.y+zoomBox.height<=stageBox.y+stageBox.height,'Zoom control escaped model stage');
@@ -45,8 +45,9 @@ const { prepareContext } = require('./browser-qa');
           await page.mouse.wheel(0,-240);
           await page.waitForTimeout(60);
           assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family once enabled');
-          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))<=3,'Manual zoom must stay inside its limit');
+          assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))<=3.5,'Manual zoom must stay inside its limit');
           await toggle.click();
+          await page.waitForFunction(()=>SP_TEST.snapshot().zoom===1);
           assert.equal(await page.evaluate(()=>SP_TEST.snapshot().zoom),1,'Switching zoom off returns the whole model');
           const times=[];
           for (let i=0;i<48;i++) {
