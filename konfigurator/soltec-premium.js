@@ -1688,6 +1688,7 @@
            No BSP fragments, centroid ordering or expanded polygon strokes can
            reveal a hidden steel member through another opaque member. */
         let depthPainter = null, cachedGeometry = null;
+        let motionDetail = false, detailTimer = 0;
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
           if (!depthPainter) {
@@ -1720,7 +1721,7 @@
           const { VW, VH, scale, ox, oy, DIST } = camera;
           // Supersample even on 1x desktop displays: long folded-sheet edges
           // and 1.5 mm flashing laps otherwise collapse to broken pixels.
-          const ratio = 2;
+          const ratio = motionDetail ? 1 : 2;
           const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
           const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
@@ -5093,6 +5094,14 @@
            ako to už rieši  o kus vyššie. */
         let stagePending = 0, stageTimer = 0;
         const scheduleStage = () => {
+          // Keep interactive frames light, then resolve the identical geometry
+          // at full detail once input stops. No part or pose changes on settle.
+          motionDetail = true;
+          window.clearTimeout(detailTimer);
+          detailTimer = window.setTimeout(() => {
+            motionDetail = false;
+            drawStage();
+          }, 160);
           if (stagePending) return;
           stagePending = 1;
           const run = () => {
