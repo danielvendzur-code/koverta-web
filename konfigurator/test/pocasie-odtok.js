@@ -90,17 +90,24 @@ const HELPERS = () => {
     await page.waitForTimeout(300);
   };
   /* Rovnaký záber s dažďom a bez neho. Dážď sa pozastaví, takže obe snímky
-     idú v plnom rozlíšení a líšia sa výhradne vodou. */
-  const waterUnderRoof = async (page) => {
+     idú v plnom rozlíšení a líšia sa výhradne vodou. Meria sa niekoľko fáz
+     dažďa a berie sa najsilnejšia: v jednom zamrznutom snímku môže cez medzeru
+     práve nič nepadať a z takej náhody nemá test robiť chybu. */
+  const waterUnderRoof = async (page, samples = 3) => {
     await weather(page, false);
     await page.evaluate(() => window.__shot('A'));
     await weather(page, true);
-    await pause(page);
-    await page.evaluate(() => window.__shot('B'));
-    const out = await page.evaluate(() => window.__diff());
-    assert(!out.error, 'meranie dažďa zlyhalo: ' + JSON.stringify(out));
+    let most = 0;
+    for (let i = 0; i < samples; i++) {
+      await pause(page);
+      await page.evaluate(() => window.__shot('B'));
+      const out = await page.evaluate(() => window.__diff());
+      assert(!out.error, 'meranie dažďa zlyhalo: ' + JSON.stringify(out));
+      most = Math.max(most, out.n);
+      if (i < samples - 1) { await resume(page); await page.waitForTimeout(280); }
+    }
     await weather(page, false);
-    return out.n;
+    return most;
   };
 
   // ---- bioklimatická pergola: lamely rozhodujú, či dážď prejde -------------
