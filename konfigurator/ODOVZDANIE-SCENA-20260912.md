@@ -52,6 +52,13 @@ softvérové WebGL), nie na fyzickom mobile.
 - Bez žľabu (panelová strecha bez doplnku) voda prepadá cez odkvapovú hranu
   ako kvapkací záves obrátený k pozorovateľovi.
 
+### SVG záloha
+- Overené v prehliadači bez WebGL (`--disable-3d-apis`): plátno prepne na
+  `svg-fallback`, panel napíše „Tento prehliadač kreslí zjednodušený nákres —
+  vybavenie sa v ňom nezobrazí." a pri daždi doplní „Dážď sa kreslí len v 3D
+  náhľade tohto prehliadača." Animácia sa nespustí (hodiny ostanú na nule),
+  takže nič nestavia scénu na procesore dokola.
+
 ### Mobil
 - Panel aj počasie sa na telefóne vojdú, tlačidlá majú 44 px, stránka
   nepretečie do šírky.
@@ -71,6 +78,7 @@ Chromium bez GPU (softvérové WebGL — absolútne časy sú preto pesimistick�
 | stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke | PASS |
 | browser-qa, pricing-logic, soltec-motion-regression, depth-renderer-qa | PASS |
 | **pocasie-odtok** (nový) | PASS |
+| soltec-motion | PASS. Vo workflowe „Koverta exact final QA" bežal proti `/bioklimaticke-pergoly/`, kde od 2e4455f konfigurátor nie je, takže čakal na `[data-sp-cfg]` do vypršania. Ukazuje na `konfigurator/?page=bio` ako druhý workflow. |
 | layout-smoke | FAIL aj na čistom strome — `.kh-hero__rating` má na mobile 117,66 px proti prahu 120 px, lebo v tejto piesočnici je zablokovaná CDN s písmami a text sa vysádza náhradným rezom. Nie je to regresia tejto vetvy. |
 
 `konfigurator/test/pocasie-odtok.js` meria dážď pohľadom spod podhľadu —
