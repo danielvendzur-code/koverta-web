@@ -2318,6 +2318,35 @@
             }
             quad(cap, hex, { normal: n, bias: ON_SKIN });
           };
+          /* Krytka na päte stĺpa nie je spojovací prvok, takže ju nesmie
+             kresliť skrutkuj: šesťhranná hlava sa na tejto pozícii čítala ako
+             matica. Kryt je plochý okrúhly diel — valcový obvod, po ňom úkos
+             a mierne zapustené čelo, takže svetlo po ňom obieha dokola a
+             nemá žiadnu hranu, ktorá by pripomínala kľúč. Priemer aj výška
+             sú vizuálne proporcie, nie výrobný údaj. */
+          const krytka = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
+            const r = R || 11, sd = sgn || 1, h = dlzka || 3;
+            const SEG = 16, rim = r * 0.78, lip = h * 0.45;
+            const P = (t, rad, a) => {
+              const c = Math.cos(a) * rad, d = Math.sin(a) * rad;
+              if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
+              if (os === 'y') return [cx0 + c, cy0 + sd * t, cz0 + d];
+              return [cx0 + c, cy0 + d, cz0 + sd * t];
+            };
+            const n = os === 'x' ? [sd, 0, 0] : os === 'y' ? [0, sd, 0] : [0, 0, sd];
+            const face = [];
+            for (let i = 0; i < SEG; i++) {
+              const a = (Math.PI * 2 * i) / SEG, b = (Math.PI * 2 * (i + 1)) / SEG;
+              face.push(P(h, rim, a));
+              const c = Math.cos((a + b) / 2), d = Math.sin((a + b) / 2);
+              const sideNormal = os === 'x' ? [0, c, d] : os === 'y' ? [c, 0, d] : [c, d, 0];
+              quad([P(0, r, a), P(lip, r, a), P(lip, r, b), P(0, r, b)], hex,
+                   { normal: sideNormal, cull: false, bias: ON_SKIN });
+              const skos = [P(lip, r, a), P(h, rim, a), P(h, rim, b), P(lip, r, b)];
+              quad(skos, shade(hex, 0.05), { normal: faceNormal(skos), cull: false, bias: ON_SKIN });
+            }
+            quad(face, shade(hex, 0.03), { normal: n, bias: ON_SKIN });
+          };
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
             const zin = model().rimSoffitHex || '#c2c7cb';
@@ -2633,9 +2662,11 @@
                   quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
                     {normal:[0,1,0],cull:true,edge:false,decal:true});
                 }
+                /* Pri päte stĺpa sú krytky, nie skrutky — kreslí ich preto
+                   krytka a nie skrutkuj. */
                 for (const z of [55, 115]) for (const side of [-1, 1]) {
-                  skrutkuj(px + pd / 2, side < 0 ? py - 0.4 : py + pw + 0.4, z,
-                    'y', frame, 9, side, 3);
+                  krytka(px + pd / 2, side < 0 ? py - 0.4 : py + pw + 0.4, z,
+                    'y', shade(frame, 0.04), 10, side, 3.4);
                 }
               }
               if (BIO.roundPosts) {
