@@ -5920,7 +5920,9 @@
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
             dragging = true; lastX = e.clientX; lastY = e.clientY;
-            stageEl.setPointerCapture(e.pointerId);
+            /* Zachytenie ukazovateľa je pohodlie, nie podmienka: keď prehliadač
+               ukazovateľ medzitým uvoľní, ťahanie musí ísť ďalej, nie spadnúť. */
+            try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
           });
           stageEl.addEventListener('pointermove', (e) => {
             if (!dragging) return;

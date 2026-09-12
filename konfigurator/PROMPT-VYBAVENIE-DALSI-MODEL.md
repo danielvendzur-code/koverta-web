@@ -51,12 +51,16 @@ pergolách (`bio`, `canopy`).
    Odporúčaný postup: pridať ďalšie plátky do `section(x)` v oblasti ramena a
    veka, spáru robiť ako úzky vtlačený kanál (dva plátky s posunom dovnútra),
    lem blatníka ako samostatný pás okolo oblúka.
-2. **Veľkosť súboru.** Auto má 63 674 trojuholníkov a 591 kB gzip. Načítava sa
-   až po kliknutí na „Auto", ale menej staníc v strede karosérie a hrubšia
-   pneumatika by to stiahli pod 400 kB bez viditeľnej straty.
-3. **Lounge zostava** (`patio-lounge`) je použiteľná, ale nábytok je zo
-   zaoblených kvádrov. Chce to prešitie vankúšov, tenšie nohy a jeden
-   detail navyše (podnos, lampáš, kvetináč).
+2. **Veľkosť súboru.** Auto má 34 902 trojuholníkov a 335 kB gzip. Načítava sa
+   až po kliknutí na „Auto"; ďalšie zjemňovanie tvaru by nemalo tento rozpočet
+   výrazne prekročiť.
+3. **Lounge zostava** (`patio-lounge`, 23 486 trojuholníkov, 181 kB) už má
+   prešité vankúše, lampáš, podnos aj kvetináč. Jej pôdorys je zámerne
+   3 160 × 2 400 mm: bioklimatická pergola je najviac 3 500 mm široká a
+   hlbšia zostava by sa medzi stĺpy nikdy nezmestila. Kto ju bude prestavovať,
+   nesmie ju rozšíriť naprieč — inak sa prestane ponúkať a v pergole ostane
+   len bistro stolík. Zlepšiť sa dá poťah (látka je hladká plocha bez záhybov)
+   a koberec (dva pásy tónov namiesto štruktúry).
 4. **Bistro** je Poly Haven CC0 sieť; zdroj nie je v repozitári, takže sa dá
    prestaviť len s pôvodným `seating.gltf`.
 
@@ -83,3 +87,7 @@ python3 -m http.server 8901                          # a potom vizuálna kontrol
 Vizuálne sa vybavenie zapína v paneli „Vybavenie priestoru" pod plátnom.
 `window.SP_TEST.scene()` vráti stav scény, `window.SP_TEST.setView(az,el)`
 otočí kameru pre porovnávacie zábery.
+
+Lounge zostava sa objaví až pri šírke od 3 260 mm (pri stĺpe 120 mm); pod ňou
+plán ponúkne bistro stolíky. Pri kontrole teda treba nastaviť `bio` na plnú
+šírku 3 500 mm, inak sa lounge nezobrazí.

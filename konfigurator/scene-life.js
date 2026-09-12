@@ -11,10 +11,10 @@
   const models = {
     car: { file:'touring-sedan.bin.gz', bounds:[-74,-1040,1,4826,1040,1528] },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
-    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1450,0,1580,1450,822] }
+    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] }
   };
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-2',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-3',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -67,23 +67,24 @@
     }
     if(mode==='bistro') {
       /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
-         kreslá, stolík a koberec — nie jeden stolík uprostred prázdna. Lounge
-         potrebuje okrem svojej obálky ešte 250 mm na každú stranu na obídenie;
-         kde sa nezmestí, ostáva bistro. */
+         kreslá, stolík a koberec — nie jeden stolík uprostred prázdna. Zostava
+         je 2,4 m hlboká práve preto, aby sa pod bioklimatickú pergolu (najviac
+         3,5 m široká) vôbec zmestila; k tomu 200 mm na každú stranu na
+         obídenie a 250 mm v smere dĺžky. Kde ani to nevyjde, ostáva bistro. */
       const lb=models.lounge.bounds;
-      if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+500) {
+      if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+400) {
         result.push({key:'lounge',x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
         return {items:result,capacity:1,reason:''};
       }
       const bb=models.bistro.bounds, need=y=>(y?bb[4]-bb[1]:bb[3]-bb[0])+600;
       if(available<need(false) || c.W-2*margin<need(true))return {items:[],capacity:0,reason:'Pre posedenie a odsunutie stoličiek tu nie je dosť voľného miesta.'};
-      result.push({key:'bistro',x:(x0+x1)/2+55,y:c.W/2+47,z:2,rotation:0});
-      // Two complete bistro sets only when their usable envelopes do not meet.
-      if(count==='2' && available>=3000) {
-        result[0].x=(x0+x1)/2-750+55;
-        result.push({...result[0],x:(x0+x1)/2+750+55});
-      }
-      return {items:result,capacity:available>=3000?2:1,reason:''};
+      /* Dve kompletné bistro zostavy len vtedy, keď sa ich použiteľné obálky
+         nestretnú. Prednastavené „podľa priestoru" ich rozloží po dĺžke, aby
+         dlhý prístrešok nestál okolo jediného stolíka. */
+      const seats=available>=3000?2:1, wantSeats=count==='auto'?seats:Math.min(Number(count)||1,seats);
+      const mid=(x0+x1)/2+55;
+      for(let i=0;i<wantSeats;i++)result.push({key:'bistro',x:mid+(wantSeats===2?(i?750:-750):0),y:c.W/2+47,z:2,rotation:0});
+      return {items:result,capacity:seats,reason:''};
     }
     return {items:[],capacity:0,reason:''};
   }
@@ -269,7 +270,9 @@
     const update=()=>{failure='';if(context)prepare(context);changed();run();};
     panel.addEventListener('click',e=>{
       const b=e.target.closest('button');if(!b)return;
-      if(b.dataset.sceneMode){state.mode=b.dataset.sceneMode;state.count='1';}
+      /* Posedenie má priestor vyplniť, auto nie: jedno auto je bežná
+         predstava parkovania, tri kusy nábytku bežná predstava terasy. */
+      if(b.dataset.sceneMode){state.mode=b.dataset.sceneMode;state.count=b.dataset.sceneMode==='bistro'?'auto':'1';}
       if(b.dataset.sceneWeather){state.weather=b.dataset.sceneWeather;stalled=false;pace=0;paints=0;}
       if(b.hasAttribute('data-scene-pause'))state.paused=!state.paused;
       update();
@@ -374,7 +377,7 @@
           float phase=fract(seed.z+clock*(4300.+seed.w*1800.)/max(300.,top-stopZ));
           float z=mix(top,stopZ,phase);float land=smoothstep(.965,1.,phase);
           vec3 across=vec3(orbit.x,orbit.y,0.);
-          vec3 fall=vec3(x,y,z)+across*corner.x*(2.5+2.*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
+          vec3 fall=vec3(x,y,z)+across*corner.x*(4.2+3.4*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
           vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
           vec3 b=cross(n,t);
           vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
@@ -382,7 +385,7 @@
           // A contact ring belongs to the wet side of its surface. Seen from
           // underneath, it must not shine through a thin sheet or the ground.
           float facing=smoothstep(0.,.12,dot(n,normalize(eye-vec3(x,y,stopZ))));
-          opacity=(.25+seed.w*.23)*(1.-land*.65)*density*mix(1.,facing,land);splash=land;}`,
+          opacity=(.28+seed.w*.24)*(1.-land*.65)*density*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));

@@ -18,8 +18,10 @@ kolesá 19". 34 902 trojuholníkov, 335 330 bajtov gzip.
 Pôvodný návrh pre tento konfigurátor: trojmiestna pohovka, dve kreslá, nízky
 stolík s podnosom a vonkajší koberec, poskladané ako jedna zostava, aby široká
 pergola nestála okolo jedného bistro stolíka. Rozmery zodpovedajú bežnému
-záhradnému nábytku: pohovka 2,28 m, hĺbka 0,76 m, sedák 0,40 m nad zemou.
-Obálka 3,16 × 2,90 m. 23 790 trojuholníkov, 186 757 bajtov gzip.
+záhradnému nábytku: pohovka 2,28 m, hĺbka 0,70 m, sedák 0,40 m nad zemou.
+Obálka 3,16 × 2,40 m — naprieč je zostava zámerne plytká, aby sa zmestila aj
+pod bioklimatickú pergolu, ktorá je najviac 3,5 m široká.
+23 486 trojuholníkov, 185 010 bajtov gzip.
 
 ## Outdoor Table Chair Set 01
 
@@ -40,6 +42,6 @@ vyžadovalo prihlásenie. Pri Ferrari nebola overená licencia pôvodného model
 
 ## Refinement 12. 9. 2026
 
-Aktuálny sedan má 34 902 trojuholníkov a 335 330 bajtov gzip. Lounge má 23 790 trojuholníkov a 186 757 bajtov gzip; rozmery 3,16 × 2,90 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
+Aktuálny sedan má 34 902 trojuholníkov a 335 330 bajtov gzip. Lounge má 23 486 trojuholníkov a 185 010 bajtov gzip; rozmery 3,16 × 2,40 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
 
 Pôvodné vstupy bistro zostavy sa dajú obnoviť skriptom `../tools/fetch-bistro-source.py`; manifest obsahuje presné URL aj SHA-256.

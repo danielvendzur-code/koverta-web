@@ -378,7 +378,10 @@ if len(sys.argv)>1:
 # A garden lounge set, original design: a three seater, two armchairs, a low
 # table and an outdoor rug, laid out as one arrangement so a wide pergola does
 # not stand around a single bistro table. Sizes follow ordinary catalogue
-# outdoor furniture: 2280 mm sofa, 900 mm deep, seats 400 mm off the ground.
+# outdoor furniture: 2280 mm sofa, 700 mm deep, seats 400 mm off the ground.
+# The arrangement is 2,4 m across on purpose: a bioclimatic pergola is at most
+# 3,5 m wide, so a deeper set would never fit between the posts and the lounge
+# would stay a model nobody ever sees.
 frame=(58,62,66); fabric=(206,201,190); fabric2=(178,172,160); teak=(148,116,78)
 slate=(96,101,106); rugA=(196,192,182); rugB=(168,166,158); cushion=(120,132,138)
 
@@ -412,7 +415,7 @@ def stitched(c,s,e):
 
 def seat_unit(cx,cy,width,face):
     """One sofa or armchair: frame plinth, arms, seat and back cushions."""
-    depth=760.;seat=400.;armh=600.;backh=780.
+    depth=700.;seat=400.;armh=600.;backh=780.
     y0=cy-face*depth/2   # front edge
     y1=cy+face*depth/2   # back edge
     rbox([cx,cy,265],[width/2-50,depth/2-55,35],.14,frame,0)
@@ -437,11 +440,11 @@ def seat_unit(cx,cy,width,face):
 
 def table(cx,cy):
     # Slim aluminium base and separate teak slats; enough knee room at the seats.
-    rbox([cx,cy,326],[540,248,12],.10,frame,0)
-    for j in range(7):
-        rbox([cx,cy-240+j*80,356],[575,38,16],.08,tuple(v+(j%3-1)*4 for v in teak),6,16,10)
+    rbox([cx,cy,326],[540,210,12],.10,frame,0)
+    for j in range(6):
+        rbox([cx,cy-200+j*80,356],[575,38,16],.08,tuple(v+(j%3-1)*4 for v in teak),6,16,10)
     for sx in (-1,1):
-        for sy in (-1,1):leg(cx+sx*508,cy+sy*226,0,328,14)
+        for sy in (-1,1):leg(cx+sx*508,cy+sy*190,0,328,14)
     rbox([cx+180,cy,387],[160,103,10],.12,(70,75,76),0,16,8)
     for dx in (-60,60):tube([cx+180+dx,cy,398],[cx+180+dx,cy,476],29,(188,207,212),2,12)
     # Open-frame lantern, glass and a candle. Small, deliberately quiet detail.
@@ -458,14 +461,14 @@ def table(cx,cy):
 
 # rug: two tones so it does not read as a painted rectangle
 for i in range(9):
-    t0=-1450+i*2900/9;t1=-1450+(i+1)*2900/9
+    t0=-1200+i*2400/9;t1=-1200+(i+1)*2400/9
     mesh([[[-1580,t0,4],[1580,t0,4]],[[-1580,t1,4],[1580,t1,4]]],rugA if i%2 else rugB,0)
-mesh([[[-1580,-1450,3],[-1580,1450,3]],[[-1510,-1385,7],[-1510,1385,7]]],(150,148,140),0)
-mesh([[[1580,-1450,3],[1580,1450,3]],[[1510,-1385,7],[1510,1385,7]]],(150,148,140),0,flip=True)
+mesh([[[-1580,-1200,3],[-1580,1200,3]],[[-1510,-1135,7],[-1510,1135,7]]],(150,148,140),0)
+mesh([[[1580,-1200,3],[1580,1200,3]],[[1510,-1135,7],[1510,1135,7]]],(150,148,140),0,flip=True)
 
-seat_unit(0,-1000,2280,-1)
-seat_unit(-690,1000,880,1)
-seat_unit(690,1000,880,1)
+seat_unit(0,-840,2280,-1)
+seat_unit(-690,840,880,1)
+seat_unit(690,840,880,1)
 table(0,0)
 # Planter stays within the rug envelope and clear of the table/seat approaches.
 tube([1360,-950,0],[1360,-950,345],115,(116,117,109),0,24)

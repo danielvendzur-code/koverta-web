@@ -5,6 +5,11 @@
    Meria sa pohľadom spod podhľadu — v tom kuželi je vidieť práve priestor
    pod strechou — porovnaním rovnakého záberu s dažďom a bez neho.
 
+   Počíta sa len to, čo padne dovnútra premietnutého obrysu strechy stiahnutého
+   k jeho stredu. Bez tejto masky sa dážď za prístreškom premietal do tej istej
+   časti obrázka a nedal sa odlíšiť od presakovania — pri otvorených lamelách
+   takých bodov býva niekoľko a test ich vypisuje zvlášť.
+
    Odtok sa drží skutočnej geometrie z `lastKvAccessoryGeometry`: hladina
    leží v priereze žľabu, kaluž pod ústím zvodu a nikde inde. Vnútro zvodu
    a stĺpa ostáva bez vody, lebo cez plný profil nemá čo presvitať. */
@@ -29,6 +34,14 @@ const HELPERS = () => {
         const q = window.SP_TEST.project(s.length * fx, s.width * fy, s.height * 0.55);
         x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y);
       }));
+      /* Obrys strechy premietnutý do obrazovky a stiahnutý k stredu. Počíta sa
+         len to, čo padne dovnútra neho: dážď mimo prístrešku sa pri pohľade
+         zdola premieta do rovnakej časti obrázka a bez tejto masky by sa
+         nedalo rozlíšiť od skutočného presakovania. */
+      const corners = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        .map(([u, v]) => window.SP_TEST.project(s.length * u, s.width * v, s.height));
+      const cx = corners.reduce((a, q) => a + q.x, 0) / 4;
+      const cy = corners.reduce((a, q) => a + q.y, 0) / 4;
       window.SP_TEST.redrawStage();
       const canvas = svg.querySelector('canvas');
       if (!canvas) { window['__slot' + slot] = null; done(null); return; }
@@ -36,7 +49,9 @@ const HELPERS = () => {
       const w = canvas.width, h = canvas.height, px = new Uint8Array(w * h * 4);
       gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
       const sx = w / vb[2], sy = h / vb[3];
-      window['__slot' + slot] = { w, h, px, region: [
+      window['__slot' + slot] = { w, h, px,
+        roof: corners.map((q) => [(cx + (q.x - cx) * 0.8) * sx, h - (cy + (q.y - cy) * 0.8) * sy]),
+        region: [
         Math.max(0, Math.round(x0 * sx)), Math.max(0, Math.round(h - y1 * sy)),
         Math.min(w, Math.round(x1 * sx)), Math.min(h, Math.round(h - y0 * sy))] };
       done({ w, h });
@@ -46,15 +61,24 @@ const HELPERS = () => {
     const a = window.__slotA, b = window.__slotB;
     if (!a || !b) return { error: 'chýba záber' };
     if (a.w !== b.w || a.h !== b.h) return { error: 'rôzna veľkosť plátna', a: [a.w, a.h], b: [b.w, b.h] };
+    const inside = (px, py) => {
+      let hit = false;
+      for (let i = 0, j = a.roof.length - 1; i < a.roof.length; j = i++) {
+        const [xi, yi] = a.roof[i], [xj, yj] = a.roof[j];
+        if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) hit = !hit;
+      }
+      return hit;
+    };
     const [x0, y0, x1, y1] = a.region;
-    let n = 0, t = 0;
+    let n = 0, outside = 0, t = 0;
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
       const i = (y * a.w + x) * 4; t++;
       const d = Math.abs(a.px[i] - b.px[i]) + Math.abs(a.px[i+1] - b.px[i+1])
         + Math.abs(a.px[i+2] - b.px[i+2]) + Math.abs(a.px[i+3] - b.px[i+3]);
-      if (d > 18) n++;
+      if (d <= 18) continue;
+      if (inside(x, y)) n++; else outside++;
     }
-    return { n, t };
+    return { n, outside, t };
   };
 };
 
@@ -93,7 +117,7 @@ const HELPERS = () => {
      idú v plnom rozlíšení a líšia sa výhradne vodou. Meria sa niekoľko fáz
      dažďa a berie sa najsilnejšia: v jednom zamrznutom snímku môže cez medzeru
      práve nič nepadať a z takej náhody nemá test robiť chybu. */
-  const waterUnderRoof = async (page, samples = 3) => {
+  const waterUnderRoof = async (page, samples = 5) => {
     await weather(page, false);
     await page.evaluate(() => window.__shot('A'));
     await weather(page, true);
@@ -104,6 +128,7 @@ const HELPERS = () => {
       const out = await page.evaluate(() => window.__diff());
       assert(!out.error, 'meranie dažďa zlyhalo: ' + JSON.stringify(out));
       most = Math.max(most, out.n);
+      if (process.env.KV_RAIN_DEBUG) console.log('  vzorka', i, 'pod strechou', out.n, 'mimo obrysu', out.outside, 'z', out.t);
       if (i < samples - 1) { await resume(page); await page.waitForTimeout(280); }
     }
     await weather(page, false);
@@ -133,8 +158,12 @@ const HELPERS = () => {
     const open = await waterUnderRoof(page);
     await setLouver(0);
     const shut = await waterUnderRoof(page);
-    if (!(open >= 40)) bad.push(`otvorenými lamelami musí pršať pod strechu, nameraných ${open} bodov`);
-    if (!(shut <= 12 && shut * 6 <= open)) bad.push(`zatvorené lamely musia dážď zadržať, nameraných ${shut} bodov proti ${open} pri otvorených`);
+    /* Koľko kvapiek prejde medzerou, závisí od fázy, v ktorej sa dážď zastaví:
+       nameralo sa 16 až 130 bodov. Prah je pod tým rozpätím, ale ďaleko nad
+       nulou, ktorú dáva zatvorená aj panelová strecha — rozhoduje rozdiel medzi
+       otvorenou a zatvorenou strechou, nie presné číslo. */
+    if (!(open >= 15)) bad.push(`otvorenými lamelami musí pršať pod strechu, nameraných ${open} bodov pod obrysom strechy`);
+    if (!(shut <= 4 && shut * 6 <= open)) bad.push(`zatvorené lamely musia dážď zadržať, nameraných ${shut} bodov pod obrysom strechy proti ${open} pri otvorených`);
 
     // Voda po lamelách tečie, až keď sa zatvárajú; otvorená lamela ju neudrží.
     await weather(page, true);
@@ -169,7 +198,7 @@ const HELPERS = () => {
     await page.evaluate(() => { window.SP_TEST.setView(-0.6, -1.05); window.SP_TEST.redrawStage(); });
     await page.waitForTimeout(400);
     const panel = await waterUnderRoof(page);
-    if (!(panel <= 12)) bad.push(`pod panelovú strechu nesmie pršať, nameraných ${panel} bodov`);
+    if (!(panel <= 4)) bad.push(`pod panelovú strechu nesmie pršať, nameraných ${panel} bodov pod obrysom strechy`);
 
     await weather(page, true);
     await resume(page);
