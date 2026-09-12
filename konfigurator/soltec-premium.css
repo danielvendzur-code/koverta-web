@@ -1480,3 +1480,8 @@
 @media (max-width: 989px) {
   #SoltecPremium .sp-stage { position: relative; top: auto; }
 }
+
+@media (max-width: 749px) {
+  #SoltecPremium .sp-zoom { position: relative; top: auto; right: auto; order: -1; align-self: flex-end; margin: .8rem .8rem 0; box-shadow: none; }
+  #SoltecPremium .sp-stage__hint { display: none; }
+}
