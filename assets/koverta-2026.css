@@ -15229,21 +15229,39 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 /* The underline grows only in X. Its 3px height and rounded ends never
    change, including the first and last frame. */
 .kv-header .kv-nav__link::after {
-  height:3px; border-radius:999px; transform:none; clip-path:inset(0 100% 0 0 round 999px);
+  width:calc(100% - 20px); height:3px; border-radius:999px; transform:none; clip-path:inset(0 100% 0 0 round 999px);
   transition:clip-path 220ms var(--k-ease);
 }
 .kv-header .kv-nav__item:hover > .kv-nav__link::after,
 .kv-header .kv-nav__item.is-open > .kv-nav__link::after,
-.kv-header .kv-nav__link:focus-visible::after { transform:none; clip-path:inset(0 0 0 0 round 999px); }
+.kv-header .kv-nav__link:focus-visible::after,
+.kv-header .kv-nav__link[aria-current="page"]::after { transform:none; clip-path:inset(0 0 0 0 round 999px); }
+
+/* The top service line uses the same content axis as the logo. It lives
+   outside the site reset, therefore its list spacing must be reset here. */
+.kv-header .kv-topbar__usps { margin:0; padding:0; list-style:none; }
+
+/* Mega-menu thumbnails stay completely anchored under the pointer. */
+@media (min-width:1024px) {
+  .kv-header .kv-mega__brand-grid a,
+  .kv-header .kv-mega__real-grid a { transition:background-color 170ms var(--k-ease); }
+  .kv-header .kv-mega__brand-grid a:hover,
+  .kv-header .kv-mega__brand-grid a:focus-visible,
+  .kv-header .kv-mega__real-grid a:hover,
+  .kv-header .kv-mega__real-grid a:focus-visible { transform:none; }
+  .kv-header .kv-mega__foto img { transform:none !important; transition:none !important; }
+}
 
 /* Cards no longer recolour their CTA when only the photograph/body is
    hovered. The button changes only under the pointer or keyboard focus. */
 .k .kh-ponuka__karta:hover .kh-ponuka__akcia,
 .k .kh-ponuka__karta:focus-visible .kh-ponuka__akcia {
-  border-color:#b78900; background:var(--k-amber); color:var(--k-ink);
+  border-color:transparent; background:var(--k-amber); color:var(--k-ink);
 }
 .k .kh-ponuka__akcia:hover,
-.k .kh-ponuka__akcia:focus-visible { border-color:var(--k-ink); background:var(--k-ink); color:#fff; }
+.k .kh-ponuka__akcia:focus-visible { border-color:transparent; background:#e5b600; color:var(--k-ink); }
+.k .kh-ponuka__akcia { border-color:transparent; }
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia { border-color:transparent; }
 .k .kh-ponuka__kus--vstup .kh-ponuka__karta::before { content:none; }
 
 /* Brand offer router */
@@ -15272,23 +15290,29 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .kh-brand-dialog__links span { color:var(--k-grey); font-size:12.5px; line-height:1.45; }
 .k-dialog-open { overflow:hidden; }
 
-/* Consistent, shorter subpage hero. Homepage keeps its own cinematic height. */
-body:not(.k-home) .k .kh-hero { min-height:clamp(520px,66svh,650px); }
-body:not(.k-home) .k .kh-hero__box { padding-top:clamp(82px,10vh,112px); padding-bottom:clamp(34px,5vh,54px); }
-body:not(.k-home) .k .kh-hero .k-display { max-width:15ch; font-size:clamp(42px,5vw,68px); line-height:.98; }
+/* Consistent, compact subpage hero. The headline, CTAs and all three facts
+   fit in a common 800px-high desktop viewport. Homepage stays cinematic. */
+body:not(.k-home) .k .kh-hero { min-height:clamp(510px,64svh,610px); }
+body:not(.k-home) .k .kh-hero__box { padding-top:clamp(72px,8vh,88px); padding-bottom:clamp(24px,3.5vh,38px); }
+body:not(.k-home) .k .kh-hero .k-display { max-width:16ch; font-size:clamp(40px,4.25vw,58px); line-height:1; }
 body:not(.k-home) .k .kh-hero__lead { max-width:58ch; font-size:clamp(16px,1.35vw,19px); line-height:1.55; }
-body:not(.k-home) .k .kh-hero__trust { gap:0; margin-top:24px; }
-body:not(.k-home) .k .kh-hero__chip { padding:9px 28px 9px 0; margin-right:28px; }
+body:not(.k-home) .k .kh-hero__box > .k-display,
+body:not(.k-home) .k .kh-hero__box > h1 { margin-bottom:clamp(18px,2.2vw,30px); }
+body:not(.k-home) .k .kh-hero__box > .k-lead { margin-bottom:14px; }
+body:not(.k-home) .k .kh-hero__box > .kh-hero__actions { margin-bottom:14px; }
+body:not(.k-home) .k .kh-hero__trust { gap:0; margin-top:0; }
+body:not(.k-home) .k .kh-hero__chip { padding:5px 20px 5px 0; margin-right:20px; font-size:9px; }
+body:not(.k-home) .k .kh-hero__chip strong { margin-bottom:2px; font-size:clamp(13px,1.15vw,16px); }
 body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
   left:max(var(--k-gut),calc((100vw - var(--k-max)) / 2 + var(--k-gut)));
   top:clamp(18px,2vw,26px); max-width:calc(var(--k-max) - (2 * var(--k-gut)));
 }
 
-/* Secondary CTA is grey, never a floating white pill. */
+/* Secondary CTA is warm graphite/stone, never a floating white pill. */
 .k .k-btn--line { background:#e8eae8; border-color:#969c9f; color:var(--k-ink); }
-.k .kh-hero .k-btn--line { background:rgba(67,74,78,.78); border-color:rgba(255,255,255,.5); color:#fff; backdrop-filter:blur(5px); }
+.k .kh-hero .k-btn--line { background:rgba(215,207,180,.9); border-color:rgba(255,240,188,.72); color:#171b1d; backdrop-filter:blur(5px); }
 .k .k-btn--line:hover,.k .k-btn--line:focus-visible { background:#d9ddda; border-color:var(--k-ink); }
-.k .kh-hero .k-btn--line:hover,.k .kh-hero .k-btn--line:focus-visible { background:#555d61; border-color:#fff; }
+.k .kh-hero .k-btn--line:hover,.k .kh-hero .k-btn--line:focus-visible { background:#f0df9c; border-color:#f0df9c; color:#12171a; }
 
 /* Tighten oversized empty gaps without collapsing the hierarchy. */
 .k .k-band { padding-block:clamp(58px,6.5vw,96px); }
@@ -15304,6 +15328,23 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
 .k .kh-size-custom__eyebrow { color:#596164; }
 .k .kh-size-custom__text { max-width:58ch; font-size:clamp(18px,1.5vw,22px); }
 .k .kh-size-custom__note { margin-top:12px; max-width:68ch; font-size:12.5px; }
+.k .kh-size-custom .k-btn--line { background:#5c6467; border-color:#5c6467; color:#fff; }
+.k .kh-size-custom .k-btn--line:hover,
+.k .kh-size-custom .k-btn--line:focus-visible { background:#3f474a; border-color:#3f474a; color:#fff; }
+
+/* Homepage proof points form one designed information rail. Copy is
+   unchanged; scale and grouping are calmer and easier to scan. */
+.k-home .kh-fakty { padding-block:clamp(34px,4vw,58px); background:#efefeb; border:0; }
+.k-home .kh-fakty__rad {
+  overflow:hidden; padding:10px 18px; border:1px solid rgba(18,23,26,.09);
+  border-radius:20px; background:#fff; box-shadow:0 18px 54px rgba(18,23,26,.07);
+}
+.k-home .kh-fakty__polozka { min-width:0; padding:20px 22px; }
+.k-home .kh-fakty__polozka::before { left:0; top:18px; bottom:18px; }
+.k-home .kh-fakty__cislo { font-size:clamp(31px,3vw,44px); }
+.k-home .kh-fakty__cislo::after { width:28px; height:3px; margin-top:9px; }
+.k-home .kh-fakty__co { margin-top:9px; font-size:clamp(15px,1.25vw,18px); }
+.k-home .kh-fakty__pod { margin-top:4px; font-size:12.5px; line-height:1.48; }
 
 /* “Čo je v cene” is an editorial checklist rather than a wall of white cards. */
 .k .kh-vcene { background:var(--k-ink); color:#fff; }
@@ -15328,29 +15369,91 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
   .k .kh-vcene__polozka:first-child { border-top:0; }
 }
 
+@media (min-width:720px) and (max-height:850px) {
+  body:not(.k-home) .k .kh-hero { min-height:560px; }
+  body:not(.k-home) .k .kh-hero__box { padding-top:66px; padding-bottom:22px; }
+  body:not(.k-home) .k .kh-hero .k-display { font-size:clamp(38px,4vw,54px); }
+}
+
 /* SOLTEC CARPORT · compact, readable family-first decision */
+.k .k-carport-series__head,
+.k .k-carport-series__facts,
+.k .k-carport-series__extras,
+.k .k-carport-series__models { min-width:0; }
+.k .k-carport-series { position:relative; }
+.k .k-carport-series::before {
+  content:""; position:absolute; z-index:2; left:20px; right:20px; top:0; height:3px;
+  border-radius:0 0 999px 999px; background:var(--k-amber); pointer-events:none;
+}
+.k .k-carport-series--sl::before { background:#d5aa00; }
+@media (min-width:1021px) {
+  .k .k-carport-compare { grid-template-rows:auto auto auto auto; align-items:stretch; }
+  .k .k-carport-series { display:grid; grid-template-rows:subgrid; grid-row:span 4; }
+}
 .k .k-carport-series__head { min-height:172px; }
 .k .k-carport-series__head figure { min-height:172px; }
-.k .k-carport-series__facts { padding:8px 16px 0; }
-.k .k-carport-series__facts div { min-height:78px; padding:11px 12px; }
-.k .k-carport-series__extras { margin:10px 18px 0; padding:13px 15px; }
-.k .k-carport-series__models { padding-top:12px; }
+.k .k-carport-series__head img { transition:none; transform:none; }
+.k .k-carport-series__code {
+  padding:5px 8px; border-radius:999px; background:rgba(255,204,0,.12);
+  outline:1px solid rgba(255,204,0,.25);
+}
+.k .k-carport-series__facts { padding:8px 18px 0; }
+.k .k-carport-series__facts div { min-height:76px; padding:12px; }
+.k .k-carport-series__facts dd { font-weight:600; }
+.k .k-carport-series__facts dt { color:#806100; }
+.k .k-carport-series__extras { margin:10px 18px 0; padding:14px 16px; border-left-width:2px; border-radius:0 10px 10px 0; }
+.k .k-carport-series__models { align-self:end; padding-top:12px; }
 .k details.k-model-card--mini { overflow:hidden; }
 .k details.k-model-card--mini > summary {
   position:relative; display:grid; grid-template-columns:auto 1fr; align-items:center; gap:7px 10px;
   min-height:128px; padding:14px 36px 14px 14px; list-style:none; cursor:pointer;
+  transition:background-color 180ms var(--k-ease);
 }
+.k details.k-model-card--mini > summary:hover,
+.k details.k-model-card--mini > summary:focus-visible { background:#fff8d8; }
 .k details.k-model-card--mini > summary::-webkit-details-marker { display:none; }
 .k details.k-model-card--mini > summary::after {
-  content:"+"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
-  color:#8b6200; font:500 22px/1 var(--k-head);
+  content:"+"; position:absolute; right:11px; top:50%; display:grid; place-items:center;
+  width:25px; height:25px; border:1px solid rgba(139,98,0,.32); border-radius:50%;
+  transform:translateY(-50%); color:#8b6200; font:500 19px/1 var(--k-head);
 }
-.k details.k-model-card--mini[open] > summary::after { content:"−"; }
+.k details.k-model-card--mini[open] > summary::after { content:"−"; background:var(--k-amber); border-color:var(--k-amber); color:var(--k-ink); }
+.k details.k-model-card--mini[open] > summary { background:#fff8d8; }
 .k details.k-model-card--mini summary .k-model-card__use { justify-self:end; }
 .k details.k-model-card--mini summary strong { grid-column:1 / -1; font:750 15px/1.25 var(--k-head); }
 .k details.k-model-card--mini summary small { grid-column:1 / -1; color:var(--k-grey); font-size:12px; }
 .k .k-model-card__detail { padding:0 14px 14px; border-top:1px solid rgba(18,23,26,.1); }
 .k .k-model-card__detail > p { margin:12px 0 6px; color:var(--k-grey); font-size:12px; line-height:1.45; }
+
+/* OUTDOOR KITCHEN · one preparation sequence instead of two dense boxes */
+.k .k-kitchen-plan__steps {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0;
+  margin:0; padding:0; border-top:1px solid rgba(18,23,26,.16);
+  border-bottom:1px solid rgba(18,23,26,.16); list-style:none;
+}
+.k .k-kitchen-plan__step {
+  position:relative; min-width:0; padding:clamp(24px,3vw,40px);
+  border-left:1px solid rgba(18,23,26,.13);
+}
+.k .k-kitchen-plan__step:first-child { border-left:0; }
+.k .k-kitchen-plan__number {
+  display:block; margin-bottom:clamp(28px,4vw,52px); color:#9a7000;
+  font:800 12px/1 var(--k-head); letter-spacing:.12em;
+}
+.k .k-kitchen-plan__step h3 { margin:0 0 12px; font:750 clamp(20px,1.8vw,26px)/1.1 var(--k-head); letter-spacing:-.025em; }
+.k .k-kitchen-plan__step p { margin:0 0 24px; color:var(--k-grey); font-size:14px; line-height:1.58; }
+.k .k-kitchen-plan__step strong { display:block; margin-top:auto; color:var(--k-ink); font-size:12px; }
+.k .k-kitchen-plan__note {
+  margin:22px 0 0; padding:17px 20px; border-left:3px solid var(--k-amber);
+  background:rgba(255,255,255,.62); color:var(--k-grey); font-size:13px; line-height:1.5;
+}
+.k .k-kitchen-plan__note strong { color:var(--k-ink); }
+@media (max-width:800px) {
+  .k .k-kitchen-plan__steps { grid-template-columns:1fr; }
+  .k .k-kitchen-plan__step { border-left:0; border-top:1px solid rgba(18,23,26,.13); }
+  .k .k-kitchen-plan__step:first-child { border-top:0; }
+  .k .k-kitchen-plan__number { margin-bottom:18px; }
+}
 
 @media (min-width:1180px) {
   .k .k-model-section .k-head { margin-bottom:30px; }
