@@ -14519,6 +14519,22 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-shade-guide__item > span { width:max-content; padding-bottom:5px; border-bottom:2px solid var(--k-amber); font-size:12px; font-weight:800; letter-spacing:.08em; }
 .k .kh-shade-guide__item strong { font-family:var(--k-head); font-size:clamp(17px,1.35vw,20px); line-height:1.18; letter-spacing:-.02em; }
 .k .kh-shade-guide__item small { font-size:13px; line-height:1.45; color:var(--k-muted); }
+.k .kh-shade-products { display:grid; gap:14px; margin:clamp(22px,3vw,38px) 0 0; }
+.k .kh-shade-product { display:grid; grid-template-columns:minmax(190px,.72fr) minmax(0,2fr); overflow:hidden; border:1px solid rgba(18,23,26,.16); border-radius:20px; background:#fff; box-shadow:0 12px 34px rgba(18,23,26,.045); }
+.k .kh-shade-product__head { display:flex; flex-direction:column; align-items:flex-start; padding:clamp(22px,2.6vw,34px); border-right:1px solid var(--k-hair-soft); background:linear-gradient(145deg,#151a1d 0%,#273036 100%); color:#fff; }
+.k .kh-shade-product__head > span { display:inline-flex; align-items:center; min-height:31px; padding:0 10px; margin-bottom:auto; border:1px solid rgba(255,255,255,.38); border-radius:999px; color:var(--k-amber); font-size:12px; font-weight:850; letter-spacing:.08em; }
+.k .kh-shade-product__head h3 { margin:clamp(28px,3vw,48px) 0 9px; font-family:var(--k-head); font-size:clamp(22px,2vw,31px); line-height:1.03; letter-spacing:-.025em; }
+.k .kh-shade-product__head p { margin:0; color:rgba(255,255,255,.74); font-size:14px; line-height:1.5; }
+.k .kh-shade-product__story { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.k .kh-shade-product__story > div { padding:clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-shade-product__story > div:first-child { border-left:0; }
+.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+.k .kh-shade-product__story p { margin:0; color:#50585c; font-size:14px; line-height:1.58; }
+.k .kh-shade-product__facts { grid-column:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; border-top:1px solid var(--k-hair-soft); background:var(--k-bone); }
+.k .kh-shade-product__facts > div { display:grid; gap:5px; padding:15px clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
+.k .kh-shade-product__facts > div:first-child { border-left:0; }
+.k .kh-shade-product__facts dt { color:#747b7e; font-size:11px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+.k .kh-shade-product__facts dd { margin:0; color:var(--k-ink); font-size:14px; font-weight:760; line-height:1.35; }
 .k .kh-typ--refined .kh-typ__riadok--prvy { padding-block:inherit; border-color:var(--k-hair); background:var(--k-white); box-shadow:none; }
 .k .kh-typ--refined .kh-typ__riadok--prvy .kh-pojem { color:var(--k-grey-soft); }
 .k .kh-typ--refined .kh-typ__riadok--prvy .kh-typ__model { font-size:inherit; color:var(--k-ink); }
@@ -14527,6 +14543,11 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-typ--refined .kh-typ__riadok--prvy .kh-pas__kota { color:var(--k-ink); }
 @media (max-width:999px) {
   .k .kh-shade-needs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .k .kh-shade-product { grid-template-columns:1fr; }
+  .k .kh-shade-product__head { border-right:0; }
+  .k .kh-shade-product__head > span { margin-bottom:0; }
+  .k .kh-shade-product__head h3 { margin:24px 0 8px; }
+  .k .kh-shade-product__facts { grid-column:1; }
   .k .kh-kitchen-specs { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .k .kh-kitchen-spec:nth-child(3) { border-left:0; }
   .k .kh-kitchen-spec:nth-child(n+3) { border-top:1px solid var(--k-hair-soft); }
@@ -14543,6 +14564,10 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 @media (max-width:599px) {
   .k .kh-shade-needs { grid-template-columns:minmax(0,1fr); }
   .k .kh-shade-needs a { min-height:0; }
+  .k .kh-shade-product { border-radius:16px; }
+  .k .kh-shade-product__story, .k .kh-shade-product__facts { grid-template-columns:1fr; }
+  .k .kh-shade-product__story > div, .k .kh-shade-product__facts > div { border-left:0; }
+  .k .kh-shade-product__story > div + div, .k .kh-shade-product__facts > div + div { border-top:1px solid var(--k-hair-soft); }
   .k .kh-kitchen-specs, .k .kh-kitchen-facts, .k .kh-shade-guide { grid-template-columns:minmax(0,1fr); }
   .k .kh-kitchen-spec, .k .kh-kitchen-facts > li, .k .kh-shade-guide__item { border-left:0; border-right:0; }
   .k .kh-kitchen-spec + .kh-kitchen-spec, .k .kh-kitchen-facts > li + li, .k .kh-shade-guide__item + .kh-shade-guide__item { border-top:1px solid var(--k-hair-soft); }
