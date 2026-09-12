@@ -72,6 +72,10 @@ pergolách (`bio`, `canopy`).
 - Obálky v `scene-life.js` (`models[...].bounds`) musia po prestavbe sedieť na
   sieť; ten istý test to kontroluje. Rozostupy a kapacity sa z obálok počítajú,
   neprepisujú sa ručne.
+- Položka scény smie byť otočená o štvrť otáčky (`rotation` je 0 alebo π/2).
+  Otočenie rieši shader (uniform `spin`), kontaktný tieň aj dopad dažďa — model
+  sa teda nemá „predotáčať" v generátore a nesmie predpokladať, ktorá jeho os
+  bude v prístrešku pozdĺžna.
 - Nezasahovať do cenníka, rozmerov ani do geometrie prístreškov.
 - Nevypínať a nezmäkčovať existujúce kontroly.
 
