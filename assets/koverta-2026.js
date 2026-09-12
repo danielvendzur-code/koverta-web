@@ -2708,6 +2708,12 @@
         v.hidden = true;
         try { v.pause(); } catch (e) {}
       };
+      const vlastnyKoniec = Number.parseFloat(v.dataset.kVideoEnd || '');
+      if (Number.isFinite(vlastnyKoniec) && vlastnyKoniec > 0) {
+        v.addEventListener('timeupdate', () => {
+          if (v.currentTime >= vlastnyKoniec) v.currentTime = 0;
+        });
+      }
       v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
       v.addEventListener('error', vzdaj);
 
