@@ -1731,9 +1731,18 @@
           }
           const { gl, program, host, surface, buffer, position, color, pattern, texUV } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
-          // Supersample even on 1x desktop displays: long folded-sheet edges
-          // and 1.5 mm flashing laps otherwise collapse to broken pixels.
-          const ratio = motionDetail ? 1 : 2;
+          /* Kreslí sa nad natívnym rozlíšením displeja, nie nad CSS pixelmi.
+             Pevný dvojnásobok znamenal na 2× displeji presne natívne rozlíšenie
+             a na 3× telefóne dokonca menej — model bol rozmazaný a tenké hrany
+             lemovania sa rozpadli. Násobok teraz vychádza z devicePixelRatio,
+             počas otáčania klesne kvôli plynulosti a po zastavení sa dokreslí
+             ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
+             displeji nevyrobilo buffer, ktorý ovládač odmietne. */
+          const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+          let ratio = motionDetail ? Math.max(1, dpr * 0.9) : Math.max(2.5, dpr * 1.8);
+          const MAX_PIXELS = 7.2e6;
+          const over = (canvas.clientWidth * ratio) * (canvas.clientHeight * ratio) / MAX_PIXELS;
+          if (over > 1) ratio /= Math.sqrt(over);
           const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
           const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
@@ -2643,7 +2652,12 @@
                    vidno zo strany, kde parkuje auto — nie do polovice výšky,
                    kde sa strácala za autom aj za očami. Jej horná hrana je
                    preto tesne pod hlavou stĺpa. */
-                if(px===xs[0] && py>W/2){
+                /* Nálepka patrí na stĺp pri strane, kadiaľ sa vchádza a parkuje,
+                   nie na zadný rad. Zadný rad stojí pri stene alebo plote a logo
+                   tam nikto nevidí. Berie sa preto odkvapový rad — posledná os
+                   v poli — a z neho líce otočené von. Ak má byť na inom stĺpe,
+                   je to zmena tejto jednej podmienky. */
+                if(px===xs[xs.length-1] && py>W/2){
                   const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6;
                   const z=H+lift-h-Math.max(70,Math.round(H*0.04));
                   quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
@@ -3406,7 +3420,12 @@
             const VAZ_W = REF.vazW || 58, VAZ_H = REF.vazH || 180;
             const TRAP_H = REF.trapH || 36, TRAP_KRYT = REF.trapKryt || 1072;
             const TRAP_ZAD = REF.trapZad || 15, TRAP_ODK = REF.trapOdkvap || 85;
-            const zinok = model().rimSoffitHex || '#c2c7cb';
+            /* Pozinkovaná oceľ nie je tá istá belasá ako podhľad. Kým mala
+               C profilom rovnaký tón ako trapézový podhľad (#dadada oproti
+               #d9dcdd), splynuli s ním a ich skutočný tvar — pásnica, stojina,
+               otvorený žľab v boku — nebolo zdola vidieť takmer vôbec. Oceľ je
+               preto zreteľne tmavšia než náter podhľadu. */
+            const zinok = shade(model().rimSoffitHex || '#c2c7cb', -0.18);
             const zBot = H, zTop = zBot + LEM_H;
             /* Obvodový rám začína 2 mm nad spodkom lemovania. Kým mali obe
                spodné líca tú istú rovinu, triedil ich BSP ako splynuté a rám
@@ -3704,9 +3723,18 @@
                  len nižšia — kreslí sa z rovnakého rezu. Škáru medzi profilmi
                  má zdola vidieť, obvodový rám nie. */
               cProfil('x', os - VAZ_W, VAZ_W * 2, ramTop - VAZ_H, VAZ_H, inY0, inY1, C_WEB, 5, true, true);
-              /* Po dĺžke väznice žiadne skrutky nie sú — na oficiálnych
-                 rendroch aj na fotkách realizácií sú len na spojkách na jej
-                 koncoch. Rad skrutiek cez celý podhľad tam nepatrí. */
+              /* Skrutky po dĺžke väznice. Predtým tu neboli vôbec; majiteľ ich
+                 na priečnych profiloch chce, tak ako sú na obvodovom ráme —
+                 na oboch stojinách dvojica nad sebou, približne po metri.
+                 Rozstup je vizuálny pokyn majiteľa, nie statický návrh. */
+              const krokV = 1000;
+              const poliV = Math.max(1, Math.round((inY1 - inY0) / krokV));
+              for (let k = 1; k < poliV; k++) {
+                const yv = inY0 + ((inY1 - inY0) * k) / poliV;
+                [[os - VAZ_W, -1], [os + VAZ_W, 1]].forEach((lico) => {
+                  [-1, 1].forEach((d) => skrutka(lico[0], yv, zVaz + d * VAZ_H * 0.22, 'x', 7, lico[1]));
+                });
+              }
             });
             /* Koniec každej väznice: dva uholníky, po jednom na každej strane
                dvojice C profilov — teda štyri na väznicu. */
@@ -4012,7 +4040,17 @@
               const section = kvStlpRez(row, rows.length);
               const postX = rows[row], postFace = postX + section.d;
               const inset = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
-              const radius = section.w * 0.93 / 2, standoff = 17;
+              /* Priemer zvodu. Majiteľ pôvodne žiadal 93 % šírky stĺpa; po
+                 zhliadnutí záberov to zrušil — rúra takej hrúbky je na pohľad
+                 rovnako široká ako stĺp. Vraciame sa na priemer obnovenej
+                 pôvodnej siete Expivi, teda 80 mm. Na 150 mm stĺpe je to 53 %
+                 jeho šírky, takže zvod je zreteľne užší. */
+              /* 80 mm je priemer obnovenej pôvodnej siete a platí na rodine so
+                 150 mm stĺpom. Novšia rodina má stĺp 100 mm a na ňom by tá istá
+                 rúra bola opäť takmer taká široká ako stĺp, presne to majiteľ
+                 vytkol. Priemer preto sleduje stĺp a zdrojových 80 mm je strop. */
+              const PIPE_MM = Math.max(50, Math.min(80, section.w * 0.6));
+              const radius = PIPE_MM / 2, standoff = 17;
               const pipeX = postFace + radius + standoff, pipeY = inset + section.w / 2;
               const sourcePipeX = four ? 4973 : 5916;
               const gutterShift = L - 6000;
@@ -4046,6 +4084,29 @@
                 x0:L-146.5,x1:L-21.5,y0:9.4+pipeY-55,y1:W-10,
                 zBottom:2543.5+H-2398,zTop:2611+H-2398,outletX:L-84,
                 pocket:{xMin:L-RAM_ODK,xMax:L,zMin:zBot,zMax:ramTop}};
+
+              /* Žľabové háky. Majiteľ ich na zábere hľadal a neboli tam — žľab
+                 visel vo vzduchu. Hák obopína dno žľabu a druhým ramenom sa
+                 opiera o stojinu obvodového rámu, celý ostáva v kapse za
+                 lemovaním, takže nič nepretŕča cez odkvapovú hranu. Rozstup aj
+                 prierez sú vizuálne proporcie, nie výrobný údaj. */
+              const gx0 = L - 146.5, gx1 = L - 21.5;
+              const gzB = 2543.5 + H - 2398;
+              const hookT = 4, hookW = 26;
+              const yFrom = 9.4 + pipeY - 55, yTo = W - 10, gSpan = yTo - yFrom;
+              const nHooks = Math.max(2, Math.round(gSpan / 700));
+              const hookHex = shade(frame, -0.08);
+              const hooks = [];
+              for (let i = 0; i <= nHooks; i++) {
+                const hy = yFrom + (gSpan * i) / nHooks;
+                if (Math.abs(hy - pipeY) < 90) continue;          // výpust nechávame voľnú
+                const y0h = Math.min(Math.max(hy - hookW / 2, yFrom), yTo - hookW);
+                boxFaces(gx0 - 5, y0h, gzB - hookT, (gx1 + 5) - (gx0 - 5), hookW, hookT, hookHex, [], SHAFT);
+                boxFaces(gx0 - 5, y0h, gzB - hookT, hookT, hookW, Math.max(8, ramTop - (gzB - hookT)), hookHex, [], SHAFT);
+                hooks.push({ y: Math.round(y0h + hookW / 2), z: Math.round(gzB - hookT) });
+              }
+              kvAccessoryGeometry.gutter.hangers = { count: hooks.length, pitch: Math.round(gSpan / nHooks), at: hooks };
+
               const clamps=[];
               [H*.28,H*.70].forEach(z=>{
                 // Mounting plate touches the post; annular straps follow the
@@ -4356,10 +4417,15 @@
               const lipEnd = left + Math.max(skin * 7, bladeW * 0.11);
               const lipZ = -Math.max(4, t * 0.16);
               const lipNotch = lipZ - Math.max(1.5, skin * 0.8);
+              /* Odvodňovací žľab na vrchu lamely bol vyfrézovaný takmer cez celú
+                 hrúbku: dno na -t+skin nechalo pod sebou 2 mm materiálu, takže
+                 pri otvorenej streche vyzerala lamela z boku ako tenký plech.
+                 Skutočný profil má plytký kanál a pod ním plné telo. */
+              const troughZ = -Math.min(t * 0.32, 9);
               const sharpProfile = [
                 [left,-t],[bodyEnd,-t],[bodyEnd+3,-skin],
                 [fullHalf,-skin],[fullHalf,0],[shoulder1,0],
-                [shoulder0,-t+skin],[left+skin*2,-t+skin],
+                [shoulder0,troughZ],[left+skin*2,troughZ],
                 [left+skin*3,lipNotch],[lipEnd,lipNotch],
                 [lipEnd,lipZ],[left+skin,lipZ]
               ];
@@ -5698,24 +5764,34 @@
         const orbitPointers = new Map();
         let pinchDistance = 0;
         const stageEl = cfgRoot.querySelector('.sp-stage');
-        const zoomUI = document.createElement('div');
+        /* Priblíženie je doplnková funkcia, nie povinné ovládanie. Percentá,
+           „+", „−" ani „Celý model" tu preto nie sú — je tu jeden prepínač.
+           Kým je vypnutý, koliesko nad modelom normálne roluje stránku;
+           predtým mu model rolovanie zobral a návštevník sa nedostal nižšie.
+           Vypnutie vráti model na celý záber. */
+        let zoomOn = false;
+        const zoomUI = document.createElement('button');
         const setZoom = value => {
-          manualZoom = Math.max(0.65, Math.min(3.5, value));
-          const output=zoomUI.querySelector('output');
-          if(output)output.value=Math.round(manualZoom*100)+' %';
+          manualZoom = Math.max(0.9, Math.min(3, value));
           scheduleStage();
         };
         if (stageEl) {
-          zoomUI.className='sp-zoom';
-          zoomUI.setAttribute('role','group');
-          zoomUI.setAttribute('aria-label','Priblíženie modelu');
-          zoomUI.innerHTML='<button type="button" data-sp-zoom="out" aria-label="Oddialiť model">−</button><output aria-live="polite">100 %</output><button type="button" data-sp-zoom="in" aria-label="Priblížiť model">+</button><button type="button" data-sp-zoom="reset" aria-label="Obnoviť celý model">Celý model</button>';
+          zoomUI.type = 'button';
+          zoomUI.className = 'sp-zoom';
+          zoomUI.setAttribute('data-sp-zoom-toggle', '');
+          zoomUI.setAttribute('aria-pressed', 'false');
+          zoomUI.setAttribute('aria-label', 'Zapnúť priblíženie modelu');
+          zoomUI.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20.5 20.5M7.8 10.5h5.4M10.5 7.8v5.4"/></svg><span>Priblížiť</span>';
           stageEl.appendChild(zoomUI);
-          zoomUI.addEventListener('click',e=>{
-            const b=e.target.closest('[data-sp-zoom]');if(!b)return;
-            setZoom(b.dataset.spZoom==='reset'?1:manualZoom*(b.dataset.spZoom==='in'?1.2:1/1.2));
-          });
+          const setZoomMode = (on) => {
+            zoomOn = on;
+            zoomUI.setAttribute('aria-pressed', String(on));
+            zoomUI.setAttribute('aria-label', on ? 'Vypnúť priblíženie modelu' : 'Zapnúť priblíženie modelu');
+            if (!on) setZoom(1);
+          };
+          zoomUI.addEventListener('click', () => setZoomMode(!zoomOn));
           canvas.addEventListener('wheel',e=>{
+            if(!zoomOn)return;
             e.preventDefault();setZoom(manualZoom*Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*0.003));
           },{passive:false});
           /* Turning the model is part of the product, so it cannot be mouse-only.
@@ -5723,12 +5799,12 @@
           const hint = document.createElement('p');
           hint.className = 'sp-stage__hint';
           hint.setAttribute('aria-hidden', 'true');
-          hint.textContent = 'Ťahaním otočíte · kolieskom alebo dvoma prstami priblížite';
+          hint.textContent = 'Ťahaním otočíte · priblíženie zapnete tlačidlom';
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
             if(e.target.closest('button,input,select,textarea'))return;
-            if(e.key==='+'||e.key==='='){e.preventDefault();setZoom(manualZoom*1.2);return;}
-            if(e.key==='-'){e.preventDefault();setZoom(manualZoom/1.2);return;}
+            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom*1.2);return;}
+            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(manualZoom/1.2);return;}
             stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
@@ -5758,7 +5834,7 @@
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size>1){
               const p=[...orbitPointers.values()],distance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);
-              if(pinchDistance>0)setZoom(manualZoom*distance/pinchDistance);
+              if(pinchDistance>0&&zoomOn)setZoom(manualZoom*distance/pinchDistance);
               pinchDistance=distance;return;
             }
             // Drag right, model turns right: the point under the cursor has to
