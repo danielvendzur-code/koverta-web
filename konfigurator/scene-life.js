@@ -265,8 +265,17 @@
       }
       sync();
     }
+    const place=(program,name,attribute)=>{
+      let known=gpu.places.get(program);
+      if(!known){known=new Map();gpu.places.set(program,known);}
+      let at=known.get(name);
+      if(at===undefined){at=attribute?gpu.gl.getAttribLocation(program,name):gpu.gl.getUniformLocation(program,name);known.set(name,at);}
+      return at;
+    };
+    const U=(program,name)=>place(program,name,false);
+    const A=(program,name)=>place(program,name,true);
     function uniformCamera(gl,p,camera) {
-      const u=(n)=>gl.getUniformLocation(p,n),c=context;
+      const u=(n)=>U(p,n),c=context;
       gl.uniform3f(u('extent'),c.L,c.W,c.H);
       gl.uniform4f(u('orbit'),Math.cos(c.az),Math.sin(c.az),Math.cos(c.el),Math.sin(c.el));
       gl.uniform4f(u('fit'),camera.scale,camera.ox,camera.oy,camera.VW);
@@ -371,7 +380,10 @@
       let rand=9307;const random=()=>{rand=(rand*1664525+1013904223)>>>0;return rand/4294967296;};
       for(let i=0;i<360;i++){const s=[random(),random(),random(),random()];for(const xy of [[-1,0],[1,0],[1,1],[-1,0],[1,1],[-1,1]])seeds.push(...s,...xy);}
       gl.bindBuffer(gl.ARRAY_BUFFER,rainBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(seeds),gl.STATIC_DRAW);
-      gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:seeds.length/6};
+      /* Miesta uniformov a atribútov si drží modul sám. Ovládač ich hľadá
+         podľa reťazca a v snímku ich je vyše dvadsať — pri každom otočení
+         modelu to bola zbytočná práca navyše. */
+      gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:seeds.length/6,places:new Map()};
     }
     function draw(gl,camera,weatherOnly=false) {
       if(!context)return;init(gl);
@@ -381,18 +393,18 @@
         gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
         const p=gpu.rain;gl.useProgram(p);uniformCamera(gl,p,camera);gl.bindBuffer(gl.ARRAY_BUFFER,gpu.rainBuffer);
-        const a=gl.getAttribLocation(p,'seed'),b=gl.getAttribLocation(p,'corner');
+        const a=A(p,'seed'),b=A(p,'corner');
         gl.enableVertexAttribArray(a);gl.enableVertexAttribArray(b);gl.vertexAttribPointer(a,4,gl.FLOAT,false,24,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,24,16);
-        gl.uniform1f(gl.getUniformLocation(p,'clock'),time);
-        gl.uniform1f(gl.getUniformLocation(p,'roofBase'),c.roofZ);
-        gl.uniform1f(gl.getUniformLocation(p,'roofRise'),c.roofRise||0);
-        gl.uniform4f(gl.getUniformLocation(p,'foot'),0,0,c.L,c.W);
+        gl.uniform1f(U(p,'clock'),time);
+        gl.uniform1f(U(p,'roofBase'),c.roofZ);
+        gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
+        gl.uniform4f(U(p,'foot'),0,0,c.L,c.W);
         /* blade = [prvá os, rozteč, krytie, 1 = lamely]. Panelová strecha
            dostane nulu v poslednej zložke a zadrží všetko. */
         const zone=c.louverZone;
-        gl.uniform4f(gl.getUniformLocation(p,'blade'),
+        gl.uniform4f(U(p,'blade'),
           zone?zone.x0:0,Math.max(1,c.pitch||183),Math.min(c.cover===undefined?0:c.cover,1e5),zone?1:0);
-        gl.uniform4f(gl.getUniformLocation(p,'zone'),zone?zone.x0:0,zone?zone.y0:0,zone?zone.x1:c.L,zone?zone.y1:c.W);
+        gl.uniform4f(U(p,'zone'),zone?zone.x0:0,zone?zone.y0:0,zone?zone.x1:c.L,zone?zone.y1:c.W);
         /* Obálky vybavenia zastavia kvapku na streche auta alebo na stolíku
            namiesto toho, aby prepadla plechom. Prázdne miesto dostane
            nemožný obdĺžnik, takže test nikdy neprejde. */
@@ -400,11 +412,11 @@
         const empty=[0,0,-1,-1],tops=[0,0,0];
         ['blockA','blockB','blockC'].forEach((name,i)=>{
           const item=boxes[i],box=item&&deck(item.key,loaded.get(item.key));
-          if(!box){gl.uniform4f(gl.getUniformLocation(p,name),...empty);return;}
-          gl.uniform4f(gl.getUniformLocation(p,name),item.x+box[0],item.y+box[1],item.x+box[2],item.y+box[3]);
+          if(!box){gl.uniform4f(U(p,name),...empty);return;}
+          gl.uniform4f(U(p,name),item.x+box[0],item.y+box[1],item.x+box[2],item.y+box[3]);
           tops[i]=item.z+box[4];
         });
-        gl.uniform3f(gl.getUniformLocation(p,'blockTop'),tops[0],tops[1],tops[2]);
+        gl.uniform3f(U(p,'blockTop'),tops[0],tops[1],tops[2]);
         gl.drawArrays(gl.TRIANGLES,0,gpu.rainVertices);
         gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);
         if(state.flow) {
@@ -416,10 +428,10 @@
           } else gl.bindBuffer(gl.ARRAY_BUFFER,gpu.flowBuffer);
           if(gpu.flowVertices) {
             const locs=[['p',3,0],['uv',2,12],['kind',1,20],['alpha',1,24]].map(([n,size,off])=>{
-              const loc=gl.getAttribLocation(f,n);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,28,off);return loc;
+              const loc=A(f,n);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,28,off);return loc;
             });
-            gl.uniform1f(gl.getUniformLocation(f,'clock'),time);
-            gl.uniform1f(gl.getUniformLocation(f,'strength'),state.paused||reduced.matches?.85:1);
+            gl.uniform1f(U(f,'clock'),time);
+            gl.uniform1f(U(f,'strength'),state.paused||reduced.matches?.85:1);
             gl.drawArrays(gl.TRIANGLES,0,gpu.flowVertices);
             locs.forEach(loc=>gl.disableVertexAttribArray(loc));
           }
@@ -432,7 +444,7 @@
       if(drawn.length) {
         const sp=gpu.contact;gl.useProgram(sp);uniformCamera(gl,sp,camera);
         gl.bindBuffer(gl.ARRAY_BUFFER,gpu.contactBuffer);
-        const ca=gl.getAttribLocation(sp,'corner');
+        const ca=A(sp,'corner');
         gl.enableVertexAttribArray(ca);gl.vertexAttribPointer(ca,2,gl.FLOAT,false,8,0);
         gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
@@ -442,30 +454,30 @@
              padá na +x a -y. Pod strechou je to len mierne posunutý kontaktný
              tieň, nie ostrý slnečný. */
           const h=b[5]-b[2], k=state.weather==='sun'?0.08:0.03;
-          gl.uniform3f(gl.getUniformLocation(sp,'center'),
+          gl.uniform3f(U(sp,'center'),
             item.x+(b[0]+b[3])/2+h*k*0.338, item.y+(b[1]+b[4])/2-h*k*0.838, 1.5);
-          gl.uniform2f(gl.getUniformLocation(sp,'radius'),
+          gl.uniform2f(U(sp,'radius'),
             (b[3]-b[0])/2+Math.min(260,h*0.22), (b[4]-b[1])/2+Math.min(260,h*0.22));
-          gl.uniform1f(gl.getUniformLocation(sp,'strength'),state.weather==='sun'?1:.62);
+          gl.uniform1f(U(sp,'strength'),state.weather==='sun'?1:.62);
           gl.drawArrays(gl.TRIANGLES,0,6);
         }
         gl.disableVertexAttribArray(ca);gl.depthMask(true);
       }
       const p=gpu.main;gl.useProgram(p);uniformCamera(gl,p,camera);
       const ca=Math.cos(context.az),sa=Math.sin(context.az),ce=Math.cos(context.el),se=Math.sin(context.el);
-      gl.uniform3f(gl.getUniformLocation(p,'eye'),context.L/2-sa*ce*camera.DIST,context.W/2+ca*ce*camera.DIST,context.H/2+se*camera.DIST);
-      gl.uniform3fv(gl.getUniformLocation(p,'paint'),state.paint==='graphite'?[.19,.23,.26]:state.paint==='blue'?[.13,.27,.36]:[.63,.67,.69]);
-      gl.uniform1f(gl.getUniformLocation(p,'overcast'),state.weather==='sun'?0:.85);
-      gl.uniform1f(gl.getUniformLocation(p,'alpha'),1);
+      gl.uniform3f(U(p,'eye'),context.L/2-sa*ce*camera.DIST,context.W/2+ca*ce*camera.DIST,context.H/2+se*camera.DIST);
+      gl.uniform3fv(U(p,'paint'),state.paint==='graphite'?[.19,.23,.26]:state.paint==='blue'?[.13,.27,.36]:[.63,.67,.69]);
+      gl.uniform1f(U(p,'overcast'),state.weather==='sun'?0:.85);
+      gl.uniform1f(U(p,'alpha'),1);
       gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.disable(gl.CULL_FACE);
       for(const item of currentPlan.items) {
         const data=loaded.get(item.key);if(!data)continue;
         let m=gpu.meshes.get(item.key);if(!m){m={buffer:gl.createBuffer(),count:data.byteLength/16};gl.bindBuffer(gl.ARRAY_BUFFER,m.buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gpu.meshes.set(item.key,m);}
         gl.bindBuffer(gl.ARRAY_BUFFER,m.buffer);
         for(const [name,size,type,norm,offset] of [['p',3,gl.SHORT,false,0],['n',3,gl.SHORT,true,6],['c',3,gl.UNSIGNED_BYTE,true,12],['material',1,gl.UNSIGNED_BYTE,false,15]]) {
-          const loc=gl.getAttribLocation(p,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,type,norm,16,offset);
+          const loc=A(p,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,type,norm,16,offset);
         }
-        gl.uniform3f(gl.getUniformLocation(p,'offset'),item.x,item.y,item.z);
+        gl.uniform3f(U(p,'offset'),item.x,item.y,item.z);
         gl.drawArrays(gl.TRIANGLES,0,m.count);
       }
     }
