@@ -2630,7 +2630,7 @@
               if (model().roofKit === 'koverta') {
                 if(px===xs[0] && py>W/2){
                   const w=pd*.86,h=w/4.4,x=px+(pd-w)/2,y=py+pw+0.6,z=Math.min(1450,H*.62);
-                  quad([[x+w,y,z],[x,y,z],[x,y,z+h],[x+w,y,z+h]],'#ffffff',
+                  quad([[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],'#ffffff',
                     {normal:[0,1,0],cull:true,edge:false,decal:true});
                 }
                 for (const z of [55, 115]) for (const side of [-1, 1]) {
@@ -4369,7 +4369,7 @@
               // drainage trough and overlapping sealing lip (200/28 drawing).
               for(let j=0;j<profile.length;j++) {
                 const A=profile[j], B=profile[(j+1)%profile.length];
-                const pts=[P(A[0],A[1],y0-lap),P(B[0],B[1],y0-lap),P(B[0],B[1],y1+lap),P(A[0],A[1],y1+lap)];
+                const pts=[P(A[0],A[1],y0-lap),P(A[0],A[1],y1+lap),P(B[0],B[1],y1+lap),P(B[0],B[1],y0-lap)];
                 quad(pts,louv,{normal:faceNormal(pts),edge:false,cull:false});
               }
               for(const [y,ny] of [[y0-lap,-1],[y1+lap,1]])caps.forEach(ids=>quad(ids.map(j=>P(profile[j][0],profile[j][1],y)),louv,{normal:[0,ny,0],edge:false,cull:false}));
@@ -5171,6 +5171,8 @@
             window.clearTimeout(moverTimer);
             moverTimer = 0;
             M.set(to);
+            window.clearTimeout(detailTimer);
+            motionDetail = false;
             /* Beh končil prestavbou celého panela. Tá prejde aj cez ,
                takže posledný snímok behu a to, čo ostane na obrazovke, nie je tá istá
                geometria — lamely na konci každého zatvorenia poskočili. Od polohy
