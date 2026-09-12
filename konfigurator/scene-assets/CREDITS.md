@@ -11,15 +11,15 @@ profilov: hladká tam, kde je auto hladké, s ostrou hranou na prahu, na línii
 dverí, na ramene a na hrane veka. Zasklenie, zrkadlá, svetlá, mriežka,
 pneumatiky, disky aj kotúčové brzdy sú skutočná geometria, nie nálepky.
 Rozmery vrátane detailov: približne 4,90 × 2,08 × 1,53 m, rázvor 2,91 m,
-kolesá 19". 63 674 trojuholníkov, 591 069 bajtov gzip.
+kolesá 19". 34 902 trojuholníkov, 335 330 bajtov gzip.
 
 ## Lounge zostava
 
 Pôvodný návrh pre tento konfigurátor: trojmiestna pohovka, dve kreslá, nízky
 stolík s podnosom a vonkajší koberec, poskladané ako jedna zostava, aby široká
 pergola nestála okolo jedného bistro stolíka. Rozmery zodpovedajú bežnému
-záhradnému nábytku: pohovka 2,28 m, hĺbka 0,85 m, sedák 0,40 m nad zemou.
-Obálka 3,16 × 2,30 m. 14 610 trojuholníkov, 111 788 bajtov gzip.
+záhradnému nábytku: pohovka 2,28 m, hĺbka 0,76 m, sedák 0,40 m nad zemou.
+Obálka 3,16 × 2,90 m. 23 790 trojuholníkov, 186 757 bajtov gzip.
 
 ## Outdoor Table Chair Set 01
 

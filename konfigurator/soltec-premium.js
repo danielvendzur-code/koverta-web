@@ -5834,11 +5834,9 @@
         const orbitPointers = new Map();
         let pinchDistance = 0;
         const stageEl = cfgRoot.querySelector('.sp-stage');
-        /* Priblíženie je doplnková funkcia, nie povinné ovládanie. Percentá,
-           „+", „−" ani „Celý model" tu preto nie sú — je tu jeden prepínač.
-           Kým je vypnutý, koliesko nad modelom normálne roluje stránku;
-           predtým mu model rolovanie zobral a návštevník sa nedostal nižšie.
-           Vypnutie vráti model na celý záber. */
+        /* Zoom is opt-in so the wheel scrolls the page until enabled.
+           Pointer anchoring preserves the inspected detail; reset eases both
+           scale and the bounded pan back to the complete model. */
         let zoomOn = false;
         const zoomUI = document.createElement('button');
         const zoomTools=document.createElement('div');
@@ -5878,11 +5876,11 @@
             zoomOn = on;zoomTools.hidden=!on;
             zoomUI.setAttribute('aria-pressed', String(on));
             zoomUI.setAttribute('aria-label', on ? 'Vypnúť priblíženie modelu' : 'Zapnúť priblíženie modelu');
-            if (!on) {zoomPan.x=0;zoomPan.y=0;setZoom(1);}
+            if (!on) {setZoom(1);}
           };
           zoomUI.addEventListener('click', () => setZoomMode(!zoomOn));
           zoomTools.addEventListener('click',e=>{const b=e.target.closest('[data-zoom-step]');if(!b)return;
-            if(b.dataset.zoomStep==='reset'){zoomPan.x=0;zoomPan.y=0;setZoom(1);}
+            if(b.dataset.zoomStep==='reset'){setZoom(1);}
             else setZoom(zoomTarget*(b.dataset.zoomStep==='in'?1.15:1/1.15));
           });
           canvas.addEventListener('wheel',e=>{
@@ -5908,7 +5906,7 @@
             else if (e.key === 'ArrowRight') view.az += step;
             else if (e.key === 'ArrowUp') view.el = Math.min(1.45, view.el + step * 0.7);
             else if (e.key === 'ArrowDown') view.el = Math.max(EL_FLOOR(), view.el - step * 0.7);
-            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); zoomPan.x=0;zoomPan.y=0;setZoom(1); }
+            else if (e.key === 'Home') { view.az = VIEWS.front.az; view.el = FRONT_EL(); setZoom(1); }
             else used = false;
             if (!used) return;
             e.preventDefault();

@@ -37,4 +37,12 @@ for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for
 }
 assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:0},'car','2').items.length,2);
 assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2').items.length,0);
+// Interior posts must reduce capacity or split rows, never pierce a car.
+for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,4400,4350,4550]]]) {
+  const r=plan({L:6000,W:8000,H:2400,post:150,boxDepth:0,obstacles},'car','auto');
+  const bounds=r.items.map(i=>{const b=dimensions.car;return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];});
+  for(const a of bounds)for(const b of obstacles)assert(a[2]<=b[0]-79||a[0]>=b[2]+79||a[3]<=b[1]-79||a[1]>=b[3]+79,'car hits a post');
+  for(let i=1;i<bounds.length;i++)assert(bounds[i][1]-bounds[i-1][3]>=599,'door clearance lost');
+}
+assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
 console.log('Scene assets PASS: packed normals, ground contact, bounds, multi-car separation and box exclusion.');
