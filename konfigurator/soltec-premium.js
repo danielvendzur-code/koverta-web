@@ -1718,7 +1718,9 @@
           }
           const { gl, program, host, surface, buffer, position, color, pattern } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
-          const ratio = Math.min(2, window.devicePixelRatio || 1);
+          // Supersample even on 1x desktop displays: long folded-sheet edges
+          // and 1.5 mm flashing laps otherwise collapse to broken pixels.
+          const ratio = 2;
           const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
           const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
@@ -1761,7 +1763,7 @@
                 const w = Math.max(DIST * 0.45, DIST - p.d);
                 data.push(((p.x * scale + ox) / VW * 2 - 1) * w,
                   (1 - (p.y * scale + oy) / VH * 2) * w,
-                  (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...vertexTint, String(f.sourceFill).startsWith('url(') ? 1 : 0);
+                  f.bg ? 0 : (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...vertexTint, String(f.sourceFill).startsWith('url(') ? 1 : 0);
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0], 0); vertex(f.p[i], i); vertex(f.p[i+1], i+1); }
             }
