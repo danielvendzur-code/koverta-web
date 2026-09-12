@@ -15165,44 +15165,74 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .k-carport-series .k-model-card--mini .k-model-card__lead { min-height: 0; }
 }
 
-/* GARDEN CONSTRUCTION · visual 2 × 4 decision cards */
+/* GARDEN CONSTRUCTION · one compact technical panel, not eight empty cards */
+.k .kh-skl--garden {
+  padding: clamp(10px, 1.2vw, 16px);
+  border-radius: 22px;
+  background: var(--k-ink);
+  overflow: hidden;
+}
 .k .kh-skl--garden .kh-skl__hlava { display: none; }
 .k .kh-skl--garden .kh-skl__zoznam {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
 }
 .k .kh-skl--garden .kh-skl__riadok {
   grid-template-columns: 1fr;
   align-content: start;
-  gap: 12px;
-  min-height: 230px;
-  padding: clamp(20px, 2.2vw, 30px);
-  border: 1px solid rgba(18, 23, 26, .12);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(18, 23, 26, .05);
+  gap: 10px;
+  min-height: 190px;
+  padding: clamp(18px, 2vw, 26px);
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, .13);
+  border-bottom: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.k .kh-skl--garden .kh-skl__zcoho { font-size: 15px; line-height: 1.58; }
+.k .kh-skl--garden .kh-skl__riadok:nth-child(4n) { border-right: 0; }
+.k .kh-skl--garden .kh-skl__riadok:nth-child(n + 5) { border-bottom: 0; }
+.k .kh-skl--garden .kh-skl__cislo { color: var(--k-amber); }
+.k .kh-skl--garden .kh-skl__nazov { color: #fff; font-size: clamp(17px, 1.35vw, 20px); }
+.k .kh-skl--garden .kh-skl__zcoho { color: rgba(255, 255, 255, .72); font-size: 13.5px; line-height: 1.55; }
 .k .kh-skl--garden .kh-skl__kedy {
   align-self: end;
   justify-self: start;
   margin: auto 0 0;
-  padding: 6px 10px;
-  border: 1px solid rgba(18, 23, 26, .18);
-  border-radius: 999px;
-  color: var(--k-ink);
-  font-size: 11px;
+  padding: 9px 0 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 0;
+  color: var(--k-amber);
+  font-size: 10.5px;
   font-weight: 750;
+  letter-spacing: .06em;
   text-align: left;
+  text-transform: uppercase;
 }
 .k .kh-skl--garden .kh-skl__riadok--dolezite {
-  border-color: #c69b00;
-  background: linear-gradient(145deg, #fff7d0, #fff);
+  background: linear-gradient(145deg, rgba(255, 204, 0, .13), rgba(255, 204, 0, .035));
+}
+@media (max-width: 1180px) {
+  .k .kh-skl--garden .kh-skl__zoznam { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(4n) { border-right: 1px solid rgba(255, 255, 255, .13); }
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(2n) { border-right: 0; }
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(n + 5) { border-bottom: 1px solid rgba(255, 255, 255, .13); }
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(n + 7) { border-bottom: 0; }
 }
 @media (max-width: 719px) {
   .k .kh-skl--garden .kh-skl__zoznam { grid-template-columns: 1fr; }
-  .k .kh-skl--garden .kh-skl__riadok { min-height: 0; }
+  .k .kh-skl--garden .kh-skl__riadok,
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(2n),
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(4n),
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(n + 5),
+  .k .kh-skl--garden .kh-skl__riadok:nth-child(n + 7) {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .13);
+  }
+  .k .kh-skl--garden .kh-skl__riadok:last-child { border-bottom: 0; }
 }
 
 /* FINAL WEB REPAIR · navigation, rhythm and reusable product sections */
