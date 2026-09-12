@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Interný odhad pätiek | Koverta</title>
+  <style>
+    :root{--ink:#12171a;--muted:#626a6e;--bone:#f1f0ec;--line:#d9dcda;--amber:#ffcc00;--white:#fff}
+    *{box-sizing:border-box}body{margin:0;background:var(--bone);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+    button,input,select{font:inherit}.shell{width:min(1180px,100%);margin:auto;padding:28px 22px 64px}
+    header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:16px 0 28px;border-bottom:1px solid var(--line)}
+    .brand{font-size:25px;font-weight:800;letter-spacing:.08em}.brand::before{content:"[";color:var(--amber);font-size:34px;margin-right:2px}
+    .tag{color:var(--muted);font-size:13px}.eyebrow{margin:44px 0 8px;color:#8b6800;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+    h1{max-width:760px;margin:0;font-size:clamp(34px,5vw,64px);line-height:1;letter-spacing:-.045em}
+    .lead{max-width:720px;margin:18px 0 34px;color:var(--muted);font-size:16px}
+    .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:18px;align-items:start}
+    .panel{padding:clamp(22px,3vw,34px);border:1px solid var(--line);border-radius:20px;background:var(--white);box-shadow:0 14px 44px rgba(18,23,26,.06)}
+    h2{margin:0 0 22px;font-size:22px;letter-spacing:-.025em}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 14px}
+    .field{display:grid;gap:7px}.field[hidden]{display:none!important}.field--wide{grid-column:1/-1}.field label{font-size:12px;font-weight:800}.field small{color:var(--muted);font-size:11px}
+    input,select{width:100%;height:48px;padding:0 13px;border:1px solid #bfc5c2;border-radius:10px;background:#fff;color:var(--ink)}
+    input:focus,select:focus{outline:3px solid rgba(255,204,0,.34);border-color:#8a6b00}
+    .section{margin-top:28px;padding-top:25px;border-top:1px solid var(--line)}.section h3{margin:0 0 6px;font-size:17px}.section>p{margin:0 0 18px;color:var(--muted);font-size:12px}
+    .result{position:sticky;top:18px;background:var(--ink);color:#fff}.result h2{color:#fff}.result dl{margin:0}.result dl div{display:flex;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.13)}
+    .result dt{color:rgba(255,255,255,.65);font-size:13px}.result dd{margin:0;text-align:right;font-weight:750}.total{margin:24px -8px 0;padding:22px 8px 0;border-top:3px solid var(--amber)}
+    .total span{display:block;color:rgba(255,255,255,.65);font-size:12px}.total strong{display:block;margin-top:4px;color:var(--amber);font-size:clamp(32px,4vw,46px);line-height:1}
+    .notice{margin:22px 0 0;padding:15px;border-left:3px solid var(--amber);background:rgba(255,255,255,.07);color:rgba(255,255,255,.72);font-size:12px}
+    .actions{display:flex;gap:10px;margin-top:18px}.actions button{min-height:44px;padding:0 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer}.primary{background:var(--amber);color:var(--ink)}.secondary{background:#353c3f;color:#fff}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}.result{position:static}.fields{grid-template-columns:1fr}.field--wide{grid-column:auto}header{align-items:flex-start;flex-direction:column}}
+    @media print{body{background:#fff}.shell{width:100%;padding:0}.actions,.lead{display:none}.grid{grid-template-columns:1fr 1fr}.panel{box-shadow:none}.result{position:static}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="brand">Koverta</div><div class="tag">Interný pracovný nástroj · nie je súčasťou verejnej ponuky</div></header>
+    <p class="eyebrow">Výkop, betón a kotvenie</p>
+    <h1>Orientačný odhad ceny pätiek</h1>
+    <p class="lead">Rozmery a aktuálne jednotkové sadzby zadáva zamestnanec. Kalkulačka nič nepredpokladá a výsledok preto možno prispôsobiť konkrétnej zákazke aj cenníku dodávateľa.</p>
+
+    <div class="grid">
+      <form class="panel" id="calc" novalidate>
+        <h2>1. Rozmery a počet</h2>
+        <div class="fields">
+          <div class="field"><label for="count">Počet pätiek</label><input id="count" inputmode="decimal" placeholder="napr. 6"><small>kusy</small></div>
+          <div class="field"><label for="shape">Tvar výkopu</label><select id="shape"><option value="rect">Obdĺžnik / štvorec</option><option value="round">Kruhový vrt</option></select></div>
+          <div class="field" data-rect><label for="width">Šírka</label><input id="width" inputmode="decimal" placeholder="cm"><small>centimetre</small></div>
+          <div class="field" data-rect><label for="length">Dĺžka</label><input id="length" inputmode="decimal" placeholder="cm"><small>centimetre</small></div>
+          <div class="field" data-round hidden><label for="diameter">Priemer</label><input id="diameter" inputmode="decimal" placeholder="cm"><small>centimetre</small></div>
+          <div class="field"><label for="depth">Hĺbka</label><input id="depth" inputmode="decimal" placeholder="cm"><small>centimetre</small></div>
+          <div class="field"><label for="reserve">Rezerva betónu</label><input id="reserve" inputmode="decimal" placeholder="0"><small>percentá — podľa firemného pravidla</small></div>
+        </div>
+
+        <section class="section">
+          <h3>2. Aktuálne jednotkové sadzby</h3>
+          <p>Sadzby zadávajte všetky rovnako: buď s DPH, alebo bez DPH.</p>
+          <div class="fields">
+            <div class="field"><label for="excavation">Výkop</label><input id="excavation" inputmode="decimal" placeholder="€/m³"><small>za m³ výkopu</small></div>
+            <div class="field"><label for="removal">Odvoz zeminy</label><input id="removal" inputmode="decimal" placeholder="€/m³"><small>za m³ výkopu</small></div>
+            <div class="field"><label for="concrete">Betón</label><input id="concrete" inputmode="decimal" placeholder="€/m³"><small>za m³ vrátane zvolenej rezervy</small></div>
+            <div class="field"><label for="anchor">Kotvenie</label><input id="anchor" inputmode="decimal" placeholder="€/ks"><small>za jednu pätku</small></div>
+            <div class="field"><label for="labour">Práca</label><input id="labour" inputmode="decimal" placeholder="€/ks"><small>za jednu pätku</small></div>
+            <div class="field"><label for="fixed">Fixné náklady</label><input id="fixed" inputmode="decimal" placeholder="€"><small>presun, technika alebo iná pevná položka</small></div>
+          </div>
+        </section>
+      </form>
+
+      <aside class="panel result" aria-live="polite">
+        <h2>Orientačný výsledok</h2>
+        <dl>
+          <div><dt>Objem jednej pätky</dt><dd id="one">—</dd></div>
+          <div><dt>Objem výkopu spolu</dt><dd id="volume">—</dd></div>
+          <div><dt>Betón s rezervou</dt><dd id="volumeConcrete">—</dd></div>
+          <div><dt>Výkop</dt><dd id="costExcavation">—</dd></div>
+          <div><dt>Odvoz zeminy</dt><dd id="costRemoval">—</dd></div>
+          <div><dt>Betón</dt><dd id="costConcrete">—</dd></div>
+          <div><dt>Kotvenie</dt><dd id="costAnchor">—</dd></div>
+          <div><dt>Práca</dt><dd id="costLabour">—</dd></div>
+          <div><dt>Fixné náklady</dt><dd id="costFixed">—</dd></div>
+        </dl>
+        <div class="total"><span>Odhad spolu</span><strong id="total">—</strong></div>
+        <p class="notice">Výsledok je interný odhad. Rozmery pätiek, únosnosť podložia a statické riešenie musí potvrdiť návrh konkrétnej stavby.</p>
+        <div class="actions"><button class="primary" type="button" onclick="window.print()">Vytlačiť odhad</button><button class="secondary" type="button" id="reset">Vymazať</button></div>
+      </aside>
+    </div>
+  </main>
+  <script>
+    (()=>{
+      const ids=['count','shape','width','length','diameter','depth','reserve','excavation','removal','concrete','anchor','labour','fixed'];
+      const el=Object.fromEntries(ids.map(id=>[id,document.getElementById(id)]));
+      const out=id=>document.getElementById(id);
+      const n=value=>{const x=parseFloat(String(value).replace(',','.'));return Number.isFinite(x)&&x>=0?x:0};
+      const money=value=>value>0?new Intl.NumberFormat('sk-SK',{style:'currency',currency:'EUR'}).format(value):'—';
+      const volume=value=>value>0?new Intl.NumberFormat('sk-SK',{minimumFractionDigits:3,maximumFractionDigits:3}).format(value)+' m³':'—';
+      function calculate(){
+        const count=n(el.count.value), depth=n(el.depth.value)/100;
+        const base=el.shape.value==='round'
+          ? Math.PI*Math.pow(n(el.diameter.value)/200,2)*depth
+          : n(el.width.value)/100*n(el.length.value)/100*depth;
+        const totalVolume=base*count, concreteVolume=totalVolume*(1+n(el.reserve.value)/100);
+        const costs={
+          costExcavation:totalVolume*n(el.excavation.value),costRemoval:totalVolume*n(el.removal.value),
+          costConcrete:concreteVolume*n(el.concrete.value),costAnchor:count*n(el.anchor.value),
+          costLabour:count*n(el.labour.value),costFixed:n(el.fixed.value)
+        };
+        out('one').textContent=volume(base);out('volume').textContent=volume(totalVolume);out('volumeConcrete').textContent=volume(concreteVolume);
+        Object.entries(costs).forEach(([id,value])=>out(id).textContent=money(value));
+        out('total').textContent=money(Object.values(costs).reduce((a,b)=>a+b,0));
+        localStorage.setItem('koverta-footing-estimate',JSON.stringify(Object.fromEntries(ids.map(id=>[id,el[id].value]))));
+      }
+      function shape(){const round=el.shape.value==='round';document.querySelectorAll('[data-round]').forEach(x=>x.hidden=!round);document.querySelectorAll('[data-rect]').forEach(x=>x.hidden=round);calculate()}
+      try{const saved=JSON.parse(localStorage.getItem('koverta-footing-estimate')||'{}');ids.forEach(id=>{if(saved[id]!==undefined)el[id].value=saved[id]})}catch(e){}
+      ids.forEach(id=>el[id].addEventListener(id==='shape'?'change':'input',id==='shape'?shape:calculate));
+      document.getElementById('reset').addEventListener('click',()=>{ids.forEach(id=>el[id].value=id==='shape'?'rect':'');localStorage.removeItem('koverta-footing-estimate');shape()});
+      shape();
+    })();
+  </script>
+</body>
+</html>
