@@ -1573,8 +1573,13 @@
   transition: max-height .22s ease, opacity .2s ease .04s, margin .22s ease, visibility 0s;
 }
 /* Myš kartu rozbalí celú, dotyk ju rozbalí ťuknutím na hlavičku.
-   Klávesnica zaostrením, aby sa dala prejsť tabulátorom. */
-@media (hover: hover) and (pointer: fine) {
+   Klávesnica zaostrením, aby sa dala prejsť tabulátorom.
+   Len tam, kde karta naozaj pláva nad kresbou. Pod 750 px sedí v toku pod
+   scénou a je široká ako scéna; rozbalenie na 30 rem ju tam nezväčšovalo,
+   ale zužovalo — na 390 px okne z 358 px na 300 px, takže vedľa nej ostal
+   pruh podkladu. Na telefóne to nebolo vidieť, lebo dotyk sem nespadá; na
+   úzkom okne s myšou áno. */
+@media (hover: hover) and (pointer: fine) and (min-width: 750px) {
   #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover,
   #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:focus-within { width: min(30rem, calc(100% - 2.4rem)); }
   #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover .sp-scene__more,
