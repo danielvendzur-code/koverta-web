@@ -22,11 +22,36 @@ const { prepareContext } = require('./browser-qa');
         await stage.scrollIntoViewIfNeeded();
         await page.locator('[data-sp-cfg]').first().dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse'});
         await page.waitForFunction(()=>document.querySelector('[data-sp-canvas]')?.dataset.renderer==='webgl-depth');
+        const layer = await page.evaluate(() => {
+          const svg = document.querySelector('[data-sp-canvas]');
+          const surface = document.querySelector('[data-sp-depth-canvas]');
+          const sr = svg && svg.getBoundingClientRect();
+          const cr = surface && surface.getBoundingClientRect();
+          return {
+            exists: Boolean(surface), outsideSvg: Boolean(surface && !svg.contains(surface)),
+            sameStage: Boolean(surface && surface.parentElement === svg.parentElement),
+            foreignObjects: svg.querySelectorAll('foreignObject').length,
+            hidden: Boolean(surface && surface.hidden),
+            pointerEvents: surface && getComputedStyle(surface).pointerEvents,
+            delta: sr && cr ? {
+              left: Math.abs(sr.left - cr.left), top: Math.abs(sr.top - cr.top),
+              width: Math.abs(sr.width - cr.width), height: Math.abs(sr.height - cr.height)
+            } : null
+          };
+        });
+        assert(layer.exists && layer.outsideSvg && layer.sameStage, 'WebGL canvas must be a sibling layer above the SVG');
+        assert.equal(layer.foreignObjects, 0, 'The render path must not use SVG foreignObject');
+        assert.equal(layer.hidden, false, 'The WebGL layer must be visible');
+        assert.equal(layer.pointerEvents, 'none', 'The SVG must remain the interaction surface');
+        assert(layer.delta && Object.values(layer.delta).every(value => value <= 1), 'WebGL and SVG layers must be aligned: '+JSON.stringify(layer.delta));
         const models = await page.locator('[data-sp-model]').evaluateAll(nodes=>nodes.map(n=>n.dataset.spModel));
         for (const key of (models.length ? models : [null])) {
           if (key) {
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
+          }
+          if (kind === 'carport' && /^SL/i.test(String(key))) {
+            assert(Number(await stage.getAttribute('data-panel-seam-count')) > 0, 'SL roof must show its ISO panel joints');
           }
           // Zoom is opt-in; detail controls appear only after enabling it.
           // While it is off the wheel must leave the page scrolling alone.
@@ -62,7 +87,7 @@ const { prepareContext } = require('./browser-qa');
           }
           for (const [name,el] of [['front',0.28],['top',1.12],['under',-0.18]]) {
             await page.evaluate(el=>{window.SP_TEST.setView(0.82,el); window.SP_TEST.redrawStage();},el);
-            await stage.screenshot({path:`qa-artifacts/depth/${kind}-${key||'K'}-${mobile?'mobile':'desktop'}-${name}.png`});
+            await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/${kind}-${key||'K'}-${mobile?'mobile':'desktop'}-${name}.png`});
           }
           if(kind==='bio') {
             const led=page.locator('[data-sp-add-on="led"]');
@@ -73,7 +98,7 @@ const { prepareContext } = require('./browser-qa');
             for(const value of [100,50,10,1,0]) {
               await range.evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));},value);
               await page.waitForTimeout(60);
-              await stage.screenshot({path:`qa-artifacts/depth/bio-${key}-${mobile?'mobile':'desktop'}-louver-${value}.png`});
+              await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/bio-${key}-${mobile?'mobile':'desktop'}-louver-${value}.png`});
             }
           }
           if(kind==='bio') {
@@ -89,9 +114,9 @@ const { prepareContext } = require('./browser-qa');
               h.dataset.qaOpacity=o;return same;
             },null,{polling:120,timeout:6000});
             await page.evaluate(()=>{SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            const before=await stage.screenshot();
+            const before=await page.locator('.sp-stage').first().screenshot();
             await page.evaluate(()=>{SP_TEST.setView(2.1,.7);SP_TEST.redrawStage();SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            const after=await stage.screenshot();
+            const after=await page.locator('.sp-stage').first().screenshot();
             assert(before.equals(after),'Closed lamellas and lighting must return to identical pixels after orbit');
           }
           if(kind==='carport') {
@@ -99,7 +124,7 @@ const { prepareContext } = require('./browser-qa');
             if(await box.count() && await box.isEnabled()){
               await box.evaluate(el=>{el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));});
               await page.waitForTimeout(220);
-              await stage.screenshot({path:`qa-artifacts/depth/box-${key}-${mobile?'mobile':'desktop'}.png`});
+              await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/box-${key}-${mobile?'mobile':'desktop'}.png`});
               await box.evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});
             }
           }
@@ -118,7 +143,7 @@ const { prepareContext } = require('./browser-qa');
             await page.waitForTimeout(80);
             await page.evaluate(()=>{window.SP_TEST.setView(.82,.28);window.SP_TEST.redrawStage();});
             assert.equal(await stage.getAttribute('data-invalid-face-count'),'0','Invalid moving timber geometry');
-            await stage.screenshot({path:`qa-artifacts/depth/timber-${mobile?'mobile':'desktop'}-${value}.png`});
+            await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/timber-${mobile?'mobile':'desktop'}-${value}.png`});
           }
         }
         assert.deepEqual(errors,[],'Runtime exceptions');

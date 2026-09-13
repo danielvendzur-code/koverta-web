@@ -43,7 +43,7 @@ const HELPERS = () => {
       const cx = corners.reduce((a, q) => a + q.x, 0) / 4;
       const cy = corners.reduce((a, q) => a + q.y, 0) / 4;
       window.SP_TEST.redrawStage();
-      const canvas = svg.querySelector('canvas');
+      const canvas = svg.parentElement.querySelector('[data-sp-depth-canvas]');
       if (!canvas) { window['__slot' + slot] = null; done(null); return; }
       const gl = canvas.getContext('webgl');
       const w = canvas.width, h = canvas.height, px = new Uint8Array(w * h * 4);

@@ -1732,14 +1732,30 @@
             gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
             gl.deleteShader(vs); gl.deleteShader(fs);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
-            const host = svgEl('foreignObject', { x: 0, y: 0 });
-            surface.style.cssText = 'display:block;width:100%;height:100%;pointer-events:none';
-            host.style.pointerEvents = 'none'; host.appendChild(surface);
+            /* WebGL used to live in an SVG foreignObject. That makes Chromium
+               composite the whole SVG/HTML boundary on every orbit frame. Keep
+               the SVG as the accessible interaction surface and background,
+               but put the raster in its own layer in the stage stacking
+               context. The canvas never handles input, so all existing wheel,
+               pointer and keyboard behaviour continues to belong to the SVG. */
+            cfgRoot.querySelectorAll('[data-sp-depth-canvas]').forEach((node) => node.remove());
+            surface.className = 'sp-stage__depth';
+            surface.setAttribute('data-sp-depth-canvas', '');
+            surface.setAttribute('aria-hidden', 'true');
+            canvas.insertAdjacentElement('afterend', surface);
+            canvas.replaceChildren();
             surface.addEventListener('webglcontextlost', (event) => {
-              event.preventDefault(); depthPainter = false; scheduleStage();
+              event.preventDefault();
+              surface.hidden = true;
+              depthPainter = false;
+              scheduleStage();
             });
-            surface.addEventListener('webglcontextrestored', () => { depthPainter = null; scheduleStage(); });
-            depthPainter = { gl, program, host, surface,
+            surface.addEventListener('webglcontextrestored', () => {
+              surface.remove();
+              depthPainter = null;
+              scheduleStage();
+            });
+            depthPainter = { gl, program, surface, cssWidth: 0, cssHeight: 0,
               position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern'), texUV: gl.getAttribLocation(program, 'texUV') };
             const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
@@ -1753,7 +1769,7 @@
             };
             logo.src=new URL('koverta-decal.svg',document.querySelector('script[src*="soltec-premium.js"]').src).href;
           }
-          const { gl, program, host, surface, position, color, pattern, texUV } = depthPainter;
+          const { gl, program, surface, position, color, pattern, texUV } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           /* Kreslí sa nad natívnym rozlíšením displeja, nie nad CSS pixelmi.
              Pevný dvojnásobok znamenal na 2× displeji presne natívne rozlíšenie
@@ -1765,13 +1781,20 @@
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
           let ratio = motionDetail ? Math.max(1, dpr * motionScale * 0.9) : Math.max(2.5, dpr * 1.8);
           const MAX_PIXELS = 7.2e6;
-          const over = (canvas.clientWidth * ratio) * (canvas.clientHeight * ratio) / MAX_PIXELS;
+          const cssWidth = Math.max(1, canvas.clientWidth);
+          const cssHeight = Math.max(1, canvas.clientHeight);
+          const over = (cssWidth * ratio) * (cssHeight * ratio) / MAX_PIXELS;
           if (over > 1) ratio /= Math.sqrt(over);
-          const width = Math.max(1, Math.round(canvas.clientWidth * ratio));
-          const height = Math.max(1, Math.round(canvas.clientHeight * ratio));
+          const width = Math.max(1, Math.round(cssWidth * ratio));
+          const height = Math.max(1, Math.round(cssHeight * ratio));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
-          host.setAttribute('width', VW); host.setAttribute('height', VH);
-          if (host.parentNode !== canvas) canvas.replaceChildren(host);
+          if (depthPainter.cssWidth !== cssWidth || depthPainter.cssHeight !== cssHeight) {
+            surface.style.width = cssWidth + 'px';
+            surface.style.height = cssHeight + 'px';
+            depthPainter.cssWidth = cssWidth;
+            depthPainter.cssHeight = cssHeight;
+          }
+          surface.hidden = false;
           const rgba = (fill) => {
             if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
             if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
@@ -1874,6 +1897,7 @@
         };
         const drawStageInner = () => {
           lastKvAccessoryGeometry = null;
+          canvas.dataset.panelSeamCount = '0';
           const L = lengthMM(), W = widthMM(), H = state.height;
           const frame = state.frameColor.hex, louv = state.louverColor.hex;
           const sideHex = (state.sideColor && state.sideColor.hex) || frame;
@@ -4455,6 +4479,25 @@
                       [b,inY1,panelBottomZ(b,inY1)],[b,inY0,panelBottomZ(b,inY0)]], edgeHex, Object.assign({ normal:[1,0,0] }, edge));
               }
             });
+            /* SL roofs are assembled from adjacent ISO panels. SVG strokes used
+               to hint at those joints, but WebGL renders only faces, so the
+               roof became one perfectly clean slab. Give every internal SL
+               boundary a narrow physical joint on both skins. */
+            if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
+              const boundaries = cuts.slice(0, -1).map((cut) => cut[1]);
+              const halfJoint = 3;
+              boundaries.forEach((x) => {
+                const a = Math.max(inX0, x - halfJoint);
+                const b = Math.min(inX1, x + halfJoint);
+                quad([[a, inY0, panelTopZ(a, inY0) + 0.8], [b, inY0, panelTopZ(b, inY0) + 0.8],
+                      [b, inY1, panelTopZ(b, inY1) + 0.8], [a, inY1, panelTopZ(a, inY1) + 0.8]],
+                     seamTop, { normal: [0, 0, 1], cull: true, raw: true, edge: false, fit: false });
+                quad([[a, inY1, panelBottomZ(a, inY1) - 0.8], [b, inY1, panelBottomZ(b, inY1) - 0.8],
+                      [b, inY0, panelBottomZ(b, inY0) - 0.8], [a, inY0, panelBottomZ(a, inY0) - 0.8]],
+                     seamLow, { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
+              });
+              canvas.dataset.panelSeamCount = String(boundaries.length);
+            }
             /* the four edges of the slab, so it is a solid and not two sheets */
             if (!integratedFall) {
               quad([[inX0,inY0,panelTopZ(inX0,inY0)],[inX1,inY0,panelTopZ(inX1,inY0)],[inX1,inY0,panelBottomZ(inX1,inY0)],[inX0,inY0,panelBottomZ(inX0,inY0)]], edgeHex, { normal:[0,-1,0], cull:true, edge:false, bias:-600 });
@@ -4670,6 +4713,8 @@
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
           canvas.setAttribute('aria-label', `${model().label || state.model}, ${widthMM()} krát ${lengthMM()} milimetrov, ${state.frameColor.name}, pohľad ${aboveDepth}`);
           if (paintDepth(faces, { VW, VH, scale, ox, oy, DIST })) return;
+          const depthSurface = cfgRoot.querySelector('[data-sp-depth-canvas]');
+          if (depthSurface) depthSurface.hidden = true;
           canvas.dataset.renderer = 'svg-fallback';
           const g = svgEl('g', { 'shape-rendering': 'geometricPrecision' });
           const podklad = faces.filter((f) => f.bg);
@@ -6093,6 +6138,19 @@
         renderAll();
         showStep(1, true);
         root.classList.add('sp-cfg-active');
+        /* The SVG can change size without a window resize (full-screen mode,
+           scene dock and responsive grid changes). Keep the independent WebGL
+           layer locked to that box in all of those paths. */
+        if ('ResizeObserver' in window) {
+          let observedWidth = canvas.clientWidth, observedHeight = canvas.clientHeight;
+          const stageResizeObserver = new ResizeObserver((entries) => {
+            const box = entries[0] && entries[0].contentRect;
+            if (!box || (Math.abs(box.width - observedWidth) < 0.5 && Math.abs(box.height - observedHeight) < 0.5)) return;
+            observedWidth = box.width; observedHeight = box.height;
+            requestAnimationFrame(drawStage);
+          });
+          stageResizeObserver.observe(canvas);
+        }
         let resizeTick = false;
         window.addEventListener('resize', () => {
           if (resizeTick) return;
