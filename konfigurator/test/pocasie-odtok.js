@@ -96,7 +96,9 @@ const HELPERS = () => {
     if (await consent.count()) await consent.first().click();
     await page.waitForTimeout(2400);
     await page.evaluate(HELPERS);
-    await page.evaluate(() => { document.querySelector('.sp-scene').open = true; });
+    /* Karta ovládania stojí na kresbe pootvorená a rozbalí sa až pod myšou.
+       Test si ju rozbalí natrvalo, inak by na jej tlačidlá nedosiahol. */
+    await page.evaluate(() => { const c = document.querySelector('.sp-scene'); c.open = true; c.classList.remove('is-peek'); });
     return { page, assertNoErrors };
   };
   const weather = async (page, on) => {

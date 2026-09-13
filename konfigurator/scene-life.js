@@ -301,9 +301,15 @@
     let planningKey='',rainKey='',rainData=null,roofSurface=null,roofKey='',flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const stage=root.querySelector('.sp-stage');
-    /* Panel bol zabalený a s ním aj auto, posedenie a počasie — vlastník ich
-       hľadal a nenašiel. Otvára sa rovno; zabaliť sa dá kliknutím. */
-    const panel=document.createElement('details');panel.className='sp-scene';panel.open=true;
+    /* Karta stojí pootvorená: vidno jej názov a čo je práve v scéne, telo sa
+       rozbalí, keď naň prejde myš — a kliknutím sa dá nechať otvorené natrvalo.
+       Úplne zabalená sa nehľadala dobre, úplne otvorená zase stála na modeli.
+       Na dotyku hover neexistuje, tam ju otvorí ťuknutie.
+
+       `details` ostáva otvorený stále a o zbalení rozhoduje trieda: keby sa
+       zatváral naozaj, prehliadač by telo vybral z rozloženia a nemalo by sa
+       čo animovať ani na čom držať hover. */
+    const panel=document.createElement('details');panel.className='sp-scene is-peek';panel.open=true;
     /* Ovládanie vybavenia a počasia leží na plátne, nie pod ním: v paneli pod
        obrázkom ukrojilo z výšky náhľadu toľko, že model ostal malý a pod ním
        pás textu. Ako karta v rohu plátna je vidieť hneď, dá sa zabaliť do
@@ -316,7 +322,7 @@
         <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
         <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
-        <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Počasie">
+        <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
         <div class="sp-scene__rain" hidden><select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status" role="status" aria-live="polite"></p>
@@ -375,6 +381,8 @@
     }
     const update=()=>{failure='';if(context)prepare(context);changed();run();};
     panel.addEventListener('click',e=>{
+      const head=e.target.closest('summary');
+      if(head){e.preventDefault();panel.classList.toggle('is-peek');return;}
       const b=e.target.closest('button');if(!b)return;
       /* Posedenie má priestor vyplniť, auto nie: jedno auto je bežná
          predstava parkovania, tri kusy nábytku bežná predstava terasy. */

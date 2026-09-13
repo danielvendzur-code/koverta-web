@@ -104,16 +104,24 @@ function percentile(values, p) {
     requestAnimationFrame(tick);
   });
 
-  await page.mouse.move(box.x + box.width * 0.36, box.y + box.height * 0.55);
+  /* Ťahá sa hornou polovicou kresby. Dolný ľavý roh drží kartu s ovládaním
+     vybavenia a počasia, a tá ťah myšou pohltí — model sa vtedy neotáča,
+     nekreslí sa nič a merané snímky sú prázdne. Kým ťah začínal na nej,
+     test hlásil krásnych 16,7 ms a nemeral pritom vôbec nič. */
+  const startAz = (await page.evaluate(() => window.SP_TEST.snapshot().view)).az;
+  await page.mouse.move(box.x + box.width * 0.62, box.y + box.height * 0.26);
   await page.mouse.down();
   for (let i = 0; i < 54; i += 1) {
-    const x = box.x + box.width * (0.30 + 0.40 * (i / 53));
-    const y = box.y + box.height * (0.48 + 0.13 * Math.sin(i / 5));
+    const x = box.x + box.width * (0.56 + 0.36 * (i / 53));
+    const y = box.y + box.height * (0.20 + 0.12 * Math.sin(i / 5));
     await page.mouse.move(x, y);
     await page.waitForTimeout(8);
   }
   await page.mouse.up();
   await page.waitForTimeout(120);
+  const endAz = (await page.evaluate(() => window.SP_TEST.snapshot().view)).az;
+  assert.ok(Math.abs(endAz - startAz) > 0.05,
+    `Camera drag did not turn the model (az ${startAz} → ${endAz}); the measurement would be meaningless`);
 
   const motionMetrics = await page.evaluate(() => {
     window.__soltecFrameActive = false;

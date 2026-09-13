@@ -20,7 +20,9 @@ const {prepareContext}=require('./browser-qa');
           e.value=String(Math.min(Number(e.max)||value,Math.max(Number(e.min)||0,value)));
           e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));
         }
-        document.querySelector('.sp-scene').open=true;
+        /* Karta je na kresbe pootvorená a otvára ju hover; test ju rozbalí
+           natrvalo, aby sa dalo klikať na jej ovládanie. */
+        const card=document.querySelector('.sp-scene');card.open=true;card.classList.remove('is-peek');
       },{garden:family==='bio'||family==='canopy'});
       const car=family==='koverta'||family==='carport';
       await page.locator('[data-scene-mode="'+(car?'car':'bistro')+'"]').click();
