@@ -104,12 +104,12 @@ const HELPERS = () => {
     await page.waitForTimeout(600);
   };
   const pause = async (page) => {
-    const button = page.getByRole('button', { name: 'Pozastaviť dážď' });
+    const button = page.getByRole('button', { name: 'Pozastaviť', exact: true });
     if (await button.count()) await button.click();
     await page.waitForTimeout(500);
   };
   const resume = async (page) => {
-    const button = page.getByRole('button', { name: 'Spustiť dážď' });
+    const button = page.getByRole('button', { name: 'Spustiť', exact: true });
     if (await button.count()) await button.click();
     await page.waitForTimeout(300);
   };
@@ -168,7 +168,7 @@ const HELPERS = () => {
     // Voda po lamelách tečie, až keď sa zatvárajú; otvorená lamela ju neudrží.
     await weather(page, true);
     await resume(page);
-    await page.getByLabel('Ukázať odtok vody').check();
+    await page.getByLabel('Odtok vody').check();
     await page.waitForTimeout(500);
     await setLouver(0);
     const shutFlow = await page.evaluate(() => window.SP_TEST.scene());
@@ -202,7 +202,7 @@ const HELPERS = () => {
 
     await weather(page, true);
     await resume(page);
-    await page.getByLabel('Ukázať odtok vody').check();
+    await page.getByLabel('Odtok vody').check();
     await page.waitForTimeout(600);
     const scene = await page.evaluate(() => window.SP_TEST.scene());
     const acc = await page.evaluate(() => window.SP_TEST.snapshot().geometry.accessories);
@@ -250,12 +250,18 @@ const HELPERS = () => {
         && q.box[5] > 12 && q.box[2] < gutter.zBottom;
       if (inPipe) bad.push(`voda vnútri zvodu: ${JSON.stringify(q.box)}`);
     }
-    const guide = await page.evaluate(() => {
-      const el = document.querySelector('.sp-drain-guide');
-      return { hidden: el.hidden, text: el.textContent };
-    });
-    if (guide.hidden) bad.push('schéma odtoku sa má ukázať spolu s vodou');
-    if (!/žľab/i.test(guide.text) || !/zvod/i.test(guide.text)) bad.push('schéma nepomenúva žľab a zvod');
+    /* Trasu vody má ukázať voda, nie odsek textu vedľa kresby. Slovná schéma
+       odtoku bola odstránená na žiadosť vlastníka a nemá sa vrátiť: kontroly
+       vyššie už merajú, že voda naozaj tečie žľabom a zvodom a nie po lemovaní
+       ani vnútrom profilu. */
+    const prose = await page.evaluate(() => ({
+      guide: Boolean(document.querySelector('.sp-drain-guide')),
+      note: Boolean(document.querySelector('.sp-scene__note')),
+      hidden: /Popis skrytej trasy|Cez odkvapovú hranu/i.test(document.body.textContent)
+    }));
+    if (prose.guide) bad.push('slovná schéma odtoku sa vrátila do panela');
+    if (prose.note) bad.push('vysvetľujúci odsek pod ovládaním sa vrátil');
+    if (prose.hidden) bad.push('popis skrytej trasy sa vrátil na stránku');
     assertNoErrors();
     await page.close();
   }

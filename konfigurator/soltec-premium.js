@@ -1586,6 +1586,15 @@
             if (v === null) open = true;
             lines.push({ k: `${g.title}: ${o.t}`, v, sum: v || 0 });
           });
+          /* Odkvap so zvodom je pri prístreškoch Koverta súčasťou zostavy a
+             nie voľbou, takže sa už neponúka ako prepínač. Cenu odvodnenia
+             ale výrobca potvrdzuje až v ponuke, takže položka musí ostať v
+             súhrne bez čísla — inak by súčet vyzeral ako konečná cena za
+             zostavu, ktorej časť ešte nie je nacenená. */
+          if (maOdkvap() && model().roofKit === 'koverta') {
+            open = true;
+            lines.push({ k: 'Odkvap a zvod — súčasť zostavy', v: null, sum: 0 });
+          }
           if (!state.frameColor.std) lines.push({ k: 'Príplatok za farbu konštrukcie', v: BIO.surcharge.frame, sum: BIO.surcharge.frame });
           if (!state.louverColor.std) lines.push({ k: 'Príplatok za farbu lamiel', v: BIO.surcharge.louver, sum: BIO.surcharge.louver });
           return { lines, total: lines.reduce((a, l) => a + l.sum, 0), open };
@@ -1691,6 +1700,20 @@
            reveal a hidden steel member through another opaque member. */
         let depthPainter = null, cachedGeometry = null, sceneLife = null;
         let motionDetail = false, detailTimer = 0;
+        /* Rozlíšenie počas otáčania sa neurčuje natvrdo. Kým stroj stíha,
+           kreslí sa aj v pohybe nadštandardne a hrany ostávajú rovné; až keď
+           snímok trvá dlho, klesne na úsporné. Pevný nízky násobok znamenal,
+           že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
+        let motionScale = 1.5;
+        const motionTimes = [];
+        const noteFrame = (ms) => {
+          motionTimes.push(ms); if (motionTimes.length > 12) motionTimes.shift();
+          if (motionTimes.length < 6) return;
+          const sorted = motionTimes.slice().sort((a, b) => a - b);
+          const median = sorted[sorted.length >> 1];
+          const want = median > 26 ? 1 : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
+          if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
+        };
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
           if (!depthPainter) {
@@ -1740,7 +1763,7 @@
              ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
              displeji nevyrobilo buffer, ktorý ovládač odmietne. */
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-          let ratio = motionDetail ? Math.max(1, dpr * 0.9) : Math.max(2.5, dpr * 1.8);
+          let ratio = motionDetail ? Math.max(1, dpr * motionScale * 0.9) : Math.max(2.5, dpr * 1.8);
           const MAX_PIXELS = 7.2e6;
           const over = (canvas.clientWidth * ratio) * (canvas.clientHeight * ratio) / MAX_PIXELS;
           if (over > 1) ratio /= Math.sqrt(over);
@@ -1845,6 +1868,11 @@
         };
 
         const drawStage = () => {
+          const drawStart = (window.performance && performance.now) ? performance.now() : 0;
+          try { return drawStageInner(); }
+          finally { if (drawStart && motionDetail) noteFrame(performance.now() - drawStart); }
+        };
+        const drawStageInner = () => {
           lastKvAccessoryGeometry = null;
           const L = lengthMM(), W = widthMM(), H = state.height;
           const frame = state.frameColor.hex, louv = state.louverColor.hex;
@@ -1972,15 +2000,34 @@
              lofted body, where dozens of small facets step through the mirror
              angle one after another and each one flashed. */
           const SPEC_I = 0.16, SPEC_P = 7;
+          /* Chladný odlesk kovu. Pozink neodráža slnko do biela ako náter —
+             odraz má do modra, lebo v ňom je obloha. Preto sa odlesk pridáva
+             po kanáloch, nie ako šedá. */
+          const ZINC_SPEC = [0.93, 0.985, 1.07];
           const litFill = (c, n, material) => {
             const base = toRGB(c);
             const kd = Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
             const fd = Math.max(0, n[0] * FILL[0] + n[1] * FILL[1] + n[2] * FILL[2]);
-            const l = AMB + KEY_I * kd + FILL_I * fd + BOUNCE_I * Math.max(0, -n[2]) + SKY_I * Math.max(0, n[2]);
-            const hn = Math.max(0, n[0] * HALF[0] + n[1] * HALF[1] + n[2] * HALF[2]);
             const satin = material === 'zinc';
-            const spec = kd > 0 ? (satin ? 0.28 : SPEC_I) * Math.pow(hn, satin ? 18 : SPEC_P) * 255 : 0;
-            const v = base.slice(0, 3).map((x) => Math.max(0, Math.min(255, Math.round(x * l + spec))));
+            /* Kov sa netieňuje ako náter. Rozdiel medzi lícom otočeným ku
+               svetlu a lícom odvráteným je u lesklého plechu oveľa väčší a
+               šikmé plochy chytia oblohu — bez toho ostal pozink plochý
+               svetlosivý obdĺžnik bez tvaru. Ambient ide dole, kľúč a obloha
+               hore, takže sa stojina, pásnica a žliabok C profilu zdola
+               rozlíšia. */
+            const l = satin
+              ? AMB * 0.80 + KEY_I * 1.45 * kd + FILL_I * 0.9 * fd
+                + BOUNCE_I * 0.85 * Math.max(0, -n[2]) + SKY_I * 2.4 * Math.max(0, n[2])
+              : AMB + KEY_I * kd + FILL_I * fd + BOUNCE_I * Math.max(0, -n[2]) + SKY_I * Math.max(0, n[2]);
+            const hn = Math.max(0, n[0] * HALF[0] + n[1] * HALF[1] + n[2] * HALF[2]);
+            const spec = kd > 0 ? (satin ? 0.30 : SPEC_I) * Math.pow(hn, satin ? 16 : SPEC_P) * 255 : 0;
+            /* Pri šmyku pohľadu pozdĺž plechu sa odraz zosilní — to je ten
+               kovový lesk, ktorý beží po profile, keď sa model otáča. */
+            const graze = satin
+              ? Math.pow(1 - Math.min(1, Math.abs(n[0] * VIEWDIR[0] + n[1] * VIEWDIR[1] + n[2] * VIEWDIR[2])), 4) * 26
+              : 0;
+            const v = base.slice(0, 3).map((x, i) => Math.max(0, Math.min(255,
+              Math.round(x * l + (spec + graze) * (satin ? ZINC_SPEC[i] : 1)))));
             return base[3] == null
               ? 'rgb(' + v[0] + ',' + v[1] + ',' + v[2] + ')'
               : 'rgba(' + v[0] + ',' + v[1] + ',' + v[2] + ',' + base[3] + ')';
@@ -2922,8 +2969,14 @@
             const runTo = axis === 'x' ? b[0] : b[1];
 
             /* the posts standing inside this run divide it into bays */
+            /* Lamelová stena Koverta je jedno pole cez celú stranu: lamely
+               prebiehajú od rohu k rohu a stĺp stojí za nimi. Kým sa aj ona
+               delila stĺpmi, mala uprostred zvislý rám a lamela sa lámala na
+               polovicu — na stavbe je to jeden kus. Ostatné výplne sú panely
+               a rolety, tie sa medzi stĺpy naozaj vkladajú. */
+            const oneField = model().roofKit === 'koverta' && Boolean(KV_MAT[kind]);
             const cuts = [];
-            if (axis === 'x') {
+            if (axis === 'x' && !oneField) {
               const rowXs = postXs();
               rowXs.forEach((px, xi) => {
                 /* Only the cut around a real post is structural here. Koverta
@@ -3474,12 +3527,12 @@
             const VAZ_W = REF.vazW || 58, VAZ_H = REF.vazH || 180;
             const TRAP_H = REF.trapH || 36, TRAP_KRYT = REF.trapKryt || 1072;
             const TRAP_ZAD = REF.trapZad || 15, TRAP_ODK = REF.trapOdkvap || 85;
-            /* Pozinkovaná oceľ nie je tá istá belasá ako podhľad. Kým mala
-               C profilom rovnaký tón ako trapézový podhľad (#dadada oproti
-               #d9dcdd), splynuli s ním a ich skutočný tvar — pásnica, stojina,
-               otvorený žľab v boku — nebolo zdola vidieť takmer vôbec. Oceľ je
-               preto zreteľne tmavšia než náter podhľadu. */
-            const zinok = shade(model().rimSoffitHex || '#c2c7cb', -0.18);
+            /* Oceľ C profilov je o kúsok tmavšia než podhľad trapézu, aby sa
+               ich tvar — pásnica, stojina, otvorený žľab v boku — dal zdola
+               prečítať. Kým mali obe presne ten istý tón, splynuli a z
+               podhľadu ostal jeden plochý obdĺžnik. Odtieň je chladná kovová
+               strieborná; teplá sivá z pozinku robila plast. */
+            const zinok = shade(model().rimSoffitHex || '#c2c7cb', -0.14);
             const zBot = H, zTop = zBot + LEM_H;
             /* Obvodový rám začína 2 mm nad spodkom lemovania. Kým mali obe
                spodné líca tú istú rovinu, triedil ich BSP ako splynuté a rám
@@ -3659,7 +3712,7 @@
                 [[u0, -1], [u1, 1]].forEach((e) => {
                   const pts = [P(ca, cz, e[0]), P(ca + cw, cz, e[0]), P(ca + cw, cz + ch, e[0]), P(ca, cz + ch, e[0])];
                   quad(e[1] > 0 ? pts : pts.slice().reverse(), hex,
-                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], cull: true, arris: false, edge: false, seamless: true });
+                       { normal: axis === 'x' ? [0, e[1], 0] : [e[1], 0, 0], material: 'zinc', cull: true, arris: false, edge: false, seamless: true });
                 });
               });
               if (!single) {
@@ -3833,7 +3886,10 @@
               hostBottomZ: trapBot,
               renderZ: trapBot
             };
-            const spodHex = maIzolaciu ? '#c7c4bb' : '#d9dcdd';
+            /* Podhľad trapézu je pozinkovaný plech, teda chladná kovová
+               strieborná — nie teplá sivá farba steny. Odtieň smie prísť z
+               dát stránky, aby sa dal doladiť bez zásahu do rendereru. */
+            const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -3942,6 +3998,10 @@
                 const surfaceNormal = faceNormal(pts);
                 if (!upward) tone = shade(hex, -0.16 * cavity);
                 quad(pts, tone, {
+                  /* Podhľad trapézu je ten istý pozinkovaný plech ako C
+                     profily pod ním. Kým sa tieňoval ako náter, bol z neho
+                     zdola plochý sivý obdĺžnik, hoci vlna má tvar. */
+                  material: upward ? undefined : 'zinc',
                   normal: surfaceNormal,
                   cull: true,
                   edge: false,
@@ -3976,21 +4036,26 @@
                blikajúcich švov. */
 
             /* --- lineárne LED osvetlenie -------------------------------
-               Drive realization IMG_3676 copy.jpeg (id
-               1w1t5Sw5Yi1rkJkVd3GbbCN3vWCI5HzOD) shows one installation with
-               a continuous illuminated perimeter on all four frame runs;
-               IMG_1569.jpeg (id 10ZmiliwPjt_HqwsbxkGSgZf2iWTynT3Y) shows the
-               profile physically seated against a steel member. This renderer
-               represents that evidenced installation, not a mandatory standard
-               LED layout for every Koverta order. Profile dimensions remain
-               visual proportions, never millimetres inferred from photos. */
+               Svetlo visí na priečnych profiloch, nie po obvode: majiteľ to
+               opravil s tým, že na realizáciách bývajú pásy práve na
+               väzniciach. Sedí to aj s konštrukciou — väznica je jediný
+               nosník, ktorý ide cez celý priestor a má rovný spodok široký
+               116 mm, takže hliníkový profil má na čom držať a svetlo padá
+               do stredu prístrešku, nie po jeho okraji.
+
+               Profil má rozmery bežného nábytkového/vonkajšieho LED profilu
+               (asi 40 mm široký a 22 mm vysoký). Predtým bol 8-14 × 4-8 mm a
+               na modeli z neho ostal vlások — majiteľ to vytkol ako „moc
+               tenké". Rozmery ostávajú vizuálnou proporciou, nie výrobnou
+               kótou konkrétneho profilu. */
             if (Boolean(state.extras['kv-led'])) {
               kvAccessoryGeometry.led.enabled = true;
               kvAccessoryGeometry.led.blockedPosts = [];
-              const ledW = Math.max(8, Math.min(14, RAM_PAR * 0.18));
-              const ledT = Math.max(4, Math.min(8, RAM_H * 0.03));
-              const diffT = Math.max(1.2, ledT * 0.22);
-              const ledZ = ramBot - ledT;
+              const ledW = Math.max(26, Math.min(46, VAZ_W * 2 * 0.34));
+              const ledT = Math.max(14, Math.min(26, VAZ_H * 0.12));
+              const diffT = Math.max(3, ledT * 0.28);
+              const zVazBot = ramTop - VAZ_H;
+              const ledZ = zVazBot - ledT;
               const ledProfile = shade(zinok, -0.18);
               const ledLight = '#f5e8c5';
 
@@ -4015,17 +4080,15 @@
                   side, x, y, dx, dy,
                   profileBottomZ: ledZ,
                   profileTopZ: ledZ + ledT,
-                  hostBottomZ: ramBot
+                  hostBottomZ: zVazBot
                 });
                 ledSurface(x, y, dx, dy);
               };
 
-              /* Subtract real post footprints from a host-frame interval. LED
-                 therefore follows the frame through overhangs and between posts,
-                 but never passes through a steel post just to keep a drawn line
-                 visually continuous. Photos show the strips terminating at post
-                 connections; no corner connector or hidden through-post path is
-                 invented. */
+              /* Subtract real post footprints from a host interval. The strip
+                 follows the purlin across the whole shelter, but never passes
+                 through a steel post head just to keep a drawn line visually
+                 continuous. */
               const subtractIntervals = (from, to, blockers) => {
                 const clipped = blockers
                   .map((b) => [Math.max(from, b[0]), Math.min(to, b[1])])
@@ -4045,44 +4108,29 @@
               const ledN = ledXs.length;
               const ledVsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               const ledSections = ledXs.map((_, i) => kvStlpRez(i, ledN));
-              const sideBlocks = ledXs.map((px, i) => {
-                const b = [px, px + ledSections[i].d];
+              ledXs.forEach((px, i) => {
                 kvAccessoryGeometry.led.blockedPosts.push({
-                  axis: 'x', index: i, from: b[0], to: b[1],
+                  axis: 'x', index: i, from: px, to: px + ledSections[i].d,
                   rearY0: ledVsun, rearY1: ledVsun + ledSections[i].w,
                   frontY0: W - ledVsun - ledSections[i].w, frontY1: W - ledVsun
                 });
-                return b;
               });
 
-              /* This is a representative renderer of the perimeter-light
-                 realization in IMG_3675/3676, not a claim that every order uses
-                 the same number of physical LED pieces. Side-frame segments
-                 occupy the underside centreline of the host C profile and are
-                 split wherever a current post physically meets that frame. */
-              const sideX0 = RAM_ZAD + 2, sideX1 = rx1 - 2;
-              const rearY = RAM_VSUN + RAM_PAR / 2 - ledW / 2;
-              const frontY = W - RAM_VSUN - RAM_PAR / 2 - ledW / 2;
-              subtractIntervals(sideX0, sideX1, sideBlocks).forEach((seg) => {
-                ledRun('rear', seg[0], rearY, seg[1] - seg[0], ledW);
-                ledRun('front', seg[0], frontY, seg[1] - seg[0], ledW);
-              });
-
-              /* End-frame strips run between the rear/front post footprints.
-                 The two end rows can have different Koverta sections, so each
-                 end derives its own y blockers from kvStlpRez(). */
-              const endRun = (side, xi, x) => {
-                const r = ledSections[xi];
-                const yBlocks = [
-                  [ledVsun, ledVsun + r.w],
-                  [W - ledVsun - r.w, W - ledVsun]
-                ];
-                subtractIntervals(ry0, ry1, yBlocks).forEach((seg) => {
-                  ledRun(side, x, seg[0], ledW, seg[1] - seg[0]);
+              /* Pás beží stredom väznice od jedného obvodového rámu k druhému.
+                 Kde pod väznicou stojí stĺp, sa preruší — hlava stĺpa dosadá
+                 priamo pod profil a svetlo cez oceľ neprejde. */
+              const ledY0 = RAM_VSUN + RAM_PAR, ledY1 = W - RAM_VSUN - RAM_PAR;
+              osi.forEach((os, i) => {
+                const x = os - ledW / 2;
+                const yBlocks = [];
+                kvAccessoryGeometry.led.blockedPosts.forEach((b) => {
+                  if (b.to <= x || b.from >= x + ledW) return;
+                  yBlocks.push([b.rearY0, b.rearY1], [b.frontY0, b.frontY1]);
                 });
-              };
-              endRun('left', 0, RAM_ZAD + RAM_PAR / 2 - ledW / 2);
-              endRun('right', Math.max(0, ledN - 1), rx1 - RAM_PAR / 2 - ledW / 2);
+                subtractIntervals(ledY0, ledY1, yBlocks).forEach((seg) => {
+                  ledRun('vaznica' + i, x, seg[0], ledW, seg[1] - seg[0]);
+                });
+              });
             }
 
             /* --- odkvap. Na odkvapovej hrane ostáva za rámom 159 mm previsu
@@ -4575,6 +4623,14 @@
                  šírku, otvorená len jej kosínus — presne tou medzerou padá
                  dážď na zem. */
               cover:panelRoof?Infinity:bladeW*Math.cos(ang),
+              /* Kam strecha tečie. F170 a F240 majú spád zabudovaný naprieč
+                 šírkou pri vodorovnom ráme, SL ho má priznaný po dĺžke. Bez
+                 tejto informácie kreslila scéna vodu na F-kach naprieč spádu,
+                 teda do kopca. */
+              drain:{axis:integratedFall?'y':'x',
+                high:integratedFall?post:0,
+                low:integratedFall?W-post:L,
+                drop:(integratedFall||fallShown)?fall:0},
               louverZone:panelRoof?null:{x0:post,x1:L-post,y0:post,y1:W-post},
               roofZ:H+beam,roofRise:(fallShown&&panelRoof?fall:0),
               renderer:canvas.dataset.renderer||'',
@@ -4588,12 +4644,20 @@
           const VW = 1000;
           const VH = Math.max(420, Math.round(VW * (boxH / Math.max(1, boxW))));
           canvas.setAttribute('viewBox', '0 0 ' + VW + ' ' + VH);
-          const pad = Math.round(Math.min(VW, VH) * 0.08);
+          /* Okraj okolo modelu bol 8 % kratšej strany na každú stranu, teda
+             takmer pätina plátna na prázdno. Model tým ostal malý v scéne a
+             ovládanie sa presunulo naň, takže miesto navyše už netreba
+             nechávať. */
+          const pad = Math.round(Math.min(VW, VH) * 0.035);
           let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
           // Fit a stable assembly envelope, including the full louver sweep.
           // Rotating blades must never zoom or recenter the whole structure.
           const fitTop = H + beam + (panelRoof ? fall : louverSize().w / 2);
-          [-180, L + 180].forEach(x => [-180, W + 180].forEach(y => [0, fitTop].forEach(z => {
+          /* Rezerva okolo obálky drží v zábere aj to, čo z konštrukcie
+             vystupuje — koleno zvodu vedľa stĺpa je z nej najďalej. 180 mm
+             bolo na to zbytočne veľa. */
+          const fitPad = 100;
+          [-fitPad, L + fitPad].forEach(x => [-fitPad, W + fitPad].forEach(y => [0, fitTop].forEach(z => {
             const q = cam(x, y, z);
             minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
             minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);

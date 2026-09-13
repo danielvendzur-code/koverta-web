@@ -1514,37 +1514,41 @@
 /* Display-only scenery controls, below the orbit surface. */
 #SoltecPremium .sp-scene { margin: 1rem 0 1.5rem; border: 1px solid #deded8; border-radius: 14px; background: #fafaf7; color: #303839; font-family: inherit; overflow: hidden; }
 #SoltecPremium .sp-scene [hidden] { display: none !important; }
-#SoltecPremium .sp-scene summary { cursor: pointer; padding: 1.4rem 1.6rem; font-weight: 600; font-size: 1.4rem; }
-#SoltecPremium .sp-scene__summary { float: right; font-weight: 400; color: #697173; font-size: 1.2rem; }
-#SoltecPremium .sp-scene__body { padding: .2rem 1.6rem 1.4rem; }
-#SoltecPremium .sp-scene__row { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin: 1rem 0; }
-#SoltecPremium .sp-scene__label { min-width: 11rem; font-size: 1.3rem; }
-#SoltecPremium .sp-scene__choices { display: flex; flex-wrap: wrap; gap: .5rem; }
-#SoltecPremium .sp-scene button, #SoltecPremium .sp-scene select { min-height: 44px; padding: .6rem 1.2rem; border: 1px solid #d7dbd7; border-radius: 8px; background: #fff; color: #303839; font: inherit; font-size: 1.3rem; cursor: pointer; }
+#SoltecPremium .sp-scene summary { cursor: pointer; padding: 1.1rem 1.4rem; font-weight: 600; font-size: 1.3rem; }
+#SoltecPremium .sp-scene__summary { float: right; font-weight: 400; color: #697173; font-size: 1.15rem; margin-left: 1.2rem; }
+#SoltecPremium .sp-scene__body { padding: 0 1.4rem 1.2rem; }
+#SoltecPremium .sp-scene__row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .6rem 0; }
+#SoltecPremium .sp-scene__choices { display: flex; flex-wrap: wrap; gap: .4rem; }
+#SoltecPremium .sp-scene button, #SoltecPremium .sp-scene select { min-height: 40px; padding: .5rem .9rem; border: 1px solid #d7dbd7; border-radius: 8px; background: #fff; color: #303839; font: inherit; font-size: 1.25rem; cursor: pointer; }
 #SoltecPremium .sp-scene button[aria-pressed="true"] { background: #354348; border-color: #354348; color: white; }
 #SoltecPremium .sp-scene button:focus-visible, #SoltecPremium .sp-scene select:focus-visible, #SoltecPremium .sp-scene summary:focus-visible { outline: 2px solid #d49b26; outline-offset: 3px; }
-#SoltecPremium .sp-scene__paint { display: flex; gap: .8rem; align-items: center; margin-left: auto; font-size: 1.3rem; }
-#SoltecPremium .sp-scene__note, #SoltecPremium .sp-scene__status { font-size: 1.2rem; line-height: 1.55; margin: .8rem 0; color: #657174; }
-#SoltecPremium .sp-scene__credits { color: #526368; font-size: 1.1rem; text-underline-offset: 3px; }
-#SoltecPremium .sp-scene__rain { display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; font-size: 1.3rem; }
-/* Panel žije v stĺpci s vizualizáciou, priamo pod lištou plátna: bez
-   vlastného okraja splynie so scénou. Otvorené telo dostane vlastné
-   rolovanie, aby v pevnej výške mriežky nezožralo plátno. */
-#SoltecPremium .sp-stage > .sp-scene { flex: 0 0 auto; margin: 0; border: 0; border-top: 1px solid var(--sp-line); border-radius: 0; background: #fff; }
-/* Mriežka rastie do výšky, tak panel plátno neokráda a rolovať netreba.
-   Na celej obrazovke je ale stĺpec presne taký vysoký ako okno — tam si
-   otvorené telo vezme najviac tretinu a zvyšok si odroluje samo. */
-#SoltecPremium .sp-cfg.is-full .sp-stage > .sp-scene[open] .sp-scene__body { max-height: 34vh; overflow-y: auto; overscroll-behavior: contain; }
-#SoltecPremium .sp-drain-guide { padding: 1.4rem 1.6rem; border-top: 1px solid #d7dbd7; font-size: 1.3rem; }
-#SoltecPremium .sp-drain-guide ol { display: flex; gap: 1.4rem; list-style: none; padding: 0; }
-#SoltecPremium .sp-drain-guide li { flex: 1; }
-#SoltecPremium .sp-drain-guide i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #dceaf0; margin-right: 6px; font-style: normal; }
-#SoltecPremium .sp-drain-guide small { color: #657174; }
+#SoltecPremium .sp-scene__status { font-size: 1.15rem; line-height: 1.5; margin: .6rem 0 .4rem; color: #657174; }
+#SoltecPremium .sp-scene__status:empty { display: none; }
+#SoltecPremium .sp-scene__credits { color: #526368; font-size: 1.05rem; text-underline-offset: 3px; }
+#SoltecPremium .sp-scene__rain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; font-size: 1.25rem; }
+/* Ovládanie sedí na plátne, pri jeho ľavom dolnom rohu, a nie v páse pod ním:
+   pás si bral toľko výšky, že na model ostala polovica scény. Dok má nulovú
+   výšku a končí presne tam, kde končí kresba, takže karta prekrýva len
+   prázdnu dlažbu — nie lištu pohľadov pod ňou ani nápovedu k ovládaniu v
+   ľavom hornom rohu. Zabalená je z nej len úzky prúžok. */
+#SoltecPremium .sp-scene-dock { position: relative; z-index: 7; height: 0; }
+#SoltecPremium .sp-scene-dock > .sp-scene {
+  position: absolute; left: 1.2rem; bottom: 1.2rem; width: min(30rem, calc(100% - 2.4rem));
+  margin: 0; border: 1px solid #dfe3de; border-radius: 12px;
+  background: rgba(255,255,253,.94); backdrop-filter: blur(6px);
+  box-shadow: 0 4px 18px #26332f14;
+}
+#SoltecPremium .sp-scene-dock > .sp-scene:not([open]) { width: auto; }
+#SoltecPremium .sp-scene-dock > .sp-scene[open] .sp-scene__body { max-height: min(46vh, 34rem); overflow-y: auto; overscroll-behavior: contain; }
 @media(max-width:749px) {
-  #SoltecPremium .sp-scene__label { width: 100%; }
+  /* Na telefóne je plátno nízke — plávajúca karta by na ňom stála na modeli.
+     Vracia sa do toku pod scénu, kde má vlastnú šírku aj miesto. */
+  #SoltecPremium .sp-scene-dock { height: auto; }
+  #SoltecPremium .sp-scene-dock > .sp-scene {
+    position: static; width: auto; margin: 0; border: 0; border-top: 1px solid var(--sp-line);
+    border-radius: 0; background: #fff; backdrop-filter: none; box-shadow: none;
+  }
   #SoltecPremium .sp-scene__summary { float: none; display: block; margin: .5rem 0 0 1.7rem; }
-  #SoltecPremium .sp-scene__paint { margin-left: 0; }
-  #SoltecPremium .sp-drain-guide ol { flex-direction: column; }
 }
 /* Lišta priblíženia je ovládanie, nie plachta cez model. Samotný rámik ani
    percentá nesmú brať ťah myšou — inak sa model v mieste, kde lišta plávala,

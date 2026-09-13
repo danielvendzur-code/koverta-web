@@ -9,7 +9,10 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    car: { file:'superb-iv.bin.gz', bounds:[-21,-1066,0,4924,1066,1483] },
+    sedan: { file:'hyundai-sonata.bin.gz', bounds:[0,-1043,0,4855,1043,1516],
+      label:'Hyundai Sonata', short:'sedan' },
+    city: { file:'city-car.bin.gz', bounds:[0,-955,0,3540,955,1500],
+      label:'malé mestské auto', short:'mestské auto' },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
@@ -19,7 +22,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260913-superb-2',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260913-cars-1',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -37,13 +40,28 @@
   let seedState=9307;
   const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
   for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
-  function plan(c, mode, count, allow) {
+  function plan(c, mode, count, allow, car) {
     if(allow && !allow(mode)) return {items:[],capacity:0,reason:''};
     const margin = Math.max(230,c.post+100), x0=c.boxDepth+margin, x1=c.L-margin;
     const available=c.L-c.boxDepth-2*margin;
     const result=[];
     if(mode==='car') {
-      const bb=models.car.bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
+      /* Väčšie auto má prednosť; kde sa s odstupmi nezmestí, zaparkuje malé.
+         Sedan potrebuje 2,74 m šírky aj s rezervou pri stĺpoch a 5,46 m
+         dĺžky — pri prednastavenom carporte sa nezmestilo nič a scéna
+         hlásila, že tu auto nezaparkuje, hoci bežné mestské auto áno. */
+      const order=car==='sedan'?['sedan']:car==='city'?['city']:['sedan','city'];
+      for(const key of order) {
+        const got=parkCars(c,count,key,car==='auto');
+        if(got.capacity||key===order[order.length-1])return got;
+      }
+    }
+    if(mode==='bistro') return seatPlan(c,count,margin,available,x0,x1,result);
+    return {items:[],capacity:0,reason:''};
+  }
+  function parkCars(c,count,key,mix) {
+      const result=[];
+      const bb=models[key].bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
       const side=Math.max(350,c.post+200),rear=c.boxDepth+(c.boxDepth?750:300),front=c.L-300,gap=600;
       const parkedX=(rear+front-carL)/2;
       let intervals=[[side+carW/2,c.W-side-carW/2]];
@@ -66,11 +84,20 @@
       let capacity=0;for(let n=1;n<=3;n++)if(place(n).length===n)capacity=n;
       const wanted=count==='auto'?capacity:Math.min(Number(count)||1,capacity);
       const ys=place(wanted);
-      ys.forEach(y=>result.push({key:'car',x:parkedX-bb[0],y,z:2,rotation:0}));
+      /* Keď stoja pod prístreškom dve autá, nemajú to byť dve kópie toho
+         istého: druhé miesto dostane druhý model, aby bolo z náhľadu vidieť
+         obe ponúkané veľkosti. Platí to len pri automatickom výbere — kto si
+         model zvolil sám, dostane ten, ktorý si zvolil. */
+      const other=key==='sedan'?'city':'sedan',ob=models[other].bounds;
+      const otherFits=mix&&ob[4]-ob[1]<=bb[4]-bb[1]&&ob[3]-ob[0]<=bb[3]-bb[0]&&ob[5]-ob[2]<=c.H-150;
+      ys.forEach((y,i)=>{
+        const k=otherFits&&i===1?other:key,kb=models[k].bounds;
+        result.push({key:k,x:(rear+front-(kb[3]-kb[0]))/2-kb[0],y,z:2,rotation:0});
+      });
       return {items:result,capacity,clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0},
         reason:capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
-    }
-    if(mode==='bistro') {
+  }
+  function seatPlan(c,count,margin,available,x0,x1,result) {
       /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
          kreslá, stolík a koberec — nie jeden stolík uprostred prázdna. Zostava
          je 2,4 m hlboká práve preto, aby sa pod bioklimatickú pergolu (najviac
@@ -105,8 +132,6 @@
       const mid=(x0+x1)/2-(tb[0]+tb[3])/2, y=c.W/2-(tb[1]+tb[4])/2;
       for(let i=0;i<wantSeats;i++)result.push({key:'bistro',x:mid+(wantSeats===2?(i?pitch/2:-pitch/2):0),y,z:2,rotation});
       return {items:result,capacity:seats,reason:''};
-    }
-    return {items:[],capacity:0,reason:''};
   }
   /* Kadiaľ tečie voda. Vychádza z tej istej geometrie, akú kreslí
      konštrukcia: rovina strechy aj s jej stúpaním, pásmo lamiel medzi stĺpmi
@@ -120,7 +145,14 @@
       for(const i of [0,1,2,0,2,3])v.push(pts[i][0],pts[i][1],pts[i][2],uv[i][0],uv[i][1],kind,alpha);
     };
     const UV=[[0,-1],[1,-1],[1,1],[0,1]];
-    const roofTop=(x,y)=>{const hit=c.roofAt&&c.roofAt(x,y);return hit==null?c.roofZ+(c.roofRise||0)*(1-clamp(x/Math.max(1,c.L),0,1)):hit;};
+    /* Kam strecha tečie. F170 a F240 majú spád naprieč šírkou, SL po dĺžke —
+       konštrukcia to hlási v `drain`, scéna si to nedomýšľa. */
+    const dr=c.drain||{axis:'x',high:0,low:c.L,drop:c.roofRise||0};
+    const ax=dr.axis==='y'?1:0, along=(x,y)=>ax?y:x, at=(u,v)=>ax?[v,u]:[u,v];
+    const spanLo=Math.min(dr.high,dr.low), spanHi=Math.max(dr.high,dr.low);
+    const roofTop=(x,y)=>{const hit=c.roofAt&&c.roofAt(x,y);if(hit!=null)return hit;
+      const t=clamp((along(x,y)-dr.high)/Math.max(1,dr.low-dr.high),0,1);
+      return c.roofZ-(dr.drop||0)*t;};
     const g=c.drainage&&c.drainage.gutter&&c.drainage.gutter.enabled?c.drainage.gutter:null;
     const d=c.drainage&&c.drainage.downpipe&&c.drainage.downpipe.enabled?c.drainage.downpipe:null;
     /* Kam až po streche voda tečie, kým zmizne z dohľadu. Pri Koverte je to
@@ -128,15 +160,20 @@
        Inde je to vnútorné líce obvodového profilu — tam sa strieška odvodňuje
        do rámu, nie cez hranu. */
     const fascia=c.drainage&&c.drainage.fascia?c.drainage.fascia:null;
-    const eave=fascia?c.L-fascia.eave-14:g?g.x0:c.L-Math.max(24,c.post||60);
+    const eave=fascia?dr.low-fascia.eave-14:g?g.x0:dr.low-Math.max(24,c.post||60);
+    const source=dr.high+(dr.low>dr.high?1:-1)*Math.min(340,Math.abs(dr.low-dr.high)*.1);
     // stabilný, no nepravidelný rozptyl pruhov — rovnaká scéna, rovnaká voda
     const rnd=(i,m)=>((i*2654435761)%m)/m;
     const dir=[Math.cos(c.az||0),Math.sin(c.az||0)];   // vodorovný smer po obrazovke
     if(c.panelRoof) {
-      const n=Math.max(10,Math.min(42,Math.round(c.W/210))),x0=Math.min(340,c.L*.1);
+      /* Pruhy idú po spáde, nie po dĺžke. Naprieč nim sa rozložia po celej
+         šírke strechy, nech je tou šírkou ktorákoľvek os. */
+      const across=ax?c.L:c.W, n=Math.max(10,Math.min(42,Math.round(across/210)));
       for(let i=0;i<n;i++) {
-        const y=c.W*(i+.5)/n+(rnd(i+7,17)-.5)*(c.W/n)*.5,w=24+rnd(i+3,9)*28;
-        quad([[x0,y-w,roofTop(x0,y-w)+2],[eave,y-w,roofTop(eave,y-w)+2],[eave,y+w,roofTop(eave,y+w)+2],[x0,y+w,roofTop(x0,y+w)+2]],UV,0,1);
+        const t=across*(i+.5)/n+(rnd(i+7,17)-.5)*(across/n)*.5,w=24+rnd(i+3,9)*28;
+        const A=at(source,t-w),B=at(eave,t-w),C=at(eave,t+w),D=at(source,t+w);
+        quad([[A[0],A[1],roofTop(A[0],A[1])+2],[B[0],B[1],roofTop(B[0],B[1])+2],
+          [C[0],C[1],roofTop(C[0],C[1])+2],[D[0],D[1],roofTop(D[0],D[1])+2]],UV,0,1);
       }
     } else if(c.louverZone) {
       /* Otvorená lamela vodu nezachytí — prší rovno pod strechu. Až ako sa
@@ -195,15 +232,19 @@
          ani stĺpa sa nekreslí, lebo cez plný jakl nemá čo presvitať. Vidno
          teda dve veci: kde voda do rámu vteká a kde z päty stĺpa vyteká.
          Kvapky visiace na odkvape boli presne to, čo tu byť nesmie. */
-      const fw=Math.max(40,c.post||60),zTop=roofTop(c.L,c.W/2);
+      const fw=Math.max(40,c.post||60),mid=at(dr.low,(ax?c.L:c.W)/2);
+      const zTop=roofTop(mid[0],mid[1]);
       // štrbina, ktorou voda vteká do profilu — po celej odkvapovej hrane
-      quad([[c.L-fw+6,10,zTop+3],[c.L-fw+6,c.W-10,zTop+3],[c.L-10,c.W-10,zTop+3],[c.L-10,10,zTop+3]],
-        [[0,-1],[0,1],[1,1],[1,-1]],1,1);
+      const sgnL=dr.low>dr.high?-1:1, e0=dr.low+sgnL*(fw-6), e1=dr.low+sgnL*10;
+      const t0=10,t1=(ax?c.L:c.W)-10;
+      const P=[at(e0,t0),at(e0,t1),at(e1,t1),at(e1,t0)];
+      quad(P.map(q=>[q[0],q[1],zTop+3]),[[0,-1],[0,1],[1,1],[1,-1]],1,1);
       /* Päta stĺpa. Odkvapová strana ich má spravidla dvoje; keď tam žiadny
          nie je (previs, montáž na stenu), berú sa tie, ktoré prístrešok má —
          voda ide dolu nimi. */
       const all=(c.obstacles||[]).filter(o=>o[2]>o[0]&&o[3]>o[1]);
-      const atEave=all.filter(o=>o[2]>=c.L-fw*1.9);
+      const near=o=>Math.abs((ax?(o[1]+o[3]):(o[0]+o[2]))/2-dr.low);
+      const atEave=all.filter(o=>near(o)<=fw*1.9);
       for(const o of (atEave.length?atEave:all)) {
         const px=(o[0]+o[2])/2,py=(o[1]+o[3])/2,half=Math.max(o[2]-o[0],o[3]-o[1])/2;
         /* Výtok patrí von od stĺpa, nie doň. Zvislý prúd vedený osou stĺpa by
@@ -248,7 +289,7 @@
        predvoľba podľa rodiny otvárala panel rovno na hlásení „nezmestí sa".
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
-    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:false,paint:'silver',intensity:'steady',family:String(family||'')};
+    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'silver',car:'auto',intensity:'steady',family:String(family||'')};
     /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
        sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
     const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
@@ -260,32 +301,39 @@
     let planningKey='',rainKey='',rainData=null,roofSurface=null,roofKey='',flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const stage=root.querySelector('.sp-stage');
-    const panel=document.createElement('details');panel.className='sp-scene';
-    panel.innerHTML=`<summary><span>Vybavenie priestoru</span><span class="sp-scene__summary">Náhľad priestoru</span></summary>
+    /* Panel bol zabalený a s ním aj auto, posedenie a počasie — vlastník ich
+       hľadal a nenašiel. Otvára sa rovno; zabaliť sa dá kliknutím. */
+    const panel=document.createElement('details');panel.className='sp-scene';panel.open=true;
+    /* Ovládanie vybavenia a počasia leží na plátne, nie pod ním: v paneli pod
+       obrázkom ukrojilo z výšky náhľadu toľko, že model ostal malý a pod ním
+       pás textu. Ako karta v rohu plátna je vidieť hneď, dá sa zabaliť do
+       úzkeho prúžku a model dostane celú plochu. */
+    panel.innerHTML=`<summary><span>Vybavenie a počasie</span><span class="sp-scene__summary">Náhľad</span></summary>
       <div class="sp-scene__body">
-        <div class="sp-scene__row"><span class="sp-scene__label">Pod prístreškom</span><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
-          <button type="button" data-scene-mode="none">Bez vybavenia</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
-        <div class="sp-scene__row" data-scene-countrow><label class="sp-scene__label" for="sp-scene-count">Počet</label><select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="auto">Podľa priestoru</option></select>
-        <label class="sp-scene__paint">Lak auta <select aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></label></div>
-        <div class="sp-scene__row" data-scene-weatherrow><span class="sp-scene__label">Počasie</span><div class="sp-scene__choices" role="group" aria-label="Počasie">
+        <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
+          <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
+        <div class="sp-scene__row" data-scene-countrow>
+        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="city">Malé auto</option></select>
+        <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
+        <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
+        <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
-        <div class="sp-scene__rain" hidden><label>Sila dažďa <select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select></label><button type="button" data-scene-pause>Pozastaviť dážď</button><label><input type="checkbox" data-scene-flow> Ukázať odtok vody</label></div>
+        <div class="sp-scene__rain" hidden><select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status" role="status" aria-live="polite"></p>
-        <p class="sp-scene__clearance" data-scene-clearance hidden>Parkovanie ponecháva 60 cm medzi autami a pri boxe 75 cm na prístup. Obálka auta zahŕňa zrkadlá.</p>
-        <p class="sp-scene__note">Vybavenie slúži na predstavu o priestore a nie je súčasťou ceny.</p>
         <a class="sp-scene__credits" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
-    /* Panel patrí pod plátno, do stĺpca s vizualizáciou. Ako priamy potomok
-       mriežky sa stal druhou bunkou prvého riadku: sadol si nad kroky
-       konfigurátora a odsunul ich do druhého riadku pod plátno, kde ich
-       spodné voľby prekryla lišta súhlasu. */
-    stage.appendChild(panel);
+    /* Karta visí na spodnej hrane kresby, nie na spodku celej scény: dok má
+       nulovú výšku a sedí presne tam, kde plátno končí, takže karta prekryje
+       len prázdnu dlažbu a nikdy nie lištu pohľadov pod ňou ani nápovedu
+       k ovládaniu v ľavom hornom rohu. */
+    const dock=document.createElement('div');dock.className='sp-scene-dock';
+    dock.appendChild(panel);
+    const bar=stage.querySelector('.sp-stage__bar');
+    if(bar)stage.insertBefore(dock,bar);else stage.appendChild(dock);
     panel.querySelector('[data-scene-mode="car"]').hidden=!forCar;
     panel.querySelector('[data-scene-mode="bistro"]').hidden=!forSeat;
-    const diagram=document.createElement('aside');diagram.className='sp-drain-guide';diagram.hidden=true;
-    diagram.innerHTML=`<strong>Ako odteká voda</strong><ol><li><i>1</i><span data-drain-roof>Strecha zachytí dážď</span></li><li><i>2</i><span data-drain-gutter>Žľab zvedie vodu k výpustu</span></li><li><i>3</i><span data-drain-pipe>Zvod odvedie vodu nadol</span></li></ol><small>Popis skrytej trasy. V 3D sa kreslí len voda, ktorú naozaj vidno — vnútro profilu, stĺpa aj zvodu ostáva zakryté. Cez odkvapovú hranu voda neprepadáva.</small>`;
-    panel.appendChild(diagram);
-    const status=panel.querySelector('[role="status"]'),countSelect=panel.querySelector('#sp-scene-count'),paintSelect=panel.querySelector('[aria-label="Lak auta"]');
+    const status=panel.querySelector('[role="status"]'),countSelect=panel.querySelector('#sp-scene-count'),
+      paintSelect=panel.querySelector('[aria-label="Lak auta"]'),carSelect=panel.querySelector('[data-scene-car]');
     function sync() {
       stage.dataset.weather=state.weather;
       panel.querySelectorAll('[data-scene-mode]').forEach(b=>b.setAttribute('aria-pressed',String(state.mode===b.dataset.sceneMode)));
@@ -293,31 +341,21 @@
       panel.querySelector('[data-scene-countrow]').hidden=state.mode==='none';
       panel.querySelector('.sp-scene__paint').hidden=state.mode!=='car';
       panel.querySelector('.sp-scene__rain').hidden=state.weather!=='rain';
-      panel.querySelector('[data-scene-clearance]').hidden=state.mode!=='car'||!currentPlan.items.length;
-      countSelect.value=state.count;
+      panel.querySelector('[data-scene-car]').hidden=state.mode!=='car';
+      countSelect.value=state.count;carSelect.value=state.car;
       [...countSelect.options].forEach(o=>{o.disabled=o.value!=='auto' && Number(o.value)>currentPlan.capacity;});
-      panel.querySelector('[data-scene-pause]').textContent=state.paused?'Spustiť dážď':'Pozastaviť dážď';
-      diagram.hidden=state.weather!=='rain'||!state.flow;
-      diagram.dataset.paused=String(state.paused||reduced.matches);
-      if(context) {
-        /* Schéma hovorí o tom, čo je práve v scéne: otvorené lamely, žľab
-           podľa objednaných doplnkov a skutočný zvod z geometrie modelu. */
-        const open=!context.panelRoof && context.louverT>.01;
-        const drain=context.drainage||{};
-        const gutter=Boolean(drain.gutter&&drain.gutter.enabled),pipe=Boolean(drain.downpipe&&drain.downpipe.enabled);
-        diagram.querySelector('[data-drain-roof]').textContent=open?'Otvorenými lamelami dážď prechádza':'Strecha zachytí dážď';
-        diagram.querySelector('[data-drain-gutter]').textContent=gutter?'Voda podteká lemovanie do žľabu a ním k výpustu':
-          context.panelRoof?'Voda steká po spáde do obvodového profilu':'Voda steká žliabkom lamiel do rámu';
-        diagram.querySelector('[data-drain-pipe]').textContent=pipe?'Vonkajší zvod vedľa stĺpa vyústi na dlažbu':
-          'Profilom a stĺpom skryto k päte stĺpa';
-      }
+      panel.querySelector('[data-scene-pause]').textContent=state.paused?'Spustiť':'Pozastaviť';
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého
          nákresu nepatria. Namiesto ticha to panel povie. */
       const flat=Boolean(context&&context.renderer&&context.renderer!=='webgl-depth');
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres — vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
-        (state.mode==='car'?(()=>{const b=models.car.bounds,m=v=>(v/1000).toFixed(2).replace('.',',');
-          return `${currentPlan.items.length} × Škoda Superb IV · dĺžka ${m(b[3]-b[0])} m vrátane nárazníkov · šírka ${m(b[4]-b[1])} m so zrkadlami`;})():
+        (state.mode==='car'?(()=>{
+          const keys=[...new Set(currentPlan.items.map(i=>i.key))];
+          if(!keys.length)return '';
+          const m=v=>(v/1000).toFixed(2).replace('.',',');
+          return keys.map(k=>{const b=models[k].bounds,n=currentPlan.items.filter(i=>i.key===k).length;
+            return `${n} × ${models[k].label} · ${m(b[3]-b[0])} × ${m(b[4]-b[1])} m so zrkadlami`;}).join(' · ');})():
          state.mode==='bistro'?(()=>{const k=currentPlan.items[0]&&currentPlan.items[0].key;
            return k==='lounge'?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec':
              k==='sofa'?'Posedenie · dvojkreslo, konferenčný stolík, koberec a kvetináč':
@@ -332,7 +370,7 @@
         context&&!context.panelRoof&&context.louverT>.05?'Otvorenými lamelami prší pod strechu.':'';
       const message=[equipment,weather].filter(Boolean).join(' · ');
       if(status.textContent!==message)status.textContent=message;
-      const label=state.mode==='car'?'Auto':state.mode==='bistro'?'Posedenie':'Bez vybavenia';
+      const label=state.mode==='car'?'Auto':state.mode==='bistro'?'Posedenie':'Prázdny';
       panel.querySelector('.sp-scene__summary').textContent=state.weather==='rain'?label+' · dážď':state.weather==='cloud'?label+' · zamračené':label;
     }
     const update=()=>{failure='';if(context)prepare(context);changed();run();};
@@ -347,12 +385,13 @@
     });
     countSelect.addEventListener('change',()=>{state.count=countSelect.value;update();});
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
+    carSelect.addEventListener('change',()=>{state.car=carSelect.value;update();});
     panel.querySelector('[data-scene-intensity]').addEventListener('change',e=>{state.intensity=e.target.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
     function prepare(c) {
       context=c;
-      const pk=JSON.stringify([c.L,c.W,c.H,c.post,c.boxDepth,c.obstacles,state.mode,state.count]);
-      if(pk!==planningKey){currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat));planningKey=pk;}
+      const pk=JSON.stringify([c.L,c.W,c.H,c.post,c.boxDepth,c.obstacles,state.mode,state.count,state.car]);
+      if(pk!==planningKey){currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat),state.car);planningKey=pk;}
       /* Po strate a obnove WebGL kontextu hostiteľ znova kreslí hĺbkovo —
          dážď sa má vrátiť s ním, nie ostať vypnutý do konca návštevy. */
       if(!animates&&c.renderer==='webgl-depth'){animates=true;run();}

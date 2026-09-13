@@ -3,28 +3,61 @@
 Vybavenie je iba náhľad priestoru; nemení cenu ani rozmery prístrešku. Auto sa
 ponúka len pri prístreškoch pre auto, posedenie len pri záhradných pergolách.
 
-## Auto v scéne — Superb IV
+## Autá v scéne
 
-Vlastná vizuálna aproximácia, ktorú si dal vyhotoviť majiteľ webu. **Nie je to
-výrobný CAD ani rozmerový podklad Škody Auto** a nemá slúžiť na overovanie
-skutočných rozmerov vozidla; v scéne stojí preto, aby bolo vidieť, koľko
-miesta pod prístreškom zaberie bežné rodinné auto. Zasklenie, zrkadlá, svetlá,
-mriežka, pneumatiky aj disky sú skutočná geometria, nie nálepky. Obálka
-vrátane zrkadiel 4,94 × 2,13 × 1,48 m. 71 715 trojuholníkov, 826 954 bajtov
-gzip; načítava sa až po zapnutí „Auto".
+Obe autá sú licencované modely tretích strán, nie vlastné aproximácie. V scéne
+stoja preto, aby bolo vidieť, koľko miesta pod prístreškom zaberie skutočné
+auto. Interiér sa pri prevode zahadzuje — cez tmavé sklo ho nevidno a je to
+takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
 
-Dodaná sieť mala na tabuľke nápis `SUPERB`. Ten je vymenený za `KOVERTA`
-skriptom `../tools/refine-car-detail.py`; pôvodné písmená boli samostatný
-tenký plát, takže sa dali odobrať bez zásahu do karosérie. Reprodukovať sa dá
-príkazom `python3 konfigurator/tools/refine-car-detail.py ZDROJ.bin.gz
-konfigurator/scene-assets/superb-iv.bin.gz`.
+### 2017 Hyundai Sonata — „sedan"
 
-### Predchádzajúci generický sedan
+- Autor: m3ika — https://sketchfab.com/m3ika3D
+- Zdroj: https://sketchfab.com/3d-models/2017-hyundai-sonata-1fbb3fb20c274f1a96c03aecedfcd047
+- Licencia: Sketchfab Standard — https://sketchfab.com/licenses (komerčné
+  použitie povolené).
+- Úpravy: glTF prevedený do milimetrov a súradníc konfigurátora; materiály
+  namapované na päticu shadera (matný, lak, sklo, chróm, svietiace sklo);
+  farba diskov, svetlometov a koncoviek vzorkovaná z pôvodných textúr do
+  vrcholov. Lak berie farbu z prepínača, takže sa dá prefarbiť.
+  Mierka je rovnomerná, nastavená tak, aby dĺžka sedela s katalógovým
+  rozmerom 4 855 mm. Obálka 4,86 × 2,09 × 1,52 m vrátane zrkadiel a antény.
+  55 806 trojuholníkov, 684 403 bajtov gzip.
+- Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
+  konfigurator/scene-assets/hyundai-sonata.bin.gz --profile sonata --length 4855`
 
-Do 13. 9. 2026 tu stál vlastný generický model bez značky (34 902
-trojuholníkov). Jeho generátor ostáva v `../tools/build-scene-assets.py`
-a dá sa prestaviť príznakom `--legacy-car`; do `scene-assets` sa už sám
-nevracia.
+### Small city car — „malé auto"
+
+- Autor: terran4627 — https://sketchfab.com/terran4627
+- Zdroj: https://sketchfab.com/3d-models/small-city-car-923feecc25b44f24b1060319bfcf6205
+- Licencia: CC-BY-4.0 — http://creativecommons.org/licenses/by/4.0/ (komerčné
+  použitie povolené, autor musí byť uvedený).
+- Povinné uvedenie zdroja: This work is based on "Small city car"
+  (https://sketchfab.com/3d-models/small-city-car-923feecc25b44f24b1060319bfcf6205)
+  by terran4627 (https://sketchfab.com/terran4627) licensed under CC-BY-4.0
+  (http://creativecommons.org/licenses/by/4.0/)
+- Úpravy: ako vyššie; navyše je celý exteriér v jednej textúre, takže sa
+  lakovaná časť karosérie oddeľuje podľa neutrálneho odtieňa a zvyšok si
+  necháva farbu z textúry. **Mierka nie je rovnomerná**: predloha je na svoju
+  dĺžku neprirodzene široká, a keďže konfigurátor odpovedá na otázku „zmestí
+  sa mi sem auto", rozmery sú stiahnuté na bežné mestské auto
+  3 540 × 1 910 × 1 500 mm vrátane zrkadiel (šírka o 12 % oproti predlohe).
+  7 155 trojuholníkov, 87 108 bajtov gzip.
+- Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
+  konfigurator/scene-assets/city-car.bin.gz --profile city --length 3540
+  --width 1910 --height 1500 --front high`
+
+### Modely, ktoré tu stáli predtým
+
+Do 13. 9. 2026 tu stáli dva vlastné generické modely — sedan pod menom
+„Superb IV" a mestský hatchback. Označovať vlastnú aproximáciu menom
+konkrétnej značky bolo zavádzajúce a kvalitou na licencované modely nestačili,
+takže sú preč. Ich generátor ostáva v `../tools/build-scene-assets.py` za
+príznakom `--legacy-car`; do `scene-assets` sa sám nevracia. S nimi odišiel aj
+skript `../tools/refine-car-detail.py`, ktorý vymieňal nápis na ich ŠPZ.
+
+BMW M2 CS z ponúknutých modelov použiť nemožno: má licenciu
+CC-BY-NC-SA-4.0, ktorá zakazuje komerčné použitie.
 
 ## Lounge zostava
 
