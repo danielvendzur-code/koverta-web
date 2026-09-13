@@ -43,7 +43,7 @@ stolík s podnosom, koberec a kvetináč. Vznikol preto, že plná lounge zostav
 potrebuje 2,4 m naprieč a záhradná pergola ju unesie až na hornom konci
 rozsahu — pri prednastavených 2,5 m šírky ostával v prístrešku jediný bistro
 stolík. Obálka 2,40 × 1,50 m, teda sa zmestí aj medzi stĺpy 2,5 m pergoly.
-11 066 trojuholníkov, 531 168 bajtov gzip.
+11 066 trojuholníkov, 86 672 bajtov gzip.
 
 ## Outdoor Table Chair Set 01
 
