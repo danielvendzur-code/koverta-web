@@ -50,8 +50,13 @@ PROFILES = {
     # Čísla svetiel sedia s menami sietí: 1LFI/1RSI sú smerovky, 1HB/1LB svetlá.
     'sonata': [
         ('car_paint',       1, None),
-        ('material.002',    0, (22, 24, 26)),   # plášť pneumatiky
-        ('material.005',    3, 'texture'),        # disk aj s lúčmi
+        ('material.002',    0, (34, 36, 39)),   # plášť pneumatiky
+        # Disk je hliník, nie potlač. Vzorkovanie textúry po vrchole z neho
+        # spravilo tmavú kašu: lúče sú v predlohe kreslené textúrou a sieť má
+        # na disk len pár desiatok trojuholníkov, takže každý vrchol trafil
+        # medzeru medzi lúčmi. Plný svetlý odtieň na materiáli 3 dá disku
+        # kovový odlesk a tvar mu spraví jeho vlastná geometria.
+        ('material.005',    3, ('spokes', (196, 202, 209), (36, 34, 33))),  # disk s lúčmi
         ('material.001',    4, (236, 150, 46)),   # smerovky
         ('material.006',    4, (242, 244, 248)),  # hlavné svetlomety
         ('material.003',    4, (238, 242, 248)),  # DRL a spiatočka
@@ -151,6 +156,64 @@ class Atlas:
         v = np.mod(uv[:, 1], 1.0) * (h - 1)
         return img[np.rint(v).astype(int), np.rint(u).astype(int)]
 
+def alloy_wheels(q, mask, bright, dark, spokes=5):
+    """Postaviť na kolesá skutočný hliníkový disk.
+
+    Lúče má predloha len v textúre a na samotný disk pripadá sotva sto
+    trojuholníkov na koleso — na to sa vzor nedá ani vzorkovať z textúry, ani
+    namaľovať po trojuholníkoch: v oboch prípadoch z disku ostane tmavá kaša
+    alebo prázdny kotúč. Pôvodný kotúč preto stmavne (je to priehlbeň za
+    lúčmi, kde v skutočnosti vidno brzdu) a pred neho sa postaví vygenerovaná
+    hviezdica: ráfik po obvode, náboj v strede a medzi nimi lúče.
+
+    Vracia (pozície, normály, farby) nových trojuholníkov, alebo None.
+    """
+    tri = q.reshape(-1, 3, 3).mean(axis=1)
+    sel = mask.reshape(-1, 3).all(axis=1)
+    if not sel.any(): return None
+    idx = np.where(sel)[0]
+    xs, ys = tri[idx, 0], tri[idx, 1]
+    split = (xs.min() + xs.max()) / 2
+    pos, nrm, col = [], [], []
+
+    def fan(cx, cz, y, s, r0, r1, a0, a1, steps, colour):
+        """Prstenec alebo výsek medzikružia v rovine kolesa, lícom von."""
+        for i in range(steps):
+            t0 = a0 + (a1 - a0) * i / steps
+            t1 = a0 + (a1 - a0) * (i + 1) / steps
+            p = [(cx + r0 * np.cos(t0), y, cz + r0 * np.sin(t0)),
+                 (cx + r1 * np.cos(t0), y, cz + r1 * np.sin(t0)),
+                 (cx + r1 * np.cos(t1), y, cz + r1 * np.sin(t1)),
+                 (cx + r0 * np.cos(t1), y, cz + r0 * np.sin(t1))]
+            order = [0, 1, 2, 0, 2, 3] if s > 0 else [0, 2, 1, 0, 3, 2]
+            for k in order:
+                pos.append(p[k]); nrm.append((0.0, float(s), 0.0)); col.append(colour)
+
+    for front in (False, True):
+        axle = (xs > split) == front
+        if not axle.any(): continue
+        for right in (False, True):
+            group = idx[axle][(ys[axle] > 0) == right]
+            if not len(group): continue
+            cx = (tri[group, 0].min() + tri[group, 0].max()) / 2
+            cz = (tri[group, 2].min() + tri[group, 2].max()) / 2
+            radius = np.hypot(tri[group, 0] - cx, tri[group, 2] - cz).max()
+            if radius < 40: continue
+            s = 1.0 if right else -1.0
+            # líce disku je to, ktoré je ďalej od stredu auta; hviezdica sadne
+            # 3 mm pred neho, teda ešte hlboko vo vnútri pneumatiky
+            face = q[np.repeat(sel, 3)][:, 1]
+            y = (tri[group, 1].max() + 3) if right else (tri[group, 1].min() - 3)
+            fan(cx, cz, y, s, radius * 0.86, radius, 0, 2 * np.pi, 36, bright)   # ráfik
+            fan(cx, cz, y, s, 0, radius * 0.21, 0, 2 * np.pi, 18, bright)        # náboj
+            for k in range(spokes):                                              # lúče
+                mid = 2 * np.pi * k / spokes
+                fan(cx, cz, y, s, radius * 0.20, radius * 0.87,
+                    mid - 0.20, mid + 0.20, 3, bright)
+    if not pos: return None
+    return (np.array(pos, dtype=np.float64), np.array(nrm, dtype=np.float64),
+            np.array(col, dtype=np.uint8))
+
 def material_of(g, rules, index):
     if index is None: return 0, None, False
     name = (g['materials'][index].get('name') or '').lower()
@@ -173,8 +236,10 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
     rules = PROFILES[profile]
     atlas = Atlas(g, src.parent)
 
-    parts = []                                   # (pos, nrm, col, mat) po vrcholoch
+    parts = []                                   # (pos, nrm, col, mat, tex, rim) po vrcholoch
     dropped = {'layer': 0, 'interior': 0}
+    rim_spec = [None]
+    rim_tone = next((c for k, m, c in rules if isinstance(c, tuple) and c and c[0] == 'spokes'), None)
 
     def walk(idx, parent):
         node = g['nodes'][idx]
@@ -198,17 +263,22 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
                     n3 = ((np.linalg.inv(world[:3, :3]).T @ nrm.T).T)[idxs]
 
                 rgb = None
+                rim = isinstance(col, tuple) and col and col[0] == 'spokes'
                 if col == 'texture' and use_texture and 'TEXCOORD_0' in attrs:
                     rgb = atlas.sample(prim['material'], read_accessor(g, buf, attrs['TEXCOORD_0'])[idxs])
                 if rgb is None:
-                    if col is None or col == 'texture':
+                    if rim:
+                        rimSpec = col
+                        col = rimSpec[1]
+                    elif col is None or col == 'texture':
                         pbr = g['materials'][prim['material']].get('pbrMetallicRoughness', {})
                         base = pbr.get('baseColorFactor', [0.6, 0.6, 0.6, 1])
                         col = tuple(int(round(255 * (v ** (1 / 2.2)))) for v in base[:3])
                     rgb = np.tile(np.array(col, dtype=np.uint8), (len(idxs), 1))
                 parts.append((p3, n3, rgb.astype(np.uint8),
                               np.full(len(idxs), mat, dtype=np.uint8),
-                              col == 'texture'))
+                              col == 'texture', rim))
+                if rim: rim_spec[0] = (prim.get('material'),)
         for child in node.get('children', []): walk(child, world)
 
     for root in g['scenes'][g.get('scene', 0)]['nodes']:
@@ -222,6 +292,7 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
     C = np.concatenate([a[2] for a in parts])
     M = np.concatenate([a[3] for a in parts])
     textured_paint = np.concatenate([np.full(len(a[0]), a[4] and a[3][0] == 1) for a in parts])
+    rim_mask = np.concatenate([np.full(len(a[0]), bool(a[5])) for a in parts])
 
     # Kde lak nesie textúra a nie faktor, treba oddeliť karosériu od zvyšku:
     # prefarbovať sa smie len dominantný neutrálny odtieň, inak by uniform
@@ -284,6 +355,18 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         n[:, 0] = -n[:, 0]
         n[:, 1] = -n[:, 1]
         print('model otočený: predok bol vzadu')
+
+    if rim_tone is not None and rim_mask.any():
+        built = alloy_wheels(q, rim_mask, rim_tone[1], rim_tone[2])
+        # pôvodný kotúč ostáva ako tmavá priehlbeň za lúčmi
+        C[rim_mask] = np.array(rim_tone[2], dtype=np.uint8)
+        if built is not None:
+            wp, wn, wc = built
+            q = np.concatenate([q, wp])
+            n = np.concatenate([n, wn])
+            C = np.concatenate([C, wc])
+            M = np.concatenate([M, np.full(len(wp), 3, dtype=np.uint8)])
+            print('disky: dostavaných', len(wp) // 3, 'trojuholníkov hviezdice')
 
     xyz = np.rint(np.stack([q[:, 0], q[:, 1], np.maximum(0, q[:, 2])], axis=1)).astype('<i2')
     nrm = np.rint(np.clip(n, -1, 1) * 32767).astype('<i2')

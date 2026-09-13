@@ -68,6 +68,19 @@ for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,440
   for(let i=1;i<bounds.length;i++)assert(bounds[i][1]-bounds[i-1][3]>=599,'door clearance lost');
 }
 assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
+// Pod najužší katalógový prístrešok (2,5 m) sa malé auto musí zmestiť. Medzi
+// stĺpmi tam ostáva 2,2 m svetla a mestské auto so zrkadlami má 1,91 m —
+// pohodlný odstup na dvere to nie je, ale auto tam stojí a náhľad to má
+// ukázať aj s tým, koľko po bokoch naozaj ostane.
+{
+  const tight=plan({L:5200,W:2500,H:2398,post:150,boxDepth:0},'car','1',null,'auto');
+  assert.equal(tight.items.length,1,'pod najužší prístrešok sa malé auto musí zmestiť');
+  assert.equal(tight.items[0].key,'city');
+  assert(tight.clearance.beside>=140,`vedľa auta ostalo len ${tight.clearance.beside} mm`);
+  assert.equal(tight.clearance.roomy,false,'pri 2,5 m sa nemá tváriť, že je na dvere miesto');
+  const b=footprint(tight.items[0]);
+  assert(b[1]>=100&&b[3]<=2400,'auto vyčnieva spod strechy');
+}
 // Kde sa sedan nezmestí, má nastúpiť malé auto — o tom celá ponuka dvoch
 // veľkostí je. Prístrešok kratší než sedan, ale dlhší než mestské auto.
 {

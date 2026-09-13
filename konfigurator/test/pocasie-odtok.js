@@ -105,10 +105,23 @@ const HELPERS = () => {
     await page.getByRole('button', { name: on ? 'Dážď' : 'Zamračené', exact: true }).click();
     await page.waitForTimeout(600);
   };
+  /* Pauza sa nečaká na čas, ale na scénu. Pevných 500 ms na pomalom stroji
+     nestačilo: snímok sa čítal, kým dážď ešte dobiehal, a dve „statické"
+     snímky sa potom líšili o kvapky v pohybe — z toho vychádzali náhodné
+     stovky bodov „presakovania" tam, kde je strecha celá. Čaká sa, kým scéna
+     ohlási zastavenú animáciu a kým sa prestanú hýbať hodiny dažďa. */
   const pause = async (page) => {
     const button = page.getByRole('button', { name: 'Pozastaviť', exact: true });
     if (await button.count()) await button.click();
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => window.SP_TEST.scene().animating === false, null, { timeout: 10_000 })
+      .catch(() => {});
+    await page.waitForFunction(() => {
+      const now = window.SP_TEST.scene().clock;
+      const same = window.__kvClock === now;
+      window.__kvClock = now;
+      return same;
+    }, null, { polling: 120, timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(120);
   };
   const resume = async (page) => {
     const button = page.getByRole('button', { name: 'Spustiť', exact: true });
@@ -227,6 +240,16 @@ const HELPERS = () => {
       if (q.box[5] < deck - 40) bad.push(`film s vodou je pod krytinou: ${JSON.stringify(q.box)} proti ${deck}`);
       if (q.box[2] > scene.roof.z + 30) bad.push(`film s vodou sa vznáša nad strechou: ${JSON.stringify(q.box)}`);
       if (q.box[3] > gutter.x0 + 1) bad.push('voda po streche má končiť pri žľabe, nie za ním');
+    }
+    /* Lemovanie obchádza strechu zo všetkých štyroch strán a voda po ňom
+       netečie — podteká ho. Film sa preto musí zastaviť pred ním na každej
+       hrane, nielen na odkvapovej. Kým sa pruhy kreslili cez celú šírku,
+       tiekli po bočnom lemovaní. */
+    const fascia = acc && acc.fascia, hull = acc && acc.assembly;
+    if (fascia && hull) for (const q of film) {
+      const overFlashing = q.box[0] < fascia.side - 1 || q.box[3] > hull.xMax - fascia.side + 1
+        || q.box[1] < fascia.side - 1 || q.box[4] > hull.yMax - fascia.side + 1;
+      if (overFlashing) bad.push(`voda tečie po lemovaní: ${JSON.stringify(q.box)}`);
     }
     if (run.length < 1) bad.push('v žľabe má byť hladina');
     for (const q of run) {
