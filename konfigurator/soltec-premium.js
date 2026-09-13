@@ -1676,6 +1676,10 @@
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, zoom: manualZoom, width: widthMM(), length: lengthMM(), height: state.height,
+            /* Poloha kamery. Bez nej sa nedá overiť, či ťah myšou model naozaj
+               otočil — a test plynulosti to overiť musí: keď ťah zhltne
+               ovládanie na kresbe, nekreslí sa nič a rýchlosť vyjde skvele. */
+            view: { az: view.az, el: view.el },
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
@@ -1700,6 +1704,10 @@
            reveal a hidden steel member through another opaque member. */
         let depthPainter = null, cachedGeometry = null, sceneLife = null;
         let motionDetail = false, detailTimer = 0;
+        /* Kým je prst alebo tlačidlo myši dole, model sa hýbe — o tom netreba
+           rozhodovať podľa času. Časovač doostrenia sa preto počas ťahania
+           vôbec nespúšťa; nasadí sa až po pustení. */
+        let interacting = false;
         /* Rozlíšenie počas otáčania sa neurčuje natvrdo. Kým stroj stíha,
            kreslí sa aj v pohybe nadštandardne a hrany ostávajú rovné; až keď
            snímok trvá dlho, klesne na úsporné. Pevný nízky násobok znamenal,
@@ -1711,8 +1719,28 @@
           if (motionTimes.length < 6) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
           const median = sorted[sorted.length >> 1];
-          const want = median > 26 ? 1 : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
+          /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+             karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
+             lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
+             kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
+             tieto stupne nikdy nespadne. */
+          const want = median > 90 ? 0.55 : median > 45 ? 0.75 : median > 26 ? 1
+            : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
           if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
+        };
+        /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
+           lebo z neho zákazník číta tvar profilu — ale ani on nesmie zabiť
+           slabý stroj. Násobok je oproti natívnym pixelom displeja, nie
+           oproti CSS: na 2× displeji je 2,0 dvojnásobné prevzorkovanie. */
+        let stillScale = 2.2;
+        const stillTimes = [];
+        const noteStill = (ms) => {
+          stillTimes.push(ms); if (stillTimes.length > 6) stillTimes.shift();
+          if (stillTimes.length < 3) return;
+          const sorted = stillTimes.slice().sort((a, b) => a - b);
+          const median = sorted[sorted.length >> 1];
+          const want = median > 320 ? 1.3 : median > 180 ? 1.7 : median < 90 ? 2.2 : 2;
+          if (want !== stillScale) { stillScale = want; stillTimes.length = 0; }
         };
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
@@ -1756,6 +1784,11 @@
               scheduleStage();
             });
             depthPainter = { gl, program, surface, cssWidth: 0, cssHeight: 0,
+              /* Najväčší buffer, aký ovládač unesie. Pýtame sa naň raz pri
+                 vzniku kontextu: `gl.getParameter` je synchrónna otázka do
+                 ovládača a volaná na každom snímku zrazila kreslenie z 17 ms
+                 na stovky. */
+              maxSide: Math.max(1024, Math.min(8192, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) || 4096)),
               position: gl.getAttribLocation(program, 'position'), color: gl.getAttribLocation(program, 'color'), pattern: gl.getAttribLocation(program, 'pattern'), texUV: gl.getAttribLocation(program, 'texUV') };
             const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
@@ -1769,7 +1802,7 @@
             };
             logo.src=new URL('koverta-decal.svg',document.querySelector('script[src*="soltec-premium.js"]').src).href;
           }
-          const { gl, program, surface, position, color, pattern, texUV } = depthPainter;
+          const { gl, program, surface, position, color, pattern, texUV, maxSide } = depthPainter;
           const { VW, VH, scale, ox, oy, DIST } = camera;
           /* Kreslí sa nad natívnym rozlíšením displeja, nie nad CSS pixelmi.
              Pevný dvojnásobok znamenal na 2× displeji presne natívne rozlíšenie
@@ -1779,12 +1812,21 @@
              ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
              displeji nevyrobilo buffer, ktorý ovládač odmietne. */
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-          let ratio = motionDetail ? Math.max(1, dpr * motionScale * 0.9) : Math.max(2.5, dpr * 1.8);
-          const MAX_PIXELS = 7.2e6;
+          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9) : Math.max(2.5, dpr * stillScale);
+          /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
+             stlačilo zastavený snímok na sotva 1,2-násobok natívneho
+             rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
+             presne tá „rasterizácia". Rozhodovať má hardvér, nie odhad:
+             ovládač povie, aký veľký buffer unesie, a plošný strop ostáva
+             len ako poistka proti pomalému kresleniu. */
+          const MAX_PIXELS = 1.4e7;
           const cssWidth = Math.max(1, canvas.clientWidth);
           const cssHeight = Math.max(1, canvas.clientHeight);
           const over = (cssWidth * ratio) * (cssHeight * ratio) / MAX_PIXELS;
           if (over > 1) ratio /= Math.sqrt(over);
+          const fits = Math.min(1, maxSide / Math.max(1, cssWidth * ratio),
+                                   maxSide / Math.max(1, cssHeight * ratio));
+          if (fits < 1) ratio *= fits;
           const width = Math.max(1, Math.round(cssWidth * ratio));
           const height = Math.max(1, Math.round(cssHeight * ratio));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
@@ -1892,8 +1934,9 @@
 
         const drawStage = () => {
           const drawStart = (window.performance && performance.now) ? performance.now() : 0;
+          const moving = motionDetail;
           try { return drawStageInner(); }
-          finally { if (drawStart && motionDetail) noteFrame(performance.now() - drawStart); }
+          finally { if (drawStart) (moving ? noteFrame : noteStill)(performance.now() - drawStart); }
         };
         const drawStageInner = () => {
           lastKvAccessoryGeometry = null;
@@ -5405,7 +5448,13 @@
           // at full detail once input stops. No part or pose changes on settle.
           motionDetail = true;
           window.clearTimeout(detailTimer);
-          detailTimer = window.setTimeout(() => {
+          /* Časovač meria čas, ale rozhodovať má vstup. Na pomalom stroji trvá
+             snímok dlhšie než tých 160 ms, takže časovač stihol dobehnúť medzi
+             dvoma pohybmi myši, prepol kreslenie späť na plné rozlíšenie a
+             ďalší snímok bol ešte pomalší — a ten ešte pomalší. Otáčanie tak
+             bežalo celé v ostrom rozlíšení, presne naopak, než sa zamýšľalo.
+             Kým je ukazovateľ dole, doostrenie sa nenaplánuje vôbec. */
+          if (!interacting) detailTimer = window.setTimeout(() => {
             motionDetail = false;
             drawStage();
           }, 160);
@@ -6040,7 +6089,7 @@
             stopCamera();
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
-            dragging = true; lastX = e.clientX; lastY = e.clientY;
+            dragging = true; interacting = true; lastX = e.clientX; lastY = e.clientY;
             /* Zachytenie ukazovateľa je pohodlie, nie podmienka: keď prehliadač
                ukazovateľ medzitým uvoľní, ťahanie musí ísť ďalej, nie spadnúť. */
             try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
@@ -6074,6 +6123,13 @@
             orbitPointers.delete(e.pointerId);pinchDistance=0;
             dragging=orbitPointers.size>0;
             if(dragging){const p=[...orbitPointers.values()][0];lastX=p[0];lastY=p[1];}
+            else {
+              /* Ukazovateľ je hore, takže teraz sa smie naplánovať ostrý
+                 snímok — počas ťahania sa nesmel. */
+              interacting = false;
+              window.clearTimeout(detailTimer);
+              detailTimer = window.setTimeout(() => { motionDetail = false; drawStage(); }, 160);
+            }
             try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
           };
           stageEl.addEventListener('pointerup', stop);

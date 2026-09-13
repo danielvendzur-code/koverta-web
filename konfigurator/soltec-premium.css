@@ -1543,20 +1543,69 @@
 #SoltecPremium .sp-scene-dock > .sp-scene {
   position: absolute; left: 1.2rem; bottom: 1.2rem; width: min(30rem, calc(100% - 2.4rem));
   margin: 0; border: 1px solid #dfe3de; border-radius: 12px;
-  background: rgba(255,255,253,.94); backdrop-filter: blur(6px);
+  /* Bez `backdrop-filter`. Karta leží nad plátnom, ktoré sa pri otáčaní
+     prekresľuje, a rozmazanie podkladu by kompozitor musel počítať znova ku
+     každému snímku. Pri 97 % krytí je rozdiel nevidno. */
+  background: rgba(255,255,253,.97);
   box-shadow: 0 4px 18px #26332f14;
 }
-#SoltecPremium .sp-scene-dock > .sp-scene:not([open]) { width: auto; }
-#SoltecPremium .sp-scene-dock > .sp-scene[open] .sp-scene__body { max-height: min(46vh, 34rem); overflow-y: auto; overscroll-behavior: contain; }
+#SoltecPremium .sp-scene-dock > .sp-scene { transition: width .18s ease; }
+/* Zbalená karta má vlastnú pevnú šírku, nie `auto`: pri `auto` by ju
+   prehliadač musel odvodzovať z obsahu zakaždým, keď sa vedľa nej zmení
+   rozmer plátna. */
+#SoltecPremium .sp-scene-dock > .sp-scene.is-peek { width: min(22rem, calc(100% - 2.4rem)); }
+#SoltecPremium .sp-scene-dock > .sp-scene .sp-scene__body {
+  max-height: min(46vh, 34rem); overflow-y: auto; overscroll-behavior: contain;
+  transition: max-height .22s ease, opacity .2s ease .04s, padding .22s ease;
+}
+/* Pootvorený stav. Telo sa nezbalí zmiznutím, ale zrolovaním, takže sa dá
+   animovať a myš má na čom ostať. Rolovanie sa zbalenému telu odoberá, inak
+   by prúžok chytal koliesko myši.
+
+   `visibility: hidden` navyše vyradí zbalené telo z kreslenia: samotné
+   `max-height: 0; opacity: 0` ho síce schová, ale prehliadač ho ďalej skladá
+   ako priesvitnú vrstvu nad plátnom. Prepína sa až po dobehnutí zbaľovania
+   (`0s linear .18s`), aby sa animácia mala na čom odohrať, a späť okamžite,
+   aby sa telo pri otvorení neobjavilo neskoro. */
+#SoltecPremium .sp-scene-dock > .sp-scene.is-peek .sp-scene__body {
+  max-height: 0; padding-block: 0; opacity: 0; overflow: hidden; visibility: hidden;
+  transition: max-height .18s ease, opacity .14s ease, padding .18s ease,
+              visibility 0s linear .18s;
+}
+/* Myš kartu otvorí, dotyk nie — tam ju otvorí ťuknutie na hlavičku.
+   Klávesnica ju otvorí zaostrením, aby sa dala prejsť tabulátorom. */
+@media (hover: hover) and (pointer: fine) {
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:focus-within { width: min(30rem, calc(100% - 2.4rem)); }
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover .sp-scene__body,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:focus-within .sp-scene__body {
+    max-height: min(46vh, 34rem); padding-block: 0 1.2rem; opacity: 1; overflow-y: auto;
+    visibility: visible;
+    transition: max-height .22s ease, opacity .2s ease .04s, padding .22s ease,
+                visibility 0s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #SoltecPremium .sp-scene-dock > .sp-scene,
+  #SoltecPremium .sp-scene-dock > .sp-scene .sp-scene__body { transition: none; }
+}
 @media(max-width:749px) {
   /* Na telefóne je plátno nízke — plávajúca karta by na ňom stála na modeli.
      Vracia sa do toku pod scénu, kde má vlastnú šírku aj miesto. */
   #SoltecPremium .sp-scene-dock { height: auto; }
-  #SoltecPremium .sp-scene-dock > .sp-scene {
+  #SoltecPremium .sp-scene-dock > .sp-scene,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek {
     position: static; width: auto; margin: 0; border: 0; border-top: 1px solid var(--sp-line);
     border-radius: 0; background: #fff; backdrop-filter: none; box-shadow: none;
   }
   #SoltecPremium .sp-scene__summary { float: none; display: block; margin: .5rem 0 0 1.7rem; }
+  /* Na telefóne karta na modeli nestojí — leží pod ním, takže sa nemá pred
+     čím skrývať a ostáva otvorená. Pootvorený stav je liek na prekrytie
+     kresby, ktoré tu nehrozí. */
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek .sp-scene__body {
+    max-height: none; padding-block: 0 1.2rem; opacity: 1; overflow: visible;
+    visibility: visible; transition: none;
+  }
 }
 /* Lišta priblíženia je ovládanie, nie plachta cez model. Samotný rámik ani
    percentá nesmú brať ťah myšou — inak sa model v mieste, kde lišta plávala,

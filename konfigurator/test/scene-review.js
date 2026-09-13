@@ -10,7 +10,14 @@ const {prepareContext}=require('./browser-qa');
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     for(const family of ['koverta','carport','bio','canopy']) {
       await page.goto('http://127.0.0.1:8901/konfigurator/?page='+family,{waitUntil:'load'});
-      const consent=page.getByRole('button',{name:'Iba nevyhnutné',exact:true});if(await consent.isVisible())await consent.click();
+      /* Lišta súhlasu sa pridáva až v `requestAnimationFrame`, takže hneď po
+         `load` ešte nemusí byť v DOM — a keď sa objaví neskôr, sadne na spodok
+         okna a prekryje ovládanie na kresbe. Preto sa na ňu počká, klikne a počká
+         sa, kým naozaj zmizne. */
+      const consent=page.getByRole('button',{name:'Iba nevyhnutné',exact:true});
+      await consent.waitFor({state:'visible',timeout:10000}).catch(()=>{});
+      if(await consent.count()&&await consent.isVisible())await consent.click();
+      await page.locator('.kv-suhlas').waitFor({state:'detached',timeout:10000}).catch(()=>{});
       const stage=page.locator('[data-sp-canvas]').first();await stage.scrollIntoViewIfNeeded();
       await page.locator('[data-sp-cfg]').first().dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse'});
       await page.waitForFunction(()=>window.SP_TEST?.scene&&document.querySelector('[data-sp-canvas]').dataset.renderer==='webgl-depth');
@@ -20,7 +27,9 @@ const {prepareContext}=require('./browser-qa');
           e.value=String(Math.min(Number(e.max)||value,Math.max(Number(e.min)||0,value)));
           e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));
         }
-        document.querySelector('.sp-scene').open=true;
+        /* Karta je na kresbe pootvorená a otvára ju hover; test ju rozbalí
+           natrvalo, aby sa dalo klikať na jej ovládanie. */
+        const card=document.querySelector('.sp-scene');card.open=true;card.classList.remove('is-peek');
       },{garden:family==='bio'||family==='canopy'});
       const car=family==='koverta'||family==='carport';
       await page.locator('[data-scene-mode="'+(car?'car':'bistro')+'"]').click();
