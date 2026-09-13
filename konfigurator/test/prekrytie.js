@@ -129,7 +129,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
       }
       window.SP_TEST.setView(first.az,first.el); window.SP_TEST.redraw();
     }, first);
-    await p.locator('[data-sp-canvas]').screenshot({path:'qa-artifacts/overlap-first.png'});
+    await p.locator('.sp-stage').first().screenshot({path:'qa-artifacts/overlap-first.png'});
     console.log('zlých pohľadov spolu:', zle.length);
   } else {
     console.log('lemovanie nikde neprekryté (180 pohľadov × ~270 bodov)');

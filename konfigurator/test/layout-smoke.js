@@ -34,6 +34,9 @@ function assert(condition, message) {
     const page = await desktop.newPage();
     page.on('pageerror', e => errors.push('desktop pageerror: ' + e.message));
     page.on('console', msg => { if (msg.type() === 'error') errors.push('desktop console: ' + msg.text()); });
+    /* „Failed to load resource" bez adresy sa nedá vyšetriť. Zlyhanú
+       požiadavku preto zaznamenávame aj s URL a dôvodom. */
+    page.on('requestfailed', r => errors.push('desktop request: ' + (r.failure() ? r.failure().errorText : 'unknown') + ' ' + r.url()));
 
     await page.goto('http://127.0.0.1:8901/', { waitUntil: 'load', timeout: 60000 });
     await dismissConsent(page);
@@ -142,7 +145,20 @@ function assert(condition, message) {
         cards,
         phone: css('.kv-bar__tel'),
         burger: css('.kv-burger'),
-        heroRating: css('.kh-hero__rating')
+        heroRating: (() => {
+          const el = document.querySelector('.kh-hero__rating');
+          if (!el) return null;
+          const s = getComputedStyle(el), r = el.getBoundingClientRect();
+          const score = el.querySelector('strong');
+          const stars = [...el.querySelectorAll('.k-stars svg')]
+            .map(v => v.getBoundingClientRect().width);
+          return {
+            display: s.display, visibility: s.visibility, width: r.width, height: r.height,
+            score: score ? score.textContent.trim() : null,
+            scoreWidth: score ? score.getBoundingClientRect().width : 0,
+            stars
+          };
+        })()
       };
     });
     console.log('MOBILE_METRICS ' + JSON.stringify(mob));
@@ -152,7 +168,17 @@ function assert(condition, message) {
     assert(mob.cards.length === 2 && mob.cards[1].y > mob.cards[0].bottom, 'Brand cards do not stack on mobile');
     assert(mob.phone && mob.phone.display === 'none', 'Main-nav phone should not consume mobile header space');
     assert(mob.burger && mob.burger.display !== 'none' && mob.burger.width > 30, 'Mobile burger is missing');
-    assert(mob.heroRating && mob.heroRating.display !== 'none' && mob.heroRating.width > 120, 'Mobile hero rating is missing');
+    /* Na mobile je hodnotenie zámerne holý riadok — značka Google, číslo a päť
+       hviezd, bez rámu a bez popisky. Meria sa preto, či je naozaj vidieť to,
+       čo návštevníka presviedča, nie či riadok presiahne nejakú šírku. */
+    assert(mob.heroRating && mob.heroRating.display !== 'none' && mob.heroRating.visibility === 'visible',
+      'Mobile hero rating is missing');
+    assert(mob.heroRating.height >= 28 && mob.heroRating.width >= 100,
+      'Mobile hero rating collapsed: ' + mob.heroRating.width + '×' + mob.heroRating.height);
+    assert(/^5[.,]0$/.test(mob.heroRating.score || '') && mob.heroRating.scoreWidth > 10,
+      'Mobile hero rating does not show the score: ' + mob.heroRating.score);
+    assert(mob.heroRating.stars.length === 5 && mob.heroRating.stars.every(w => w >= 10),
+      'Mobile hero rating does not show five stars: ' + JSON.stringify(mob.heroRating.stars));
     await mobile.close();
 
     // Product-page regression: all category heroes must keep the same layout,

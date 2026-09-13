@@ -22,7 +22,11 @@ takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
   vrcholov. Lak berie farbu z prepínača, takže sa dá prefarbiť.
   Mierka je rovnomerná, nastavená tak, aby dĺžka sedela s katalógovým
   rozmerom 4 855 mm. Obálka 4,86 × 2,09 × 1,52 m vrátane zrkadiel a antény.
-  55 806 trojuholníkov, 684 403 bajtov gzip.
+  Disky sú dostavané: predloha má lúče len v textúre a na samotný kotúč
+  pripadá sotva sto trojuholníkov na koleso, takže sa vzor nedal ani
+  vzorkovať, ani namaľovať po trojuholníkoch. Pôvodný kotúč ostáva ako tmavá
+  priehlbeň a pred ním stojí vygenerovaná päťlúčová hviezdica s ráfikom a
+  nábojom. 56 358 trojuholníkov, 687 491 bajtov gzip.
 - Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
   konfigurator/scene-assets/hyundai-sonata.bin.gz --profile sonata --length 4855`
 
