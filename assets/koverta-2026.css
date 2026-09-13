@@ -15789,19 +15789,48 @@ body:not(.k-home) .k .kh-hero__chip strong {
 /* Final hero controls: the secondary action stays visible without competing with the offer. */
 body:not(.k-home) .k .kh-hero .k-btn--line,
 body:not(.k-home) .k .kh-hero__actions .k-btn--line {
-  background:rgba(63,71,74,.9); border-color:rgba(255,255,255,.52); color:#fff;
+  background:rgba(232,234,232,.94); border-color:rgba(255,255,255,.78); color:var(--k-ink);
 }
 body:not(.k-home) .k .kh-hero .k-btn--line:hover,
 body:not(.k-home) .k .kh-hero .k-btn--line:focus-visible,
 body:not(.k-home) .k .kh-hero__actions .k-btn--line:hover,
 body:not(.k-home) .k .kh-hero__actions .k-btn--line:focus-visible {
-  background:#535d60; border-color:#fff; color:#fff;
+  background:var(--k-amber); border-color:var(--k-amber); color:var(--k-ink);
 }
 body:not(.k-home) .k .kh-hero__chip strong { font-size:clamp(16px,1.25vw,19px); }
 body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 .k .k-band { padding-block:clamp(48px,5.2vw,76px); }
 .k .k-head { margin-bottom:clamp(26px,3.1vw,42px); }
+
+/* Carport construction: drawing and layer list fill the section without a duplicate photo. */
+.k .kh-zost--carport { grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr); }
+.k .kh-zost--carport .kh-zost__stlpec,
+.k .kh-zost--carport .kh-zost__panel { height:100%; }
+.k .kh-mat__media--roof img { object-position:center top; }
+
+/* Realisations menu begins directly below its trigger and keeps a continuous hover area. */
+@media (min-width:1024px) {
+  .kv-header .kv-nav__item--uzke { position:relative; }
+  .kv-header .kv-nav__item--uzke .kv-mega--uzke.kv-mega--real.kv-mega--batch5 {
+    left:0; right:auto; top:calc(100% - 1px);
+  }
+}
+@media (max-width:899px) {
+  .k .kh-zost--carport { grid-template-columns:1fr; }
+}
+
+/* Compact contact intro: breadcrumb remains on top, title and lead share the width. */
+.k .kh-hlava { padding-top:clamp(22px,2.4vw,34px); padding-bottom:clamp(24px,2.8vw,38px); }
+.k .kh-hlava__intro {
+  display:grid; grid-template-columns:minmax(240px,.72fr) minmax(360px,1fr);
+  align-items:end; gap:clamp(28px,5vw,80px);
+}
+.k .kh-hlava__nadpis { margin:0; }
+.k .kh-hlava__lead { justify-self:end; max-width:58ch; }
+.k .kh-rychlo { margin-top:clamp(20px,2.2vw,30px); }
 @media (max-width:619px) {
+  .k .kh-zost--carport { grid-template-columns:1fr; }
+  .k .kh-hlava__intro { grid-template-columns:1fr; gap:12px; }
   body:not(.k-home) .k .kh-hero__chip { min-height:52px; font-size:9px; line-height:1.25; }
   body:not(.k-home) .k .kh-hero__chip strong { font-size:14px; }
 }
