@@ -9,7 +9,7 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    car: { file:'touring-sedan.bin.gz', bounds:[-74,-1040,1,4826,1040,1528] },
+    car: { file:'touring-sedan.bin.gz', bounds:[-74,-1020,1,4826,1020,1475] },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] }
   };
@@ -18,7 +18,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-3',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-4',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -376,8 +376,14 @@
           float fres=pow(1.-max(0.,dot(n,v)),4.);
           /* Odraz berie tmavú oblohu: vybavenie stojí pod strechou, nie na
              lúke. Kým sklo zrkadlilo jasnú oblohu, čítalo sa ako plech. */
-          if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);vec3 env=mix(vec3(.08,.09,.11),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
-            result=mix(result,env,(kind>1.5&&kind<2.5?.30:.15)+fres*.22);}
+          /* Lak nie je zrkadlo. Kým sa odraz miešal takto silno a spodná
+             obloha bola takmer čierna, každá zvislá plocha karosérie stmavla
+             pri okraji do čierna a strecha auta vyzerala ako tmavá kupola
+             nasadená na svetlé telo. Sklo si silný odraz ponecháva. */
+          if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);
+            bool see=kind>1.5&&kind<2.5;
+            vec3 env=mix(vec3(see?.08:.20,see?.09:.21,see?.11:.23),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
+            result=mix(result,env,(see?.30:.11)+fres*(see?.22:.12));}
           result+=spec*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
           if(kind>3.5&&kind<4.5)result=mix(result,base,.7);
           if(kind>4.5&&kind<5.5){float weave=sin(world.x*1.8)*sin(world.y*1.7+world.z*1.6);result=base*l*(.99+.01*weave);}

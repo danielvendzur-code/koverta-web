@@ -85,9 +85,9 @@ paint=(150,157,161); glass=(28,38,46); rubber=(26,28,30); alloy=(178,185,191)
 chrome=(198,205,210); trim=(24,26,28); lens=(232,238,242); tail=(146,30,32)
 inner=(44,47,51); floorpan=(36,39,42); mesh_dark=(26,29,32)
 
-LEN=4760; FA=960; RA=3870; WR=372; TW=126; ARCH=410
-COWL=1640; ROOF_F=2320; ROOF_R=3400; DECK_R=4040
-BPILLAR=(2650,2724)
+LEN=4760; FA=960; RA=3870; WR=372; TW=126; ARCH=436
+COWL=1614; ROOF_F=2258; ROOF_R=3624; DECK_R=4186
+BPILLAR=(2688,2762)
 
 def curve(x,xs,ys): return float(np.interp(x,xs,ys))
 
@@ -130,8 +130,8 @@ def crease(x):
 
 def deck(x):
     """Top of the bodyshell: bonnet, belt line, boot lid."""
-    return curve(x,[0,60,200,600,1100,COWL,2200,3200,DECK_R,4400,4620,LEN],
-                   [836,860,890,924,944,956,960,960,1004,1016,1000,952])
+    return curve(x,[0,60,200,600,1100,COWL,2200,3200,DECK_R,4340,4560,LEN],
+                   [802,832,872,916,940,962,992,996,1002,1004,976,904])
 
 def dhw(x):
     """Half width of that top surface."""
@@ -139,7 +139,7 @@ def dhw(x):
                    [510,572,640,734,816,866,876,872,856,818,754,688])
 
 def crown(x):
-    return curve(x,[0,600,1400,COWL,DECK_R,4400,LEN],[10,22,30,26,22,18,10])
+    return curve(x,[0,600,1400,COWL,DECK_R,4400,LEN],[9,15,19,18,16,13,8])
 
 def section(x):
     """Half section as splined patches: smooth where a car is smooth, with a
@@ -147,19 +147,20 @@ def section(x):
     crease and the deck edge — those four breaks are the highlights that make
     a body panel read as sheet metal."""
     w=hw(x);s=sill(x);c=crease(x);d=deck(x);t=dhw(x);k=crown(x);h=max(1.,d-c)
-    f=s+(c-s)*.58
+    f1=s+(c-s)*.23;f2=s+(c-s)*.66
     return [
-        [(0,172),(w*.42,168),(w*.74,s-56),(w*.86,s-20)],                     # underbody
-        [(w*.86,s-20),(w*.926,s-6),(w*.947,s)],                              # sill lip
-        [(w*.947,s),(w*.984,s+(f-s)*.44),(w*.998,f-8),(w,f)],                # lower door
-        [(w,f),(w*.997,f+(c-f)*.40),(w*.999,f+(c-f)*.76),(w,c)],             # upper door
-        [(w,c),(w*.993,c+h*.24),(w*.973,c+h*.54),(t+24,d-54),(t,d-8)],       # shoulder
-        [(t,d-8),(t*.90,d+k*.30),(t*.58,d+k*.76),(0,d+k)],                   # deck
+        [(0,172),(w*.40,168),(w*.72,s-58),(w*.86,s-22)],                     # underbody
+        [(w*.86,s-22),(w*.912,s-7),(w*.928,s)],                              # rocker, tucked under
+        [(w*.928,s),(w*.966,s+(f1-s)*.52),(w*.988,f1-7),(w*.993,f1)],        # rocker to the low line
+        [(w*.992,f1),(w*.998,f1+(f2-f1)*.44),(w,f1+(f2-f1)*.80),(w,f2)],     # lower door
+        [(w,f2),(w*.998,f2+(c-f2)*.46),(w*.994,f2+(c-f2)*.80),(w*.986,c)],   # upper door
+        [(w*.986,c),(w*.974,c+h*.26),(w*.946,c+h*.56),(t+22,d-52),(t,d-8)],  # shoulder
+        [(t,d-8),(t*.95,d+k*.58),(t*.64,d+k*.93),(0,d+k)],                   # deck
     ]
 
 def flank_y(x,z):
     """Half width of the painted flank at a height, for trims that must sit on it."""
-    pts=spline(section(x)[2],10)+spline(section(x)[3],10)+spline(section(x)[4],14)
+    pts=spline(section(x)[2],8)+spline(section(x)[3],8)+spline(section(x)[4],8)+spline(section(x)[5],12)
     best=min(pts,key=lambda p:abs(p[1]-z))
     return best[0]
 
@@ -206,10 +207,10 @@ XS=sorted(x for x in _xs if 0<=x<=LEN)
 FRONT=[x for x in XS if x<=COWL];CABIN=[x for x in XS if COWL<=x<=DECK_R];REAR=[x for x in XS if x>=DECK_R]
 
 for sign in (-1,1):
-    build(XS,[(floorpan,0,3),(trim,0,2),(paint,1,4),(paint,1,4),(paint,1,6),None],sign)
-    build(FRONT,[None]*5+[(paint,1,6)],sign)
-    build(CABIN,[None]*5+[(inner,0,3)],sign)
-    build(REAR,[None]*5+[(paint,1,6)],sign)
+    build(XS,[(floorpan,0,3),(trim,0,2),(paint,1,3),(paint,1,4),(paint,1,4),(paint,1,6),None],sign)
+    build(FRONT,[None]*6+[(paint,1,6)],sign)
+    build(CABIN,[None]*6+[(inner,0,3)],sign)
+    build(REAR,[None]*6+[(paint,1,6)],sign)
 
 for sign in (-1,1):
     xs=[x for x in XS if x>=DECK_R-40]
@@ -220,16 +221,16 @@ def front_tint(z,v):
     if 236<=z<=372: return (mesh_dark,0,34)               # lower intake
     if 424<=z<=642: return (mesh_dark,0,44)               # main grille
     if 300<=z<=404 and v>.72: return ((226,228,222),0,10) # number plate
-    if 700<=z<=734 and v<.46: return (lens,4,10)          # headlamp signature
-    if 666<=z<=776 and v<.5: return ((40,44,48),0,12)     # lamp housing
+    if 668<=z<=744 and v<.52: return (lens,4,12)          # headlamp lens
+    if 636<=z<=782 and v<.56: return ((38,42,46),0,16)    # lamp housing, set back
     return (paint,1,0)
 
 def rear_tint(z,v):
     if z<210: return (floorpan,0,0)
     if 232<=z<=330: return (mesh_dark,0,26)               # diffuser
     if 596<=z<=712 and v>.70: return ((226,228,222),0,8)  # plate recess
-    if 844<=z<=898: return (tail,4,10)                    # tail signature
-    if 818<=z<=930: return ((54,27,29),0,12)
+    if 824<=z<=886: return (tail,4,12)                    # full-width tail bar
+    if 800<=z<=910: return ((50,25,27),0,16)
     return (paint,1,0)
 
 endcap(0,-1,74,front_tint)
@@ -241,35 +242,36 @@ for axle in (FA,RA):
     for sign in (-1,1):
         grid=[]
         for x in xs:
-            w=hw(x)*.947;s=sill(x);row=[]
+            w=hw(x)*.928;s=sill(x);row=[]
             for j in range(5):
                 t=j/4.
                 row.append([x,sign*(w-10-t*250),s-4-t*44*(1-t*.6)])
             grid.append(row)
         mesh(grid,(42,45,48),0,flip=sign<0)
-        edge=[[x,sign*(hw(x)*.947-260),sill(x)-30] for x in xs]
+        edge=[[x,sign*(hw(x)*.928-260),sill(x)-30] for x in xs]
         mesh([edge,[[p[0],p[1],184] for p in edge]],(34,37,40),0,flip=sign>0)
 
-# Rolled 12 mm wheel-arch lip: a small formed edge seated on the opening.
+# Wheel-arch lip. A shallow rolled edge disappeared at any distance; this one
+# is a formed flare that catches light and gives the opening a rim.
 for axle in (FA,RA):
     xs=[x for x in XS if abs(x-axle)<ARCH+120 and sill(x)>255]
     for sign in (-1,1):
-        mesh([[[x,sign*(hw(x)*.947+off),sill(x)+dz] for off,dz in [(-2,0),(3,2),(5,9),(2,15)]] for x in xs],paint,1,flip=sign>0)
+        mesh([[[x,sign*(hw(x)*.928+off),sill(x)+dz] for off,dz in [(-3,0),(6,3),(10,12),(7,22),(1,30)]] for x in xs],paint,1,flip=sign>0)
 
 # ---- greenhouse -----------------------------------------------------------
 def roofz(x):
-    return curve(x,[COWL,1830,2050,ROOF_F,2800,ROOF_R,3700,3900,DECK_R],
-                   [deck(COWL),1196,1358,1462,1472,1454,1330,1168,deck(DECK_R)])
+    return curve(x,[COWL,1810,2060,2200,ROOF_F,2470,2900,3350,ROOF_R,3760,3980,4110,DECK_R],
+                   [deck(COWL),1182,1352,1402,1424,1434,1438,1434,1420,1330,1188,1094,deck(DECK_R)])
 
 def ghw(x):
-    return curve(x,[COWL,1960,ROOF_F,2800,ROOF_R,3800,DECK_R],
-                   [dhw(COWL),786,734,726,716,730,762])
+    return curve(x,[COWL,1940,ROOF_F,2800,ROOF_R,3900,DECK_R],
+                   [dhw(COWL),838,812,806,798,814,834])
 
 def gsection(x):
     b=dhw(x);d=deck(x);r=roofz(x);g=ghw(x);h=max(1.,r-d);k=min(24.,h*.09)
-    rail=r-min(150.,h*.30)
+    rail=r-min(58.,h*.13)
     return [
-        [(b,d),(b*.998,d+h*.20),(g*1.012,d+h*.60),(g,rail)],
+        [(b,d),(b*.996,d+h*.24),(g*1.004,d+h*.64),(g,rail)],
         [(g,rail),(g*.945,r-min(58.,h*.13)),(g*.79,r-min(15.,h*.045)),(g*.44,r+k*.55),(0,r+k)],
     ]
 
@@ -288,37 +290,52 @@ for sign in (-1,1):
     # bright surround along the belt and over the roof rail
     tube([COWL+70,sign*(dhw(COWL)-4),deck(COWL)+22],[DECK_R-90,sign*(dhw(DECK_R)-4),deck(DECK_R)+18],6,chrome,3,8)
     for a,b in [(ROOF_F+40,BPILLAR[0]),(BPILLAR[1],ROOF_R-30)]:
-        tube([a,sign*(ghw(a)-2),roofz(a)-min(150.,(roofz(a)-deck(a))*.30)],
-             [b,sign*(ghw(b)-2),roofz(b)-min(150.,(roofz(b)-deck(b))*.30)],6,chrome,3,8)
+        tube([a,sign*(ghw(a)-2),roofz(a)-min(58.,(roofz(a)-deck(a))*.13)],
+             [b,sign*(ghw(b)-2),roofz(b)-min(58.,(roofz(b)-deck(b))*.13)],5,chrome,3,8)
     # seats and head restraints, seen through the glass
-    for x in (2380,3010):
+    for x in (2380,3060):
         mesh([[[x-40,sign*130,958],[x-40,sign*420,958]],[[x+34,sign*140,1226],[x+34,sign*400,1226]]],(54,57,62),0,flip=sign<0)
         ellipsoid([x+18,sign*272,1262],[88,124,68],(48,51,56),0,14,8)
 mesh([[[COWL+70,-820,958],[COWL+70,820,958]],[[COWL+520,-792,1046],[COWL+520,792,1046]]],(50,53,58),0)
-ellipsoid([3440,0,1476],[148,26,52],paint,1,14,8)
+ellipsoid([3560,0,roofz(3560)+2],[148,26,50],paint,1,14,8)
 
 # ---- lamps that wrap onto the flanks, shut lines, handles, mirrors --------
 for sign in (-1,1):
-    xs=[x for x in XS if x<=440]
-    mesh([[[x,sign*(flank_y(x,z)-3),z] for z in (674,696,740,770)] for x in xs],(40,44,48),0,flip=sign>0)
-    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (706,728)] for x in xs],lens,4,flip=sign>0)
-    xs=[x for x in XS if x>=LEN-280]
-    mesh([[[x,sign*(flank_y(x,z)-3),z] for z in (818,842,902,930)] for x in xs],(52,26,28),0,flip=sign>0)
-    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (848,894)] for x in xs],tail,4,flip=sign>0)
-    for x in (2380,3260):
+    xs=[x for x in XS if x<=460]
+    mesh([[[x,sign*(flank_y(x,z)-4),z] for z in (640,664,748,778)] for x in xs],(38,42,46),0,flip=sign>0)
+    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (670,742)] for x in xs],lens,4,flip=sign>0)
+    xs=[x for x in XS if x>=LEN-300]
+    mesh([[[x,sign*(flank_y(x,z)-4),z] for z in (798,822,888,912)] for x in xs],(50,25,27),0,flip=sign>0)
+    mesh([[[x,sign*(flank_y(x,z)-1),z] for z in (826,884)] for x in xs],tail,4,flip=sign>0)
+    for x in (1712,2380,3260):
         pts=[[x,sign*(flank_y(x,sill(x)+40)+2),sill(x)+40],[x,sign*(flank_y(x,crease(x))+2),crease(x)],
              [x,sign*(dhw(x)+4),deck(x)-16]]
-        for a,b in zip(pts,pts[1:]): tube(a,b,1.8,(58,64,68),0,5)
+        for a,b in zip(pts,pts[1:]): tube(a,b,3.4,(46,50,54),0,6)
+    # Door handle: a pull bar with its own shadowed recess behind it, so it
+    # reads as something you can grip and not as a chrome sticker.
     for x in (2250,3130):
-        ellipsoid([x,sign*(flank_y(x,crease(x)+46)+2),crease(x)+46],[76,9,14],chrome,3,18,8)
-    # mirror: a tapered shell on a short stalk, its rear face the glass
-    tube([1782,sign*886,1006],[1744,sign*962,1034],16,(34,38,42),0,10)
-    def shell(u,v,sign=sign):
-        a=u*math.tau;w=1.-.34*(1.-v)
-        return [1706+v*172,sign*(1004+36*math.cos(a)*w),1052+48*math.sin(a)*w]
-    mesh([[shell(i/16,j/4) for j in range(5)] for i in range(17)],paint,1,flip=sign<0)
-    mesh([[shell(i/16,0) for i in range(17)],[[1706,sign*1004,1052] for i in range(17)]],paint,1,flip=sign>0)
-    mesh([[shell(i/16,1) for i in range(17)],[[1878,sign*1004,1052] for i in range(17)]],(88,108,124),2,flip=sign<0)
+        ellipsoid([x,sign*(flank_y(x,crease(x)+42)+1),crease(x)+42],[104,11,17],chrome,3,20,8)
+        ellipsoid([x-16,sign*(flank_y(x,crease(x)+34)-4),crease(x)+34],[92,7,11],(52,56,60),0,16,6)
+    # Door mirror. The old one was a puck on a rod standing 70 mm clear of the
+    # body — a lollipop from every angle. This one is what a mirror actually
+    # is: a housing lofted rearwards from a sail base on the door shoulder,
+    # widening as it goes, with the glass in its rear face.
+    root=flank_y(1800,deck(1800)-40);zb=deck(1800)+4
+    def housing(u,v,sign=sign,root=root,zb=zb):
+        a=u*math.tau
+        cy=root+curve(v,[0,.34,1],[26,70,84]);ry=curve(v,[0,.34,1],[15,42,50])
+        cz=zb+curve(v,[0,.34,1],[10,22,25]);rz=curve(v,[0,.34,1],[13,38,44])
+        e=.66
+        return [1802+v*136,
+                sign*(cy+ry*math.copysign(abs(math.cos(a))**e,math.cos(a))),
+                cz+rz*math.copysign(abs(math.sin(a))**e,math.sin(a))]
+    mesh([[housing(i/20,j/6) for j in range(7)] for i in range(21)],paint,1,flip=sign<0)
+    # sail base: the housing tapers back into the door skin, no floating stalk
+    mesh([[housing(i/20,0) for i in range(21)],
+          [[1774,sign*(root-2),zb+12] for i in range(21)]],paint,1,flip=sign>0)
+    # the rear face is glass, very slightly domed
+    mesh([[housing(i/20,1) for i in range(21)],
+          [[1944,sign*(root+84),zb+25] for i in range(21)]],(104,120,134),2,flip=sign<0)
 
 # ---- wheels ---------------------------------------------------------------
 for axle in (FA,RA):

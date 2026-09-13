@@ -40,20 +40,29 @@ pergolách (`bio`, `canopy`).
 
 ## Čo treba zlepšiť (v tomto poradí)
 
-1. **Auto stále vyzerá „naliate", nie ostré.** Vlastník to pomenoval presne:
-   chce niečo reálne, nie balón bez tvaru. Konkrétne slabiny:
-   - prechod strecha → zadné sklo → veko je jedna plynulá guľa; chýba mu
-     zlom nad zadným oknom a ostrá hrana veka,
-   - blatníky nemajú lem — otvor kolesa je len hrana plechu,
-   - dvere nemajú spáru s hĺbkou, len tenkú tmavú rúrku po povrchu,
-   - predné aj zadné svetlo je pás na karosérii; chýba mu ostenie a odsadenie,
-   - zrkadlo je malý puk na tenkej nôžke.
-   Odporúčaný postup: pridať ďalšie plátky do `section(x)` v oblasti ramena a
-   veka, spáru robiť ako úzky vtlačený kanál (dva plátky s posunom dovnútra),
-   lem blatníka ako samostatný pás okolo oblúka.
-2. **Veľkosť súboru.** Auto má 34 902 trojuholníkov a 335 kB gzip. Načítava sa
-   až po kliknutí na „Auto"; ďalšie zjemňovanie tvaru by nemalo tento rozpočet
-   výrazne prekročiť.
+1. **Auto.** Toto je hlavná úloha a vlastník ju zadáva samostatne. Model je
+   vlastný generický sedan, nie model konkrétnej značky, a taký musí ostať.
+   Doterajšie kolo opravilo proporcie a povrch — nižšia strecha, sklo až po
+   okraj strechy (predtým nad oknami bežal 150 mm pás plechu a kabína
+   vyzerala ako helma), dlhšia strecha a kratšie veko, ramenná hrana a nižšia
+   línia na dverách namiesto jednej hladkej steny, hlbšie blatníky s lemom,
+   zrkadlo ako skutočná skrinka na pätke namiesto puku na tyčke, čitateľné
+   svetlá a spáry. Čo ostáva slabé:
+   - prechod strecha → zadné sklo → veko je stále mäkký, chýba ostrá hrana veka,
+   - C-stĺpik a zadný bok tvoria jeden veľký klin bez členenia,
+   - predný previs je dlhý a nárazník ťažký,
+   - kľučky sú elipsoidy, nie skutočné madlá s priehlbňou,
+   - kolesá majú jednoduchý disk bez brzdy a ventilu.
+   Prijateľný je aj úplne iný postup: nahradiť sieť modelom z CC0 zdroja.
+   Poly Haven žiadny sedan nemá (má len `covered_car` pod plachtou); Quaternius
+   a Kenney majú CC0 autá, ale sú štylizované a do inak realistickej scény sa
+   nehodia. Ak sa použije cudzí model, patrí doň záznam v
+   `konfigurator/scene-assets/CREDITS.md` a skript na stiahnutie zdroja
+   s SHA-256, ako to má bistro (`konfigurator/tools/fetch-bistro-source.py`).
+
+2. **Rozpočet.** Auto má 39 402 trojuholníkov a ~350 kB gzip. Načítava sa až po
+   kliknutí na „Auto"; nový model by nemal ísť výrazne nad 400 kB.
+
 3. **Lounge zostava** (`patio-lounge`, 23 486 trojuholníkov, 181 kB) už má
    prešité vankúše, lampáš, podnos aj kvetináč. Jej pôdorys je zámerne
    3 160 × 2 400 mm: bioklimatická pergola je najviac 3 500 mm široká a
@@ -61,8 +70,31 @@ pergolách (`bio`, `canopy`).
    nesmie ju rozšíriť naprieč — inak sa prestane ponúkať a v pergole ostane
    len bistro stolík. Zlepšiť sa dá poťah (látka je hladká plocha bez záhybov)
    a koberec (dva pásy tónov namiesto štruktúry).
+
 4. **Bistro** je Poly Haven CC0 sieť; zdroj nie je v repozitári, takže sa dá
    prestaviť len s pôvodným `seating.gltf`.
+
+## Ako model odovzdať, aby sa dal iba zapojiť
+
+Integrácia je zámerne mechanická — stačí dodržať toto:
+
+- Sieť musí byť `konfigurator/scene-assets/touring-sedan.bin.gz` v tom istom
+  16-bajtovom formáte. Auto stojí na `z = 0`, smeruje nosom na `-x`
+  (`x = 0` je predný nárazník, `x = LEN` zadný), stred rozchodu je `y = 0`.
+- Po prestavbe treba prepísať `models.car.bounds` v `konfigurator/scene-life.js`
+  na skutočne namerané hodnoty siete. `konfigurator/test/scene-assets.js`
+  porovnáva deklarované obálky s meraním a bez zhody padne.
+- Ak sa zmení výška auta, mení sa aj to, či sa zmestí pod nízky prístrešok —
+  test na to má vlastnú kontrolu, netreba ju obchádzať.
+- Pri zmene siete treba zvýšiť verziu v `scene-life.js`
+  (`?v=20260912-refinement-N`) aj v `konfigurator/index.html`, inak CDN
+  a prehliadače vrátia starý model.
+- Na rýchle pozeranie bez prehliadača slúži
+  `konfigurator/tools/preview-scene-asset.py`: vykreslí bok, čelo, pôdorys a
+  dva trojštvrťové pohľady priamo z `.bin.gz` za pár sekúnd, tým istým
+  osvetlením ako runtime shader. Cez Playwright je jedna iterácia rádovo
+  pomalšia, takže tvar sa oplatí ladiť týmto a až hotový výsledok pozrieť
+  v konfigurátore.
 
 ## Hranice, ktoré sa nesmú posunúť
 
@@ -83,6 +115,8 @@ pergolách (`bio`, `canopy`).
 
 ```
 python3 konfigurator/tools/build-scene-assets.py     # prestaví auto a lounge
+python3 konfigurator/tools/preview-scene-asset.py \
+    konfigurator/scene-assets/touring-sedan.bin.gz /tmp/nahlad   # rýchly pohľad
 node konfigurator/test/scene-assets.js               # formát, obálky, rozostupy
 node konfigurator/test/pocasie-odtok.js              # dážď a odtok
 node konfigurator/test/technical-fidelity.js
