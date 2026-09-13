@@ -130,19 +130,6 @@ const { prepareContext } = require('./browser-qa');
               window.__qaLouver=t; return same;
             },null,{polling:140,timeout:10000});
             await page.evaluate(()=>{SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            /* Rozlíšenie zastaveného snímku sa prispôsobuje výkonu stroja a po
-               prvých kresbách ešte stúpa. Keď sa zmení medzi dvoma zábermi,
-               líšia sa v každom pixeli — a netvrdí to nič o modeli. Kreslí sa
-               teda dovtedy, kým veľkosť vyrovnávacej pamäte neprestane rásť. */
-            for (let settle = 0, last = ''; settle < 12; settle++) {
-              const size = await page.evaluate(() => {
-                SP_TEST.redrawStage();
-                const c = document.querySelector('[data-sp-depth-canvas]');
-                return c ? c.width + 'x' + c.height : 'none';
-              });
-              if (size === last) break;
-              last = size;
-            }
             /* Číta sa priamo kresliaca pamäť, nie záber stránky. Záber prvku
                vracia výrez stránky, takže doň spadne aj to, čo nad plátnom
                leží: pravý dolný roh mal pruh 116 × 2 pixelov, ktorý sa medzi
@@ -180,14 +167,25 @@ const { prepareContext } = require('./browser-qa');
               }
               return { differing: n, max, painted, total: px.length / 4, box: n ? [x0, y0, x1, y1] : null };
             }, moves);
-            await page.evaluate(()=>{window.__qaFrame=null;});
-            const baseFrame = await grab([[.82,-.18]]);
-            const orbit = await grab([[2.1,.7],[.82,-.18]]);
+            /* Rozlíšenie zastaveného snímku sa prispôsobuje výkonu stroja a po
+               prvých kresbách ešte stúpa. Stupeň sa prehodnocuje až po troch
+               meraniach, takže „dve rovnaké veľkosti za sebou" ešte nič
+               neznamenajú — na CI vyrástla pamäť z 1217×915 na 1575×1184
+               presne medzi dvoma zábermi. Stupňov je konečne veľa, takže sa
+               dvojica jednoducho zopakuje, kým obidva zábery nevyjdú v tej
+               istej veľkosti. */
+            let baseFrame = null, orbit = null;
+            for (let attempt = 0; attempt < 8; attempt++) {
+              await page.evaluate(()=>{window.__qaFrame=null;});
+              baseFrame = await grab([[.82,-.18]]);
+              orbit = await grab([[2.1,.7],[.82,-.18]]);
+              if (!orbit.sizeChanged) break;
+            }
+            assert(!orbit.sizeChanged,
+              'Render resolution never held still across the orbit comparison: '+JSON.stringify(orbit.sizeChanged));
             assert(baseFrame.painted > orbit.total * 0.05 && orbit.painted > orbit.total * 0.05,
               'The drawing buffer came back all but empty, so the comparison would prove nothing: '
               + JSON.stringify({base: baseFrame, after: orbit}));
-            assert(!orbit.sizeChanged,
-              'Render resolution changed during the orbit comparison: '+JSON.stringify(orbit.sizeChanged));
             if (orbit.differing) {
               console.log('ORBIT MISMATCH', kind, key, mobile?'mobile':'desktop', JSON.stringify(orbit));
               await page.locator('[data-sp-depth-canvas]').first()
