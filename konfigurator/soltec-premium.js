@@ -1845,11 +1845,21 @@
             depthPainter.cssHeight = cssHeight;
           }
           surface.hidden = false;
+          /* Tá istá farba sa v scéne opakuje na stovkách plôch a rozoberala sa
+             z reťazca pri každej z nich, ku každému snímku. Tabuľka žije jeden
+             snímok, takže sa nemá ako rozísť so `state`. */
+          const colours = new Map();
           const rgba = (fill) => {
-            if (fill.startsWith('url(')) fill = (state.boxColor || state.frameColor).hex;
-            if (fill[0] === '#') { const n = parseInt(fill.slice(1), 16); return [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
-            const m = fill.match(/[\d.]+/g) || [];
-            return [(+m[0] || 0)/255, (+m[1] || 0)/255, (+m[2] || 0)/255, m.length > 3 ? +m[3] : 1];
+            const hit = colours.get(fill);
+            if (hit) return hit;
+            let text = fill;
+            if (text.startsWith('url(')) text = (state.boxColor || state.frameColor).hex;
+            let value;
+            if (text[0] === '#') { const n = parseInt(text.slice(1), 16); value = [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255, 1]; }
+            else { const m = text.match(/[\d.]+/g) || [];
+              value = [(+m[0] || 0)/255, (+m[1] || 0)/255, (+m[2] || 0)/255, m.length > 3 ? +m[3] : 1]; }
+            colours.set(fill, value);
+            return value;
           };
           // Fit the depth interval to the actual assembly. The former 80:1
           // interval wasted precision on empty space and let opposite faces of
@@ -1879,24 +1889,43 @@
             gl.vertexAttribPointer(pattern, 1, gl.FLOAT, false, 44, 32);
             gl.vertexAttribPointer(texUV, 2, gl.FLOAT, false, 44, 36);
           };
+          /* Vrcholy sa skladali do bežného poľa cez `push` a z neho sa ku
+             každému snímku vyrábalo nové `Float32Array` — pri tejto scéne
+             takmer dvestotisíc čísel na snímok, ktoré vzápätí zahodil zberač
+             pamäte. Pole teraz patrí slotu, prežije snímok a rastie len keď
+             je scéna väčšia než doteraz. */
+          const UV = [[0,0],[1,0],[1,1],[0,1]];
           const upload = (name, items) => {
-            const slot = slots[name] || (slots[name] = { buffer: gl.createBuffer(), count: 0 });
-            const data = [];
+            const slot = slots[name] || (slots[name] = { buffer: gl.createBuffer(), count: 0, data: null });
+            let corners = 0;
+            for (const f of items) if (f.p.length > 2) corners += (f.p.length - 2) * 3;
+            const floats = corners * 11;
+            if (!slot.data || slot.data.length < floats) slot.data = new Float32Array(Math.ceil(floats * 1.25) + 1024);
+            const data = slot.data;
+            let at = 0;
             for (const f of items) {
               const tint = rgba(f.fill);
+              const mesh = f.decal ? 2 : String(f.sourceFill).startsWith('url(') ? 1 : 0;
+              const flat = f.bg;
               const vertex = (p, index) => {
-                const vertexTint = f.vertexFills ? rgba(f.vertexFills[index]) : tint;
+                const t = f.vertexFills ? rgba(f.vertexFills[index]) : tint;
                 const w = Math.max(DIST * 0.45, DIST - p.d);
-                data.push(((p.x * scale + ox) / VW * 2 - 1) * w,
-                  (1 - (p.y * scale + oy) / VH * 2) * w,
-                  f.bg ? 0 : (far + near)/(far - near)*w - 2*far*near/(far-near), w, ...vertexTint, f.decal ? 2 : String(f.sourceFill).startsWith('url(') ? 1 : 0, ...([[0,0],[1,0],[1,1],[0,1]][index] || [0,0]));
+                const uv = UV[index] || UV[0];
+                data[at] = ((p.x * scale + ox) / VW * 2 - 1) * w;
+                data[at + 1] = (1 - (p.y * scale + oy) / VH * 2) * w;
+                data[at + 2] = flat ? 0 : (far + near)/(far - near)*w - 2*far*near/(far-near);
+                data[at + 3] = w;
+                data[at + 4] = t[0]; data[at + 5] = t[1]; data[at + 6] = t[2]; data[at + 7] = t[3];
+                data[at + 8] = mesh;
+                data[at + 9] = uv[0]; data[at + 10] = uv[1];
+                at += 11;
               };
               for (let i = 1; i < f.p.length - 1; i++) { vertex(f.p[0], 0); vertex(f.p[i], i); vertex(f.p[i+1], i+1); }
             }
-            slot.count = data.length / 11;
+            slot.count = at / 11;
             if (slot.count) {
               gl.bindBuffer(gl.ARRAY_BUFFER, slot.buffer);
-              gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+              gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, at), gl.DYNAMIC_DRAW);
             }
             return slot;
           };
