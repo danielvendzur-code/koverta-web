@@ -77,7 +77,12 @@ const { prepareContext } = require('./browser-qa');
           // sibling of the canvas, so put it back over the model first.
           await page.locator('[data-sp-canvas]').hover();
           await page.mouse.wheel(0,-240);
-          await page.waitForTimeout(60);
+          /* Priblíženie sa nenastaví skokom — dobieha po snímkoch a každý z
+             nich prekreslí model. Na stroji bez grafickej karty trvá jeden
+             snímok aj pol sekundy, takže v pevnom okne 60 ms nemusel prebehnúť
+             ani jeden a `zoom` bol stále presne 1, hoci priblíženie fungovalo.
+             Čaká sa preto na skutočnú zmenu; keď nepríde, test padne rovnako. */
+          await page.waitForFunction(()=>SP_TEST.snapshot().zoom>1,null,{timeout:15000}).catch(()=>{});
           assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))>1,'Manual zoom must work in every family once enabled');
           assert((await page.evaluate(()=>SP_TEST.snapshot().zoom))<=3.5,'Manual zoom must stay inside its limit');
           await toggle.click();
