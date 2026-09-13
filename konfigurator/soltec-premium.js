@@ -1746,7 +1746,15 @@
           if (depthPainter === false) return false;
           if (!depthPainter) {
             const surface = document.createElement('canvas');
-            const gl = surface.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
+            /* Vyhladzovanie stojí na prevzorkovaní, nie na MSAA. Zastavený
+               snímok sa kreslí 2,5- až 4,4-násobne nad CSS pixelmi a prehliadač
+               ho zmenší — to je 6 až 19 vzoriek na výsledný pixel, hustejšie
+               než 4× MSAA, a vyhladzuje aj vnútro plochy, nie iba obrys. MSAA
+               sa k tomu iba pripočítavalo a na stroji bez grafickej karty to
+               bolo drahé: rovnaký ťah myšou stál 150 ms na snímok s ním a
+               67 ms bez neho (p95). V obraze sme najväčší rozdiel našli na
+               jedinej zvislej hrane — jeden stĺpec sivej medzihodnoty. */
+            const gl = surface.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
             if (!gl) { depthPainter = false; return false; }
             const compile = (type, source) => {
               const shader = gl.createShader(type);

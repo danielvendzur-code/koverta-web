@@ -52,6 +52,9 @@ const { prepareContext } = require('./browser-qa');
         assert(layer.delta && Object.values(layer.delta).every(value => value <= 1), 'WebGL and SVG layers must be aligned: '+JSON.stringify(layer.delta));
         const models = await page.locator('[data-sp-model]').evaluateAll(nodes=>nodes.map(n=>n.dataset.spModel));
         for (const key of (models.length ? models : [null])) {
+          /* Kľúč modelu môže obsahovať lomku („170/28"), a tá by v názve
+             súboru založila neexistujúci priečinok. */
+          const slug = String(key || 'K').replace(/[^a-z0-9]+/gi, '-');
           if (key) {
             await page.locator('[data-sp-model="'+key+'"]').click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
@@ -93,7 +96,7 @@ const { prepareContext } = require('./browser-qa');
           }
           for (const [name,el] of [['front',0.28],['top',1.12],['under',-0.18]]) {
             await page.evaluate(el=>{window.SP_TEST.setView(0.82,el); window.SP_TEST.redrawStage();},el);
-            await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/${kind}-${key||'K'}-${mobile?'mobile':'desktop'}-${name}.png`});
+            await page.locator('.sp-stage').first().screenshot({path:`qa-artifacts/depth/${kind}-${slug}-${mobile?'mobile':'desktop'}-${name}.png`});
           }
           if(kind==='bio') {
             const led=page.locator('[data-sp-add-on="led"]');
@@ -119,10 +122,53 @@ const { prepareContext } = require('./browser-qa');
               const o=getComputedStyle(h).opacity,same=h.dataset.qaOpacity===o;
               h.dataset.qaOpacity=o;return same;
             },null,{polling:120,timeout:6000});
+            /* Porovnáva sa samotná kresba modelu, nie celá scéna. Pod scénou
+               leží ovládanie lamiel a jeho percentuálny odpočet sa po
+               poslednom nastavení ešte dorovnáva — riadok pribudne, scéna sa
+               o pár pixelov vytiahne a dva zábery „celej scény" sa potom
+               líšia o pruh textu pri spodnej hrane, hoci model je rovnaký.
+               Vrstva s modelom má stálu veľkosť a je presne to, čoho sa
+               tvrdenie týka. */
+            const bitmap = page.locator('[data-sp-depth-canvas]').first();
+            /* Lamely sa po poslednom nastavení ešte dobiehajú do cieľovej
+               polohy. Kým dobiehajú, líšia sa dva zábery o samotný model — a
+               to je práve to, čo sa tu overovať nemá. */
+            await page.waitForFunction(()=>{
+              const t=window.SP_TEST.snapshot().louverT, same=window.__qaLouver===t;
+              window.__qaLouver=t; return same;
+            },null,{polling:140,timeout:10000});
             await page.evaluate(()=>{SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            const before=await page.locator('.sp-stage').first().screenshot();
+            /* Rozlíšenie zastaveného snímku sa prispôsobuje výkonu stroja a po
+               prvých kresbách ešte stúpa. Keď sa zmení medzi dvoma zábermi,
+               líšia sa v každom pixeli — a netvrdí to nič o modeli. Kreslí sa
+               teda dovtedy, kým veľkosť vyrovnávacej pamäte neprestane rásť. */
+            const bufferSize = () => page.evaluate(() => {
+              const c = document.querySelector('[data-sp-depth-canvas]');
+              return c ? c.width + 'x' + c.height : 'none';
+            });
+            for (let settle = 0, last = ''; settle < 12; settle++) {
+              await page.evaluate(()=>{SP_TEST.redrawStage();});
+              const size = await bufferSize();
+              if (size === last) break;
+              last = size;
+            }
+            /* Zaberá sa samotné plátno bez podkladu. Plátno je na okrajoch
+               modelu polopriehľadné a Playwright ho inak zloží s tým, čo leží
+               pod ním; podklad sa prekresľuje samostatne a jeho zaokrúhlenie
+               menilo hodnotu o jednotku na 5 % pixelov — na okrajoch hrán,
+               nikde inde. Merané: rovnaká množina 20 752 pixelov, rozdiel
+               presne 1. Bez podkladu vyšlo dvanásť kôl za sebou zhodne. */
+            const shot = () => bitmap.screenshot({omitBackground:true});
+            const sizeBefore = await bufferSize();
+            const before=await shot();
             await page.evaluate(()=>{SP_TEST.setView(2.1,.7);SP_TEST.redrawStage();SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            const after=await page.locator('.sp-stage').first().screenshot();
+            const after=await shot();
+            assert.equal(await bufferSize(), sizeBefore, 'Render resolution changed during the orbit comparison');
+            if(!before.equals(after)){
+              fs.writeFileSync(`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}-a.png`,before);
+              fs.writeFileSync(`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}-b.png`,after);
+              console.log('ORBIT MISMATCH', kind, key, mobile?'mobile':'desktop');
+            }
             assert(before.equals(after),'Closed lamellas and lighting must return to identical pixels after orbit');
           }
           if(kind==='carport') {
