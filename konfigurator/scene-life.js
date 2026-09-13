@@ -9,16 +9,17 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    car: { file:'touring-sedan.bin.gz', bounds:[-74,-1020,1,4826,1020,1475] },
+    car: { file:'superb-iv.bin.gz', bounds:[-21,-1066,0,4924,1066,1483] },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
-    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] }
+    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] },
+    sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
   };
   /* Obálka po otočení o štvrť otáčky okolo zvislej osi: (x,y) → (-y,x).
      Vybavenie sa inak otáčať nedá a ani nemá — stolík postavený našikmo by
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260912-refinement-4',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260913-superb-2',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -75,10 +76,17 @@
          je 2,4 m hlboká práve preto, aby sa pod bioklimatickú pergolu (najviac
          3,5 m široká) vôbec zmestila; k tomu 200 mm na každú stranu na
          obídenie a 250 mm v smere dĺžky. Kde ani to nevyjde, ostáva bistro. */
-      const lb=models.lounge.bounds;
-      if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+400) {
-        result.push({key:'lounge',x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
-        return {items:result,capacity:1,reason:''};
+      /* Od najväčšieho k najmenšiemu: plná lounge zostava, kompaktné
+         posedenie s pohovkou a až potom bistro stolík. Kým existovala len
+         lounge a bistro, pri prednastavenej šírke záhradnej pergoly (2,5 m)
+         nezostalo nič lepšie než stolík pre dvoch — hoci pohovka s koberčekom
+         sa medzi stĺpy pohodlne zmestí. */
+      for(const key of ['lounge','sofa']) {
+        const lb=models[key].bounds;
+        if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+400) {
+          result.push({key,x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
+          return {items:result,capacity:1,reason:''};
+        }
       }
       /* Stolík so stoličkami sa zmestí pozdĺž aj naprieč. Užšia pergola ho
          vezme otočený o štvrť otáčky: pri prednastavenej šírke 2,5 m by inak
@@ -115,14 +123,19 @@
     const roofTop=(x,y)=>{const hit=c.roofAt&&c.roofAt(x,y);return hit==null?c.roofZ+(c.roofRise||0)*(1-clamp(x/Math.max(1,c.L),0,1)):hit;};
     const g=c.drainage&&c.drainage.gutter&&c.drainage.gutter.enabled?c.drainage.gutter:null;
     const d=c.drainage&&c.drainage.downpipe&&c.drainage.downpipe.enabled?c.drainage.downpipe:null;
-    const eave=g?g.x0:c.L-24;
+    /* Kam až po streche voda tečie, kým zmizne z dohľadu. Pri Koverte je to
+       spodný okraj lemovania: po lemovaní voda nesteká, podteká ho do žľabu.
+       Inde je to vnútorné líce obvodového profilu — tam sa strieška odvodňuje
+       do rámu, nie cez hranu. */
+    const fascia=c.drainage&&c.drainage.fascia?c.drainage.fascia:null;
+    const eave=fascia?c.L-fascia.eave-14:g?g.x0:c.L-Math.max(24,c.post||60);
     // stabilný, no nepravidelný rozptyl pruhov — rovnaká scéna, rovnaká voda
     const rnd=(i,m)=>((i*2654435761)%m)/m;
     const dir=[Math.cos(c.az||0),Math.sin(c.az||0)];   // vodorovný smer po obrazovke
     if(c.panelRoof) {
-      const n=Math.max(7,Math.min(26,Math.round(c.W/380))),x0=Math.min(340,c.L*.1);
+      const n=Math.max(10,Math.min(42,Math.round(c.W/210))),x0=Math.min(340,c.L*.1);
       for(let i=0;i<n;i++) {
-        const y=c.W*(i+.5)/n+(rnd(i+7,17)-.5)*(c.W/n)*.6,w=14+rnd(i+3,9)*18;
+        const y=c.W*(i+.5)/n+(rnd(i+7,17)-.5)*(c.W/n)*.5,w=24+rnd(i+3,9)*28;
         quad([[x0,y-w,roofTop(x0,y-w)+2],[eave,y-w,roofTop(eave,y-w)+2],[eave,y+w,roofTop(eave,y+w)+2],[x0,y+w,roofTop(x0,y+w)+2]],UV,0,1);
       }
     } else if(c.louverZone) {
@@ -139,27 +152,69 @@
     }
     if(g) {
       /* Žľab visí v kapse za lemovaním, takže hladinu vidno len spod strechy
-         a z odkvapovej strany — presne tak, ako to zakrýva samotný profil. */
+         a z odkvapovej strany — presne tak, ako to zakrýva samotný profil.
+         Nad výpustom hladina zrýchli a stiahne sa doň; bez toho sa v žľabe
+         len ticho lesklo a nebolo vidieť, kam voda ide. */
       const yOut=d?d.pipeCenter[1]:(g.y0+g.y1)/2,zb=g.zBottom+7,gx0=g.x0+10,gx1=g.x1-10;
       for(const y of [g.y0,g.y1])if(Math.abs(y-yOut)>60)
         quad([[gx0,y,zb],[gx0,yOut,zb],[gx1,yOut,zb],[gx1,y,zb]],UV,1,1);
+      const mouth=Math.min(150,Math.max(70,(g.x1-g.x0)*.9));
+      for(const sgn of [-1,1]) {
+        const yFar=yOut+sgn*mouth;
+        if(yFar<g.y0-20||yFar>g.y1+20)continue;
+        quad([[gx0,yFar,zb+2],[gx0,yOut,zb+2],[gx1,yOut,zb+2],[gx1,yFar,zb+2]],UV,2,1);
+      }
     }
     if(d) {
       const px=d.pipeCenter[0],py=d.pipeCenter[1],r=d.radius||40;
-      const bottom=d.pathBounds?d.pathBounds.zMin:0,w=Math.max(14,r*.55);
-      // Vnútro zvodu ostáva zakryté; vidno až to, čo z neho vytečie.
-      if(bottom>90)quad([[px-dir[0]*w,py-dir[1]*w,0],[px-dir[0]*w,py-dir[1]*w,bottom],
-        [px+dir[0]*w,py+dir[1]*w,bottom],[px+dir[0]*w,py+dir[1]*w,0]],[[1,-1],[0,-1],[0,1],[1,1]],2,1);
-      const R=Math.max(340,r*8);
+      const bottom=d.pathBounds?d.pathBounds.zMin:0,w=Math.max(16,r*.62);
+      /* Vnútro zvodu ostáva zakryté; vidno až to, čo z neho vytečie. Ústie
+         býva len pár centimetrov nad dlažbou, takže podmienka „kresli prúd,
+         len keď je vyššie ako 90 mm" ho takmer vždy zhltla a z celej trasy
+         nebolo pri zvode vidieť nič. Prúd sa preto kreslí vždy — od ústia po
+         dlažbu, a ak je ústie nízko, aspoň krátky výtok. */
+      /* Koleno zvodu mieri od stĺpa preč, takže voda vyteká pred ním — nie
+         v jeho osi. Zvislý prúd vedený osou by ležal vnútri rúry a to je
+         presne to, čo cez plný profil presvitať nesmie. */
+      const pcx=d.post?(d.post.x0+d.post.x1)/2:px,pcy=d.post?(d.post.y0+d.post.y1)/2:py;
+      let ox=px-pcx,oy=py-pcy;let on=Math.hypot(ox,oy);
+      if(on<1){ox=1;oy=0;on=1;}ox/=on;oy/=on;
+      const sx=px+ox*(r+34),sy=py+oy*(r+34);
+      quad([[sx-oy*w,sy+ox*w,Math.min(bottom+r,120)],[sx-oy*w,sy+ox*w,2],
+        [sx+oy*w,sy-ox*w,2],[sx+oy*w,sy-ox*w,Math.min(bottom+r,120)]],[[1,-1],[0,-1],[0,1],[1,1]],2,1);
+      const run=Math.max(420,r*9);
+      quad([[sx-oy*w*1.7,sy+ox*w*1.7,3],[sx+ox*run-oy*w*1.7,sy+oy*run+ox*w*1.7,3],
+        [sx+ox*run+oy*w*1.7,sy+oy*run-ox*w*1.7,3],[sx+oy*w*1.7,sy-ox*w*1.7,3]],UV,4,1);
+      /* Kaluž ostáva súmerná okolo osi zvodu — voda z kolena dopadá práve tam
+         a odtiaľ sa rozbieha. */
+      const R=Math.max(430,r*10);
       quad([[px-R,py-R,3],[px+R,py-R,3],[px+R,py+R,3],[px-R,py+R,3]],[[-1,-1],[1,-1],[1,1],[-1,1]],3,1);
     } else if(c.panelRoof) {
-      /* Bez žľabu prepadá voda cez odkvapovú hranu. Kvapky sú obrátené
-         k pozorovateľovi, aby nezmizli pri pohľade zboku. */
-      const n=Math.max(6,Math.min(22,Math.round(c.W/380))),zTop=roofTop(c.L,c.W/2);
-      for(let i=0;i<n;i++) {
-        const y=c.W*(i+.5)/n+(rnd(i+11,13)-.5)*70,w=8+rnd(i+5,7)*7,len=240+rnd(i+2,11)*260;
-        const cx=c.L+6,dx=dir[0]*w,dy=dir[1]*w;
-        quad([[cx-dx,y-dy,zTop-len],[cx-dx,y-dy,zTop],[cx+dx,y+dy,zTop],[cx+dx,y+dy,zTop-len]],[[1,-1],[0,-1],[0,1],[1,1]],2,1);
+      /* Strieška sa neodvodňuje cez hranu. Voda dobehne po spáde do
+         obvodového profilu, ním do stĺpa a stĺpom k päte — vnútro profilu
+         ani stĺpa sa nekreslí, lebo cez plný jakl nemá čo presvitať. Vidno
+         teda dve veci: kde voda do rámu vteká a kde z päty stĺpa vyteká.
+         Kvapky visiace na odkvape boli presne to, čo tu byť nesmie. */
+      const fw=Math.max(40,c.post||60),zTop=roofTop(c.L,c.W/2);
+      // štrbina, ktorou voda vteká do profilu — po celej odkvapovej hrane
+      quad([[c.L-fw+6,10,zTop+3],[c.L-fw+6,c.W-10,zTop+3],[c.L-10,c.W-10,zTop+3],[c.L-10,10,zTop+3]],
+        [[0,-1],[0,1],[1,1],[1,-1]],1,1);
+      /* Päta stĺpa. Odkvapová strana ich má spravidla dvoje; keď tam žiadny
+         nie je (previs, montáž na stenu), berú sa tie, ktoré prístrešok má —
+         voda ide dolu nimi. */
+      const all=(c.obstacles||[]).filter(o=>o[2]>o[0]&&o[3]>o[1]);
+      const atEave=all.filter(o=>o[2]>=c.L-fw*1.9);
+      for(const o of (atEave.length?atEave:all)) {
+        const px=(o[0]+o[2])/2,py=(o[1]+o[3])/2,half=Math.max(o[2]-o[0],o[3]-o[1])/2;
+        /* Výtok patrí von od stĺpa, nie doň. Zvislý prúd vedený osou stĺpa by
+           bol práve tá voda presvitajúca cez plný jakl, ktorá tu byť nesmie. */
+        let ox=px-c.L/2,oy=py-c.W/2;const on=Math.hypot(ox,oy)||1;ox/=on;oy/=on;
+        const sx=px+ox*(half+26),sy=py+oy*(half+26);
+        const run=Math.max(300,half*6),w=Math.max(26,half*.6);
+        quad([[sx-oy*w,sy+ox*w,3],[sx+ox*run-oy*w,sy+oy*run+ox*w,3],
+          [sx+ox*run+oy*w,sy+oy*run-ox*w,3],[sx+oy*w,sy-ox*w,3]],UV,4,1);
+        const R=Math.max(280,half*6);
+        quad([[sx-R,sy-R,3],[sx+R,sy-R,3],[sx+R,sy+R,3],[sx-R,sy+R,3]],[[-1,-1],[1,-1],[1,1],[-1,1]],3,1);
       }
     }
     return new Float32Array(v);
@@ -228,7 +283,7 @@
     panel.querySelector('[data-scene-mode="car"]').hidden=!forCar;
     panel.querySelector('[data-scene-mode="bistro"]').hidden=!forSeat;
     const diagram=document.createElement('aside');diagram.className='sp-drain-guide';diagram.hidden=true;
-    diagram.innerHTML=`<strong>Ako odteká voda</strong><ol><li><i>1</i><span data-drain-roof>Strecha zachytí dážď</span></li><li><i>2</i><span data-drain-gutter>Žľab zvedie vodu k výpustu</span></li><li><i>3</i><span data-drain-pipe>Zvod odvedie vodu nadol</span></li></ol><small>Popis skrytej trasy. V 3D sa kreslí len voda, ktorú naozaj vidno — vnútro zvodu a rozvod v profile ostávajú zakryté.</small>`;
+    diagram.innerHTML=`<strong>Ako odteká voda</strong><ol><li><i>1</i><span data-drain-roof>Strecha zachytí dážď</span></li><li><i>2</i><span data-drain-gutter>Žľab zvedie vodu k výpustu</span></li><li><i>3</i><span data-drain-pipe>Zvod odvedie vodu nadol</span></li></ol><small>Popis skrytej trasy. V 3D sa kreslí len voda, ktorú naozaj vidno — vnútro profilu, stĺpa aj zvodu ostáva zakryté. Cez odkvapovú hranu voda neprepadáva.</small>`;
     panel.appendChild(diagram);
     const status=panel.querySelector('[role="status"]'),countSelect=panel.querySelector('#sp-scene-count'),paintSelect=panel.querySelector('[aria-label="Lak auta"]');
     function sync() {
@@ -251,10 +306,10 @@
         const drain=context.drainage||{};
         const gutter=Boolean(drain.gutter&&drain.gutter.enabled),pipe=Boolean(drain.downpipe&&drain.downpipe.enabled);
         diagram.querySelector('[data-drain-roof]').textContent=open?'Otvorenými lamelami dážď prechádza':'Strecha zachytí dážď';
-        diagram.querySelector('[data-drain-gutter]').textContent=gutter?'Žľab za lemovaním zvedie vodu k výpustu':
-          context.panelRoof?'Bez žľabu voda prepadá cez odkvapovú hranu':'Voda steká žliabkom lamiel do rámu';
+        diagram.querySelector('[data-drain-gutter]').textContent=gutter?'Voda podteká lemovanie do žľabu a ním k výpustu':
+          context.panelRoof?'Voda steká po spáde do obvodového profilu':'Voda steká žliabkom lamiel do rámu';
         diagram.querySelector('[data-drain-pipe]').textContent=pipe?'Vonkajší zvod vedľa stĺpa vyústi na dlažbu':
-          context.panelRoof&&!gutter?'Kvapká priamo na terén pod hranou':'Skrytý zvod v stĺpe';
+          'Profilom a stĺpom skryto k päte stĺpa';
       }
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého
          nákresu nepatria. Namiesto ticha to panel povie. */
@@ -262,10 +317,11 @@
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres — vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
         (state.mode==='car'?(()=>{const b=models.car.bounds,m=v=>(v/1000).toFixed(2).replace('.',',');
-          return `${currentPlan.items.length} × Touring sedan · dĺžka ${m(b[3]-b[0])} m vrátane nárazníkov · šírka ${m(b[4]-b[1])} m so zrkadlami`;})():
-         state.mode==='bistro'?(currentPlan.items[0]&&currentPlan.items[0].key==='lounge'
-           ?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec'
-           :`${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`):''));
+          return `${currentPlan.items.length} × Škoda Superb IV · dĺžka ${m(b[3]-b[0])} m vrátane nárazníkov · šírka ${m(b[4]-b[1])} m so zrkadlami`;})():
+         state.mode==='bistro'?(()=>{const k=currentPlan.items[0]&&currentPlan.items[0].key;
+           return k==='lounge'?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec':
+             k==='sofa'?'Posedenie · dvojkreslo, konferenčný stolík, koberec a kvetináč':
+             `${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`;})():''));
       /* Počasie povie, čo naozaj vidno. Bez hĺbkového rendereru sa dážď
          nekreslí vôbec a mlčať o tom by znamenalo tváriť sa, že prší. */
       const weather=state.weather!=='rain'?'':
@@ -385,6 +441,11 @@
             vec3 env=mix(vec3(see?.08:.20,see?.09:.21,see?.11:.23),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
             result=mix(result,env,(see?.30:.11)+fres*(see?.22:.12));}
           result+=spec*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
+          /* Lak auta má dve vrstvy: pigment a nad ním číry lak. Bez tej druhej
+             sa karoséria lesknúť nezačne — ostane matná ako plast. Ostrý úzky
+             odlesk plus jemné presvetlenie hrán je presne to, čo z plochy robí
+             lakovaný plech. */
+          if(kind>.5&&kind<1.5)result+=(.20*pow(max(0.,dot(n,normalize(key+v))),240.)+fres*.07)*(1.-overcast*.55);
           if(kind>3.5&&kind<4.5)result=mix(result,base,.7);
           if(kind>4.5&&kind<5.5){float weave=sin(world.x*1.8)*sin(world.y*1.7+world.z*1.6);result=base*l*(.99+.01*weave);}
           if(kind>5.5){float grain=sin(world.x*.075+sin(world.y*.31)*.8);result=base*l*(.97+.03*grain);}
@@ -423,17 +484,31 @@
         uniform float viewportHeight;${projection}
         varying vec2 vUv;varying float vKind;varying float vAlpha;
         void main(){vUv=uv;vKind=kind;vAlpha=alpha;gl_Position=project(p);}`,
-        `precision mediump float;varying vec2 vUv;varying float vKind;varying float vAlpha;uniform float clock;uniform float strength;
+`precision mediump float;varying vec2 vUv;varying float vKind;varying float vAlpha;uniform float clock;uniform float strength;
         void main(){
           float across=1.-smoothstep(.45,1.,abs(vUv.y));float a=0.;vec3 col=vec3(.60,.77,.88);
-          if(vKind<.5){float s=fract(vUv.x*1.8-clock*.42);a=(.03+.15*smoothstep(.55,1.,s))*across;}
-          else if(vKind<1.5){float s=fract(vUv.x*2.2-clock*.85);a=(.20+.30*smoothstep(.35,1.,s))*across;}
-          else if(vKind<2.5){float s=fract(vUv.x*1.4-clock*1.6);a=(.10+.46*smoothstep(.5,1.,s))*across;}
-          else{
+          /* Mokrý plech je tmavší ako suchý a až hrebeň stekajúcej vody je
+             svetlý. Kým bol film jednoliato svetlý a takmer priehľadný, na
+             bledej streche ho nebolo vidieť vôbec a strecha pôsobila sucho aj
+             v najsilnejšom daždi. */
+          if(vKind<.5){float s=fract(vUv.x*1.6-clock*.5);float crest=smoothstep(.52,1.,s);
+            a=(.15+.34*crest)*across;col=mix(vec3(.33,.41,.47),vec3(.80,.89,.95),crest);}
+          else if(vKind<1.5){float s=fract(vUv.x*2.2-clock*.85);a=(.24+.34*smoothstep(.35,1.,s))*across;}
+          else if(vKind<2.5){float s=fract(vUv.x*1.4-clock*1.6);a=(.20+.55*smoothstep(.45,1.,s))*across;
+            col=mix(vec3(.50,.65,.76),vec3(.88,.94,.98),smoothstep(.45,1.,s));}
+          else if(vKind<3.5){
             /* Mokrá dlažba je tmavšia, nie svetlejšia — svetlé je až rozbité
                kruhy na hladine. */
-            float r=length(vUv),ring=smoothstep(.55,1.,fract(r*2.2-clock*1.15)),wet=1.-smoothstep(.35,1.,r);
-            a=wet*(.22+.26*ring);col=mix(vec3(.20,.26,.30),vec3(.78,.88,.94),ring*.75);
+            float r=length(vUv),ring=smoothstep(.55,1.,fract(r*2.2-clock*1.15)),wet=1.-smoothstep(.30,1.,r);
+            a=wet*(.32+.30*ring);col=mix(vec3(.19,.25,.29),vec3(.80,.89,.95),ring*.75);
+          }
+          else{
+            /* Odtekajúci pramienok po dlažbe. Je to voda na zemi, nie film na
+               streche, takže má vlastný druh — inak by ho meranie presakovania
+               počítalo medzi vodu na krytine. */
+            float s=fract(vUv.x*1.1-clock*.8);
+            a=(.20+.24*smoothstep(.4,1.,s))*across*(1.-smoothstep(.55,1.,vUv.x));
+            col=mix(vec3(.22,.29,.34),vec3(.72,.83,.90),smoothstep(.4,1.,s));
           }
           gl_FragColor=vec4(col,a*strength*vAlpha);}`);
       /* Kontaktný tieň. Bez neho vybavenie viselo nad dlažbou — auto aj
@@ -579,7 +654,10 @@
         weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
         pace:Math.round(pace),
         frameCost:Math.round(budget*100)/100,clock:Math.round(time*1000)/1000,
+        /* surfaceZ je skutočná výška krytiny pod dažďom, nie vrch lemovania.
+           Test presakovania si o ňu opiera kontrolu, že film leží na plechu. */
         roof:context?{z:context.roofZ,rise:context.roofRise||0,panel:Boolean(context.panelRoof),
+          surfaceZ:context.roofAt?context.roofAt(context.L*.5,context.W*.5):null,
           pitch:context.pitch,cover:context.cover,louverT:context.louverT}:null,
         flowQuads:context?flow(context).length/42:0,
         /* Obálky vodných plôch podľa druhu. QA na nich overí, že voda leží tam,

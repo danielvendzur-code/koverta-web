@@ -365,7 +365,11 @@ for axle in (FA,RA):
         tube([axle,yc-sign*10,WR],[axle,yc+sign*16,WR],178,(112,116,120),3,26)
         mesh([[[axle-54,yc+sign*42,WR+158],[axle+54,yc+sign*42,WR+158]],
               [[axle-54,yc+sign*42,WR+210],[axle+54,yc+sign*42,WR+210]]],(128,44,40),0,flip=sign<0)
-save('touring-sedan')
+# Konfigurátor teraz vozí Superb IV — dodanú hotovú packed sieť, nie tento
+# generovaný sedan. Kód ostáva, lebo je to jediný zdroj pôvodného modelu, ale
+# bez príznaku sa súbor nevracia do scene-assets pri každom behu skriptu.
+if '--legacy-car' in sys.argv: save('touring-sedan')
+else: V.clear()
 
 if len(sys.argv)>1:
     src=pathlib.Path(sys.argv[1]);g=json.loads((src/'seating.gltf').read_text());buffers=[(src/b['uri']).read_bytes() for b in g['buffers']]
@@ -497,3 +501,40 @@ for j in range(12):
     tube([1360,-950,z-25],end,2.5,(101,99,65),0,5)
     ellipsoid(end,[48,20,12],(82+j%3*6,101+j%4*4,69),0,12,6)
 save('patio-lounge')
+
+# ---------------------------------------------------------------------------
+# Kompaktné posedenie. Plná lounge zostava potrebuje 2,4 m naprieč a tú má
+# záhradná pergola až na hornom konci rozsahu; pri prednastavených 2,5 m šírky
+# ostával jediný bistro stolík. Toto je to, čo si pod „posedením" predstaví
+# človek s bežnou terasou: dvojkreslová pohovka, konferenčný stolík, koberec
+# a kvetináč, celé 2,40 × 1,54 m — teda sa zmestí aj medzi stĺpy 2,5 m pergoly.
+for i in range(7):
+    t0=-750+i*1500/7;t1=-750+(i+1)*1500/7
+    mesh([[[-1200,t0,4],[1200,t0,4]],[[-1200,t1,4],[1200,t1,4]]],rugA if i%2 else rugB,0)
+mesh([[[-1200,-750,3],[-1200,750,3]],[[-1140,-695,7],[-1140,695,7]]],(150,148,140),0)
+mesh([[[1200,-750,3],[1200,750,3]],[[1140,-695,7],[1140,695,7]]],(150,148,140),0,flip=True)
+
+seat_unit(-90,-420,1560,-1)
+
+def small_table(cx,cy):
+    """Konferenčný stolík k dvojkreslu: užší a nižší než pri veľkej zostave."""
+    rbox([cx,cy,318],[400,190,11],.10,frame,0)
+    for j in range(5):
+        rbox([cx,cy-160+j*80,346],[430,36,15],.08,tuple(v+(j%3-1)*4 for v in teak),6,16,10)
+    for sx in (-1,1):
+        for sy in (-1,1):leg(cx+sx*372,cy+sy*146,0,320,13)
+    rbox([cx+120,cy,375],[118,80,9],.12,(70,75,76),0,16,8)
+    for dx in (-44,44):tube([cx+120+dx,cy,386],[cx+120+dx,cy,452],26,(188,207,212),2,12)
+
+small_table(-90,290)
+
+# kvetináč do voľného rohu koberca, mimo prístupu k pohovke aj stolíku
+tube([900,-470,0],[900,-470,330],104,(116,117,109),0,24)
+ellipsoid([900,-470,332],[97,97,7],(62,54,44),0,24,6)
+tube([900,-470,335],[900,-470,650],8,(102,85,62),6,8)
+for j in range(10):
+    a=j*2.39996;z=420+j*20
+    end=[900+math.cos(a)*112,-470+math.sin(a)*94,z+52]
+    tube([900,-470,z-22],end,2.4,(101,99,65),0,5)
+    ellipsoid(end,[44,19,11],(82+j%3*6,101+j%4*4,69),0,12,6)
+save('patio-sofa')

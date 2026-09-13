@@ -78,7 +78,7 @@ pergolách (`bio`, `canopy`).
 
 Integrácia je zámerne mechanická — stačí dodržať toto:
 
-- Sieť musí byť `konfigurator/scene-assets/touring-sedan.bin.gz` v tom istom
+- Sieť musí byť `konfigurator/scene-assets/superb-iv.bin.gz` v tom istom
   16-bajtovom formáte. Auto stojí na `z = 0`, smeruje nosom na `-x`
   (`x = 0` je predný nárazník, `x = LEN` zadný), stred rozchodu je `y = 0`.
 - Po prestavbe treba prepísať `models.car.bounds` v `konfigurator/scene-life.js`
@@ -116,7 +116,7 @@ Integrácia je zámerne mechanická — stačí dodržať toto:
 ```
 python3 konfigurator/tools/build-scene-assets.py     # prestaví auto a lounge
 python3 konfigurator/tools/preview-scene-asset.py \
-    konfigurator/scene-assets/touring-sedan.bin.gz /tmp/nahlad   # rýchly pohľad
+    konfigurator/scene-assets/superb-iv.bin.gz /tmp/nahlad   # rýchly pohľad
 node konfigurator/test/scene-assets.js               # formát, obálky, rozostupy
 node konfigurator/test/pocasie-odtok.js              # dážď a odtok
 node konfigurator/test/technical-fidelity.js

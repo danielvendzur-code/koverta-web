@@ -78,6 +78,16 @@ const { prepareContext } = require('./browser-qa');
           }
           if(kind==='bio') {
             await page.waitForTimeout(220);
+            /* Bublina s nápovedou sa po prejdení myšou rozsvecuje 0,25 s a leží
+               nad plátnom. Pri pevných 220 ms padol prvý záber doprostred toho
+               prechodu a druhý až po ňom — porovnávala sa nápoveda, nie model.
+               Čaká sa, kým sa jej krytie ustáli. */
+            await page.waitForFunction(()=>{
+              const h=document.querySelector('.sp-stage__hint');
+              if(!h)return true;
+              const o=getComputedStyle(h).opacity,same=h.dataset.qaOpacity===o;
+              h.dataset.qaOpacity=o;return same;
+            },null,{polling:120,timeout:6000});
             await page.evaluate(()=>{SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
             const before=await stage.screenshot();
             await page.evaluate(()=>{SP_TEST.setView(2.1,.7);SP_TEST.redrawStage();SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});

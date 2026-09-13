@@ -214,8 +214,16 @@ const HELPERS = () => {
     const run = parts.filter((q) => q.kind === 1);
     const pool = parts.filter((q) => q.kind === 3);
     if (film.length < 5) bad.push('po panelovej streche má tiecť voda k odkvapu');
+    /* Film leží na krytine, nie na vrchu lemovania. `roof.z` je horná hrana
+       lemovacieho plechu — o 35 mm vyššie než trapéz, po ktorom voda naozaj
+       tečie — takže porovnávať film s ňou znamenalo žiadať, aby voda tiekla po
+       lemovaní. Meria sa proti skutočnej výške krytiny a s tolerantnosťou len
+       na vlnu trapézu. */
+    const deck = scene.roof.surfaceZ;
+    assert(typeof deck === 'number', 'scéna musí povedať, kde leží krytina');
     for (const q of film) {
-      if (q.box[5] < scene.roof.z) bad.push(`film s vodou je pod rovinou strechy: ${JSON.stringify(q.box)}`);
+      if (q.box[5] < deck - 40) bad.push(`film s vodou je pod krytinou: ${JSON.stringify(q.box)} proti ${deck}`);
+      if (q.box[2] > scene.roof.z + 30) bad.push(`film s vodou sa vznáša nad strechou: ${JSON.stringify(q.box)}`);
       if (q.box[3] > gutter.x0 + 1) bad.push('voda po streche má končiť pri žľabe, nie za ním');
     }
     if (run.length < 1) bad.push('v žľabe má byť hladina');

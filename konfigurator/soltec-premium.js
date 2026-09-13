@@ -2383,7 +2383,12 @@
           /* Cast shadow: the roof footprint dropped to the ground and pushed
              along the light. The throw is compressed so it grounds the model
              without pulling the framing off the structure. */
-          const shX = 0.22 * H * (-KEY[0] / KEY[2]), shY = 0.22 * H * (-KEY[1] / KEY[2]);
+          /* Zamračené nemá slnko, takže nemá ani vrhnutý tieň so smerom.
+             Kým sa pri „Zamračené" kreslil ten istý posunutý tieň ako za
+             slnka, voľba nemenila skoro nič a pôsobila zbytočne. Pod mrakmi
+             ostáva pod prístreškom len mäkké, súmerné stmavnutie. */
+          const shSoft = overcast ? 0.16 : 1;
+          const shX = 0.22 * H * (-KEY[0] / KEY[2]) * shSoft, shY = 0.22 * H * (-KEY[1] / KEY[2]) * shSoft;
 
           layer = -3 * ROOF_LAYER;
           if (se > 0.01) {
@@ -2429,14 +2434,17 @@
              a grey rectangle with soft corners rather than a shadow. */
           for (let i = 10; i >= 0; i--) {
             const t = 1 - i / 10;
-            shadow(40 + i * 26, +(0.012 + 0.030 * t * t).toFixed(4));
+            /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
+               oblohy, nie z jedného smeru. */
+            shadow(40 + i * (overcast ? 42 : 26),
+              +((0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1)).toFixed(4));
           }
 
           /* Sun through open blades. Dropping the gaps between them onto the
              ground along the same light is what shows, at a glance, that the
              roof is open - from a low viewpoint the blades themselves still
              overlap into what looks like a closed surface. */
-          if (model().roof !== 'panel' && state.louverT > 0.02) {
+          if (model().roof !== 'panel' && state.louverT > 0.02 && !overcast) {
             const li0 = post, li1 = L - post;
             const nb = (model().lamellas || [])[state.length] || Math.max(4, Math.round((li1 - li0) / 183));
             const lpitch = (li1 - li0) / nb;
@@ -3481,6 +3489,10 @@
             const ramBot = zBot + 2, ramTop = ramBot + RAM_H;
             const kvAccessoryGeometry = {
               assembly: { xMin: 0, xMax: L, yMin: 0, yMax: W, zMin: 0, zMax: zTop },
+              /* Dokiaľ siaha lemovanie po trapéze. Voda po ňom netečie — mizne
+                 pod ním do žľabu — takže film na streche musí skončiť tu a nie
+                 až na odkvapovej hrane. */
+              fascia: { eave: LEM_CELO, side: LEM_BOK, zTop, zBottom: zBot },
               insulation: null,
               led: { enabled: false, runs: [] },
               gutter: null,

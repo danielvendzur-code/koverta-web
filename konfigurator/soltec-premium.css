@@ -345,7 +345,29 @@
 
     #SoltecPremium .sp-cfg__grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(33rem, .58fr); gap: clamp(1.6rem, 2vw, 2.4rem); align-items: stretch; height: min(70rem, calc(100vh - 15rem)); min-height: 48rem; }
     #SoltecPremium .sp-stage { position: relative; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; border-radius: var(--media-radius, .8rem); background: #fff; }
-    #SoltecPremium .sp-stage__canvas { display: block; flex: 1 1 auto; width: 100%; min-height: 0; height: auto; background: linear-gradient(180deg, #fbfbfa 0%, #f0efec 100%); }
+    /* Pozadie plátna. Plochý biely prechod nechával model visieť v prázdne;
+       toto je ateliérové pozadie — mäkké svetlo zhora od kľúčového svetla,
+       chladnejší, tmavší spodok, kde pokračuje dlažba, a jemná vinieta, ktorá
+       drží konštrukciu v strede záberu. Podľa počasia sa mení: slnko je teplé,
+       zamračené studené a ploché, dážď najtmavší. Kým bolo pozadie rovnaké pre
+       všetky tri, voľba počasia takmer nič nemenila. */
+    #SoltecPremium .sp-stage__canvas {
+      display: block; flex: 1 1 auto; width: 100%; min-height: 0; height: auto;
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(28,34,38,.10) 0%, rgba(28,34,38,0) 62%),
+        radial-gradient(78% 58% at 26% 6%, rgba(255,252,244,.95) 0%, rgba(255,252,244,0) 70%),
+        linear-gradient(180deg, #fdfcfa 0%, #f4f3ef 46%, #eceae5 68%, #e6e4de 100%);
+    }
+    #SoltecPremium .sp-stage[data-weather="cloud"] .sp-stage__canvas {
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(24,30,36,.12) 0%, rgba(24,30,36,0) 62%),
+        linear-gradient(180deg, #f2f3f4 0%, #eaebec 48%, #e2e3e4 70%, #dcdddd 100%);
+    }
+    #SoltecPremium .sp-stage[data-weather="rain"] .sp-stage__canvas {
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(20,27,34,.16) 0%, rgba(20,27,34,0) 60%),
+        linear-gradient(180deg, #eceef0 0%, #e3e6e8 46%, #dadde0 70%, #d3d6d9 100%);
+    }
     #SoltecPremium .sp-stage__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 1.6rem; padding: 1.4rem clamp(1.6rem, 2.2vw, 2.4rem); border-top: 1px solid var(--sp-line); }
     #SoltecPremium .sp-stage__dims { color: var(--sp-muted); font-size: 1.35rem; }
     #SoltecPremium .sp-stage__dims b { color: var(--sp-ink); font-weight: 500; }

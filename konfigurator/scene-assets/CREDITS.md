@@ -3,15 +3,28 @@
 Vybavenie je iba náhľad priestoru; nemení cenu ani rozmery prístrešku. Auto sa
 ponúka len pri prístreškoch pre auto, posedenie len pri záhradných pergolách.
 
-## Touring sedan
+## Auto v scéne — Superb IV
 
-Pôvodný generický model vytvorený pre tento konfigurátor. Nejde o model ani
-rozmerový podklad žiadnej automobilky. Karoséria je vyloftovaná z pozdĺžnych
-profilov: hladká tam, kde je auto hladké, s ostrou hranou na prahu, na línii
-dverí, na ramene a na hrane veka. Zasklenie, zrkadlá, svetlá, mriežka,
-pneumatiky, disky aj kotúčové brzdy sú skutočná geometria, nie nálepky.
-Rozmery vrátane detailov: približne 4,90 × 2,08 × 1,53 m, rázvor 2,91 m,
-kolesá 19". 34 902 trojuholníkov, 335 330 bajtov gzip.
+Vlastná vizuálna aproximácia, ktorú si dal vyhotoviť majiteľ webu. **Nie je to
+výrobný CAD ani rozmerový podklad Škody Auto** a nemá slúžiť na overovanie
+skutočných rozmerov vozidla; v scéne stojí preto, aby bolo vidieť, koľko
+miesta pod prístreškom zaberie bežné rodinné auto. Zasklenie, zrkadlá, svetlá,
+mriežka, pneumatiky aj disky sú skutočná geometria, nie nálepky. Obálka
+vrátane zrkadiel 4,94 × 2,13 × 1,48 m. 71 715 trojuholníkov, 826 954 bajtov
+gzip; načítava sa až po zapnutí „Auto".
+
+Dodaná sieť mala na tabuľke nápis `SUPERB`. Ten je vymenený za `KOVERTA`
+skriptom `../tools/refine-car-detail.py`; pôvodné písmená boli samostatný
+tenký plát, takže sa dali odobrať bez zásahu do karosérie. Reprodukovať sa dá
+príkazom `python3 konfigurator/tools/refine-car-detail.py ZDROJ.bin.gz
+konfigurator/scene-assets/superb-iv.bin.gz`.
+
+### Predchádzajúci generický sedan
+
+Do 13. 9. 2026 tu stál vlastný generický model bez značky (34 902
+trojuholníkov). Jeho generátor ostáva v `../tools/build-scene-assets.py`
+a dá sa prestaviť príznakom `--legacy-car`; do `scene-assets` sa už sám
+nevracia.
 
 ## Lounge zostava
 
@@ -22,6 +35,15 @@ záhradnému nábytku: pohovka 2,28 m, hĺbka 0,70 m, sedák 0,40 m nad zemou.
 Obálka 3,16 × 2,40 m — naprieč je zostava zámerne plytká, aby sa zmestila aj
 pod bioklimatickú pergolu, ktorá je najviac 3,5 m široká.
 23 486 trojuholníkov, 185 010 bajtov gzip.
+
+## Kompaktné posedenie
+
+Pôvodný návrh pre tento konfigurátor: dvojkreslová pohovka, konferenčný
+stolík s podnosom, koberec a kvetináč. Vznikol preto, že plná lounge zostava
+potrebuje 2,4 m naprieč a záhradná pergola ju unesie až na hornom konci
+rozsahu — pri prednastavených 2,5 m šírky ostával v prístrešku jediný bistro
+stolík. Obálka 2,40 × 1,50 m, teda sa zmestí aj medzi stĺpy 2,5 m pergoly.
+11 066 trojuholníkov, 531 168 bajtov gzip.
 
 ## Outdoor Table Chair Set 01
 
@@ -42,6 +64,6 @@ vyžadovalo prihlásenie. Pri Ferrari nebola overená licencia pôvodného model
 
 ## Refinement 12. 9. 2026
 
-Aktuálny sedan má 34 902 trojuholníkov a 335 330 bajtov gzip. Lounge má 23 486 trojuholníkov a 185 010 bajtov gzip; rozmery 3,16 × 2,40 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
+Lounge má 23 486 trojuholníkov a 185 010 bajtov gzip; rozmery 3,16 × 2,40 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
 
 Pôvodné vstupy bistro zostavy sa dajú obnoviť skriptom `../tools/fetch-bistro-source.py`; manifest obsahuje presné URL aj SHA-256.

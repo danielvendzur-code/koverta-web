@@ -1,6 +1,6 @@
 """Orthographic preview of a packed scene mesh, without a browser.
 
-Usage: python3 preview-scene-asset.py ../scene-assets/touring-sedan.bin.gz OUTDIR
+Usage: python3 preview-scene-asset.py ../scene-assets/superb-iv.bin.gz OUTDIR
 
 Writes side / front / top and two three-quarter views as PNG. Shading follows
 the same key and fill directions as the runtime shader in scene-life.js, so a
