@@ -122,14 +122,6 @@ const { prepareContext } = require('./browser-qa');
               const o=getComputedStyle(h).opacity,same=h.dataset.qaOpacity===o;
               h.dataset.qaOpacity=o;return same;
             },null,{polling:120,timeout:6000});
-            /* Porovnáva sa samotná kresba modelu, nie celá scéna. Pod scénou
-               leží ovládanie lamiel a jeho percentuálny odpočet sa po
-               poslednom nastavení ešte dorovnáva — riadok pribudne, scéna sa
-               o pár pixelov vytiahne a dva zábery „celej scény" sa potom
-               líšia o pruh textu pri spodnej hrane, hoci model je rovnaký.
-               Vrstva s modelom má stálu veľkosť a je presne to, čoho sa
-               tvrdenie týka. */
-            const bitmap = page.locator('[data-sp-depth-canvas]').first();
             /* Lamely sa po poslednom nastavení ešte dobiehajú do cieľovej
                polohy. Kým dobiehajú, líšia sa dva zábery o samotný model — a
                to je práve to, čo sa tu overovať nemá. */
@@ -142,34 +134,67 @@ const { prepareContext } = require('./browser-qa');
                prvých kresbách ešte stúpa. Keď sa zmení medzi dvoma zábermi,
                líšia sa v každom pixeli — a netvrdí to nič o modeli. Kreslí sa
                teda dovtedy, kým veľkosť vyrovnávacej pamäte neprestane rásť. */
-            const bufferSize = () => page.evaluate(() => {
-              const c = document.querySelector('[data-sp-depth-canvas]');
-              return c ? c.width + 'x' + c.height : 'none';
-            });
             for (let settle = 0, last = ''; settle < 12; settle++) {
-              await page.evaluate(()=>{SP_TEST.redrawStage();});
-              const size = await bufferSize();
+              const size = await page.evaluate(() => {
+                SP_TEST.redrawStage();
+                const c = document.querySelector('[data-sp-depth-canvas]');
+                return c ? c.width + 'x' + c.height : 'none';
+              });
               if (size === last) break;
               last = size;
             }
-            /* Zaberá sa samotné plátno bez podkladu. Plátno je na okrajoch
-               modelu polopriehľadné a Playwright ho inak zloží s tým, čo leží
-               pod ním; podklad sa prekresľuje samostatne a jeho zaokrúhlenie
-               menilo hodnotu o jednotku na 5 % pixelov — na okrajoch hrán,
-               nikde inde. Merané: rovnaká množina 20 752 pixelov, rozdiel
-               presne 1. Bez podkladu vyšlo dvanásť kôl za sebou zhodne. */
-            const shot = () => bitmap.screenshot({omitBackground:true});
-            const sizeBefore = await bufferSize();
-            const before=await shot();
-            await page.evaluate(()=>{SP_TEST.setView(2.1,.7);SP_TEST.redrawStage();SP_TEST.setView(.82,-.18);SP_TEST.redrawStage();});
-            const after=await shot();
-            assert.equal(await bufferSize(), sizeBefore, 'Render resolution changed during the orbit comparison');
-            if(!before.equals(after)){
-              fs.writeFileSync(`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}-a.png`,before);
-              fs.writeFileSync(`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}-b.png`,after);
-              console.log('ORBIT MISMATCH', kind, key, mobile?'mobile':'desktop');
+            /* Číta sa priamo kresliaca pamäť, nie záber stránky. Záber prvku
+               vracia výrez stránky, takže doň spadne aj to, čo nad plátnom
+               leží: pravý dolný roh mal pruh 116 × 2 pixelov, ktorý sa medzi
+               dvoma zábermi menil o viac než 25 hodnôt — dvakrát po sebe,
+               presne ten istý pruh, na dvoch rôznych modeloch. Nebol to model.
+               Vykreslenie aj čítanie preto bežia v jednej úlohe prehliadača,
+               kým je kresliaca pamäť ešte platná, a porovnáva sa naozaj len to,
+               čo renderer nakreslil. */
+            const grab = (moves) => page.evaluate((moves) => {
+              for (const [az, el] of moves) { SP_TEST.setView(az, el); SP_TEST.redrawStage(); }
+              const c = document.querySelector('[data-sp-depth-canvas]');
+              const gl = c.getContext('webgl');
+              const px = new Uint8Array(c.width * c.height * 4);
+              gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, px);
+              /* Prázdna kresliaca pamäť by prešla ako „rovnaké pixely" — a
+                 nemerala by nič. Počíta sa preto, koľko pixelov je vôbec
+                 nakreslených. */
+              let painted = 0;
+              for (let i = 3; i < px.length; i += 4) if (px[i]) painted++;
+              const base = window.__qaFrame;
+              if (!base) { window.__qaFrame = { w: c.width, h: c.height, px }; return { stored: [c.width, c.height], painted }; }
+              window.__qaFrame = null;
+              if (base.w !== c.width || base.h !== c.height)
+                return { sizeChanged: [base.w, base.h, c.width, c.height] };
+              let n = 0, max = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+              for (let i = 0; i < px.length; i += 4) {
+                let d = 0;
+                for (let k = 0; k < 4; k++) { const dk = Math.abs(px[i + k] - base.px[i + k]); if (dk > d) d = dk; }
+                if (d) {
+                  n++; if (d > max) max = d;
+                  const q = i >> 2, x = q % c.width, y = (q / c.width) | 0;
+                  if (x < x0) x0 = x; if (x > x1) x1 = x;
+                  if (y < y0) y0 = y; if (y > y1) y1 = y;
+                }
+              }
+              return { differing: n, max, painted, total: px.length / 4, box: n ? [x0, y0, x1, y1] : null };
+            }, moves);
+            await page.evaluate(()=>{window.__qaFrame=null;});
+            const baseFrame = await grab([[.82,-.18]]);
+            const orbit = await grab([[2.1,.7],[.82,-.18]]);
+            assert(baseFrame.painted > orbit.total * 0.05 && orbit.painted > orbit.total * 0.05,
+              'The drawing buffer came back all but empty, so the comparison would prove nothing: '
+              + JSON.stringify({base: baseFrame, after: orbit}));
+            assert(!orbit.sizeChanged,
+              'Render resolution changed during the orbit comparison: '+JSON.stringify(orbit.sizeChanged));
+            if (orbit.differing) {
+              console.log('ORBIT MISMATCH', kind, key, mobile?'mobile':'desktop', JSON.stringify(orbit));
+              await page.locator('[data-sp-depth-canvas]').first()
+                .screenshot({path:`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}.png`});
             }
-            assert(before.equals(after),'Closed lamellas and lighting must return to identical pixels after orbit');
+            assert.equal(orbit.differing, 0,
+              'Closed lamellas and lighting must return to identical pixels after orbit: '+JSON.stringify(orbit));
           }
           if(kind==='carport') {
             const box=page.locator('[data-sp-add-on="box"]');
