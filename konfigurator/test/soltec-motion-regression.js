@@ -47,8 +47,13 @@ function percentile(values, p) {
   page.on('pageerror', (error) => pageErrors.push(error.stack || error.message));
 
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  /* Lišta súhlasu sa pridáva až v `requestAnimationFrame`. Keď sa objaví až
+     po tejto kontrole, sadne na spodok okna, prekryje časť kresby a ťah
+     myšou zhltne — merali by sa prázdne snímky. */
   const consent = page.getByRole('button', { name: 'Iba nevyhnutné', exact: true });
-  if (await consent.isVisible()) await consent.click();
+  await consent.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {});
+  if (await consent.count() && await consent.isVisible()) await consent.click();
+  await page.locator('.kv-suhlas').waitFor({ state: 'detached', timeout: 10_000 }).catch(() => {});
   const cfg = page.locator('#SoltecPremium [data-sp-cfg]');
   await cfg.scrollIntoViewIfNeeded();
   await cfg.dispatchEvent('pointerdown', { pointerId: 41, pointerType: 'mouse', clientX: 20, clientY: 20 });

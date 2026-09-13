@@ -1719,7 +1719,13 @@
           if (motionTimes.length < 6) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
           const median = sorted[sorted.length >> 1];
-          const want = median > 26 ? 1 : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
+          /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+             karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
+             lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
+             kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
+             tieto stupne nikdy nespadne. */
+          const want = median > 90 ? 0.55 : median > 45 ? 0.75 : median > 26 ? 1
+            : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
           if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
@@ -1790,7 +1796,7 @@
              ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
              displeji nevyrobilo buffer, ktorý ovládač odmietne. */
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-          let ratio = motionDetail ? Math.max(1, dpr * motionScale * 0.9) : Math.max(2.5, dpr * stillScale);
+          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9) : Math.max(2.5, dpr * stillScale);
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
