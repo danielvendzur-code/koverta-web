@@ -1730,7 +1730,7 @@
         foto: './assets/soltec-carport-sl240-real.jpg',
         preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
-        foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
+        foto: './assets/foto/20250522_144729-w600.jpg',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
         foto: './assets/soltec-bio-hero-2026.jpg',
@@ -3105,11 +3105,19 @@
       img.setAttribute('data-k-menu-src', menuAsset(filename));
     };
 
+    /* Zásuvka je mobilné menu a pri načítaní stránky je zavretá, no jej
+       fotky sa sťahovali hneď — na konfigurátore to bolo sedem záberov a
+       2,65 MB, ktoré návštevník na telefóne nikdy neuvidí, kým na menu
+       neťukne. Držia sa preto rovnako ako v mega menu a `src` dostanú až pri
+       otvorení. */
     const setDrawerPhoto = (hrefPart, filename) => {
       header.querySelectorAll('.kv-drawer__rad a').forEach((a) => {
         if (!(a.getAttribute('href') || '').includes(hrefPart)) return;
         const img = a.querySelector('.kv-drawer__foto img');
-        if (img) img.setAttribute('src', menuAsset(filename));
+        if (!img) return;
+        img.removeAttribute('src');
+        img.removeAttribute('srcset');
+        img.setAttribute('data-k-menu-src', menuAsset(filename));
       });
     };
 
@@ -3296,8 +3304,8 @@
     /* Fotografie v desktopovom mega menu nemajú dôvod sťahovať sa pri prvom
        vykreslení stránky. HTML si ich URL drží v data atribútoch a src sa
        doplní až v okamihu, keď návštevník konkrétne menu naozaj otvorí. */
-    const nacitajMenuFotky = (item) => {
-      item.querySelectorAll('.kv-mega img[data-k-menu-src]').forEach((img) => {
+    const nacitajMenuFotky = (item, vyber) => {
+      item.querySelectorAll(vyber || '.kv-mega img[data-k-menu-src]').forEach((img) => {
         const src = img.getAttribute('data-k-menu-src');
         const srcset = img.getAttribute('data-k-menu-srcset');
         if (src) {
@@ -3414,6 +3422,7 @@
            položka aj telefónne číslo boli spolovice pod ním. Kým je menu
            otvorené, pás odchádza; po zavretí sa vráti. */
         document.documentElement.classList.toggle('ma-otvorene-menu', open);
+        if (open) nacitajMenuFotky(drawer, 'img[data-k-menu-src]');
         if (open) {
           const first = drawer.querySelector('a, button');
           if (first) first.focus();

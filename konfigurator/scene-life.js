@@ -209,7 +209,28 @@
           prev=cur;cur=next;
         }
         // zlúčiť susedné vzorky toho istého žliabku
-        return out.filter((v,i)=>i===0||v-out[i-1]>60);
+        const found=out.filter((v,i)=>i===0||v-out[i-1]>60);
+        /* Žliabky sú rozostúpené pravidelne, ale hľadajú sa po krokoch, takže
+           ktorý padne medzi dve vzorky, ten sa nenájde — a ostane suchý, kým
+           okolo neho tečie. Na streche 2 500 mm vychádzal rozostup 204 mm a
+           medzi 1 276 a 1 696 zívala medzera 420, čiže presne jeden vynechaný.
+           Medzery širšie než rozostup sa preto dopočítajú z neho; dopĺňa sa
+           len medzi nájdenými žliabkami, nikdy za krajný — tam už vodu na
+           lemovanie nechceme. */
+        if(found.length>=3) {
+          const gaps=found.slice(1).map((v,i)=>v-found[i]).sort((a,b)=>a-b);
+          const pitch=gaps[gaps.length>>1];
+          const full=[];
+          for(let i=0;i<found.length;i++) {
+            full.push(found[i]);
+            if(i+1<found.length) {
+              const gap=found[i+1]-found[i], missing=Math.round(gap/pitch)-1;
+              for(let m=1;m<=missing;m++) full.push(found[i]+gap*m/(missing+1));
+            }
+          }
+          return full;
+        }
+        return found;
       })();
       const lanes=valleys.length>=3
         ? valleys.map((v,i)=>[v,Math.max(8,Math.min(46,(valleys[1]-valleys[0])*0.30))])

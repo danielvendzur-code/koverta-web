@@ -154,11 +154,16 @@ const { prepareContext } = require('./browser-qa');
                  nakreslených. */
               let painted = 0;
               for (let i = 3; i < px.length; i += 4) if (px[i]) painted++;
+              /* Plátno má veľkosť displeja a nemení sa; scéna sa však kreslí do
+                 väčšieho buffra, ktorého násobok si renderer podľa výkonu
+                 stroja uberá. Porovnávať treba ten, inak dva zábery vyjdú
+                 rôzne a veľkosť plátna to zatají. */
+              const drawn = c.dataset.spRender || (c.width + 'x' + c.height);
               const base = window.__qaFrame;
-              if (!base) { window.__qaFrame = { w: c.width, h: c.height, px }; return { stored: [c.width, c.height], painted }; }
+              if (!base) { window.__qaFrame = { w: c.width, h: c.height, drawn, px }; return { stored: [c.width, c.height, drawn], painted }; }
               window.__qaFrame = null;
-              if (base.w !== c.width || base.h !== c.height)
-                return { sizeChanged: [base.w, base.h, c.width, c.height] };
+              if (base.w !== c.width || base.h !== c.height || base.drawn !== drawn)
+                return { sizeChanged: [base.w + 'x' + base.h + '@' + base.drawn, c.width + 'x' + c.height + '@' + drawn] };
               let n = 0, max = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
               for (let i = 0; i < px.length; i += 4) {
                 let d = 0;

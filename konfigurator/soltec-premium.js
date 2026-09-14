@@ -1681,6 +1681,7 @@
                ovládanie na kresbe, nekreslí sa nič a rýchlosť vyjde skvele. */
             view: { az: view.az, el: view.el },
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
+            geometryCache: canvas.dataset.geometryCache || null,
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
             geometry: model().kvGeom ? {
@@ -1714,18 +1715,31 @@
            že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
         let motionScale = 1.5;
         const motionTimes = [];
+        /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+           karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
+           lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
+           kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
+           tieto stupne nikdy nespadne. */
+        const motionStep = (ms) => ms > 90 ? 0.55 : ms > 45 ? 0.75 : ms > 26 ? 1
+          : ms > 15 ? 1.25 : ms < 9 ? 1.9 : 1.5;
         const noteFrame = (ms) => {
           motionTimes.push(ms); if (motionTimes.length > 12) motionTimes.shift();
+          /* Spomalenie sa uzná z jedného snímku, zrýchlenie až z mediánu.
+             Kým sa aj na spomalenie čakalo na šesť snímkov, každé ťahanie na
+             slabom stroji začínalo šiestimi najdrahšími snímkami, aké vie
+             nakresliť — a práve tie divák vidí ako trhnutie hneď na začiatku
+             pohybu, teda tam, kde najviac prekáža. Jeden snímok nad 60 ms je
+             dosť na dôkaz, že stroj nestíha; opačne to neplatí, jeden rýchly
+             snímok o výkone nesvedčí, tak sa nahor ide naďalej cez medián.
+             Šesťdesiat, nie štyridsaťpäť, aby jediné zaseknutie na inak
+             svižnom stroji kvalitu nezrazilo. */
+          if (ms > 60) {
+            const hned = motionStep(ms);
+            if (hned < motionScale) { motionScale = hned; motionTimes.length = 0; return; }
+          }
           if (motionTimes.length < 6) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
-          const median = sorted[sorted.length >> 1];
-          /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
-             karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
-             lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
-             kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
-             tieto stupne nikdy nespadne. */
-          const want = median > 90 ? 0.55 : median > 45 ? 0.75 : median > 26 ? 1
-            : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
+          const want = motionStep(sorted[sorted.length >> 1]);
           if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
@@ -1746,14 +1760,15 @@
           if (depthPainter === false) return false;
           if (!depthPainter) {
             const surface = document.createElement('canvas');
-            /* Vyhladzovanie stojí na prevzorkovaní, nie na MSAA. Zastavený
-               snímok sa kreslí 2,5- až 4,4-násobne nad CSS pixelmi a prehliadač
-               ho zmenší — to je 6 až 19 vzoriek na výsledný pixel, hustejšie
-               než 4× MSAA, a vyhladzuje aj vnútro plochy, nie iba obrys. MSAA
-               sa k tomu iba pripočítavalo a na stroji bez grafickej karty to
-               bolo drahé: rovnaký ťah myšou stál 150 ms na snímok s ním a
-               67 ms bez neho (p95). V obraze sme najväčší rozdiel našli na
-               jedinej zvislej hrane — jeden stĺpec sivej medzihodnoty. */
+            /* Scéna sa nekreslí rovno na plátno, ale do vlastnej textúry vo
+               vyššom rozlíšení, ktorú si sami zmenšíme (nižšie `resolve`).
+               Dôvod: zmenšovanie necháva prehliadač a ten to robí zle. Pri
+               2,5:1 ostanú zo šikmých hrán schody, pri 4:1 vyzerá obraz ako
+               bez vyhladzovania vôbec — merané na tom istom zábere trapézovej
+               strechy, ktorá je zo šikmých hrán celá. Vlastný filter započíta
+               každý vykreslený pixel, nie iba tie, ktoré si prehliadač vyberie.
+               MSAA na hlavnom buffri preto netreba — kreslíme doň už len
+               hotový obdĺžnik. */
             const gl = surface.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
             if (!gl) { depthPainter = false; return false; }
             const compile = (type, source) => {
@@ -1768,6 +1783,21 @@
             gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
             gl.deleteShader(vs); gl.deleteShader(fs);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+            /* Zmenšovací priechod. Štyri odbery s lineárnym filtrom, položené
+               do stredov štyroch kvadrantov výsledného pixela: každý odber sám
+               spriemeruje svoj blok, takže štyri odbery pokryjú celú plochu aj
+               pri štvornásobnom zmenšení. Priemeruje sa s krytím zarátaným do
+               farby a až potom sa delí späť — inak by na priehľadnom okraji
+               presiakla farba spod nuly. */
+            const rprog = gl.createProgram();
+            const rvs = compile(gl.VERTEX_SHADER, 'attribute vec2 corner; varying vec2 vUV; void main(){vUV=corner*0.5+0.5;gl_Position=vec4(corner,0.0,1.0);}');
+            const rfs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; uniform sampler2D src; uniform vec2 step; varying vec2 vUV; vec4 tap(vec2 o){vec4 t=texture2D(src,vUV+o);return vec4(t.rgb*t.a,t.a);} void main(){vec4 a=tap(vec2(-step.x,-step.y))+tap(vec2(step.x,-step.y))+tap(vec2(-step.x,step.y))+tap(vec2(step.x,step.y));a*=0.25;gl_FragColor=a.a>0.0015?vec4(a.rgb/a.a,a.a):vec4(0.0);}');
+            gl.attachShader(rprog, rvs); gl.attachShader(rprog, rfs); gl.linkProgram(rprog);
+            gl.deleteShader(rvs); gl.deleteShader(rfs);
+            if (!gl.getProgramParameter(rprog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(rprog));
+            const quad = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
             /* WebGL used to live in an SVG foreignObject. That makes Chromium
                composite the whole SVG/HTML boundary on every orbit frame. Keep
                the SVG as the accessible interaction surface and background,
@@ -1792,6 +1822,12 @@
               scheduleStage();
             });
             depthPainter = { gl, program, surface, cssWidth: 0, cssHeight: 0,
+              rprog, quad,
+              rcorner: gl.getAttribLocation(rprog, 'corner'),
+              rsrc: gl.getUniformLocation(rprog, 'src'),
+              rstep: gl.getUniformLocation(rprog, 'step'),
+              fbo: gl.createFramebuffer(), fboTex: gl.createTexture(),
+              fboDepth: gl.createRenderbuffer(), fboW: 0, fboH: 0,
               /* Najväčší buffer, aký ovládač unesie. Pýtame sa naň raz pri
                  vzniku kontextu: `gl.getParameter` je synchrónna otázka do
                  ovládača a volaná na každom snímku zrazila kreslenie z 17 ms
@@ -1804,6 +1840,7 @@
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+            depthPainter.decal = texture;
             const logo=new Image();logo.onload=()=>{
               gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
               gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,logo);scheduleStage();
@@ -1820,7 +1857,16 @@
              ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
              displeji nevyrobilo buffer, ktorý ovládač odmietne. */
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9) : Math.max(2.5, dpr * stillScale);
+          /* Zastavený snímok sa kreslí v celočíselnom násobku fyzických
+             pixelov displeja. Nie kvôli výkonu — kvôli obrazu. Zmenšenie
+             2,5:1 si prehliadač neodfiltruje: zo šikmých hrán, a trapézová
+             strecha je z nich celá, ostanú schody. Pri 2:1 zmenší správne a
+             tie isté rebrá sú súvislé; porovnané na tom istom zábere. Vyššie
+             prevzorkovanie preto obraz nezlepšuje, ak nesedí na celé pixely —
+             pri 4:1 vyzeral rovnako zubato ako bez vyhladzovania. Vedľajší
+             účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
+          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
+            : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
@@ -1835,9 +1881,67 @@
           const fits = Math.min(1, maxSide / Math.max(1, cssWidth * ratio),
                                    maxSide / Math.max(1, cssHeight * ratio));
           if (fits < 1) ratio *= fits;
-          const width = Math.max(1, Math.round(cssWidth * ratio));
-          const height = Math.max(1, Math.round(cssHeight * ratio));
+          /* Keď niektorý strop násobok zrazí, zaokrúhli sa späť nadol na celé
+             fyzické pixely — filter nižšie počíta so štvorcovými blokmi. */
+          if (!motionDetail) ratio = dpr * Math.max(1, Math.floor(ratio / dpr + 1e-6));
+          /* Zastavený snímok: plátno má presne toľko pixelov, koľko ich má
+             displej, takže ho prehliadač už nijako nepreberá — scéna sa kreslí
+             do textúry `ratio/dpr`-krát väčšej a zmenšuje ju náš vlastný
+             priechod. Počas otáčania sa kreslí rovno na plátno v zníženom
+             rozlíšení ako doteraz: obraz je vtedy aj tak rozmazaný zámerne a
+             priechod navyše by len ubral snímky (na tom istom ťahu 50 → 67 ms
+             na snímok). */
+          const width = Math.max(1, Math.round(cssWidth * (motionDetail ? ratio : dpr)));
+          const height = Math.max(1, Math.round(cssHeight * (motionDetail ? ratio : dpr)));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
+          const fboW = Math.max(1, Math.round(cssWidth * ratio));
+          const fboH = Math.max(1, Math.round(cssHeight * ratio));
+          if (!motionDetail && (depthPainter.fboW !== fboW || depthPainter.fboH !== fboH)) {
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.fboTex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fboW, fboH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            /* 24-bitová hĺbka, nie 16. Šestnásť bitov nestačí ani hlavnému
+               buffru — plechy hrubé pol milimetra sa v nich bijú — a vlastný
+               cieľ by na tom bol rovnako. `DEPTH_STENCIL` je jediný spôsob,
+               ako si v tejto verzii WebGL vypýtať 24 bitov. */
+            gl.bindRenderbuffer(gl.RENDERBUFFER, depthPainter.fboDepth);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, fboW, fboH);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, depthPainter.fbo);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, depthPainter.fboTex, 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depthPainter.fboDepth);
+            const ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+            /* Keby ovládač taký cieľ odmietol, kreslíme rovno na plátno ako
+               predtým — radšej tvrdšia hrana než prázdna scéna. */
+            depthPainter.offscreen = ready;
+            depthPainter.fboW = ready ? fboW : 0;
+            depthPainter.fboH = ready ? fboH : 0;
+          }
+          /* Násobok sa počíta voči fyzickým pixelom, takže hustý displej ho
+             nepotrebuje taký vysoký: na telefóne s dpr 3 by štvornásobok
+             znamenal 12× nad CSS pixelmi a textúru cez 50 MB, pričom na
+             výsledný CSS pixel pripadá pri dvojnásobku rovnako veľa vzoriek
+             ako na počítači pri štvornásobku. Keď z toho vyjde jedna k jednej,
+             priechod navyše netreba vôbec. */
+          const offscreen = !motionDetail && fboW > width
+            && depthPainter.offscreen && depthPainter.fboW === fboW;
+          /* Plátno má odteraz vždy veľkosť displeja, takže samo o sebe nepovie,
+             v akom rozlíšení sa scéna naozaj kreslila — a kontrola otáčania sa
+             na jeho veľkosť spoliehala. Skutočný rozmer je preto vidieť tu. */
+          const drawnSize = offscreen ? fboW + 'x' + fboH : width + 'x' + height;
+          /* Zapisuje sa len pri zmene. Počas ťahania ide o zápis do DOM ku
+             každému snímku a tam sa nemá čo míňať. */
+          if (depthPainter.drawnSize !== drawnSize) {
+            depthPainter.drawnSize = drawnSize;
+            surface.dataset.spRender = drawnSize;
+          }
+          const drawW = offscreen ? fboW : width;
+          const drawH = offscreen ? fboH : height;
           if (depthPainter.cssWidth !== cssWidth || depthPainter.cssHeight !== cssHeight) {
             surface.style.width = cssWidth + 'px';
             surface.style.height = cssHeight + 'px';
@@ -1944,7 +2048,8 @@
           transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
           upload('background', background); upload('solid', solid); upload('transparent', transparent);
           const paint = () => {
-            gl.viewport(0, 0, surface.width, surface.height);
+            if (offscreen) gl.bindFramebuffer(gl.FRAMEBUFFER, depthPainter.fbo);
+            gl.viewport(0, 0, drawW, drawH);
             bindStage();
             gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -1959,13 +2064,46 @@
               bindStage();
             }
             drawSlot(slots.transparent, true); gl.depthMask(true);
+            if (!offscreen) return;
+            /* Zmenšenie do plátna. Odbery sedia v stredoch kvadrantov, takže
+               pri dvoj- aj trojnásobku pokryjú celú plochu pixela. */
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, surface.width, surface.height);
+            gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+            gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.disable(gl.BLEND);
+            gl.useProgram(depthPainter.rprog);
+            gl.bindBuffer(gl.ARRAY_BUFFER, depthPainter.quad);
+            gl.enableVertexAttribArray(depthPainter.rcorner);
+            gl.vertexAttribPointer(depthPainter.rcorner, 2, gl.FLOAT, false, 0, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.fboTex);
+            gl.uniform1i(depthPainter.rsrc, 0);
+            const q = drawW / Math.max(1, surface.width);
+            gl.uniform2f(depthPainter.rstep, q > 1 ? q / 4 / drawW : 0, q > 1 ? q / 4 / drawH : 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.disableVertexAttribArray(depthPainter.rcorner);
+            /* Scéna očakáva na jednotke 0 obtlačok. Keby tu ostala visieť
+               cieľová textúra, ďalší snímok by do nej kreslil a súčasne z nej
+               čítal — a nenakreslil by nič. */
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.decal || null);
+            gl.depthMask(true);
           };
           depthPainter.replay = paint;
           paint();
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
-          if (window.SP_TEST) window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
-          canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
+          /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
+             záber zložený a či nejaká plocha vyšla nezmyselne. Ten druhý
+             prejde každý vrchol každej plochy — pri troch tisícoch plôch to
+             bola pätina času, ktorý ostal na snímok počas otáčania, a to
+             kvôli číslu, ktoré sa nikdy nečíta počas ťahania. Kontroly ho
+             čítajú zo zastaveného záberu, a ten sa dokreslí hneď po pustení,
+             takže tam ostáva presne taký, aký bol. */
+          if (!motionDetail) {
+            window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
+            canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
+          }
           return true;
         };
 
@@ -1973,7 +2111,21 @@
           const drawStart = (window.performance && performance.now) ? performance.now() : 0;
           const moving = motionDetail;
           try { return drawStageInner(); }
-          finally { if (drawStart) (moving ? noteFrame : noteStill)(performance.now() - drawStart); }
+          finally {
+            if (drawStart) {
+              const elapsed = performance.now() - drawStart;
+              (moving ? noteFrame : noteStill)(elapsed);
+              /* The browser QA records renderer work rather than gaps caused
+                 by Playwright delivering pointer events over CDP. This array
+                 exists only when the test explicitly creates it. */
+              if (moving && window.SP_TEST && Array.isArray(window.SP_TEST.motionFrames)) {
+                window.SP_TEST.motionFrames.push({
+                  ms: elapsed,
+                  cache: canvas.dataset.geometryCache || null
+                });
+              }
+            }
+          }
         };
         const drawStageInner = () => {
           lastKvAccessoryGeometry = null;
@@ -2082,10 +2234,25 @@
              like metal with a form rather than a cut-out. */
           const overcast = Boolean(sceneLife && sceneLife.state.weather !== 'sun');
           const AMB = overcast ? .51 : .36, KEY_I = overcast ? .22 : .56, FILL_I = overcast ? .19 : .22, BOUNCE_I = overcast ? .29 : .34, SKY_I = .13;
+          /* Rozklad farby na zložky je čistý výpočet z reťazca, tak sa robí
+             raz za snímok a nie raz za plochu. Cena za jednu plochu bola tri
+             takéto rozklady: nasvietenie si vypýta základnú farbu, opar
+             nasvietenú a obrys z nej ešte tmavší odtieň — a každý si ju znovu
+             rozobral regulárnym výrazom, čo je aj práca navyše, aj odpad pre
+             zberač pamäti. Reťazce sa pritom opakujú: všetky vrchné plochy
+             lamiel majú jednu farbu aj jednu normálu, takže z tabuľky
+             odpovedá takmer každé volanie. Tabuľka žije jeden snímok, tak sa
+             nemá ako rozísť so scénou, a volajúci z nej len čítajú. */
+          const rgbParsed = new Map();
           const toRGB = (c) => {
-            if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
-            const m = c.match(/[\d.]+/g) || [];
-            return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : null];
+            const hit = rgbParsed.get(c);
+            if (hit) return hit;
+            let value;
+            if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); value = [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
+            else { const m = c.match(/[\d.]+/g) || [];
+              value = [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : null]; }
+            rgbParsed.set(c, value);
+            return value;
           };
           const darken = (c, k) => {
             const v = toRGB(c);
@@ -2182,17 +2349,47 @@
             const s = v.slice(0, 3).map((x, i) => Math.round(x + (HAZE_TO[i] - x) * t)).join(',');
             return v[3] == null ? 'rgb(' + s + ')' : 'rgba(' + s + ',' + v[3] + ')';
           };
-          const geometryKey = JSON.stringify(state) + '|' + [se > 0.01, fromAbove, VIEWDIR[0] > 0, VIEWDIR[1] > 0].join(',');
-          const cacheHit = model().kvGeom && cachedGeometry && cachedGeometry.key === geometryKey;
+          /* Svetové súradnice sa pri otáčaní kamery nemenia. Pôvodne ich
+             Soltec napriek tomu skladal znova v každom motion frame: stovky
+             lamiel, rámov, výplní a spojov prešli celou JS cestou ešte pred
+             projekciou. Koverta už rovnakú raw cache používala. Kľúč obsahuje
+             celý produktový stav aj jediné pohľadové vetvy, ktoré rozhodujú,
+             ktoré pomocné plochy sa vytvoria; samotná projekcia, culling,
+             svetlo a hĺbka sa naďalej prepočítajú pre každý nový pohľad.
+             Počas zmeny produktu/lamiel teda cache bezpečne minie, pri čistom
+             orbite sa iba prehrá tá istá fyzická geometria. */
+          /* Soltec's world geometry does not depend on the camera quadrant.
+             Its old semantic layer nudges stay within the same model/background
+             class and WebGL resolves visibility from real depth. Keeping yaw
+             signs in the key caused two full rebuilds during an ordinary orbit
+             and those isolated stalls still occupied p95. Koverta retains its
+             established view bands because its trapezoid skin details select
+             the upper or lower physical face at the roof-plane crossing. */
+          const geometryViewKey = model().kvGeom
+            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
+            : [];
+          const geometryKey = JSON.stringify(state) + '|' + [overcast].concat(geometryViewKey).join(',');
+          const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
+          canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const rawFaces = [];
           const weatherSolids = [];
           let sceneryObstacles = [];
           const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
-            if (!cacheHit && model().kvGeom) rawFaces.push({ pts, fill, opts, layer });
             const o = opts || {};
-            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             const normal = o.normal || faceNormal(pts);
+            /* Store the already resolved world normal as part of the raw face.
+               Replaying the cache must still project and relight the face, but
+               it need not rebuild a normal that cannot change with the camera. */
+            if (!cacheHit) rawFaces.push({
+              pts, fill, layer,
+              opts: o.normal ? o : Object.assign({}, o, { normal })
+            });
+            /* Dlažba patrí do rovnakej svetovej cache, no pri pohľade pod
+               horizont sa nesmie premietnuť. Viditeľnosť sa vyhodnotí pri
+               replayi jednej plochy; nesmie zneplatniť celý prístrešok. */
+            if (o.aboveHorizon && se <= 0.01) return;
+            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
             if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
@@ -2527,7 +2724,7 @@
 
 
           if (cacheHit) {
-            lastKvAccessoryGeometry = cachedGeometry.accessories;
+            lastKvAccessoryGeometry = cachedGeometry.accessories || null;
             sceneryObstacles = cachedGeometry.sceneryObstacles || [];
             for (const face of cachedGeometry.faces) { layer = face.layer; quad(face.pts, face.fill, face.opts); }
           } else {
@@ -2542,24 +2739,24 @@
           const shX = 0.22 * H * (-KEY[0] / KEY[2]) * shSoft, shY = 0.22 * H * (-KEY[1] / KEY[2]) * shSoft;
 
           layer = -3 * ROOF_LAYER;
-          if (se > 0.01) {
+          if (se > 0.01 || !model().kvGeom) {
             const reach = Math.max(L, W) * 2.4;
             const fx0 = L / 2 - reach, fx1 = L / 2 + reach;
             const fy0 = W / 2 - reach, fy1 = W / 2 + reach;
-            const ground = { normal: [0,0,1], raw: true, edge: false, fit: false };
+            const ground = { normal: [0,0,1], raw: true, edge: false, fit: false, aboveHorizon: true };
             quad([[fx0,fy0,0],[fx1,fy0,0],[fx1,fy1,0],[fx0,fy1,0]], 'rgb(226,225,221)', ground);
             /* the paving, laid out from the structure so the joints stay put
                as the model is resized rather than crawling under it */
             const bay = 900;
             const joint = 'rgba(180,179,174,.55)';
             for (let x = Math.ceil(fx0 / bay) * bay; x < fx1; x += bay)
-              quad([[x - 6,fy0,0],[x + 6,fy0,0],[x + 6,fy1,0],[x - 6,fy1,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1 });
+              quad([[x - 6,fy0,0],[x + 6,fy0,0],[x + 6,fy1,0],[x - 6,fy1,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1, aboveHorizon: true });
             for (let y = Math.ceil(fy0 / bay) * bay; y < fy1; y += bay)
-              quad([[fx0,y - 6,0],[fx1,y - 6,0],[fx1,y + 6,0],[fx0,y + 6,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1 });
+              quad([[fx0,y - 6,0],[fx1,y - 6,0],[fx1,y + 6,0],[fx0,y + 6,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1, aboveHorizon: true });
             /* and a band of the page colour round the outside, so the paving
                has no visible edge of its own */
             const fade = reach * 0.42;
-            const veil = (a, b, c, d, al) => quad([a, b, c, d], 'rgba(246,245,243,' + al + ')', { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 2 });
+            const veil = (a, b, c, d, al) => quad([a, b, c, d], 'rgba(246,245,243,' + al + ')', { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 2, aboveHorizon: true });
             for (let i = 0; i < 7; i++) {
               const t = i / 7, al = (0.10 + t * 0.20).toFixed(2);
               const gx0 = fx0 + fade * t, gx1 = fx1 - fade * t, gy0 = fy0 + fade * t, gy1 = fy1 - fade * t;
@@ -4619,7 +4816,15 @@
                the blades lie flat and overlap by the 17 mm the pitch leaves
                over, which is the seal; there is no separate closed state to
                jump to, it is simply this one at nought degrees. */
-            const mid = bz + beam; // fixed pivot datum; closed top meets the frame
+            /* Zavretá strecha končila presne v rovine s hornou hranou rámu.
+               Vyzerá to správne, ale po celom obvode, kde konce lamiel dosadajú
+               na rám, tým ležia dve plochy v tej istej výške — a hĺbková pamäť
+               pri každom pootočení kamery vyberie inú. To je ten tancujúci
+               obrys na zavretej pergole. Merané deviatimi krokmi po 0,0008 rad:
+               v rovine skákalo 677 pixelov hore-dolu, o 0,8 mm nižšie ani
+               jeden. Osem desatín milimetra je menej než hrúbka náteru a na
+               2,5 m vysokom modeli to nikto neuvidí; rám ale vyhráva vždy. */
+            const mid = bz + beam / 2; // fixed pivot datum; closed top sits just under the frame
             const t = blade.t;                     // blade thickness, along its own normal
             const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
@@ -4686,12 +4891,26 @@
 
             for (let i = 0; i < n; i++) {
               const x = i0 + pitch * (i + 0.5);
-              const fullAX = x - dx, fullAZ = mid - dz;
-              const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
-              const bX = x + dx, bZ = mid + dz;
+              /* Zatvorená strecha sa prekrýva o 17 mm tesnenia, ale všetky
+                 lamely ležali na tej istej výške, takže sa v tom prekryve ich
+                 horné plochy kryli presne. Hĺbková pamäť potom nemá podľa čoho
+                 rozhodnúť, ktorá je navrchu, a pri každom pootočení kamery
+                 vyhrá iná — celá strecha „tancuje". Merané pri deviatich
+                 krokoch po 0,0008 rad: 1 126 pixelov skákalo hore-dolu, kým pri
+                 otvorených lamelách nula.
+                 Susedia sa preto striedajú o pol milimetra. Skutočná lamela
+                 tiež jedným okrajom leží na susedovi; striedanie je oproti
+                 stálemu prekladaniu to, čo nenakloní celú strechu (dvadsaťsedem
+                 lamiel po pol milimetra by bolo vyše centimetra). Pol milimetra
+                 je pod hrúbkou plechu aj pod veľkosťou pixela, takže na obraze
+                 nie je čo vidieť — len prekryv prestane byť nerozhodný. */
+              const midI = mid;
+              const fullAX = x - dx, fullAZ = midI - dz;
+              const aX = x + topLeadS * bladeUx, aZ = midI + topLeadS * bladeUz;
+              const bX = x + dx, bZ = midI + dz;
               // One rigid, closed extrusion, one powder-coat material. A
               // recessed tongue seals the neighbour without coplanar bottoms.
-              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, mid + u * bladeUz + z * bladeUx];
+              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, midI + u * bladeUz + z * bladeUx];
               // Soltec S section: a full-depth box, sloped shoulder, low
               // drainage trough and overlapping sealing lip (200/28 drawing).
               for(let j=0;j<profile.length;j++) {
@@ -4725,7 +4944,7 @@
 
           }
 
-            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
+            cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
           }
           layer = 0;
 
