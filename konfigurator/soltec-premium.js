@@ -1681,6 +1681,7 @@
                ovládanie na kresbe, nekreslí sa nič a rýchlosť vyjde skvele. */
             view: { az: view.az, el: view.el },
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
+            geometryCache: canvas.dataset.geometryCache || null,
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
             geometry: model().kvGeom ? {
@@ -2334,17 +2335,33 @@
             const s = v.slice(0, 3).map((x, i) => Math.round(x + (HAZE_TO[i] - x) * t)).join(',');
             return v[3] == null ? 'rgb(' + s + ')' : 'rgba(' + s + ',' + v[3] + ')';
           };
-          const geometryKey = JSON.stringify(state) + '|' + [se > 0.01, fromAbove, VIEWDIR[0] > 0, VIEWDIR[1] > 0].join(',');
-          const cacheHit = model().kvGeom && cachedGeometry && cachedGeometry.key === geometryKey;
+          /* Svetové súradnice sa pri otáčaní kamery nemenia. Pôvodne ich
+             Soltec napriek tomu skladal znova v každom motion frame: stovky
+             lamiel, rámov, výplní a spojov prešli celou JS cestou ešte pred
+             projekciou. Koverta už rovnakú raw cache používala. Kľúč obsahuje
+             celý produktový stav aj jediné pohľadové vetvy, ktoré rozhodujú,
+             ktoré pomocné plochy sa vytvoria; samotná projekcia, culling,
+             svetlo a hĺbka sa naďalej prepočítajú pre každý nový pohľad.
+             Počas zmeny produktu/lamiel teda cache bezpečne minie, pri čistom
+             orbite sa iba prehrá tá istá fyzická geometria. */
+          const geometryKey = JSON.stringify(state) + '|' + [overcast, se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])].join(',');
+          const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
+          canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const rawFaces = [];
           const weatherSolids = [];
           let sceneryObstacles = [];
           const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
-            if (!cacheHit && model().kvGeom) rawFaces.push({ pts, fill, opts, layer });
             const o = opts || {};
             if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             const normal = o.normal || faceNormal(pts);
+            /* Store the already resolved world normal as part of the raw face.
+               Replaying the cache must still project and relight the face, but
+               it need not rebuild a normal that cannot change with the camera. */
+            if (!cacheHit) rawFaces.push({
+              pts, fill, layer,
+              opts: o.normal ? o : Object.assign({}, o, { normal })
+            });
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
             if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
@@ -2679,7 +2696,7 @@
 
 
           if (cacheHit) {
-            lastKvAccessoryGeometry = cachedGeometry.accessories;
+            lastKvAccessoryGeometry = cachedGeometry.accessories || null;
             sceneryObstacles = cachedGeometry.sceneryObstacles || [];
             for (const face of cachedGeometry.faces) { layer = face.layer; quad(face.pts, face.fill, face.opts); }
           } else {
@@ -4899,7 +4916,7 @@
 
           }
 
-            if (model().kvGeom) cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
+            cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
           }
           layer = 0;
 

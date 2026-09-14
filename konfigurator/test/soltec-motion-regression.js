@@ -20,6 +20,10 @@ function assertSourceContract() {
   assert.match(source, /const BSP_MAX = model\(\)\.kvGeom \? 320 : 28;/, 'Soltec BSP must keep its bounded interactive-depth path');
   assert.match(source, /const BSP_LEAF = model\(\)\.kvGeom \? 0 : 18;/, 'Soltec BSP must stop subdividing already-small local face sets');
   assert.match(source, /scheduleStage\(\);/, 'Camera motion must use the stage-only render path');
+  assert.match(source, /const cacheHit = Boolean\(cachedGeometry && cachedGeometry\.key === geometryKey\);/,
+    'World-geometry cache must cover Soltec as well as Koverta');
+  assert.doesNotMatch(source, /cacheHit = model\(\)\.kvGeom/,
+    'Soltec geometry cache must not be gated behind the Koverta model flag');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the
@@ -61,6 +65,26 @@ function percentile(values, p) {
 
   const pageKind = await page.evaluate(() => window.SP_TEST.snapshot().page);
   assert.equal(pageKind, 'bio', 'Motion regression must run on the Soltec bioclimatic pergola, not Koverta');
+
+  // A stage-only redraw at an unchanged view must replay world geometry. The
+  // previous implementation exposed the cache only to Koverta, so Soltec
+  // reported a miss forever and rebuilt every blade on every camera frame.
+  const cacheProbe = await page.evaluate(() => {
+    window.SP_TEST.redraw();
+    const fresh = {
+      cache: window.SP_TEST.snapshot().geometryCache,
+      faces: Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount)
+    };
+    window.SP_TEST.redrawStage();
+    const replay = {
+      cache: window.SP_TEST.snapshot().geometryCache,
+      faces: Number(document.querySelector('#SoltecPremium [data-sp-canvas]').dataset.faceCount)
+    };
+    return { fresh, replay };
+  });
+  assert.equal(cacheProbe.fresh.cache, 'miss', 'Forced Soltec redraw must rebuild the cache once');
+  assert.equal(cacheProbe.replay.cache, 'hit', 'Unchanged Soltec stage redraw did not reuse world geometry');
+  assert.equal(cacheProbe.replay.faces, cacheProbe.fresh.faces, 'Soltec cache replay changed the rendered face count');
 
   // Sweep directly through the low-elevation region. The test uses only the
   // stage renderer so it measures geometry/render behavior rather than rebuilding UI.
