@@ -1919,7 +1919,13 @@
           /* Plátno má odteraz vždy veľkosť displeja, takže samo o sebe nepovie,
              v akom rozlíšení sa scéna naozaj kreslila — a kontrola otáčania sa
              na jeho veľkosť spoliehala. Skutočný rozmer je preto vidieť tu. */
-          surface.dataset.spRender = offscreen ? fboW + 'x' + fboH : width + 'x' + height;
+          const drawnSize = offscreen ? fboW + 'x' + fboH : width + 'x' + height;
+          /* Zapisuje sa len pri zmene. Počas ťahania ide o zápis do DOM ku
+             každému snímku a tam sa nemá čo míňať. */
+          if (depthPainter.drawnSize !== drawnSize) {
+            depthPainter.drawnSize = drawnSize;
+            surface.dataset.spRender = drawnSize;
+          }
           const drawW = offscreen ? fboW : width;
           const drawH = offscreen ? fboH : height;
           if (depthPainter.cssWidth !== cssWidth || depthPainter.cssHeight !== cssHeight) {
