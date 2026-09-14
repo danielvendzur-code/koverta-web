@@ -2353,7 +2353,7 @@
              the upper or lower physical face at the roof-plane crossing. */
           const geometryViewKey = model().kvGeom
             ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
-            : [se > 0.01];
+            : [];
           const geometryKey = JSON.stringify(state) + '|' + [overcast].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
@@ -2363,7 +2363,6 @@
           const eye = [L / 2 + VIEWDIR[0] * DIST, W / 2 + VIEWDIR[1] * DIST, H / 2 + VIEWDIR[2] * DIST];
           const quad = (pts, fill, opts) => {
             const o = opts || {};
-            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             const normal = o.normal || faceNormal(pts);
             /* Store the already resolved world normal as part of the raw face.
                Replaying the cache must still project and relight the face, but
@@ -2372,6 +2371,11 @@
               pts, fill, layer,
               opts: o.normal ? o : Object.assign({}, o, { normal })
             });
+            /* Dlažba patrí do rovnakej svetovej cache, no pri pohľade pod
+               horizont sa nesmie premietnuť. Viditeľnosť sa vyhodnotí pri
+               replayi jednej plochy; nesmie zneplatniť celý prístrešok. */
+            if (o.aboveHorizon && se <= 0.01) return;
+            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
             if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
@@ -2721,24 +2725,24 @@
           const shX = 0.22 * H * (-KEY[0] / KEY[2]) * shSoft, shY = 0.22 * H * (-KEY[1] / KEY[2]) * shSoft;
 
           layer = -3 * ROOF_LAYER;
-          if (se > 0.01) {
+          if (se > 0.01 || !model().kvGeom) {
             const reach = Math.max(L, W) * 2.4;
             const fx0 = L / 2 - reach, fx1 = L / 2 + reach;
             const fy0 = W / 2 - reach, fy1 = W / 2 + reach;
-            const ground = { normal: [0,0,1], raw: true, edge: false, fit: false };
+            const ground = { normal: [0,0,1], raw: true, edge: false, fit: false, aboveHorizon: true };
             quad([[fx0,fy0,0],[fx1,fy0,0],[fx1,fy1,0],[fx0,fy1,0]], 'rgb(226,225,221)', ground);
             /* the paving, laid out from the structure so the joints stay put
                as the model is resized rather than crawling under it */
             const bay = 900;
             const joint = 'rgba(180,179,174,.55)';
             for (let x = Math.ceil(fx0 / bay) * bay; x < fx1; x += bay)
-              quad([[x - 6,fy0,0],[x + 6,fy0,0],[x + 6,fy1,0],[x - 6,fy1,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1 });
+              quad([[x - 6,fy0,0],[x + 6,fy0,0],[x + 6,fy1,0],[x - 6,fy1,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1, aboveHorizon: true });
             for (let y = Math.ceil(fy0 / bay) * bay; y < fy1; y += bay)
-              quad([[fx0,y - 6,0],[fx1,y - 6,0],[fx1,y + 6,0],[fx0,y + 6,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1 });
+              quad([[fx0,y - 6,0],[fx1,y - 6,0],[fx1,y + 6,0],[fx0,y + 6,0]], joint, { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 1, aboveHorizon: true });
             /* and a band of the page colour round the outside, so the paving
                has no visible edge of its own */
             const fade = reach * 0.42;
-            const veil = (a, b, c, d, al) => quad([a, b, c, d], 'rgba(246,245,243,' + al + ')', { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 2 });
+            const veil = (a, b, c, d, al) => quad([a, b, c, d], 'rgba(246,245,243,' + al + ')', { normal: [0,0,1], raw: true, edge: false, fit: false, bias: 2, aboveHorizon: true });
             for (let i = 0; i < 7; i++) {
               const t = i / 7, al = (0.10 + t * 0.20).toFixed(2);
               const gx0 = fx0 + fade * t, gx1 = fx1 - fade * t, gy0 = fy0 + fade * t, gy1 = fy1 - fade * t;
