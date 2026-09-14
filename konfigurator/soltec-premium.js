@@ -2111,7 +2111,21 @@
           const drawStart = (window.performance && performance.now) ? performance.now() : 0;
           const moving = motionDetail;
           try { return drawStageInner(); }
-          finally { if (drawStart) (moving ? noteFrame : noteStill)(performance.now() - drawStart); }
+          finally {
+            if (drawStart) {
+              const elapsed = performance.now() - drawStart;
+              (moving ? noteFrame : noteStill)(elapsed);
+              /* The browser QA records renderer work rather than gaps caused
+                 by Playwright delivering pointer events over CDP. This array
+                 exists only when the test explicitly creates it. */
+              if (moving && window.SP_TEST && Array.isArray(window.SP_TEST.motionFrames)) {
+                window.SP_TEST.motionFrames.push({
+                  ms: elapsed,
+                  cache: canvas.dataset.geometryCache || null
+                });
+              }
+            }
+          }
         };
         const drawStageInner = () => {
           lastKvAccessoryGeometry = null;
