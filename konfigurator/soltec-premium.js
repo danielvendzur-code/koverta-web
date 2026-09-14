@@ -1746,14 +1746,15 @@
           if (depthPainter === false) return false;
           if (!depthPainter) {
             const surface = document.createElement('canvas');
-            /* Vyhladzovanie stojí na prevzorkovaní, nie na MSAA. Zastavený
-               snímok sa kreslí 2,5- až 4,4-násobne nad CSS pixelmi a prehliadač
-               ho zmenší — to je 6 až 19 vzoriek na výsledný pixel, hustejšie
-               než 4× MSAA, a vyhladzuje aj vnútro plochy, nie iba obrys. MSAA
-               sa k tomu iba pripočítavalo a na stroji bez grafickej karty to
-               bolo drahé: rovnaký ťah myšou stál 150 ms na snímok s ním a
-               67 ms bez neho (p95). V obraze sme najväčší rozdiel našli na
-               jedinej zvislej hrane — jeden stĺpec sivej medzihodnoty. */
+            /* Scéna sa nekreslí rovno na plátno, ale do vlastnej textúry vo
+               vyššom rozlíšení, ktorú si sami zmenšíme (nižšie `resolve`).
+               Dôvod: zmenšovanie necháva prehliadač a ten to robí zle. Pri
+               2,5:1 ostanú zo šikmých hrán schody, pri 4:1 vyzerá obraz ako
+               bez vyhladzovania vôbec — merané na tom istom zábere trapézovej
+               strechy, ktorá je zo šikmých hrán celá. Vlastný filter započíta
+               každý vykreslený pixel, nie iba tie, ktoré si prehliadač vyberie.
+               MSAA na hlavnom buffri preto netreba — kreslíme doň už len
+               hotový obdĺžnik. */
             const gl = surface.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
             if (!gl) { depthPainter = false; return false; }
             const compile = (type, source) => {
@@ -1768,6 +1769,21 @@
             gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
             gl.deleteShader(vs); gl.deleteShader(fs);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+            /* Zmenšovací priechod. Štyri odbery s lineárnym filtrom, položené
+               do stredov štyroch kvadrantov výsledného pixela: každý odber sám
+               spriemeruje svoj blok, takže štyri odbery pokryjú celú plochu aj
+               pri štvornásobnom zmenšení. Priemeruje sa s krytím zarátaným do
+               farby a až potom sa delí späť — inak by na priehľadnom okraji
+               presiakla farba spod nuly. */
+            const rprog = gl.createProgram();
+            const rvs = compile(gl.VERTEX_SHADER, 'attribute vec2 corner; varying vec2 vUV; void main(){vUV=corner*0.5+0.5;gl_Position=vec4(corner,0.0,1.0);}');
+            const rfs = compile(gl.FRAGMENT_SHADER, 'precision mediump float; uniform sampler2D src; uniform vec2 step; varying vec2 vUV; vec4 tap(vec2 o){vec4 t=texture2D(src,vUV+o);return vec4(t.rgb*t.a,t.a);} void main(){vec4 a=tap(vec2(-step.x,-step.y))+tap(vec2(step.x,-step.y))+tap(vec2(-step.x,step.y))+tap(vec2(step.x,step.y));a*=0.25;gl_FragColor=a.a>0.0015?vec4(a.rgb/a.a,a.a):vec4(0.0);}');
+            gl.attachShader(rprog, rvs); gl.attachShader(rprog, rfs); gl.linkProgram(rprog);
+            gl.deleteShader(rvs); gl.deleteShader(rfs);
+            if (!gl.getProgramParameter(rprog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(rprog));
+            const quad = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
             /* WebGL used to live in an SVG foreignObject. That makes Chromium
                composite the whole SVG/HTML boundary on every orbit frame. Keep
                the SVG as the accessible interaction surface and background,
@@ -1792,6 +1808,12 @@
               scheduleStage();
             });
             depthPainter = { gl, program, surface, cssWidth: 0, cssHeight: 0,
+              rprog, quad,
+              rcorner: gl.getAttribLocation(rprog, 'corner'),
+              rsrc: gl.getUniformLocation(rprog, 'src'),
+              rstep: gl.getUniformLocation(rprog, 'step'),
+              fbo: gl.createFramebuffer(), fboTex: gl.createTexture(),
+              fboDepth: gl.createRenderbuffer(), fboW: 0, fboH: 0,
               /* Najväčší buffer, aký ovládač unesie. Pýtame sa naň raz pri
                  vzniku kontextu: `gl.getParameter` je synchrónna otázka do
                  ovládača a volaná na každom snímku zrazila kreslenie z 17 ms
@@ -1804,6 +1826,7 @@
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+            depthPainter.decal = texture;
             const logo=new Image();logo.onload=()=>{
               gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
               gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,logo);scheduleStage();
@@ -1820,7 +1843,16 @@
              ostrý snímok. Plocha je zhora obmedzená, aby veľké okno na 3×
              displeji nevyrobilo buffer, ktorý ovládač odmietne. */
           const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9) : Math.max(2.5, dpr * stillScale);
+          /* Zastavený snímok sa kreslí v celočíselnom násobku fyzických
+             pixelov displeja. Nie kvôli výkonu — kvôli obrazu. Zmenšenie
+             2,5:1 si prehliadač neodfiltruje: zo šikmých hrán, a trapézová
+             strecha je z nich celá, ostanú schody. Pri 2:1 zmenší správne a
+             tie isté rebrá sú súvislé; porovnané na tom istom zábere. Vyššie
+             prevzorkovanie preto obraz nezlepšuje, ak nesedí na celé pixely —
+             pri 4:1 vyzeral rovnako zubato ako bez vyhladzovania. Vedľajší
+             účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
+          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
+            : dpr * (stillScale >= 2 ? 4 : 2);
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
@@ -1835,9 +1867,50 @@
           const fits = Math.min(1, maxSide / Math.max(1, cssWidth * ratio),
                                    maxSide / Math.max(1, cssHeight * ratio));
           if (fits < 1) ratio *= fits;
-          const width = Math.max(1, Math.round(cssWidth * ratio));
-          const height = Math.max(1, Math.round(cssHeight * ratio));
+          /* Keď niektorý strop násobok zrazí, zaokrúhli sa späť nadol na celé
+             fyzické pixely — filter nižšie počíta so štvorcovými blokmi. */
+          if (!motionDetail) ratio = dpr * Math.max(1, Math.floor(ratio / dpr + 1e-6));
+          /* Zastavený snímok: plátno má presne toľko pixelov, koľko ich má
+             displej, takže ho prehliadač už nijako nepreberá — scéna sa kreslí
+             do textúry `ratio/dpr`-krát väčšej a zmenšuje ju náš vlastný
+             priechod. Počas otáčania sa kreslí rovno na plátno v zníženom
+             rozlíšení ako doteraz: obraz je vtedy aj tak rozmazaný zámerne a
+             priechod navyše by len ubral snímky (na tom istom ťahu 50 → 67 ms
+             na snímok). */
+          const width = Math.max(1, Math.round(cssWidth * (motionDetail ? ratio : dpr)));
+          const height = Math.max(1, Math.round(cssHeight * (motionDetail ? ratio : dpr)));
           if (surface.width !== width || surface.height !== height) { surface.width = width; surface.height = height; }
+          const fboW = Math.max(1, Math.round(cssWidth * ratio));
+          const fboH = Math.max(1, Math.round(cssHeight * ratio));
+          if (!motionDetail && (depthPainter.fboW !== fboW || depthPainter.fboH !== fboH)) {
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.fboTex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fboW, fboH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            /* 24-bitová hĺbka, nie 16. Šestnásť bitov nestačí ani hlavnému
+               buffru — plechy hrubé pol milimetra sa v nich bijú — a vlastný
+               cieľ by na tom bol rovnako. `DEPTH_STENCIL` je jediný spôsob,
+               ako si v tejto verzii WebGL vypýtať 24 bitov. */
+            gl.bindRenderbuffer(gl.RENDERBUFFER, depthPainter.fboDepth);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, fboW, fboH);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, depthPainter.fbo);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, depthPainter.fboTex, 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depthPainter.fboDepth);
+            const ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+            /* Keby ovládač taký cieľ odmietol, kreslíme rovno na plátno ako
+               predtým — radšej tvrdšia hrana než prázdna scéna. */
+            depthPainter.offscreen = ready;
+            depthPainter.fboW = ready ? fboW : 0;
+            depthPainter.fboH = ready ? fboH : 0;
+          }
+          const offscreen = !motionDetail && depthPainter.offscreen && depthPainter.fboW === fboW;
+          const drawW = offscreen ? fboW : width;
+          const drawH = offscreen ? fboH : height;
           if (depthPainter.cssWidth !== cssWidth || depthPainter.cssHeight !== cssHeight) {
             surface.style.width = cssWidth + 'px';
             surface.style.height = cssHeight + 'px';
@@ -1944,7 +2017,8 @@
           transparent.sort((a,b) => a.depthAvg - b.depthAvg || a.order - b.order);
           upload('background', background); upload('solid', solid); upload('transparent', transparent);
           const paint = () => {
-            gl.viewport(0, 0, surface.width, surface.height);
+            if (offscreen) gl.bindFramebuffer(gl.FRAMEBUFFER, depthPainter.fbo);
+            gl.viewport(0, 0, drawW, drawH);
             bindStage();
             gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.depthMask(true);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -1959,6 +2033,30 @@
               bindStage();
             }
             drawSlot(slots.transparent, true); gl.depthMask(true);
+            if (!offscreen) return;
+            /* Zmenšenie do plátna. Odbery sedia v stredoch kvadrantov, takže
+               pri dvoj- aj trojnásobku pokryjú celú plochu pixela. */
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, surface.width, surface.height);
+            gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+            gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.disable(gl.BLEND);
+            gl.useProgram(depthPainter.rprog);
+            gl.bindBuffer(gl.ARRAY_BUFFER, depthPainter.quad);
+            gl.enableVertexAttribArray(depthPainter.rcorner);
+            gl.vertexAttribPointer(depthPainter.rcorner, 2, gl.FLOAT, false, 0, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.fboTex);
+            gl.uniform1i(depthPainter.rsrc, 0);
+            const q = drawW / Math.max(1, surface.width);
+            gl.uniform2f(depthPainter.rstep, q > 1 ? q / 4 / drawW : 0, q > 1 ? q / 4 / drawH : 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.disableVertexAttribArray(depthPainter.rcorner);
+            /* Scéna očakáva na jednotke 0 obtlačok. Keby tu ostala visieť
+               cieľová textúra, ďalší snímok by do nej kreslil a súčasne z nej
+               čítal — a nenakreslil by nič. */
+            gl.bindTexture(gl.TEXTURE_2D, depthPainter.decal || null);
+            gl.depthMask(true);
           };
           depthPainter.replay = paint;
           paint();
