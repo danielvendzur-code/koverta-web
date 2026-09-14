@@ -1730,7 +1730,7 @@
         foto: './assets/soltec-carport-sl240-real.jpg',
         preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
-        foto: 'https://koverta.sk/cdn/shop/files/20250522_144729.jpg?width=600',
+        foto: './assets/foto/20250522_144729-w600.jpg',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
         foto: './assets/soltec-bio-hero-2026.jpg',
