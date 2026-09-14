@@ -1714,18 +1714,31 @@
            že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
         let motionScale = 1.5;
         const motionTimes = [];
+        /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+           karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
+           lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
+           kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
+           tieto stupne nikdy nespadne. */
+        const motionStep = (ms) => ms > 90 ? 0.55 : ms > 45 ? 0.75 : ms > 26 ? 1
+          : ms > 15 ? 1.25 : ms < 9 ? 1.9 : 1.5;
         const noteFrame = (ms) => {
           motionTimes.push(ms); if (motionTimes.length > 12) motionTimes.shift();
+          /* Spomalenie sa uzná z jedného snímku, zrýchlenie až z mediánu.
+             Kým sa aj na spomalenie čakalo na šesť snímkov, každé ťahanie na
+             slabom stroji začínalo šiestimi najdrahšími snímkami, aké vie
+             nakresliť — a práve tie divák vidí ako trhnutie hneď na začiatku
+             pohybu, teda tam, kde najviac prekáža. Jeden snímok nad 60 ms je
+             dosť na dôkaz, že stroj nestíha; opačne to neplatí, jeden rýchly
+             snímok o výkone nesvedčí, tak sa nahor ide naďalej cez medián.
+             Šesťdesiat, nie štyridsaťpäť, aby jediné zaseknutie na inak
+             svižnom stroji kvalitu nezrazilo. */
+          if (ms > 60) {
+            const hned = motionStep(ms);
+            if (hned < motionScale) { motionScale = hned; motionTimes.length = 0; return; }
+          }
           if (motionTimes.length < 6) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
-          const median = sorted[sorted.length >> 1];
-          /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
-             karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
-             lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
-             kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
-             tieto stupne nikdy nespadne. */
-          const want = median > 90 ? 0.55 : median > 45 ? 0.75 : median > 26 ? 1
-            : median > 15 ? 1.25 : median < 9 ? 1.9 : 1.5;
+          const want = motionStep(sorted[sorted.length >> 1]);
           if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
@@ -2079,8 +2092,17 @@
           paint();
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
-          if (window.SP_TEST) window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
-          canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
+          /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
+             záber zložený a či nejaká plocha vyšla nezmyselne. Ten druhý
+             prejde každý vrchol každej plochy — pri troch tisícoch plôch to
+             bola pätina času, ktorý ostal na snímok počas otáčania, a to
+             kvôli číslu, ktoré sa nikdy nečíta počas ťahania. Kontroly ho
+             čítajú zo zastaveného záberu, a ten sa dokreslí hneď po pustení,
+             takže tam ostáva presne taký, aký bol. */
+          if (!motionDetail) {
+            window.SP_TEST.renderMaterials = [...new Set(faces.map(f => f.sourceFill))];
+            canvas.dataset.invalidFaceCount = String(faces.filter(f => f.w.length < 3 || f.w.some(p => p.some(v => !Number.isFinite(v)))).length);
+          }
           return true;
         };
 
@@ -2197,10 +2219,25 @@
              like metal with a form rather than a cut-out. */
           const overcast = Boolean(sceneLife && sceneLife.state.weather !== 'sun');
           const AMB = overcast ? .51 : .36, KEY_I = overcast ? .22 : .56, FILL_I = overcast ? .19 : .22, BOUNCE_I = overcast ? .29 : .34, SKY_I = .13;
+          /* Rozklad farby na zložky je čistý výpočet z reťazca, tak sa robí
+             raz za snímok a nie raz za plochu. Cena za jednu plochu bola tri
+             takéto rozklady: nasvietenie si vypýta základnú farbu, opar
+             nasvietenú a obrys z nej ešte tmavší odtieň — a každý si ju znovu
+             rozobral regulárnym výrazom, čo je aj práca navyše, aj odpad pre
+             zberač pamäti. Reťazce sa pritom opakujú: všetky vrchné plochy
+             lamiel majú jednu farbu aj jednu normálu, takže z tabuľky
+             odpovedá takmer každé volanie. Tabuľka žije jeden snímok, tak sa
+             nemá ako rozísť so scénou, a volajúci z nej len čítajú. */
+          const rgbParsed = new Map();
           const toRGB = (c) => {
-            if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
-            const m = c.match(/[\d.]+/g) || [];
-            return [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : null];
+            const hit = rgbParsed.get(c);
+            if (hit) return hit;
+            let value;
+            if (c.charAt(0) === '#') { const n = parseInt(c.slice(1), 16); value = [(n >> 16) & 255, (n >> 8) & 255, n & 255, null]; }
+            else { const m = c.match(/[\d.]+/g) || [];
+              value = [+m[0] || 0, +m[1] || 0, +m[2] || 0, m.length > 3 ? +m[3] : null]; }
+            rgbParsed.set(c, value);
+            return value;
           };
           const darken = (c, k) => {
             const v = toRGB(c);
