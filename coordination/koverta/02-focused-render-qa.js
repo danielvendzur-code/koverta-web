@@ -129,17 +129,21 @@ async function renderProbe(page, az, el, sampleFascia) {
         const px = Math.round(point.x);
         const py = Math.round(point.y);
         if (px < 1 || py < 1 || px >= vb[2] - 1 || py >= vb[3] - 1) continue;
-        /* Pri pohľade takmer po líci sa celé zmestí do niekoľkých pixelov: pri
-           azimute 5° padli dva body vzdialené 240 mm na pixely 89 a 87. Jeden
-           pixel vtedy pokrýva stovky milimetrov steny aj kus strechy za jej
-           hranou a zaokrúhlený odber sa už nedá pripísať lemovaniu — vychádza
-           raz tak, raz onak podľa toho, kam padne hranica: pri okraji kresby
-           8 % čisto, pri 6 % dva body, pri 5 % zase čisto, pri 4 % dva. Taká
-           odpoveď nemeria plech, meria zaokrúhľovanie. Body, kde je líce užšie
-           než dva pixely na krok, sa preto nepočítajú ani ako vzorka; skutočná
-           diera v merateľnom lemovaní padne ďalej rovnako. */
+        /* Vyššie stojí, že líce presne z boku nie je viditeľná plocha. Test
+           na to (`> 1e-6`) ale nevylúči nič: pri azimute 5° je líce od bočného
+           pohľadu ďaleko dosť, aby prešlo, a pritom sa celé zmestí do hrsti
+           pixelov — dva body vzdialené 240 mm padli na pixely 89 a 87, kým na
+           čelnej stene je ten istý krok 56 pixelov. Jeden pixel vtedy pokrýva
+           stovky milimetrov plechu aj kus strechy za jeho hranou a zaokrúhlený
+           odber sa nedá pripísať lemovaniu: pri okraji kresby 8 % vyšiel čisto,
+           pri 6 % dva body, pri 5 % zase čisto, pri 4 % dva. To nemeria plech,
+           to meria zaokrúhľovanie. Hranica je preto merateľná — krok kratší než
+           štyri pixely znamená líce priostro z boku a bod sa nepočíta ani ako
+           vzorka. Diera v lemovaní, ktoré pixely rozlíšia, padne ďalej rovnako,
+           a keby raz prestali byť merateľné takmer všetky body, zhodí to beh
+           nález `fascia-sampling-degenerate` nižšie. */
         const along = window.SP_TEST.project(nextX, nextY, zFace);
-        if (Math.hypot(along.x - point.x, along.y - point.y) < 2) { fasciaUnresolved += 1; continue; }
+        if (Math.hypot(along.x - point.x, along.y - point.y) < 4) { fasciaUnresolved += 1; continue; }
         fasciaSamples += 1;
         const isGreen = (sx, sy) => {
           const offset = (sy * vb[2] + sx) * 4;
