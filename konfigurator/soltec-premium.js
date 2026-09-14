@@ -2344,7 +2344,17 @@
              svetlo a hĺbka sa naďalej prepočítajú pre každý nový pohľad.
              Počas zmeny produktu/lamiel teda cache bezpečne minie, pri čistom
              orbite sa iba prehrá tá istá fyzická geometria. */
-          const geometryKey = JSON.stringify(state) + '|' + [overcast, se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])].join(',');
+          /* Soltec's world geometry does not depend on the camera quadrant.
+             Its old semantic layer nudges stay within the same model/background
+             class and WebGL resolves visibility from real depth. Keeping yaw
+             signs in the key caused two full rebuilds during an ordinary orbit
+             and those isolated stalls still occupied p95. Koverta retains its
+             established view bands because its trapezoid skin details select
+             the upper or lower physical face at the roof-plane crossing. */
+          const geometryViewKey = model().kvGeom
+            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
+            : [se > 0.01];
+          const geometryKey = JSON.stringify(state) + '|' + [overcast].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const rawFaces = [];

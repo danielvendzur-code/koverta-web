@@ -24,6 +24,8 @@ function assertSourceContract() {
     'World-geometry cache must cover Soltec as well as Koverta');
   assert.doesNotMatch(source, /cacheHit = model\(\)\.kvGeom/,
     'Soltec geometry cache must not be gated behind the Koverta model flag');
+  assert.match(source, /const geometryViewKey = model\(\)\.kvGeom[\s\S]{0,180}: \[se > 0\.01\];/,
+    'Soltec camera orbit must not invalidate world geometry at yaw quadrant boundaries');
 
   // Koverta must keep generating physical roof components at every camera
   // elevation. BSP resolves visibility; camera thresholds must not delete the
