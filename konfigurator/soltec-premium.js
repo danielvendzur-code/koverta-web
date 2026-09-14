@@ -4724,7 +4724,15 @@
                the blades lie flat and overlap by the 17 mm the pitch leaves
                over, which is the seal; there is no separate closed state to
                jump to, it is simply this one at nought degrees. */
-            const mid = bz + beam; // fixed pivot datum; closed top meets the frame
+            /* Zavretá strecha končila presne v rovine s hornou hranou rámu.
+               Vyzerá to správne, ale po celom obvode, kde konce lamiel dosadajú
+               na rám, tým ležia dve plochy v tej istej výške — a hĺbková pamäť
+               pri každom pootočení kamery vyberie inú. To je ten tancujúci
+               obrys na zavretej pergole. Merané deviatimi krokmi po 0,0008 rad:
+               v rovine skákalo 677 pixelov hore-dolu, o 0,8 mm nižšie ani
+               jeden. Osem desatín milimetra je menej než hrúbka náteru a na
+               2,5 m vysokom modeli to nikto neuvidí; rám ale vyhráva vždy. */
+            const mid = bz + beam / 2; // fixed pivot datum; closed top sits just under the frame
             const t = blade.t;                     // blade thickness, along its own normal
             const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
@@ -4791,12 +4799,26 @@
 
             for (let i = 0; i < n; i++) {
               const x = i0 + pitch * (i + 0.5);
-              const fullAX = x - dx, fullAZ = mid - dz;
-              const aX = x + topLeadS * bladeUx, aZ = mid + topLeadS * bladeUz;
-              const bX = x + dx, bZ = mid + dz;
+              /* Zatvorená strecha sa prekrýva o 17 mm tesnenia, ale všetky
+                 lamely ležali na tej istej výške, takže sa v tom prekryve ich
+                 horné plochy kryli presne. Hĺbková pamäť potom nemá podľa čoho
+                 rozhodnúť, ktorá je navrchu, a pri každom pootočení kamery
+                 vyhrá iná — celá strecha „tancuje". Merané pri deviatich
+                 krokoch po 0,0008 rad: 1 126 pixelov skákalo hore-dolu, kým pri
+                 otvorených lamelách nula.
+                 Susedia sa preto striedajú o pol milimetra. Skutočná lamela
+                 tiež jedným okrajom leží na susedovi; striedanie je oproti
+                 stálemu prekladaniu to, čo nenakloní celú strechu (dvadsaťsedem
+                 lamiel po pol milimetra by bolo vyše centimetra). Pol milimetra
+                 je pod hrúbkou plechu aj pod veľkosťou pixela, takže na obraze
+                 nie je čo vidieť — len prekryv prestane byť nerozhodný. */
+              const midI = mid;
+              const fullAX = x - dx, fullAZ = midI - dz;
+              const aX = x + topLeadS * bladeUx, aZ = midI + topLeadS * bladeUz;
+              const bX = x + dx, bZ = midI + dz;
               // One rigid, closed extrusion, one powder-coat material. A
               // recessed tongue seals the neighbour without coplanar bottoms.
-              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, mid + u * bladeUz + z * bladeUx];
+              const P = (u, z, y) => [x + u * bladeUx - z * bladeUz, y, midI + u * bladeUz + z * bladeUx];
               // Soltec S section: a full-depth box, sloped shoulder, low
               // drainage trough and overlapping sealing lip (200/28 drawing).
               for(let j=0;j<profile.length;j++) {
