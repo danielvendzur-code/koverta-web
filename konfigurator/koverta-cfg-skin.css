@@ -803,17 +803,20 @@ body { background: var(--k-white); color: var(--k-ink); }
 
 /* ==========================================================================
    Dotykové ovládanie vizualizácie
-   Otáčanie modelu prstom scrollovalo stránkou: `touch-action: none` bolo len
-   na samotnom SVG, ale ťahanie počúva celá scéna, takže dotyk kdekoľvek mimo
-   plátna dal prehliadaču povolenie stránku posunúť. Model sa pod prstom
-   pootočil o kúsok a potom už len ušiel hore.
+   Scéna si brala celý dotyk (`touch-action: none`), aby ťah prstom model
+   otáčal a nescrolloval stránku. Na telefóne to znamenalo, že vizualizácia
+   zaberá kus obrazovky, ktorým sa stránka posunúť nedá — majiteľ hlásil, že
+   konfigurátor na mobile nejde odscrollovať. „Vedľa nej je vždy čoho sa
+   chytiť" na širokom okne platí, na 390 px nie.
 
-   Scéna preto dotykové gestá preberá celá. Stránka sa scrolluje čímkoľvek
-   mimo nej — vizualizácia nie je na výšku obrazovky, takže je vždy čoho sa
-   chytiť.
+   Rozdelené je to podľa smeru: zvislé potiahnutie patrí stránke, vodorovné
+   scéne. Otáčanie okolo zvislej osi je to, čo si zákazník na modeli
+   prezerá, a to ostáva pod prstom; sklon má vlastné tlačidlá pohľadov.
+   Prehliadač gesto vyhodnotí sám a keď si zvislé vezme, pošle nám
+   `pointercancel`, ktorý už obsluhujeme.
    ========================================================================== */
 #SoltecPremium .sp-stage,
-#SoltecPremium .sp-stage__canvas { touch-action: none; }
+#SoltecPremium .sp-stage__canvas { touch-action: pan-y; }
 /* Lišta pod scénou sú tlačidlá, tam musí dotyk fungovať normálne. */
 #SoltecPremium .sp-stage__bar,
 #SoltecPremium .sp-stage__ref { touch-action: auto; }

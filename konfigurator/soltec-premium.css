@@ -390,7 +390,7 @@
     #SoltecPremium .sp-louver-range::-webkit-slider-thumb { width: 1.8rem; height: 1.8rem; margin-top: -.65rem; border: 0; border-radius: 50%; background: var(--sp-ink); -webkit-appearance: none; appearance: none; box-shadow: 0 .2rem .6rem rgba(18,18,18,.25); }
     #SoltecPremium .sp-louver-range::-moz-range-thumb { width: 1.8rem; height: 1.8rem; border: 0; border-radius: 50%; background: var(--sp-ink); box-shadow: 0 .2rem .6rem rgba(18,18,18,.25); }
     #SoltecPremium .sp-louver-run { display: flex; align-items: center; gap: .8rem; }
-    #SoltecPremium .sp-louver-btn { display: grid; width: 3.4rem; height: 3.4rem; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid var(--sp-line); border-radius: 50%; background: #fff; color: var(--sp-ink); cursor: pointer; touch-action: none; transition: background-color .15s ease, border-color .15s ease, transform .12s ease; }
+    #SoltecPremium .sp-louver-btn { display: grid; width: 3.4rem; height: 3.4rem; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid var(--sp-line); border-radius: 50%; background: #fff; color: var(--sp-ink); cursor: pointer; touch-action: pan-y; transition: background-color .15s ease, border-color .15s ease, transform .12s ease; }
     #SoltecPremium .sp-louver-btn svg { width: 1.9rem; height: 1.9rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     #SoltecPremium .sp-louver-btn:hover { border-color: var(--sp-ink); }
     #SoltecPremium .sp-louver-btn:active { background: var(--sp-ink); border-color: var(--sp-ink); color: #fff; transform: scale(.94); }
@@ -1382,7 +1382,7 @@
 
 #SoltecPremium .sp-stage { cursor: grab; }
 #SoltecPremium .sp-stage:active { cursor: grabbing; }
-#SoltecPremium .sp-stage__canvas { touch-action: none; }
+#SoltecPremium .sp-stage__canvas { touch-action: pan-y; }
 #SoltecPremium .sp-viewpick { display: inline-flex; gap: .3rem; padding: .3rem; border-radius: 999px; background: rgba(18,18,18,.06); }
 #SoltecPremium .sp-viewpick button { min-height: 3.4rem; padding: 0 1.2rem; border: 0; border-radius: 999px; background: transparent; color: var(--sp-muted); cursor: pointer; font-size: 1.25rem; }
 #SoltecPremium .sp-viewpick button[aria-pressed="true"] { background: var(--sp-ink); color: #fff; }
@@ -1445,7 +1445,10 @@
   position: relative;
   z-index: 4;
   pointer-events: auto;
-  touch-action: none;
+  /* Posuvník sa ťahá vodorovne, takže si zvislý smer nemá čo brať: na
+     telefóne je pod prstom skoro celá šírka stránky a `none` tu znamenalo
+     ďalšie miesto, kde sa stránka nedá odscrollovať. */
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
   cursor: ew-resize;

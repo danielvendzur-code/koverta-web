@@ -1852,7 +1852,7 @@
              pri 4:1 vyzeral rovnako zubato ako bez vyhladzovania. Vedľajší
              účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
           let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
-            : dpr * (stillScale >= 2 ? 4 : 2);
+            : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
@@ -1908,7 +1908,14 @@
             depthPainter.fboW = ready ? fboW : 0;
             depthPainter.fboH = ready ? fboH : 0;
           }
-          const offscreen = !motionDetail && depthPainter.offscreen && depthPainter.fboW === fboW;
+          /* Násobok sa počíta voči fyzickým pixelom, takže hustý displej ho
+             nepotrebuje taký vysoký: na telefóne s dpr 3 by štvornásobok
+             znamenal 12× nad CSS pixelmi a textúru cez 50 MB, pričom na
+             výsledný CSS pixel pripadá pri dvojnásobku rovnako veľa vzoriek
+             ako na počítači pri štvornásobku. Keď z toho vyjde jedna k jednej,
+             priechod navyše netreba vôbec. */
+          const offscreen = !motionDetail && fboW > width
+            && depthPainter.offscreen && depthPainter.fboW === fboW;
           const drawW = offscreen ? fboW : width;
           const drawH = offscreen ? fboH : height;
           if (depthPainter.cssWidth !== cssWidth || depthPainter.cssHeight !== cssHeight) {
