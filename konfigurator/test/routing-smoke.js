@@ -92,11 +92,17 @@ module.exports = async function routingSmoke(browser) {
       }
 
       if (route === 'koverta') {
-        await gotoControl('[data-sp-add-opt="pick:odkvap"]');
-        const gutter = page.locator('[data-sp-add-opt="pick:odkvap"]');
-        assert(await gutter.count() === 1 && await gutter.getAttribute('aria-pressed') === 'true' &&
-          (await snapshot()).picks.odkvap === 'ano',
-          'Koverta mandatory gutter is missing or exposes an off state');
+        /* Odkvap so zvodom je súčasťou zostavy, nie voľbou — prepínač aj
+           kotvenie sú z ponuky preč. Musí teda platiť oboje: voľby sa
+           nevrátili a odvodnenie je aj tak v modeli aj v súhrne ako položka
+           bez ceny, takže súčet ostáva otvorený. */
+        assert(await page.locator('[data-sp-add-opt^="pick:"]').count() === 0,
+          'Koverta again offers the removed anchoring/gutter choices');
+        const drained = await snapshot();
+        assert(drained.geometry.accessories.gutter && drained.geometry.accessories.downpipe,
+          'Koverta lost the drainage that belongs to the assembly');
+        assert(drained.price.open === true && drained.price.lines.some(line => line.v === null && /Odkvap/.test(line.k)),
+          'Koverta drainage is missing from the quote lines as an unpriced item');
       } else {
         const extraGroup = route === 'bio' ? 'x-ovl' : 'x-konstr';
         const groupSelector = `[data-sp-add-on="${extraGroup}"]`;

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Orientačný odhad ceny betónových pätiek | Koverta</title>
+  <style>
+    :root{--ink:#111719;--ink-2:#1b2326;--muted:#626c70;--bone:#f4f3ef;--line:#d8dcda;--amber:#ffcc00;--amber-dark:#806100;--white:#fff;--soft:#edf0ee;--red:#9b2f2f}
+    *{box-sizing:border-box}html{color-scheme:light}body{margin:0;background:var(--bone);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+    button,input{font:inherit}.shell{width:min(1180px,100%);margin:auto;padding:22px 22px 64px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:10px 0 22px;border-bottom:1px solid var(--line)}
+    .brand{font-size:25px;font-weight:800;letter-spacing:.08em}.brand::before{content:"[";color:var(--amber);font-size:34px;margin-right:2px}
+    .preview{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#e2e4e2;color:#3f474a;font-size:12px;font-weight:800}.preview::before{width:7px;height:7px;border-radius:50%;background:#947100;content:""}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,380px);gap:42px;align-items:end;padding:42px 0 30px}
+    .eyebrow{margin:0 0 9px;color:var(--amber-dark);font-size:12px;font-weight:850;letter-spacing:.11em;text-transform:uppercase}
+    h1{max-width:780px;margin:0;font-size:clamp(36px,5vw,64px);line-height:1;letter-spacing:-.05em}.lead{max-width:720px;margin:17px 0 0;color:var(--muted);font-size:16px}
+    .hero-note{padding:18px 20px;border-left:3px solid var(--amber);background:rgba(255,255,255,.72);color:#4f585c;font-size:13px}.hero-note strong{display:block;margin-bottom:4px;color:var(--ink);font-size:14px}
+    .grid{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(390px,.97fr);gap:18px;align-items:start}
+    .panel{border:1px solid var(--line);border-radius:22px;background:var(--white);box-shadow:0 16px 48px rgba(18,23,26,.06);overflow:hidden}
+    .controls{padding:clamp(22px,3vw,34px)}h2{margin:0;font-size:24px;letter-spacing:-.03em}.intro{margin:7px 0 25px;color:var(--muted);font-size:13px}
+    fieldset{min-width:0;margin:0;padding:23px 0;border:0;border-top:1px solid var(--line)}fieldset:first-of-type{padding-top:0;border-top:0}
+    legend{display:flex;width:100%;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 13px;padding:0;font-size:14px;font-weight:850}legend output{color:var(--amber-dark);font-size:13px;font-weight:850}
+    .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.choice{position:relative}.choice input{position:absolute;opacity:0;pointer-events:none}
+    .choice label{display:flex;min-height:56px;align-items:center;justify-content:center;padding:9px;border:1px solid #abb2af;border-radius:12px;background:#fff;text-align:center;font-weight:800;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+    .choice input:checked+label{border-color:var(--amber-dark);background:#fff6c9;box-shadow:inset 0 0 0 1px var(--amber-dark)}.choice input:focus-visible+label{outline:3px solid rgba(255,204,0,.42);outline-offset:2px}
+    .fixed-size{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:17px 18px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}.fixed-size strong{font-size:26px;letter-spacing:-.04em}.fixed-size span{color:var(--muted);font-size:12px}
+    .hint{display:flex;gap:10px;margin:14px 0 0;padding:13px 14px;border-radius:12px;background:var(--soft);color:#596166;font-size:12px}.hint strong{color:var(--ink)}
+    .postcode{display:grid;grid-template-columns:minmax(0,170px) 1fr;gap:12px;align-items:center}.postcode input{width:100%;height:52px;padding:0 15px;border:1px solid #929a9d;border-radius:12px;background:#fff;font-weight:850;letter-spacing:.06em}.postcode input:focus{outline:3px solid rgba(255,204,0,.35);border-color:var(--amber-dark)}.place{min-height:42px;color:var(--muted);font-size:12px}.place strong{display:block;color:var(--ink);font-size:14px}.place.error{color:var(--red)}
+    .result{position:sticky;top:18px;background:var(--ink);color:#fff}.result-main{padding:clamp(24px,3vw,34px)}.result .eyebrow{color:var(--amber)}
+    .price{margin:9px 0 8px;color:var(--amber);font-size:clamp(38px,4vw,54px);font-weight:850;line-height:1;letter-spacing:-.045em;white-space:nowrap}.price-note{margin:0;color:rgba(255,255,255,.7);font-size:12px}
+    .facts{display:grid;grid-template-columns:1fr 1fr;margin-top:24px;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16)}
+    .fact{padding:14px 0}.fact:nth-child(odd){padding-right:15px;border-right:1px solid rgba(255,255,255,.16)}.fact:nth-child(even){padding-left:15px}.fact:nth-child(n+3){border-top:1px solid rgba(255,255,255,.16)}.fact span{display:block;color:rgba(255,255,255,.58);font-size:11px}.fact strong{display:block;margin-top:3px;font-size:16px}
+    .breakdown{margin:18px 0 0;padding:0;list-style:none}.breakdown li{display:flex;justify-content:space-between;gap:18px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.72);font-size:12px}.breakdown strong{color:#fff;text-align:right}.breakdown .travel-note{display:block;margin-top:2px;color:rgba(255,255,255,.45);font-size:10px}
+    .actions{display:flex;gap:9px;margin-top:18px}.actions button{min-height:44px;padding:0 16px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#333b3e;color:#fff;font-weight:800;cursor:pointer}.actions .primary{border-color:var(--amber);background:var(--amber);color:var(--ink)}.actions button:disabled{cursor:not-allowed;opacity:.46}
+    .spec{padding:22px 28px;background:var(--ink-2)}.spec h3{margin:0 0 12px;font-size:15px}.spec ul{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:0;padding:0;list-style:none;color:rgba(255,255,255,.78);font-size:12px}.spec li::before{margin-right:7px;color:var(--amber);content:"✓"}
+    .scope{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.scope article{padding:22px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.68)}.scope h3{margin:0 0 12px;font-size:18px}.scope ul{margin:0;padding:0;list-style:none;color:#566064;font-size:13px}.scope li{position:relative;padding:7px 0 7px 24px;border-top:1px solid rgba(18,23,26,.09)}.scope li:first-child{border-top:0}.scope li::before{position:absolute;left:0;color:var(--amber-dark);font-weight:900;content:"✓"}.scope .excluded li::before{color:#858d90;content:"—"}
+    .sources{margin:18px 0 0;padding:19px 21px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.58)}.sources summary{font-weight:850;cursor:pointer}.sources p,.sources li{color:#626b6f;font-size:12px}.sources ul{margin:12px 0 0;padding-left:19px}.sources a{color:#313a3e;text-decoration-thickness:1px;text-underline-offset:3px}
+    .fineprint{max-width:940px;margin:20px auto 0;color:#6d7578;text-align:center;font-size:11px}
+    @media(max-width:860px){.hero{grid-template-columns:1fr;gap:20px}.grid{grid-template-columns:1fr}.result{position:static}.hero{padding-top:34px}}
+    @media(max-width:540px){.shell{padding-inline:14px}.preview{font-size:10px}.choices{grid-template-columns:repeat(3,1fr)}.choice label{min-height:48px}.fixed-size,.postcode{grid-template-columns:1fr}.facts,.scope{grid-template-columns:1fr}.fact,.fact:nth-child(odd),.fact:nth-child(even){padding:13px 0;border-right:0}.fact:nth-child(n+2){border-top:1px solid rgba(255,255,255,.16)}.spec ul{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column;gap:10px}.hero-note{padding:14px 16px}.price{font-size:clamp(34px,11vw,46px)}.actions{flex-direction:column}.actions button{width:100%}}
+    @media print{body{background:#fff}.shell{width:100%;padding:0}.preview,.actions,.sources,.fineprint{display:none}.grid{grid-template-columns:1fr 1fr}.panel{box-shadow:none}.result{position:static}.hero{padding-top:24px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="brand">Koverta</div><div class="preview">Skrytý pracovný náhľad · nie je v menu</div></header>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Doplnková služba k prístrešku</p>
+        <h1>Odhad ceny betónových pätiek</h1>
+        <p class="lead">Vyberte počet pätiek, nezámrznú hĺbku a zadajte PSČ. Kalkulačka spočíta množstvo betónu, jednotlivé práce aj orientačnú dopravu z Nitry.</p>
+      </div>
+      <div class="hero-note"><strong>Šírka 60 × 60 cm je pevná.</strong>Je podložená statickým posudkom Koverta pre prístrešok 6 × 6 m. Pri inej zostave alebo podloží môže technický návrh určiť iný základ.</div>
+    </section>
+
+    <div class="grid">
+      <form class="panel controls" id="calc">
+        <h2>Zostava pätiek</h2>
+        <p class="intro">Objem betónu je čistý výpočet z rozmeru 60 × 60 cm a zvolenej hĺbky.</p>
+
+        <fieldset>
+          <legend>1. Počet pätiek</legend>
+          <div class="choices">
+            <div class="choice"><input type="radio" name="count" id="count2" value="2"><label for="count2">2 pätky</label></div>
+            <div class="choice"><input type="radio" name="count" id="count4" value="4" checked><label for="count4">4 pätky</label></div>
+            <div class="choice"><input type="radio" name="count" id="count6" value="6"><label for="count6">6 pätiek</label></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Rozmer jednej pätky</legend>
+          <div class="fixed-size"><strong>60 × 60 cm</strong><span>Štvorcová pätka. Kalkulačka neponúka užší rozmer, ktorý nemáme potvrdený technickým podkladom.</span></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span>3. Hĺbka pätky</span><output id="depthOut">70 cm</output></legend>
+          <div class="choices">
+            <div class="choice"><input type="radio" name="depth" id="depth60" value="60"><label for="depth60">60 cm</label></div>
+            <div class="choice"><input type="radio" name="depth" id="depth70" value="70" checked><label for="depth70">70 cm</label></div>
+            <div class="choice"><input type="radio" name="depth" id="depth80" value="80"><label for="depth80">80 cm</label></div>
+          </div>
+          <p class="hint"><span aria-hidden="true">↓</span><span>Technický podklad Koverta uvádza minimum <strong>60 cm a spodnú hranu v nezámrznej hĺbke</strong>. Konkrétnu hĺbku potvrdí návrh podľa miesta.</span></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>4. Miesto realizácie</legend>
+          <div class="postcode">
+            <input id="postcode" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="6" value="949 07" aria-label="PSČ miesta realizácie">
+            <div class="place" id="place" aria-live="polite"><strong>Nitra</strong>Doprava sa počíta z Nitry.</div>
+          </div>
+          <p class="hint"><span aria-hidden="true">⌖</span><span>PSČ určí orientačnú vzdialenosť. Cena dopravy počíta cestu <strong>tam aj späť</strong>; presnú trasu potvrdí ponuka.</span></p>
+        </fieldset>
+      </form>
+
+      <aside class="panel result" aria-live="polite">
+        <div class="result-main">
+          <p class="eyebrow">Orientačná cena pre zákazníka</p>
+          <h2>Výkop a betonáž pätiek</h2>
+          <div class="price" id="price">—</div>
+          <p class="price-note">vrátane DPH · pracovný odhad, nie záväzná cenová ponuka</p>
+          <div class="facts">
+            <div class="fact"><span>Počet</span><strong id="factCount">—</strong></div>
+            <div class="fact"><span>Jedna pätka</span><strong id="factSize">—</strong></div>
+            <div class="fact"><span>Betón spolu</span><strong id="concrete">—</strong></div>
+            <div class="fact"><span>Odhad cesty</span><strong id="distance">—</strong></div>
+          </div>
+          <ul class="breakdown">
+            <li><span>Príprava zákazky</span><strong id="mobilizationPrice">—</strong></li>
+            <li><span>Vytýčenie pätiek</span><strong id="layoutPrice">—</strong></li>
+            <li><span>Ručný výkop</span><strong id="digPrice">—</strong></li>
+            <li><span>Makadam a zhutnenie</span><strong id="gravelPrice">—</strong></li>
+            <li><span>Výstuž</span><strong id="steelPrice">—</strong></li>
+            <li><span>Betón C20/25</span><strong id="concretePrice">—</strong></li>
+            <li><span>Betonáž a zarovnanie</span><strong id="pourPrice">—</strong></li>
+            <li><span>Doprava<span class="travel-note" id="travelFormula"></span></span><strong id="travelPrice">—</strong></li>
+          </ul>
+          <div class="actions"><button class="primary" type="button" id="copy">Skopírovať rozpis</button><button type="button" onclick="window.print()">Vytlačiť</button></div>
+        </div>
+        <div class="spec">
+          <h3>Technický základ výpočtu</h3>
+          <ul><li>štvorec 60 × 60 cm</li><li>hĺbka 60 / 70 / 80 cm</li><li>betón C20/25</li><li>makadam 150 mm</li><li>výstuž 10 × 10 / 150</li><li>čistý objem podľa geometrie</li></ul>
+        </div>
+      </aside>
+    </div>
+
+    <section class="scope" aria-label="Rozsah odhadu">
+      <article><h3>V odhade je zahrnuté</h3><ul><li>výjazd pracovnej skupiny z Nitry</li><li>vytýčenie osí pätiek podľa odsúhlaseného návrhu</li><li>ručný výkop v bežnej zemine</li><li>150 mm vrstva makadamu a zhutnenie</li><li>výstuž podľa technického podkladu Koverta</li><li>betón C20/25, uloženie a zarovnanie hornej hrany</li><li>základné upratanie pracoviska</li></ul></article>
+      <article class="excluded"><h3>V odhade nie je zahrnuté</h3><ul><li>odvoz a skládka výkopovej zeminy</li><li>rozobratie alebo oprava dlažby a iných hotových povrchov</li><li>čerpanie vody, paženie a sanácia neúnosného podložia</li><li>betónpumpa alebo iná technika pri neprístupnom pozemku</li><li>zmena rozmeru, výstuže alebo počtu pätiek podľa statika</li></ul></article>
+    </section>
+
+    <details class="sources">
+      <summary>Podklady a cenová metodika</summary>
+      <p>Technická skladba vychádza z dokumentu „Koverta — technické požiadavky na montáž prístrešku“ a zo statického posudku Koverta pre prístrešok 6 × 6 m. PSČ a súradnice obcí sú z otvorených dát GeoNames.</p>
+      <ul>
+        <li><a href="https://drive.google.com/file/d/1AgDyrU6pJbQsfwRR-OYSZrOEqKqfHa36/view" target="_blank" rel="noreferrer">Koverta — technické požiadavky</a> — minimálna hĺbka, makadam, výstuž a betón C20/25. <a href="https://drive.google.com/file/d/1iLyQFK_wvn7F-AyYooawhTDoVY6le4R2/view" target="_blank" rel="noreferrer">Statický posudok 6 × 6 m</a> potvrdzuje pätku 60 × 60 cm pre túto konkrétnu zostavu.</li>
+        <li><a href="https://www.slovitrans.sk/sites/default/files/cennik_01.01.2026_betony_dl.pdf" target="_blank" rel="noreferrer">Slovitrans 2026</a> a <a href="https://www.ab-stav.sk/cennik" target="_blank" rel="noreferrer">AB-STAV</a> — verejné ceny betónu C20/25.</li>
+        <li><a href="https://www.betonservis.sk/vykopove-prace" target="_blank" rel="noreferrer">Betónservis</a> — verejný benchmark ručného výkopu.</li>
+        <li><a href="https://www.stavebnadoprava.sk/sk/cennik.html" target="_blank" rel="noreferrer">Stavebná doprava</a> — benchmark 1,25 €/km za cestu zo stanoviska a späť.</li>
+        <li><a href="https://download.geonames.org/export/zip/" target="_blank" rel="noreferrer">GeoNames</a> — slovenské PSČ a približné súradnice, licencia CC BY 4.0.</li>
+      </ul>
+    </details>
+    <p class="fineprint">Jednotkové sadzby sú zatiaľ pracovná kalibrácia s DPH podľa verejných cien, nie schválený cenník Koverta. Nástroj zostáva skrytý a bez indexácie, kým firma nepotvrdí vlastné sadzby a obchodné zaokrúhľovanie.</p>
+  </main>
+  <script src="../assets/sk-postcodes-geo.js"></script>
+  <script>
+    (()=>{
+      const WIDTH_CM=60;
+      const BASE={lat:48.3076,lon:18.0845};
+      const RATE={mobilization:120,layoutEach:25,digEach:55,gravelEach:18,steelEach:38,concreteM3:145,pourEach:45,cleanup:20,travelKm:1.25,roadFactor:1.22};
+      const byId=id=>document.getElementById(id);
+      const countChoices=[...document.querySelectorAll('[name="count"]')];
+      const depthChoices=[...document.querySelectorAll('[name="depth"]')];
+      const postcode=byId('postcode');
+      const number=(value,digits=2)=>new Intl.NumberFormat('sk-SK',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(value);
+      const money=value=>new Intl.NumberFormat('sk-SK',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(value);
+      const checked=items=>Number(items.find(item=>item.checked)?.value||0);
+      const rad=value=>value*Math.PI/180;
+      const haversine=(a,b)=>{const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);const h=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))};
+      const cleanPostcode=value=>value.replace(/\D/g,'').slice(0,5);
+      const formatPostcode=value=>value.length>3?`${value.slice(0,3)} ${value.slice(3)}`:value;
+      let current={};
+
+      function calculate(){
+        const quantity=checked(countChoices);
+        const depth=checked(depthChoices);
+        const clean=quantity*Math.pow(WIDTH_CM/100,2)*(depth/100);
+        const code=cleanPostcode(postcode.value);
+        const geo=(window.KOVERTA_SK_POSTCODES||{})[code];
+        let oneWay=0,roundTrip=0,travel=0,place='';
+        if(geo){
+          oneWay=Math.max(0,Math.round(haversine(BASE,{lat:geo[0],lon:geo[1]})*RATE.roadFactor));
+          roundTrip=oneWay*2;
+          travel=roundTrip*RATE.travelKm;
+          place=geo[2];
+          byId('place').classList.remove('error');
+          byId('place').innerHTML=`<strong>${place}</strong>Odhad trasy z Nitry: ${oneWay} km jedným smerom.`;
+        }else{
+          byId('place').classList.toggle('error',code.length===5);
+          byId('place').innerHTML=code.length===5?'<strong>PSČ sa nenašlo</strong>Skontrolujte päť číslic. Doprava zatiaľ nie je započítaná.':'<strong>Zadajte celé PSČ</strong>Dopravu dopočítame po piatich čísliciach.';
+        }
+        const lines={mobilization:RATE.mobilization,layout:quantity*RATE.layoutEach,dig:quantity*RATE.digEach,gravel:quantity*RATE.gravelEach,steel:quantity*RATE.steelEach,concrete:clean*RATE.concreteM3,pour:quantity*RATE.pourEach+RATE.cleanup,travel};
+        const shownTotal=Object.values(lines).reduce((sum,value)=>sum+Math.round(value),0);
+        current={quantity,depth,clean,code,place,oneWay,roundTrip,lines,shownTotal,validPostcode:Boolean(geo)};
+        byId('depthOut').textContent=`${depth} cm`;
+        byId('price').textContent=geo?money(shownTotal):'Doplňte PSČ';
+        byId('factCount').textContent=`${quantity} pät${quantity===2?'ky':'iek'}`;
+        byId('factSize').textContent=`60 × 60 × ${depth} cm`;
+        byId('concrete').textContent=`${number(clean,3)} m³`;
+        byId('distance').textContent=geo?`${oneWay} km tam · ${roundTrip} km spolu`:'nezapočítaná';
+        byId('mobilizationPrice').textContent=money(lines.mobilization);
+        byId('layoutPrice').textContent=money(lines.layout);
+        byId('digPrice').textContent=money(lines.dig);
+        byId('gravelPrice').textContent=money(lines.gravel);
+        byId('steelPrice').textContent=money(lines.steel);
+        byId('concretePrice').textContent=money(lines.concrete);
+        byId('pourPrice').textContent=money(lines.pour);
+        byId('travelPrice').textContent=geo?money(lines.travel):'—';
+        byId('travelFormula').textContent=geo?`${roundTrip} km × ${number(RATE.travelKm,2)} €/km`:'zadajte platné PSČ';
+        byId('copy').disabled=!geo;
+      }
+
+      [...countChoices,...depthChoices].forEach(input=>input.addEventListener('change',calculate));
+      postcode.addEventListener('input',()=>{const clean=cleanPostcode(postcode.value);postcode.value=formatPostcode(clean);calculate()});
+      byId('calc').addEventListener('submit',event=>event.preventDefault());
+      byId('copy').addEventListener('click',async event=>{
+        const l=current.lines;
+        const text=['Koverta — orientačný odhad betónových pätiek',`${current.quantity} × 60 × 60 × ${current.depth} cm`,`Betón spolu: ${number(current.clean,3)} m³`,`Miesto: ${formatPostcode(current.code)} ${current.place}`,`Príprava zákazky: ${money(l.mobilization)}`,`Vytýčenie: ${money(l.layout)}`,`Ručný výkop: ${money(l.dig)}`,`Makadam a zhutnenie: ${money(l.gravel)}`,`Výstuž: ${money(l.steel)}`,`Betón C20/25: ${money(l.concrete)}`,`Betonáž a zarovnanie: ${money(l.pour)}`,`Doprava: ${money(l.travel)}`,`Odhad spolu s DPH: ${money(current.shownTotal)}`].join('\n');
+        try{await navigator.clipboard.writeText(text);event.currentTarget.textContent='Rozpis skopírovaný';setTimeout(()=>event.currentTarget.textContent='Skopírovať rozpis',1800)}catch(e){event.currentTarget.textContent='Kopírovanie zlyhalo'}
+      });
+      calculate();
+    })();
+  </script>
+</body>
+</html>

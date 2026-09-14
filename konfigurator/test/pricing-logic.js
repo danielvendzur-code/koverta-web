@@ -99,20 +99,15 @@ async function revealControl(page, selector) {
     assert(JSON.stringify(catalogue.sideOpts.filter(item => item.id !== 'open').map(item => item.id)) === JSON.stringify([
       'kvdrevo','kvwpc','kvhlinik'
     ]), 'Current supported Koverta side-wall material set changed');
-    const gutterYes = catalogue.gutter.opts.find(item => item.id === 'ano');
-    assert(gutterYes && gutterYes.cena == null, 'Gutter must not receive an invented numeric price');
-    assert(catalogue.gutter.opts.length === 1 && catalogue.gutter.opts[0].id === 'ano',
-      'Koverta must expose mandatory drainage without a no-gutter alternative');
-    assert(catalogue.anchoring && JSON.stringify(catalogue.anchoring.opts.map(item => item.id)) === JSON.stringify(['beton', 'ine']),
-      'Unsupported concrete-footing/paving anchoring variants are still exposed');
-    assert(catalogue.anchoring.opts[0].tichy === true && catalogue.anchoring.opts[0].cena == null,
-      'Base concrete anchoring must not create a fake 0 € surcharge');
-    assert(catalogue.anchoring.opts[1].cena == null && /na nacenenie/.test(catalogue.anchoring.opts[1].s || ''),
-      'Alternative substrate must remain quote-only without an invented price');
+    /* Kotvenie do betónu aj odkvap so zvodom sú súčasťou zostavy, takže sa
+       ako voľba neponúkajú vôbec; izolácia strechy z ponuky doplnkov odišla
+       spolu s nimi. Zostáva svetlo a elektrická prípojka. */
+    assert(!catalogue.gutter && !catalogue.anchoring,
+      'Odstránené voľby kotvenia a odkvapu sa vrátili do produktových dát');
     assert(Array.isArray(catalogue.extras) && catalogue.extras.length === 1,
       'Koverta sourced accessory group is missing');
     const accessoryItems = catalogue.extras[0].items || [];
-    assert(JSON.stringify(accessoryItems.map(item => item.id)) === JSON.stringify(['kv-izol', 'kv-led', 'kv-elektro']),
+    assert(JSON.stringify(accessoryItems.map(item => item.id)) === JSON.stringify(['kv-led', 'kv-elektro']),
       'Unsupported Koverta accessory was exposed or a sourced accessory is missing');
     assert(accessoryItems.every(item => item.price == null),
       'Koverta accessory received an invented numeric price');
@@ -221,43 +216,30 @@ async function revealControl(page, selector) {
     });
     await waitRender(page);
 
-    // Drainage is mandatory, quote-only and has no misleading off state.
-    await revealControl(page, '[data-sp-add-opt="pick:odkvap"]');
-    const gutterButtons = page.locator('[data-sp-add-opt="pick:odkvap"]');
-    assert(await gutterButtons.count() === 1 &&
-      await gutterButtons.filter({ hasText: 'So žľabom a zvodom' }).getAttribute('aria-pressed') === 'true',
-      'Mandatory gutter/downpipe is not the sole selected drainage option');
-    assert(await gutterButtons.filter({ hasText: 'Bez odkvapu' }).count() === 0,
-      'Removed no-gutter option returned');
-    assert((await page.locator('[data-sp-lines]').innerText()).includes('Odkvap a zvod'),
-      'Mandatory gutter is missing from the quote lines');
-
-    // Alternative anchoring is request-only; base concrete remains selected independently.
-    const anchoringButtons = page.locator('[data-sp-add-opt="pick:kotvenie"]');
-    await anchoringButtons.filter({ hasText: 'Iný podklad / príprava základov' }).click();
-    await waitRender(page);
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Unpriced foundation option did not mark total as open');
-    await anchoringButtons.filter({ hasText: 'Do pripraveného betónu' }).click();
-    await waitRender(page);
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Mandatory quote-only drainage was lost after returning to base anchoring');
+    // Odvodnenie ostáva v zostave aj bez prepínača — a jeho voľby sa nesmú vrátiť.
+    await revealControl(page, '[data-sp-add-on="x-kv"]');
+    assert(await page.locator('[data-sp-add-opt^="pick:"]').count() === 0,
+      'Odstránené voľby kotvenia a odkvapu sa vrátili do ponuky');
+    assert((await page.evaluate(() => window.SP_TEST.snapshot())).geometry.accessories.gutter,
+      'Odvodnenie zmizlo z modelu spolu s odstráneným prepínačom');
 
     // Sourced Koverta accessories remain quote-only and must survive a compatible size change.
     const accessoryToggle = page.locator('[data-sp-add-on="x-kv"]');
     await accessoryToggle.locator('xpath=ancestor::label[1]').click();
     assert(await accessoryToggle.isChecked(), 'Accessory group did not open through the visible switch');
-    const insulationPlus = page.locator('[data-sp-x="kv-izol"][data-sp-xd="1"]');
-    await insulationPlus.waitFor({ state: 'visible' });
-    await insulationPlus.click();
+    assert(await page.locator('[data-sp-x="kv-izol"]').count() === 0,
+      'Odstránená izolácia strechy sa vrátila medzi doplnky');
+    const ledPlus = page.locator('[data-sp-x="kv-led"][data-sp-xd="1"]');
+    await ledPlus.waitFor({ state: 'visible' });
+    await ledPlus.click();
     await waitRender(page);
     let accessorySnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(accessorySnapshot.extras['kv-izol'] === 1, 'Insulation accessory did not enter runtime state');
-    assert(accessorySnapshot.price.open === true, 'Unpriced insulation accessory did not open the price');
+    assert(accessorySnapshot.extras['kv-led'] === 1, 'LED accessory did not enter runtime state');
+    assert(accessorySnapshot.price.open === true, 'Unpriced LED accessory did not open the price');
     assert(accessorySnapshot.price.total === null && accessorySnapshot.price.catalogueSubtotal === 4497,
       'Open Koverta snapshot still presents the catalogue subtotal as a final numeric total');
-    assert(accessorySnapshot.price.lines.some(line => line.v === null && /Izolácia strechy/.test(line.k)),
-      'Insulation accessory is missing its quote-only price line');
+    assert(accessorySnapshot.price.lines.some(line => line.v === null && /LED/.test(line.k)),
+      'LED accessory is missing its quote-only price line');
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Selected unpriced accessory still presents an exact final total');
 
@@ -269,7 +251,7 @@ async function revealControl(page, selector) {
     });
     await waitRender(page);
     accessorySnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(accessorySnapshot.width === 2800 && accessorySnapshot.extras['kv-izol'] === 1,
+    assert(accessorySnapshot.width === 2800 && accessorySnapshot.extras['kv-led'] === 1,
       'Compatible accessory was lost after dimension change');
 
     await page.evaluate(() => {
@@ -324,14 +306,16 @@ async function revealControl(page, selector) {
     assert(payload.body.includes('Umiestnenie: Samostatne stojaci.'), 'Payload omits the actual default placement');
     assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state from selected unpriced configuration');
     assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
-    assert(payload.body.includes('Izolácia strechy'), 'Payload omits selected sourced accessory');
+    assert(payload.body.includes('LED'), 'Payload omits selected sourced accessory');
     assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
       'Payload incorrectly implies a verified zero color surcharge');
     assert(payload.body.includes('vrátane DPH a montáže'), 'Payload omits verified VAT/installation scope');
     assert(payload.body.includes('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.'),
       'Payload omits unresolved transport/quote-only disclaimer');
-    assert(payload.body.includes('Kotvenie stĺpov: Do pripraveného betónu'), 'Payload omits selected base anchoring');
-    assert(payload.body.includes('Odkvap a zvod: So žľabom a zvodom'), 'Payload omits mandatory drainage state');
+    /* Kotvenie a odkvap sa už nevyberajú, ale odvodnenie je súčasťou zostavy
+       a jeho cena sa potvrdzuje v ponuke — v dopyte teda musí ostať uvedené. */
+    assert(!payload.body.includes('Kotvenie stĺpov:'), 'Payload still offers the removed anchoring choice');
+    assert(payload.body.includes('Odkvap a zvod'), 'Payload omits mandatory drainage state');
     assert(!payload.body.includes('voda steká z hrany') && !payload.body.includes('kotvenie podľa podkladu'),
       'Payload leaks helper copy into selected-option values');
     assert((payload.body.match(/Umiestnenie:/g) || []).length === 1 && !payload.body.includes('Umiestnenie —'),
@@ -357,8 +341,10 @@ async function revealControl(page, selector) {
     assert(resetSnapshot.price.total === null && resetSnapshot.price.catalogueSubtotal === 4497 &&
       resetSnapshot.price.open === true,
       'Reset lost the catalogue subtotal or mandatory quote-only drainage state');
-    assert(resetSnapshot.picks.odkvap === 'ano' && resetSnapshot.picks.kotvenie === 'beton',
-      'Reset did not restore default gutter/anchoring');
+    assert(!Object.keys(resetSnapshot.picks).length,
+      'Reset brought the removed anchoring/gutter choices back');
+    assert(resetSnapshot.geometry.accessories.gutter && resetSnapshot.geometry.accessories.downpipe,
+      'Reset lost the drainage that is part of the assembly');
     assert(Object.values(resetSnapshot.extras).every(value => !value),
       'Reset left a selected Koverta accessory in runtime state');
 

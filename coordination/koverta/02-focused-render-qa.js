@@ -98,6 +98,7 @@ async function renderProbe(page, az, el, sampleFascia) {
 
     let fasciaBleed = 0;
     let fasciaSamples = 0;
+    let fasciaUnresolved = 0;
     let firstBleed = null;
     if (sampleFascia) {
       const snapshot = window.SP_TEST.snapshot();
@@ -109,22 +110,40 @@ async function renderProbe(page, az, el, sampleFascia) {
       const viewX = -sa * Math.cos(el);
       const viewY = ca * Math.cos(el);
       const body = [];
-      for (let t = 0.08; t <= 0.92; t += 0.06) {
+      const STEP = 0.06;
+      for (let t = 0.08; t <= 0.92; t += STEP) {
         /* Meraj plochu viditeľného zvislého líca, nie subpixelovú hornú
            siluetu. Vzdialené líce je strechou legitímne zakryté, preto sa v
            každej osi vyberá iba strana obrátená ku kamere. */
         /* Do not treat an exactly edge-on face as a visible surface. Its
            projected area is zero and that pixel legitimately belongs to the
            roof behind it; all camera-facing fascia surfaces remain sampled. */
-        if (Math.abs(viewX) > 1e-6) body.push([viewX >= 0 ? length : 0, t * width]);
-        if (Math.abs(viewY) > 1e-6) body.push([t * length, viewY >= 0 ? width : 0]);
+        /* Ku každému bodu sa nesie aj nasledujúci bod po tom istom líci.
+           Ich odstup v pixeloch hovorí, či sa na líce vôbec dá mieriť. */
+        if (Math.abs(viewX) > 1e-6) body.push([viewX >= 0 ? length : 0, t * width, viewX >= 0 ? length : 0, (t + STEP) * width]);
+        if (Math.abs(viewY) > 1e-6) body.push([t * length, viewY >= 0 ? width : 0, (t + STEP) * length, viewY >= 0 ? width : 0]);
       }
 
-      for (const [x, y] of body) {
+      for (const [x, y, nextX, nextY] of body) {
         const point = window.SP_TEST.project(x, y, zFace);
         const px = Math.round(point.x);
         const py = Math.round(point.y);
         if (px < 1 || py < 1 || px >= vb[2] - 1 || py >= vb[3] - 1) continue;
+        /* Vyššie stojí, že líce presne z boku nie je viditeľná plocha. Test
+           na to (`> 1e-6`) ale nevylúči nič: pri azimute 5° je líce od bočného
+           pohľadu ďaleko dosť, aby prešlo, a pritom sa celé zmestí do hrsti
+           pixelov — dva body vzdialené 240 mm padli na pixely 89 a 87, kým na
+           čelnej stene je ten istý krok 56 pixelov. Jeden pixel vtedy pokrýva
+           stovky milimetrov plechu aj kus strechy za jeho hranou a zaokrúhlený
+           odber sa nedá pripísať lemovaniu: pri okraji kresby 8 % vyšiel čisto,
+           pri 6 % dva body, pri 5 % zase čisto, pri 4 % dva. To nemeria plech,
+           to meria zaokrúhľovanie. Hranica je preto merateľná — krok kratší než
+           štyri pixely znamená líce priostro z boku a bod sa nepočíta ani ako
+           vzorka. Diera v lemovaní, ktoré pixely rozlíšia, padne ďalej rovnako,
+           a keby raz prestali byť merateľné takmer všetky body, zhodí to beh
+           nález `fascia-sampling-degenerate` nižšie. */
+        const along = window.SP_TEST.project(nextX, nextY, zFace);
+        if (Math.hypot(along.x - point.x, along.y - point.y) < 4) { fasciaUnresolved += 1; continue; }
         fasciaSamples += 1;
         const isGreen = (sx, sy) => {
           const offset = (sy * vb[2] + sx) * 4;
@@ -154,6 +173,7 @@ async function renderProbe(page, az, el, sampleFascia) {
       greenPixels,
       fasciaBleed,
       fasciaSamples,
+      fasciaUnresolved,
       firstBleed
     };
   }, { az, el, sampleFascia });
@@ -313,6 +333,7 @@ async function runMobileFullscreen(browser, findings, browserErrors) {
             elevation,
             fasciaBleed: probe.fasciaBleed,
             fasciaSamples: probe.fasciaSamples,
+            fasciaUnresolved: probe.fasciaUnresolved,
             invalidPolygons: probe.invalidPolygons
           });
           if (probe.invalidPolygons || probe.fasciaBleed) {
@@ -424,6 +445,20 @@ async function runMobileFullscreen(browser, findings, browserErrors) {
         'failure-' + i + '-' + finding.type + '-' + finding.width + 'x' + finding.length +
           '-az' + safe(finding.az) + '-el' + safe(elevation) + '.png'
       );
+    }
+
+    /* Odber, ktorý sa nedá rozlíšiť, sa nepočíta — a práve preto sa musí
+       strážiť, koľko ich je. Keby raz niečo zúžilo všetky líca pod dva pixely,
+       kontrola by prešla bez toho, aby čokoľvek zmerala. Drvivá väčšina bodov
+       musí ostať merateľná. */
+    const sweptSamples = fineSweep.reduce((sum, item) => sum + item.fasciaSamples, 0);
+    const sweptUnresolved = fineSweep.reduce((sum, item) => sum + (item.fasciaUnresolved || 0), 0);
+    if (!sweptSamples || sweptUnresolved > sweptSamples * 0.25) {
+      findings.push({
+        type: 'fascia-sampling-degenerate',
+        sweptSamples,
+        sweptUnresolved
+      });
     }
 
     await runMobileFullscreen(browser, findings, browserErrors);

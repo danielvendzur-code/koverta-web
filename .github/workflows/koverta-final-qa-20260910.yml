@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -126,14 +126,18 @@ jobs:
         run: |
           python3 -m http.server 8901 >/tmp/soltec-http.log 2>&1 &
           for i in {1..30}; do
-            if curl -fsS 'http://127.0.0.1:8901/bioklimaticke-pergoly/' >/dev/null; then exit 0; fi
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=bio' >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/soltec-http.log
           exit 1
       - name: Soltec louver and camera motion regression
         env:
-          SOLTEC_URL: http://127.0.0.1:8901/bioklimaticke-pergoly/
+          # Konfigurátor býval vložený do /bioklimaticke-pergoly/; od 2e4455f
+          # stránka odkazuje na samostatný nástroj, takže test tam už žiadne
+          # [data-sp-cfg] nenašiel a čakal do vypršania. Rovnakú adresu používa
+          # aj druhý QA workflow.
+          SOLTEC_URL: http://127.0.0.1:8901/konfigurator/?page=bio
         run: node konfigurator/test/soltec-motion-regression.js
       - name: Upload Soltec evidence
         if: always()

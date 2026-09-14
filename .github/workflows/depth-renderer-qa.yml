@@ -3,6 +3,7 @@ on:
   push:
     branches: [fix/koverta-final-repair-20260910]
     paths:
+      - konfigurator/soltec-premium.css
       - konfigurator/soltec-premium.js
       - konfigurator/test/depth-renderer-qa.js
       - .github/workflows/depth-renderer-qa.yml

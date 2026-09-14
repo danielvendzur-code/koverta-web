@@ -62,16 +62,15 @@ async function snapshot(page) {
   return JSON.parse(JSON.stringify(await page.evaluate(() => window.SP_TEST.snapshot())));
 }
 
+/* Odkvap so zvodom a kotvenie do betónu sú súčasťou zostavy, nie voľba —
+   ich prepínače aj vysvetľujúce odseky boli z konfigurátora odstránené na
+   žiadosť vlastníka. Test preto stráži dve veci naraz: že sa tie voľby
+   nevrátili do ponuky a že odvodnenie napriek tomu v modeli fyzicky je. */
 async function assertMandatoryDrainage(page) {
-  await gotoControl(page, '[data-sp-add-opt="pick:odkvap"]');
-  const options = page.locator('[data-sp-add-opt="pick:odkvap"]');
-  assert(await options.count() === 1,
-    'Koverta must expose exactly one mandatory drainage configuration');
-  const option = options.filter({ hasText: 'So žľabom a zvodom' }).first();
-  assert(await option.count() === 1 && await option.getAttribute('aria-pressed') === 'true',
-    'Mandatory gutter/downpipe option is missing or not selected');
-  assert(await options.filter({ hasText: 'Bez odkvapu' }).count() === 0,
-    'Removed no-gutter option returned');
+  const gone = await page.locator('[data-sp-add-opt^="pick:"]').count();
+  assert(gone === 0, 'Odstránené voľby kotvenia a odkvapu sa vrátili do ponuky');
+  const prose = await page.evaluate(() => /Kotvenie stĺpov|Odkvap a zvod sú súčasťou/i.test(document.body.textContent));
+  assert(!prose, 'Odstránený vysvetľujúci text kotvenia/odkvapu sa vrátil');
   await page.waitForTimeout(180);
 }
 
@@ -192,22 +191,26 @@ function validateAccessoryContacts(snap, label) {
   assert(accessories, `${label}: missing Koverta accessory contact geometry`);
   const assembly = accessories.assembly;
 
-  const insulation = accessories.insulation;
-  assert(insulation && insulation.enabled, `${label}: insulation contact data missing`);
-  assertClose(insulation.renderZ, insulation.hostBottomZ,
-    `${label}: insulation is not bonded to the trapezoid underside`);
+  /* Izolácia strechy už nie je v ponuke doplnkov, takže sa ani nemá zapnúť. */
+  assert(!accessories.insulation || !accessories.insulation.enabled,
+    `${label}: odstránená izolácia sa vrátila do geometrie`);
 
+  /* Svetlo visí na priečnych profiloch: jeden pás na každú väznicu, a keď
+     pod väznicou stojí stĺp, rozdelený na kusy okolo neho. Preto sa počíta
+     počet obsadených väzníc, nie štyri strany obvodového rámu. */
   const led = accessories.led;
   assert(led && led.enabled, `${label}: LED contact data missing`);
-  assert(Array.isArray(led.runs) && led.runs.length >= 4,
-    `${label}: LED renderer produced too few physical frame segments`);
-  const renderedSides = new Set(led.runs.map((run) => run.side));
-  ['rear', 'front', 'left', 'right'].forEach((side) => {
-    assert(renderedSides.has(side), `${label}: LED has no segment on ${side} frame`);
-  });
+  const purlins = new Set(led.runs.map((run) => run.side));
+  assert(purlins.size >= 3, `${label}: LED nesvieti na každom priečnom profile (${purlins.size})`);
+  assert([...purlins].every((side) => /^vaznica\d+$/.test(side)),
+    `${label}: LED sa vrátilo na obvodový rám namiesto priečnych profilov`);
   led.runs.forEach((run, i) => {
     assertClose(run.profileTopZ, run.hostBottomZ,
-      `${label}: LED segment ${i} does not touch its host frame underside`);
+      `${label}: LED segment ${i} does not touch its host purlin underside`);
+    assert(run.dx >= 26 && run.dx <= 46,
+      `${label}: LED segment ${i} je príliš tenký alebo široký (${run.dx} mm)`);
+    assert(run.profileTopZ - run.profileBottomZ >= 14,
+      `${label}: LED segment ${i} je príliš plochý`);
     assert(run.dx > 0 && run.dy > 0,
       `${label}: LED segment ${i} has a non-positive footprint`);
     assert(run.x >= assembly.xMin - 0.01 && run.y >= assembly.yMin - 0.01 &&
@@ -324,24 +327,20 @@ function validateAccessoryContacts(snap, label) {
       await assertMandatoryDrainage(page);
       const drainageOn = await svgState(page);
       const drainageSnap = await snapshot(page);
-      assert(drainageSnap.picks.odkvap === 'ano', `${device}: mandatory drainage is not active`);
+      assert(!Object.keys(drainageSnap.picks).length, `${device}: picks must be empty after the options were removed`);
       assert(drainageSnap.geometry.accessories.gutter &&
         drainageSnap.geometry.accessories.downpipe,
         `${device}: mandatory gutter/downpipe has no physical geometry`);
       assert(drainageOn.polygons > 100 && (drainageOn.markup.includes('<polygon') || drainageOn.markup.includes('<image')),
         `${device}: mandatory drainage render is empty`);
 
-      /* Insulation is bonded to the roof underside, so verify it from an
-         underside view instead of weakening culling just for the test. */
+      /* Izolácia strechy už nie je v ponuke doplnkov; ostalo len svetlo a
+         elektrická prípojka. Overuje sa z podhľadu, kde by izolácia bola
+         vidieť, že sa medzi doplnky nevrátila. */
       await page.locator('[data-sp-view="under"]').click();
       await page.waitForTimeout(220);
-      const beforeInsulation = await svgState(page);
-      await enableExtra(page, 'kv-izol');
-      const withInsulation = await svgState(page);
-      const insulationSnap = await snapshot(page);
-      assert(insulationSnap.extras['kv-izol'] === 1, `${device}: insulation state missing`);
-      assert(withInsulation.markup !== beforeInsulation.markup,
-        `${device}: insulation did not alter the bonded roof underside render`);
+      assert(await page.locator('[data-sp-x="kv-izol"]').count() === 0,
+        `${device}: odstránená izolácia strechy sa vrátila medzi doplnky`);
 
       const beforeLed = await svgState(page);
       await enableExtra(page, 'kv-led');
@@ -441,8 +440,9 @@ function validateAccessoryContacts(snap, label) {
           `${device}: size did not update to ${width}x${length}`);
         assert(snap.geometry && snap.geometry.postAxes.length === expectedRows,
           `${device}: ${width}x${length} expected ${expectedRows} post rows, got ${snap.geometry && snap.geometry.postAxes.length}`);
-        assert(snap.extras['kv-izol'] === 1 && snap.extras['kv-led'] === 1 && snap.picks.odkvap === 'ano',
-          `${device}: accessory state was lost after resize`);
+        assert(snap.extras['kv-led'] === 1, `${device}: accessory state was lost after resize`);
+        assert(snap.geometry.accessories.gutter && snap.geometry.accessories.downpipe,
+          `${device}: odvodnenie musí ostať v zostave aj po zmene rozmeru`);
         SIDES.forEach(side => validateWallAnchor(snap, side, `${device}/${width}x${length}`));
         validateAccessoryContacts(snap, `${device}/${width}x${length}`);
         await rotateAndValidate(page, device, `${width}x${length}/accessories`, 24);

@@ -345,7 +345,37 @@
 
     #SoltecPremium .sp-cfg__grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(33rem, .58fr); gap: clamp(1.6rem, 2vw, 2.4rem); align-items: stretch; height: min(70rem, calc(100vh - 15rem)); min-height: 48rem; }
     #SoltecPremium .sp-stage { position: relative; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; border-radius: var(--media-radius, .8rem); background: #fff; }
-    #SoltecPremium .sp-stage__canvas { display: block; flex: 1 1 auto; width: 100%; min-height: 0; height: auto; background: linear-gradient(180deg, #fbfbfa 0%, #f0efec 100%); }
+    /* Pozadie plátna. Plochý biely prechod nechával model visieť v prázdne;
+       toto je ateliérové pozadie — mäkké svetlo zhora od kľúčového svetla,
+       chladnejší, tmavší spodok, kde pokračuje dlažba, a jemná vinieta, ktorá
+       drží konštrukciu v strede záberu. Podľa počasia sa mení: slnko je teplé,
+       zamračené studené a ploché, dážď najtmavší. Kým bolo pozadie rovnaké pre
+       všetky tri, voľba počasia takmer nič nemenila. */
+    #SoltecPremium .sp-stage__canvas {
+      display: block; flex: 1 1 auto; width: 100%; min-height: 0; height: auto;
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(28,34,38,.10) 0%, rgba(28,34,38,0) 62%),
+        radial-gradient(78% 58% at 26% 6%, rgba(255,252,244,.95) 0%, rgba(255,252,244,0) 70%),
+        linear-gradient(180deg, #fdfcfa 0%, #f4f3ef 46%, #eceae5 68%, #e6e4de 100%);
+    }
+    /* The WebGL bitmap is a separate compositing layer over the SVG scene.
+       Keeping it out of foreignObject avoids rebuilding an SVG/HTML boundary
+       during camera motion. Its exact CSS height follows the SVG from JS. */
+    #SoltecPremium .sp-stage__depth {
+      position: absolute; z-index: 1; top: 0; left: 0; display: block;
+      max-width: 100%; pointer-events: none;
+    }
+    #SoltecPremium .sp-stage__depth[hidden] { display: none; }
+    #SoltecPremium .sp-stage[data-weather="cloud"] .sp-stage__canvas {
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(24,30,36,.12) 0%, rgba(24,30,36,0) 62%),
+        linear-gradient(180deg, #f2f3f4 0%, #eaebec 48%, #e2e3e4 70%, #dcdddd 100%);
+    }
+    #SoltecPremium .sp-stage[data-weather="rain"] .sp-stage__canvas {
+      background:
+        radial-gradient(120% 90% at 50% 108%, rgba(20,27,34,.16) 0%, rgba(20,27,34,0) 60%),
+        linear-gradient(180deg, #eceef0 0%, #e3e6e8 46%, #dadde0 70%, #d3d6d9 100%);
+    }
     #SoltecPremium .sp-stage__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 1.6rem; padding: 1.4rem clamp(1.6rem, 2.2vw, 2.4rem); border-top: 1px solid var(--sp-line); }
     #SoltecPremium .sp-stage__dims { color: var(--sp-muted); font-size: 1.35rem; }
     #SoltecPremium .sp-stage__dims b { color: var(--sp-ink); font-weight: 500; }
@@ -1396,7 +1426,7 @@
 #SoltecPremium .sp-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 #SoltecPremium .sp-stage:focus { outline: none; }
 #SoltecPremium .sp-stage:focus-visible { outline: 2px solid var(--sp-ink); outline-offset: 3px; }
-#SoltecPremium .sp-stage__hint { position: absolute; left: 1.6rem; bottom: 1.6rem; margin: 0; padding: .5rem 1rem; border-radius: 100px; background: rgba(18,18,18,.62); color: #fff; font-size: 1.1rem; letter-spacing: .02em; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+#SoltecPremium .sp-stage__hint { position: absolute; z-index: 2; left: 1.6rem; bottom: 1.6rem; margin: 0; padding: .5rem 1rem; border-radius: 100px; background: rgba(18,18,18,.62); color: #fff; font-size: 1.1rem; letter-spacing: .02em; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
 /* Nápoveda sa zapína vo vrstve koverta-cfg-skin.css — len pre myš a klávesnicu. */
 @media (prefers-reduced-motion: reduce) { #SoltecPremium .sp-stage__hint { transition: none; } }
 
@@ -1462,8 +1492,7 @@
 #SoltecPremium .sp-cfg :focus-visible { outline: 3px solid #b98d00; outline-offset: 3px; }
 #SoltecPremium .sp-result__price { font-weight: 700; letter-spacing: -.04em; }
 #SoltecPremium .sp-stage__hint { max-width: calc(100% - 3rem); font-size: 1.1rem; background: rgba(18,23,26,.7); }
-/* Jeden prepínač, nie ovládací panel. Priblíženie je doplnok, takže tu nie sú
-   percentá ani +/− a tlačidlo drží typografiu a paletu zvyšku webu. */
+/* Zoom stays opt-in; its detail controls sit below the toggle. */
 #SoltecPremium .sp-zoom {
   position: absolute; top: 5.5rem; right: 1.4rem; z-index: 3;
   display: inline-flex; align-items: center; gap: .6rem;
@@ -1489,4 +1518,115 @@
 
 @media (max-width: 749px) {
   #SoltecPremium .sp-stage__hint { display: none; }
+}
+/* Display-only scenery controls, below the orbit surface. */
+#SoltecPremium .sp-scene { margin: 1rem 0 1.5rem; border: 1px solid #deded8; border-radius: 14px; background: #fafaf7; color: #303839; font-family: inherit; overflow: hidden; }
+#SoltecPremium .sp-scene [hidden] { display: none !important; }
+#SoltecPremium .sp-scene summary { cursor: pointer; padding: 1.1rem 1.4rem; font-weight: 600; font-size: 1.3rem; }
+#SoltecPremium .sp-scene__summary { float: right; font-weight: 400; color: #697173; font-size: 1.15rem; margin-left: 1.2rem; }
+#SoltecPremium .sp-scene__body { padding: 0 1.4rem 1.2rem; }
+#SoltecPremium .sp-scene__row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .6rem 0; }
+#SoltecPremium .sp-scene__choices { display: flex; flex-wrap: wrap; gap: .4rem; }
+#SoltecPremium .sp-scene button, #SoltecPremium .sp-scene select { min-height: 40px; padding: .5rem .9rem; border: 1px solid #d7dbd7; border-radius: 8px; background: #fff; color: #303839; font: inherit; font-size: 1.25rem; cursor: pointer; }
+#SoltecPremium .sp-scene button[aria-pressed="true"] { background: #354348; border-color: #354348; color: white; }
+#SoltecPremium .sp-scene button:focus-visible, #SoltecPremium .sp-scene select:focus-visible, #SoltecPremium .sp-scene summary:focus-visible { outline: 2px solid #d49b26; outline-offset: 3px; }
+#SoltecPremium .sp-scene__status { font-size: 1.15rem; line-height: 1.5; margin: .6rem 0 .4rem; color: #657174; }
+#SoltecPremium .sp-scene__status:empty { display: none; }
+/* Blokový, aby sa dal v pootvorenom stave zrolovať — na riadkovom prvku
+   `max-height` neplatí a pod kartou po ňom ostávala prázdna medzera. */
+#SoltecPremium .sp-scene__credits { display: block; color: #526368; font-size: 1.05rem; text-underline-offset: 3px; }
+#SoltecPremium .sp-scene__rain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; font-size: 1.25rem; }
+/* Ovládanie sedí na plátne, pri jeho ľavom dolnom rohu, a nie v páse pod ním:
+   pás si bral toľko výšky, že na model ostala polovica scény. Dok má nulovú
+   výšku a končí presne tam, kde končí kresba, takže karta prekrýva len
+   prázdnu dlažbu — nie lištu pohľadov pod ňou ani nápovedu k ovládaniu v
+   ľavom hornom rohu. Zabalená je z nej len úzky prúžok. */
+#SoltecPremium .sp-scene-dock { position: relative; z-index: 7; height: 0; }
+#SoltecPremium .sp-scene-dock > .sp-scene {
+  position: absolute; left: 1.2rem; bottom: 1.2rem; width: min(30rem, calc(100% - 2.4rem));
+  margin: 0; border: 1px solid #dfe3de; border-radius: 12px;
+  /* Bez `backdrop-filter`. Karta leží nad plátnom, ktoré sa pri otáčaní
+     prekresľuje, a rozmazanie podkladu by kompozitor musel počítať znova ku
+     každému snímku. Pri 97 % krytí je rozdiel nevidno. */
+  background: rgba(255,255,253,.97);
+  box-shadow: 0 4px 18px #26332f14;
+}
+#SoltecPremium .sp-scene-dock > .sp-scene { transition: width .18s ease; }
+#SoltecPremium .sp-scene-dock > .sp-scene.is-peek { width: min(27rem, calc(100% - 2.4rem)); }
+#SoltecPremium .sp-scene-dock > .sp-scene.is-peek .sp-scene__body { padding-bottom: .7rem; }
+#SoltecPremium .sp-scene-dock > .sp-scene .sp-scene__body {
+  max-height: min(46vh, 34rem); overflow-y: auto; overscroll-behavior: contain;
+}
+/* Pootvorený stav skrýva len druhoradé voľby — model auta, počet, lak, silu
+   dažďa a poznámky. Samotné prepínače „čo je pod prístreškom" a „aké je
+   počasie" ostávajú na kresbe vidieť vždy: zabalené do prúžku s názvom ich
+   vlastník nenašiel. Skrytá časť sa navyše vyradí z kreslenia
+   (`visibility`), inak ju prehliadač skladá nad plátnom pri každom snímku. */
+#SoltecPremium .sp-scene-dock > .sp-scene.is-peek .sp-scene__more {
+  max-height: 0; margin-block: 0; padding-block: 0; opacity: 0;
+  overflow: hidden; visibility: hidden;
+  transition: max-height .18s ease, opacity .14s ease, margin .18s ease,
+              visibility 0s linear .18s;
+}
+#SoltecPremium .sp-scene-dock > .sp-scene .sp-scene__more {
+  max-height: 12rem; visibility: visible;
+  transition: max-height .22s ease, opacity .2s ease .04s, margin .22s ease, visibility 0s;
+}
+/* Myš kartu rozbalí celú, dotyk ju rozbalí ťuknutím na hlavičku.
+   Klávesnica zaostrením, aby sa dala prejsť tabulátorom.
+   Len tam, kde karta naozaj pláva nad kresbou. Pod 750 px sedí v toku pod
+   scénou a je široká ako scéna; rozbalenie na 30 rem ju tam nezväčšovalo,
+   ale zužovalo — na 390 px okne z 358 px na 300 px, takže vedľa nej ostal
+   pruh podkladu. Na telefóne to nebolo vidieť, lebo dotyk sem nespadá; na
+   úzkom okne s myšou áno. */
+@media (hover: hover) and (pointer: fine) and (min-width: 750px) {
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:focus-within { width: min(30rem, calc(100% - 2.4rem)); }
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:hover .sp-scene__more,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek:focus-within .sp-scene__more {
+    max-height: 12rem; margin-block: .6rem; padding-block: 0; opacity: 1;
+    overflow: visible; visibility: visible;
+    transition: max-height .22s ease, opacity .2s ease .04s, margin .22s ease, visibility 0s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #SoltecPremium .sp-scene-dock > .sp-scene,
+  #SoltecPremium .sp-scene-dock > .sp-scene .sp-scene__more { transition: none; }
+}
+@media(max-width:749px) {
+  /* Na telefóne je plátno nízke — plávajúca karta by na ňom stála na modeli.
+     Vracia sa do toku pod scénu, kde má vlastnú šírku aj miesto. */
+  #SoltecPremium .sp-scene-dock { height: auto; }
+  #SoltecPremium .sp-scene-dock > .sp-scene,
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek {
+    position: static; width: auto; margin: 0; border: 0; border-top: 1px solid var(--sp-line);
+    border-radius: 0; background: #fff; backdrop-filter: none; box-shadow: none;
+  }
+  #SoltecPremium .sp-scene__summary { float: none; display: block; margin: .5rem 0 0 1.7rem; }
+  /* Na telefóne karta na modeli nestojí — leží pod ním, takže sa nemá pred
+     čím skrývať a ostáva otvorená. Pootvorený stav je liek na prekrytie
+     kresby, ktoré tu nehrozí. */
+  #SoltecPremium .sp-scene-dock > .sp-scene.is-peek .sp-scene__more {
+    max-height: none; margin-block: .6rem; opacity: 1; overflow: visible;
+    visibility: visible; transition: none;
+  }
+}
+/* Lišta priblíženia je ovládanie, nie plachta cez model. Samotný rámik ani
+   percentá nesmú brať ťah myšou — inak sa model v mieste, kde lišta plávala,
+   nedá otočiť. Klikať sa dá len na tlačidlá. */
+#SoltecPremium .sp-zoom-tools { position: absolute; z-index: 8; right: 1.2rem; top: 9.8rem; display: flex; align-items: center; gap: .4rem; padding: .4rem; border: 1px solid #d8ddda; border-radius: 10px; background: rgba(255,255,253,.96); box-shadow: 0 3px 14px #26332f12; pointer-events: none; }
+#SoltecPremium .sp-zoom-tools[hidden] { display: none; }
+#SoltecPremium .sp-zoom-tools button { pointer-events: auto; min-width: 44px; min-height: 44px; border: 0; border-radius: 7px; background: #f0f2ed; color: #303c40; font: inherit; font-size: 1.6rem; cursor: pointer; }
+#SoltecPremium .sp-zoom-tools button:last-child { padding: 0 1rem; font-size: 1.2rem; }
+#SoltecPremium .sp-zoom-tools output { min-width: 5rem; text-align: center; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+#SoltecPremium .sp-zoom-tools button:focus-visible { outline: 2px solid #c18e22; outline-offset: 2px; }
+/* Na telefóne je plátno nízke a plávajúca lišta padla presne doprostred
+   modelu; posunutá k spodku scény zase prekryla panel vybavenia. Na úzkej
+   obrazovke preto nepláva vôbec — sadne si do toku pod lištu pohľadov, kde má
+   plné tlačidlá a nič nezakrýva. */
+@media(max-width:749px) {
+  #SoltecPremium .sp-zoom-tools {
+    position: static; margin: 0 clamp(1.4rem, 2.2vw, 2.4rem) 1.2rem;
+    justify-content: center; gap: .4rem;
+  }
 }

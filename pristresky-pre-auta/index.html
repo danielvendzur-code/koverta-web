@@ -390,11 +390,10 @@
     </div>
     <div class="kh-size-custom k-rise">
       <div>
-        <p class="kh-size-custom__eyebrow">Iný rozmer? Nie je problém.</p>
-        <p class="kh-size-custom__text">Katalógové veľkosti sú najrýchlejší východiskový bod. Ak sa žiadna presne nehodí k domu alebo pozemku, navrhneme šírku a dĺžku na mieru.</p>
-        <p class="kh-size-custom__note">Uvedené katalógové ceny sú z e-shopu koverta.sk vrátane DPH, dopravy a montáže. Pri atypickom rozmere cenu potvrdíme po zameraní.</p>
+        <p class="kh-size-custom__eyebrow">Nenašli ste presný rozmer?</p>
+        <p class="kh-size-custom__text">Vyberte najbližšiu katalógovú veľkosť. Presný rozmer doladíme podľa podkladov k miestu.</p>
       </div>
-      <a class="k-btn k-btn--line" href="#ponuka">Nezáväzná cenová ponuka <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="k-btn k-btn--primary" href="#ponuka">Požiadať o rozmer na mieru <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
 </section>
@@ -463,8 +462,8 @@
     <ul class="kh-vcene__rad">
       <li class="kh-vcene__polozka k-rise" data-k-delay="1">
         <span class="kh-vcene__cislo" aria-hidden="true">01</span>
-        <h3 class="kh-vcene__nazov">Zameranie na mieste</h3>
-        <ul class="kh-vcene__body"><li>Prídeme, odmeriame a overíme podklad</li><li>Povieme, čo sa na pozemok zmestí</li><li>Zadarmo, aj keď si nakoniec nič neobjednáte</li></ul>
+        <h3 class="kh-vcene__nazov">Zameranie podľa potreby</h3>
+        <ul class="kh-vcene__body"><li>Najprv posúdime rozmery a fotografie</li><li>Na miesto prídeme, iba ak treba niečo overiť</li><li>Vtedy je zameranie bezplatné a nezáväzné</li></ul>
       </li>
       <li class="kh-vcene__polozka k-rise" data-k-delay="2">
         <span class="kh-vcene__cislo" aria-hidden="true">02</span>
@@ -500,7 +499,7 @@
       </div>
     </header>
 
-    <div class="kh-zost">
+    <div class="kh-zost kh-zost--carport">
       <figure class="kh-zost__ram k-rise">
         <img src="../assets/koverta-sketch-carport.svg" alt="Rez prístreškom s očíslovanými vrstvami, kótou šírky a výšky" width="840" height="560" loading="lazy" decoding="async">
         <div class="kh-zost__koty">
@@ -510,11 +509,7 @@
         </div>
       </figure>
       <div class="kh-zost__stlpec">
-        <figure class="kh-zost__foto k-rise" data-k-delay="1">
-          <img src="../assets/koverta-pristresok-auto-trnava-hero.jpg" alt="Rovná strešná línia dokončeného prístrešku Koverta" width="1600" height="1200" loading="lazy" decoding="async">
-          <span class="kh-zost__kut" aria-hidden="true"></span>
-        </figure>
-        <div class="kh-zost__panel k-rise" data-k-delay="2">
+        <div class="kh-zost__panel k-rise" data-k-delay="1">
           <p class="k-eyebrow">Vrstvy rezu</p>
           <ol class="kh-zost__vrstvy">
   <li class="kh-zost__vrstva"><span class="kh-zost__cislo">01</span><span class="kh-zost__co"><b>Nosné stĺpy</b> — oceľové stĺpy podľa zvolenej a overenej zostavy</span></li>
@@ -651,12 +646,16 @@
         <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
           <input type="hidden" name="form_type" value="contact">
           <input type="hidden" name="utf8" value="✓">
-          <fieldset>
-          <legend>Máte záujem o</legend>
-          <div class="kh-form__choices">
-            <label><input type="radio" name="contact[Čo rieši]" value="Prístrešok pre auto Koverta" checked><span>Prístrešok pre auto Koverta</span></label>
-          </div>
-        </fieldset>
+<label class="kh-field kh-field--interest"><span>Máte záujem o</span><select name="contact[Čo rieši]" required>
+            <option selected>Prístrešok pre auto Koverta</option>
+            <option>Carport Soltec</option>
+            <option>Záhradný prístrešok Koverta</option>
+            <option>Pevné prestrešenie Soltec</option>
+            <option>Bioklimatická pergola Soltec</option>
+            <option>Tienenie Soltec</option>
+            <option>Vonkajšia kuchyňa Soltec</option>
+            <option>Iné – potrebujem poradiť</option>
+          </select></label>
 
           <div class="kh-form__grid">
             <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>

@@ -3,11 +3,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Isolate only external analytics. First-party requests and browser errors
-// remain visible and must fail every browser test.
+// Isolate only external analytics and the web-font CDN. First-party requests
+// and browser errors remain visible and must fail every browser test.
 async function prepareContext(context) {
   await context.route(/^https:\/\/(?:www\.googletagmanager\.com|www\.google-analytics\.com|[a-z0-9.-]*clarity\.ms)\//,
     route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
+  /* Písmo z Google Fonts nerozhoduje o ničom, čo tieto testy tvrdia — merajú
+     geometriu modelu, prekrytie profilov a cenu. Zato je to sieťová závislosť
+     mimo nášho dosahu: keď CDN odpovie pomaly alebo vôbec, spadne kontrola,
+     ktorá o písme nehovorí. Stránka má v zázname náhradné rodiny, takže sa
+     vykreslí aj bez neho. */
+  await context.route(/^https:\/\/fonts\.(?:googleapis|gstatic)\.com\//,
+    route => route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
 }
 
 function watchErrors(page) {

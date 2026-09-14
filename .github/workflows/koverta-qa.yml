@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok]
     steps:
       - uses: actions/checkout@v4
         with:

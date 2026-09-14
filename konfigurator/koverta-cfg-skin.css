@@ -684,7 +684,24 @@ body { background: var(--k-white); color: var(--k-ink); }
 #SoltecPremium .sp-cfg.is-full .sp-stage__canvas { min-height: min(320px, 46vh); }
 
 @media screen and (max-width: 989px) {
-  #SoltecPremium .sp-cfg.is-full .sp-cfg__grid { grid-template-rows: minmax(0, 46vh) minmax(0, 1fr); }
+  /* Riadok scény si výšku nemôže rozdeliť vopred: pod kresbou je okrem lišty
+     aj panel vybavenia a pri pevných 46 vh sa oboje orezalo — na telefóne sa
+     vo fullscreene nedalo prepnúť pohľad ani počasie. Výšku určuje kresba
+     (rovnaká ako doteraz), riadok rastie podľa obsahu a kroky konfigurátora
+     si vezmú zvyšok a rolujú samy. */
+  #SoltecPremium .sp-cfg.is-full .sp-cfg__grid { grid-template-rows: auto minmax(0, 1fr); }
+  #SoltecPremium .sp-cfg.is-full .sp-stage { height: auto; }
+  #SoltecPremium .sp-cfg.is-full .sp-stage__canvas { flex: 0 0 auto; height: min(320px, 46vh); }
+  /* Otvorený panel vybavenia si na telefóne nemôže vziať celý zvyšok okna,
+     inak z krokov konfigurátora ostane prúžok. Telo panelu sa zastaví na
+     22 vh a doroluje sa v sebe. */
+  #SoltecPremium .sp-cfg.is-full .sp-stage > .sp-scene[open] .sp-scene__body { max-height: 22vh; overflow-y: auto; overscroll-behavior: contain; }
+  /* A kým je otvorený, požičia si trochu výšky aj samotná kresba — nech
+     ostane na kroky konfigurátora použiteľné miesto. Staršie prehliadače
+     bez :has() nechajú kresbu takú, aká je. */
+  @supports selector(:has(*)) {
+    #SoltecPremium .sp-cfg.is-full .sp-stage:has(> .sp-scene[open]) .sp-stage__canvas { height: min(220px, 30vh); min-height: 0; }
+  }
   /* Rozmery na svojom riadku, oba prepínače vedľa seba na druhom. Keď sa
      nezmestia do šírky telefónu, riadok sa posúva prstom — nezalomí sa. */
   #SoltecPremium .sp-stage__bar {
