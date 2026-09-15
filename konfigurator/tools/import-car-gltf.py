@@ -80,6 +80,35 @@ PROFILES = {
     # Malé mestské auto nesie celý exteriér v jednej textúre, takže farbu
     # berieme z nej po vrchole; lak sa dovolí len tam, kde textúra drží
     # dominantný odtieň karosérie (viď --paint-from-texture).
+    # G80 M3 nesie materiály len ako Material.0NN, takže ktorý je ktorý sa
+    # zistilo z geometrie: 015 je jediná veľká zelená vrstva cez celú karosériu,
+    # 029 sedí v pásme kolies po celom rázvore, 020 je dlhý úzky pás vysoko
+    # (zasklenie), 003 je najširšia vrstva vôbec (zrkadlá) a 018/019 sú drobné
+    # červené a biele kusy vpredu a vzadu.
+    'g80': [
+        ('material.015',    1, None),                 # lak
+        ('material.029',    3, (198, 204, 210)),      # disky
+        ('material.020',    2, (26, 32, 38)),         # zasklenie
+        ('material.019',    4, (240, 244, 248)),      # svetlomety
+        ('material.018',    4, (214, 30, 36)),        # koncové svetlá
+        ('material.003',    3, (176, 182, 188)),      # zrkadlá
+        ('material.017',    0, (34, 34, 36)),         # spodné lemy a nárazníky
+        ('material.016',    0, (22, 23, 25)),         # pneumatiky a tmavé diely
+        ('material.002',    0, (20, 21, 23)),
+    ],
+    # 208 má celý exteriér na jednom materiáli, takže sa vrstvy rozlišujú menom
+    # siete. Karoséria si drží farbu z textúry — okná sú v nej namaľované,
+    # takže lak z prepínača by prefarbil aj ich.
+    'p208': [
+        ('plane.000',       0, 'texture'),            # karoséria vrátane okien
+        # Koleso je v predlohe jeden tmavý kotúč a textúra na ňom nemá lúče,
+        # takže z neho po vzorkovaní ostala čierna placka. Disk sa preto
+        # dostavia rovnako ako pri sedane.
+        ('circle.000',      3, ('spokes', (198, 204, 210), (28, 29, 31))),
+        ('sphere.001',      3, (176, 182, 188)),      # zrkadlá
+        ('cube.004',        4, (240, 244, 248)),      # predné svetlá
+        ('cube.003',        4, (214, 30, 36)),        # zadný svetelný pás
+    ],
     'city': [
         ('exterior',        1, 'texture'),
         ('interior',     None, None),
@@ -214,12 +243,20 @@ def alloy_wheels(q, mask, bright, dark, spokes=5):
     return (np.array(pos, dtype=np.float64), np.array(nrm, dtype=np.float64),
             np.array(col, dtype=np.uint8))
 
-def material_of(g, rules, index):
+def material_of(g, rules, index, mesh=''):
+    """Materiál pre danú vrstvu. Pravidlo sa hľadá najprv podľa mena materiálu
+    a keď tam nič nesedí, podľa mena siete: nejeden model zo Sketchfabu nesie
+    celý exteriér na jedinom materiáli a jediné, čím sa kolesá líšia od karosérie,
+    je meno siete."""
     if index is None: return 0, None, False
     name = (g['materials'][index].get('name') or '').lower()
-    interior = any(k in name for k in INTERIOR)
+    mesh = (mesh or '').lower()
+    interior = any(k in name for k in INTERIOR) or any(k in mesh for k in INTERIOR)
     for key, mat, col in rules:
         if key in name:
+            return mat, col, interior
+    for key, mat, col in rules:
+        if key in mesh:
             return mat, col, interior
     pbr = g['materials'][index].get('pbrMetallicRoughness', {})
     if 'baseColorTexture' in pbr:
@@ -245,8 +282,9 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         node = g['nodes'][idx]
         world = parent @ node_matrix(node)
         if 'mesh' in node:
+            mesh_name = g['meshes'][node['mesh']].get('name') or node.get('name') or ''
             for prim in g['meshes'][node['mesh']]['primitives']:
-                mat, col, interior = material_of(g, rules, prim.get('material'))
+                mat, col, interior = material_of(g, rules, prim.get('material'), mesh_name)
                 if mat is None: dropped['layer'] += 1; continue
                 if interior and not keep_interior: dropped['interior'] += 1; continue
                 attrs = prim['attributes']

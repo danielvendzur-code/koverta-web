@@ -12,7 +12,11 @@ const dimensions={};
 for(const [key,model] of Object.entries(models)) {
   const file=model.file.replace(/\.bin\.gz$/,'');
   const data=zlib.gunzipSync(fs.readFileSync(path.join(root,'scene-assets',file+'.bin.gz')));
-  assert.equal(data.length%48,0);assert(data.length>100000);
+  assert.equal(data.length%48,0);
+  // Stráži sa, či je súbor naozaj sieť a nie odrezok: stotisíc bajtov bola
+  // hranica šitá na vtedajšie modely a skutočne nízkopolygónové auto pod ňu
+  // padne, hoci je celé. Dvesto trojuholníkov nepodlezie žiadny celý model.
+  assert(data.length>=48*200,`${file}: ${data.length/48} trojuholníkov je málo na celý model`);
   const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<data.length;i+=16){
     const n=Math.hypot(data.readInt16LE(i+6),data.readInt16LE(i+8),data.readInt16LE(i+10))/32767;
@@ -84,7 +88,10 @@ assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items
 // Kde sa sedan nezmestí, má nastúpiť malé auto — o tom celá ponuka dvoch
 // veľkostí je. Prístrešok kratší než sedan, ale dlhší než mestské auto.
 {
-  const tight=plan({L:4600,W:4000,H:2400,post:150,boxDepth:0},'car','1');
+  // Rozmer sa posunul s modelom: malé auto je odteraz Peugeot 208 (4 055 mm),
+  // nie generická 3,54 m krabička, takže "kratší než sedan, dlhší než malé
+  // auto" je dnes iné číslo. Tvrdenie ostáva to isté.
+  const tight=plan({L:4900,W:4000,H:2400,post:150,boxDepth:0},'car','1');
   assert.equal(tight.items.length,1,'do krátkeho prístrešku patrí malé auto');
   assert.equal(tight.items[0].key,'city');
 }

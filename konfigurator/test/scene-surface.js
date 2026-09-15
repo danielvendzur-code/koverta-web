@@ -6,7 +6,7 @@ const surface=build([[[0,0,100],[100,0,200],[100,100,200],[0,100,100]],[[30,30,2
 assert.equal(surface.hit(20,70).z,120);assert.equal(surface.hit(40,40).z,250);assert.equal(surface.hit(-1,50),null);
 const gap=build([[[0,0,100],[40,0,100],[40,100,100],[0,100,100]],[[60,0,100],[100,0,100],[100,100,100],[60,100,100]]]);
 assert.equal(gap.hit(50,50),null);assert.equal(gap.hit(30,50).z,100);
-const buffer=zlib.gunzipSync(fs.readFileSync('konfigurator/scene-assets/hyundai-sonata.bin.gz'));
+const buffer=zlib.gunzipSync(fs.readFileSync('konfigurator/scene-assets/bmw-g80-m3.bin.gz'));
 const car=packed(buffer.buffer.slice(buffer.byteOffset,buffer.byteOffset+buffer.byteLength));
 const hood=car.hit(600,0),roof=car.hit(2800,0),boot=car.hit(4400,0);
 assert(hood.z<1100&&roof.z>1400&&boot.z<1200,'rain must meet actual hood/roof/boot, not one elevated box');

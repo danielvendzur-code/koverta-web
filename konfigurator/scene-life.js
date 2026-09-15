@@ -9,10 +9,10 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    sedan: { file:'hyundai-sonata.bin.gz', bounds:[0,-1043,0,4855,1043,1516],
-      label:'Hyundai Sonata', short:'sedan' },
-    city: { file:'city-car.bin.gz', bounds:[0,-955,0,3540,955,1500],
-      label:'malé mestské auto', short:'mestské auto' },
+    sedan: { file:'bmw-g80-m3.bin.gz', bounds:[0,-1013,0,4794,1013,1462],
+      label:'BMW M3', short:'sedan' },
+    city: { file:'peugeot-208.bin.gz', bounds:[0,-985,0,4055,985,1463],
+      label:'Peugeot 208', short:'malé auto' },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
@@ -22,7 +22,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260913-cars-1',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-2',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -51,10 +51,23 @@
          dĺžky — pri prednastavenom carporte sa nezmestilo nič a scéna
          hlásila, že tu auto nezaparkuje, hoci bežné mestské auto áno. */
       const order=car==='sedan'?['sedan']:car==='city'?['city']:['sedan','city'];
+      /* Kto si vypýtal konkrétny počet, má ho dostať, ak sa vôbec dá. Väčšie
+         auto ide prvé — na otázku "zmestí sa mi sem auto" odpovedá ono —, ale
+         keď sa ich toľko nezmestí a menších áno, ukáže sa menšie. Predtým
+         rozhodovalo len to, či sa zmestí aspoň jedno, takže pri troch autách
+         ostali na scéne dve a prepínač vyzeral pokazene. */
+      const want=count==='auto'?0:Math.max(1,Number(count)||1);
+      let biggest=null,most=null;
       for(const key of order) {
         const got=parkCars(c,count,key,car==='auto');
-        if(got.capacity||key===order[order.length-1])return got;
+        if(want&&got.items.length>=want)return got;
+        if(!biggest&&got.capacity)biggest=got;
+        if(!most||got.items.length>most.items.length)most=got;
       }
+      /* Pri "podľa priestoru" rozhoduje veľkosť auta, pri konkrétnom počte ich
+         počet: kto si vypýtal tri, nemá dostať jedno len preto, že to jedno je
+         väčšie. */
+      return (want?(most||biggest):(biggest||most));
     }
     if(mode==='bistro') return seatPlan(c,count,margin,available,x0,x1,result);
     return {items:[],capacity:0,reason:''};
@@ -64,24 +77,39 @@
       const bb=models[key].bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
       /* Odstup od stĺpa. 350 mm je pohodlie — miesto na otvorenie dverí. Malé
          auto sa ale pod najužší prístrešok zmestí aj bez neho: pri 2,5 m
-         šírky ostane medzi stĺpmi 2,2 m svetla a mestské auto so zrkadlami
-         má 1,91 m. Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom
+         šírky ostane medzi stĺpmi 2,2 m svetla a Peugeot 208 so zrkadlami
+         má 1,97 m. Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom
          aute preto stačí konštrukčná medzera, a koľko ho naozaj ostane, sa
          napíše pod náhľad. Sedan si pohodlný odstup drží. */
       const roomy=Math.max(350,c.post+200);
       const side=key==='city'?Math.max(140,c.post*0.9):roomy;
       const rear=c.boxDepth+(c.boxDepth?750:300),front=c.L-300,gap=600;
-      const parkedX=(rear+front-carL)/2;
-      let intervals=[[side+carW/2,c.W-side-carW/2]];
-      if(front-rear<carL||c.H<carH+150)intervals=[];
-      for(const o of c.obstacles||[]) {
-        if(o[2]+80<parkedX||o[0]-80>parkedX+carL)continue;
-        const a=o[1]-80-carW/2,b=o[3]+80+carW/2,next=[];
-        for(const [lo,hi] of intervals){if(b<lo||a>hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
-        intervals=next;
-      }
-      intervals=intervals.filter(i=>i[1]>=i[0]);
-      const place=n=>{
+      /* Za sebou, nie vedľa seba. Doteraz sa parkovalo do jediného radu naprieč
+         šírkou, takže tretie auto nemalo kam — carport býva široký najviac šesť
+         metrov a tam sa vedľa seba zmestia dve. Dĺžka je pritom to, čo Soltec
+         predáva až do 9,3 m: za autom tam ostáva miesto na celé ďalšie. Medzi
+         nárazníkom a kapotou v druhom rade stačí 500 mm; medzi seba sa tam
+         nechodí, vychádza sa do strany. */
+      const tandem=500;
+      const depth=front-rear;
+      const rows=(c.H<carH+150||depth<carL)?0:Math.min(3,Math.floor((depth+tandem)/(carL+tandem)));
+      /* Rady sa rozložia po celej hĺbke rovnomerne, takže auto nestojí na
+         samom kraji, keď je prístrešok výrazne dlhší než potrebuje. */
+      const rowX=n=>{
+        const span=n*carL+(n-1)*tandem, start=rear+(depth-span)/2;
+        return Array.from({length:n},(_,i)=>start+i*(carL+tandem));
+      };
+      const lanesAt=(x)=>{
+        let intervals=[[side+carW/2,c.W-side-carW/2]];
+        for(const o of c.obstacles||[]) {
+          if(o[2]+80<x||o[0]-80>x+carL)continue;
+          const a=o[1]-80-carW/2,b=o[3]+80+carW/2,next=[];
+          for(const [lo,hi] of intervals){if(b<lo||a>hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
+          intervals=next;
+        }
+        return intervals.filter(i=>i[1]>=i[0]);
+      };
+      const laneYs=(intervals,n)=>{
         const ys=[];let last=-Infinity;
         for(const [lo,hi] of intervals)for(let y=Math.max(lo,last+carW+gap);y<=hi+.01&&ys.length<n;y+=carW+gap){ys.push(y);last=y;}
         if(ys.length!==n)return [];
@@ -89,18 +117,48 @@
         if(ys.every(y=>intervals.some(([lo,hi])=>y+shift>=lo&&y+shift<=hi)))return ys.map(y=>y+shift);
         return ys;
       };
-      let capacity=0;for(let n=1;n<=3;n++)if(place(n).length===n)capacity=n;
+      /* Koľko áut sa zmestí: najprv sa zaplní rad naprieč, až potom sa ide
+         dozadu. Dve autá vedľa seba vyzerajú ako carport, dve za sebou ako
+         prejazd. */
+      const spots=[];
+      for(const x of rowX(rows||1)) {
+        if(!rows) break;
+        const intervals=lanesAt(x);
+        let lanes=0;for(let n=1;n<=3;n++)if(laneYs(intervals,n).length===n)lanes=n;
+        spots.push({x,intervals,lanes});
+      }
+      const laneMax=Math.max(0,...spots.map(s=>s.lanes));
+      /* Rozloženie pre daný počet: rozdelí sa medzi rady čo najrovnomernejšie,
+         prvý rad plnší. */
+      const layout=(want)=>{
+        if(!spots.length||want<1) return [];
+        const use=Math.min(spots.length,Math.ceil(want/Math.max(1,laneMax)));
+        const per=[];let left=want;
+        for(let i=0;i<use;i++){const n=Math.min(spots[i].lanes,Math.ceil(left/(use-i)));per.push(n);left-=n;}
+        if(left>0) return [];
+        const out=[];
+        per.forEach((n,i)=>{
+          const ys=laneYs(spots[i].intervals,n);
+          if(ys.length!==n){out.length=0;return;}
+          ys.forEach(y=>out.push({x:spots[i].x,y}));
+        });
+        return out.length===want?out:[];
+      };
+      let capacity=0;for(let n=1;n<=3;n++)if(layout(n).length===n)capacity=n;
       const wanted=count==='auto'?capacity:Math.min(Number(count)||1,capacity);
-      const ys=place(wanted);
+      const slots=layout(wanted);
+      const ys=slots.map(s=>s.y);
       /* Keď stoja pod prístreškom dve autá, nemajú to byť dve kópie toho
          istého: druhé miesto dostane druhý model, aby bolo z náhľadu vidieť
          obe ponúkané veľkosti. Platí to len pri automatickom výbere — kto si
          model zvolil sám, dostane ten, ktorý si zvolil. */
       const other=key==='sedan'?'city':'sedan',ob=models[other].bounds;
       const otherFits=mix&&ob[4]-ob[1]<=bb[4]-bb[1]&&ob[3]-ob[0]<=bb[3]-bb[0]&&ob[5]-ob[2]<=c.H-150;
-      ys.forEach((y,i)=>{
+      slots.forEach((s,i)=>{
         const k=otherFits&&i===1?other:key,kb=models[k].bounds;
-        result.push({key:k,x:(rear+front-(kb[3]-kb[0]))/2-kb[0],y,z:2,rotation:0});
+        /* Auto sa v rade zarovná na stred svojho miesta, aby kratší model
+           nestál kapotou vpredu a zadkom v prázdne. */
+        result.push({key:k,x:s.x+(carL-(kb[3]-kb[0]))/2-kb[0],y:s.y,z:2,rotation:0});
       });
       const gapBeside=result.length?Math.round(Math.min(...result.map(i=>{
         const kb=models[i.key].bounds;return Math.min(i.y+kb[1],c.W-(i.y+kb[4]));}))):null;
