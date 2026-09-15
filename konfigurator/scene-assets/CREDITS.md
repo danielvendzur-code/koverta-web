@@ -72,15 +72,35 @@ skript `../tools/refine-car-detail.py`, ktorý vymieňal nápis na ich ŠPZ.
 BMW M2 CS z ponúknutých modelov použiť nemožno: má licenciu
 CC-BY-NC-SA-4.0, ktorá zakazuje komerčné použitie.
 
-## Lounge zostava
+## Modern Industrial Outdoor Sofa Set — „lounge zostava"
 
-Pôvodný návrh pre tento konfigurátor: trojmiestna pohovka, dve kreslá, nízky
-stolík s podnosom a vonkajší koberec, poskladané ako jedna zostava, aby široká
-pergola nestála okolo jedného bistro stolíka. Rozmery zodpovedajú bežnému
-záhradnému nábytku: pohovka 2,28 m, hĺbka 0,70 m, sedák 0,40 m nad zemou.
-Obálka 3,16 × 2,40 m — naprieč je zostava zámerne plytká, aby sa zmestila aj
-pod bioklimatickú pergolu, ktorá je najviac 3,5 m široká.
-23 486 trojuholníkov, 185 010 bajtov gzip.
+- Autor: Ulug'bek — https://sketchfab.com/ulugbekdizayn
+- Zdroj: https://sketchfab.com/3d-models/modern-industrial-outdoor-sofa-set-010bd90929894f32a7caa781c9f8f6a8
+- Licencia: CC-BY-4.0 — http://creativecommons.org/licenses/by/4.0/ (komerčné
+  použitie povolené, autor musí byť uvedený).
+- Povinné uvedenie zdroja: This work is based on "Modern Industrial Outdoor Sofa Set"
+  (https://sketchfab.com/3d-models/modern-industrial-outdoor-sofa-set-010bd90929894f32a7caa781c9f8f6a8)
+  by Ulug'bek (https://sketchfab.com/ulugbekdizayn) licensed under CC-BY-4.0
+  (http://creativecommons.org/licenses/by/4.0/)
+- Úpravy: glTF prevedený do milimetrov a súradníc konfigurátora; farby z textúr
+  vzorkované do vrcholov, pôvodné normály zachované. Tri materiály: čalúnenie
+  a drevo stolíka si nesú farbu v textúre, kovový rám ju má vo faktore. Všetko
+  je matné — vonkajší nábytok je látka, prášková farba a drevo, nič z toho sa
+  neleskne ako lak. Trojmiestna pohovka, dve kreslá a konferenčný stolík na
+  čiernom ráme. Obálka 4,13 × 2,63 × 1,29 m. 32 728 trojuholníkov,
+  397 491 bajtov gzip.
+- Prečo práve táto: z dvoch ponúknutých zostáv má táto tri čisté materiály,
+  ktoré sadnú na pätici shadera, a pôdorys, ktorý sa pod pergolu zmestí.
+  Modern Outdoor Lounge je 6,4 × 7,0 m záhradná scéna z mnohých kusov
+  a desiatok drobných materiálov — musela by sa rozobrať a jej podoba stojí
+  na textúrach.
+- Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
+  konfigurator/scene-assets/patio-sofaset.bin.gz --profile sofaset`
+
+### Predchádzajúca lounge zostava
+
+Do 15. 9. 2026 tu stál vlastný návrh: pohovka, dve kreslá, stolík s podnosom
+a koberec, obálka 3,16 × 2,40 m. Ustúpil licencovanému modelu.
 
 ## Kompaktné posedenie
 

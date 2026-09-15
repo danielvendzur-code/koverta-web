@@ -14,7 +14,7 @@
     city: { file:'peugeot-208.bin.gz', bounds:[0,-985,0,4055,985,1463],
       label:'Peugeot 208', short:'malé auto' },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
-    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] },
+    lounge: { file:'patio-sofaset.bin.gz', bounds:[0,-1315,0,4130,1315,1291] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
   };
   /* Obálka po otočení o štvrť otáčky okolo zvislej osi: (x,y) → (-y,x).

@@ -109,6 +109,14 @@ PROFILES = {
         ('cube.004',        4, (240, 244, 248)),      # predné svetlá
         ('cube.003',        4, (214, 30, 36)),        # zadný svetelný pás
     ],
+    # Záhradná zostava, nie auto. Tri materiály: látka a drevo si nesú farbu
+    # v textúre, kovový rám ju má vo faktore. Nič z toho sa neleskne ako lak,
+    # tak je všetko matné - vonkajší nábytok je látka, prášková farba a drevo.
+    'sofaset': [
+        ('mato',            0, 'texture'),          # čalúnenie
+        ('taxta',           0, 'texture'),          # drevo stolíka
+        ('metal',           0, (46, 47, 49)),       # rám
+    ],
     'city': [
         ('exterior',        1, 'texture'),
         ('interior',     None, None),
