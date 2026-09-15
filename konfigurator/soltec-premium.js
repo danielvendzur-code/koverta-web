@@ -4836,8 +4836,26 @@
                v rovine skákalo 677 pixelov hore-dolu, o 0,8 mm nižšie ani
                jeden. Osem desatín milimetra je menej než hrúbka náteru a na
                2,5 m vysokom modeli to nikto neuvidí; rám ale vyhráva vždy. */
-            const mid = bz + beam / 2; // fixed pivot datum; closed top sits just under the frame
             const t = blade.t;                     // blade thickness, along its own normal
+            /* Lamela sa drží tak vysoko v ráme, ako jej dovolí jej vlastný
+               rozkyv. Zatvorená je preto zarovno s rámom, otvorená sa stiahne
+               dovnútra a zhora ostane vidieť celý profil.
+
+               Jedna pevná os to nedokáže ani jedno, ani druhé. Keby sedela
+               hore, otvorená lamela by z rámu vyčnievala a prekrývala ho -
+               tak to vyzeralo predtým. Keby sedela v strede, zatvorená strecha
+               by bola o pol rámu ponorená - tak to vyzeralo potom. Lamela má
+               pritom v každom uhle inú výšku: naplocho je vysoká hrúbku,
+               natočená (šírka · sínus). Stred sa preto posadí presne o polovicu
+               tej výšky pod hornú hranu rámu a drží sa jej po celý rozsah.
+
+               Tých 0,8 mm pod hranou je odstup, ktorý zabráni tancujúcemu
+               obrysu: v presne rovnakej výške má hĺbková pamäť na výber a pri
+               každom pootočení kamery vyberie inú plochu. Merané deviatimi
+               krokmi po 0,0008 rad: v rovine skákalo 677 pixelov, o 0,8 mm
+               nižšie ani jeden. Je to menej než hrúbka náteru. */
+            const halfSwing = fullHalf * Math.abs(bladeUz) + (t / 2) * Math.abs(bladeUx);
+            const mid = bz + beam - halfSwing - 0.8;
             const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
                recessed into the underside of the blade, so it is only ever seen
