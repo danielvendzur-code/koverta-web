@@ -42,6 +42,24 @@
   let seedState=9307;
   const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
   for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
+  /* Laky auta. Podklad je zámerne tmavší, než by farba "mala" byť: shader
+     nad neho kladie číry lak, ostrý odlesk a odraz oblohy, a tie majú voči
+     čomu vyniknúť len na tmavšom podklade. Preto je aj metalíza v hodnote,
+     ktorá na papieri vyzerá tmavo — na aute vyjde presne.
+
+     Ponuka bola strieborná, grafitová a modrá, teda tri studené odtiene,
+     ktoré vedľa seba splývali. Pribudla červená, čierna a biela, aby si
+     zákazník našiel niečo blízke svojmu autu. Biela je teplá a jasná, takže
+     sa so striebornou nepletie. */
+  const PAINTS = {
+    graphite: { label: 'Grafitová',  rgb: [.19, .23, .26] },
+    blue:     { label: 'Modrá',      rgb: [.13, .27, .36] },
+    red:      { label: 'Červená',    rgb: [.40, .055, .065] },
+    black:    { label: 'Čierna',     rgb: [.075, .08, .09] },
+    silver:   { label: 'Strieborná', rgb: [.63, .67, .69] },
+    white:    { label: 'Biela',      rgb: [.80, .795, .78] }
+  };
+
   /* Autá od najdlhšieho po najkratšie. Na otázku "zmestí sa mi sem auto"
      odpovedá to najväčšie, ktoré sa tam zmestí, tak sa skúšajú v tomto poradí. */
   const CARS = ['sedan', 'sport', 'city'];
@@ -435,7 +453,7 @@
        predvoľba podľa rodiny otvárala panel rovno na hlásení „nezmestí sa".
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
-    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'silver',car:'auto',family:String(family||'')};
+    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'graphite',car:'auto',family:String(family||'')};
     /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
        sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
     const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
@@ -467,7 +485,7 @@
         <div class="sp-scene__row sp-scene__more" data-scene-countrow>
         <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
-        <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
+        <select class="sp-scene__paint" aria-label="Lak auta">${Object.entries(PAINTS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
         <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
         <div class="sp-scene__rain sp-scene__more" hidden><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
@@ -801,7 +819,7 @@
       const p=gpu.main;gl.useProgram(p);uniformCamera(gl,p,camera);
       const ca=Math.cos(context.az),sa=Math.sin(context.az),ce=Math.cos(context.el),se=Math.sin(context.el);
       gl.uniform3f(U(p,'eye'),context.L/2-sa*ce*camera.DIST,context.W/2+ca*ce*camera.DIST,context.H/2+se*camera.DIST);
-      gl.uniform3fv(U(p,'paint'),state.paint==='graphite'?[.19,.23,.26]:state.paint==='blue'?[.13,.27,.36]:[.63,.67,.69]);
+      gl.uniform3fv(U(p,'paint'),(PAINTS[state.paint]||PAINTS.graphite).rgb);
       gl.uniform1f(U(p,'overcast'),state.weather==='sun'?0:.85);
       gl.uniform1f(U(p,'alpha'),1);
       gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.disable(gl.CULL_FACE);
