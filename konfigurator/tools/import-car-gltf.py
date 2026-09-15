@@ -109,6 +109,30 @@ PROFILES = {
         ('cube.004',        4, (240, 244, 248)),      # predné svetlá
         ('cube.003',        4, (214, 30, 36)),        # zadný svetelný pás
     ],
+    # 911 pomenúva vrstvy poctivo, takže profil je len prepis mien. Interiér
+    # a motor si zahodí sám cez INTERIOR. Pozor na poradie: 'car_vstd' je
+    # predponou 'car_vstda', tak ide mriežka pred štandardné diely.
+    'p911': [
+        ('car_vpnt_',       1, None),                 # lak
+        ('car_vgla_',       2, (26, 34, 42)),         # zasklenie
+        ('car_vwhl_',       3, (206, 210, 214)),      # disky
+        ('car_vlgt_',       4, (240, 244, 248)),      # svetlá
+        ('calip_color',     0, (196, 154, 16)),       # brzdové strmene
+        ('bl_rim',          3, (150, 154, 158)),
+        ('wheel1a',         0, (24, 25, 27)),         # plášte
+        ('car_vstda',       0, (18, 19, 21)),         # mriežka
+        ('car_vstd_',       0, (56, 58, 62)),         # lemy a lišty
+        ('standardsurface', 0, (16, 17, 19)),
+    ],
+    # Mini nesie karosériu na jednom materiáli s textúrou, ale má na ňu
+    # štrnásťtisíc vrcholov, takže sa do nich textúra zmestí a nemá zmysel ju
+    # prebiť lakom z prepínača. Zasklenie je zvlášť. Podložka pod autom nie je
+    # súčasťou auta.
+    'mini': [
+        ('mcar_hull',       0, 'texture'),
+        ('mcar_glass',      2, (26, 34, 42)),
+        ('ground',       None, None),
+    ],
     # Záhradná zostava, nie auto. Tri materiály: látka a drevo si nesú farbu
     # v textúre, kovový rám ju má vo faktore. Nič z toho sa neleskne ako lak,
     # tak je všetko matné - vonkajší nábytok je látka, prášková farba a drevo.

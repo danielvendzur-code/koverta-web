@@ -467,7 +467,7 @@
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
         <div class="sp-scene__rain sp-scene__more" hidden><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
-        <a class="sp-scene__credits sp-scene__more" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
+        <a class="sp-scene__credits sp-scene__more" href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
     /* Karta visí na spodnej hrane kresby, nie na spodku celej scény: dok má
        nulovú výšku a sedí presne tam, kde plátno končí, takže karta prekryje
