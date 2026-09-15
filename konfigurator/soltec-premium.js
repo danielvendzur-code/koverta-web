@@ -2642,7 +2642,9 @@
           const LED_TINT = {
             warm:    { core: 'rgba(255,247,229,.98)', spill: '255,206,138' },
             neutral: { core: 'rgba(250,252,255,.98)', spill: '221,234,255' },
-            rgb:     { core: 'rgba(240,246,255,.98)', spill: '146,182,255' }
+            /* RGBW sa na pohľad nesmie rovnať neutrálnej: jadro ide do modra
+               rovnako ako jeho rozptyl, inak sú dve z troch volieb tá istá. */
+            rgb:     { core: 'rgba(214,230,255,.98)', spill: '146,182,255' }
           };
           const ledRect = (x0, x1, y0, y1, z, tint) => {
             const c = LED_TINT[tint] || LED_TINT.warm;
@@ -2654,6 +2656,16 @@
                [x0 - (alongX ? 0 : m), y1 + (alongX ? m : 0), z - drop]],
               fill, { normal: [0,0,-1], cull: true, edge: false, raw: true, bias: bias });
             const n = Math.min(x1 - x0, y1 - y0);
+            /* Rozliate svetlo. Poznámka nad tabuľkou ho sľubuje a odtieň naň
+               má pripravený, ale nakreslené nikdy nebolo: z pásu ostal holý
+               svetlý obdĺžnik. A keďže farba svetla je v rozptyle a nie
+               v jadre, líšili sa tri ponúkané odtiene len odtieňom bielej —
+               teda na pohľad vôbec. Tri prstence sa rozširujú a slabnú;
+               rozširujú sa iba naprieč, takže dvojmetrový pás nerozkvitne do
+               dvojmetrovej kaluže. */
+            put(n * 5.0, `rgba(${c.spill},.13)`, 384, 0.15);
+            put(n * 2.6, `rgba(${c.spill},.22)`, 388, 0.25);
+            put(n * 1.1, `rgba(${c.spill},.34)`, 392, 0.35);
             put(2, '#35393b', 396, 0.5);
             put(0, c.core.replace('.98', '1'), 400, 1.2);
           };
@@ -4937,6 +4949,9 @@
                   [cx + gap * bladeUz - bladeUx * w, yc - hy, cz - gap * bladeUx - bladeUz * w], [cx + gap * bladeUz + bladeUx * w, yc - hy, cz - gap * bladeUx + bladeUz * w],
                   [cx + gap * bladeUz + bladeUx * w, yc + hy, cz - gap * bladeUx + bladeUz * w], [cx + gap * bladeUz - bladeUx * w, yc + hy, cz - gap * bladeUx - bladeUz * w]
                 ], fill, { normal: [bladeUz, 0, -bladeUx], cull: true, edge: false, raw: true, bias: bias });
+                /* To isté na lamele: bez rozptylu svietil pás ako nálepka. */
+                strip(62, `rgba(${ledCol.spill},.13)`, 386, 0.2);
+                strip(32, `rgba(${ledCol.spill},.24)`, 391, 0.45);
                 strip(11, '#35393b', 396);
                 strip(8, ledCol.core.replace('.98', '1'), 400, 0.7);
               }

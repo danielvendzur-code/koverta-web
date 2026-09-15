@@ -430,7 +430,7 @@
        predvoľba podľa rodiny otvárala panel rovno na hlásení „nezmestí sa".
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
-    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'silver',car:'auto',intensity:'steady',family:String(family||'')};
+    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'silver',car:'auto',family:String(family||'')};
     /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
        sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
     const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
@@ -465,7 +465,7 @@
         <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
         <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
-        <div class="sp-scene__rain sp-scene__more" hidden><select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
+        <div class="sp-scene__rain sp-scene__more" hidden><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
         <a class="sp-scene__credits sp-scene__more" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
@@ -543,7 +543,6 @@
     countSelect.addEventListener('change',()=>{state.count=countSelect.value;update();});
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
     carSelect.addEventListener('change',()=>{state.car=carSelect.value;update();});
-    panel.querySelector('[data-scene-intensity]').addEventListener('change',e=>{state.intensity=e.target.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
     function prepare(c) {
       context=c;
@@ -743,8 +742,12 @@
         gl.vertexAttribPointer(a,4,gl.FLOAT,false,40,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,40,16);gl.vertexAttribPointer(h,4,gl.FLOAT,false,40,24);
         gl.uniform1f(U(p,'clock'),time);gl.uniform1f(U(p,'roofBase'),c.roofZ);gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
         gl.uniform3f(U(p,'eye'),c.L/2-Math.sin(c.az)*Math.cos(c.el)*camera.DIST,c.W/2+Math.cos(c.az)*Math.cos(c.el)*camera.DIST,c.H/2+Math.sin(c.el)*camera.DIST);
-        gl.uniform1f(U(p,'density'),state.intensity==='light'?.72:state.intensity==='heavy'?1.1:1);
-        if(rainData)gl.drawArrays(gl.TRIANGLES,0,(state.intensity==='light'?180:state.intensity==='heavy'?600:360)*6);
+        gl.uniform1f(U(p,'density'),1);
+        /* Jedna sila dažďa. Voľba medzi mrholením, dažďom a lejakom
+           neodpovedala na nič, čo zákazník o prístrešku rieši, a lejak stál
+           600 kvapiek namiesto 360 - teda takmer dvojnásobok práce za snímok
+           pri pohľade, ktorý si nikto nevybral kvôli sile dažďa. */
+        if(rainData)gl.drawArrays(gl.TRIANGLES,0,360*6);
         gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);gl.disableVertexAttribArray(h);
         if(state.flow) {
           const f=gpu.flow;gl.useProgram(f);uniformCamera(gl,f,camera);
@@ -847,7 +850,7 @@
     sync();
     return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
       snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
-        weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
+        weather:state.weather,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
         pace:Math.round(pace),
         frameCost:Math.round(budget*100)/100,clock:Math.round(time*1000)/1000,
         /* surfaceZ je skutočná výška krytiny pod dažďom, nie vrch lemovania.

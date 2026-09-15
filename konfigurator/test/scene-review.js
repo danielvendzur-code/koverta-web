@@ -47,7 +47,8 @@ const {prepareContext}=require('./browser-qa');
       await page.locator('[data-zoom-step="reset"]').click();await page.waitForFunction(()=>SP_TEST.snapshot().zoom===1);
       await zoom.click();
       await page.getByRole('button',{name:'Dážď',exact:true}).click();
-      await page.getByLabel('Sila dažďa').selectOption('heavy');
+      // Sila dažďa sa už nevyberá: scéna kreslí jednu. Záber ostáva ten istý,
+      // len sa nenastavuje stupeň, ktorý zmizol z ponuky.
       await page.waitForTimeout(800);
       await page.getByRole('button',{name:'Pozastaviť',exact:true}).click();
       await page.getByLabel('Odtok vody').check();
