@@ -1756,16 +1756,26 @@
            kreslí sa aj v pohybe nadštandardne a hrany ostávajú rovné; až keď
            snímok trvá dlho, klesne na úsporné. Pevný nízky násobok znamenal,
            že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
-        let motionScale = 1.5;
+        /* Stupne rebríka sú v riadkoch obrazu, nie v násobku veľkosti plátna.
+           Násobok znamenal, že to isté „stredné" rozlíšenie stálo na malom
+           plátne štvrtinu toho, čo na celej obrazovke — okno sa roztiahlo a
+           pohyb spomalil, hoci sa na modeli nič nezmenilo. V riadkoch je cena
+           stupňa rovnaká všade a 720p je naozaj stupeň, nie náhodný zlomok.
+           Rad je 720 × {0,49; 0,6; 0,8; 1; 1,2; 1,5}; na doterajšom plátne
+           720 × 540 px vychádzali tie isté stupne s odchýlkou do troch percent,
+           takže sa nemení, čo slabý stroj unesie — mení sa, že nad ním je
+           stupeň pomenovaný 720p a že sa nezdražuje s veľkosťou okna. */
+        const MOTION_ROWS = [352, 432, 576, 720, 864, 1080];
+        let motionScale = 4;                  // index do MOTION_ROWS
         const motionTimes = [];
         let settleFrames = 0;
-        /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+        /* Spodný stupeň nie je jeden CSS pixel. Na stroji bez grafickej
            karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
            lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
            kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
            tieto stupne nikdy nespadne. */
-        const motionStep = (ms) => ms > 90 ? 0.55 : ms > 45 ? 0.75 : ms > 26 ? 1
-          : ms > 15 ? 1.25 : ms < 9 ? 1.9 : 1.5;
+        const motionStep = (ms) => ms > 90 ? 0 : ms > 45 ? 1 : ms > 26 ? 2
+          : ms > 15 ? 3 : ms < 9 ? 5 : 4;
         const noteFrame = (ms) => {
           motionTimes.push(ms); if (motionTimes.length > 12) motionTimes.shift();
           /* Spomalenie sa uzná z jedného snímku, zrýchlenie až z mediánu.
@@ -1796,6 +1806,11 @@
           if (motionTimes.length < 10) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
           const want = motionStep(sorted[sorted.length >> 1]);
+          /* Nahor po jednom stupni. Skok z najnižšieho rovno na najvyšší
+             znamenal, že sa stroj otestoval najdrahším snímkom a hneď spadol
+             späť — divák z toho videl, ako sa obraz počas jedného ťahania
+             preostruje a rozmazáva dokola. */
+          if (want > motionScale) return stepTo(motionScale + 1);
           if (want !== motionScale) stepTo(want);
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
@@ -1921,7 +1936,8 @@
              prevzorkovanie preto obraz nezlepšuje, ak nesedí na celé pixely —
              pri 4:1 vyzeral rovnako zubato ako bez vyhladzovania. Vedľajší
              účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
-          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
+          let ratio = motionDetail
+            ? Math.max(0.5, MOTION_ROWS[motionScale] / Math.max(1, canvas.clientHeight))
             : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
           /* Na hustom displeji sa počas otáčania neprevzorkováva nad vlastné
              pixely displeja. Telefón s pomerom 2,75 kreslil pohyb v 1,7-násobku
