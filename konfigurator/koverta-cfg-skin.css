@@ -1151,3 +1151,59 @@ body { background: var(--k-white); color: var(--k-ink); }
 }
 #SoltecPremium .sp-navrow button[data-sp-next]:hover { border-color: var(--k-amber); }
 #SoltecPremium .sp-navrow button[data-sp-next]:disabled { box-shadow: none; }
+
+/* Atypický rozmer
+   ---------------------------------------------------------------------------
+   Panel sa doteraz vkladal bez jediného pravidla, takže tri popisky a tri
+   políčka stáli v jednom riadku textu jedno cez druhé a nedalo sa prečítať,
+   ku ktorému políčku ktorý popisok patrí. Vyzerá to teraz ako zvyšok kroku:
+   políčka v mriežke, popisok nad políčkom, jednotka v popisku. */
+#SoltecPremium .kv-custom {
+  margin: 1.2rem 0 0;
+  padding: 1.6rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 1rem;
+  background: var(--sp-soft);
+}
+#SoltecPremium .kv-custom > .sp-side-note:first-child { margin: 0 0 1.4rem; }
+#SoltecPremium .kv-custom__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 560px) {
+  #SoltecPremium .kv-custom__row { grid-template-columns: 1fr; }
+}
+#SoltecPremium .kv-custom label {
+  display: block;
+  color: var(--sp-muted);
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+#SoltecPremium .kv-custom input[type="number"],
+#SoltecPremium .kv-custom textarea {
+  display: block;
+  width: 100%;
+  margin-top: .5rem;
+  padding: .7rem .85rem;
+  border: 1px solid var(--sp-line);
+  border-radius: .7rem;
+  background: #fff;
+  color: var(--sp-ink);
+  font: inherit;
+  font-size: 1.3rem;
+}
+#SoltecPremium .kv-custom input[type="number"] { min-height: 4rem; }
+#SoltecPremium .kv-custom textarea { min-height: 7rem; resize: vertical; }
+#SoltecPremium .kv-custom input:focus-visible,
+#SoltecPremium .kv-custom textarea:focus-visible {
+  outline: 2px solid var(--k-amber);
+  outline-offset: 1px;
+  border-color: var(--k-amber);
+}
+/* Políčko, ktoré prehliadač označí za nevyplnené, sa má dať nájsť očami.
+   Platí až po prvom odoslaní, aby prázdny formulár nesvietil načerveno. */
+#SoltecPremium .kv-custom.je-overeny input:invalid { border-color: #c4341f; }
+#SoltecPremium .kv-custom__note { margin-top: 1.2rem; }
+#SoltecPremium .kv-custom [data-kv-cerr] { margin-top: 1rem; color: #c4341f; }
+#SoltecPremium .kv-custom [data-kv-csend] { width: 100%; margin-top: 1.4rem; }

@@ -505,9 +505,9 @@
     panel.innerHTML = ''
       + '<p class="sp-side-note">Napíšte požadovaný rozmer. Je to samostatný dopyt na technické posúdenie; katalógová zostava ani jej cena nepotvrdzujú realizovateľnosť atypického rozmeru. Individuálne riešenia ako šikmé steny, kotvenie do steny, L-tvar alebo zelená strecha riešime samostatným posúdením a nacenením.</p>'
       + '<div class="kv-custom__row">'
-      + '<label>Šírka (mm)<input type="number" min="1" step="1" required data-kv-cw></label>'
-      + '<label>Hĺbka (mm)<input type="number" min="1" step="1" required data-kv-cl></label>'
-      + '<label>Výška (mm)<input type="number" min="1" step="1" required data-kv-ch></label>'
+      + '<label>Šírka (mm)<input type="number" inputmode="numeric" min="1" step="1" required data-kv-cw></label>'
+      + '<label>Hĺbka (mm)<input type="number" inputmode="numeric" min="1" step="1" required data-kv-cl></label>'
+      + '<label>Výška (mm)<input type="number" inputmode="numeric" min="1" step="1" required data-kv-ch></label>'
       + '</div>'
       + '<label class="kv-custom__note">Čo ešte treba vedieť<textarea rows="2" data-kv-cnote placeholder="Napríklad spôsob použitia, umiestnenie alebo iné požiadavky…"></textarea></label>'
       + '<p class="sp-side-note" data-kv-cerr role="alert" hidden>Vyplňte všetky tri rozmery kladným číslom v milimetroch.</p>'
@@ -537,6 +537,9 @@
       var h = Number(hEl.value);
       var bad = !Number.isFinite(w) || w <= 0 || !Number.isFinite(l) || l <= 0 || !Number.isFinite(h) || h <= 0;
       if (bad) {
+        /* Až teraz smie byť políčko červené. Pred prvým odoslaním je prázdne
+           políčko normálny stav, nie chyba. */
+        panel.classList.add('je-overeny');
         if (err) err.hidden = false;
         var firstBad = [wEl, lEl, hEl].find(function (el) {
           var v = Number(el.value);
@@ -546,6 +549,7 @@
         return;
       }
       if (err) err.hidden = true;
+      panel.classList.remove('je-overeny');
       sendKovertaQuote({
         w: Math.round(w),
         l: Math.round(l),
