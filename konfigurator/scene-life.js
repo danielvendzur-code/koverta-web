@@ -342,7 +342,12 @@
     } else if(c.louverZone) {
       /* Otvorená lamela vodu nezachytí — prší rovno pod strechu. Až ako sa
          zatvára, rozbehne sa po jej žliabku prúžok k rámu. */
-      const shut=(c.louverT||0)<.01?1:0,z=c.louverZone;
+      /* Poznámka vyššie sľubuje, že sa prúžok rozbehne "ako sa zatvára", ale
+         hodnota bola zapnuté/vypnuté a preskočila do jednotky až pod jedným
+         percentom. Pri lamele privretej na desatinu tak po nej netiekla ani
+         kvapka, hoci vodu už zachytáva. Ide to teraz plynulo: plný film na
+         zavretej streche a do tretiny otvorenia sa vytratí. */
+      const shut=1-clamp((c.louverT||0)/.34,0,1),z=c.louverZone;
       if(shut>.02) {
         const n=Math.max(1,Math.round((z.x1-z.x0)/Math.max(1,c.pitch)));
         for(let i=0;i<n;i++) {
@@ -687,7 +692,7 @@
           float phase=fract(seed.z+clock*(4300.+seed.w*1800.)/max(300.,top-stopZ));
           float z=mix(top,stopZ,phase);float land=smoothstep(.965,1.,phase);
           vec3 across=vec3(orbit.x,orbit.y,0.);
-          vec3 fall=vec3(x,y,z)+across*corner.x*(4.2+3.4*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
+          vec3 fall=vec3(x,y,z)+across*corner.x*(7.+5.5*seed.w)+vec3(0.,0.,corner.y*(135.+seed.w*135.)*(1.-land));
           vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
           vec3 b=cross(n,t);
           vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
@@ -695,7 +700,7 @@
           // A contact ring belongs to the wet side of its surface. Seen from
           // underneath, it must not shine through a thin sheet or the ground.
           float facing=smoothstep(0.,.12,dot(n,normalize(eye-vec3(x,y,stopZ))));
-          opacity=(.28+seed.w*.24)*(1.-land*.65)*density*mix(1.,facing,land);splash=land;}`,
+          opacity=(.44+seed.w*.34)*(1.-land*.6)*density*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
@@ -772,10 +777,11 @@
         gl.uniform3f(U(p,'eye'),c.L/2-Math.sin(c.az)*Math.cos(c.el)*camera.DIST,c.W/2+Math.cos(c.az)*Math.cos(c.el)*camera.DIST,c.H/2+Math.sin(c.el)*camera.DIST);
         gl.uniform1f(U(p,'density'),1);
         /* Jedna sila dažďa. Voľba medzi mrholením, dažďom a lejakom
-           neodpovedala na nič, čo zákazník o prístrešku rieši, a lejak stál
-           600 kvapiek namiesto 360 - teda takmer dvojnásobok práce za snímok
-           pri pohľade, ktorý si nikto nevybral kvôli sile dažďa. */
-        if(rainData)gl.drawArrays(gl.TRIANGLES,0,360*6);
+           neodpovedala na nič, čo zákazník o prístrešku rieši. Kvapiek je
+           však 560, nie 360: pri troch stovkách tenkých bledých čiarok bolo
+           na svetlej dlažbe sotva vidieť, že prší. Dvesto kvapiek navyše
+           stojí podľa merania scény desatinu milisekundy na snímok. */
+        if(rainData)gl.drawArrays(gl.TRIANGLES,0,560*6);
         gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);gl.disableVertexAttribArray(h);
         if(state.flow) {
           const f=gpu.flow;gl.useProgram(f);uniformCamera(gl,f,camera);
