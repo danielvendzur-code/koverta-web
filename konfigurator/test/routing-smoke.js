@@ -69,11 +69,22 @@ module.exports = async function routingSmoke(browser) {
       const initialComparable = route === 'koverta' ? initial.price.catalogueSubtotal : initial.price.total;
       const resizedComparable = route === 'koverta' ? resized.price.catalogueSubtotal : resized.price.total;
       assert(resizedComparable !== initialComparable, `${route}: dimension change did not change price`);
-      const current = await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno');
+      /* Jeden krok môže mať viac panelov — rozmer a pod ním model — ale všetky
+         musia patriť tomu istému kroku. Keby sa niektorý odpojil, zákazník by
+         videl v jednom kroku kus iného. */
+        const visibleStep = async () => {
+          const nos = await page.locator('[data-sp-stepno]:not([hidden])').evaluateAll(
+            els => els.map(el => el.dataset.spStepno));
+          assert(nos.length > 0, `${route}: no visible step panel`);
+          assert(new Set(nos).size === 1,
+            `${route}: visible panels belong to different steps: ${nos.join(', ')}`);
+          return nos[0];
+        };
+      const current = await visibleStep();
       await page.locator('[data-sp-next]').click();
-      assert(await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno') !== current, `${route}: next failed`);
+      assert(await visibleStep() !== current, `${route}: next failed`);
       await page.locator('[data-sp-back]').click();
-      assert(await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno') === current, `${route}: back failed`);
+      assert(await visibleStep() === current, `${route}: back failed`);
 
       await gotoControl('[data-sp-frame-color]');
       await page.locator('[data-sp-frame-color]:not([aria-pressed="true"])').first().click();

@@ -449,6 +449,19 @@
     #SoltecPremium .sp-modelgrid button[aria-pressed="true"] { border-color: var(--sp-ink); background: var(--sp-ink); }
     #SoltecPremium .sp-modelgrid button[aria-pressed="true"] strong { color: #fff; }
     #SoltecPremium .sp-modelgrid button[aria-pressed="true"] small { color: rgba(255,255,255,.72); }
+    /* Cena pri modeli platí pre rozmer, ktorý je nastavený o krok vyššie —
+       preto je tu, a nie až v súhrne: z dvoch mien si zákazník vyberie to
+       lacnejšie, z dvoch čísel to, ktoré sedí k jeho rozmeru. */
+    #SoltecPremium .sp-modelgrid__cena { display: block; margin-top: .45rem; font-family: var(--font-heading-family); font-size: 1.15rem; font-weight: 600; letter-spacing: -.01em; color: var(--sp-ink); }
+    #SoltecPremium .sp-modelgrid button[aria-pressed="true"] .sp-modelgrid__cena { color: #fff; }
+    /* Model, ktorý nastavený rozmer nedosiahne. Nie je zakázaný — dá sa naň
+       prepnúť a rozmer sa stiahne — ale nesmie vyzerať ako rovnocenná
+       lacnejšia možnosť, lebo by si ho zákazník vybral a nevšimol si, že
+       dostal menší prístrešok. */
+    #SoltecPremium .sp-modelgrid button.is-short { border-style: dashed; }
+    #SoltecPremium .sp-modelgrid button.is-short strong,
+    #SoltecPremium .sp-modelgrid button.is-short small { opacity: .62; }
+    #SoltecPremium .sp-modelgrid button.is-short .sp-modelgrid__cena { color: var(--sp-muted); font-weight: 500; }
 
     /* side picker: a top view you click straight on */
     #SoltecPremium .sp-sides { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr) 4.6rem; grid-template-rows: 3.4rem auto 3.4rem; gap: .5rem; align-items: center; justify-items: center; max-width: 30rem; margin: 0 auto 1.4rem; }

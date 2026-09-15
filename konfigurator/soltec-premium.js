@@ -686,8 +686,8 @@
           ['4', 'Doplnky', 'Doplnky'],
           ['5', 'Súhrn', 'Súhrn']
         ] : [
-          ['1', 'Riešenie', 'Riešenie'],
-          ['2', 'Rozmer', 'Rozmer'],
+          ['1', 'Umiestnenie', 'Umiestnenie'],
+          ['2', 'Rozmer a model', 'Rozmer'],
           ['3', 'Strecha a farby', 'Strecha'],
           ['4', 'Boky', 'Boky'],
           ['5', 'Doplnky', 'Doplnky'],
@@ -695,9 +695,14 @@
         ];
         const STEPS = RAIL.length;
         const STEP_NAMES = RAIL.map((r) => r[1]);
+        /* Model sa vyberá až po veľkosti. Keď stál pred ňou, zákazník si
+           vyberal z názvov — a z dvoch názvov, ktoré mu nič nehovoria, si
+           vezme ten lacnejší, nie ten, ktorý jeho rozmer unesie. Po zadaní
+           rozmeru je pri každom modeli vidieť, či ten rozmer vôbec dosiahne
+           a čo pri ňom stojí, takže sa vyberá z čísel, nie z mien. */
         const STEP_MAP = ONE_MODEL
           ? { 1: 0, 2: 0, 3: 1, 4: 3, 5: 2, 6: 4, 7: 5 }
-          : { 1: 1, 2: 1, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
+          : { 1: 1, 2: 2, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
 
         /* Standalone GitHub Pages builds made before the guided-flow redesign
            still contain the original seven small steps. Upgrade that markup in
@@ -727,7 +732,44 @@
           if (cap) cap.textContent = 'Krok 1 z ' + STEPS;
           if (name) name.textContent = STEP_NAMES[0];
         };
+        /* Panel s modelom stojí v zdroji pred panelom s rozmerom, lebo tak
+           išli pôvodné malé kroky. V spoločnom kroku ho treba presunúť za
+           rozmer — poradie v DOM je poradie, v akom to zákazník číta. */
+        const modelPanelAfterSize = () => {
+          if (ONE_MODEL) return;
+          const modely = cfgRoot.querySelector('[data-sp-models]');
+          const sirka = cfgRoot.querySelector('[data-sp-width-slider]');
+          if (!modely || !sirka) return;
+          const panelModel = modely.closest('.sp-step');
+          const panelRozmer = sirka.closest('.sp-step');
+          if (!panelModel || !panelRozmer || panelModel === panelRozmer) return;
+          if (panelModel.dataset.spStepno !== panelRozmer.dataset.spStepno) return;
+          panelRozmer.after(panelModel);
+        };
         normalizeLegacySteps();
+        modelPanelAfterSize();
+        /* Ako sa nástroj ovláda — dole pod krokmi a zavreté. Kto to potrebuje,
+           rozklikne; kto nie, nepríde kvôli návodu o miesto na obrazovke. Pri
+           ňom sedí aj odkaz na autorov 3D modelov: patrí medzi vysvetlivky,
+           nie na viditeľné miesto stránky. */
+        const buildHowto = () => {
+          const rail = cfgRoot.querySelector('.sp-rail');
+          const kolona = rail && rail.parentNode;
+          if (!kolona || kolona.querySelector('[data-sp-howto]')) return;
+          const d = document.createElement('details');
+          d.className = 'sp-howto';
+          d.dataset.spHowto = '';
+          d.innerHTML = '<summary>Ako sa to ovláda</summary>'
+            + '<ul>'
+            + '<li><b>Otáčanie</b> — ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
+            + '<li><b>Priblíženie</b> — koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
+            + '<li><b>Vybavenie a počasie</b> — karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
+            + '<li><b>Cena</b> — mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu.</li>'
+            + '<li><a href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a> — autori a licencie áut a záhradného nábytku v scéne.</li>'
+            + '</ul>';
+          kolona.appendChild(d);
+        };
+        buildHowto();
 
         const NS = 'http://www.w3.org/2000/svg';
         const money = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 });
@@ -5244,6 +5286,32 @@
 
         /* ------------------------------------------------------------ panel */
         const q = (sel) => cfgRoot.querySelector(sel);
+        /* Čo model stojí pri rozmere, ktorý si zákazník práve nastavil, a či
+           ten rozmer vôbec dosiahne. Cenník nie je obdĺžnik: najdlhšie dĺžky
+           má F170 publikované len pre užšie šírky, takže „dosiahne" znamená,
+           že bunka v tabuľke existuje, nie že sa rozmer zmestí do maxima. */
+        const modelReach = (key) => {
+          const m = BIO.models[key];
+          const w = widthMM(), l = lengthMM();
+          const zoznamL = m.lengths || [];
+          const zoznamW = m.widths || null;
+          const doL = zoznamL.length ? zoznamL[zoznamL.length - 1] : 0;
+          const doW = zoznamW && zoznamW.length ? zoznamW[zoznamW.length - 1] : (m.width || 0);
+          if (l > doL + 0.5 || w > doW + 0.5) return { ok: false, doW, doL };
+          const li = dimensionBandIndex(zoznamL, l);
+          const cap = Array.isArray(m.maxWidthAt) ? m.maxWidthAt[li] : null;
+          if (cap && w > cap + 0.5) return { ok: false, doW: cap, doL };
+          const wi = zoznamW ? dimensionBandIndex(zoznamW, w) : 0;
+          const zat = m.loads || m.gridLoads;
+          const zi = zat ? Math.max(0, Math.min(state.load, zat.length - 1)) : 0;
+          let cena = null;
+          try {
+            cena = m.loads
+              ? m.prices[String(m.loads[zi])][li]
+              : (m.gridLoads ? m.prices[String(m.gridLoads[zi])][li][wi] : m.prices[li][wi]);
+          } catch (e) { cena = null; }
+          return { ok: true, doW, doL, cena: Number.isFinite(cena) ? cena : null };
+        };
         const buildModels = () => {
           const host = q('[data-sp-models]');
           /* Pri jedinom modeli krok s výberom modelu na stránke nie je. */
@@ -5251,11 +5319,21 @@
           host.textContent = '';
           BIO.order.forEach((key) => {
             const m = BIO.models[key];
+            const r = modelReach(key);
             const b = document.createElement('button');
             b.type = 'button';
             b.dataset.spModel = key;
             b.setAttribute('aria-pressed', String(key === state.model));
-            b.innerHTML = `<strong>${m.label}</strong><small>${m.blurb}</small>`;
+            /* Model, ktorý zvolený rozmer nedosiahne, sa neponúka ako rovnocenná
+               možnosť. Nie je zakázaný — dá sa naň prepnúť a rozmer sa stiahne —
+               ale musí byť vidieť, že to rozmer zmenší, inak si ho zákazník
+               vyberie ako lacnejší a nevšimne si, že dostal menší prístrešok. */
+            b.classList.toggle('is-short', !r.ok);
+            const cena = r.ok && r.cena != null
+              ? `${money.format(r.cena)} €`
+              : r.ok ? 'cena na dopyt' : `max ${money.format(r.doW)} × ${money.format(r.doL)} mm`;
+            b.innerHTML = `<strong>${m.label}</strong><small>${m.blurb}</small>`
+              + `<span class="sp-modelgrid__cena">${cena}</span>`;
             host.appendChild(b);
           });
         };
@@ -6028,7 +6106,19 @@
         const renderAll = () => {
           clampIdx();
           const m = model();
-          cfgRoot.querySelectorAll('[data-sp-model]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spModel === state.model)));
+          cfgRoot.querySelectorAll('[data-sp-model]').forEach((b) => {
+            b.setAttribute('aria-pressed', String(b.dataset.spModel === state.model));
+            /* Cena aj dosah sa prepisujú pri každom posune posuvníka — v tom
+               je celý zmysel poradia „najprv rozmer": pri modeli stojí číslo
+               pre rozmer, ktorý zákazník práve drží, nie pre nejaký iný. */
+            const cenaEl = b.querySelector('.sp-modelgrid__cena');
+            if (!cenaEl) return;
+            const r = modelReach(b.dataset.spModel);
+            b.classList.toggle('is-short', !r.ok);
+            cenaEl.textContent = r.ok && r.cena != null
+              ? `${money.format(r.cena)} €`
+              : r.ok ? 'cena na dopyt' : `max ${money.format(r.doW)} × ${money.format(r.doL)} mm`;
+          });
           cfgRoot.querySelectorAll('[data-sp-place]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spPlace === state.placement)));
           syncLouver();
           /* Pri jedinom modeli krok s jeho výberom neexistuje; popis dielov
