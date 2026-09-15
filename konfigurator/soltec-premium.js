@@ -1161,7 +1161,18 @@
                bay a car parks in grew with the roof. A pergola's book gives no
                position, so that one still stands at mid-span. */
             const p5 = model().p5;
-            if (p5) return [0, Math.round(Math.min(p5, span / 2)), span];
+            if (p5) {
+              const at = Math.round(Math.min(p5, span / 2));
+              /* Lenže P5 je „mozna pozicija" odmeraná na streche, akú kniha
+                 nakreslila, a tá istá kniha hovorí, že po dĺžku post4 model
+                 nesú dve rady stĺpov. Držať odstup napevno na deväťmetrovom
+                 prestrešení znamená pole 6,6 m — dlhšie než celá strecha,
+                 ktorá stojí na štyroch stĺpoch — a stredný stĺp vyzerá, akoby
+                 sa zošmykol ku kraju. Pole nesmie byť dlhšie než post4;
+                 kde by fixný odstup taký vyrobil, delí sa rozpätie rovnako. */
+              if (span - at <= (Number(model().post4) || span)) return [0, at, span];
+              return [0, Math.round(span / 2), span];
+            }
             const t = model().roof === 'panel' ? 0.34 : 0.5;   // access bay, or mid-span
             return [0, Math.round(span * t), span];
           }
@@ -1681,6 +1692,9 @@
                ovládanie na kresbe, nekreslí sa nič a rýchlosť vyjde skvele. */
             view: { az: view.az, el: view.el },
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
+            /* Ľavé líca stĺpov po dĺžke a hĺbka ich prierezu. Rozostup sa inak
+               nedá zmerať inak než odčítaním pixelov z kresby. */
+            posts: { xs: postXs(), d: postD(), carry: Number(model().post4) || null },
             geometryCache: canvas.dataset.geometryCache || null,
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
