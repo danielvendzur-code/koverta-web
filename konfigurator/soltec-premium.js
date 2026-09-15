@@ -1715,6 +1715,7 @@
            že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
         let motionScale = 1.5;
         const motionTimes = [];
+        let settleFrames = 0;
         /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
            karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
            lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
@@ -1733,14 +1734,26 @@
              snímok o výkone nesvedčí, tak sa nahor ide naďalej cez medián.
              Šesťdesiat, nie štyridsaťpäť, aby jediné zaseknutie na inak
              svižnom stroji kvalitu nezrazilo. */
+          /* Snímok tesne po zmene rozlíšenia je drahý práve tou zmenou: plátno
+             si prealokuje kresliaci buffer a scéna sa nahrá do nového. Keby
+             sa podľa neho rozhodovalo, rebrík by reagoval na cenu vlastného
+             kroku a hojdal sa medzi stupňami. Merané na telefóne pri jednom
+             ťahaní: štyri zmeny rozlíšenia, medián snímku 16,7 ms a p95
+             100 ms - čiže plynulé kreslenie a špičky presne na tých zmenách.
+             Po kroku sa preto pár snímkov nemeria vôbec. */
+          if (settleFrames > 0) { settleFrames--; return; }
+          motionTimes.push(ms); if (motionTimes.length > 14) motionTimes.shift();
+          const stepTo = (want) => { motionScale = want; motionTimes.length = 0; settleFrames = 4; };
           if (ms > 60) {
             const hned = motionStep(ms);
-            if (hned < motionScale) { motionScale = hned; motionTimes.length = 0; return; }
+            if (hned < motionScale) return stepTo(hned);
           }
-          if (motionTimes.length < 6) return;
+          /* Nahor sa ide z dlhšej vzorky než predtým, aby jedno ťahanie
+             neprešlo cez tri stupne. */
+          if (motionTimes.length < 10) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
           const want = motionStep(sorted[sorted.length >> 1]);
-          if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
+          if (want !== motionScale) stepTo(want);
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
            lebo z neho zákazník číta tvar profilu — ale ani on nesmie zabiť
@@ -1867,6 +1880,13 @@
              účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
           let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
             : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
+          /* Na hustom displeji sa počas otáčania neprevzorkováva nad vlastné
+             pixely displeja. Telefón s pomerom 2,75 kreslil pohyb v 1,7-násobku
+             svojich pixelov, kým zastavený snímok má dvojnásobok - pohyb tak
+             stál takmer to isté čo ostrý záber a celý zmysel pohybového režimu
+             sa strácal. Jeden pixel displeja na jeden CSS pixel je na telefóne
+             ostré dosť; ostrosť naviac sa dokreslí po pustení. */
+          if (motionDetail && dpr >= 2) ratio = Math.min(ratio, dpr);
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
