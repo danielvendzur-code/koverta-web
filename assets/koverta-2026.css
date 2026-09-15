@@ -15674,3 +15674,52 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   body:not(.k-home) .k .kh-hero__chip { min-height:52px; font-size:9px; line-height:1.25; }
   body:not(.k-home) .k .kh-hero__chip strong { font-size:14px; }
 }
+
+/* ==========================================================================
+   ÚVODNÁ OBRAZOVKA NA TELEFÓNE
+   ==========================================================================
+   Na 393 px sa z úvodu stávala tlačenica: nadpis siahal takmer po pravý
+   okraj, závoj pod textom sa v druhej polovici vytrácal (je to 105° prechod
+   šitý na širokú obrazovku), tlačidlá sa zalomili na dva riadky rôznej
+   šírky a hodnotenie na Google skončilo na samej hrane obrazovky.
+   Nemení sa poradie ani obsah, len rytmus a miera. */
+@media (max-width: 759px) {
+  /* Nadpis o stupeň menší, aby mal po stranách vzduch, a bez umelého
+     obmedzenia na 10,6 znaku — na úzkej obrazovke ho zalomí šírka sama
+     a lepšie, než keď sa mu miera predpíše. */
+  .k .kh-hero .k-display { font-size: clamp(27px, 7.8vw, 36px); line-height: 1.08; letter-spacing: -0.02em; }
+  .k .kh-hero h1 { max-width: none; }
+
+  /* Závoj po zvislej osi, nie šikmý. Šikmý prechod je šitý na širokú
+     obrazovku: na úzkej sa v druhej polovici vytratí a text cez neho
+     preteká. Blok sa pritom naťahuje na celú výšku úvodu, takže rovnomerné
+     stmavenie by z neho spravilo veľký tmavý obdĺžnik cez celú fotku —
+     hustne preto až tam, kde text naozaj začína, a hore sa stráca. */
+  .k .kh-hero__box {
+    /* Cez celú šírku obrazovky. Kým závoj končil 20 px od okraja, bolo po
+       stranách vidieť jeho zvislú hranu ako tonálny schod cez fotografiu.
+       Text si odsadenie drží vlastnou výplňou, takže sa nikam neposunul. */
+    margin-inline: -20px;
+    padding: 20px;
+    border-radius: 0;
+    background: linear-gradient(to top,
+      rgba(9, 12, 14, 0.72) 0%,
+      rgba(9, 12, 14, 0.66) 52%,
+      rgba(9, 12, 14, 0.30) 72%,
+      rgba(9, 12, 14, 0) 88%);
+  }
+  .k .kh-hero__lead { font-size: 15px; line-height: 1.55; margin-top: 12px; }
+
+  /* Dve tlačidlá pod sebou a obe cez celú šírku. Zalomené do dvoch riadkov
+     rôznej šírky vyzerali ako nedokončená sadzba a druhé bolo na palec
+     zbytočne malý cieľ. */
+  .k .kh-hero__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .k .kh-hero__actions .k-btn { width: 100%; justify-content: center; }
+  .k .kh-hero__box > .kh-hero__actions { margin-bottom: 14px; }
+  .k .kh-hero__trust { margin-top: 0; }
+}
