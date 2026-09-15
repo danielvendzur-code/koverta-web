@@ -24,7 +24,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-3',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-4',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));

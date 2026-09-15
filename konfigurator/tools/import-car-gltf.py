@@ -112,6 +112,20 @@ PROFILES = {
     # 911 pomenúva vrstvy poctivo, takže profil je len prepis mien. Interiér
     # a motor si zahodí sám cez INTERIOR. Pozor na poradie: 'car_vstd' je
     # predponou 'car_vstda', tak ide mriežka pred štandardné diely.
+    # Diagnostika: každá vrstva 911 dostane vlastnú výraznú farbu, aby sa
+    # z obrázka dalo prečítať, ktorý materiál kde sedí. Do scény nejde.
+    'p911debug': [
+        ('car_vpnt_',       0, (255, 0, 0)),
+        ('car_vgla_',       0, (0, 255, 0)),
+        ('car_vwhl_',       0, (0, 0, 255)),
+        ('car_vlgt_',       0, (255, 255, 0)),
+        ('calip_color',     0, (255, 0, 255)),
+        ('bl_rim',          0, (0, 255, 255)),
+        ('wheel1a',         0, (128, 0, 0)),
+        ('car_vstda',       0, (0, 128, 0)),
+        ('car_vstd_',       0, (255, 128, 0)),
+        ('standardsurface', 0, (128, 0, 255)),
+    ],
     'p911': [
         ('car_vpnt_',       1, None),                 # lak
         ('car_vgla_',       2, (26, 34, 42)),         # zasklenie
@@ -149,6 +163,16 @@ PROFILES = {
     ],
 }
 INTERIOR = ('interior', 'gauges', 'display', 'screen', 'engine', 'ssb_')
+
+# Svetlá, ktoré predloha nechala na materiáli skla.
+# 911 nesie svetlomety aj zadný svetelný pás na tom istom materiáli a v tej
+# istej sieti ako okná, takže sa menom oddeliť nedajú - a s tmavým zasklením
+# potom splynú s karosériou a auto vyzerá, že svetlá nemá. Geometria ich
+# oddelí spoľahlivo: sklá kabíny sedia vysoko, lampy pod pásom. Merané na
+# predlohe: stredné sklá nikde neklesnú pod 65 % výšky auta a lampy nikde
+# nevystúpia nad 63 %. Hodnota je podiel výšky auta, pod ktorým je sklo lampa.
+LAMPS_BELOW = {'p911': 0.64}
+LAMP_TONE = (242, 246, 250)
 
 COMP = {5120: 'b', 5121: 'B', 5122: 'h', 5123: 'H', 5125: 'I', 5126: 'f'}
 NUM = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
@@ -425,6 +449,14 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         n[:, 0] = -n[:, 0]
         n[:, 1] = -n[:, 1]
         print('model otočený: predok bol vzadu')
+
+    cut = LAMPS_BELOW.get(profile)
+    if cut is not None:
+        lamp = (M == 2) & (q[:, 2] < q[:, 2].max() * cut)
+        if lamp.any():
+            M[lamp] = 4
+            C[lamp] = np.array(LAMP_TONE, dtype=np.uint8)
+            print('sklo pod', f'{cut:.0%}', 'výšky prepnuté na svetlá:', int(lamp.sum()), 'vrcholov')
 
     if rim_tone is not None and rim_mask.any():
         built = alloy_wheels(q, rim_mask, rim_tone[1], rim_tone[2])
