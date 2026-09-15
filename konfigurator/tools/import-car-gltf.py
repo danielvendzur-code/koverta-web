@@ -172,7 +172,17 @@ INTERIOR = ('interior', 'gauges', 'display', 'screen', 'engine', 'ssb_')
 # predlohe: stredné sklá nikde neklesnú pod 65 % výšky auta a lampy nikde
 # nevystúpia nad 63 %. Hodnota je podiel výšky auta, pod ktorým je sklo lampa.
 LAMPS_BELOW = {'p911': 0.64}
-LAMP_TONE = (242, 246, 250)
+
+# Karoséria oddelená podľa sýtosti farby.
+# Mini nesie celý exteriér na jednom materiáli s textúrou, takže lak sa od
+# striech, skiel a lemov nedá oddeliť menom. Farbou áno: lakovaná časť je
+# sýto červená, všetko ostatné je neutrálne sivé alebo takmer čierne.
+# Merané na predlohe: nad sýtosťou 0,5 leží 12 423 vrcholov s priemernou
+# farbou (58, 12, 11), pod 0,35 je 46 620 vrcholov s priemerom (71, 72, 71).
+# Hranica je medzi nimi a nie je tesná ani z jednej strany.
+PAINT_BY_SATURATION = {'mini': 0.45}
+LAMP_TONE = (242, 246, 250)          # svetlomety
+LAMP_TONE_REAR = (198, 34, 34)       # koncové svetlá
 
 COMP = {5120: 'b', 5121: 'B', 5122: 'h', 5123: 'H', 5125: 'I', 5126: 'f'}
 NUM = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
@@ -455,8 +465,33 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         lamp = (M == 2) & (q[:, 2] < q[:, 2].max() * cut)
         if lamp.any():
             M[lamp] = 4
+            # Vpredu biele, vzadu červené. Po zarovnaní stojí predok na nule,
+            # takže koncové svetlá sedia v druhej polovici dĺžky.
+            rear = lamp & (q[:, 0] > (q[:, 0].min() + q[:, 0].max()) / 2)
             C[lamp] = np.array(LAMP_TONE, dtype=np.uint8)
-            print('sklo pod', f'{cut:.0%}', 'výšky prepnuté na svetlá:', int(lamp.sum()), 'vrcholov')
+            C[rear] = np.array(LAMP_TONE_REAR, dtype=np.uint8)
+            print('sklo pod', f'{cut:.0%}', 'výšky prepnuté na svetlá:',
+                  int(lamp.sum()), 'vrcholov, z toho vzadu', int(rear.sum()))
+
+    sat_cut = PAINT_BY_SATURATION.get(profile)
+    if sat_cut is not None:
+        hi = C.max(axis=1).astype(float)
+        lo = C.min(axis=1).astype(float)
+        sat = np.where(hi > 0, (hi - lo) / np.maximum(hi, 1), 0.0)
+        paint_by_hue = (M == 0) & (sat >= sat_cut)
+        if paint_by_hue.any():
+            M[paint_by_hue] = 1
+            print('podľa sýtosti prepnuté na lak:', int(paint_by_hue.sum()), 'vrcholov')
+
+    # Lak nesie vo vrchole činiteľ jasu, nie farbu: shader ním násobí farbu
+    # z prepínača. Pri jednofarebnej predlohe vyjde všade jedna a nemení sa
+    # nič; pri karosérii z textúry si takto svetlé a tmavé miesta ponechá.
+    paint_mask = (M == 1)
+    if paint_mask.any():
+        lum = C[paint_mask].astype(float) @ np.array([0.2126, 0.7152, 0.0722])
+        mean = float(lum.mean()) or 1.0
+        factor = np.clip(lum / mean, 0.0, 2.0)
+        C[paint_mask] = np.rint(factor * 127.5).astype(np.uint8)[:, None]
 
     if rim_tone is not None and rim_mask.any():
         built = alloy_wheels(q, rim_mask, rim_tone[1], rim_tone[2])

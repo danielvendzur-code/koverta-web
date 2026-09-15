@@ -24,7 +24,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-4',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-6',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -636,6 +636,11 @@
         vec2 turn(vec2 v){return vec2(v.x*spin.x-v.y*spin.y,v.x*spin.y+v.y*spin.x);}
         void main(){world=vec3(turn(p.xy),p.z)+offset;normal=vec3(turn(n.xy),n.z);
           color=c;kind=material;gl_Position=project(world);}`,
+        /* Lak (materiál 1) farbu z prepínača násobí činiteľom uloženým vo
+           vrchole, nie ju prepisuje. Pri jednofarebnej predlohe je činiteľ
+           všade jedna a nemení sa nič; pri aute, ktoré má karosériu
+           v textúre, si takto svetlá a tmavé miesta ponechá a lak sa aj tak
+           dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
         `precision highp float;varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
         uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
         void main(){vec3 n=normalize(normal);vec3 v=normalize(eye-world);if(dot(n,v)<0.)n=-n;
@@ -643,7 +648,7 @@
           float kd=max(0.,dot(n,key));float l=.36+.56*kd+.22*max(0.,dot(n,fill))+.34*max(0.,-n.z)+.13*max(0.,n.z);
           l=mix(l,.64+.27*max(0.,n.z)+.16*max(0.,-n.z),overcast);
           vec3 base=color;float spec=.03;float gloss=20.;
-          if(kind>.5&&kind<1.5){base=paint;spec=.32;gloss=65.;}
+          if(kind>.5&&kind<1.5){base=paint*(color.r*2.);spec=.32;gloss=65.;}
           if(kind>1.5&&kind<2.5){spec=.55;gloss=100.;}
           if(kind>2.5&&kind<3.5){spec=.4;gloss=45.;}
           vec3 result=base*l;

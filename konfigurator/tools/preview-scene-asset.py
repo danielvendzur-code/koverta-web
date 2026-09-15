@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 
 PAINT = (150, 157, 161)   # material 1 takes its colour from a uniform at runtime
+# ...a vrchol k nej nesie činiteľ jasu, ktorým sa násobí. 128 znamená bez zmeny.
 GLASS = (30, 40, 48)
 
 def load(path):
@@ -66,7 +67,11 @@ def render(src, out, az, el, W=1400, H=900, pad=1.06):
         light = (.36 + .56 * max(0, n @ key) + .22 * max(0, n @ fill)
                  + .34 * max(0, -n[2]) + .13 * max(0, n[2]))
         kind = int(M[t])
-        base = np.array(PAINT if kind == 1 else GLASS if kind == 2 else C[t].mean(axis=0))
+        if kind == 1:
+            # Rovnako ako shader: lak sa násobí činiteľom uloženým vo vrchole.
+            base = np.clip(np.array(PAINT) * (C[t].mean(axis=0)[0] / 127.5), 0, 255)
+        else:
+            base = np.array(GLASS if kind == 2 else C[t].mean(axis=0))
         if kind == 2: light = light * .55 + .10
         sub[m] = zz[m]
         img[y0:y1 + 1, x0:x1 + 1][m] = np.clip(base * light, 0, 255)

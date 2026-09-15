@@ -2696,9 +2696,26 @@
         const p = v.play();
         if (p && p.catch) p.catch(vzdaj);
         /* Úsporný režim vie sľub prehrávania aj potvrdiť a video potom ostane
-           stáť na nule. Po dvoch a pol sekundách sa preto pozrieme, či sa
-           naozaj pohlo; ak nie, úvod ostáva na fotografii. */
-        window.setTimeout(() => { if (v.currentTime === 0) vzdaj(); }, 2500);
+           stáť na nule. Treba sa preto pozrieť, či sa naozaj pohlo — ale
+           nie podľa hodiniek. Dve a pol sekundy je na osem megabajtov málo:
+           pri studenej pamäti alebo pomalšej linke sa video dovtedy
+           nerozbehne ani keď je úplne v poriadku, a úvod sa ho potom vzdal
+           natrvalo. Odtiaľ to, že raz hralo a raz nie.
+
+           Rozhoduje teraz stav prehrávača, nie čas: kým ešte sťahuje alebo
+           má málo dát, čaká sa ďalej, najviac však dvanásť sekúnd. Vzdá sa
+           len vtedy, keď prehrávač hlási chybu, alebo keď má dosť dát a aj
+           tak stojí — to je ten úsporný režim, na ktorý je poistka určená. */
+        let cakanie = 0;
+        const dohliadni = () => {
+          if (v.hidden || v.currentTime > 0) return;
+          if (v.error) return vzdaj();
+          cakanie += 1;
+          const staleNacitava = v.readyState < 3 || v.networkState === 2;
+          if (staleNacitava && cakanie < 8) return window.setTimeout(dohliadni, 1500);
+          vzdaj();
+        };
+        window.setTimeout(dohliadni, 2500);
       };
       /* Vzdať sa videa znamená vrátiť úvod fotografii, ktorá je pod ním —
          nikdy nenechať prázdne miesto. */

@@ -15684,11 +15684,19 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
    šírky a hodnotenie na Google skončilo na samej hrane obrazovky.
    Nemení sa poradie ani obsah, len rytmus a miera. */
 @media (max-width: 759px) {
-  /* Nadpis o stupeň menší, aby mal po stranách vzduch, a bez umelého
-     obmedzenia na 10,6 znaku — na úzkej obrazovke ho zalomí šírka sama
-     a lepšie, než keď sa mu miera predpíše. */
-  .k .kh-hero .k-display { font-size: clamp(27px, 7.8vw, 36px); line-height: 1.08; letter-spacing: -0.02em; }
-  .k .kh-hero h1 { max-width: none; }
+  /* Nadpis vyplní riadok. Pri 9 vw a umelej miere 10,6 znaku siahal takmer
+     po pravý okraj; pri 7,8 vw zas ostávalo napravo 118 zo 353 pixelov
+     prázdnych a blok pôsobil odseknuto. Meria sa to na najdlhšom riadku:
+     "Prístrešky a pergoly" má pri 38,5 px 320 pixelov a do obsahovej šírky
+     393 px obrazovky sa zmestí s tridsiatimi voľnými. Miera sa nepredpisuje
+     — na úzkej obrazovke zalomí text šírka sama a lepšie. */
+  .k .kh-hero .k-display { font-size: clamp(30px, 9.8vw, 42px); line-height: 1.06; letter-spacing: -0.025em; }
+  /* Mieru stanovujú tri pravidlá s rastúcou špecificitou (10,6ch, 15,5ch,
+     15ch). Na telefóne ju nechceme žiadnu: na 393 px je 15ch presne 315
+     pixelov a nadpis sa pri nich zalomil na "Prístrešky" a "a pergoly",
+     hoci celé "Prístrešky a pergoly" sa do 353 px zmestí. */
+  .k .kh-hero h1,
+  .k .kh-hero .k-display { max-width: none; }
 
   /* Závoj po zvislej osi, nie šikmý. Šikmý prechod je šitý na širokú
      obrazovku: na úzkej sa v druhej polovici vytratí a text cez neho

@@ -3,6 +3,11 @@
 Vybavenie je iba náhľad priestoru; nemení cenu ani rozmery prístrešku. Auto sa
 ponúka len pri prístreškoch pre auto, posedenie len pri záhradných pergolách.
 
+Lak (materiál 1) nesie vo vrchole činiteľ jasu, nie farbu: shader ním násobí
+farbu z prepínača. Pri jednofarebnej predlohe vyjde činiteľ všade jedna a
+nemení sa nič; pri karosérii z textúry si takto svetlé a tmavé miesta ponechá
+a prefarbiť sa dá aj tak. Hodnota 128 znamená "bez zmeny".
+
 ## Autá v scéne
 
 Všetky tri autá sú licencované modely tretích strán, nie vlastné aproximácie.
@@ -70,9 +75,12 @@ takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
   a svetlami. Zasklenie je vlastný materiál. Podložka pod autom (`ground`) sa
   zahadzuje, nie je súčasťou auta. Predok bolo treba otočiť ručne
   (`--front high`): odhad podľa výšky kapoty u hatchbacku zlyháva.
-  Mierka rovnomerná podľa katalógovej dĺžky 3 876 mm. Obálka
-  3,88 × 2,00 × 1,47 m vrátane zrkadiel. 20 036 trojuholníkov,
-  364 345 bajtov gzip.
+  Karoséria sa od striech, skiel a lemov oddeľuje sýtosťou farby: nad 0,45
+  leží 12 428 vrcholov lakovanej červenej, pod ňou neutrálne sivé a čierne
+  diely. Lakovaná časť tak berie farbu z prepínača a čierna strecha, sklá
+  ani lemy sa neprefarbia. Mierka rovnomerná podľa katalógovej dĺžky
+  3 876 mm. Obálka 3,88 × 2,00 × 1,47 m vrátane zrkadiel.
+  20 036 trojuholníkov, 364 345 bajtov gzip.
 - Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
   konfigurator/scene-assets/mini-cooper.bin.gz --profile mini --length 3876
   --front high`
