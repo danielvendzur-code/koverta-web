@@ -125,7 +125,7 @@ jobs:
             echo "RESULT $name: $rc" | tee -a qa-artifacts/final-100-results.txt
             [ "$rc" = 0 ] || echo "$name" >> qa-artifacts/failures.txt
           }
-          for t in osnova-podla-expivi prekrytie strecha-nepresvita stlpy-vidno stlpy-rozostup plynulost layout-smoke technical-fidelity koverta-accessories pricing-logic routing-smoke browser-qa; do
+          for t in osnova-podla-expivi prekrytie strecha-nepresvita stlpy-vidno stlpy-rozostup krytina-strechy plynulost layout-smoke technical-fidelity koverta-accessories pricing-logic routing-smoke browser-qa; do
             run_test "$t" "konfigurator/test/$t.js"
           done
           for t in 02-occlusion-sweep 02-component-visibility 02-focused-render-qa; do

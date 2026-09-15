@@ -827,6 +827,28 @@
           { top: 'RAL 9002', bottom: 'RAL 9006', topHex: '#d7d5c8', bottomHex: '#a7aaa8' },
           { top: 'RAL 9002', bottom: 'RAL 7016', topHex: '#d7d5c8', bottomHex: '#383e42' }
         ];
+        /* Krytina strechy modelu G. Cenník 2026, strany 60 a 61, ju vedie ako
+           dva typy strechy: MODEL 1 sklenená na nosnom profile K75 z
+           vrstveného kaleného skla 66.2 a MODEL 2 zelená na sekundárnom
+           profile R100 — hliníkový plech a na ňom celý systém zelenej strechy.
+           Obidve nesú vetu „CENA SE DOLOČI POSAMEZNO ZA VSAK PROJEKT", takže
+           cenu k nim cenník nedáva a konfigurátor si ju nesmie vymyslieť:
+           ponúka voľbu, cenu nemení a povie, že sa oceňuje na projekt.
+           Rozteč sekundárnych profilov v cenníku je pri obidvoch 900 mm do
+           60 kg/m², 600 mm do stredného stupňa a 300 mm pri najvyššom, kde
+           stĺpy stoja na najviac 3 m. Strop zaťaženia sa líši: sklo 140 a 240,
+           zelená 120 a 200 kg/m². */
+        const ROOF_SKINS = [
+          { id: 'glass', label: 'Sklo', sec: 'K75', caps: '60, 140 a 240 kg/m²',
+            about: 'Vrstvené kalené sklo 66.2.',
+            topHex: 'rgba(203,222,231,.46)', bottomHex: 'rgba(219,233,239,.34)',
+            chipTop: '#cbdee7', chipLow: '#8fa3ad' },
+          { id: 'green', label: 'Zelená strecha', sec: 'R100', caps: '60, 120 a 200 kg/m²',
+            about: 'Hliníkový plech a na ňom celý systém zelenej strechy.',
+            topHex: '#5d7350', bottomHex: '#b4b8b6',
+            chipTop: '#5d7350', chipLow: '#b4b8b6' }
+        ];
+
         /* The blade cannot swing past the point where its tips break out
            through the section: arcsin(170/200) for a 200 blade in a 170
            profile. Everything between shut and there is one continuous run. */
@@ -856,6 +878,7 @@
           frameColor: BIO.colors[0],
           louverColor: BIO.colors[0],
           roofFinish: 0,
+          roofSkin: 0,          // krytina strechy G: 0 sklo, 1 zelená
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
           sideColor: null,
           activeSide: 'front',
@@ -1060,6 +1083,12 @@
           const roh = rohovy && !(b && b.stlpyNaVaznici);
           return { d: side, w: side, roh };
         };
+        /* Krytinu volí len model, ktorý ju v cenníku má — teda G. Ostatné
+           modely majú strechu danú (ISO panel, lamely, trapéz), tak im sem
+           nič netreba. */
+        const roofSkin = () => (model().glazed === true
+          ? (ROOF_SKINS[state.roofSkin] || ROOF_SKINS[0]) : null);
+
         const postD = () => {
           const b = kvBand();
           if (b) return kvStlpRez(0, 2).d;
@@ -4642,18 +4671,25 @@
             /* Secondary members are true catalogue rectangles. Integrated F
                members stay horizontal while the panel plane changes height
                across their span; SL keeps the established stepped geometry. */
-            const glass = model().glazed === true;
+            const skin = roofSkin();
+            /* Zelená strecha nie je presklenie: hore je vegetácia, dole
+               hliníkový plech. Sklo ostáva východiskom, lebo je v cenníku
+               prvé (MODEL 1). */
+            const green = !!skin && skin.id === 'green';
+            const glass = model().glazed === true && !green;
             /* Soltec kryje strechu ISO panelom — hladká doska. Koverta má
                trapézový profil, ktorý je zdola vlnitý. */
-            const trapez = model().roofSheet === 'trapez' && !glass;
+            const trapez = model().roofSheet === 'trapez' && !glass && !green;
             const roofFinish = ROOF_FINISHES[state.roofFinish] || ROOF_FINISHES[0];
             const sMax = loadKg() >= 240 ? 300 : (loadKg() >= 160 ? 600 : 1200);
             const bays = Math.max(3, Math.min(28, Math.ceil((inX1 - inX0) / sMax)));
             const step = (inX1 - inX0) / bays;
-            const skinTop = glass ? 'rgba(203,222,231,.46)' : roofFinish.topHex;
-            const skinLow = glass ? 'rgba(219,233,239,.34)' : roofFinish.bottomHex;
-            const seamTop = glass ? shade(frame, 0.12) : shade(roofFinish.topHex, -0.24);
-            const seamLow = glass ? shade(frame, 0.24) : shade(roofFinish.bottomHex, -0.18);
+            const skinTop = green ? skin.topHex : glass ? 'rgba(203,222,231,.46)' : roofFinish.topHex;
+            const skinLow = green ? skin.bottomHex : glass ? 'rgba(219,233,239,.34)' : roofFinish.bottomHex;
+            /* Vegetácia je súvislá plocha, nie tabule — škáry sa na nej nekreslia
+               ako pri paneloch, len sa zľahka odtieňujú, aby plocha nebola plochá. */
+            const seamTop = green ? shade(skin.topHex, -0.08) : glass ? shade(frame, 0.12) : shade(roofFinish.topHex, -0.24);
+            const seamLow = green ? shade(skin.bottomHex, -0.12) : glass ? shade(frame, 0.24) : shade(roofFinish.bottomHex, -0.18);
             /* seams follow the panels where the model is built from them, and
                fall back to the bay division where it is not */
             const widths = roofPanels();
@@ -4752,12 +4788,17 @@
               : (integratedFall
                 ? beamRuns.slice(0, -1).map((run, i) => [run.b + 2, beamRuns[i + 1].a - 2]).filter((c) => c[1] - c[0] > 8)
                 : cuts);
-            const edgeHex = glass ? shade(frame, 0.10) : shade(roofFinish.bottomHex, -0.16);
-            panelCuts.forEach((c) => {
+            const edgeHex = green ? shade(skin.bottomHex, -0.16)
+              : glass ? shade(frame, 0.10) : shade(roofFinish.bottomHex, -0.16);
+            panelCuts.forEach((c, ci) => {
               const a = c[0], b = c[1];
               const pane = glass ? { raw: true, bias: ON_SKIN } : { bias: integratedFall ? -20 : -600 };
+              /* Zeleň nie je náter: jeden odtieň cez celú strechu z nej spraví
+                 biliardové súkno. Systém sa kladie po pásoch, tak sa pás od pásu
+                 zľahka odlišuje — toľko, aby plocha žila, nie aby sa pruhovala. */
+              const topHex = green ? shade(skinTop, ((ci % 3) - 1) * 0.05) : skinTop;
               quad([[a, inY0, panelTopZ(a, inY0)], [b, inY0, panelTopZ(b, inY0)],
-                    [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], skinTop,
+                    [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], topHex,
                    Object.assign({ cull: true, edgeHex: seamTop }, pane));
               quad([[a, inY1, panelBottomZ(a, inY1)], [b, inY1, panelBottomZ(b, inY1)],
                     [b, inY0, panelBottomZ(b, inY0)], [a, inY0, panelBottomZ(a, inY0)]], skinLow,
@@ -5306,6 +5347,53 @@
             button.setAttribute('aria-label', `Strešný panel: vrch ${finish.top}, spodná strana ${finish.bottom}`);
             button.innerHTML = `<span class="sp-roofchip__sample" aria-hidden="true"><i style="--sp-roof-top:${finish.topHex}"></i><i style="--sp-roof-bottom:${finish.bottomHex}"></i></span>`
               + `<span><strong>${finish.top.replace('RAL ', '')}</strong><small>spodok ${finish.bottom.replace('RAL ', '')}</small></span>`;
+            host.appendChild(button);
+          });
+        };
+
+        /* Krytina strechy G. Cenník jej cenu neuvádza, tak voľba mení model
+           a text dopytu, nie sumu — a povie to rovno, aby zákazník nečakal,
+           že je krytina v cene. */
+        const buildRoofSkins = () => {
+          let wrap = cfgRoot.querySelector('[data-sp-roof-skin-wrap]');
+          let host = cfgRoot.querySelector('[data-sp-roof-skins]');
+          if (!wrap || !host) {
+            const after = cfgRoot.querySelector('[data-sp-roof-colors-wrap]')
+              || cfgRoot.querySelector('[data-sp-frame-colors]');
+            if (!after) return;
+            wrap = document.createElement('div');
+            wrap.className = 'sp-roof-finish';
+            wrap.dataset.spRoofSkinWrap = '';
+            wrap.hidden = true;
+            wrap.innerHTML = '<div class="sp-step__label"><b>Krytina strechy</b><span class="sp-step__val" data-sp-roof-skin-val></span></div>'
+              + '<div class="sp-roofcolors" role="group" aria-label="Krytina strechy" data-sp-roof-skins></div>'
+              + '<p class="sp-side-note" data-sp-roof-skin-note></p>';
+            after.after(wrap);
+            host = wrap.querySelector('[data-sp-roof-skins]');
+          }
+          if (!wrap || !host) return;
+          const available = model().glazed === true;
+          wrap.hidden = !available;
+          if (!available) { host.textContent = ''; return; }
+          const chosen = roofSkin();
+          const value = wrap.querySelector('[data-sp-roof-skin-val]');
+          if (value) value.textContent = chosen.label;
+          const note = wrap.querySelector('[data-sp-roof-skin-note]');
+          if (note) {
+            note.textContent = `${chosen.about} Nosný profil ${chosen.sec}, stupne zaťaženia`
+              + ` ${chosen.caps}. Krytinu cenník neuvádza sumou — Soltec ju oceňuje`
+              + ' individuálne pre každý projekt, preto nie je v cene vyššie.';
+          }
+          host.textContent = '';
+          ROOF_SKINS.forEach((sk, i) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sp-roofchip';
+            button.dataset.spRoofSkin = String(i);
+            button.setAttribute('aria-pressed', String(i === state.roofSkin));
+            button.setAttribute('aria-label', `Krytina strechy: ${sk.label}`);
+            button.innerHTML = `<span class="sp-roofchip__sample" aria-hidden="true"><i style="--sp-roof-top:${sk.chipTop}"></i><i style="--sp-roof-bottom:${sk.chipLow}"></i></span>`
+              + `<span><strong>${sk.label}</strong><small>profil ${sk.sec}</small></span>`;
             host.appendChild(button);
           });
         };
@@ -5947,6 +6035,7 @@
           const louverHost = q('[data-sp-louver-colors]');
           if (louverHost) buildColors(louverHost, state.louverColor, 'spLouverColor');
           buildRoofFinishes();
+          buildRoofSkins();
           buildLoads();
           syncCarPick();
           buildSideOpts();
@@ -6088,6 +6177,8 @@
             state.frameColor = BIO.colors[Number(t.dataset.spFrameColor)];
           } else if (t.dataset.spRoofFinish) {
             state.roofFinish = Math.max(0, Math.min(ROOF_FINISHES.length - 1, Number(t.dataset.spRoofFinish)));
+          } else if (t.dataset.spRoofSkin) {
+            state.roofSkin = Math.max(0, Math.min(ROOF_SKINS.length - 1, Number(t.dataset.spRoofSkin)));
           } else if (t.dataset.spBoxColor) {
             state.boxColor = BIO.colors[Number(t.dataset.spBoxColor)];
           } else if (t.dataset.spLouverColor) {
@@ -6160,6 +6251,10 @@
                 : `Konštrukcia ${state.frameColor.name} (${state.frameColor.ral}), lamely ${state.louverColor.name} (${state.louverColor.ral}).`,
               model().roof === 'panel' && model().glazed !== true && model().roofKit !== 'koverta'
                 ? `Strešný ISO panel: vrch ${ROOF_FINISHES[state.roofFinish].top}, spodná strana ${ROOF_FINISHES[state.roofFinish].bottom}.` : '',
+              /* Krytina G nie je v cene, tak to dopyt musí povedať — inak by
+                 obchodník posielal ponuku, ktorú zákazník čítal ako úplnú. */
+              roofSkin()
+                ? `Krytina strechy: ${roofSkin().label.toLowerCase()} — ${roofSkin().about} Nosný profil ${roofSkin().sec}. Cenník ju neuvádza sumou, oceňuje sa individuálne pre každý projekt.` : '',
               /* Prístrešok Koverta sa neumiestňuje voľbou — krok s riešením
                  nemá, tak by veta tvrdila niečo, čo zákazník nevybral. */
               ONE_MODEL ? '' : `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ' — '}${placement().label}.`,
