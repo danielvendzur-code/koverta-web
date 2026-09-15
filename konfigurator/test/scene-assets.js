@@ -36,10 +36,10 @@ for(const [key,model] of Object.entries(models)) {
 // inak by otočený stolík prešiel testom aj keby stál v stĺpe.
 const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
 const footprint=(i)=>{const b=turned(dimensions[i.key],i.rotation);return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];};
-for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto'])for(const car of ['auto','sedan','city',undefined]) {
+for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto'])for(const car of ['auto','sedan','sport','city',undefined]) {
   const c={L,W,H:2400,post:150,boxDepth};const r=plan(c,mode,count,null,car);
   // Kto si model zvolil, musí ho dostať — inak by prepínač len klamal.
-  if(mode==='car'&&(car==='sedan'||car==='city'))r.items.forEach(i=>assert.equal(i.key,car,'zvolený model auta sa nedodržal'));
+  if(mode==='car'&&(car==='sedan'||car==='sport'||car==='city'))r.items.forEach(i=>assert.equal(i.key,car,'zvolený model auta sa nedodržal'));
   for(const i of r.items)assert(i.rotation===0||Math.abs(i.rotation-Math.PI/2)<1e-9,`neznáme otočenie ${i.rotation}`);
   const bounds=r.items.map(footprint);
   bounds.forEach(b=>{assert(b[0]>=boxDepth+200);assert(b[2]<=L-200);assert(b[1]>=200);assert(b[3]<=W-200);});
@@ -71,7 +71,10 @@ for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,440
   for(const a of bounds)for(const b of obstacles)assert(a[2]<=b[0]-79||a[0]>=b[2]+79||a[3]<=b[1]-79||a[1]>=b[3]+79,'car hits a post');
   for(let i=1;i<bounds.length;i++)assert(bounds[i][1]-bounds[i-1][3]>=599,'door clearance lost');
 }
-assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
+// Strecha musí byť nižšia než najnižšie ponúkané auto. Kým boli v ponuke len
+// sedan a hatchback, bolo 1,6 m nízko na všetko; 911 je vysoká 1,29 m a pod
+// 1,6 m sa zmestí naozaj. Tvrdenie ostáva: pod príliš nízku strechu auto nepatrí.
+assert.equal(plan({L:6000,W:6000,H:1200,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
 // Pod najužší katalógový prístrešok (2,5 m) sa malé auto musí zmestiť. Medzi
 // stĺpmi tam ostáva 2,2 m svetla a mestské auto so zrkadlami má 1,91 m —
 // pohodlný odstup na dvere to nie je, ale auto tam stojí a náhľad to má

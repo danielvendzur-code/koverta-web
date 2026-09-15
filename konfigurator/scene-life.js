@@ -11,8 +11,10 @@
   const models = {
     sedan: { file:'bmw-g80-m3.bin.gz', bounds:[0,-1013,0,4794,1013,1462],
       label:'BMW M3', short:'sedan' },
-    city: { file:'peugeot-208.bin.gz', bounds:[0,-985,0,4055,985,1463],
-      label:'Peugeot 208', short:'malé auto' },
+    sport: { file:'porsche-911.bin.gz', bounds:[0,-1005,0,4519,1005,1285],
+      label:'Porsche 911', short:'športové' },
+    city: { file:'mini-cooper.bin.gz', bounds:[0,-1001,0,3876,1001,1474],
+      label:'Mini Cooper', short:'malé auto' },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-sofaset.bin.gz', bounds:[0,-1315,0,4130,1315,1291] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
@@ -22,7 +24,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-2',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-3',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -40,6 +42,9 @@
   let seedState=9307;
   const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
   for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
+  /* Autá od najdlhšieho po najkratšie. Na otázku "zmestí sa mi sem auto"
+     odpovedá to najväčšie, ktoré sa tam zmestí, tak sa skúšajú v tomto poradí. */
+  const CARS = ['sedan', 'sport', 'city'];
   function plan(c, mode, count, allow, car) {
     if(allow && !allow(mode)) return {items:[],capacity:0,reason:''};
     const margin = Math.max(230,c.post+100), x0=c.boxDepth+margin, x1=c.L-margin;
@@ -50,7 +55,7 @@
          Sedan potrebuje 2,74 m šírky aj s rezervou pri stĺpoch a 5,46 m
          dĺžky — pri prednastavenom carporte sa nezmestilo nič a scéna
          hlásila, že tu auto nezaparkuje, hoci bežné mestské auto áno. */
-      const order=car==='sedan'?['sedan']:car==='city'?['city']:['sedan','city'];
+      const order=CARS.indexOf(car)>=0?[car]:CARS.slice();
       /* Kto si vypýtal konkrétny počet, má ho dostať, ak sa vôbec dá. Väčšie
          auto ide prvé — na otázku "zmestí sa mi sem auto" odpovedá ono —, ale
          keď sa ich toľko nezmestí a menších áno, ukáže sa menšie. Predtým
@@ -152,7 +157,7 @@
          istého: druhé miesto dostane druhý model, aby bolo z náhľadu vidieť
          obe ponúkané veľkosti. Platí to len pri automatickom výbere — kto si
          model zvolil sám, dostane ten, ktorý si zvolil. */
-      const other=key==='sedan'?'city':'sedan',ob=models[other].bounds;
+      const other=key==='city'?'sedan':'city',ob=models[other].bounds;
       const otherFits=mix&&ob[4]-ob[1]<=bb[4]-bb[1]&&ob[3]-ob[0]<=bb[3]-bb[0]&&ob[5]-ob[2]<=c.H-150;
       slots.forEach((s,i)=>{
         const k=otherFits&&i===1?other:key,kb=models[k].bounds;
@@ -460,7 +465,7 @@
         <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
           <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
         <div class="sp-scene__row sp-scene__more" data-scene-countrow>
-        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="city">Malé auto</option></select>
+        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
         <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
         <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">

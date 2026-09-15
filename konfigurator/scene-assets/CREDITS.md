@@ -5,9 +5,9 @@ ponúka len pri prístreškoch pre auto, posedenie len pri záhradných pergolá
 
 ## Autá v scéne
 
-Obe autá sú licencované modely tretích strán, nie vlastné aproximácie. V scéne
-stoja preto, aby bolo vidieť, koľko miesta pod prístreškom zaberie skutočné
-auto. Interiér sa pri prevode zahadzuje — cez tmavé sklo ho nevidno a je to
+Všetky tri autá sú licencované modely tretích strán, nie vlastné aproximácie.
+V scéne stoja preto, aby bolo vidieť, koľko miesta pod prístreškom zaberie
+skutočné auto. Interiér sa pri prevode zahadzuje — cez tmavé sklo ho nevidno a je to
 takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
 
 ### Low Poly BMW G80 M3 — „sedan"
@@ -33,34 +33,57 @@ takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
 - Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
   konfigurator/scene-assets/bmw-g80-m3.bin.gz --profile g80 --length 4794`
 
-### Nouvelle Peugeot 208 — „malé auto"
+### Porsche 911 Carrera 4S — „športové"
 
-- Autor: GrunyStudio — https://sketchfab.com/grunystudio
-- Zdroj: https://sketchfab.com/3d-models/nouvelle-peugeot-208-lowpoly-3d4a1578573645de9a2915e93b7edcf7
+- Autor: Car2022 — https://sketchfab.com/Car2022
+- Zdroj: https://sketchfab.com/3d-models/porsche-911-carrera-4s-a38a94062bbd471e868084af2886d7da
 - Licencia: CC-BY-4.0 — http://creativecommons.org/licenses/by/4.0/ (komerčné
   použitie povolené, autor musí byť uvedený).
-- Povinné uvedenie zdroja: This work is based on "Nouvelle Peugeot 208 - lowpoly"
-  (https://sketchfab.com/3d-models/nouvelle-peugeot-208-lowpoly-3d4a1578573645de9a2915e93b7edcf7)
-  by GrunyStudio (https://sketchfab.com/grunystudio) licensed under CC-BY-4.0
+- Povinné uvedenie zdroja: This work is based on "Porsche 911 Carrera 4S"
+  (https://sketchfab.com/3d-models/porsche-911-carrera-4s-a38a94062bbd471e868084af2886d7da)
+  by Car2022 (https://sketchfab.com/Car2022) licensed under CC-BY-4.0
   (http://creativecommons.org/licenses/by/4.0/)
-- Úpravy: súbor obsahuje dve kópie toho istého auta vedľa seba; do scény ide
-  jedna. Celý exteriér má jeden jediný materiál, takže sa vrstvy rozlišujú menom
-  siete (`plane.000` karoséria, `circle.000` kolesá, `sphere.001` zrkadlá,
-  `cube.003`/`cube.004` svetlá). Karoséria si drží farbu vzorkovanú z textúry
-  a nie z prepínača: okná sú v textúre namaľované a lak by prefarbil aj ich.
-  Disky sú dostavané rovnako ako pri sedane — predloha má koleso ako jeden tmavý
-  kotúč bez lúčov. Mierka je rovnomerná podľa katalógovej dĺžky 4 055 mm.
-  Obálka 4,06 × 1,97 × 1,46 m vrátane zrkadiel. 1 772 trojuholníkov,
-  17 416 bajtov gzip.
-- Známe obmedzenie: predloha má na celé auto 1 220 trojuholníkov a všetok detail
-  má v textúre. Náš renderer textúry nepozná a farbu nesie vo vrcholoch, takže
-  pri takej hrubej sieti nie je kam ju uložiť a karoséria vychádza hranatá.
-  Je to vlastnosť predlohy, nie prevodu; model sa má vymeniť za hustejší, ktorý
-  farby nesie v materiáloch.
+- Úpravy: najpodrobnejší model v scéne — 55 321 trojuholníkov v zdroji, z toho
+  44 011 po zahodení interiéru a motora. Vrstvy sú pomenované poctivo
+  (`car_vpnt_` lak, `car_vgla_` zasklenie, `car_vwhl_` disky, `car_vlgt_`
+  svetlá, `CALIP_COLOR` brzdové strmene), takže profil je len prepis mien.
+  Lak berie farbu z prepínača. Mierka rovnomerná podľa katalógovej dĺžky
+  4 519 mm. Obálka 4,52 × 2,01 × 1,29 m vrátane zrkadiel. Je to zároveň
+  najnižšie auto v ponuke a pod nízku strechu sa dostane tam, kde sa ostatné
+  nezmestia.
 - Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
-  konfigurator/scene-assets/peugeot-208.bin.gz --profile p208 --length 4055`
+  konfigurator/scene-assets/porsche-911.bin.gz --profile p911 --length 4519`
+
+### MiniCooper — „malé auto"
+
+- Autor: zeee7 — https://sketchfab.com/zeee7
+- Zdroj: https://sketchfab.com/3d-models/minicooper-391d8c412c5049ada8f9013c267f0d40
+- Licencia: CC-BY-4.0 — http://creativecommons.org/licenses/by/4.0/ (komerčné
+  použitie povolené, autor musí byť uvedený).
+- Povinné uvedenie zdroja: This work is based on "MiniCooper"
+  (https://sketchfab.com/3d-models/minicooper-391d8c412c5049ada8f9013c267f0d40)
+  by zeee7 (https://sketchfab.com/zeee7) licensed under CC-BY-4.0
+  (http://creativecommons.org/licenses/by/4.0/)
+- Úpravy: karoséria je na jednom materiáli s textúrou, ale pripadá na ňu
+  štrnásťtisíc vrcholov, takže sa do nich textúra zmestí a lak z prepínača ju
+  neprebíja — odtiaľ tmavočervená karoséria s čiernou strechou aj s maskou
+  a svetlami. Zasklenie je vlastný materiál. Podložka pod autom (`ground`) sa
+  zahadzuje, nie je súčasťou auta. Predok bolo treba otočiť ručne
+  (`--front high`): odhad podľa výšky kapoty u hatchbacku zlyháva.
+  Mierka rovnomerná podľa katalógovej dĺžky 3 876 mm. Obálka
+  3,88 × 2,00 × 1,47 m vrátane zrkadiel. 20 036 trojuholníkov,
+  364 345 bajtov gzip.
+- Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
+  konfigurator/scene-assets/mini-cooper.bin.gz --profile mini --length 3876
+  --front high`
 
 ### Modely, ktoré tu stáli predtým
+
+Peugeot 208 tu stál 15. 9. 2026 pol dňa. Predloha má na celé auto 1 220
+trojuholníkov a všetok detail v textúre, ktorú renderer nepozná — karoséria
+z toho vyšla hranatá a fľakatá. Nahradil ho Mini Cooper, ktorý má na to isté
+dvadsaťtisíc trojuholníkov.
+
 
 Do 13. 9. 2026 tu stáli dva vlastné generické modely — sedan pod menom
 „Superb IV" a mestský hatchback. Označovať vlastnú aproximáciu menom
