@@ -2323,6 +2323,8 @@
              odpovedá takmer každé volanie. Tabuľka žije jeden snímok, tak sa
              nemá ako rozísť so scénou, a volajúci z nej len čítajú. */
           const rgbParsed = new Map();
+          /* Nasvietené farby jedného snímku: kľúč je farba + normála + materiál. */
+          const litCache = new Map();
           const toRGB = (c) => {
             const hit = rgbParsed.get(c);
             if (hit) return hit;
@@ -2475,7 +2477,22 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            /* Nasvietenie závisí od farby, normály, materiálu a smeru pohľadu —
+               prvé tri sa počas otáčania nemenia, štvrtý je jeden na snímok.
+               Stovky plôch sa pritom v tejto trojici opakujú: všetky vrchné
+               plochy lamiel majú jednu farbu aj jednu normálu. Kľúč sa skladá
+               raz pri stavbe geometrie a drží sa pri ploche, takže sa v snímku
+               už len číta z tabuľky; tá žije jeden snímok, tak sa nemá ako
+               rozísť s pohľadom. Vynechá to aj skladanie výsledného reťazca,
+               ktoré bolo z celého nasvietenia to najdrahšie. */
+            let lit;
+            if (o.raw) lit = fill;
+            else {
+              if (o.__sk === undefined) o.__sk = fill + '|' + normal.join(',') + '|' + (o.material || '');
+              let base = litCache.get(o.__sk);
+              if (base === undefined) { base = litFill(fill, normal, o.material); litCache.set(o.__sk, base); }
+              lit = haze(base, depthAvg);
+            }
             if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
               const tint=toRGB(fill);
               if(tint[0]<80 && tint[1]<80 && tint[2]<80)lit='rgba('+tint.slice(0,3).join(',')+','+(tint[3]*.48)+')';
