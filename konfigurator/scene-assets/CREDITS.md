@@ -69,18 +69,27 @@ takmer polovica trojuholníkov. Prevádza ich `../tools/import-car-gltf.py`.
   (https://sketchfab.com/3d-models/minicooper-391d8c412c5049ada8f9013c267f0d40)
   by zeee7 (https://sketchfab.com/zeee7) licensed under CC-BY-4.0
   (http://creativecommons.org/licenses/by/4.0/)
-- Úpravy: karoséria je na jednom materiáli s textúrou, ale pripadá na ňu
-  štrnásťtisíc vrcholov, takže sa do nich textúra zmestí a lak z prepínača ju
-  neprebíja — odtiaľ tmavočervená karoséria s čiernou strechou aj s maskou
-  a svetlami. Zasklenie je vlastný materiál. Podložka pod autom (`ground`) sa
-  zahadzuje, nie je súčasťou auta. Predok bolo treba otočiť ručne
-  (`--front high`): odhad podľa výšky kapoty u hatchbacku zlyháva.
-  Karoséria sa od striech, skiel a lemov oddeľuje sýtosťou farby: nad 0,45
-  leží 12 428 vrcholov lakovanej červenej, pod ňou neutrálne sivé a čierne
-  diely. Lakovaná časť tak berie farbu z prepínača a čierna strecha, sklá
-  ani lemy sa neprefarbia. Mierka rovnomerná podľa katalógovej dĺžky
-  3 876 mm. Obálka 3,88 × 2,00 × 1,47 m vrátane zrkadiel.
-  20 036 trojuholníkov, 364 345 bajtov gzip.
+- Úpravy: karoséria je na jednom materiáli s textúrou, takže sa lak od
+  striech, skiel a lemov nedá oddeliť menom. Oddeľuje sa odtieňom: rozhoduje
+  prevaha najsilnejšieho kanála nad druhým v poradí, lebo tá zatienenému
+  panelu ostane, kým sýtosť aj jas s tieňom padajú. Pri prahoch 12, 18 a 26
+  vyjde 11 133, 10 918 a 10 566 vrcholov s tým istým priemerom (68, 11, 9),
+  hranica teda leží v rovine; zvolený je prah 12. Rozhoduje sa celý
+  trojuholník, nie vrchol, inak by z plochy vypadol matný klin. Zapečený tieň
+  pod lemami blatníkov je v textúre prepálený na čiernu a odtieň v ňom
+  neostal, takže sa pohlcuje do laku podľa susedstva — bez toho okolo kolies
+  visel pílovitý čierny lem. Lak potom nesie vo vrchole len činiteľ jasu,
+  a to stiahnutý k jednej (0,72–1,39 namiesto 0,34–8,0): textúra má zapečené
+  tiene tak tvrdé, že karoséria z nich vyzerala obhorená, a svetlo si scéna
+  aj tak počíta z normál. Svetlomety a hmlovky predloha nechala na materiáli
+  skla — sklo pod 62 % výšky auta sú lampy (486 vrcholov, všetky vpredu),
+  zvyšok zasklenia začína až nad 96 % tejto hranice. Koncové svetlá sú
+  priamo v karosérii, vyberá ich box v rohoch zadnej steny s filtrom jasu:
+  svetlý rámik lampy ostáva matný a dáva šošovke čistý obrys. Podložka pod
+  autom (`ground`) sa zahadzuje. Predok bolo treba otočiť ručne
+  (`--front high`): odhad podľa výšky kapoty u hatchbacku zlyháva. Mierka
+  rovnomerná podľa katalógovej dĺžky 3 876 mm. Obálka 3,88 × 2,00 × 1,47 m
+  vrátane zrkadiel. 20 036 trojuholníkov, 368 017 bajtov gzip.
 - Reprodukcia: `python3 konfigurator/tools/import-car-gltf.py ZDROJ/scene.gltf
   konfigurator/scene-assets/mini-cooper.bin.gz --profile mini --length 3876
   --front high`

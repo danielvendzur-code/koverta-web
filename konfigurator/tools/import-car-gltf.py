@@ -171,16 +171,35 @@ INTERIOR = ('interior', 'gauges', 'display', 'screen', 'engine', 'ssb_')
 # oddelí spoľahlivo: sklá kabíny sedia vysoko, lampy pod pásom. Merané na
 # predlohe: stredné sklá nikde neklesnú pod 65 % výšky auta a lampy nikde
 # nevystúpia nad 63 %. Hodnota je podiel výšky auta, pod ktorým je sklo lampa.
-LAMPS_BELOW = {'p911': 0.64}
+LAMPS_BELOW = {'p911': 0.64, 'mini': 0.62}
 
-# Karoséria oddelená podľa sýtosti farby.
+# Koncové svetlá, ktoré predloha nechala priamo v karosérii.
+# Mini ich nesie na tom istom materiáli ako lak, takže by sa s ním prefarbili
+# a auto by vzadu svietilo bielo alebo modro. Geometria ich vyberie: sedia
+# v rohoch zadnej steny a nikde inde na aute nie je nič, čo by do toho rohu
+# zasahovalo. Box je (x od, |y| od, z od, z do) v podieloch dĺžky, polovice
+# šírky a výšky zarovnaného modelu, za ním strop jasu. Do boxu padne aj
+# svetlý rámik svetla — textúra ho kreslí ako chróm a je to jediné, čo dáva
+# lampe čistý obrys, tak ho jas odfiltruje a rámik ostane matný.
+# Merané na predlohe: v boxe je 1 042 vrcholov, z toho 292 rámika s jasom
+# okolo 120 a 678 šošovky s jasom pod 60.
+LAMP_BOX = {'mini': (0.908, 0.60, 0.455, 0.685, 60.0)}
+
+# Karoséria oddelená podľa odtieňa.
 # Mini nesie celý exteriér na jednom materiáli s textúrou, takže lak sa od
-# striech, skiel a lemov nedá oddeliť menom. Farbou áno: lakovaná časť je
-# sýto červená, všetko ostatné je neutrálne sivé alebo takmer čierne.
-# Merané na predlohe: nad sýtosťou 0,5 leží 12 423 vrcholov s priemernou
-# farbou (58, 12, 11), pod 0,35 je 46 620 vrcholov s priemerom (71, 72, 71).
-# Hranica je medzi nimi a nie je tesná ani z jednej strany.
-PAINT_BY_SATURATION = {'mini': 0.45}
+# striech, skiel a lemov nedá oddeliť menom. Odtieňom áno: lakovaná časť je
+# červená, všetko ostatné je neutrálne sivé alebo čierne. Rozhoduje prevaha
+# najsilnejšieho kanála nad druhým v poradí, nie sýtosť ani jas — prevaha
+# ostane aj zatienenému panelu, kým podiel a jas s tieňom padajú a karoséria
+# potom vypadávala z laku po fľakoch.
+# Merané na predlohe: pri prahoch 12, 18 a 26 vyjde 11 133, 10 918 a 10 566
+# vrcholov s rovnakým priemerom (68, 11, 9), takže hranica leží v rovine.
+# Pri 8 sa ich nazbiera 13 807 a priemer sa posunie na (67, 20, 17) —
+# tam už do laku presakujú sivé lemy.
+PAINT_BY_TINT = {'mini': 12}
+# Nad čím sa už tmavý matný diel nepovažuje za zapečený tieň karosérie.
+# Lak má na predlohe stredný jas 18, lišty a zrkadlá 128; prah 9 leží medzi.
+SHADOW_LUM = 9.0
 LAMP_TONE = (242, 246, 250)          # svetlomety
 LAMP_TONE_REAR = (198, 34, 34)       # koncové svetlá
 
@@ -473,24 +492,74 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
             print('sklo pod', f'{cut:.0%}', 'výšky prepnuté na svetlá:',
                   int(lamp.sum()), 'vrcholov, z toho vzadu', int(rear.sum()))
 
-    sat_cut = PAINT_BY_SATURATION.get(profile)
-    if sat_cut is not None:
-        hi = C.max(axis=1).astype(float)
-        lo = C.min(axis=1).astype(float)
-        sat = np.where(hi > 0, (hi - lo) / np.maximum(hi, 1), 0.0)
-        paint_by_hue = (M == 0) & (sat >= sat_cut)
-        if paint_by_hue.any():
-            M[paint_by_hue] = 1
-            print('podľa sýtosti prepnuté na lak:', int(paint_by_hue.sum()), 'vrcholov')
+    box = LAMP_BOX.get(profile)
+    if box is not None:
+        x0, y0, z0, z1, lum_max = box
+        L, W, H = q[:, 0].max(), np.abs(q[:, 1]).max(), q[:, 2].max()
+        inside = ((q[:, 0] > L * x0) & (np.abs(q[:, 1]) > W * y0)
+                  & (q[:, 2] > H * z0) & (q[:, 2] < H * z1)
+                  & (C.astype(float) @ np.array([0.2126, 0.7152, 0.0722]) <= lum_max))
+        # Svetlom je len trojuholník, ktorý leží v boxe celý. Pri dvoch
+        # vrcholoch z troch mu tretí trčí do karosérie a lampa dostane
+        # pílovitý okraj; takto sa obrys drží hrán siete a lem si spraví
+        # svetlý rámik, ktorý ostal matný.
+        tail = np.repeat(inside.reshape(-1, 3).all(axis=1), 3)
+        if tail.any():
+            M[tail] = 4
+            C[tail] = np.array(LAMP_TONE_REAR, dtype=np.uint8)
+            print('koncové svetlá vybrané z karosérie:', int(tail.sum()), 'vrcholov')
+
+    tint_cut = PAINT_BY_TINT.get(profile)
+    if tint_cut is not None:
+        rank = np.sort(C.astype(np.int32), axis=1)
+        tint = rank[:, 2] - rank[:, 1]
+        # Rozhoduje sa celý trojuholník, nie vrchol: jediný vrchol, ktorý trafil
+        # škáru medzi panelmi, by inak z plochy vyrezal matný klin. Na predlohe
+        # je zmiešaných 969 z 19 730 trojuholníkov, väčšina sa teda aj tak zhodne.
+        matte = (M == 0).reshape(-1, 3).all(axis=1)
+        vote = ((M == 0) & (tint >= tint_cut)).reshape(-1, 3).sum(axis=1)
+        paint_tri = matte & (vote >= 2)
+
+        # Zapečený tieň pod lemom blatníka je v textúre prepálený na čiernu,
+        # takže odtieň v ňom neostal a z laku vypadne — okolo kolies potom
+        # visí pílovitý čierny lem. Pozná sa podľa toho, že sa dotýka laku
+        # a je takmer čierny: pohltíme ho, nech z neho vyjde tmavší odtieň
+        # karosérie namiesto diery. Svetlé lišty a zrkadlá sa laku dotýkajú
+        # tiež, ale čierne nie sú, tak ostanú matné.
+        lum3 = (C.astype(float) @ np.array([0.2126, 0.7152, 0.0722])
+                ).reshape(-1, 3).mean(axis=1)
+        shadow = matte & (lum3 <= SHADOW_LUM) & ~paint_tri
+        vid = np.unique(np.rint(q).astype(np.int64), axis=0, return_inverse=True)[1]
+        grown = 0
+        while paint_tri.any() and shadow.any():
+            edge = np.zeros(vid.max() + 1, dtype=bool)
+            edge[vid[np.repeat(paint_tri, 3)]] = True
+            add = shadow & (edge[vid].reshape(-1, 3).sum(axis=1) >= 2)
+            if not add.any(): break
+            paint_tri |= add
+            shadow &= ~add
+            grown += int(add.sum())
+
+        if paint_tri.any():
+            M[np.repeat(paint_tri, 3)] = 1
+            print('podľa odtieňa prepnuté na lak:', int(paint_tri.sum()) * 3,
+                  'vrcholov, z toho', grown * 3, 'z pohlteného tieňa')
 
     # Lak nesie vo vrchole činiteľ jasu, nie farbu: shader ním násobí farbu
     # z prepínača. Pri jednofarebnej predlohe vyjde všade jedna a nemení sa
     # nič; pri karosérii z textúry si takto svetlé a tmavé miesta ponechá.
     paint_mask = (M == 1)
     if paint_mask.any():
-        lum = C[paint_mask].astype(float) @ np.array([0.2126, 0.7152, 0.0722])
-        mean = float(lum.mean()) or 1.0
-        factor = np.clip(lum / mean, 0.0, 2.0)
+        lum = C.astype(float) @ np.array([0.2126, 0.7152, 0.0722])
+        # Jas sa priemeruje po trojuholníku a stred je medián, nie priemer:
+        # zopár odleskov by priemer vytiahlo hore a zvyšok karosérie by
+        # stmavol. Rozsah sa sťahuje k jednej, lebo textúra nesie zapečené
+        # tiene a odlesky tak tvrdé, že by z laku spravili fľaky — svetlo si
+        # scéna počíta z normál sama. Na predlohe ide pomer 0,34–8,0 na
+        # činiteľ 0,72–1,39.
+        lum = np.repeat(lum.reshape(-1, 3).mean(axis=1), 3)
+        ref = float(np.median(lum[paint_mask])) or 1.0
+        factor = np.clip(lum[paint_mask] / ref, 0.45, 2.2) ** 0.42
         C[paint_mask] = np.rint(factor * 127.5).astype(np.uint8)[:, None]
 
     if rim_tone is not None and rim_mask.any():
