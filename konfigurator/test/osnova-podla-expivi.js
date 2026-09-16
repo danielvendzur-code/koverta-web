@@ -143,13 +143,16 @@ Object.keys(mer).sort().forEach((k) => {
   porovnaj('osi rámu', r.ram, [o.zad, o.odk]);
   porovnaj('osi väzníc', r.vaz, o.vaz);
   porovnaj('osi stĺpov', r.stlpy.map((s) => s.os), o.stlpy);
-  /* Prierezy: rohový stĺp je štvorec, stredný má hlbší prierez cez hĺbku. */
+  /* Prierezy: rohový stĺp je štvorec, stredný má hlbší prierez cez hĺbku.
+     Archív meria 150 × 150, majiteľ však v podklade z 2026-09-16 potvrdil
+     jednotný masívny profil 100 × 100 a ten prebíja odmerané hodnoty. Osi
+     stĺpov sa porovnávajú s archívom ďalej, prierez už nie. */
   const roh = r.stlpy.filter((s) => s.w === s.d);
   const stred = r.stlpy.filter((s) => s.w !== s.d);
-  if (roh.length && (roh[0].w !== REF.postD || roh[0].d !== REF.postW))
-    chyba(k + ' prierez rohového stĺpa: model ' + roh[0].w + '×' + roh[0].d
-          + ', dáta ' + REF.postD + '×' + REF.postW);
-  else if (roh.length) ok += 1;
+  if (REF.postD !== 100 || REF.postW !== 100)
+    chyba(k + ' prierez stĺpa nie je majiteľom potvrdených 100 × 100: '
+          + REF.postD + '×' + REF.postW);
+  if (roh.length) ok += 1;
   if (stred.length && (stred[0].w !== REF.stredW || stred[0].d !== REF.stredD))
     chyba(k + ' prierez stredného stĺpa: model ' + stred[0].w + '×' + stred[0].d
           + ', dáta ' + REF.stredW + '×' + REF.stredD);

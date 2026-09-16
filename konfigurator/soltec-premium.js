@@ -686,8 +686,8 @@
           ['4', 'Doplnky', 'Doplnky'],
           ['5', 'Súhrn', 'Súhrn']
         ] : [
-          ['1', 'Riešenie', 'Riešenie'],
-          ['2', 'Rozmer', 'Rozmer'],
+          ['1', 'Umiestnenie', 'Umiestnenie'],
+          ['2', 'Rozmer a model', 'Rozmer'],
           ['3', 'Strecha a farby', 'Strecha'],
           ['4', 'Boky', 'Boky'],
           ['5', 'Doplnky', 'Doplnky'],
@@ -695,9 +695,14 @@
         ];
         const STEPS = RAIL.length;
         const STEP_NAMES = RAIL.map((r) => r[1]);
+        /* Model sa vyberá až po veľkosti. Keď stál pred ňou, zákazník si
+           vyberal z názvov — a z dvoch názvov, ktoré mu nič nehovoria, si
+           vezme ten lacnejší, nie ten, ktorý jeho rozmer unesie. Po zadaní
+           rozmeru je pri každom modeli vidieť, či ten rozmer vôbec dosiahne
+           a čo pri ňom stojí, takže sa vyberá z čísel, nie z mien. */
         const STEP_MAP = ONE_MODEL
           ? { 1: 0, 2: 0, 3: 1, 4: 3, 5: 2, 6: 4, 7: 5 }
-          : { 1: 1, 2: 1, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
+          : { 1: 1, 2: 2, 3: 2, 4: 4, 5: 3, 6: 5, 7: 6 };
 
         /* Standalone GitHub Pages builds made before the guided-flow redesign
            still contain the original seven small steps. Upgrade that markup in
@@ -727,7 +732,44 @@
           if (cap) cap.textContent = 'Krok 1 z ' + STEPS;
           if (name) name.textContent = STEP_NAMES[0];
         };
+        /* Panel s modelom stojí v zdroji pred panelom s rozmerom, lebo tak
+           išli pôvodné malé kroky. V spoločnom kroku ho treba presunúť za
+           rozmer — poradie v DOM je poradie, v akom to zákazník číta. */
+        const modelPanelAfterSize = () => {
+          if (ONE_MODEL) return;
+          const modely = cfgRoot.querySelector('[data-sp-models]');
+          const sirka = cfgRoot.querySelector('[data-sp-width-slider]');
+          if (!modely || !sirka) return;
+          const panelModel = modely.closest('.sp-step');
+          const panelRozmer = sirka.closest('.sp-step');
+          if (!panelModel || !panelRozmer || panelModel === panelRozmer) return;
+          if (panelModel.dataset.spStepno !== panelRozmer.dataset.spStepno) return;
+          panelRozmer.after(panelModel);
+        };
         normalizeLegacySteps();
+        modelPanelAfterSize();
+        /* Ako sa nástroj ovláda — dole pod krokmi a zavreté. Kto to potrebuje,
+           rozklikne; kto nie, nepríde kvôli návodu o miesto na obrazovke. Pri
+           ňom sedí aj odkaz na autorov 3D modelov: patrí medzi vysvetlivky,
+           nie na viditeľné miesto stránky. */
+        const buildHowto = () => {
+          const rail = cfgRoot.querySelector('.sp-rail');
+          const kolona = rail && rail.parentNode;
+          if (!kolona || kolona.querySelector('[data-sp-howto]')) return;
+          const d = document.createElement('details');
+          d.className = 'sp-howto';
+          d.dataset.spHowto = '';
+          d.innerHTML = '<summary>Ako sa to ovláda</summary>'
+            + '<ul>'
+            + '<li><b>Otáčanie</b> — ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
+            + '<li><b>Priblíženie</b> — koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
+            + '<li><b>Vybavenie a počasie</b> — karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
+            + '<li><b>Cena</b> — mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu.</li>'
+            + '<li><a href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a> — autori a licencie áut a záhradného nábytku v scéne.</li>'
+            + '</ul>';
+          kolona.appendChild(d);
+        };
+        buildHowto();
 
         const NS = 'http://www.w3.org/2000/svg';
         const money = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 });
@@ -797,8 +839,13 @@
           { id: 'h50a',  label: 'Posuvné panely H50 — hliník',  note: 'podľa rozmeru' },
           { id: 'fi30',  label: 'Stena ISO 3 — izolačný panel 30 mm', note: 'podľa výšky' },
           { id: 'fw25',  label: 'Stena WOOD — sibírsky smrekovec',  note: 'podľa výšky' },
-          { id: 'l44es', label: 'Stena L44-ES — ťahokov',            note: 'podľa výšky' },
-          { id: 'l44alu', label: 'Stena L44-ALU 20/20 — hliník',     note: 'podľa výšky' },
+          /* L44-ES a L44-ALU 20/20 tu boli ako bočné steny, ale v cenníku nie
+             sú steny: sú to plášte lopy — „LOPA / L44-ES", „LOPA / L44-ALU
+             20/20" — a účtujú sa ako celý zadný box daného rozmeru, nie na
+             bežný meter steny. Cenník pevných stien pozná dve: FW25 zo
+             sibírskeho smrekovca do 4 m a FI30 z ISO panela do 6 m. Na
+             terasách a pergolách L44 v cenníku 2026 nie je vôbec. Ostávajú
+             teda tam, kam patria — medzi prevedenia boxu. */
           { id: 'e300',  label: 'Brisoleje E300',                    note: 'na nacenenie' }
         ];
         const SIDE_OPTS = (Array.isArray(BIO.sideOpts) && BIO.sideOpts.length)
@@ -827,6 +874,37 @@
           { top: 'RAL 9002', bottom: 'RAL 9006', topHex: '#d7d5c8', bottomHex: '#a7aaa8' },
           { top: 'RAL 9002', bottom: 'RAL 7016', topHex: '#d7d5c8', bottomHex: '#383e42' }
         ];
+        /* Krytina strechy modelu G. Cenník 2026, strany 60 a 61, ju vedie ako
+           dva typy strechy: MODEL 1 sklenená na nosnom profile K75 z
+           vrstveného kaleného skla 66.2 a MODEL 2 zelená na sekundárnom
+           profile R100 — hliníkový plech a na ňom celý systém zelenej strechy.
+           Obidve nesú vetu „CENA SE DOLOČI POSAMEZNO ZA VSAK PROJEKT", takže
+           cenu k nim cenník nedáva a konfigurátor si ju nesmie vymyslieť:
+           ponúka voľbu, cenu nemení a povie, že sa oceňuje na projekt.
+           Rozteč sekundárnych profilov v cenníku je pri obidvoch 900 mm do
+           60 kg/m², 600 mm do stredného stupňa a 300 mm pri najvyššom, kde
+           stĺpy stoja na najviac 3 m. Strop zaťaženia sa líši: sklo 140 a 240,
+           zelená 120 a 200 kg/m². */
+        const ROOF_SKINS = [
+          { id: 'glass', label: 'Sklo', sec: 'K75', caps: '60, 140 a 240 kg/m²',
+            about: 'Vrstvené kalené sklo 66.2.',
+            topHex: 'rgba(203,222,231,.46)', bottomHex: 'rgba(219,233,239,.34)',
+            chipTop: '#cbdee7', chipLow: '#8fa3ad' },
+          { id: 'green', label: 'Zelená strecha', sec: 'R100', caps: '60, 120 a 200 kg/m²',
+            about: 'Hliníkový plech a na ňom celý systém zelenej strechy.',
+            topHex: '#5d7350', bottomHex: '#b4b8b6',
+            chipTop: '#5d7350', chipLow: '#b4b8b6' }
+        ];
+        /* Krytina tretia: ISO panel. Cenník ju vedie ako krytinu tejto rodiny
+           spolu so sklom a zelenou strechou — „ISO panel 3 cm, laminirano
+           kaljeno steklo ali zelena streha" — ale nie je to voľba: modely F
+           ju majú napevno a modely G ju nemajú. Krok s krytinou ju preto
+           ukazuje ako danú, nie ako tlačidlo; bez toho vyzeral zoznam krytín
+           tak, že ISO panel neexistuje. Vrch a spodok panela sa vyberá o kus
+           vyššie, medzi farbami. */
+        const ROOF_FIXED = { id: 'iso', label: 'ISO panel 30 mm', sec: 'integrovaný spád 2 %',
+          caps: 'podľa modelu', about: 'Sendvičový panel s 30 mm izoláciou proti prehriatiu aj hluku dažďa.' };
+
         /* The blade cannot swing past the point where its tips break out
            through the section: arcsin(170/200) for a 200 blade in a 170
            profile. Everything between shut and there is one continuous run. */
@@ -860,6 +938,7 @@
           frameColor: BIO.colors.find((c) => c.ral === 'RAL 7016') || BIO.colors[0],
           louverColor: BIO.colors[0],
           roofFinish: 0,
+          roofSkin: 0,          // krytina strechy G: 0 sklo, 1 zelená
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
           sideColor: null,
           activeSide: 'front',
@@ -1064,6 +1143,12 @@
           const roh = rohovy && !(b && b.stlpyNaVaznici);
           return { d: side, w: side, roh };
         };
+        /* Krytinu volí len model, ktorý ju v cenníku má — teda G. Ostatné
+           modely majú strechu danú (ISO panel, lamely, trapéz), tak im sem
+           nič netreba. */
+        const roofSkin = () => (model().glazed === true
+          ? (ROOF_SKINS[state.roofSkin] || ROOF_SKINS[0]) : null);
+
         const postD = () => {
           const b = kvBand();
           if (b) return kvStlpRez(0, 2).d;
@@ -1164,6 +1249,11 @@
                the span drifted with it - 2 959 mm on an 8,7 m carport - so the
                bay a car parks in grew with the roof. A pergola's book gives no
                position, so that one still stands at mid-span. */
+            /* Nerovnaké polia nie sú chyba, je to parkovanie: do kratšieho
+               poľa sa zaparkuje jedno auto, do dlhšieho dve — auto stojí
+               dĺžkou naprieč šírkou prístrešku, takže polia delia frontu.
+               Preto P5 drží pevný odstup bez ohľadu na dĺžku strechy a
+               nesmie sa „opraviť" na rovnomerné delenie. */
             const p5 = model().p5;
             if (p5) return [0, Math.round(Math.min(p5, span / 2)), span];
             const t = model().roof === 'panel' ? 0.34 : 0.5;   // access bay, or mid-span
@@ -1461,7 +1551,7 @@
               const bands = Object.keys(t).map(Number).sort((a, b) => a - b);
               return t[bands[dimensionBandIndex(bands, state.height)]];
             };
-            const WALL_CODE = { fi30: 'iso', fw25: 'wood', l44es: 'l44es', l44alu: 'l44alu' };
+            const WALL_CODE = { fi30: 'iso', fw25: 'wood' };
 
             /* Published numeric keys are lower bounds of discrete price bands. */
             const bandKey = (obj, want) => {
@@ -1685,6 +1775,9 @@
                ovládanie na kresbe, nekreslí sa nič a rýchlosť vyjde skvele. */
             view: { az: view.az, el: view.el },
             louverT: state.louverT, sideOpen: { ...state.sideOpen },
+            /* Ľavé líca stĺpov po dĺžke a hĺbka ich prierezu. Rozostup sa inak
+               nedá zmerať inak než odčítaním pixelov z kresby. */
+            posts: { xs: postXs(), d: postD(), carry: Number(model().post4) || null },
             geometryCache: canvas.dataset.geometryCache || null,
             price: priceLines(), frameColor: state.frameColor.ral, sides: { ...state.sides },
             picks: { ...state.picks }, extras: { ...state.extras },
@@ -1717,15 +1810,26 @@
            kreslí sa aj v pohybe nadštandardne a hrany ostávajú rovné; až keď
            snímok trvá dlho, klesne na úsporné. Pevný nízky násobok znamenal,
            že aj výkonný počítač ukazoval počas ťahania zubaté čiary. */
-        let motionScale = 1.5;
+        /* Stupne rebríka sú v riadkoch obrazu, nie v násobku veľkosti plátna.
+           Násobok znamenal, že to isté „stredné" rozlíšenie stálo na malom
+           plátne štvrtinu toho, čo na celej obrazovke — okno sa roztiahlo a
+           pohyb spomalil, hoci sa na modeli nič nezmenilo. V riadkoch je cena
+           stupňa rovnaká všade a 720p je naozaj stupeň, nie náhodný zlomok.
+           Rad je 720 × {0,49; 0,6; 0,8; 1; 1,2; 1,5}; na doterajšom plátne
+           720 × 540 px vychádzali tie isté stupne s odchýlkou do troch percent,
+           takže sa nemení, čo slabý stroj unesie — mení sa, že nad ním je
+           stupeň pomenovaný 720p a že sa nezdražuje s veľkosťou okna. */
+        const MOTION_ROWS = [352, 432, 576, 720, 864, 1080];
+        let motionScale = 4;                  // index do MOTION_ROWS
         const motionTimes = [];
-        /* Spodná hranica nie je jeden CSS pixel. Na stroji bez grafickej
+        let settleFrames = 0;
+        /* Spodný stupeň nie je jeden CSS pixel. Na stroji bez grafickej
            karty stojí snímok aj pri ňom vyše stovky milisekúnd, a vtedy je
            lepšie kresliť otáčanie mäkšie než po skokoch: rozmazané je len
            kým sa model hýbe, po pustení sa dokreslí ostro. Kto má GPU, na
            tieto stupne nikdy nespadne. */
-        const motionStep = (ms) => ms > 90 ? 0.55 : ms > 45 ? 0.75 : ms > 26 ? 1
-          : ms > 15 ? 1.25 : ms < 9 ? 1.9 : 1.5;
+        const motionStep = (ms) => ms > 90 ? 0 : ms > 45 ? 1 : ms > 26 ? 2
+          : ms > 15 ? 3 : ms < 9 ? 5 : 4;
         const noteFrame = (ms) => {
           motionTimes.push(ms); if (motionTimes.length > 12) motionTimes.shift();
           /* Spomalenie sa uzná z jedného snímku, zrýchlenie až z mediánu.
@@ -1737,14 +1841,31 @@
              snímok o výkone nesvedčí, tak sa nahor ide naďalej cez medián.
              Šesťdesiat, nie štyridsaťpäť, aby jediné zaseknutie na inak
              svižnom stroji kvalitu nezrazilo. */
+          /* Snímok tesne po zmene rozlíšenia je drahý práve tou zmenou: plátno
+             si prealokuje kresliaci buffer a scéna sa nahrá do nového. Keby
+             sa podľa neho rozhodovalo, rebrík by reagoval na cenu vlastného
+             kroku a hojdal sa medzi stupňami. Merané na telefóne pri jednom
+             ťahaní: štyri zmeny rozlíšenia, medián snímku 16,7 ms a p95
+             100 ms - čiže plynulé kreslenie a špičky presne na tých zmenách.
+             Po kroku sa preto pár snímkov nemeria vôbec. */
+          if (settleFrames > 0) { settleFrames--; return; }
+          motionTimes.push(ms); if (motionTimes.length > 14) motionTimes.shift();
+          const stepTo = (want) => { motionScale = want; motionTimes.length = 0; settleFrames = 4; };
           if (ms > 60) {
             const hned = motionStep(ms);
-            if (hned < motionScale) { motionScale = hned; motionTimes.length = 0; return; }
+            if (hned < motionScale) return stepTo(hned);
           }
-          if (motionTimes.length < 6) return;
+          /* Nahor sa ide z dlhšej vzorky než predtým, aby jedno ťahanie
+             neprešlo cez tri stupne. */
+          if (motionTimes.length < 10) return;
           const sorted = motionTimes.slice().sort((a, b) => a - b);
           const want = motionStep(sorted[sorted.length >> 1]);
-          if (want !== motionScale) { motionScale = want; motionTimes.length = 0; }
+          /* Nahor po jednom stupni. Skok z najnižšieho rovno na najvyšší
+             znamenal, že sa stroj otestoval najdrahším snímkom a hneď spadol
+             späť — divák z toho videl, ako sa obraz počas jedného ťahania
+             preostruje a rozmazáva dokola. */
+          if (want > motionScale) return stepTo(motionScale + 1);
+          if (want !== motionScale) stepTo(want);
         };
         /* To isté pre zastavený snímok. Ten sa kreslí raz a smie stáť viac,
            lebo z neho zákazník číta tvar profilu — ale ani on nesmie zabiť
@@ -1771,9 +1892,13 @@
                bez vyhladzovania vôbec — merané na tom istom zábere trapézovej
                strechy, ktorá je zo šikmých hrán celá. Vlastný filter započíta
                každý vykreslený pixel, nie iba tie, ktoré si prehliadač vyberie.
-               MSAA na hlavnom buffri preto netreba — kreslíme doň už len
-               hotový obdĺžnik. */
-            const gl = surface.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
+               Na zastavený snímok teda MSAA netreba — do hlavného buffra ide
+               už len hotový obdĺžnik a viacnásobné vzorkovanie obdĺžnika nemá
+               čo vyhladiť. Počas otáčania sa však kreslí rovno na plátno bez
+               tej medzitextúry, a práve tam boli hrany zubaté. MSAA je preto
+               zapnuté: v pohybe vyhladzuje skutočnú geometriu a v pokoji stojí
+               dva trojuholníky navyše. */
+            const gl = surface.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
             if (!gl) { depthPainter = false; return false; }
             const compile = (type, source) => {
               const shader = gl.createShader(type);
@@ -1869,8 +1994,16 @@
              prevzorkovanie preto obraz nezlepšuje, ak nesedí na celé pixely —
              pri 4:1 vyzeral rovnako zubato ako bez vyhladzovania. Vedľajší
              účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
-          let ratio = motionDetail ? Math.max(0.5, dpr * motionScale * 0.9)
+          let ratio = motionDetail
+            ? Math.max(0.5, MOTION_ROWS[motionScale] / Math.max(1, canvas.clientHeight))
             : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
+          /* Na hustom displeji sa počas otáčania neprevzorkováva nad vlastné
+             pixely displeja. Telefón s pomerom 2,75 kreslil pohyb v 1,7-násobku
+             svojich pixelov, kým zastavený snímok má dvojnásobok - pohyb tak
+             stál takmer to isté čo ostrý záber a celý zmysel pohybového režimu
+             sa strácal. Jeden pixel displeja na jeden CSS pixel je na telefóne
+             ostré dosť; ostrosť naviac sa dokreslí po pustení. */
+          if (motionDetail && dpr >= 2) ratio = Math.min(ratio, dpr);
           /* Strop bol pevných 7,2 Mpx. Na 2× displeji cez celú obrazovku to
              stlačilo zastavený snímok na sotva 1,2-násobok natívneho
              rozlíšenia a na šikmých hranách profilu bolo vidieť schodíky —
@@ -2248,6 +2381,8 @@
              odpovedá takmer každé volanie. Tabuľka žije jeden snímok, tak sa
              nemá ako rozísť so scénou, a volajúci z nej len čítajú. */
           const rgbParsed = new Map();
+          /* Nasvietené farby jedného snímku: kľúč je farba + normála + materiál. */
+          const litCache = new Map();
           const toRGB = (c) => {
             const hit = rgbParsed.get(c);
             if (hit) return hit;
@@ -2311,7 +2446,7 @@
             if (c[2] < AO_FOOT) k -= 0.15 * (1 - c[2] / AO_FOOT);
             return k < 0.52 ? 0.52 : k;
           };
-          const litFill = (c, n, material, at) => {
+          const litFill = (c, n, material, ao) => {
             const base = toRGB(c);
             const kd = Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
             const fd = Math.max(0, n[0] * FILL[0] + n[1] * FILL[1] + n[2] * FILL[2]);
@@ -2326,7 +2461,7 @@
               ? AMB * 0.80 + KEY_I * 1.45 * kd + FILL_I * 0.9 * fd
                 + BOUNCE_I * 0.85 * Math.max(0, -n[2]) + SKY_I * 2.4 * Math.max(0, n[2])
               : AMB + KEY_I * kd + FILL_I * fd + BOUNCE_I * Math.max(0, -n[2]) + SKY_I * Math.max(0, n[2]);
-            if (at) l *= aoAt(at, n);
+            if (ao !== undefined) l *= ao;
             const hn = Math.max(0, n[0] * HALF[0] + n[1] * HALF[1] + n[2] * HALF[2]);
             const spec = kd > 0 ? (satin ? 0.30 : SPEC_I) * Math.pow(hn, satin ? 16 : SPEC_P) * 255 : 0;
             /* Pri šmyku pohľadu pozdĺž plechu sa odraz zosilní — to je ten
@@ -2433,29 +2568,43 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            /* The face's own place in the scene decides how much sky reaches
-               it, so occlusion is measured at its centre, not at the origin. */
-            let centre = null;
-            if (!o.raw) {
-              centre = [0, 0, 0];
+            /* Nasvietenie závisí od farby, normály, materiálu, zatienenia a
+               smeru pohľadu. Prvé štyri sa počas otáčania nemenia, piaty je
+               jeden na snímok, a stovky plôch sa v tej kombinácii opakujú:
+               všetky vrchné plochy lamiel majú jednu farbu aj jednu normálu.
+               Kľúč farby, normály a materiálu sa skladá raz pri stavbe
+               geometrie a drží sa pri ploche; zatienenie sa k nemu pridá až
+               pri čítaní, zaokrúhlené na šesťdesiatštvrtiny, aby susedné
+               plochy padli do toho istého riadku a tabuľka si prácu naozaj
+               ušetrila. Žije jeden snímok, tak sa nemá ako rozísť s pohľadom. */
+            let lit, ao = 1;
+            if (o.raw) lit = fill;
+            else {
+              const centre = [0, 0, 0];
               for (const v of pts) { centre[0] += v[0]; centre[1] += v[1]; centre[2] += v[2]; }
               centre[0] /= pts.length; centre[1] /= pts.length; centre[2] /= pts.length;
+              ao = Math.round(aoAt(centre, normal) * 64) / 64;
+              if (o.__sk === undefined) o.__sk = fill + '|' + normal.join(',') + '|' + (o.material || '');
+              const key = o.__sk + '|' + ao;
+              let base = litCache.get(key);
+              if (base === undefined) { base = litFill(fill, normal, o.material, ao); litCache.set(key, base); }
+              lit = haze(base, depthAvg);
             }
-            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material, centre), depthAvg);
-            /* One tone per face is enough for a post, but not for the soffit:
-               it is a single large panel whose occlusion runs from bright at
-               the eaves to dark well inside, and a flat fill turned it into a
-               grey slab. Where occlusion actually varies across a face, the
-               corners are shaded separately and the rasteriser interpolates,
-               which costs nothing on the small members that do not vary. */
-            let vertexFills = o.vertexNormals
-              ? o.vertexNormals.map((n) => haze(litFill(fill, n, o.material, centre), depthAvg))
-              : null;
-            if (!vertexFills && !o.raw) {
-              let lo = 1, hi = 0;
-              for (const v of pts) { const a = aoAt(v, normal); if (a < lo) lo = a; if (a > hi) hi = a; }
-              if (hi - lo > 0.02)
-                vertexFills = pts.map((v) => haze(litFill(fill, normal, o.material, v), depthAvg));
+            /* Jedna farba na plochu stačí na stĺp, nie na podhľad: je to jeden
+               veľký panel, ktorého zatienenie ide od svetlého okraja po tmavý
+               stred, a plochá výplň z neho robila sivú dosku. Kde sa zatienenie
+               po ploche naozaj mení, nasvietia sa rohy zvlášť a rasterizér
+               medzi nimi interpoluje; na malých dieloch sa nemení nič. */
+            let vertexFills = null;
+            if (!o.raw) {
+              if (o.vertexNormals) {
+                vertexFills = o.vertexNormals.map((n) => haze(litFill(fill, n, o.material, ao), depthAvg));
+              } else {
+                let lo = 1, hi = 0;
+                for (const v of pts) { const a = aoAt(v, normal); if (a < lo) lo = a; if (a > hi) hi = a; }
+                if (hi - lo > 0.02)
+                  vertexFills = pts.map((v) => haze(litFill(fill, normal, o.material, aoAt(v, normal)), depthAvg));
+              }
             }
             if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
               const tint=toRGB(fill);
@@ -2702,7 +2851,9 @@
           const LED_TINT = {
             warm:    { core: 'rgba(255,247,229,.98)', spill: '255,206,138' },
             neutral: { core: 'rgba(250,252,255,.98)', spill: '221,234,255' },
-            rgb:     { core: 'rgba(240,246,255,.98)', spill: '146,182,255' }
+            /* RGBW sa na pohľad nesmie rovnať neutrálnej: jadro ide do modra
+               rovnako ako jeho rozptyl, inak sú dve z troch volieb tá istá. */
+            rgb:     { core: 'rgba(214,230,255,.98)', spill: '146,182,255' }
           };
           const ledRect = (x0, x1, y0, y1, z, tint) => {
             const c = LED_TINT[tint] || LED_TINT.warm;
@@ -2714,6 +2865,16 @@
                [x0 - (alongX ? 0 : m), y1 + (alongX ? m : 0), z - drop]],
               fill, { normal: [0,0,-1], cull: true, edge: false, raw: true, bias: bias });
             const n = Math.min(x1 - x0, y1 - y0);
+            /* Rozliate svetlo. Poznámka nad tabuľkou ho sľubuje a odtieň naň
+               má pripravený, ale nakreslené nikdy nebolo: z pásu ostal holý
+               svetlý obdĺžnik. A keďže farba svetla je v rozptyle a nie
+               v jadre, líšili sa tri ponúkané odtiene len odtieňom bielej —
+               teda na pohľad vôbec. Tri prstence sa rozširujú a slabnú;
+               rozširujú sa iba naprieč, takže dvojmetrový pás nerozkvitne do
+               dvojmetrovej kaluže. */
+            put(n * 5.0, `rgba(${c.spill},.13)`, 384, 0.15);
+            put(n * 2.6, `rgba(${c.spill},.22)`, 388, 0.25);
+            put(n * 1.1, `rgba(${c.spill},.34)`, 392, 0.35);
             put(2, '#35393b', 396, 0.5);
             put(0, c.core.replace('.98', '1'), 400, 1.2);
           };
@@ -4501,46 +4662,69 @@
             if (maOdkvap()) {
               const refs = window.KV_DRAIN_REFERENCE;
               if (!refs) throw new Error('Missing original Koverta drainage geometry');
-              const four = postLayout().n === 2;
-              const ref = refs[four ? 'four' : 'six'];
               const rows = postXs(), row = rows.length - 1;
               const section = kvStlpRez(row, rows.length);
               const postX = rows[row], postFace = postX + section.d;
               const inset = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               /* Priemer zvodu. Majiteľ pôvodne žiadal 93 % šírky stĺpa; po
                  zhliadnutí záberov to zrušil — rúra takej hrúbky je na pohľad
-                 rovnako široká ako stĺp. Vraciame sa na priemer obnovenej
-                 pôvodnej siete Expivi, teda 80 mm. Na 150 mm stĺpe je to 53 %
-                 jeho šírky, takže zvod je zreteľne užší. */
-              /* 80 mm je priemer obnovenej pôvodnej siete a platí na rodine so
-                 150 mm stĺpom. Novšia rodina má stĺp 100 mm a na ňom by tá istá
-                 rúra bola opäť takmer taká široká ako stĺp, presne to majiteľ
-                 vytkol. Priemer preto sleduje stĺp a zdrojových 80 mm je strop. */
-              const PIPE_MM = Math.max(50, Math.min(80, section.w * 0.6));
+                 rovnako široká ako stĺp. Platí priemer obnovenej pôvodnej
+                 siete Expivi, teda 80 mm.
+                 Priemer bol chvíľu naviazaný na stĺp (0,6 × jeho šírka), aby
+                 na užšom 100 mm stĺpe nevyzeral rovnako široko. Tým ale zvod
+                 menil hrúbku podľa rozmeru prístreška: rovnaká rodina mala pri
+                 6200 mm rúru 60 mm a pri 7000 mm 80 mm, a záhradné prístrešky
+                 so 150 mm stĺpom nesedeli s autoprístreškami. Zvod je jeden
+                 výrobok a má jeden priemer — majiteľ to tak aj žiada. Ostáva
+                 teda pevných 80 mm; aj na 100 mm stĺpe je to stále užšie ako
+                 stĺp a ďaleko od 93 %, ktoré vytkol. */
+              const PIPE_MM = 80;
               const radius = PIPE_MM / 2, standoff = 17;
               const pipeX = postFace + radius + standoff, pipeY = inset + section.w / 2;
-              const sourcePipeX = four ? 4973 : 5916;
               const gutterShift = L - 6000;
+              /* Ktorú z dvoch odmeraných sietí použiť. Rozhoduje to jediné, čo
+                 rozlišuje ich tvar: ako ďaleko je rúra od výpuste žľabu.
+                 „six“ má rúru priamo pod výpusťou a ide rovno dole, „four“ ju
+                 má 943 mm vo vnútri a šikmým úsekom sa k nej vracia.
+                 Voľba visela na počte stĺpov (postLayout().n === 2), čo je iná
+                 otázka. Záhradné prístrešky majú stĺpy vždy na kraji, teda dva
+                 v rade a rúru 20 mm od výpuste — dostávali však „four“ a jeho
+                 943 mm šikmina sa stlačila na dvadsať milimetrov. To je tá
+                 deformácia. Berie sa sieť, ktorej vlastné odsadenie je bližšie
+                 k skutočnému; rozdiel potom pohltí prázdny pás medzi rúrou
+                 a žľabom, na čo je dosť krátky. */
+              const outletX = L - 84;
+              const odsadenie = pipeX - outletX;
+              const four = Math.abs(odsadenie + 943) < Math.abs(odsadenie);
+              const ref = refs[four ? 'four' : 'six'];
+              const sourcePipeX = four ? 4973 : 5916;
               const pipeShift = pipeX - sourcePipeX;
-              const mapPoint = (p, index) => {
-                // Preserve the circular straight leg and gutter cross section;
-                // adapt only the intervening run to the active post station.
-                const transition = four ? Math.max(0,Math.min(1,(p[0]-sourcePipeX-50)/(5916-sourcePipeX-100)))
-                  : Math.max(0,Math.min(1,(p[2]-2400)/143.5));
+              /* Zvod sa posúva k aktívnemu stĺpu, žľab k aktívnej odkvapovej
+                 hrane, a tie dva posuny sa nerovnajú. Rozdiel musí pohltiť
+                 prechod medzi nimi — nikdy nie samotná rúra ani žľab, inak sa
+                 koleno na päte roztiahne alebo stlačí a zakončenie prestane
+                 vyzerať ako na autoprístreškoch. Rampa preto leží celá
+                 v prázdnom páse medzi koncom kolmej rúry a žľabom: v sieti
+                 „four“ medzi x 5150 a 5800 (rúra končí na 5077, výtok začína
+                 na 5800), v sieti „six“ medzi z 1500 a 2400 (rúra končí na
+                 1360, žľab začína na 2500). Rúra aj žľab tak ostávajú tuhé
+                 a majú na oboch rodinách presne rovnaký prierez aj koleno. */
+              const GAP = four ? { at: (p) => p[0], from: 5150, to: 5800 }
+                : { at: (p) => p[2], from: 1500, to: 2400 };
+              const mapPoint = (p) => {
+                const transition = Math.max(0, Math.min(1, (GAP.at(p) - GAP.from) / (GAP.to - GAP.from)));
                 const dx = pipeShift + (gutterShift-pipeShift)*transition;
                 const near = pipeY - 55;
                 const wy = p[1] <= 150 ? p[1]+near : p[1] >= 6850 ? p[1]+W-7000
                   : p[1]+near+(W-7000-near)*(p[1]-150)/6700;
                 const z = p[2] < 200 ? p[2] : p[2] > 2300 ? p[2]+H-2398
                   : p[2]+(H-2398)*(p[2]-200)/2100;
-                /* Zvod musí mať jeden priemer po celej dĺžke. Pôvodne sa
-                   prírastok nad 80 mm rozpúšťal na 83,5 mm pod žľabom, takže
-                   rúra menila hrúbku. Teraz sa mení jedinou hranou v rovine
-                   dna žľabu — tá je celá v kapse za lemovaním — a celý
-                   odkrytý úsek má rovnaký prierez. */
-                const radial = p[2] < 2543.5 ? (radius - 40) : 0;
-                const n = ref.normals[index];
-                return [p[0]+dx+n[0]*radial,wy+n[1]*radial,z+n[2]*radial];
+                /* Priemer sa už nemení, takže rúra ide do scény presne
+                   v prierezoch pôvodnej siete. Predtým sa rozdiel rozpúšťal
+                   posunom po normále, čo pätu rúry namiesto zúženia rozšírilo
+                   — normály sú tam otočené dnu a 60 mm rúra mala pri dlažbe
+                   98 mm koleno. Tá oprava už netreba. */
+                return [p[0]+dx, wy, z];
               };
               const vertices = ref.vertices.map(mapPoint);
               ref.triangles.forEach(tri => {
@@ -4587,7 +4771,23 @@
                 }
                 clamps.push({z,bridgeX0:postFace-2,bridgeX1:postFace+standoff+2,postFaceX:postFace,pipeNearX:pipeX-radius});
               });
-              kvAccessoryGeometry.downpipe={enabled:true,source:ref.source,radius,pipeCenter:[pipeX,pipeY],standoff,
+              /* Zakončenie rúry pri dlažbe. Meria sa z hotových bodov a hlási
+                 sa v súradniciach rúry, aby sa dalo overiť, že autoprístrešky
+                 aj záhradné prístrešky končia rovnako — to je jediný spôsob,
+                 ako to porovnať naprieč rodinami, kde rúra stojí inde. */
+              const pata = vertices.filter((q) => q[2] < 260);
+              const terminal = pata.length ? {
+                zMax: Math.round(Math.max(...pata.map((q) => q[2]))),
+                dxMin: Math.round(Math.min(...pata.map((q) => q[0])) - pipeX),
+                dxMax: Math.round(Math.max(...pata.map((q) => q[0])) - pipeX),
+                dyMin: Math.round(Math.min(...pata.map((q) => q[1])) - pipeY),
+                dyMax: Math.round(Math.max(...pata.map((q) => q[1])) - pipeY)
+              } : null;
+              kvAccessoryGeometry.downpipe={enabled:true,source:ref.source,radius,pipeCenter:[pipeX,pipeY],standoff,terminal,
+                /* Ako ďaleko je rúra od výpuste a ako ďaleko je v zvolenej
+                   sieti. Čím väčší rozdiel, tým viac sa sieť naťahuje; keď
+                   sa vyberie tá nesprávna, jej šikmina sa zdeformuje. */
+                outletOffset:Math.round(odsadenie), sourceOffset: four ? -943 : 0,
                 post:{x0:postX,x1:postFace,y0:inset,y1:inset+section.w},clamps,
                 vertexCount:vertices.length,triangleCount:ref.triangles.length,
                 pathBounds:{xMin:Math.min(...vertices.map(p=>p[0])),xMax:Math.max(...vertices.map(p=>p[0])),
@@ -4656,18 +4856,25 @@
             /* Secondary members are true catalogue rectangles. Integrated F
                members stay horizontal while the panel plane changes height
                across their span; SL keeps the established stepped geometry. */
-            const glass = model().glazed === true;
+            const skin = roofSkin();
+            /* Zelená strecha nie je presklenie: hore je vegetácia, dole
+               hliníkový plech. Sklo ostáva východiskom, lebo je v cenníku
+               prvé (MODEL 1). */
+            const green = !!skin && skin.id === 'green';
+            const glass = model().glazed === true && !green;
             /* Soltec kryje strechu ISO panelom — hladká doska. Koverta má
                trapézový profil, ktorý je zdola vlnitý. */
-            const trapez = model().roofSheet === 'trapez' && !glass;
+            const trapez = model().roofSheet === 'trapez' && !glass && !green;
             const roofFinish = ROOF_FINISHES[state.roofFinish] || ROOF_FINISHES[0];
             const sMax = loadKg() >= 240 ? 300 : (loadKg() >= 160 ? 600 : 1200);
             const bays = Math.max(3, Math.min(28, Math.ceil((inX1 - inX0) / sMax)));
             const step = (inX1 - inX0) / bays;
-            const skinTop = glass ? 'rgba(203,222,231,.46)' : roofFinish.topHex;
-            const skinLow = glass ? 'rgba(219,233,239,.34)' : roofFinish.bottomHex;
-            const seamTop = glass ? shade(frame, 0.12) : shade(roofFinish.topHex, -0.24);
-            const seamLow = glass ? shade(frame, 0.24) : shade(roofFinish.bottomHex, -0.18);
+            const skinTop = green ? skin.topHex : glass ? 'rgba(203,222,231,.46)' : roofFinish.topHex;
+            const skinLow = green ? skin.bottomHex : glass ? 'rgba(219,233,239,.34)' : roofFinish.bottomHex;
+            /* Vegetácia je súvislá plocha, nie tabule — škáry sa na nej nekreslia
+               ako pri paneloch, len sa zľahka odtieňujú, aby plocha nebola plochá. */
+            const seamTop = green ? shade(skin.topHex, -0.08) : glass ? shade(frame, 0.12) : shade(roofFinish.topHex, -0.24);
+            const seamLow = green ? shade(skin.bottomHex, -0.12) : glass ? shade(frame, 0.24) : shade(roofFinish.bottomHex, -0.18);
             /* seams follow the panels where the model is built from them, and
                fall back to the bay division where it is not */
             const widths = roofPanels();
@@ -4766,12 +4973,17 @@
               : (integratedFall
                 ? beamRuns.slice(0, -1).map((run, i) => [run.b + 2, beamRuns[i + 1].a - 2]).filter((c) => c[1] - c[0] > 8)
                 : cuts);
-            const edgeHex = glass ? shade(frame, 0.10) : shade(roofFinish.bottomHex, -0.16);
-            panelCuts.forEach((c) => {
+            const edgeHex = green ? shade(skin.bottomHex, -0.16)
+              : glass ? shade(frame, 0.10) : shade(roofFinish.bottomHex, -0.16);
+            panelCuts.forEach((c, ci) => {
               const a = c[0], b = c[1];
               const pane = glass ? { raw: true, bias: ON_SKIN } : { bias: integratedFall ? -20 : -600 };
+              /* Zeleň nie je náter: jeden odtieň cez celú strechu z nej spraví
+                 biliardové súkno. Systém sa kladie po pásoch, tak sa pás od pásu
+                 zľahka odlišuje — toľko, aby plocha žila, nie aby sa pruhovala. */
+              const topHex = green ? shade(skinTop, ((ci % 3) - 1) * 0.05) : skinTop;
               quad([[a, inY0, panelTopZ(a, inY0)], [b, inY0, panelTopZ(b, inY0)],
-                    [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], skinTop,
+                    [b, inY1, panelTopZ(b, inY1)], [a, inY1, panelTopZ(a, inY1)]], topHex,
                    Object.assign({ cull: true, edgeHex: seamTop }, pane));
               quad([[a, inY1, panelBottomZ(a, inY1)], [b, inY1, panelBottomZ(b, inY1)],
                     [b, inY0, panelBottomZ(b, inY0)], [a, inY0, panelBottomZ(a, inY0)]], skinLow,
@@ -4884,8 +5096,26 @@
                v rovine skákalo 677 pixelov hore-dolu, o 0,8 mm nižšie ani
                jeden. Osem desatín milimetra je menej než hrúbka náteru a na
                2,5 m vysokom modeli to nikto neuvidí; rám ale vyhráva vždy. */
-            const mid = bz + beam / 2; // fixed pivot datum; closed top sits just under the frame
             const t = blade.t;                     // blade thickness, along its own normal
+            /* Lamela sa drží tak vysoko v ráme, ako jej dovolí jej vlastný
+               rozkyv. Zatvorená je preto zarovno s rámom, otvorená sa stiahne
+               dovnútra a zhora ostane vidieť celý profil.
+
+               Jedna pevná os to nedokáže ani jedno, ani druhé. Keby sedela
+               hore, otvorená lamela by z rámu vyčnievala a prekrývala ho -
+               tak to vyzeralo predtým. Keby sedela v strede, zatvorená strecha
+               by bola o pol rámu ponorená - tak to vyzeralo potom. Lamela má
+               pritom v každom uhle inú výšku: naplocho je vysoká hrúbku,
+               natočená (šírka · sínus). Stred sa preto posadí presne o polovicu
+               tej výšky pod hornú hranu rámu a drží sa jej po celý rozsah.
+
+               Tých 0,8 mm pod hranou je odstup, ktorý zabráni tancujúcemu
+               obrysu: v presne rovnakej výške má hĺbková pamäť na výber a pri
+               každom pootočení kamery vyberie inú plochu. Merané deviatimi
+               krokmi po 0,0008 rad: v rovine skákalo 677 pixelov, o 0,8 mm
+               nižšie ani jeden. Je to menej než hrúbka náteru. */
+            const halfSwing = fullHalf * Math.abs(bladeUz) + (t / 2) * Math.abs(bladeUx);
+            const mid = bz + beam - halfSwing - 0.8;
             const ox = t * bladeUz, oz = -t * bladeUx;
             /* Which blades carry a strip, and how long each one is. The strip is
                recessed into the underside of the blade, so it is only ever seen
@@ -4997,6 +5227,9 @@
                   [cx + gap * bladeUz - bladeUx * w, yc - hy, cz - gap * bladeUx - bladeUz * w], [cx + gap * bladeUz + bladeUx * w, yc - hy, cz - gap * bladeUx + bladeUz * w],
                   [cx + gap * bladeUz + bladeUx * w, yc + hy, cz - gap * bladeUx + bladeUz * w], [cx + gap * bladeUz - bladeUx * w, yc + hy, cz - gap * bladeUx - bladeUz * w]
                 ], fill, { normal: [bladeUz, 0, -bladeUx], cull: true, edge: false, raw: true, bias: bias });
+                /* To isté na lamele: bez rozptylu svietil pás ako nálepka. */
+                strip(62, `rgba(${ledCol.spill},.13)`, 386, 0.2);
+                strip(32, `rgba(${ledCol.spill},.24)`, 391, 0.45);
                 strip(11, '#35393b', 396);
                 strip(8, ledCol.core.replace('.98', '1'), 400, 0.7);
               }
@@ -5163,6 +5396,32 @@
 
         /* ------------------------------------------------------------ panel */
         const q = (sel) => cfgRoot.querySelector(sel);
+        /* Čo model stojí pri rozmere, ktorý si zákazník práve nastavil, a či
+           ten rozmer vôbec dosiahne. Cenník nie je obdĺžnik: najdlhšie dĺžky
+           má F170 publikované len pre užšie šírky, takže „dosiahne" znamená,
+           že bunka v tabuľke existuje, nie že sa rozmer zmestí do maxima. */
+        const modelReach = (key) => {
+          const m = BIO.models[key];
+          const w = widthMM(), l = lengthMM();
+          const zoznamL = m.lengths || [];
+          const zoznamW = m.widths || null;
+          const doL = zoznamL.length ? zoznamL[zoznamL.length - 1] : 0;
+          const doW = zoznamW && zoznamW.length ? zoznamW[zoznamW.length - 1] : (m.width || 0);
+          if (l > doL + 0.5 || w > doW + 0.5) return { ok: false, doW, doL };
+          const li = dimensionBandIndex(zoznamL, l);
+          const cap = Array.isArray(m.maxWidthAt) ? m.maxWidthAt[li] : null;
+          if (cap && w > cap + 0.5) return { ok: false, doW: cap, doL };
+          const wi = zoznamW ? dimensionBandIndex(zoznamW, w) : 0;
+          const zat = m.loads || m.gridLoads;
+          const zi = zat ? Math.max(0, Math.min(state.load, zat.length - 1)) : 0;
+          let cena = null;
+          try {
+            cena = m.loads
+              ? m.prices[String(m.loads[zi])][li]
+              : (m.gridLoads ? m.prices[String(m.gridLoads[zi])][li][wi] : m.prices[li][wi]);
+          } catch (e) { cena = null; }
+          return { ok: true, doW, doL, cena: Number.isFinite(cena) ? cena : null };
+        };
         const buildModels = () => {
           const host = q('[data-sp-models]');
           /* Pri jedinom modeli krok s výberom modelu na stránke nie je. */
@@ -5170,11 +5429,21 @@
           host.textContent = '';
           BIO.order.forEach((key) => {
             const m = BIO.models[key];
+            const r = modelReach(key);
             const b = document.createElement('button');
             b.type = 'button';
             b.dataset.spModel = key;
             b.setAttribute('aria-pressed', String(key === state.model));
-            b.innerHTML = `<strong>${m.label}</strong><small>${m.blurb}</small>`;
+            /* Model, ktorý zvolený rozmer nedosiahne, sa neponúka ako rovnocenná
+               možnosť. Nie je zakázaný — dá sa naň prepnúť a rozmer sa stiahne —
+               ale musí byť vidieť, že to rozmer zmenší, inak si ho zákazník
+               vyberie ako lacnejší a nevšimne si, že dostal menší prístrešok. */
+            b.classList.toggle('is-short', !r.ok);
+            const cena = r.ok && r.cena != null
+              ? `${money.format(r.cena)} €`
+              : r.ok ? 'cena na dopyt' : `max ${money.format(r.doW)} × ${money.format(r.doL)} mm`;
+            b.innerHTML = `<strong>${m.label}</strong><small>${m.blurb}</small>`
+              + `<span class="sp-modelgrid__cena">${cena}</span>`;
             host.appendChild(b);
           });
         };
@@ -5303,6 +5572,134 @@
           });
         };
 
+        /* Posun rozmeru po jednej katalógovej zastávke.
+           Posuvník sa na telefóne trafí ťažko: na 304 px širokom páse je jeden
+           pixel pätnásť milimetrov a zastávok je osemnásť, takže sa prstom
+           preskakuje cez dve naraz a späť. Vedľa neho preto stoja dve tlačidlá,
+           ktoré posunú presne o jednu zastávku. Kto chce konkrétne číslo,
+           napíše ho do políčka pri výpise — to už na stránke je. */
+        const nudge = (kind, dir) => {
+          const m = model();
+          if (kind === 'h') {
+            const el = q('[data-sp-h]');
+            if (!el) return;
+            const krok = 100;
+            const lo = Number(el.min) || 2000, hi = Number(el.max) || 2800;
+            state.height = Math.max(lo, Math.min(hi,
+              Math.round((state.height + dir * krok) / krok) * krok));
+          } else {
+            const list = kind === 'w' ? m.widths : m.lengths;
+            if (!list || !list.length) return;
+            const now = kind === 'w' ? widthMM() : lengthMM();
+            /* Prvá zastávka, ktorá nie je pred nami. Keď na nej práve stojíme,
+               ide sa o jednu ďalej — inak by tlačidlo nerobilo nič. */
+            let i = list.findIndex((v) => v >= now - 0.5);
+            if (i < 0) i = list.length - 1;
+            if (dir > 0) i = Math.min(list.length - 1, list[i] > now + 0.5 ? i : i + 1);
+            else i = Math.max(0, list[i] < now - 0.5 ? i : i - 1);
+            const val = list[i];
+            if (kind === 'w') { state.widthValue = val; state.width = dimensionBandIndex(list, val); }
+            else { state.lengthValue = val; state.length = dimensionBandIndex(list, val); }
+          }
+          clampToModel();
+          scheduleRender();
+        };
+        const KROKY = { w: ['Šírka', 'šírku'], l: ['Dĺžka', 'dĺžku'], h: ['Výška', 'výšku'] };
+        const buildNudgers = () => {
+          ['w', 'l', 'h'].forEach((kind) => {
+            const slider = cfgRoot.querySelector(`[data-sp-${kind}]`);
+            if (!slider || slider.dataset.spNudge === '1') return;
+            const host = slider.parentNode;
+            if (!host) return;
+            slider.dataset.spNudge = '1';
+            const rad = document.createElement('div');
+            rad.className = 'sp-nudge';
+            const btn = (dir, znak, popis) => {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.className = 'sp-nudge__btn';
+              b.dataset.spNudge = kind;
+              b.dataset.spNudgeDir = String(dir);
+              b.setAttribute('aria-label', `${popis} ${KROKY[kind][1]} o jeden katalógový rozmer`);
+              b.textContent = znak;
+              return b;
+            };
+            host.insertBefore(rad, slider);
+            rad.appendChild(btn(-1, '−', 'Zmenšiť'));
+            rad.appendChild(slider);
+            rad.appendChild(btn(1, '+', 'Zväčšiť'));
+          });
+        };
+
+        /* Krytina strechy G. Cenník jej cenu neuvádza, tak voľba mení model
+           a text dopytu, nie sumu — a povie to rovno, aby zákazník nečakal,
+           že je krytina v cene. */
+        const buildRoofSkins = () => {
+          let wrap = cfgRoot.querySelector('[data-sp-roof-skin-wrap]');
+          let host = cfgRoot.querySelector('[data-sp-roof-skins]');
+          if (!wrap || !host) {
+            const after = cfgRoot.querySelector('[data-sp-roof-colors-wrap]')
+              || cfgRoot.querySelector('[data-sp-frame-colors]');
+            if (!after) return;
+            wrap = document.createElement('div');
+            wrap.className = 'sp-roof-finish';
+            wrap.dataset.spRoofSkinWrap = '';
+            wrap.hidden = true;
+            wrap.innerHTML = '<div class="sp-step__label"><b>Krytina strechy</b><span class="sp-step__val" data-sp-roof-skin-val></span></div>'
+              + '<div class="sp-roofcolors" role="group" aria-label="Krytina strechy" data-sp-roof-skins></div>'
+              + '<p class="sp-side-note" data-sp-roof-skin-note></p>';
+            after.after(wrap);
+            host = wrap.querySelector('[data-sp-roof-skins]');
+          }
+          if (!wrap || !host) return;
+          /* Panelová strecha má krytinu vždy — buď na výber (G), alebo danú
+             (F s ISO panelom). Lamelová a trapézová strecha krytinu nevolí. */
+          const volitelna = model().glazed === true;
+          const available = model().roof === 'panel' && model().roofKit !== 'koverta';
+          wrap.hidden = !available;
+          if (!available) { host.textContent = ''; return; }
+          if (!volitelna) {
+            const f = ROOF_FIXED;
+            const value = wrap.querySelector('[data-sp-roof-skin-val]');
+            if (value) value.textContent = f.label;
+            const note = wrap.querySelector('[data-sp-roof-skin-note]');
+            if (note) note.textContent = `${f.about} Tento model ju má napevno —`
+              + ' sklo a zelenú strechu nesie rada G. Vrch a spodok panela vyberiete vyššie.';
+            host.textContent = '';
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'sp-roofchip';
+            b.disabled = true;
+            b.setAttribute('aria-pressed', 'true');
+            b.innerHTML = '<span class="sp-roofchip__sample" aria-hidden="true">'
+              + '<i style="--sp-roof-top:#d7d5c8"></i><i style="--sp-roof-bottom:#a7aaa8"></i></span>'
+              + `<span><strong>${f.label}</strong><small>${f.sec}</small></span>`;
+            host.appendChild(b);
+            return;
+          }
+          const chosen = roofSkin();
+          const value = wrap.querySelector('[data-sp-roof-skin-val]');
+          if (value) value.textContent = chosen.label;
+          const note = wrap.querySelector('[data-sp-roof-skin-note]');
+          if (note) {
+            note.textContent = `${chosen.about} Nosný profil ${chosen.sec}, stupne zaťaženia`
+              + ` ${chosen.caps}. Krytinu cenník neuvádza sumou — Soltec ju oceňuje`
+              + ' individuálne pre každý projekt, preto nie je v cene vyššie.';
+          }
+          host.textContent = '';
+          ROOF_SKINS.forEach((sk, i) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sp-roofchip';
+            button.dataset.spRoofSkin = String(i);
+            button.setAttribute('aria-pressed', String(i === state.roofSkin));
+            button.setAttribute('aria-label', `Krytina strechy: ${sk.label}`);
+            button.innerHTML = `<span class="sp-roofchip__sample" aria-hidden="true"><i style="--sp-roof-top:${sk.chipTop}"></i><i style="--sp-roof-bottom:${sk.chipLow}"></i></span>`
+              + `<span><strong>${sk.label}</strong><small>profil ${sk.sec}</small></span>`;
+            host.appendChild(button);
+          });
+        };
+
         /* The movement control belongs to the side currently being edited.
            It used to be rebuilt inside priceLines() for all four sides, so the
            last side in that loop silently won. Keeping the renderer here also
@@ -5360,7 +5757,15 @@
           const side = state.activeSide;
           host.textContent = '';
           let lastGroup = '';
-          SIDE_OPTS.forEach((o) => {
+          /* Model si smie zoznam výplní zúžiť. Cenník ich neviaže na model —
+             kapitola o doplnkoch hovorí všeobecne o „stranách prístreška
+             alebo pergoly" — ale poznámky pri modeloch F vymenúvajú sklenené,
+             ALU a drevené panely a ZIP roletu, kým pri SL nič také nestojí.
+             Kým to výrobca nepotvrdí, neuberá sa nič; keď potvrdí, je to jedno
+             pole v dátach modelu a nie zásah do kódu. */
+          const povolene = Array.isArray(model().sideIds) ? model().sideIds : null;
+          SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
+            .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
               : SIDE_MOVES[o.id] ? 'Pohyblivé tienenie a panely' : 'Pevné výplne';
             if (group !== lastGroup) {
@@ -5900,7 +6305,19 @@
         const renderAll = () => {
           clampIdx();
           const m = model();
-          cfgRoot.querySelectorAll('[data-sp-model]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spModel === state.model)));
+          cfgRoot.querySelectorAll('[data-sp-model]').forEach((b) => {
+            b.setAttribute('aria-pressed', String(b.dataset.spModel === state.model));
+            /* Cena aj dosah sa prepisujú pri každom posune posuvníka — v tom
+               je celý zmysel poradia „najprv rozmer": pri modeli stojí číslo
+               pre rozmer, ktorý zákazník práve drží, nie pre nejaký iný. */
+            const cenaEl = b.querySelector('.sp-modelgrid__cena');
+            if (!cenaEl) return;
+            const r = modelReach(b.dataset.spModel);
+            b.classList.toggle('is-short', !r.ok);
+            cenaEl.textContent = r.ok && r.cena != null
+              ? `${money.format(r.cena)} €`
+              : r.ok ? 'cena na dopyt' : `max ${money.format(r.doW)} × ${money.format(r.doL)} mm`;
+          });
           cfgRoot.querySelectorAll('[data-sp-place]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spPlace === state.placement)));
           syncLouver();
           /* Pri jedinom modeli krok s jeho výberom neexistuje; popis dielov
@@ -5939,7 +6356,9 @@
           buildColors(q('[data-sp-frame-colors]'), state.frameColor, 'spFrameColor');
           const louverHost = q('[data-sp-louver-colors]');
           if (louverHost) buildColors(louverHost, state.louverColor, 'spLouverColor');
+          buildNudgers();
           buildRoofFinishes();
+          buildRoofSkins();
           buildLoads();
           syncCarPick();
           buildSideOpts();
@@ -6081,6 +6500,11 @@
             state.frameColor = BIO.colors[Number(t.dataset.spFrameColor)];
           } else if (t.dataset.spRoofFinish) {
             state.roofFinish = Math.max(0, Math.min(ROOF_FINISHES.length - 1, Number(t.dataset.spRoofFinish)));
+          } else if (t.dataset.spNudge && t.dataset.spNudgeDir) {
+            nudge(t.dataset.spNudge, Number(t.dataset.spNudgeDir));
+            return;
+          } else if (t.dataset.spRoofSkin) {
+            state.roofSkin = Math.max(0, Math.min(ROOF_SKINS.length - 1, Number(t.dataset.spRoofSkin)));
           } else if (t.dataset.spBoxColor) {
             state.boxColor = BIO.colors[Number(t.dataset.spBoxColor)];
           } else if (t.dataset.spLouverColor) {
@@ -6153,6 +6577,10 @@
                 : `Konštrukcia ${state.frameColor.name} (${state.frameColor.ral}), lamely ${state.louverColor.name} (${state.louverColor.ral}).`,
               model().roof === 'panel' && model().glazed !== true && model().roofKit !== 'koverta'
                 ? `Strešný ISO panel: vrch ${ROOF_FINISHES[state.roofFinish].top}, spodná strana ${ROOF_FINISHES[state.roofFinish].bottom}.` : '',
+              /* Krytina G nie je v cene, tak to dopyt musí povedať — inak by
+                 obchodník posielal ponuku, ktorú zákazník čítal ako úplnú. */
+              roofSkin()
+                ? `Krytina strechy: ${roofSkin().label.toLowerCase()} — ${roofSkin().about} Nosný profil ${roofSkin().sec}. Cenník ju neuvádza sumou, oceňuje sa individuálne pre každý projekt.` : '',
               /* Prístrešok Koverta sa neumiestňuje voľbou — krok s riešením
                  nemá, tak by veta tvrdila niečo, čo zákazník nevybral. */
               ONE_MODEL ? '' : `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ' — '}${placement().label}.`,
@@ -6309,7 +6737,11 @@
             state.widthValue = m.width;
           }
           let li = m.lengths.findIndex((l) => l >= 5000);
-          if (li < 0) li = Math.round((m.lengths.length - 1) * 0.6);
+          /* Keď model na päť metrov nedosiahne, otvára sa v spodnej polovici
+             zoznamu. Zaokrúhľovaním nahor padol dvojpoložkový zoznam
+             záhradného prístreška rovno na maximum a posuvník dĺžky sa už
+             nemal kam pohnúť. */
+          if (li < 0) li = Math.floor((m.lengths.length - 1) * 0.6);
           state.length = li;
           state.lengthValue = m.lengths[li];
           clampToModel();

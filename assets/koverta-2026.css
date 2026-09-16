@@ -7361,157 +7361,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* ==========================================================================
-   VRSTVA 50 · Lišta súhlasu s meraním
-   ==========================================================================
-   Sedí dole, nie cez celú obrazovku: rozhodnutie o meraní nemá byť brána,
-   cez ktorú sa treba prebiť k obsahu. Na telefóne stojí nad lepivým
-   tlačidlom ponuky, aby ho neprekryla. Tmavá plocha ju odlíši od stránky
-   a jasne povie, že je to systémová vec, nie ďalšia ponuka. */
-.kv-suhlas {
-  position: fixed;
-  z-index: 90;
-  left: clamp(10px, 2vw, 24px);
-  right: clamp(10px, 2vw, 24px);
-  bottom: clamp(10px, 2vw, 24px);
-  display: flex;
-  justify-content: flex-start;
-  pointer-events: none;
-}
-@media (max-width: 899px) {
-  .kv-suhlas { bottom: calc(var(--kv-dok, 0px) + 10px); }
-}
-.kv-suhlas__in {
-  width: min(560px, 100%);
-  padding: clamp(18px, 2vw, 24px);
-  border-radius: var(--k-r);
-  background: #171d20;
-  color: #fff;
-  box-shadow: 0 24px 60px rgba(18, 23, 26, 0.32);
-  pointer-events: auto;
-  transform: translate3d(0, 18px, 0);
-  opacity: 0;
-  transition: transform 320ms var(--k-ease-out), opacity 320ms var(--k-ease);
-}
-.kv-suhlas.je-vidno .kv-suhlas__in { transform: none; opacity: 1; }
-.kv-suhlas.je-siroka .kv-suhlas__in { width: min(620px, 100%); }
-@media (prefers-reduced-motion: reduce) {
-  .kv-suhlas__in { transition: none; transform: none; }
-}
-
-.kv-suhlas__text strong {
-  display: block;
-  margin-bottom: 7px;
-  font-family: var(--k-head);
-  font-size: 16.5px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-.kv-suhlas__text p {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.72);
-}
-.kv-suhlas__text a { color: var(--k-amber); text-underline-offset: 3px; }
-
-.kv-suhlas__volby {
-  display: grid;
-  gap: 2px;
-  margin-top: 16px;
-  max-height: min(46vh, 320px);
-  overflow-y: auto;
-}
-.kv-suhlas__volba {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  padding: 11px 12px;
-  border-radius: var(--k-r-sm);
-  cursor: pointer;
-}
-.kv-suhlas__volba:hover { background: rgba(255, 255, 255, 0.05); }
-.kv-suhlas__volba.je-pevna { cursor: default; opacity: 0.66; }
-.kv-suhlas__volba.je-pevna:hover { background: transparent; }
-.kv-suhlas__volba input {
-  width: 19px;
-  height: 19px;
-  margin-top: 2px;
-  accent-color: var(--k-amber);
-  cursor: inherit;
-}
-.kv-suhlas__volba span {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.62);
-}
-.kv-suhlas__volba span strong {
-  display: block;
-  margin-bottom: 2px;
-  font-family: var(--k-head);
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.kv-suhlas__akcie {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 9px;
-  margin-top: 17px;
-}
-.kv-suhlas__btn {
-  flex: 1 1 auto;
-  min-height: 46px;
-  padding: 0 20px;
-  border: 1px solid transparent;
-  border-radius: var(--k-r-pill);
-  font-family: var(--k-head);
-  font-size: 14.5px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  transition: background 200ms var(--k-ease), border-color 200ms var(--k-ease), color 200ms var(--k-ease);
-}
-.kv-suhlas__btn--ano { background: var(--k-amber); color: var(--k-ink); }
-.kv-suhlas__btn--ano:hover { background: #ffd452; }
-.kv-suhlas__btn--nie {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #fff;
-}
-.kv-suhlas__btn--nie:hover { border-color: #fff; background: rgba(255, 255, 255, 0.08); }
-.kv-suhlas__viac {
-  flex: 0 0 auto;
-  padding: 8px 4px;
-  border: 0;
-  background: none;
-  font-family: var(--k-body);
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.kv-suhlas__viac:hover { color: #fff; }
-.kv-suhlas__btn:focus-visible,
-.kv-suhlas__viac:focus-visible { outline: 2px solid var(--k-amber); outline-offset: 2px; }
-
-/* Odkaz v pätke vyzerá ako ostatné právne odkazy, len je to tlačidlo. */
-.kf__suhlas {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
-}
-.kf__suhlas:hover { text-decoration-color: currentColor; }
-
-/* ==========================================================================
    VRSTVA 51 · Ceny pri katalógových rozmeroch a vstup do konfigurátora
    ==========================================================================
    Čip rozmeru bol doteraz len rozmer. Cena je pritom prvé, čo o prístrešku
@@ -8123,13 +7972,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
     align-items: center;
     min-height: 36px;
   }
-  .kf__bottom a,
-  .kf__suhlas {
+  .kf__bottom a {
     display: inline-flex;
     align-items: center;
     min-height: 32px;
   }
-  .kv-suhlas__volba input,
   .kh-form__suhlas input {
     width: 22px;
     height: 22px;
@@ -8855,7 +8702,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
 /* --- Plný ---------------------------------------------------------------- */
 .k .k-btn--primary,
-.k .kv-suhlas__btn--ano,
 .k .kh-cat__actions > .k-link,
 .k .kh-dock .k-btn--primary {
   background: var(--k-amber);
@@ -8864,7 +8710,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
   box-shadow: none;
 }
 .k .k-btn--primary:hover,
-.k .kv-suhlas__btn--ano:hover,
 .k .kh-cat__actions > .k-link:hover {
   background: var(--k-amber);
   border-color: var(--k-ink);
@@ -8879,7 +8724,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-size__kus,
 .k .kh-rev__source,
 .k .kh-proc__step-of,
-.k .kv-suhlas__btn--nie,
 .k .kh-work__filters button:not([aria-pressed="true"]) {
   background: transparent;
   border: 1px solid var(--cip-ram, rgba(18, 23, 26, 0.18));
@@ -8903,7 +8747,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k-invert .k-btn--glass,
 .k-invert .kh-soltec__cfg,
 .kh-hero .k-btn--glass,
-.kv-suhlas .kv-suhlas__btn--nie,
 .kh-cta__aside .k-btn--line {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.34);
@@ -8912,7 +8755,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k-invert .k-btn--line:hover,
 .k-invert .k-btn--glass:hover,
 .kh-hero .k-btn--glass:hover,
-.kv-suhlas .kv-suhlas__btn--nie:hover,
 .kh-cta__aside .k-btn--line:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: #fff;
@@ -12168,7 +12010,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .k-btn--ink,
 .k .k-btn--line,
 .k .k-btn--glass,
-.k .kv-suhlas__btn--ano,
 .k .kh-cat__actions > .k-link,
 .k .kh-pick__lane .k-link,
 .k .kh-dock .k-btn--primary { box-shadow: none; }
@@ -12190,7 +12031,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
    tmavší obrys. */
 .k .k-btn--primary:hover,
 .kv-header .k-btn--primary:hover,
-.k .kv-suhlas__btn--ano:hover,
 .k .kh-cat__actions > .k-link:hover,
 .k .kh-cat__item:hover .kh-cat__actions > .k-link,
 .k .kh-pick__lane .k-link:hover,
@@ -15833,4 +15673,61 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .k .kh-hlava__intro { grid-template-columns:1fr; gap:12px; }
   body:not(.k-home) .k .kh-hero__chip { min-height:52px; font-size:9px; line-height:1.25; }
   body:not(.k-home) .k .kh-hero__chip strong { font-size:14px; }
+}
+
+/* ==========================================================================
+   ÚVODNÁ OBRAZOVKA NA TELEFÓNE
+   ==========================================================================
+   Na 393 px sa z úvodu stávala tlačenica: nadpis siahal takmer po pravý
+   okraj, závoj pod textom sa v druhej polovici vytrácal (je to 105° prechod
+   šitý na širokú obrazovku), tlačidlá sa zalomili na dva riadky rôznej
+   šírky a hodnotenie na Google skončilo na samej hrane obrazovky.
+   Nemení sa poradie ani obsah, len rytmus a miera. */
+@media (max-width: 759px) {
+  /* Nadpis vyplní riadok. Pri 9 vw a umelej miere 10,6 znaku siahal takmer
+     po pravý okraj; pri 7,8 vw zas ostávalo napravo 118 zo 353 pixelov
+     prázdnych a blok pôsobil odseknuto. Meria sa to na najdlhšom riadku:
+     "Prístrešky a pergoly" má pri 38,5 px 320 pixelov a do obsahovej šírky
+     393 px obrazovky sa zmestí s tridsiatimi voľnými. Miera sa nepredpisuje
+     — na úzkej obrazovke zalomí text šírka sama a lepšie. */
+  .k .kh-hero .k-display { font-size: clamp(30px, 9.8vw, 42px); line-height: 1.06; letter-spacing: -0.025em; }
+  /* Mieru stanovujú tri pravidlá s rastúcou špecificitou (10,6ch, 15,5ch,
+     15ch). Na telefóne ju nechceme žiadnu: na 393 px je 15ch presne 315
+     pixelov a nadpis sa pri nich zalomil na "Prístrešky" a "a pergoly",
+     hoci celé "Prístrešky a pergoly" sa do 353 px zmestí. */
+  .k .kh-hero h1,
+  .k .kh-hero .k-display { max-width: none; }
+
+  /* Závoj po zvislej osi, nie šikmý. Šikmý prechod je šitý na širokú
+     obrazovku: na úzkej sa v druhej polovici vytratí a text cez neho
+     preteká. Blok sa pritom naťahuje na celú výšku úvodu, takže rovnomerné
+     stmavenie by z neho spravilo veľký tmavý obdĺžnik cez celú fotku —
+     hustne preto až tam, kde text naozaj začína, a hore sa stráca. */
+  .k .kh-hero__box {
+    /* Cez celú šírku obrazovky. Kým závoj končil 20 px od okraja, bolo po
+       stranách vidieť jeho zvislú hranu ako tonálny schod cez fotografiu.
+       Text si odsadenie drží vlastnou výplňou, takže sa nikam neposunul. */
+    margin-inline: -20px;
+    padding: 20px;
+    border-radius: 0;
+    background: linear-gradient(to top,
+      rgba(9, 12, 14, 0.72) 0%,
+      rgba(9, 12, 14, 0.66) 52%,
+      rgba(9, 12, 14, 0.30) 72%,
+      rgba(9, 12, 14, 0) 88%);
+  }
+  .k .kh-hero__lead { font-size: 15px; line-height: 1.55; margin-top: 12px; }
+
+  /* Dve tlačidlá pod sebou a obe cez celú šírku. Zalomené do dvoch riadkov
+     rôznej šírky vyzerali ako nedokončená sadzba a druhé bolo na palec
+     zbytočne malý cieľ. */
+  .k .kh-hero__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .k .kh-hero__actions .k-btn { width: 100%; justify-content: center; }
+  .k .kh-hero__box > .kh-hero__actions { margin-bottom: 14px; }
+  .k .kh-hero__trust { margin-top: 0; }
 }

@@ -6,3 +6,6 @@ node_modules/
 # v konfigurator/test a coordination/koverta a workflowy ho nahrávajú ako
 # artefakt behu, nie ako obsah repozitára.
 qa-artifacts/
+
+# Bajtkód Pythonu z nástrojov v konfigurator/tools.
+__pycache__/

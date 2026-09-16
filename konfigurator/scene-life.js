@@ -9,12 +9,14 @@
      clearance maths, so they must be regenerated together with the meshes;
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
-    sedan: { file:'hyundai-sonata.bin.gz', bounds:[0,-1043,0,4855,1043,1516],
-      label:'Hyundai Sonata', short:'sedan' },
-    city: { file:'city-car.bin.gz', bounds:[0,-955,0,3540,955,1500],
-      label:'malé mestské auto', short:'mestské auto' },
+    sedan: { file:'bmw-g80-m3.bin.gz', bounds:[0,-1013,0,4794,1013,1462],
+      label:'BMW M3', short:'sedan' },
+    sport: { file:'porsche-911.bin.gz', bounds:[0,-1005,0,4519,1005,1285],
+      label:'Porsche 911', short:'športové' },
+    city: { file:'mini-cooper.bin.gz', bounds:[0,-1001,0,3876,1001,1474],
+      label:'Mini Cooper', short:'malé auto' },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
-    lounge: { file:'patio-lounge.bin.gz', bounds:[-1580,-1200,0,1580,1200,822] },
+    lounge: { file:'patio-sofaset.bin.gz', bounds:[0,-1315,0,4130,1315,1291] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
   };
   /* Obálka po otočení o štvrť otáčky okolo zvislej osi: (x,y) → (-y,x).
@@ -22,7 +24,7 @@
      v pravouhlom prístrešku pôsobil ako nedorozumenie. */
   const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
   function load(key) {
-    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260913-cars-1',base)).then(r => {
+    if (!assets.has(key)) assets.set(key, fetch(new URL(models[key].file+'?v=20260915-cars-6',base)).then(r => {
       if (!r.ok) throw Error('Model sa nepodarilo načítať.'); return r.arrayBuffer();
     }).then(async data => {
       const signature=new Uint8Array(data,0,Math.min(2,data.byteLength));
@@ -40,6 +42,27 @@
   let seedState=9307;
   const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
   for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
+  /* Laky auta. Podklad je zámerne tmavší, než by farba "mala" byť: shader
+     nad neho kladie číry lak, ostrý odlesk a odraz oblohy, a tie majú voči
+     čomu vyniknúť len na tmavšom podklade. Preto je aj metalíza v hodnote,
+     ktorá na papieri vyzerá tmavo — na aute vyjde presne.
+
+     Ponuka bola strieborná, grafitová a modrá, teda tri studené odtiene,
+     ktoré vedľa seba splývali. Pribudla červená, čierna a biela, aby si
+     zákazník našiel niečo blízke svojmu autu. Biela je teplá a jasná, takže
+     sa so striebornou nepletie. */
+  const PAINTS = {
+    graphite: { label: 'Grafitová',  rgb: [.19, .23, .26] },
+    blue:     { label: 'Modrá',      rgb: [.13, .27, .36] },
+    red:      { label: 'Červená',    rgb: [.40, .055, .065] },
+    black:    { label: 'Čierna',     rgb: [.075, .08, .09] },
+    silver:   { label: 'Strieborná', rgb: [.63, .67, .69] },
+    white:    { label: 'Biela',      rgb: [.80, .795, .78] }
+  };
+
+  /* Autá od najdlhšieho po najkratšie. Na otázku "zmestí sa mi sem auto"
+     odpovedá to najväčšie, ktoré sa tam zmestí, tak sa skúšajú v tomto poradí. */
+  const CARS = ['sedan', 'sport', 'city'];
   function plan(c, mode, count, allow, car) {
     if(allow && !allow(mode)) return {items:[],capacity:0,reason:''};
     const margin = Math.max(230,c.post+100), x0=c.boxDepth+margin, x1=c.L-margin;
@@ -50,63 +73,120 @@
          Sedan potrebuje 2,74 m šírky aj s rezervou pri stĺpoch a 5,46 m
          dĺžky — pri prednastavenom carporte sa nezmestilo nič a scéna
          hlásila, že tu auto nezaparkuje, hoci bežné mestské auto áno. */
-      const order=car==='sedan'?['sedan']:car==='city'?['city']:['sedan','city'];
+      const order=CARS.indexOf(car)>=0?[car]:CARS.slice();
+      /* Kto si vypýtal konkrétny počet, má ho dostať, ak sa vôbec dá. Väčšie
+         auto ide prvé — na otázku "zmestí sa mi sem auto" odpovedá ono —, ale
+         keď sa ich toľko nezmestí a menších áno, ukáže sa menšie. Predtým
+         rozhodovalo len to, či sa zmestí aspoň jedno, takže pri troch autách
+         ostali na scéne dve a prepínač vyzeral pokazene. */
+      const want=count==='auto'?0:Math.max(1,Number(count)||1);
+      let biggest=null,most=null;
       for(const key of order) {
         const got=parkCars(c,count,key,car==='auto');
-        if(got.capacity||key===order[order.length-1])return got;
+        if(want&&got.items.length>=want)return got;
+        if(!biggest&&got.capacity)biggest=got;
+        if(!most||got.items.length>most.items.length)most=got;
       }
+      /* Pri "podľa priestoru" rozhoduje veľkosť auta, pri konkrétnom počte ich
+         počet: kto si vypýtal tri, nemá dostať jedno len preto, že to jedno je
+         väčšie. */
+      return (want?(most||biggest):(biggest||most));
     }
     if(mode==='bistro') return seatPlan(c,count,margin,available,x0,x1,result);
     return {items:[],capacity:0,reason:''};
   }
   function parkCars(c,count,key,mix) {
-      const result=[];
       const bb=models[key].bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
+      if(c.H<carH+150) return {items:[],capacity:0,
+        reason:'Pod túto výšku sa auto nezmestí. Zvýšte prístrešok.'};
       /* Odstup od stĺpa. 350 mm je pohodlie — miesto na otvorenie dverí. Malé
          auto sa ale pod najužší prístrešok zmestí aj bez neho: pri 2,5 m
-         šírky ostane medzi stĺpmi 2,2 m svetla a mestské auto so zrkadlami
-         má 1,91 m. Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom
-         aute preto stačí konštrukčná medzera, a koľko ho naozaj ostane, sa
-         napíše pod náhľad. Sedan si pohodlný odstup drží. */
+         šírky ostane medzi stĺpmi 2,2 m svetla a Mini so zrkadlami má 2,0 m.
+         Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom aute preto
+         stačí konštrukčná medzera, a koľko ho naozaj ostane, sa napíše pod
+         náhľad. Sedan si pohodlný odstup drží. */
       const roomy=Math.max(350,c.post+200);
       const side=key==='city'?Math.max(140,c.post*0.9):roomy;
-      const rear=c.boxDepth+(c.boxDepth?750:300),front=c.L-300,gap=600;
-      const parkedX=(rear+front-carL)/2;
-      let intervals=[[side+carW/2,c.W-side-carW/2]];
-      if(front-rear<carL||c.H<carH+150)intervals=[];
-      for(const o of c.obstacles||[]) {
-        if(o[2]+80<parkedX||o[0]-80>parkedX+carL)continue;
-        const a=o[1]-80-carW/2,b=o[3]+80+carW/2,next=[];
-        for(const [lo,hi] of intervals){if(b<lo||a>hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
-        intervals=next;
-      }
-      intervals=intervals.filter(i=>i[1]>=i[0]);
-      const place=n=>{
-        const ys=[];let last=-Infinity;
-        for(const [lo,hi] of intervals)for(let y=Math.max(lo,last+carW+gap);y<=hi+.01&&ys.length<n;y+=carW+gap){ys.push(y);last=y;}
-        if(ys.length!==n)return [];
-        const shift=c.W/2-(ys[0]+ys[ys.length-1])/2;
-        if(ys.every(y=>intervals.some(([lo,hi])=>y+shift>=lo&&y+shift<=hi)))return ys.map(y=>y+shift);
-        return ys;
+      const gap=600;
+
+      /* Auto stojí v prístrešku jednou z dvoch polôh: dĺžkou po dĺžke stavby,
+         alebo dĺžkou naprieč jej šírkou. Pri veľkom carporte je správna tá
+         druhá — a vidno to na stĺpoch. Trojstĺpová varianta delí frontu na
+         nerovnaké polia práve preto, že do kratšieho poľa sa zaparkuje jedno
+         auto a do dlhšieho dve; keby autá stáli po dĺžke, tá nerovnosť by
+         nedávala zmysel. Skúsime obe polohy a necháme tú, do ktorej sa zmestí
+         viac áut; pri zhode ostáva pozdĺžna, lebo úzky prístrešok na jedno
+         auto je prejazd, nie front. */
+      const plan=(rot)=>{
+        /* Koľko auto zaberie po dĺžke stavby (x) a koľko po jej šírke (y). */
+        const along=rot?carW:carL, across=rot?carL:carW;
+        const depth=c.W-2*side;
+        const rows=Math.floor((depth+gap)/(across+gap));
+        if(rows<1) return null;
+        const rowSpan=rows*across+(rows-1)*gap;
+        const yStart=side+(depth-rowSpan)/2;
+        const ys=Array.from({length:rows},(_,i)=>yStart+i*(across+gap));
+        /* Box zaberá koniec dĺžky a pred ním treba miesto na dvere. */
+        const from=c.boxDepth+(c.boxDepth?750:300),to=c.L-300;
+        const bays=(y)=>{
+          let free=[[from,to]];
+          for(const o of c.obstacles||[]) {
+            /* Naprieč sa autom prechádza pomedzi stĺpy, takže každý stĺp delí
+               frontu bez ohľadu na to, kde v hĺbke stojí — a práve to robí
+               z nerovnakých polí trojstĺpovej varianty parkovací plán.
+               Pozdĺžne auto ide popri stĺpoch a prekáža mu len ten, ktorý
+               stojí v jeho pruhu. */
+            if(!rot&&(o[3]<y-80||o[1]>y+across+80)) continue;
+            const a=o[0]-side,b=o[2]+side,next=[];
+            for(const [lo,hi] of free){if(b<=lo||a>=hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
+            free=next;
+          }
+          return free.filter(([lo,hi])=>hi-lo>=along);
+        };
+        /* Miesta sa vyrábajú po poliach a v každom sa vycentrujú, aby autá
+           nestáli pri jednom stĺpe a pri druhom neostalo prázdno. */
+        const stalls=[];
+        for(const y of ys) for(const [lo,hi] of bays(y)) {
+          const n=Math.floor((hi-lo+gap)/(along+gap));
+          const span=n*along+(n-1)*gap,start=lo+((hi-lo)-span)/2;
+          for(let i=0;i<n;i++) stalls.push({x:start+i*(along+gap),y});
+        }
+        if(!stalls.length) return null;
+        return {rot,along,across,stalls,capacity:Math.min(3,stalls.length)};
       };
-      let capacity=0;for(let n=1;n<=3;n++)if(place(n).length===n)capacity=n;
-      const wanted=count==='auto'?capacity:Math.min(Number(count)||1,capacity);
-      const ys=place(wanted);
+      const varianty=[plan(0),plan(1)].filter(Boolean);
+      if(!varianty.length) return {items:[],capacity:0,
+        reason:'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
+      const best=varianty.reduce((a,b)=>b.capacity>a.capacity?b:a);
+
+      const wanted=count==='auto'?best.capacity:Math.min(Number(count)||1,best.capacity);
+      /* Miesta sa berú v poradí, v akom vznikli: pole po poli od predného.
+         Pri troch autách a poliach 1 + 2 z toho vyjde presne to, čo má
+         trojstĺpová varianta — jedno v kratšom poli, dve v dlhšom. */
+      const miesta=best.stalls.slice(0,wanted);
       /* Keď stoja pod prístreškom dve autá, nemajú to byť dve kópie toho
          istého: druhé miesto dostane druhý model, aby bolo z náhľadu vidieť
          obe ponúkané veľkosti. Platí to len pri automatickom výbere — kto si
          model zvolil sám, dostane ten, ktorý si zvolil. */
-      const other=key==='sedan'?'city':'sedan',ob=models[other].bounds;
-      const otherFits=mix&&ob[4]-ob[1]<=bb[4]-bb[1]&&ob[3]-ob[0]<=bb[3]-bb[0]&&ob[5]-ob[2]<=c.H-150;
-      ys.forEach((y,i)=>{
-        const k=otherFits&&i===1?other:key,kb=models[k].bounds;
-        result.push({key:k,x:(rear+front-(kb[3]-kb[0]))/2-kb[0],y,z:2,rotation:0});
+      const other=key==='city'?'sedan':'city',ob=models[other].bounds;
+      const otherFits=mix&&ob[4]-ob[1]<=carW&&ob[3]-ob[0]<=carL&&ob[5]-ob[2]<=c.H-150;
+      const result=miesta.map((m,i)=>{
+        const k=otherFits&&i===1?other:key;
+        const tb=turned(models[k].bounds,best.rot);
+        /* Kratší model sa v mieste vycentruje, aby nestál kapotou vpredu
+           a zadkom v prázdne. */
+        return {key:k,rotation:best.rot?Math.PI/2:0,z:2,
+          x:m.x+(best.along-(tb[3]-tb[0]))/2-tb[0],
+          y:m.y+(best.across-(tb[4]-tb[1]))/2-tb[1]};
       });
       const gapBeside=result.length?Math.round(Math.min(...result.map(i=>{
-        const kb=models[i.key].bounds;return Math.min(i.y+kb[1],c.W-(i.y+kb[4]));}))):null;
-      return {items:result,capacity,clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0,
-        beside:gapBeside,roomy:gapBeside!=null&&gapBeside>=roomy},
-        reason:capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
+        const tb=turned(models[i.key].bounds,best.rot);
+        return Math.min(i.y+tb[1],c.W-(i.y+tb[4]));}))):null;
+      return {items:result,capacity:best.capacity,
+        clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0,
+          beside:gapBeside,roomy:gapBeside!=null&&gapBeside>=roomy,
+          across:Boolean(best.rot)},
+        reason:best.capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
   }
   function seatPlan(c,count,margin,available,x0,x1,result) {
       /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
@@ -119,12 +199,27 @@
          lounge a bistro, pri prednastavenej šírke záhradnej pergoly (2,5 m)
          nezostalo nič lepšie než stolík pre dvoch — hoci pohovka s koberčekom
          sa medzi stĺpy pohodlne zmestí. */
+      /* Zostava sa smie postaviť aj otočená o štvrť otáčky a na dlhej terase
+         ich stojí viac než jedna. Jedna pohovka pod šesťmetrovým prístreškom
+         vyzerala ako zabudnutý kus nábytku uprostred prázdna. */
       for(const key of ['lounge','sofa']) {
         const lb=models[key].bounds;
-        if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+400) {
-          result.push({key,x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
-          return {items:result,capacity:1,reason:''};
-        }
+        const sedi=r=>{const t=turned(lb,r);
+          return available>=(t[3]-t[0])+500 && c.W-2*margin>=(t[4]-t[1])+400;};
+        const rot=sedi(0)?0:sedi(Math.PI/2)?Math.PI/2:null;
+        if(rot===null) continue;
+        /* 600 mm medzi dvomi zostavami je prechod, nie škára — pod šesť­
+           metrovým prístreškom sa tak zmestia dve a terasa prestane vyzerať
+           prázdna okolo jedného kusa nábytku. */
+        const odstup=600;
+        const tb=turned(lb,rot), krok=(tb[3]-tb[0])+odstup;
+        const kapacita=Math.max(1,Math.min(2,Math.floor((available+odstup)/krok)));
+        const kolko=count==='auto'?kapacita:Math.min(Number(count)||1,kapacita);
+        const stred=(x0+x1)/2-(tb[0]+tb[3])/2, y=c.W/2-(tb[1]+tb[4])/2;
+        for(let i=0;i<kolko;i++)
+          result.push({key,rotation:rot,z:2,y,
+            x:stred+(kolko===2?(i?krok/2:-krok/2):0)});
+        return {items:result,capacity:kapacita,reason:''};
       }
       /* Stolík so stoličkami sa zmestí pozdĺž aj naprieč. Užšia pergola ho
          vezme otočený o štvrť otáčky: pri prednastavenej šírke 2,5 m by inak
@@ -261,7 +356,12 @@
     } else if(c.louverZone) {
       /* Otvorená lamela vodu nezachytí — prší rovno pod strechu. Až ako sa
          zatvára, rozbehne sa po jej žliabku prúžok k rámu. */
-      const shut=(c.louverT||0)<.01?1:0,z=c.louverZone;
+      /* Poznámka vyššie sľubuje, že sa prúžok rozbehne "ako sa zatvára", ale
+         hodnota bola zapnuté/vypnuté a preskočila do jednotky až pod jedným
+         percentom. Pri lamele privretej na desatinu tak po nej netiekla ani
+         kvapka, hoci vodu už zachytáva. Ide to teraz plynulo: plný film na
+         zavretej streche a do tretiny otvorenia sa vytratí. */
+      const shut=1-clamp((c.louverT||0)/.34,0,1),z=c.louverZone;
       if(shut>.02) {
         const n=Math.max(1,Math.round((z.x1-z.x0)/Math.max(1,c.pitch)));
         for(let i=0;i<n;i++) {
@@ -372,7 +472,7 @@
        predvoľba podľa rodiny otvárala panel rovno na hlásení „nezmestí sa".
        Vybavenie je doplnok — zapne si ho návštevník. `family` ostáva v API,
        lebo o rodine rozhoduje, čo má zmysel ponúkať ako prvé. */
-    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'silver',car:'auto',intensity:'steady',family:String(family||'')};
+    const state={mode:'none',count:'1',weather:'sun',paused:matchMedia('(prefers-reduced-motion: reduce)').matches,flow:true,paint:'graphite',car:'auto',family:String(family||'')};
     /* Čo dáva zmysel pod ktorou konštrukciou. Pod prístrešok pre auto nepatrí
        sedačka a pod záhradnú pergolu auto — ponuka to preto ani neukáže. */
     const forCar=/^(carport|koverta)$/.test(state.family),forSeat=!forCar;
@@ -402,14 +502,14 @@
         <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
           <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
         <div class="sp-scene__row sp-scene__more" data-scene-countrow>
-        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="city">Malé auto</option></select>
+        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
-        <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
+        <select class="sp-scene__paint" aria-label="Lak auta">${Object.entries(PAINTS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
         <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
           <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
-        <div class="sp-scene__rain sp-scene__more" hidden><select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
+        <div class="sp-scene__rain sp-scene__more" hidden><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
-        <a class="sp-scene__credits sp-scene__more" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
+        <a class="sp-scene__credits sp-scene__more" href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
     /* Karta visí na spodnej hrane kresby, nie na spodku celej scény: dok má
        nulovú výšku a sedí presne tam, kde plátno končí, takže karta prekryje
@@ -485,10 +585,38 @@
     countSelect.addEventListener('change',()=>{state.count=countSelect.value;update();});
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
     carSelect.addEventListener('change',()=>{state.car=carSelect.value;update();});
-    panel.querySelector('[data-scene-intensity]').addEventListener('change',e=>{state.intensity=e.target.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
+    /* Predstih namiesto točiaceho kolieska.
+       Sieť auta sa doteraz sťahovala až po kliknutí na „Auto" — 0,6 s na
+       lokálnej sieti, 2,2 s pri 1,5 Mb/s, a presne to je čas, ktorý by
+       ukazovalo načítavanie. Ukazovateľ ten čas nezrýchli, len ho ozdobí.
+       Stiahne sa preto vopred, keď prehliadač nič nerobí: prvé kliknutie
+       potom nečaká. Berie sa jediný model, ten prednastavený, a iba tam, kde
+       to návštevník neplatí — pri zapnutom šetrení dát ani na pomalom
+       pripojení sa nesťahuje nič navyše. */
+    let predstih=false;
+    function prefetch(c) {
+      if(predstih||!c)return;
+      predstih=true;
+      const net=navigator.connection;
+      /* Šetrenie dát je výslovné prianie návštevníka a na 2G by sťahovanie
+         navyše ukradlo pásmo samotnej stránke. Inde sa predstih oplatí. */
+      if(net&&(net.saveData||/^(2g|slow-2g)$/i.test(net.effectiveType||'')))return;
+      const start=()=>{
+        /* Sťahuje sa presne to, čo by sa objavilo po kliknutí — nie prvé auto
+           zo zoznamu. Pod prednastavený carport sa zmestí mestské, nie sedan,
+           takže predstih na sedan by bol k ničomu. */
+        let kluce=[];
+        try{ kluce=plan(c,forCar?'car':'bistro',state.count,null,state.car).items.map(i=>i.key); }catch(e){}
+        for(const k of new Set(kluce))
+          if(!loaded.has(k)&&!loading.has(k))load(k).catch(()=>{});
+      };
+      if(window.requestIdleCallback)window.requestIdleCallback(start,{timeout:4000});
+      else window.setTimeout(start,1500);
+    }
     function prepare(c) {
       context=c;
+      prefetch(c);
       const pk=JSON.stringify([c.L,c.W,c.H,c.post,c.boxDepth,c.obstacles,state.mode,state.count,state.car]);
       if(pk!==planningKey){currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat),state.car);planningKey=pk;}
       /* Po strate a obnove WebGL kontextu hostiteľ znova kreslí hĺbkovo —
@@ -556,6 +684,11 @@
         vec2 turn(vec2 v){return vec2(v.x*spin.x-v.y*spin.y,v.x*spin.y+v.y*spin.x);}
         void main(){world=vec3(turn(p.xy),p.z)+offset;normal=vec3(turn(n.xy),n.z);
           color=c;kind=material;gl_Position=project(world);}`,
+        /* Lak (materiál 1) farbu z prepínača násobí činiteľom uloženým vo
+           vrchole, nie ju prepisuje. Pri jednofarebnej predlohe je činiteľ
+           všade jedna a nemení sa nič; pri aute, ktoré má karosériu
+           v textúre, si takto svetlá a tmavé miesta ponechá a lak sa aj tak
+           dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
         `precision highp float;varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
         uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
         void main(){vec3 n=normalize(normal);vec3 v=normalize(eye-world);if(dot(n,v)<0.)n=-n;
@@ -563,7 +696,7 @@
           float kd=max(0.,dot(n,key));float l=.36+.56*kd+.22*max(0.,dot(n,fill))+.34*max(0.,-n.z)+.13*max(0.,n.z);
           l=mix(l,.64+.27*max(0.,n.z)+.16*max(0.,-n.z),overcast);
           vec3 base=color;float spec=.03;float gloss=20.;
-          if(kind>.5&&kind<1.5){base=paint;spec=.32;gloss=65.;}
+          if(kind>.5&&kind<1.5){base=paint*(color.r*2.);spec=.32;gloss=65.;}
           if(kind>1.5&&kind<2.5){spec=.55;gloss=100.;}
           if(kind>2.5&&kind<3.5){spec=.4;gloss=45.;}
           vec3 result=base*l;
@@ -606,7 +739,7 @@
           // solved on the CPU for the column (x,y); leaning the fall sideways
           // slid drops that land beside the carport across the roof outline
           // on their way down, which read as rain getting in underneath.
-          vec3 fall=vec3(x,y,z)+across*corner.x*(4.2+3.4*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
+          vec3 fall=vec3(x,y,z)+across*corner.x*(7.+5.5*seed.w)+vec3(0.,0.,corner.y*(135.+seed.w*135.)*(1.-land));
           vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
           vec3 b=cross(n,t);
           vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
@@ -620,7 +753,7 @@
           // sky at full strength every cycle, and the eye caught it.
           float birth=smoothstep(0.,.05,phase);
           float death=1.-smoothstep(.93,1.,phase);
-          opacity=(.28+seed.w*.24)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
+          opacity=(.44+seed.w*.34)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
@@ -699,8 +832,13 @@
         gl.vertexAttribPointer(a,4,gl.FLOAT,false,40,0);gl.vertexAttribPointer(b,2,gl.FLOAT,false,40,16);gl.vertexAttribPointer(h,4,gl.FLOAT,false,40,24);
         gl.uniform1f(U(p,'clock'),time);gl.uniform1f(U(p,'roofBase'),c.roofZ);gl.uniform1f(U(p,'roofRise'),c.roofRise||0);
         gl.uniform3f(U(p,'eye'),c.L/2-Math.sin(c.az)*Math.cos(c.el)*camera.DIST,c.W/2+Math.cos(c.az)*Math.cos(c.el)*camera.DIST,c.H/2+Math.sin(c.el)*camera.DIST);
-        gl.uniform1f(U(p,'density'),state.intensity==='light'?.72:state.intensity==='heavy'?1.1:1);
-        if(rainData)gl.drawArrays(gl.TRIANGLES,0,(state.intensity==='light'?180:state.intensity==='heavy'?600:360)*6);
+        gl.uniform1f(U(p,'density'),1);
+        /* Jedna sila dažďa. Voľba medzi mrholením, dažďom a lejakom
+           neodpovedala na nič, čo zákazník o prístrešku rieši. Kvapiek je
+           však 560, nie 360: pri troch stovkách tenkých bledých čiarok bolo
+           na svetlej dlažbe sotva vidieť, že prší. Dvesto kvapiek navyše
+           stojí podľa merania scény desatinu milisekundy na snímok. */
+        if(rainData)gl.drawArrays(gl.TRIANGLES,0,560*6);
         gl.disableVertexAttribArray(a);gl.disableVertexAttribArray(b);gl.disableVertexAttribArray(h);
         if(state.flow) {
           const f=gpu.flow;gl.useProgram(f);uniformCamera(gl,f,camera);
@@ -749,7 +887,7 @@
       const p=gpu.main;gl.useProgram(p);uniformCamera(gl,p,camera);
       const ca=Math.cos(context.az),sa=Math.sin(context.az),ce=Math.cos(context.el),se=Math.sin(context.el);
       gl.uniform3f(U(p,'eye'),context.L/2-sa*ce*camera.DIST,context.W/2+ca*ce*camera.DIST,context.H/2+se*camera.DIST);
-      gl.uniform3fv(U(p,'paint'),state.paint==='graphite'?[.19,.23,.26]:state.paint==='blue'?[.13,.27,.36]:[.63,.67,.69]);
+      gl.uniform3fv(U(p,'paint'),(PAINTS[state.paint]||PAINTS.graphite).rgb);
       gl.uniform1f(U(p,'overcast'),state.weather==='sun'?0:.85);
       gl.uniform1f(U(p,'alpha'),1);
       gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.disable(gl.CULL_FACE);
@@ -817,7 +955,7 @@
     return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
       setWeather(w){state.weather=w;sync();run();if(!raining()&&frame)frame(false);},
       snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
-        weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,step,
+        weather:state.weather,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,step,
         pace:Math.round(pace),
         frameCost:Math.round(budget*100)/100,clock:Math.round(time*1000)/1000,
         /* surfaceZ je skutočná výška krytiny pod dažďom, nie vrch lemovania.

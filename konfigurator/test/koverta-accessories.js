@@ -263,12 +263,21 @@ function validateAccessoryContacts(snap, label) {
     `${label}: original Expivi drainage variant missing`);
   assert(downpipe.vertexCount > 1800 && downpipe.triangleCount > 2800,
     `${label}: source drainage mesh was replaced by an incomplete placeholder`);
-  // The owner withdrew the 93 % post-width tube after seeing it rendered: at
-  // that size the downpipe reads exactly as wide as the post. It is back to
-  // the diameter of the recovered original Expivi mesh.
-  assert(downpipe.radius * 2 <= 80.01, `${label}: downpipe exceeds the recovered 80 mm source tube`);
-  assert(downpipe.radius * 2 < (downpipe.post.y1 - downpipe.post.y0) * 0.7,
-    `${label}: downpipe must stay clearly narrower than the post`);
+  /* Priemer zvodu. Majiteľ najprv vytkol rúru so 93 % šírky stĺpa — na zábere
+     vyzerala rovnako široko ako stĺp. Nasledovala oprava, ktorá priemer
+     naviazala na stĺp (0,6 × jeho šírka) a strážila ju tu pravidlom „výrazne
+     užšia ako stĺp“ (< 0,7). Tá oprava ale spravila z jedného výrobku tri:
+     rovnaká rodina mala pri 6200 mm rúru 60 mm a pri 7000 mm 80 mm a záhradné
+     prístrešky nesedeli s autoprístreškami. Majiteľ potom výslovne žiadal, aby
+     bol zvod pri stĺpe rovnaký ako na autoprístreškoch — šírkou aj zakončením.
+     Pravidlo sa preto vymenilo, nie zrušilo: priemer je jeden, presne 80 mm
+     obnovenej pôvodnej siete, na každom rozmere a v oboch rodinách. Horná
+     hranica voči stĺpu ostáva, len na hodnote, ktorú 80 mm na užšom 100 mm
+     stĺpe spĺňa — 93 %, ktoré majiteľ vytkol, tadiaľ neprejde. */
+  assertClose(downpipe.radius * 2, 80,
+    `${label}: downpipe is no longer the single 80 mm source tube`);
+  assert(downpipe.radius * 2 < (downpipe.post.y1 - downpipe.post.y0) * 0.85,
+    `${label}: downpipe must stay narrower than the post`);
   assertClose(downpipe.pipeCenter[1], (downpipe.post.y0 + downpipe.post.y1) / 2,
     `${label}: downpipe no longer follows the active corner-post centreline`);
   assertClose(downpipe.pipeCenter[0] - downpipe.radius,
@@ -283,6 +292,35 @@ function validateAccessoryContacts(snap, label) {
   assert(downpipe.radius * 2 >= postMin * 0.42 &&
     downpipe.radius * 2 <= postMin * 0.95,
     `${label}: downpipe visual diameter is disproportionate to its active host post`);
+
+  /* Zakončenie zvodu. Majiteľ žiada, aby rúra pri stĺpe vyzerala na každom
+     rozmere a na oboch rodinách rovnako ako na autoprístreškoch — rovnaká
+     šírka aj rovnaké koleno pri dlažbe. Posun k aktívnemu stĺpu a k aktívnej
+     odkvapovej hrane nie je rovnaký, takže rozdiel musí pohltiť prázdny pás
+     medzi rúrou a žľabom; keď zasiahne pätu, koleno sa stlačí alebo roztiahne
+     a zakončenie prestane sedieť. Tieto čísla sú z pôvodnej siete: rúra je
+     80 mm široká (±40 od osi) a jej koleno odhodí ústie 104 mm od osi. */
+  const term = downpipe.terminal;
+  assert(term, `${label}: downpipe terminal measurement missing`);
+  assertClose(term.dxMin, -40, `${label}: downpipe foot lost its 80 mm section`);
+  assertClose(term.dxMax, 104, `${label}: downpipe elbow no longer matches the car shelters`);
+  assertClose(term.dyMin, -40, `${label}: downpipe foot lost its 80 mm section across`);
+  assertClose(term.dyMax, 40, `${label}: downpipe foot lost its 80 mm section across`);
+
+  /* Voľba odmeranej siete. Sú dve a líšia sa jediným: „six“ má rúru priamo
+     pod výpusťou žľabu, „four“ ju má 943 mm vo vnútri a šikmým úsekom sa
+     k nej vracia. Keď sa vezme tá vzdialenejšia, jej šikmina sa musí stlačiť
+     alebo natiahnuť o celý ten rozdiel a rúra sa viditeľne zdeformuje — presne
+     to sa dialo na záhradných prístreškoch, kde voľba visela na počte stĺpov
+     a nie na polohe rúry. Berie sa tá bližšia. */
+  const NATIVE = [0, -943];
+  assert(NATIVE.indexOf(downpipe.sourceOffset) > -1,
+    `${label}: unknown drainage mesh offset ${downpipe.sourceOffset}`);
+  const chosen = Math.abs(downpipe.outletOffset - downpipe.sourceOffset);
+  const other = Math.min(...NATIVE.filter((v) => v !== downpipe.sourceOffset)
+    .map((v) => Math.abs(downpipe.outletOffset - v)));
+  assert(chosen <= other,
+    `${label}: drainage mesh is the wrong one for a pipe ${downpipe.outletOffset} mm from the outlet — it has to stretch ${chosen} mm where the other would stretch ${other}`);
 
   const bounds = downpipe.pathBounds;
   assert(bounds.xMin >= assembly.xMin - 0.01 &&

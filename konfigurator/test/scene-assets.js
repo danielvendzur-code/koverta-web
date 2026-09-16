@@ -12,7 +12,11 @@ const dimensions={};
 for(const [key,model] of Object.entries(models)) {
   const file=model.file.replace(/\.bin\.gz$/,'');
   const data=zlib.gunzipSync(fs.readFileSync(path.join(root,'scene-assets',file+'.bin.gz')));
-  assert.equal(data.length%48,0);assert(data.length>100000);
+  assert.equal(data.length%48,0);
+  // Stráži sa, či je súbor naozaj sieť a nie odrezok: stotisíc bajtov bola
+  // hranica šitá na vtedajšie modely a skutočne nízkopolygónové auto pod ňu
+  // padne, hoci je celé. Dvesto trojuholníkov nepodlezie žiadny celý model.
+  assert(data.length>=48*200,`${file}: ${data.length/48} trojuholníkov je málo na celý model`);
   const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<data.length;i+=16){
     const n=Math.hypot(data.readInt16LE(i+6),data.readInt16LE(i+8),data.readInt16LE(i+10))/32767;
@@ -32,10 +36,10 @@ for(const [key,model] of Object.entries(models)) {
 // inak by otočený stolík prešiel testom aj keby stál v stĺpe.
 const turned=(b,rot)=>rot?[-b[4],b[0],b[2],-b[1],b[3],b[5]]:b;
 const footprint=(i)=>{const b=turned(dimensions[i.key],i.rotation);return [i.x+b[0],i.y+b[1],i.x+b[3],i.y+b[4]];};
-for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto'])for(const car of ['auto','sedan','city',undefined]) {
+for(const mode of ['car','bistro'])for(const L of [3000,5000,5500,6000,9000])for(const W of [2000,2700,4000,6000,8000])for(const boxDepth of [0,2700])for(const count of ['1','2','3','auto'])for(const car of ['auto','sedan','sport','city',undefined]) {
   const c={L,W,H:2400,post:150,boxDepth};const r=plan(c,mode,count,null,car);
   // Kto si model zvolil, musí ho dostať — inak by prepínač len klamal.
-  if(mode==='car'&&(car==='sedan'||car==='city'))r.items.forEach(i=>assert.equal(i.key,car,'zvolený model auta sa nedodržal'));
+  if(mode==='car'&&(car==='sedan'||car==='sport'||car==='city'))r.items.forEach(i=>assert.equal(i.key,car,'zvolený model auta sa nedodržal'));
   for(const i of r.items)assert(i.rotation===0||Math.abs(i.rotation-Math.PI/2)<1e-9,`neznáme otočenie ${i.rotation}`);
   const bounds=r.items.map(footprint);
   bounds.forEach(b=>{assert(b[0]>=boxDepth+200);assert(b[2]<=L-200);assert(b[1]>=200);assert(b[3]<=W-200);});
@@ -59,7 +63,15 @@ assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:0},'car','2').items.le
 // sedan nezmestí.
 assert(dimensions.city[3]-dimensions.city[0]<dimensions.sedan[3]-dimensions.sedan[0],'malé auto nie je kratšie');
 assert(dimensions.city[4]-dimensions.city[1]<dimensions.sedan[4]-dimensions.sedan[1],'malé auto nie je užšie');
-assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2').items.length,0);
+// Zadný box zožerie koniec dĺžky, takže pozdĺž už auto nemá kam. Naprieč áno:
+// pod šesťmetrovou šírkou sa auto postaví bokom a pred boxom mu stačí jeho
+// vlastná šírka. Musí tam byť práve jedno, otočené, a s prístupom k boxu.
+{
+  const r=plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2');
+  assert.equal(r.items.length,1,'pred 2,7 m boxom sa zmestí bokom práve jedno auto');
+  assert(r.items[0].rotation>0,'auto pred boxom musí stáť naprieč, pozdĺž tam nie je miesto');
+  assert(footprint(r.items[0])[0]>=2700+750,'auto zablokovalo prístup k boxu');
+}
 // Interior posts must reduce capacity or split rows, never pierce a car.
 for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,4400,4350,4550]]]) {
   const r=plan({L:6000,W:8000,H:2400,post:150,boxDepth:0,obstacles},'car','auto');
@@ -67,7 +79,10 @@ for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,440
   for(const a of bounds)for(const b of obstacles)assert(a[2]<=b[0]-79||a[0]>=b[2]+79||a[3]<=b[1]-79||a[1]>=b[3]+79,'car hits a post');
   for(let i=1;i<bounds.length;i++)assert(bounds[i][1]-bounds[i-1][3]>=599,'door clearance lost');
 }
-assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
+// Strecha musí byť nižšia než najnižšie ponúkané auto. Kým boli v ponuke len
+// sedan a hatchback, bolo 1,6 m nízko na všetko; 911 je vysoká 1,29 m a pod
+// 1,6 m sa zmestí naozaj. Tvrdenie ostáva: pod príliš nízku strechu auto nepatrí.
+assert.equal(plan({L:6000,W:6000,H:1200,post:150,boxDepth:0},'car','auto').items.length,0,'car must fit under roof');
 // Pod najužší katalógový prístrešok (2,5 m) sa malé auto musí zmestiť. Medzi
 // stĺpmi tam ostáva 2,2 m svetla a mestské auto so zrkadlami má 1,91 m —
 // pohodlný odstup na dvere to nie je, ale auto tam stojí a náhľad to má
@@ -84,7 +99,10 @@ assert.equal(plan({L:6000,W:6000,H:1600,post:150,boxDepth:0},'car','auto').items
 // Kde sa sedan nezmestí, má nastúpiť malé auto — o tom celá ponuka dvoch
 // veľkostí je. Prístrešok kratší než sedan, ale dlhší než mestské auto.
 {
-  const tight=plan({L:4600,W:4000,H:2400,post:150,boxDepth:0},'car','1');
+  // Rozmer sa posunul s modelom: malé auto je odteraz Peugeot 208 (4 055 mm),
+  // nie generická 3,54 m krabička, takže "kratší než sedan, dlhší než malé
+  // auto" je dnes iné číslo. Tvrdenie ostáva to isté.
+  const tight=plan({L:4900,W:4000,H:2400,post:150,boxDepth:0},'car','1');
   assert.equal(tight.items.length,1,'do krátkeho prístrešku patrí malé auto');
   assert.equal(tight.items[0].key,'city');
 }

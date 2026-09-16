@@ -591,12 +591,48 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
      v kalkulácii nástroja a odkaz preč z webu tu nemá čo robiť. -->
 <section class="k kv-cfg" aria-label="Výber produktu">
   <div class="k-wrap kv-cfg__in">
-    <p class="kv-cfg__label">Čo si skladáte</p>
-    <nav class="kv-cfg__tabs" aria-label="Produkt">
-      <a href="?page=koverta" data-kv-tab="koverta">Prístrešky Koverta</a>
-      <a href="?page=carport" data-kv-tab="carport">Carport Soltec</a>
-      <a href="?page=canopy" data-kv-tab="canopy">Pevné prestrešenia Soltec</a>
-      <a href="?page=bio" data-kv-tab="bio">Bioklimatické pergoly</a>
+    <p class="kv-cfg__label">Čo potrebujete zastrešiť</p>
+    <nav class="kv-cfg__tabs" aria-label="Čo potrebujete zastrešiť">
+      <a href="?page=koverta" data-kv-tab="koverta">
+        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
+          <path d="M3 11h42M6 11v18M42 11v18" />
+          <path d="M12 26h3M33 26h3" />
+          <path d="M12 26c0-4 3-7 7-7h10c4 0 7 3 7 7" />
+          <circle cx="17" cy="26" r="2.4" /><circle cx="31" cy="26" r="2.4" />
+        </svg>
+        <span><strong>Oceľový prístrešok pre auto</strong><small>Koverta — vlastná výroba</small></span>
+      </a>
+      <a href="?page=carport" data-kv-tab="carport">
+        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
+          <path d="M3 9h42l-3 4H6z" /><path d="M7 13v16M41 13v16" />
+          <path d="M12 26c0-4 3-7 7-7h10c4 0 7 3 7 7" />
+          <circle cx="17" cy="26" r="2.4" /><circle cx="31" cy="26" r="2.4" />
+        </svg>
+        <span><strong>Hliníkový prístrešok pre auto</strong><small>Soltec Carport</small></span>
+      </a>
+      <a href="?page=canopy" data-kv-tab="canopy">
+        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
+          <path d="M3 10h42M6 10v19M42 10v19" />
+          <path d="M14 29v-7h8v7M28 24h8" /><path d="M28 27h8" />
+        </svg>
+        <span><strong>Prestrešenie terasy a vstupu</strong><small>Soltec — pevná strecha</small></span>
+      </a>
+      <a href="?page=zahrada" data-kv-tab="zahrada">
+        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
+          <path d="M3 11h42M6 11v18M42 11v18" />
+          <path d="M15 29v-8h7v8" /><path d="M28 25h8M28 28h8" />
+          <path d="M24 7l2-3 2 3" />
+        </svg>
+        <span><strong>Prístrešok nad terasu a záhradu</strong><small>Koverta — oceľový, stĺpy v rohoch</small></span>
+      </a>
+      <a href="?page=bio" data-kv-tab="bio">
+        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
+          <path d="M6 9v20M42 9v20" />
+          <path d="M8 10.5h32M8 14h32M8 17.5h32" />
+          <path d="M12 29v-6h8v6M28 26h9" />
+        </svg>
+        <span><strong>Pergola s otočnými lamelami</strong><small>Soltec — bioklimatická</small></span>
+      </a>
     </nav>
   </div>
 </section>
@@ -626,7 +662,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 (function () {
   var PAGES = window.KV_PAGES || {};
 
-  var LABEL = { koverta: 'Prístrešky Koverta', bio: 'Bioklimatické pergoly Soltec', canopy: 'Pevné prestrešenia Soltec', carport: 'Carport Soltec' };
+  var LABEL = { koverta: 'Prístrešky Koverta', zahrada: 'Záhradné prístrešky Koverta', bio: 'Bioklimatické pergoly Soltec', canopy: 'Pevné prestrešenia Soltec', carport: 'Carport Soltec' };
   var page = new URLSearchParams(location.search).get('page');
   if (!PAGES[page]) page = 'koverta';
 

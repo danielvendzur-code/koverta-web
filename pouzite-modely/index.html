@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
+     kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
+<script>
+(function (w) {
+  // Queue Clarity calls before GTM can run its consent tag. The loaded
+  // Clarity client consumes this queue; no analytics call is discarded.
+  if (typeof w.clarity !== 'function') {
+    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
+  }
+  w.dataLayer = w.dataLayer || [];
+  function gtag() { w.dataLayer.push(arguments); }
+  w.kvGtag = gtag;
+  w.KV_SUHLAS_KLUC = 'koverta-suhlas';
+  var v = null;
+  try { v = JSON.parse(w.localStorage.getItem(w.KV_SUHLAS_KLUC) || 'null'); } catch (e) {}
+  if (v && v.verzia !== 1) v = null;
+  w.kvSuhlas = v;
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+  if (v) {
+    gtag('consent', 'update', {
+      ad_storage: v.marketing ? 'granted' : 'denied',
+      ad_user_data: v.marketing ? 'granted' : 'denied',
+      ad_personalization: v.marketing ? 'granted' : 'denied',
+      analytics_storage: v.analytika ? 'granted' : 'denied',
+      functionality_storage: v.preferencie ? 'granted' : 'denied',
+      personalization_storage: v.preferencie ? 'granted' : 'denied',
+      security_storage: 'granted'
+    });
+  }
+  gtag('set', 'ads_data_redaction', !(v && v.marketing));
+  gtag('set', 'url_passthrough', true);
+})(window);
+</script>
+<!-- Google Tag Manager -->
+<script>
+(function (w, d, s, l, i) {
+  w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+  j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+  f.parentNode.insertBefore(j, f);
+})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
+</script>
+<!-- Koniec Google Tag Manager -->
+
+<title>O 3D modeloch — Koverta</title>
+<meta name="description" content="Autori a licencie 3D modelov áut a posedenia, ktoré sa zobrazujú v konfigurátore Koverta.">
+<!-- KOVERTA-SEO -->
+<link rel="preload" as="image" href="../assets/foto/03-w1800.jpg" fetchpriority="high">
+<link rel="preconnect" href="https://koverta.sk" crossorigin>
+<link rel="dns-prefetch" href="https://koverta.sk">
+<link rel="canonical" href="https://danielvendzur-code.github.io/koverta-web/pouzite-modely/">
+<!-- NÁHĽAD · Táto adresa je náhľad nového webu, ostrá doména je koverta.sk.
+     Kým to platí, stránka sa nesmie dostať do vyhľadávačov a súperiť s
+     koverta.sk o tie isté výrazy. PRED SPUSTENÍM tento riadok zmazať —
+     celý postup je v MIGRACIA.md v koreni repozitára. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#12171a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Koverta">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:title" content="O 3D modeloch — Koverta">
+<meta property="og:description" content="Autori a licencie 3D modelov áut a posedenia, ktoré sa zobrazujú v konfigurátore Koverta.">
+<meta property="og:url" content="https://danielvendzur-code.github.io/koverta-web/pouzite-modely/">
+<meta property="og:image" content="../assets/foto/03-w1200.jpg">
+<meta property="og:image:alt" content="O 3D modeloch — Koverta">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="O 3D modeloch — Koverta">
+<meta name="twitter:description" content="Ako a kde reklamovať, ako postupujeme pri riešení a ako prebiehajú záručné opravy.">
+<meta name="twitter:image" content="../assets/foto/03-w1200.jpg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "@id": "https://danielvendzur-code.github.io/koverta-web/#organizacia", "name": "Koverta", "url": "https://danielvendzur-code.github.io/koverta-web/", "logo": "https://danielvendzur-code.github.io/koverta-web/assets/favicon.svg", "description": "Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby na Slovensku. Zameranie a návrh zadarmo, doprava a montáž v cene.", "email": "obchod@koverta.sk", "telephone": "+421948482266", "areaServed": [{"@type": "Country", "name": "Slovensko"}, {"@type": "AdministrativeArea", "name": "Bratislavský kraj"}, {"@type": "AdministrativeArea", "name": "Trnavský kraj"}, {"@type": "AdministrativeArea", "name": "Nitriansky kraj"}, {"@type": "AdministrativeArea", "name": "Trenčiansky kraj"}, {"@type": "AdministrativeArea", "name": "Žilinský kraj"}, {"@type": "AdministrativeArea", "name": "Banskobystrický kraj"}, {"@type": "AdministrativeArea", "name": "Prešovský kraj"}, {"@type": "AdministrativeArea", "name": "Košický kraj"}], "sameAs": ["https://www.facebook.com/KovertaSK", "https://instagram.com/koverta.sk", "https://pinterest.com/KovertaSK", "https://koverta.sk/"], "contactPoint": [{"@type": "ContactPoint", "contactType": "sales", "name": "Obchodné oddelenie", "email": "obchod@koverta.sk", "telephone": "+421948482266", "availableLanguage": ["sk", "cs"]}, {"@type": "ContactPoint", "contactType": "technical support", "name": "Projektové oddelenie", "email": "design@koverta.sk", "telephone": "+421911298341", "availableLanguage": ["sk"]}, {"@type": "ContactPoint", "contactType": "billing support", "name": "Účtovné oddelenie", "email": "financie@koverta.sk", "telephone": "+421905482266", "availableLanguage": ["sk"]}], "alternateName": ["Koverta.sk", "Koverta prístrešky"], "slogan": "Prístrešky a pergoly pre váš priestor", "knowsLanguage": ["sk", "cs", "en"], "currenciesAccepted": "EUR", "knowsAbout": ["prístrešky pre autá", "carporty", "záhradné prístrešky", "zastrešenie terasy", "bioklimatické pergoly", "pevné prestrešenia", "ZIP rolety", "lamelové tienenie", "brisoleje", "vonkajšie kuchyne", "oceľové konštrukcie", "hliníkové konštrukcie", "práškové lakovanie RAL", "ohlásenie drobnej stavby"], "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Zameranie na mieste"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Cenová ponuka a návrh"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Výroba prístreškov a pergol"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Doprava a montáž na kľúč"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Betónové pätky ako doplnková služba"}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Koverta","item":"https://danielvendzur-code.github.io/koverta-web/"},{"@type":"ListItem","position":2,"name":"Dokumenty"},{"@type":"ListItem","position":3,"name":"Reklamačný poriadok"}]}</script>
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
+<!-- /KOVERTA-SEO -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85..120,400..800&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('k-js')</script>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=2026091107">
+<style>
+  /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
+  body { margin: 0; background: #fff; }
+  .k, .kv-header {
+    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+  }
+  .k h1, .k h2, .k h3, .k .k-display, .k .k-h2, .k .k-h3, .k .k-h4,
+  .k .kh-fact strong, .k .kh-rev__big b, .k .kh-cta__row strong,
+  .k .kh-usp__item strong, .k .kh-soltec__lines strong, .k .kh-faq__item summary,
+  .kv-header .kv-mega__card strong, .k .kh-fact--score b, .k .kh-cta__score b, .k .kh-proc__n {
+    font-variation-settings: "wdth" 106;
+  }
+</style>
+<style>
+  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
+     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
+     funguje aj bez skriptu. */
+  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  @media (min-width: 1000px) {
+    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
+  }
+  .kv-legal__obsah-nadpis {
+    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
+  }
+  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
+  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah a {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
+    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
+    color: #3b4247; text-decoration: none;
+    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
+  }
+  .kv-legal__obsah a::before {
+    content: counter(kvc, decimal-leading-zero);
+    font-size: 1.1rem; font-weight: 700; color: #8a6600;
+    font-variant-numeric: tabular-nums;
+  }
+  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
+  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
+  .kv-legal { max-width: 78ch; }
+  .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
+  .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
+  .kv-legal p, .kv-legal li { font-size: 1.55rem; line-height: 1.7; color: #3b4247; }
+  .kv-legal ul, .kv-legal ol { margin: 0 0 1.2rem 1.6rem; }
+  .kv-legal li { margin-bottom: .5rem; }
+  .kv-legal strong { color: #12171a; }
+  .kv-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<a class="kv-skip" href="#obsah">Preskočiť na obsah</a>
+
+<!-- ======================================================== HLAVIČKA -->
+<header class="kv-header" data-k-header>
+
+  <div class="kv-topbar">
+    <div class="k-wrap kv-topbar__in">
+      <ul class="kv-topbar__usps">
+        <li>Vlastná výroba na Slovensku</li>
+        <li>Zameranie a ponuka zadarmo</li>
+        <li>Doprava a montáž v cene</li>
+      </ul>
+      <div class="kv-topbar__side">
+        <a href="tel:+421948482266"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg>+421 948 482 266</a>
+        <a href="mailto:obchod@koverta.sk"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7" stroke-linecap="round" stroke-linejoin="round"/></svg>obchod@koverta.sk</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="kv-bar" data-k-bar>
+    <div class="k-wrap kv-bar__in">
+      <a class="kv-logo" href="../" aria-label="Koverta — domov">
+        <svg
+  class="k-logo"
+  viewBox="196 406 524 85"
+  role="img"
+  aria-label="Koverta"
+  focusable="false"
+>
+  <g class="k-logo__letter" style="--k-logo-delay: 0ms"><path fill="#455a64" d="m 280.57,422.54 h 10.86 v 20.5 h 3.09 l 32.58,-32.6 h 15.3 l -38,38 38,38 h -15.3 l -32.58,-32.57 h -3.09 v 20.67 h -10.86 z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 70ms"><path fill="#455a64" d="M380.55,432.11q21.7,0,21.71,21.72v10.85q0,21.72-21.71,21.72h-5.43q-21.72,0-21.72-21.72V453.83q0-21.72,21.72-21.72Zm10.85,21.72q0-10.86-10.85-10.86h-5.43q-10.86,0-10.86,10.86v10.85q0,10.86,10.86,10.86h5.43q10.86,0,10.85-10.86Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 140ms"><path fill="#455a64" d="M429.45,432.11l10.21,38q1.57,5.43,6.46,5.43c3.25,0,5.41-1.81,6.46-5.43l10.2-38H474l-10.21,38q-4.12,16.29-17.69,16.29t-17.7-16.29l-10.21-38Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 210ms"><path fill="#455a64" d="M516.68,432.11q21.72,0,21.71,16.29t-21.71,16.28H500.39q0,10.86,10.86,10.86H533V486.4H511.25q-21.72,0-21.71-21.72V453.83q0-21.72,21.71-21.72Zm10.86,16.29q0-5.43-10.86-5.43h-5.43q-10.86,0-10.86,10.86h16.29Q527.54,453.83,527.54,448.4Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 280ms"><path fill="#455a64" d="M567.75,453.83V486.4H556.89V453.83q0-21.72,21.72-21.72H594.9V443H578.61Q567.75,443,567.75,453.83Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 350ms"><path fill="#455a64" d="M639.83,475.54h10.86V486.4H639.83q-21.71,0-21.71-21.72V443h-5.43V432.11h5.43V410.4H629v21.71h21.71V443H629v21.71Q629,475.54,639.83,475.54Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 420ms"><path fill="#455a64" d="M688.25,486.4q-21.72,0-21.72-16.29t21.72-16.28h16.29q0-10.86-10.86-10.86H672V432.11h21.72q21.71,0,21.71,21.72v10.85q0,21.72-21.71,21.72Zm-10.86-16.29q0,5.43,10.86,5.43h5.43q10.86,0,10.86-10.86H688.25Q677.39,464.68,677.39,470.11Z"/></g>
+  <g class="k-logo__bracket" style="--k-logo-delay: 530ms"><path fill="#FFCC00" d="M 327.1,410.44 315.02835,422.53609 211.54302,422.44 v 52 L 315.19743,474.41 327.1,486.44 200.84,486.57 V 410.44 H 327.1"/></g>
+</svg>
+      </a>
+
+      <nav class="kv-nav" aria-label="Hlavná navigácia">
+        <div class="kv-nav__item" data-k-mega-item>
+          <button class="kv-nav__link" type="button" data-k-mega-trigger aria-expanded="false" aria-haspopup="true">
+            Pre autá <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="kv-mega">
+            <ul class="kv-mega__rad">
+              <li><a href="../pristresky-pre-auta/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Prístrešok Koverta pre auto pri rodinnom dome" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+                <strong>Prístrešky pre autá</strong>
+              </a></li>
+              <li><a href="../carport-soltec/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-carport-plavecky-03.jpg" width="2200" height="1650" alt="Hliníkový carport Soltec" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+                <strong>Carport Soltec</strong>
+              </a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="kv-nav__item" data-k-mega-item>
+          <button class="kv-nav__link" type="button" data-k-mega-trigger aria-expanded="false" aria-haspopup="true">
+            Pre dom a záhradu <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="kv-mega">
+            <ul class="kv-mega__rad">
+              <li><a href="../zahradne-pristresky/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/foto/20250522_144729-w600.jpg" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+                <strong>Záhradné prístrešky</strong>
+              </a></li>
+              <li><a href="../pevne-prestresenia/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Pevné prestrešenie terasy Soltec" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+                <strong>Pevné prestrešenia</strong>
+              </a></li>
+              <li><a href="../bioklimaticke-pergoly/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola Soltec s otočnými lamelami" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+                <strong>Bioklimatické pergoly</strong>
+              </a></li>
+              <li><a href="../tienenie/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-canopy-panels-real.jpg" width="1280" height="960" alt="ZIP roleta a lamelový panel na krytej terase" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+                <strong>Tienenie</strong>
+              </a></li>
+              <li><a href="../outdoor-kuchyne/">
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-bio-vecer-led.jpg" width="1600" height="1067" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+                <strong>Vonkajšie kuchyne</strong>
+              </a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="kv-nav__item"><div class="kv-nav__item kv-nav__item--uzke" data-k-mega-item>
+          <button class="kv-nav__link" type="button" data-k-mega-trigger aria-expanded="false" aria-haspopup="true">
+            Realizácie <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="kv-mega kv-mega--uzke">
+            <ul class="kv-pod">
+              <li><a href="../realizacie/"><strong>Všetky realizácie</strong><span>Fotografie z montáží podľa typu prístrešku.</span></a></li>
+              <li><a href="../realizacie/#mapa"><strong>Mapa realizácií</strong><span>Nájdite realizáciu, ktorá stojí najbližšie k vám.</span></a></li>
+            </ul>
+          </div>
+        </div></div>
+        <div class="kv-nav__item"><a class="kv-nav__link" href="../konfigurator/">3D konfigurátor</a></div>
+        <div class="kv-nav__item"><a class="kv-nav__link" href="../kontakt/">Kontakt</a></div>
+      </nav>
+
+      <div class="kv-bar__side">
+        <button class="kv-icon-btn" type="button" data-k-search-open aria-expanded="false" aria-label="Hľadať"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5" stroke-linecap="round"/></svg></button>
+        <a class="kv-icon-btn" href="https://koverta.sk/cart" aria-label="Košík"><svg viewBox="0 0 24 24"><path d="M4 5h2l2.2 10.4a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 2-1.6L20.5 8H6.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.5" cy="20" r="1.2"/><circle cx="17.5" cy="20" r="1.2"/></svg></a>
+        <a class="kv-bar__tel" href="tel:+421948482266"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg>+421 948 482 266</a>
+        <button class="kv-icon-btn kv-burger" type="button" data-k-drawer-open aria-expanded="false" aria-label="Otvoriť menu">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+<div class="kv-search" data-k-search hidden>
+      <div class="k-wrap kv-search__in">
+        <div class="kv-search__bar">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5" stroke-linecap="round"/></svg>
+          <input type="text" placeholder="Hľadajte prístrešok, pergolu, tienenie…" aria-label="Hľadať na stránke" autocomplete="off">
+          <button class="kv-search__close" type="button" data-k-search-close aria-label="Zavrieť hľadanie"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="kv-search__results" data-k-search-results></div>
+        <p class="kv-search__empty" data-k-search-empty></p>
+        <a class="kv-search__shop" data-k-search-shop href="https://koverta.sk/search" hidden><span></span><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="kv-scrim" data-k-scrim></div>
+  <aside class="kv-drawer" data-k-drawer aria-label="Menu">
+    <div class="kv-drawer__head">
+      <span class="k-eyebrow">Menu</span>
+      <button class="kv-drawer__zavri" type="button" data-k-drawer-close>Zavrieť <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button>
+    </div>
+    <details class="kv-drawer__sk" open>
+      <summary>Pre autá<svg class="kv-drawer__plus" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+      <ul class="kv-drawer__rad">
+        <li><a href="../pristresky-pre-auta/">
+          <span class="kv-drawer__foto"><img src="../assets/koverta-pristresok-garaz.jpg" width="1800" height="1350" alt="Prístrešok Koverta pre auto pri rodinnom dome" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+            <strong>Prístrešky pre autá</strong>
+          </span>
+        </a></li>
+        <li><a href="../carport-soltec/">
+          <span class="kv-drawer__foto"><img src="../assets/soltec-carport-plavecky-03.jpg" width="2200" height="1650" alt="Hliníkový carport Soltec" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            <strong>Carport Soltec</strong>
+          </span>
+        </a></li>
+      </ul>
+    </details>
+    <details class="kv-drawer__sk">
+      <summary>Pre dom a záhradu<svg class="kv-drawer__plus" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+      <ul class="kv-drawer__rad">
+        <li><a href="../zahradne-pristresky/">
+          <span class="kv-drawer__foto"><img src="../assets/foto/20250522_144729-w600.jpg" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
+            <strong>Záhradné prístrešky</strong>
+          </span>
+        </a></li>
+        <li><a href="../pevne-prestresenia/">
+          <span class="kv-drawer__foto"><img src="../assets/soltec-canopy-hero.jpg" width="2400" height="1470" alt="Pevné prestrešenie terasy Soltec" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            <strong>Pevné prestrešenia</strong>
+          </span>
+        </a></li>
+        <li><a href="../bioklimaticke-pergoly/">
+          <span class="kv-drawer__foto"><img src="../assets/soltec-bio-hero-2026.jpg" width="1920" height="1280" alt="Bioklimatická pergola Soltec s otočnými lamelami" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            <strong>Bioklimatické pergoly</strong>
+          </span>
+        </a></li>
+        <li><a href="../tienenie/">
+          <span class="kv-drawer__foto"><img src="../assets/soltec-canopy-panels-real.jpg" width="1280" height="960" alt="ZIP roleta a lamelový panel na krytej terase" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            <strong>Tienenie</strong>
+          </span>
+        </a></li>
+        <li><a href="../outdoor-kuchyne/">
+          <span class="kv-drawer__foto"><img src="../assets/soltec-bio-vecer-led.jpg" width="1600" height="1067" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__telo">
+            <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
+            <strong>Vonkajšie kuchyne</strong>
+          </span>
+        </a></li>
+      </ul>
+    </details>
+    <details class="kv-drawer__sk">
+      <summary>Realizácie<svg class="kv-drawer__plus" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+      <ul class="kv-drawer__rad kv-drawer__rad--text">
+        <li><a href="../realizacie/"><strong>Všetky realizácie</strong></a></li>
+        <li><a href="../realizacie/#mapa"><strong>Mapa realizácií</strong></a></li>
+      </ul>
+    </details>
+    <a class="kv-drawer__odkaz" href="../konfigurator/">3D konfigurátor</a>
+    <a class="kv-drawer__odkaz" href="../kontakt/">Kontakt</a>
+    <a class="kv-drawer__tel" href="tel:+421948482266"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg>+421 948 482 266</a>
+  </aside>
+</header>
+
+<main class="k" id="obsah" data-k-root>
+  <section class="k-band" style="padding-top:clamp(90px,10vw,150px)">
+    <div class="k-wrap" style="max-width:820px">
+      <nav class="kh-crumbs" aria-label="Kde sa nachádzate" style="margin-bottom:18px">
+        <a href="../">Koverta</a><span aria-hidden="true">/</span><span aria-current="page">O 3D modeloch</span>
+      </nav>
+      <h1 id="pgTitle" class="k-h2">O 3D modeloch v konfigurátore</h1>
+      <p class="k-copy">Auto a posedenie sú v 3D náhľade len preto, aby bolo vidieť, koľko miesta pod prístreškom naozaj zaberú. Nemenia cenu ani rozmery zostavy a nie sú súčasťou dodávky. Rozmery modelov zodpovedajú skutočným rozmerom vozidiel a nábytku.</p>
+      <p class="k-copy">Sú to licencované modely tretích strán. Licencia CC&nbsp;BY&nbsp;4.0 dovoľuje komerčné použitie a vyžaduje uvedenie autora — na to je tento zoznam. CC0 je voľné dielo bez podmienok; autora uvádzame aj tak.</p>
+    </div>
+  </section>
+
+  <section class="k-band">
+    <div class="k-wrap">
+      <div class="k-model-grid k-model-grid--3">
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">sedan v prístreškoch pre auto</span></div>
+            <h3>Low Poly BMW G80 M3</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd><a href="https://sketchfab.com/sharkycat109" rel="noopener nofollow" target="_blank">SharkyStudios</a></dd></div>
+              <div><dt>Zdroj</dt><dd><a href="https://sketchfab.com/3d-models/low-poly-bmw-g80-m3-ea3e807ff69e40fe82c5577ee9f0a2f4" rel="noopener nofollow" target="_blank">stránka modelu</a></dd></div>
+              <div><dt>Licencia</dt><dd><a href="https://creativecommons.org/licenses/by/4.0/deed.sk" rel="license noopener" target="_blank">CC BY 4.0</a></dd></div>
+            </dl>
+          </div>
+        </article>
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">športové auto v prístreškoch pre auto</span></div>
+            <h3>Porsche 911 Carrera 4S</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd><a href="https://sketchfab.com/Car2022" rel="noopener nofollow" target="_blank">Car2022</a></dd></div>
+              <div><dt>Zdroj</dt><dd><a href="https://sketchfab.com/3d-models/porsche-911-carrera-4s-a38a94062bbd471e868084af2886d7da" rel="noopener nofollow" target="_blank">stránka modelu</a></dd></div>
+              <div><dt>Licencia</dt><dd><a href="https://creativecommons.org/licenses/by/4.0/deed.sk" rel="license noopener" target="_blank">CC BY 4.0</a></dd></div>
+            </dl>
+          </div>
+        </article>
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">malé auto v prístreškoch pre auto</span></div>
+            <h3>MiniCooper</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd><a href="https://sketchfab.com/zeee7" rel="noopener nofollow" target="_blank">zeee7</a></dd></div>
+              <div><dt>Zdroj</dt><dd><a href="https://sketchfab.com/3d-models/minicooper-391d8c412c5049ada8f9013c267f0d40" rel="noopener nofollow" target="_blank">stránka modelu</a></dd></div>
+              <div><dt>Licencia</dt><dd><a href="https://creativecommons.org/licenses/by/4.0/deed.sk" rel="license noopener" target="_blank">CC BY 4.0</a></dd></div>
+            </dl>
+          </div>
+        </article>
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">lounge posedenie pod pergolami</span></div>
+            <h3>Modern Industrial Outdoor Sofa Set</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd><a href="https://sketchfab.com/ulugbekdizayn" rel="noopener nofollow" target="_blank">Ulug'bek</a></dd></div>
+              <div><dt>Zdroj</dt><dd><a href="https://sketchfab.com/3d-models/modern-industrial-outdoor-sofa-set-010bd90929894f32a7caa781c9f8f6a8" rel="noopener nofollow" target="_blank">stránka modelu</a></dd></div>
+              <div><dt>Licencia</dt><dd><a href="https://creativecommons.org/licenses/by/4.0/deed.sk" rel="license noopener" target="_blank">CC BY 4.0</a></dd></div>
+            </dl>
+          </div>
+        </article>
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">bistro stolík v úzkych zostavách</span></div>
+            <h3>Outdoor Table Chair Set 01</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd><a href="https://polyhaven.com/" rel="noopener nofollow" target="_blank">James Ray Cock, Poly Haven</a></dd></div>
+              <div><dt>Zdroj</dt><dd><a href="https://polyhaven.com/a/outdoor_table_chair_set_01" rel="noopener nofollow" target="_blank">stránka modelu</a></dd></div>
+              <div><dt>Licencia</dt><dd><a href="https://creativecommons.org/publicdomain/zero/1.0/deed.sk" rel="license noopener" target="_blank">CC0</a></dd></div>
+            </dl>
+          </div>
+        </article>
+      </div>
+
+      <p class="k-copy" style="margin-top:2.4rem">Modely sú upravené pre potreby konfigurátora: prevedené do milimetrov a súradníc scény, s farbami prenesenými do vrcholov siete. Podrobný zoznam úprav pri každom modeli vedieme v repozitári projektu.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================ PÄTIČKA -->
+<footer class="k kf" aria-labelledby="footerTitle">
+  <div class="k-wrap">
+    <div class="kf__lead">
+      <div>
+        <p class="k-eyebrow">Od návrhu po montáž</p>
+        <h2 id="footerTitle">Priestor, ktorý funguje v každom počasí.</h2>
+      </div>
+      <a class="k-btn k-btn--primary" href="#ponuka">Nezáväzná ponuka
+        <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+
+    <div class="kf__grid">
+      <div class="kf__brand">
+        <a class="kf__logo" href="../" aria-label="Koverta — domov">
+          <svg
+  class="k-logo k-logo--mono"
+  viewBox="196 406 524 85"
+  role="img"
+  aria-label="Koverta"
+  focusable="false"
+>
+  <g class="k-logo__letter" style="--k-logo-delay: 0ms"><path fill="#455a64" d="m 280.57,422.54 h 10.86 v 20.5 h 3.09 l 32.58,-32.6 h 15.3 l -38,38 38,38 h -15.3 l -32.58,-32.57 h -3.09 v 20.67 h -10.86 z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 70ms"><path fill="#455a64" d="M380.55,432.11q21.7,0,21.71,21.72v10.85q0,21.72-21.71,21.72h-5.43q-21.72,0-21.72-21.72V453.83q0-21.72,21.72-21.72Zm10.85,21.72q0-10.86-10.85-10.86h-5.43q-10.86,0-10.86,10.86v10.85q0,10.86,10.86,10.86h5.43q10.86,0,10.85-10.86Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 140ms"><path fill="#455a64" d="M429.45,432.11l10.21,38q1.57,5.43,6.46,5.43c3.25,0,5.41-1.81,6.46-5.43l10.2-38H474l-10.21,38q-4.12,16.29-17.69,16.29t-17.7-16.29l-10.21-38Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 210ms"><path fill="#455a64" d="M516.68,432.11q21.72,0,21.71,16.29t-21.71,16.28H500.39q0,10.86,10.86,10.86H533V486.4H511.25q-21.72,0-21.71-21.72V453.83q0-21.72,21.71-21.72Zm10.86,16.29q0-5.43-10.86-5.43h-5.43q-10.86,0-10.86,10.86h16.29Q527.54,453.83,527.54,448.4Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 280ms"><path fill="#455a64" d="M567.75,453.83V486.4H556.89V453.83q0-21.72,21.72-21.72H594.9V443H578.61Q567.75,443,567.75,453.83Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 350ms"><path fill="#455a64" d="M639.83,475.54h10.86V486.4H639.83q-21.71,0-21.71-21.72V443h-5.43V432.11h5.43V410.4H629v21.71h21.71V443H629v21.71Q629,475.54,639.83,475.54Z"/></g>
+  <g class="k-logo__letter" style="--k-logo-delay: 420ms"><path fill="#455a64" d="M688.25,486.4q-21.72,0-21.72-16.29t21.72-16.28h16.29q0-10.86-10.86-10.86H672V432.11h21.72q21.71,0,21.71,21.72v10.85q0,21.72-21.71,21.72Zm-10.86-16.29q0,5.43,10.86,5.43h5.43q10.86,0,10.86-10.86H688.25Q677.39,464.68,677.39,470.11Z"/></g>
+  <g class="k-logo__bracket" style="--k-logo-delay: 530ms"><path fill="#FFCC00" d="M 327.1,410.44 315.02835,422.53609 211.54302,422.44 v 52 L 315.19743,474.41 327.1,486.44 200.84,486.57 V 410.44 H 327.1"/></g>
+</svg>
+        </a>
+        <p>Slovenské prístrešky a pergoly navrhnuté, vyrobené a namontované na kľúč.</p>
+      </div>
+      <nav class="kf__nav" aria-label="Produkty"><strong>Riešenia</strong><a href="../pristresky-pre-auta/">Prístrešky pre autá</a><a href="../zahradne-pristresky/">Terasa a záhrada</a><a href="../tienenie/">Tienenie</a><a href="../bioklimaticke-pergoly/">Bioklimatické pergoly</a></nav>
+      <nav class="kf__nav" aria-label="Informácie"><strong>Informácie</strong><a href="../realizacie/">Realizácie</a><a href="../kontakt/">Kontakt</a><a href="../konfigurator/?page=bio">3D konfigurátor</a><a href="../produkty/">Všetky produkty</a></nav>
+      <div class="kf__contact"><strong>Kontakt</strong><a href="tel:+421948482266">+421 948 482 266</a><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a><div class="kf__social"><a href="https://www.facebook.com/KovertaSK">Facebook</a><a href="https://instagram.com/koverta.sk">Instagram</a></div></div>
+    </div>
+
+
+    <div class="kf__bottom"><span>© 2026 Koverta. Všetky práva vyhradené.</span><nav aria-label="Právne informácie"><a href="../ochrana-sukromia/">Ochrana súkromia</a><a href="../obchodne-podmienky/">Obchodné podmienky</a><a href="../reklamacie/">Reklamácie</a></nav></div>
+  </div>
+</footer>
+
+<script src="../assets/koverta-2026.js?v=2026091106" defer></script>
+<script>
+/* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
+if (new URLSearchParams(location.search).has('flat')) {
+  document.querySelectorAll('.k-rise,.k-reveal').forEach((el) => el.classList.add('is-in'));
+  const s = document.createElement('style');
+  s.textContent = '*{transition:none!important;animation:none!important}.kv-bar{position:static!important}';
+  document.head.appendChild(s);
+}
+</script>
+
+<div class="kh-dock" aria-label="Rýchly kontakt">
+  <a class="kh-dock__call" href="tel:+421948482266" aria-label="Zavolať"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></a>
+  <a class="k-btn k-btn--primary" href="#ponuka">Nezáväzná cenová ponuka</a>
+</div>
+</body>
+</html>
