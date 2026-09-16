@@ -6001,6 +6001,13 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft);
 }
 @media (max-width: 720px) { .kh-tab__foto img { aspect-ratio: 4 / 3; } }
+/* Rozmerová schéma nie je fotografia: neoreže sa, stojí na kostnom podklade
+   a rám okolo nej by zdvojil rám kresby. */
+.kh-tab__foto--schema img {
+  aspect-ratio: auto; object-fit: contain; border: 0;
+  background: var(--k-white);
+}
+@media (max-width: 720px) { .kh-tab__foto--schema img { aspect-ratio: auto; } }
 
 /* Paleta odtieňov. Vzorka je štvorec s vlasovým rámom — na svetlých RAL
    odtieňoch by inak nebolo vidieť, kde vzorka končí. */
