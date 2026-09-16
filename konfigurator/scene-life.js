@@ -586,8 +586,37 @@
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
     carSelect.addEventListener('change',()=>{state.car=carSelect.value;update();});
     panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
+    /* Predstih namiesto točiaceho kolieska.
+       Sieť auta sa doteraz sťahovala až po kliknutí na „Auto" — 0,6 s na
+       lokálnej sieti, 2,2 s pri 1,5 Mb/s, a presne to je čas, ktorý by
+       ukazovalo načítavanie. Ukazovateľ ten čas nezrýchli, len ho ozdobí.
+       Stiahne sa preto vopred, keď prehliadač nič nerobí: prvé kliknutie
+       potom nečaká. Berie sa jediný model, ten prednastavený, a iba tam, kde
+       to návštevník neplatí — pri zapnutom šetrení dát ani na pomalom
+       pripojení sa nesťahuje nič navyše. */
+    let predstih=false;
+    function prefetch(c) {
+      if(predstih||!c)return;
+      predstih=true;
+      const net=navigator.connection;
+      /* Šetrenie dát je výslovné prianie návštevníka a na 2G by sťahovanie
+         navyše ukradlo pásmo samotnej stránke. Inde sa predstih oplatí. */
+      if(net&&(net.saveData||/^(2g|slow-2g)$/i.test(net.effectiveType||'')))return;
+      const start=()=>{
+        /* Sťahuje sa presne to, čo by sa objavilo po kliknutí — nie prvé auto
+           zo zoznamu. Pod prednastavený carport sa zmestí mestské, nie sedan,
+           takže predstih na sedan by bol k ničomu. */
+        let kluce=[];
+        try{ kluce=plan(c,forCar?'car':'bistro',state.count,null,state.car).items.map(i=>i.key); }catch(e){}
+        for(const k of new Set(kluce))
+          if(!loaded.has(k)&&!loading.has(k))load(k).catch(()=>{});
+      };
+      if(window.requestIdleCallback)window.requestIdleCallback(start,{timeout:4000});
+      else window.setTimeout(start,1500);
+    }
     function prepare(c) {
       context=c;
+      prefetch(c);
       const pk=JSON.stringify([c.L,c.W,c.H,c.post,c.boxDepth,c.obstacles,state.mode,state.count,state.car]);
       if(pk!==planningKey){currentPlan=plan(c,state.mode,state.count,m=>m==='none'||(m==='car'?forCar:forSeat),state.car);planningKey=pk;}
       /* Po strate a obnove WebGL kontextu hostiteľ znova kreslí hĺbkovo —

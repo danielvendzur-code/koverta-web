@@ -4611,38 +4611,48 @@
               const inset = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               /* Priemer zvodu. Majiteľ pôvodne žiadal 93 % šírky stĺpa; po
                  zhliadnutí záberov to zrušil — rúra takej hrúbky je na pohľad
-                 rovnako široká ako stĺp. Vraciame sa na priemer obnovenej
-                 pôvodnej siete Expivi, teda 80 mm. Na 150 mm stĺpe je to 53 %
-                 jeho šírky, takže zvod je zreteľne užší. */
-              /* 80 mm je priemer obnovenej pôvodnej siete a platí na rodine so
-                 150 mm stĺpom. Novšia rodina má stĺp 100 mm a na ňom by tá istá
-                 rúra bola opäť takmer taká široká ako stĺp, presne to majiteľ
-                 vytkol. Priemer preto sleduje stĺp a zdrojových 80 mm je strop. */
-              const PIPE_MM = Math.max(50, Math.min(80, section.w * 0.6));
+                 rovnako široká ako stĺp. Platí priemer obnovenej pôvodnej
+                 siete Expivi, teda 80 mm.
+                 Priemer bol chvíľu naviazaný na stĺp (0,6 × jeho šírka), aby
+                 na užšom 100 mm stĺpe nevyzeral rovnako široko. Tým ale zvod
+                 menil hrúbku podľa rozmeru prístreška: rovnaká rodina mala pri
+                 6200 mm rúru 60 mm a pri 7000 mm 80 mm, a záhradné prístrešky
+                 so 150 mm stĺpom nesedeli s autoprístreškami. Zvod je jeden
+                 výrobok a má jeden priemer — majiteľ to tak aj žiada. Ostáva
+                 teda pevných 80 mm; aj na 100 mm stĺpe je to stále užšie ako
+                 stĺp a ďaleko od 93 %, ktoré vytkol. */
+              const PIPE_MM = 80;
               const radius = PIPE_MM / 2, standoff = 17;
               const pipeX = postFace + radius + standoff, pipeY = inset + section.w / 2;
               const sourcePipeX = four ? 4973 : 5916;
               const gutterShift = L - 6000;
               const pipeShift = pipeX - sourcePipeX;
-              const mapPoint = (p, index) => {
-                // Preserve the circular straight leg and gutter cross section;
-                // adapt only the intervening run to the active post station.
-                const transition = four ? Math.max(0,Math.min(1,(p[0]-sourcePipeX-50)/(5916-sourcePipeX-100)))
-                  : Math.max(0,Math.min(1,(p[2]-2400)/143.5));
+              /* Zvod sa posúva k aktívnemu stĺpu, žľab k aktívnej odkvapovej
+                 hrane, a tie dva posuny sa nerovnajú. Rozdiel musí pohltiť
+                 prechod medzi nimi — nikdy nie samotná rúra ani žľab, inak sa
+                 koleno na päte roztiahne alebo stlačí a zakončenie prestane
+                 vyzerať ako na autoprístreškoch. Rampa preto leží celá
+                 v prázdnom páse medzi koncom kolmej rúry a žľabom: v sieti
+                 „four“ medzi x 5150 a 5800 (rúra končí na 5077, výtok začína
+                 na 5800), v sieti „six“ medzi z 1500 a 2400 (rúra končí na
+                 1360, žľab začína na 2500). Rúra aj žľab tak ostávajú tuhé
+                 a majú na oboch rodinách presne rovnaký prierez aj koleno. */
+              const GAP = four ? { at: (p) => p[0], from: 5150, to: 5800 }
+                : { at: (p) => p[2], from: 1500, to: 2400 };
+              const mapPoint = (p) => {
+                const transition = Math.max(0, Math.min(1, (GAP.at(p) - GAP.from) / (GAP.to - GAP.from)));
                 const dx = pipeShift + (gutterShift-pipeShift)*transition;
                 const near = pipeY - 55;
                 const wy = p[1] <= 150 ? p[1]+near : p[1] >= 6850 ? p[1]+W-7000
                   : p[1]+near+(W-7000-near)*(p[1]-150)/6700;
                 const z = p[2] < 200 ? p[2] : p[2] > 2300 ? p[2]+H-2398
                   : p[2]+(H-2398)*(p[2]-200)/2100;
-                /* Zvod musí mať jeden priemer po celej dĺžke. Pôvodne sa
-                   prírastok nad 80 mm rozpúšťal na 83,5 mm pod žľabom, takže
-                   rúra menila hrúbku. Teraz sa mení jedinou hranou v rovine
-                   dna žľabu — tá je celá v kapse za lemovaním — a celý
-                   odkrytý úsek má rovnaký prierez. */
-                const radial = p[2] < 2543.5 ? (radius - 40) : 0;
-                const n = ref.normals[index];
-                return [p[0]+dx+n[0]*radial,wy+n[1]*radial,z+n[2]*radial];
+                /* Priemer sa už nemení, takže rúra ide do scény presne
+                   v prierezoch pôvodnej siete. Predtým sa rozdiel rozpúšťal
+                   posunom po normále, čo pätu rúry namiesto zúženia rozšírilo
+                   — normály sú tam otočené dnu a 60 mm rúra mala pri dlažbe
+                   98 mm koleno. Tá oprava už netreba. */
+                return [p[0]+dx, wy, z];
               };
               const vertices = ref.vertices.map(mapPoint);
               ref.triangles.forEach(tri => {
@@ -4689,7 +4699,19 @@
                 }
                 clamps.push({z,bridgeX0:postFace-2,bridgeX1:postFace+standoff+2,postFaceX:postFace,pipeNearX:pipeX-radius});
               });
-              kvAccessoryGeometry.downpipe={enabled:true,source:ref.source,radius,pipeCenter:[pipeX,pipeY],standoff,
+              /* Zakončenie rúry pri dlažbe. Meria sa z hotových bodov a hlási
+                 sa v súradniciach rúry, aby sa dalo overiť, že autoprístrešky
+                 aj záhradné prístrešky končia rovnako — to je jediný spôsob,
+                 ako to porovnať naprieč rodinami, kde rúra stojí inde. */
+              const pata = vertices.filter((q) => q[2] < 260);
+              const terminal = pata.length ? {
+                zMax: Math.round(Math.max(...pata.map((q) => q[2]))),
+                dxMin: Math.round(Math.min(...pata.map((q) => q[0])) - pipeX),
+                dxMax: Math.round(Math.max(...pata.map((q) => q[0])) - pipeX),
+                dyMin: Math.round(Math.min(...pata.map((q) => q[1])) - pipeY),
+                dyMax: Math.round(Math.max(...pata.map((q) => q[1])) - pipeY)
+              } : null;
+              kvAccessoryGeometry.downpipe={enabled:true,source:ref.source,radius,pipeCenter:[pipeX,pipeY],standoff,terminal,
                 post:{x0:postX,x1:postFace,y0:inset,y1:inset+section.w},clamps,
                 vertexCount:vertices.length,triangleCount:ref.triangles.length,
                 pathBounds:{xMin:Math.min(...vertices.map(p=>p[0])),xMax:Math.max(...vertices.map(p=>p[0])),
@@ -5474,6 +5496,65 @@
           });
         };
 
+        /* Posun rozmeru po jednej katalógovej zastávke.
+           Posuvník sa na telefóne trafí ťažko: na 304 px širokom páse je jeden
+           pixel pätnásť milimetrov a zastávok je osemnásť, takže sa prstom
+           preskakuje cez dve naraz a späť. Vedľa neho preto stoja dve tlačidlá,
+           ktoré posunú presne o jednu zastávku. Kto chce konkrétne číslo,
+           napíše ho do políčka pri výpise — to už na stránke je. */
+        const nudge = (kind, dir) => {
+          const m = model();
+          if (kind === 'h') {
+            const el = q('[data-sp-h]');
+            if (!el) return;
+            const krok = 100;
+            const lo = Number(el.min) || 2000, hi = Number(el.max) || 2800;
+            state.height = Math.max(lo, Math.min(hi,
+              Math.round((state.height + dir * krok) / krok) * krok));
+          } else {
+            const list = kind === 'w' ? m.widths : m.lengths;
+            if (!list || !list.length) return;
+            const now = kind === 'w' ? widthMM() : lengthMM();
+            /* Prvá zastávka, ktorá nie je pred nami. Keď na nej práve stojíme,
+               ide sa o jednu ďalej — inak by tlačidlo nerobilo nič. */
+            let i = list.findIndex((v) => v >= now - 0.5);
+            if (i < 0) i = list.length - 1;
+            if (dir > 0) i = Math.min(list.length - 1, list[i] > now + 0.5 ? i : i + 1);
+            else i = Math.max(0, list[i] < now - 0.5 ? i : i - 1);
+            const val = list[i];
+            if (kind === 'w') { state.widthValue = val; state.width = dimensionBandIndex(list, val); }
+            else { state.lengthValue = val; state.length = dimensionBandIndex(list, val); }
+          }
+          clampToModel();
+          scheduleRender();
+        };
+        const KROKY = { w: ['Šírka', 'šírku'], l: ['Dĺžka', 'dĺžku'], h: ['Výška', 'výšku'] };
+        const buildNudgers = () => {
+          ['w', 'l', 'h'].forEach((kind) => {
+            const slider = cfgRoot.querySelector(`[data-sp-${kind}]`);
+            if (!slider || slider.dataset.spNudge === '1') return;
+            const host = slider.parentNode;
+            if (!host) return;
+            slider.dataset.spNudge = '1';
+            const rad = document.createElement('div');
+            rad.className = 'sp-nudge';
+            const btn = (dir, znak, popis) => {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.className = 'sp-nudge__btn';
+              b.dataset.spNudge = kind;
+              b.dataset.spNudgeDir = String(dir);
+              b.setAttribute('aria-label', `${popis} ${KROKY[kind][1]} o jeden katalógový rozmer`);
+              b.textContent = znak;
+              return b;
+            };
+            host.insertBefore(rad, slider);
+            rad.appendChild(btn(-1, '−', 'Zmenšiť'));
+            rad.appendChild(slider);
+            rad.appendChild(btn(1, '+', 'Zväčšiť'));
+          });
+        };
+
         /* Krytina strechy G. Cenník jej cenu neuvádza, tak voľba mení model
            a text dopytu, nie sumu — a povie to rovno, aby zákazník nečakal,
            že je krytina v cene. */
@@ -6199,6 +6280,7 @@
           buildColors(q('[data-sp-frame-colors]'), state.frameColor, 'spFrameColor');
           const louverHost = q('[data-sp-louver-colors]');
           if (louverHost) buildColors(louverHost, state.louverColor, 'spLouverColor');
+          buildNudgers();
           buildRoofFinishes();
           buildRoofSkins();
           buildLoads();
@@ -6342,6 +6424,9 @@
             state.frameColor = BIO.colors[Number(t.dataset.spFrameColor)];
           } else if (t.dataset.spRoofFinish) {
             state.roofFinish = Math.max(0, Math.min(ROOF_FINISHES.length - 1, Number(t.dataset.spRoofFinish)));
+          } else if (t.dataset.spNudge && t.dataset.spNudgeDir) {
+            nudge(t.dataset.spNudge, Number(t.dataset.spNudgeDir));
+            return;
           } else if (t.dataset.spRoofSkin) {
             state.roofSkin = Math.max(0, Math.min(ROOF_SKINS.length - 1, Number(t.dataset.spRoofSkin)));
           } else if (t.dataset.spBoxColor) {

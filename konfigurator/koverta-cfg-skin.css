@@ -1286,3 +1286,41 @@ body { background: var(--k-white); color: var(--k-ink); }
 #SoltecPremium .sp-howto b { color: var(--k-ink); font-weight: 650; }
 #SoltecPremium .sp-howto a { color: var(--k-grey); text-decoration: underline; text-underline-offset: 2px; }
 #SoltecPremium .sp-howto a:hover { color: var(--k-ink); }
+
+
+/* Posun rozmeru po jednej katalógovej zastávke. Posuvník ostáva ten istý, len
+   po jeho bokoch stoja dve tlačidlá — na telefóne je pixel pätnásť milimetrov
+   a prstom sa medzi susednými rozmermi netrafí. */
+#SoltecPremium .sp-nudge {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+#SoltecPremium .sp-nudge__btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--k-hair);
+  border-radius: 12px;
+  background: var(--k-white);
+  color: var(--k-ink);
+  font-family: var(--k-head);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 160ms var(--k-ease), background-color 160ms var(--k-ease);
+}
+#SoltecPremium .sp-nudge__btn:hover { border-color: var(--k-ink); }
+#SoltecPremium .sp-nudge__btn:active { background: var(--k-bone); }
+#SoltecPremium .sp-nudge__btn:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+
+/* Na dotykovom displeji je jazdec väčší. Palcom sa 22 px hľadá ťažko. */
+@media (pointer: coarse) {
+  #SoltecPremium .sp-slider::-webkit-slider-thumb { width: 3rem; height: 3rem; margin-top: -1.2rem; }
+  #SoltecPremium .sp-slider::-moz-range-thumb { width: 3rem; height: 3rem; }
+  #SoltecPremium .sp-slider::-webkit-slider-runnable-track,
+  #SoltecPremium .sp-slider::-moz-range-track { height: .7rem; }
+}
