@@ -1,43 +1,17 @@
-# Spustenie na koverta.sk — čo treba prepnúť
+# Spustenie na koverta.sk
 
-Web teraz beží ako **náhľad** na `https://danielvendzur-code.github.io/koverta-web/`
-a je zámerne mimo vyhľadávačov, aby nesúperil s ostrým `koverta.sk`.
-
-Kroky nižšie treba spraviť **naraz, v jednom nasadení**. Čiastočná migrácia
-(napr. odstránená značka noindex, ale staré adresy v canonical) je horšia než
-žiadna.
-
-## 1 · Pustiť stránku do vyhľadávačov
-
-Z hlavičky **každej** stránky zmazať:
-
-```html
-<meta name="robots" content="noindex, nofollow">
-```
-
-aj komentár `<!-- NÁHĽAD · … -->` nad ním. Kontrola:
+**Hotové (2026-09-16).** Web je prepnutý na ostrú doménu: meta robots je preč
+zo všetkých verejných stránok, canonical, og:url, og:image, twitter:image,
+JSON-LD, `sitemap.xml`, `robots.txt` aj `llms.txt` ukazujú na
+`https://koverta.sk/`, sociálne obrázky sú absolútne a `lastmod` je aktuálny.
 
 ```bash
-grep -rn 'name="robots"' --include=index.html .   # nesmie nič vrátiť
+grep -rn 'danielvendzur-code.github.io' .   # vráti 0
+grep -rn 'name="robots"' --include=index.html .   # iba interny-odhad-patiek
 ```
 
-## 2 · Prepísať adresy
-
-Všade, kde je `https://danielvendzur-code.github.io/koverta-web/`, má byť
-`https://koverta.sk/`. Týka sa to:
-
-| Kde | Čoho |
-|---|---|
-| každá stránka | `<link rel="canonical">` |
-| každá stránka | `og:url`, `og:image`, `twitter:image` |
-| každá stránka | JSON-LD: `Organization.url`, `WebSite.url`, `SearchAction.target`, `BreadcrumbList.item`, `Offer.url` |
-| `sitemap.xml` | všetkých 15 adries |
-| `llms.txt` | adresy stránok |
-| `robots.txt` | riadok `Sitemap:` |
-
-```bash
-grep -rn 'danielvendzur-code.github.io' . | wc -l   # po migrácii 0
-```
+Zostáva spraviť **mimo repozitára**: presmerovania starých Shopify adries
+(tabuľka nižšie) a overenie po spustení.
 
 ## 3 · Presmerovať staré adresy Shopify
 

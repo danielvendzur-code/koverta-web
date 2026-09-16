@@ -1,13 +1,8 @@
-# NÁHĽAD · Toto je adresa náhľadu nového webu Koverta na GitHub Pages.
-# Ostrá doména je koverta.sk. Kým to platí, každá stránka nesie v hlavičke
-# <meta name="robots" content="noindex, nofollow"> — prehľadávanie je tu
-# naschvál povolené, aby roboty ten pokyn vôbec videli. Blokovať ich tu by
-# malo opačný účinok: adresu by nezískali z obsahu, ale z odkazov, a mohla by
-# sa v indexe objaviť bez popisu.
-#
-# PRED SPUSTENÍM na koverta.sk: zmazať meta robots zo všetkých stránok,
-# prepísať adresy v canonical, sitemap.xml, llms.txt a v JSON-LD. Postup je
-# v MIGRACIA.md.
+# koverta.sk — ostrá prevádzka.
+# Verejné stránky sú otvorené pre vyhľadávače. Interná kalkulačka
+# /interny-odhad-patiek/ zostáva zámerne mimo indexu cez meta robots
+# priamo v hlavičke tej stránky; tu ju naschvál neblokujeme, aby roboty
+# ten pokyn vôbec uvideli. Blokovať ju tu by malo opačný účinok.
 
 User-agent: *
 Allow: /
@@ -59,4 +54,4 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
-Sitemap: https://danielvendzur-code.github.io/koverta-web/sitemap.xml
+Sitemap: https://koverta.sk/sitemap.xml
