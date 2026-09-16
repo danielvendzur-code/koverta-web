@@ -15765,3 +15765,128 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .k .kh-hero__box > .kh-hero__actions { margin-bottom: 14px; }
   .k .kh-hero__trust { margin-top: 0; }
 }
+
+/* ==========================================================================
+   35 · Porovnanie dvoch radov
+   Soltec pri prístreškoch neukazuje karty ani zoznam typorozmerov. Ukazuje
+   jednu tabuľku, v ktorej sú vedľa seba dva rady a v riadkoch presne tie
+   vlastnosti, ktorými sa líšia. Nič iné. Zadávateľ na to ukazoval ako na
+   vzor, tak to tu je doslova: vlastnosť vľavo, dva stĺpce vpravo.
+
+   Rozdiel je čitateľný bez čítania: riadok, kde sa hodnoty líšia, má vlastné
+   pozadie a hodnota, ktorá je „viac", má tučný rez. Na telefóne sa tabuľka
+   nezlomí do dvoch blokov pod sebou — to by porovnanie zabilo — ale
+   zúži sa a ostane vodorovne posuvná v svojom ráme.
+   ========================================================================== */
+.kh-vs { margin-top: clamp(22px, 2.6vw, 34px); }
+.kh-vs__scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.kh-vs table { width: 100%; min-width: 620px; border-collapse: collapse; }
+.kh-vs__lead {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--k-muted);
+  max-width: 92ch;
+}
+.kh-vs table { border-radius: inherit; overflow: hidden; }
+.kh-vs th, .kh-vs td {
+  padding: 16px clamp(14px, 1.5vw, 24px);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+  font-size: 15px;
+}
+/* Záhlavie: názov radu a pod ním jednou vetou, pre koho je. */
+.kh-vs thead th { background: var(--k-ink); color: #fff; vertical-align: bottom; }
+.kh-vs thead th:first-child { background: var(--k-ink); }
+.kh-vs__rad {
+  display: block;
+  font-family: var(--k-head);
+  font-size: clamp(17px, 1.5vw, 21px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.kh-vs__komu {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--k-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+.kh-vs thead th:first-child span {
+  display: block;
+  font-family: var(--k-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+/* Vlastnosť v prvom stĺpci: pomenovanie, nie údaj. */
+.kh-vs tbody th {
+  width: 26%;
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--k-ink);
+  border-top: 1px solid var(--k-hair-soft);
+}
+.kh-vs tbody td { color: var(--k-muted); border-top: 1px solid var(--k-hair-soft); }
+.kh-vs tbody tr:nth-child(even) th,
+.kh-vs tbody tr:nth-child(even) td { background: var(--k-bone); }
+/* Hodnota, ktorou daný rad vedie. Bez farby navyše, len tučnejšie a v inku. */
+.kh-vs td b { font-weight: 700; color: var(--k-ink); }
+.kh-vs td small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+.kh-vs__note { margin-top: 12px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft); }
+/* Na telefóne sa tabuľka neposúva. Posúvanie by znamenalo, že divák vidí
+   naraz jeden rad — a porovnanie, kvôli ktorému tu tabuľka je, prestane
+   fungovať. Vlastnosť sa preto presunie nad riadok cez celú šírku a pod ňou
+   stoja obe hodnoty vedľa seba. */
+@media (max-width: 720px) {
+  .kh-vs__scroll { overflow-x: visible; }
+  .kh-vs table { min-width: 0; display: block; }
+  .kh-vs thead, .kh-vs tbody { display: block; }
+  .kh-vs thead tr { display: grid; grid-template-columns: 1fr 1fr; }
+  .kh-vs thead th:first-child { display: none; }
+  .kh-vs thead th { padding: 14px 14px 15px; }
+  .kh-vs__rad { font-size: 17px; }
+  .kh-vs__komu { font-size: 11.5px; }
+  .kh-vs tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--k-hair);
+  }
+  .kh-vs tbody tr:first-child { border-top: 0; }
+  .kh-vs tbody th {
+    grid-column: 1 / -1;
+    width: auto;
+    padding: 13px 14px 2px;
+    border-top: 0;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--k-grey-soft);
+  }
+  .kh-vs tbody td {
+    padding: 4px 14px 14px;
+    border-top: 0;
+    font-size: 13.5px;
+  }
+  .kh-vs tbody td + td { border-left: 1px solid var(--k-hair-soft); }
+  .kh-vs tbody td small { font-size: 12px; }
+}
