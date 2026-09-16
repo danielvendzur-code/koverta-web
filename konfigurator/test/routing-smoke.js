@@ -160,6 +160,31 @@ module.exports = async function routingSmoke(browser) {
           }
         }
       }
+      /* Odvodnenie sa kreslí z dvoch odmeraných sietí a vyberá sa tá, ktorej
+         poloha rúry voči výpuste žľabu sedí. Keď sa vezme vzdialenejšia, jej
+         šikmý úsek sa stlačí a rúra je zdeformovaná. Autoprístrešky to majú
+         v koverta-accessories, tá však beží len na jednej rodine — záhradné
+         prístrešky ostávali nekryté a práve tam bola chyba, tak sa to kontroluje
+         na každej trase, ktorá odkvap vôbec kreslí. */
+      {
+        /* Odkvap majú len rodiny so strechou Koverta; ostatné trasy nemajú
+           ani geometry, takže sa sem nedostanú. */
+        const geom = (await snapshot()).geometry;
+        const dp = geom && geom.accessories && geom.accessories.downpipe;
+        if (dp && dp.enabled) {
+          const NATIVE = [0, -943];
+          assert(NATIVE.indexOf(dp.sourceOffset) > -1,
+            `${route}/${device}: unknown drainage mesh offset ${dp.sourceOffset}`);
+          const chosen = Math.abs(dp.outletOffset - dp.sourceOffset);
+          const other = Math.min(...NATIVE.filter(v => v !== dp.sourceOffset)
+            .map(v => Math.abs(dp.outletOffset - v)));
+          assert(chosen <= other,
+            `${route}/${device}: drainage mesh stretches ${chosen} mm where the other would stretch ${other} — the pipe is deformed`);
+          assert(dp.terminal && dp.terminal.dxMin === -40 && dp.terminal.dxMax === 104 &&
+            dp.terminal.dyMin === -40 && dp.terminal.dyMax === 40,
+            `${route}/${device}: downpipe foot is not the car shelters' 80 mm tube and elbow`);
+        }
+      }
       checkErrors();
       console.log(`ROUTING_PASS ${route}/${device}: runtime, tab, dimensions, price, colour, side, extras, next/back, fullscreen`);
     }

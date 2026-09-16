@@ -4603,8 +4603,6 @@
             if (maOdkvap()) {
               const refs = window.KV_DRAIN_REFERENCE;
               if (!refs) throw new Error('Missing original Koverta drainage geometry');
-              const four = postLayout().n === 2;
-              const ref = refs[four ? 'four' : 'six'];
               const rows = postXs(), row = rows.length - 1;
               const section = kvStlpRez(row, rows.length);
               const postX = rows[row], postFace = postX + section.d;
@@ -4624,8 +4622,23 @@
               const PIPE_MM = 80;
               const radius = PIPE_MM / 2, standoff = 17;
               const pipeX = postFace + radius + standoff, pipeY = inset + section.w / 2;
-              const sourcePipeX = four ? 4973 : 5916;
               const gutterShift = L - 6000;
+              /* Ktorú z dvoch odmeraných sietí použiť. Rozhoduje to jediné, čo
+                 rozlišuje ich tvar: ako ďaleko je rúra od výpuste žľabu.
+                 „six“ má rúru priamo pod výpusťou a ide rovno dole, „four“ ju
+                 má 943 mm vo vnútri a šikmým úsekom sa k nej vracia.
+                 Voľba visela na počte stĺpov (postLayout().n === 2), čo je iná
+                 otázka. Záhradné prístrešky majú stĺpy vždy na kraji, teda dva
+                 v rade a rúru 20 mm od výpuste — dostávali však „four“ a jeho
+                 943 mm šikmina sa stlačila na dvadsať milimetrov. To je tá
+                 deformácia. Berie sa sieť, ktorej vlastné odsadenie je bližšie
+                 k skutočnému; rozdiel potom pohltí prázdny pás medzi rúrou
+                 a žľabom, na čo je dosť krátky. */
+              const outletX = L - 84;
+              const odsadenie = pipeX - outletX;
+              const four = Math.abs(odsadenie + 943) < Math.abs(odsadenie);
+              const ref = refs[four ? 'four' : 'six'];
+              const sourcePipeX = four ? 4973 : 5916;
               const pipeShift = pipeX - sourcePipeX;
               /* Zvod sa posúva k aktívnemu stĺpu, žľab k aktívnej odkvapovej
                  hrane, a tie dva posuny sa nerovnajú. Rozdiel musí pohltiť
@@ -4712,6 +4725,10 @@
                 dyMax: Math.round(Math.max(...pata.map((q) => q[1])) - pipeY)
               } : null;
               kvAccessoryGeometry.downpipe={enabled:true,source:ref.source,radius,pipeCenter:[pipeX,pipeY],standoff,terminal,
+                /* Ako ďaleko je rúra od výpuste a ako ďaleko je v zvolenej
+                   sieti. Čím väčší rozdiel, tým viac sa sieť naťahuje; keď
+                   sa vyberie tá nesprávna, jej šikmina sa zdeformuje. */
+                outletOffset:Math.round(odsadenie), sourceOffset: four ? -943 : 0,
                 post:{x0:postX,x1:postFace,y0:inset,y1:inset+section.w},clamps,
                 vertexCount:vertices.length,triangleCount:ref.triangles.length,
                 pathBounds:{xMin:Math.min(...vertices.map(p=>p[0])),xMax:Math.max(...vertices.map(p=>p[0])),

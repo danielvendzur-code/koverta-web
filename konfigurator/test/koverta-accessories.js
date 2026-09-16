@@ -307,6 +307,21 @@ function validateAccessoryContacts(snap, label) {
   assertClose(term.dyMin, -40, `${label}: downpipe foot lost its 80 mm section across`);
   assertClose(term.dyMax, 40, `${label}: downpipe foot lost its 80 mm section across`);
 
+  /* Voľba odmeranej siete. Sú dve a líšia sa jediným: „six“ má rúru priamo
+     pod výpusťou žľabu, „four“ ju má 943 mm vo vnútri a šikmým úsekom sa
+     k nej vracia. Keď sa vezme tá vzdialenejšia, jej šikmina sa musí stlačiť
+     alebo natiahnuť o celý ten rozdiel a rúra sa viditeľne zdeformuje — presne
+     to sa dialo na záhradných prístreškoch, kde voľba visela na počte stĺpov
+     a nie na polohe rúry. Berie sa tá bližšia. */
+  const NATIVE = [0, -943];
+  assert(NATIVE.indexOf(downpipe.sourceOffset) > -1,
+    `${label}: unknown drainage mesh offset ${downpipe.sourceOffset}`);
+  const chosen = Math.abs(downpipe.outletOffset - downpipe.sourceOffset);
+  const other = Math.min(...NATIVE.filter((v) => v !== downpipe.sourceOffset)
+    .map((v) => Math.abs(downpipe.outletOffset - v)));
+  assert(chosen <= other,
+    `${label}: drainage mesh is the wrong one for a pipe ${downpipe.outletOffset} mm from the outlet — it has to stretch ${chosen} mm where the other would stretch ${other}`);
+
   const bounds = downpipe.pathBounds;
   assert(bounds.xMin >= assembly.xMin - 0.01 &&
     bounds.xMax <= assembly.xMax + 100 &&
