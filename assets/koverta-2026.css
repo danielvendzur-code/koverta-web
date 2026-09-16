@@ -4851,6 +4851,15 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 @media (min-width: 660px) { .kh-vcene__rad { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1040px) { .kh-vcene__rad { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Stĺpce majú rôzne dlhé odrážky, takže druhý a tretí riadok si v susedných
+   stĺpcoch nesadli. Subgrid ich drží na spoločných riadkoch bez ohľadu na to,
+   koľko riadkov zaberie ktorá odrážka. */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 660px) {
+    .kh-vcene__rad { grid-template-rows: auto auto; }
+    .kh-vcene__polozka { display: grid; grid-template-rows: subgrid; grid-row: span 2; align-content: start; }
+  }
+}
 
 .kh-vcene__polozka {
   position: relative;
@@ -4993,6 +5002,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-mat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-mat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kh-vcene__rad:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Šesť položiek v štvorstĺpcovej mriežke nechá v druhom rade dve a vedľa
+     nich dieru. Tri stĺpce ich rozdelia na dva plné riadky. */
+  .kh-vcene__rad:has(> :last-child:nth-child(6)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-cat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 620px) and (max-width: 1039px) {
@@ -5977,6 +5989,18 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 .kh-tab tbody tr:hover td,
 .kh-tab tbody tr:hover th { background: var(--k-bone); }
 .kh-tab__note { margin-top: 12px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft); }
+/* Fotografia pod tabuľkou. Tabuľka povie rozmery, fotografia ukáže, ako to
+   vyzerá — preto stoja pod sebou a nie vedľa seba. */
+.kh-tab__foto { margin: clamp(26px, 3vw, 44px) 0 0; }
+.kh-tab__foto img {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 16 / 7; object-fit: cover;
+  border-radius: var(--k-r-sm); border: 1px solid var(--k-hair);
+}
+.kh-tab__foto figcaption {
+  margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft);
+}
+@media (max-width: 720px) { .kh-tab__foto img { aspect-ratio: 4 / 3; } }
 
 /* Paleta odtieňov. Vzorka je štvorec s vlasovým rámom — na svetlých RAL
    odtieňoch by inak nebolo vidieť, kde vzorka končí. */
@@ -14972,6 +14996,9 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
+/* Keď porovnanie nasleduje hneď za vysvetľujúcou poznámkou, potrebuje odstup. */
+.k .kh-tab__note + .k-carport-compare,
+.k .kh-size-guide + .k-carport-compare { margin-top: clamp(26px, 3.4vw, 46px); }
 .k .k-carport-series {
   overflow: hidden;
   border: 1px solid rgba(18, 23, 26, .14);

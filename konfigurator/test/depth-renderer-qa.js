@@ -56,7 +56,19 @@ const { prepareContext } = require('./browser-qa');
              súboru založila neexistujúci priečinok. */
           const slug = String(key || 'K').replace(/[^a-z0-9]+/gi, '-');
           if (key) {
-            await page.locator('[data-sp-model="'+key+'"]').click({force:true});
+            /* Výber modelu už nie je v prvom kroku — rozmer sa pýta pred ním,
+               takže tlačidlo treba najprv odkryť prepnutím na jeho krok. */
+            const model = page.locator('[data-sp-model="'+key+'"]').first();
+            await model.waitFor({ state: 'attached' });
+            const step = await model.evaluate((el) => {
+              const panel = el.closest('[data-sp-stepno]');
+              return panel ? panel.getAttribute('data-sp-stepno') : '';
+            });
+            if (step) {
+              const go = page.locator('[data-sp-goto="' + step + '"]').first();
+              if (await go.count()) { await go.click(); await model.waitFor({ state: 'visible' }); }
+            }
+            await model.click({force:true});
             await page.waitForFunction(key=>window.SP_TEST.snapshot().model===key,key);
           }
           if (kind === 'carport' && /^SL/i.test(String(key))) {
