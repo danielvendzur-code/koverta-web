@@ -282,7 +282,7 @@ async function revealControl(page, selector) {
     await page.locator('[data-sp-side-opt="kvdrevo"]').click();
     await waitRender(page);
     let linesText = await page.locator('[data-sp-lines]').innerText();
-    assert(linesText.includes('Lamely — drevo') && linesText.includes('na nacenenie'),
+    assert(linesText.includes('Lamely, drevo') && linesText.includes('na nacenenie'),
       'Unverified wooden side wall was not converted to quote-only pricing');
     assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
       'Unknown-price side wall did not mark total as open/starting price');
@@ -306,7 +306,7 @@ async function revealControl(page, selector) {
     assert(payload && payload.body, 'Koverta payload builder returned no payload');
     assert(payload.body.includes('Umiestnenie: Samostatne stojaci.'), 'Payload omits the actual default placement');
     assert(payload.body.includes('na nacenenie'), 'Payload omits quote-only state from selected unpriced configuration');
-    assert(payload.body.includes('Lamely — drevo'), 'Payload omits selected side wall');
+    assert(payload.body.includes('Lamely, drevo'), 'Payload omits selected side wall');
     assert(payload.body.includes('LED'), 'Payload omits selected sourced accessory');
     assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
       'Payload incorrectly implies a verified zero color surcharge');

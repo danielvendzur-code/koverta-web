@@ -80,6 +80,81 @@ PROFILES = {
     # Malé mestské auto nesie celý exteriér v jednej textúre, takže farbu
     # berieme z nej po vrchole; lak sa dovolí len tam, kde textúra drží
     # dominantný odtieň karosérie (viď --paint-from-texture).
+    # G80 M3 nesie materiály len ako Material.0NN, takže ktorý je ktorý sa
+    # zistilo z geometrie: 015 je jediná veľká zelená vrstva cez celú karosériu,
+    # 029 sedí v pásme kolies po celom rázvore, 020 je dlhý úzky pás vysoko
+    # (zasklenie), 003 je najširšia vrstva vôbec (zrkadlá) a 018/019 sú drobné
+    # červené a biele kusy vpredu a vzadu.
+    'g80': [
+        ('material.015',    1, None),                 # lak
+        ('material.029',    3, (198, 204, 210)),      # disky
+        ('material.020',    2, (26, 32, 38)),         # zasklenie
+        ('material.019',    4, (240, 244, 248)),      # svetlomety
+        ('material.018',    4, (214, 30, 36)),        # koncové svetlá
+        ('material.003',    3, (176, 182, 188)),      # zrkadlá
+        ('material.017',    0, (34, 34, 36)),         # spodné lemy a nárazníky
+        ('material.016',    0, (22, 23, 25)),         # pneumatiky a tmavé diely
+        ('material.002',    0, (20, 21, 23)),
+    ],
+    # 208 má celý exteriér na jednom materiáli, takže sa vrstvy rozlišujú menom
+    # siete. Karoséria si drží farbu z textúry — okná sú v nej namaľované,
+    # takže lak z prepínača by prefarbil aj ich.
+    'p208': [
+        ('plane.000',       0, 'texture'),            # karoséria vrátane okien
+        # Koleso je v predlohe jeden tmavý kotúč a textúra na ňom nemá lúče,
+        # takže z neho po vzorkovaní ostala čierna placka. Disk sa preto
+        # dostavia rovnako ako pri sedane.
+        ('circle.000',      3, ('spokes', (198, 204, 210), (28, 29, 31))),
+        ('sphere.001',      3, (176, 182, 188)),      # zrkadlá
+        ('cube.004',        4, (240, 244, 248)),      # predné svetlá
+        ('cube.003',        4, (214, 30, 36)),        # zadný svetelný pás
+    ],
+    # 911 pomenúva vrstvy poctivo, takže profil je len prepis mien. Interiér
+    # a motor si zahodí sám cez INTERIOR. Pozor na poradie: 'car_vstd' je
+    # predponou 'car_vstda', tak ide mriežka pred štandardné diely.
+    # Diagnostika: každá vrstva 911 dostane vlastnú výraznú farbu, aby sa
+    # z obrázka dalo prečítať, ktorý materiál kde sedí. Do scény nejde.
+    'p911debug': [
+        ('car_vpnt_',       0, (255, 0, 0)),
+        ('car_vgla_',       0, (0, 255, 0)),
+        ('car_vwhl_',       0, (0, 0, 255)),
+        ('car_vlgt_',       0, (255, 255, 0)),
+        ('calip_color',     0, (255, 0, 255)),
+        ('bl_rim',          0, (0, 255, 255)),
+        ('wheel1a',         0, (128, 0, 0)),
+        ('car_vstda',       0, (0, 128, 0)),
+        ('car_vstd_',       0, (255, 128, 0)),
+        ('standardsurface', 0, (128, 0, 255)),
+    ],
+    'p911': [
+        ('car_vpnt_',       1, None),                 # lak
+        ('car_vgla_',       2, (26, 34, 42)),         # zasklenie
+        ('car_vwhl_',       3, (206, 210, 214)),      # disky
+        ('car_vlgt_',       4, (240, 244, 248)),      # svetlá
+        ('calip_color',     0, (196, 154, 16)),       # brzdové strmene
+        ('bl_rim',          3, (150, 154, 158)),
+        ('wheel1a',         0, (24, 25, 27)),         # plášte
+        ('car_vstda',       0, (18, 19, 21)),         # mriežka
+        ('car_vstd_',       0, (56, 58, 62)),         # lemy a lišty
+        ('standardsurface', 0, (16, 17, 19)),
+    ],
+    # Mini nesie karosériu na jednom materiáli s textúrou, ale má na ňu
+    # štrnásťtisíc vrcholov, takže sa do nich textúra zmestí a nemá zmysel ju
+    # prebiť lakom z prepínača. Zasklenie je zvlášť. Podložka pod autom nie je
+    # súčasťou auta.
+    'mini': [
+        ('mcar_hull',       0, 'texture'),
+        ('mcar_glass',      2, (26, 34, 42)),
+        ('ground',       None, None),
+    ],
+    # Záhradná zostava, nie auto. Tri materiály: látka a drevo si nesú farbu
+    # v textúre, kovový rám ju má vo faktore. Nič z toho sa neleskne ako lak,
+    # tak je všetko matné - vonkajší nábytok je látka, prášková farba a drevo.
+    'sofaset': [
+        ('mato',            0, 'texture'),          # čalúnenie
+        ('taxta',           0, 'texture'),          # drevo stolíka
+        ('metal',           0, (46, 47, 49)),       # rám
+    ],
     'city': [
         ('exterior',        1, 'texture'),
         ('interior',     None, None),
@@ -88,6 +163,45 @@ PROFILES = {
     ],
 }
 INTERIOR = ('interior', 'gauges', 'display', 'screen', 'engine', 'ssb_')
+
+# Svetlá, ktoré predloha nechala na materiáli skla.
+# 911 nesie svetlomety aj zadný svetelný pás na tom istom materiáli a v tej
+# istej sieti ako okná, takže sa menom oddeliť nedajú - a s tmavým zasklením
+# potom splynú s karosériou a auto vyzerá, že svetlá nemá. Geometria ich
+# oddelí spoľahlivo: sklá kabíny sedia vysoko, lampy pod pásom. Merané na
+# predlohe: stredné sklá nikde neklesnú pod 65 % výšky auta a lampy nikde
+# nevystúpia nad 63 %. Hodnota je podiel výšky auta, pod ktorým je sklo lampa.
+LAMPS_BELOW = {'p911': 0.64, 'mini': 0.62}
+
+# Koncové svetlá, ktoré predloha nechala priamo v karosérii.
+# Mini ich nesie na tom istom materiáli ako lak, takže by sa s ním prefarbili
+# a auto by vzadu svietilo bielo alebo modro. Geometria ich vyberie: sedia
+# v rohoch zadnej steny a nikde inde na aute nie je nič, čo by do toho rohu
+# zasahovalo. Box je (x od, |y| od, z od, z do) v podieloch dĺžky, polovice
+# šírky a výšky zarovnaného modelu, za ním strop jasu. Do boxu padne aj
+# svetlý rámik svetla — textúra ho kreslí ako chróm a je to jediné, čo dáva
+# lampe čistý obrys, tak ho jas odfiltruje a rámik ostane matný.
+# Merané na predlohe: v boxe je 1 042 vrcholov, z toho 292 rámika s jasom
+# okolo 120 a 678 šošovky s jasom pod 60.
+LAMP_BOX = {'mini': (0.908, 0.60, 0.455, 0.685, 60.0)}
+
+# Karoséria oddelená podľa odtieňa.
+# Mini nesie celý exteriér na jednom materiáli s textúrou, takže lak sa od
+# striech, skiel a lemov nedá oddeliť menom. Odtieňom áno: lakovaná časť je
+# červená, všetko ostatné je neutrálne sivé alebo čierne. Rozhoduje prevaha
+# najsilnejšieho kanála nad druhým v poradí, nie sýtosť ani jas — prevaha
+# ostane aj zatienenému panelu, kým podiel a jas s tieňom padajú a karoséria
+# potom vypadávala z laku po fľakoch.
+# Merané na predlohe: pri prahoch 12, 18 a 26 vyjde 11 133, 10 918 a 10 566
+# vrcholov s rovnakým priemerom (68, 11, 9), takže hranica leží v rovine.
+# Pri 8 sa ich nazbiera 13 807 a priemer sa posunie na (67, 20, 17) —
+# tam už do laku presakujú sivé lemy.
+PAINT_BY_TINT = {'mini': 12}
+# Nad čím sa už tmavý matný diel nepovažuje za zapečený tieň karosérie.
+# Lak má na predlohe stredný jas 18, lišty a zrkadlá 128; prah 9 leží medzi.
+SHADOW_LUM = 9.0
+LAMP_TONE = (242, 246, 250)          # svetlomety
+LAMP_TONE_REAR = (198, 34, 34)       # koncové svetlá
 
 COMP = {5120: 'b', 5121: 'B', 5122: 'h', 5123: 'H', 5125: 'I', 5126: 'f'}
 NUM = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
@@ -214,12 +328,20 @@ def alloy_wheels(q, mask, bright, dark, spokes=5):
     return (np.array(pos, dtype=np.float64), np.array(nrm, dtype=np.float64),
             np.array(col, dtype=np.uint8))
 
-def material_of(g, rules, index):
+def material_of(g, rules, index, mesh=''):
+    """Materiál pre danú vrstvu. Pravidlo sa hľadá najprv podľa mena materiálu
+    a keď tam nič nesedí, podľa mena siete: nejeden model zo Sketchfabu nesie
+    celý exteriér na jedinom materiáli a jediné, čím sa kolesá líšia od karosérie,
+    je meno siete."""
     if index is None: return 0, None, False
     name = (g['materials'][index].get('name') or '').lower()
-    interior = any(k in name for k in INTERIOR)
+    mesh = (mesh or '').lower()
+    interior = any(k in name for k in INTERIOR) or any(k in mesh for k in INTERIOR)
     for key, mat, col in rules:
         if key in name:
+            return mat, col, interior
+    for key, mat, col in rules:
+        if key in mesh:
             return mat, col, interior
     pbr = g['materials'][index].get('pbrMetallicRoughness', {})
     if 'baseColorTexture' in pbr:
@@ -245,8 +367,9 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         node = g['nodes'][idx]
         world = parent @ node_matrix(node)
         if 'mesh' in node:
+            mesh_name = g['meshes'][node['mesh']].get('name') or node.get('name') or ''
             for prim in g['meshes'][node['mesh']]['primitives']:
-                mat, col, interior = material_of(g, rules, prim.get('material'))
+                mat, col, interior = material_of(g, rules, prim.get('material'), mesh_name)
                 if mat is None: dropped['layer'] += 1; continue
                 if interior and not keep_interior: dropped['interior'] += 1; continue
                 attrs = prim['attributes']
@@ -355,6 +478,89 @@ def main(src, dst, profile='superb', keep_interior=False, use_texture=True,
         n[:, 0] = -n[:, 0]
         n[:, 1] = -n[:, 1]
         print('model otočený: predok bol vzadu')
+
+    cut = LAMPS_BELOW.get(profile)
+    if cut is not None:
+        lamp = (M == 2) & (q[:, 2] < q[:, 2].max() * cut)
+        if lamp.any():
+            M[lamp] = 4
+            # Vpredu biele, vzadu červené. Po zarovnaní stojí predok na nule,
+            # takže koncové svetlá sedia v druhej polovici dĺžky.
+            rear = lamp & (q[:, 0] > (q[:, 0].min() + q[:, 0].max()) / 2)
+            C[lamp] = np.array(LAMP_TONE, dtype=np.uint8)
+            C[rear] = np.array(LAMP_TONE_REAR, dtype=np.uint8)
+            print('sklo pod', f'{cut:.0%}', 'výšky prepnuté na svetlá:',
+                  int(lamp.sum()), 'vrcholov, z toho vzadu', int(rear.sum()))
+
+    box = LAMP_BOX.get(profile)
+    if box is not None:
+        x0, y0, z0, z1, lum_max = box
+        L, W, H = q[:, 0].max(), np.abs(q[:, 1]).max(), q[:, 2].max()
+        inside = ((q[:, 0] > L * x0) & (np.abs(q[:, 1]) > W * y0)
+                  & (q[:, 2] > H * z0) & (q[:, 2] < H * z1)
+                  & (C.astype(float) @ np.array([0.2126, 0.7152, 0.0722]) <= lum_max))
+        # Svetlom je len trojuholník, ktorý leží v boxe celý. Pri dvoch
+        # vrcholoch z troch mu tretí trčí do karosérie a lampa dostane
+        # pílovitý okraj; takto sa obrys drží hrán siete a lem si spraví
+        # svetlý rámik, ktorý ostal matný.
+        tail = np.repeat(inside.reshape(-1, 3).all(axis=1), 3)
+        if tail.any():
+            M[tail] = 4
+            C[tail] = np.array(LAMP_TONE_REAR, dtype=np.uint8)
+            print('koncové svetlá vybrané z karosérie:', int(tail.sum()), 'vrcholov')
+
+    tint_cut = PAINT_BY_TINT.get(profile)
+    if tint_cut is not None:
+        rank = np.sort(C.astype(np.int32), axis=1)
+        tint = rank[:, 2] - rank[:, 1]
+        # Rozhoduje sa celý trojuholník, nie vrchol: jediný vrchol, ktorý trafil
+        # škáru medzi panelmi, by inak z plochy vyrezal matný klin. Na predlohe
+        # je zmiešaných 969 z 19 730 trojuholníkov, väčšina sa teda aj tak zhodne.
+        matte = (M == 0).reshape(-1, 3).all(axis=1)
+        vote = ((M == 0) & (tint >= tint_cut)).reshape(-1, 3).sum(axis=1)
+        paint_tri = matte & (vote >= 2)
+
+        # Zapečený tieň pod lemom blatníka je v textúre prepálený na čiernu,
+        # takže odtieň v ňom neostal a z laku vypadne — okolo kolies potom
+        # visí pílovitý čierny lem. Pozná sa podľa toho, že sa dotýka laku
+        # a je takmer čierny: pohltíme ho, nech z neho vyjde tmavší odtieň
+        # karosérie namiesto diery. Svetlé lišty a zrkadlá sa laku dotýkajú
+        # tiež, ale čierne nie sú, tak ostanú matné.
+        lum3 = (C.astype(float) @ np.array([0.2126, 0.7152, 0.0722])
+                ).reshape(-1, 3).mean(axis=1)
+        shadow = matte & (lum3 <= SHADOW_LUM) & ~paint_tri
+        vid = np.unique(np.rint(q).astype(np.int64), axis=0, return_inverse=True)[1]
+        grown = 0
+        while paint_tri.any() and shadow.any():
+            edge = np.zeros(vid.max() + 1, dtype=bool)
+            edge[vid[np.repeat(paint_tri, 3)]] = True
+            add = shadow & (edge[vid].reshape(-1, 3).sum(axis=1) >= 2)
+            if not add.any(): break
+            paint_tri |= add
+            shadow &= ~add
+            grown += int(add.sum())
+
+        if paint_tri.any():
+            M[np.repeat(paint_tri, 3)] = 1
+            print('podľa odtieňa prepnuté na lak:', int(paint_tri.sum()) * 3,
+                  'vrcholov, z toho', grown * 3, 'z pohlteného tieňa')
+
+    # Lak nesie vo vrchole činiteľ jasu, nie farbu: shader ním násobí farbu
+    # z prepínača. Pri jednofarebnej predlohe vyjde všade jedna a nemení sa
+    # nič; pri karosérii z textúry si takto svetlé a tmavé miesta ponechá.
+    paint_mask = (M == 1)
+    if paint_mask.any():
+        lum = C.astype(float) @ np.array([0.2126, 0.7152, 0.0722])
+        # Jas sa priemeruje po trojuholníku a stred je medián, nie priemer:
+        # zopár odleskov by priemer vytiahlo hore a zvyšok karosérie by
+        # stmavol. Rozsah sa sťahuje k jednej, lebo textúra nesie zapečené
+        # tiene a odlesky tak tvrdé, že by z laku spravili fľaky — svetlo si
+        # scéna počíta z normál sama. Na predlohe ide pomer 0,34–8,0 na
+        # činiteľ 0,72–1,39.
+        lum = np.repeat(lum.reshape(-1, 3).mean(axis=1), 3)
+        ref = float(np.median(lum[paint_mask])) or 1.0
+        factor = np.clip(lum[paint_mask] / ref, 0.45, 2.2) ** 0.42
+        C[paint_mask] = np.rint(factor * 127.5).astype(np.uint8)[:, None]
 
     if rim_tone is not None and rim_mask.any():
         built = alloy_wheels(q, rim_mask, rim_tone[1], rim_tone[2])

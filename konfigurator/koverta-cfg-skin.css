@@ -377,6 +377,10 @@ body { background: var(--k-white); color: var(--k-ink); }
 }
 #SoltecPremium .sp-chip[aria-pressed="true"] strong,
 #SoltecPremium .sp-modelgrid button[aria-pressed="true"] strong { color: var(--k-ink); }
+/* Vybraný model má v tejto koži svetlé pozadie, takže biela cena z výchozieho
+   štýlu na ňom zmizla. */
+#SoltecPremium .sp-modelgrid button[aria-pressed="true"] .sp-modelgrid__cena { color: var(--k-ink); }
+#SoltecPremium .sp-modelgrid__cena { font-family: var(--k-head); font-weight: 700; letter-spacing: -.015em; }
 #SoltecPremium .sp-chip[aria-pressed="true"] span { color: var(--k-amber-deep); }
 #SoltecPremium .sp-chip strong,
 #SoltecPremium .sp-modelgrid strong { font-weight: 700; letter-spacing: -.015em; }
@@ -1039,28 +1043,68 @@ body { background: var(--k-white); color: var(--k-ink); }
   text-transform: uppercase;
   color: var(--k-grey);
 }
-.k .kv-cfg__tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Pás sa volal menami výrobkov — „Carport Soltec", „Pevné prestrešenia
+   Soltec" — a z nich sa nedalo prečítať, čo ktorý zastreší. Teraz sa
+   pomenúvajú tým, čo pod nimi stojí: auto, terasa, lamely. Značka a materiál
+   ostávajú v druhom riadku, kde patria, a pred nimi je obrázok, lebo jedna
+   kresba povie viac než ktorékoľvek z tých mien. */
+.k .kv-cfg__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; flex: 1 1 640px; }
 .k .kv-cfg__tabs a {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 16px;
+  gap: 11px;
+  min-height: 62px;
+  padding: 10px 14px;
   border: 1px solid var(--k-hair);
-  border-radius: 999px;
+  border-radius: 14px;
   background: var(--k-white);
-  font-family: var(--k-head);
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--k-ink);
   text-decoration: none;
-  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease);
+  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease),
+              box-shadow 200ms var(--k-ease);
 }
-.k .kv-cfg__tabs a:hover { border-color: var(--k-ink); }
+.k .kv-cfg__tabs a span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.k .kv-cfg__tabs a strong {
+  font-family: var(--k-head);
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+.k .kv-cfg__tabs a small {
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--k-grey);
+}
+.k .kv-cfg__ico {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.72;
+}
+.k .kv-cfg__tabs a:hover { border-color: var(--k-ink); box-shadow: 0 2px 10px rgba(12, 14, 16, .06); }
 .k .kv-cfg__tabs a[aria-current="page"] {
   background: var(--k-ink);
   border-color: var(--k-ink);
   color: var(--k-white);
+}
+.k .kv-cfg__tabs a[aria-current="page"] small { color: rgba(255, 255, 255, .72); }
+.k .kv-cfg__tabs a[aria-current="page"] .kv-cfg__ico { opacity: 0.9; }
+@media (max-width: 1399px) {
+  .k .kv-cfg__tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1099px) {
+  .k .kv-cfg__tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* Odkaz na katalóg a ceny majiteľ z tohto pásu odstránil, takže tu po ňom
    nezostáva ani štýl. */
@@ -1073,15 +1117,11 @@ body { background: var(--k-white); color: var(--k-ink); }
   .k .kv-cfg__tabs {
     grid-column: 1 / -1;
     grid-row: 2;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    margin-inline: calc(var(--k-gut) * -1);
-    padding-inline: var(--k-gut);
-    scroll-snap-type: x proximity;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
-  .k .kv-cfg__tabs::-webkit-scrollbar { display: none; }
-  .k .kv-cfg__tabs a { flex: 0 0 auto; scroll-snap-align: start; }
+  .k .kv-cfg__tabs a { min-height: 54px; padding: 9px 12px; }
+  .k .kv-cfg__ico { width: 30px; height: 20px; }
 }
 
 /* Nástroj sa dole dotýkal pätky. Medzi posledným krokom a tmavým pásom
@@ -1151,3 +1191,136 @@ body { background: var(--k-white); color: var(--k-ink); }
 }
 #SoltecPremium .sp-navrow button[data-sp-next]:hover { border-color: var(--k-amber); }
 #SoltecPremium .sp-navrow button[data-sp-next]:disabled { box-shadow: none; }
+
+/* Atypický rozmer
+   ---------------------------------------------------------------------------
+   Panel sa doteraz vkladal bez jediného pravidla, takže tri popisky a tri
+   políčka stáli v jednom riadku textu jedno cez druhé a nedalo sa prečítať,
+   ku ktorému políčku ktorý popisok patrí. Vyzerá to teraz ako zvyšok kroku:
+   políčka v mriežke, popisok nad políčkom, jednotka v popisku. */
+#SoltecPremium .kv-custom {
+  margin: 1.2rem 0 0;
+  padding: 1.6rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 1rem;
+  background: var(--sp-soft);
+}
+#SoltecPremium .kv-custom > .sp-side-note:first-child { margin: 0 0 1.4rem; }
+#SoltecPremium .kv-custom__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 560px) {
+  #SoltecPremium .kv-custom__row { grid-template-columns: 1fr; }
+}
+#SoltecPremium .kv-custom label {
+  display: block;
+  color: var(--sp-muted);
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+#SoltecPremium .kv-custom input[type="number"],
+#SoltecPremium .kv-custom textarea {
+  display: block;
+  width: 100%;
+  margin-top: .5rem;
+  padding: .7rem .85rem;
+  border: 1px solid var(--sp-line);
+  border-radius: .7rem;
+  background: #fff;
+  color: var(--sp-ink);
+  font: inherit;
+  font-size: 1.3rem;
+}
+#SoltecPremium .kv-custom input[type="number"] { min-height: 4rem; }
+#SoltecPremium .kv-custom textarea { min-height: 7rem; resize: vertical; }
+#SoltecPremium .kv-custom input:focus-visible,
+#SoltecPremium .kv-custom textarea:focus-visible {
+  outline: 2px solid var(--k-amber);
+  outline-offset: 1px;
+  border-color: var(--k-amber);
+}
+/* Políčko, ktoré prehliadač označí za nevyplnené, sa má dať nájsť očami.
+   Platí až po prvom odoslaní, aby prázdny formulár nesvietil načerveno. */
+#SoltecPremium .kv-custom.je-overeny input:invalid { border-color: #c4341f; }
+#SoltecPremium .kv-custom__note { margin-top: 1.2rem; }
+#SoltecPremium .kv-custom [data-kv-cerr] { margin-top: 1rem; color: #c4341f; }
+#SoltecPremium .kv-custom [data-kv-csend] { width: 100%; margin-top: 1.4rem; }
+
+
+/* Návod na ovládanie. Patrí pod kroky a zavretý: kto ho potrebuje, rozklikne,
+   kto nie, nepríde kvôli nemu o miesto na obrazovke. */
+#SoltecPremium .sp-howto {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-hair);
+}
+#SoltecPremium .sp-howto > summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--k-head);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--k-grey);
+}
+#SoltecPremium .sp-howto > summary::-webkit-details-marker { display: none; }
+#SoltecPremium .sp-howto > summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1em;
+  color: var(--k-amber-deep);
+}
+#SoltecPremium .sp-howto[open] > summary::before { content: "–"; }
+#SoltecPremium .sp-howto > summary:hover { color: var(--k-ink); }
+#SoltecPremium .sp-howto ul {
+  margin: 10px 0 0;
+  padding: 0 0 0 1.05em;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--k-grey);
+}
+#SoltecPremium .sp-howto b { color: var(--k-ink); font-weight: 650; }
+#SoltecPremium .sp-howto a { color: var(--k-grey); text-decoration: underline; text-underline-offset: 2px; }
+#SoltecPremium .sp-howto a:hover { color: var(--k-ink); }
+
+
+/* Posun rozmeru po jednej katalógovej zastávke. Posuvník ostáva ten istý, len
+   po jeho bokoch stoja dve tlačidlá — na telefóne je pixel pätnásť milimetrov
+   a prstom sa medzi susednými rozmermi netrafí. */
+#SoltecPremium .sp-nudge {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+#SoltecPremium .sp-nudge__btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--k-hair);
+  border-radius: 12px;
+  background: var(--k-white);
+  color: var(--k-ink);
+  font-family: var(--k-head);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 160ms var(--k-ease), background-color 160ms var(--k-ease);
+}
+#SoltecPremium .sp-nudge__btn:hover { border-color: var(--k-ink); }
+#SoltecPremium .sp-nudge__btn:active { background: var(--k-bone); }
+#SoltecPremium .sp-nudge__btn:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 2px; }
+
+/* Na dotykovom displeji je jazdec väčší. Palcom sa 22 px hľadá ťažko. */
+@media (pointer: coarse) {
+  #SoltecPremium .sp-slider::-webkit-slider-thumb { width: 3rem; height: 3rem; margin-top: -1.2rem; }
+  #SoltecPremium .sp-slider::-moz-range-thumb { width: 3rem; height: 3rem; }
+  #SoltecPremium .sp-slider::-webkit-slider-runnable-track,
+  #SoltecPremium .sp-slider::-moz-range-track { height: .7rem; }
+}

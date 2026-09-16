@@ -14,7 +14,7 @@ const { prepareContext } = require('./browser-qa');
       const page = await context.newPage();
       const errors=[];
       page.on('pageerror',error=>errors.push(error.message));
-      for (const kind of ['koverta','carport','canopy','bio']) {
+      for (const kind of ['koverta','zahrada','carport','canopy','bio']) {
         await page.goto('http://127.0.0.1:8901/konfigurator/?page='+kind,{waitUntil:'load'});
         /* Lišta súhlasu sa pridáva až v `requestAnimationFrame`, takže hneď po
            `load` ešte nemusí byť v DOM — a keď sa objaví neskôr, sadne na spodok

@@ -42,7 +42,11 @@ module.exports = async function routingSmoke(browser) {
       const step = await page.locator(selector).first().evaluate(el => Number(el.closest('[data-sp-stepno]').dataset.spStepno));
       await page.locator(`[data-sp-goto="${step}"]`).click();
     };
-    for (const route of ['koverta', 'carport', 'canopy', 'bio']) {
+    for (const route of ['koverta', 'zahrada', 'carport', 'canopy', 'bio']) {
+      /* Záhradný prístrešok je ten istý oceľový výrobok ako prístrešok pre
+         auto — tá istá skladba, tie isté lamelové výplne, tá istá cenová
+         logika. Kontroly písané pre Kovertu preto platia aj naň. */
+      const kv = route === 'koverta' || route === 'zahrada';
       await page.goto(`http://127.0.0.1:8901/konfigurator/?page=${route}`, {waitUntil:'load',timeout:60000});
       const consent = page.getByRole('button', {name:'Iba nevyhnutné'});
       if (await consent.count()) await consent.first().click();
@@ -50,7 +54,7 @@ module.exports = async function routingSmoke(browser) {
       const initial = await snapshot();
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);
-      if (route === 'koverta') {
+      if (kv) {
         assert(initial.price.open === true && initial.price.total === null &&
           initial.price.catalogueSubtotal > 0 && Number.isFinite(initial.price.catalogueSubtotal),
           `${route}: mandatory quote-only drainage lost the numeric catalogue subtotal`);
@@ -66,24 +70,35 @@ module.exports = async function routingSmoke(browser) {
       await page.waitForTimeout(180);
       const resized = await snapshot();
       assert(resized.length !== initial.length, `${route}: length did not change`);
-      const initialComparable = route === 'koverta' ? initial.price.catalogueSubtotal : initial.price.total;
-      const resizedComparable = route === 'koverta' ? resized.price.catalogueSubtotal : resized.price.total;
+      const initialComparable = kv ? initial.price.catalogueSubtotal : initial.price.total;
+      const resizedComparable = kv ? resized.price.catalogueSubtotal : resized.price.total;
       assert(resizedComparable !== initialComparable, `${route}: dimension change did not change price`);
-      const current = await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno');
+      /* Jeden krok môže mať viac panelov — rozmer a pod ním model — ale všetky
+         musia patriť tomu istému kroku. Keby sa niektorý odpojil, zákazník by
+         videl v jednom kroku kus iného. */
+        const visibleStep = async () => {
+          const nos = await page.locator('[data-sp-stepno]:not([hidden])').evaluateAll(
+            els => els.map(el => el.dataset.spStepno));
+          assert(nos.length > 0, `${route}: no visible step panel`);
+          assert(new Set(nos).size === 1,
+            `${route}: visible panels belong to different steps: ${nos.join(', ')}`);
+          return nos[0];
+        };
+      const current = await visibleStep();
       await page.locator('[data-sp-next]').click();
-      assert(await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno') !== current, `${route}: next failed`);
+      assert(await visibleStep() !== current, `${route}: next failed`);
       await page.locator('[data-sp-back]').click();
-      assert(await page.locator('[data-sp-stepno]:not([hidden])').getAttribute('data-sp-stepno') === current, `${route}: back failed`);
+      assert(await visibleStep() === current, `${route}: back failed`);
 
       await gotoControl('[data-sp-frame-color]');
       await page.locator('[data-sp-frame-color]:not([aria-pressed="true"])').first().click();
       assert((await snapshot()).frameColor !== resized.frameColor, `${route}: colour did not change`);
       await gotoControl('[data-sp-side]');
       await page.locator('[data-sp-side]').first().click();
-      await page.locator(route === 'koverta' ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
+      await page.locator(kv ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      if (route === 'koverta') {
+      if (kv) {
         assert(withSide.price.open === true && withSide.price.total === null &&
           withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
           `${route}: quote-only side is missing from price lines`);
@@ -91,7 +106,7 @@ module.exports = async function routingSmoke(browser) {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
       }
 
-      if (route === 'koverta') {
+      if (kv) {
         /* Odkvap so zvodom je súčasťou zostavy, nie voľbou — prepínač aj
            kotvenie sú z ponuky preč. Musí teda platiť oboje: voľby sa
            nevrátili a odvodnenie je aj tak v modeli aj v súhrne ako položka
@@ -124,6 +139,10 @@ module.exports = async function routingSmoke(browser) {
       await page.locator('[data-sp-cfg-close]').click();
       assert(!(await page.locator('[data-sp-section]').evaluate(el => el.classList.contains('is-full'))), `${route}: fullscreen did not close`);
 
+      /* Odmerané scény z Expivi existujú len pre prístrešok pre auto — sú to
+         konkrétne katalógové zostavy 7000 × 5200 a 7000 × 6000. Záhradný
+         prístrešok také rozmery nemá a kreslí sa z parametrov, takže sa proti
+         nim porovnávať nedá. */
       if (route === 'koverta') {
         await gotoControl('[data-sp-w]');
         for (const length of [5200,6000]) {
@@ -141,6 +160,31 @@ module.exports = async function routingSmoke(browser) {
           }
         }
       }
+      /* Odvodnenie sa kreslí z dvoch odmeraných sietí a vyberá sa tá, ktorej
+         poloha rúry voči výpuste žľabu sedí. Keď sa vezme vzdialenejšia, jej
+         šikmý úsek sa stlačí a rúra je zdeformovaná. Autoprístrešky to majú
+         v koverta-accessories, tá však beží len na jednej rodine — záhradné
+         prístrešky ostávali nekryté a práve tam bola chyba, tak sa to kontroluje
+         na každej trase, ktorá odkvap vôbec kreslí. */
+      {
+        /* Odkvap majú len rodiny so strechou Koverta; ostatné trasy nemajú
+           ani geometry, takže sa sem nedostanú. */
+        const geom = (await snapshot()).geometry;
+        const dp = geom && geom.accessories && geom.accessories.downpipe;
+        if (dp && dp.enabled) {
+          const NATIVE = [0, -943];
+          assert(NATIVE.indexOf(dp.sourceOffset) > -1,
+            `${route}/${device}: unknown drainage mesh offset ${dp.sourceOffset}`);
+          const chosen = Math.abs(dp.outletOffset - dp.sourceOffset);
+          const other = Math.min(...NATIVE.filter(v => v !== dp.sourceOffset)
+            .map(v => Math.abs(dp.outletOffset - v)));
+          assert(chosen <= other,
+            `${route}/${device}: drainage mesh stretches ${chosen} mm where the other would stretch ${other} — the pipe is deformed`);
+          assert(dp.terminal && dp.terminal.dxMin === -40 && dp.terminal.dxMax === 104 &&
+            dp.terminal.dyMin === -40 && dp.terminal.dyMax === 40,
+            `${route}/${device}: downpipe foot is not the car shelters' 80 mm tube and elbow`);
+        }
+      }
       checkErrors();
       console.log(`ROUTING_PASS ${route}/${device}: runtime, tab, dimensions, price, colour, side, extras, next/back, fullscreen`);
     }
@@ -151,3 +195,14 @@ module.exports = async function routingSmoke(browser) {
     await context.close();
   }
 };
+
+/* Spustenie priamo z príkazového riadku. Doteraz sa tento súbor dal len
+   vyžiadať z layout-smoke; `node routing-smoke.js` sa ticho skončil nulou,
+   takže vyzeral, že prešiel, hoci neurobil nič. To je horšie ako pád. */
+if (require.main === module) {
+  const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
+  (async () => {
+    const browser = await chromium.launch();
+    try { await module.exports(browser); } finally { await browser.close(); }
+  })().catch((error) => { console.error(error.stack || error); process.exit(1); });
+}

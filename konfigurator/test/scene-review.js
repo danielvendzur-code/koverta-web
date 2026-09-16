@@ -8,7 +8,7 @@ const {prepareContext}=require('./browser-qa');
     const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:1000},deviceScaleFactor:mobile?2:1});
     await prepareContext(context);
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-    for(const family of ['koverta','carport','bio','canopy']) {
+    for(const family of ['koverta','zahrada','carport','bio','canopy']) {
       await page.goto('http://127.0.0.1:8901/konfigurator/?page='+family,{waitUntil:'load'});
       /* Lišta súhlasu sa pridáva až v `requestAnimationFrame`, takže hneď po
          `load` ešte nemusí byť v DOM — a keď sa objaví neskôr, sadne na spodok
@@ -47,7 +47,8 @@ const {prepareContext}=require('./browser-qa');
       await page.locator('[data-zoom-step="reset"]').click();await page.waitForFunction(()=>SP_TEST.snapshot().zoom===1);
       await zoom.click();
       await page.getByRole('button',{name:'Dážď',exact:true}).click();
-      await page.getByLabel('Sila dažďa').selectOption('heavy');
+      // Sila dažďa sa už nevyberá: scéna kreslí jednu. Záber ostáva ten istý,
+      // len sa nenastavuje stupeň, ktorý zmizol z ponuky.
       await page.waitForTimeout(800);
       await page.getByRole('button',{name:'Pozastaviť',exact:true}).click();
       await page.getByLabel('Odtok vody').check();
