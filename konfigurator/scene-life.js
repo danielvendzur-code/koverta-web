@@ -406,7 +406,7 @@
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
         <select class="sp-scene__paint" aria-label="Lak auta"><option value="silver">Strieborná</option><option value="graphite">Grafitová</option><option value="blue">Modrá</option></select></div>
         <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
-          <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="cloud">Zamračené</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
+          <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
         <div class="sp-scene__rain sp-scene__more" hidden><select data-scene-intensity aria-label="Sila dažďa"><option value="light">Mrholenie</option><option value="steady" selected>Dážď</option><option value="heavy">Lejak</option></select><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
         <a class="sp-scene__credits sp-scene__more" href="./scene-assets/CREDITS.md" target="_blank" rel="noopener">O 3D modeloch</a>
@@ -468,7 +468,7 @@
       const message=[equipment,weather].filter(Boolean).join(' · ');
       if(status.textContent!==message)status.textContent=message;
       const label=state.mode==='car'?'Auto':state.mode==='bistro'?'Posedenie':'Prázdny';
-      panel.querySelector('.sp-scene__summary').textContent=state.weather==='rain'?label+' · dážď':state.weather==='cloud'?label+' · zamračené':label;
+      panel.querySelector('.sp-scene__summary').textContent=state.weather==='rain'?label+' · dážď':label;
     }
     const update=()=>{failure='';if(context)prepare(context);changed();run();};
     panel.addEventListener('click',e=>{

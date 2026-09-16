@@ -1029,8 +1029,8 @@
            strecha jej na oboch koncoch prečnieva vyše metra. Šesťstĺpová má
            krajné rady v osiach čelných rámov, teda pri hranách strechy, a
            stredný rad pod prostrednou väznicou. Odmerané zo všetkých exportov
-           (prierez 110 × 190 pri štvorstĺpovej, 150 × 150 v rohoch pri
-           šesťstĺpovej) — nie je to voľba, vyplýva to zo šírky. */
+           (prierez podľa podkladu majiteľa 100 × 100 v rohoch aj v strede,
+           2026-09-16) — nie je to voľba, vyplýva to zo šírky. */
         const kvOsiStlpov = () => {
           const measured = kvMeasured();
           if (measured) return measured.postAxes.slice();
@@ -1054,7 +1054,7 @@
         const kvStlpRez = (i, n) => {
           const R = model().kvRef || {}, b = kvBand();
           const rohovy = i === 0 || i === n - 1;
-          const side = kvExportPost100() ? 100 : (Number(R.postW) || 150);
+          const side = kvExportPost100() ? 100 : (Number(R.postW) || 100);
           // Connection role is independent of section: four-post cantilever
           // assemblies still connect along the side beam, not the end frame.
           const roh = rohovy && !(b && b.stlpyNaVaznici);
@@ -3913,8 +3913,8 @@
 
             /* --- obvodový rám. Jeden C profil 74 × 220, nie dvojica —
                v kompletnej scéne 14069 sú na každej strane presne dva kusy
-               (74 × 5 820 po bokoch a 6 964 × 74 na čelách) a stĺp 150 × 150
-               je od nich hrubší, takže spod rámu dovnútra vyčnieva. Vonkajšie
+               (74 × 5 820 po bokoch a 6 964 × 74 na čelách) a stĺp je od nich
+               hrubší, takže spod rámu dovnútra vyčnieva. Vonkajšie
                líce rámu je 18 mm za lícom lemovania. Čelá sú zatiahnuté 15 mm
                od zadku a 159 od odkvapu — v tej kapse visí žľab. */
             const RAM_PAR = RAM_W;                         // hrúbka profilu rámu
@@ -5855,7 +5855,7 @@
                nevie, ako vysoko pod prístreškom prejde. */
             + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
           if (modelNote && m.kvGeom) modelNote.textContent = kvMeasured()
-            ? 'Zobrazená zostava: rovnaké stĺpy 150 × 150 mm v rohoch aj v strede, výška pod rámom 2 398 mm.'
+            ? 'Zobrazená zostava: rovnaké stĺpy 100 × 100 mm v rohoch aj v strede, výška pod rámom 2 398 mm.'
             : 'Prierez a rozmiestnenie stĺpov závisia od konkrétnej zostavy. Nosnú konštrukciu a kotvenie potvrdíme pri návrhu.';
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
