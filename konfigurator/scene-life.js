@@ -668,9 +668,13 @@
       const contact=program(gl,`precision highp float;attribute vec2 corner;uniform float viewportHeight;${projection}
         uniform vec3 center;uniform vec2 radius;varying vec2 uv;
         void main(){uv=corner;gl_Position=project(vec3(center.xy+corner*radius,center.z));}`,
-        `precision mediump float;varying vec2 uv;uniform float strength;
+        `precision mediump float;varying vec2 uv;uniform float strength;uniform float boxy;
         void main(){float d=length(uv);
-          float a=(1.-smoothstep(.10,.58,d))*.34+(1.-smoothstep(.46,1.,d))*.17;
+          float round=(1.-smoothstep(.10,.58,d))*.34+(1.-smoothstep(.46,1.,d))*.17;
+          /* Prístrešok nie je guľatý. Jeho tieň drží pôdorys strechy a mäkne
+             až na okraji, kde ho rozostruje obloha. */
+          float box=(1.-smoothstep(.62,1.,abs(uv.x)))*(1.-smoothstep(.62,1.,abs(uv.y)));
+          float a=mix(round,box*.46,boxy);
           gl_FragColor=vec4(.05,.06,.07,a*strength);}`);
       const contactBuffer=gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER,contactBuffer);
