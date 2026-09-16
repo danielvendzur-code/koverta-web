@@ -4851,6 +4851,15 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
 }
 @media (min-width: 660px) { .kh-vcene__rad { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1040px) { .kh-vcene__rad { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Stĺpce majú rôzne dlhé odrážky, takže druhý a tretí riadok si v susedných
+   stĺpcoch nesadli. Subgrid ich drží na spoločných riadkoch bez ohľadu na to,
+   koľko riadkov zaberie ktorá odrážka. */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 660px) {
+    .kh-vcene__rad { grid-template-rows: auto auto; }
+    .kh-vcene__polozka { display: grid; grid-template-rows: subgrid; grid-row: span 2; align-content: start; }
+  }
+}
 
 .kh-vcene__polozka {
   position: relative;
@@ -4993,6 +5002,9 @@ a:hover > .k-arrow { color: var(--k-amber-deep); }
   .kh-mat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-mat__grid:has(> :last-child:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kh-vcene__rad:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Šesť položiek v štvorstĺpcovej mriežke nechá v druhom rade dve a vedľa
+     nich dieru. Tri stĺpce ich rozdelia na dva plné riadky. */
+  .kh-vcene__rad:has(> :last-child:nth-child(6)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kh-cat__grid:has(> :last-child:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 620px) and (max-width: 1039px) {
