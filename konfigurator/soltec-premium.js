@@ -1996,7 +1996,7 @@
              účinok je, že 2× je aj lacnejšie než doterajších 2,5×. */
           let ratio = motionDetail
             ? Math.max(0.5, MOTION_ROWS[motionScale] / Math.max(1, canvas.clientHeight))
-            : dpr * (dpr >= 2 ? (stillScale >= 2 ? 2 : 1) : (stillScale >= 2 ? 4 : 2));
+            : dpr * (dpr >= 2 ? 2 : (stillScale >= 2 ? 4 : 2));
           /* Na hustom displeji sa počas otáčania neprevzorkováva nad vlastné
              pixely displeja. Telefón s pomerom 2,75 kreslil pohyb v 1,7-násobku
              svojich pixelov, kým zastavený snímok má dvojnásobok - pohyb tak
@@ -2018,6 +2018,18 @@
           const fits = Math.min(1, maxSide / Math.max(1, cssWidth * ratio),
                                    maxSide / Math.max(1, cssHeight * ratio));
           if (fits < 1) ratio *= fits;
+          /* Pod dvojnásobné prevzorkovanie sa pri zastavenom snímku nejde.
+             Na hustom displeji bol dovtedy jediný ústupok skok rovno na
+             natívne rozlíšenie, kde už neprevzorkováva nič: vyhladzovanie
+             kontextu do vlastnej textúry nesiaha, takže na zvislej hrane
+             stĺpa ostali schody. To je prvá vec, ktorú na obrázku vidno, a
+             nestojí za pár ušetrených milisekúnd — zastavený snímok sa kreslí
+             raz, keď už používateľ model pustil. Klesá sa len vtedy, keď by
+             väčší buffer neprešiel cez ovládač. */
+          if (!motionDetail) {
+            const room = Math.min(maxSide / cssWidth, maxSide / cssHeight);
+            ratio = Math.min(Math.max(ratio, dpr * 2), room);
+          }
           /* Keď niektorý strop násobok zrazí, zaokrúhli sa späť nadol na celé
              fyzické pixely — filter nižšie počíta so štvorcovými blokmi. */
           if (!motionDetail) ratio = dpr * Math.max(1, Math.floor(ratio / dpr + 1e-6));
@@ -2228,6 +2240,10 @@
           };
           depthPainter.replay = paint;
           paint();
+          /* Koľkokrát je scéna nakreslená nad rozlíšenie plátna. Zvonku sa to
+             inak nedá zistiť a je to presne to číslo, ktoré rozhoduje o tom,
+             či zvislá hrana vyjde hladká alebo schodovitá. */
+          canvas.dataset.superSample = (depthPainter.fboW / Math.max(1, surface.width)).toFixed(2);
           canvas.dataset.renderer = 'webgl-depth';
           canvas.dataset.faceCount = String(solid.length + transparent.length);
           /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
