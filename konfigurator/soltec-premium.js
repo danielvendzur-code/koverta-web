@@ -5600,7 +5600,15 @@
           const side = state.activeSide;
           host.textContent = '';
           let lastGroup = '';
-          SIDE_OPTS.forEach((o) => {
+          /* Model si smie zoznam výplní zúžiť. Cenník ich neviaže na model —
+             kapitola o doplnkoch hovorí všeobecne o „stranách prístreška
+             alebo pergoly" — ale poznámky pri modeloch F vymenúvajú sklenené,
+             ALU a drevené panely a ZIP roletu, kým pri SL nič také nestojí.
+             Kým to výrobca nepotvrdí, neuberá sa nič; keď potvrdí, je to jedno
+             pole v dátach modelu a nie zásah do kódu. */
+          const povolene = Array.isArray(model().sideIds) ? model().sideIds : null;
+          SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
+            .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
               : SIDE_MOVES[o.id] ? 'Pohyblivé tienenie a panely' : 'Pevné výplne';
             if (group !== lastGroup) {
