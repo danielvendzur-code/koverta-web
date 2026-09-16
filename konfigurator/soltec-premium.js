@@ -839,8 +839,13 @@
           { id: 'h50a',  label: 'Posuvné panely H50 — hliník',  note: 'podľa rozmeru' },
           { id: 'fi30',  label: 'Stena ISO 3 — izolačný panel 30 mm', note: 'podľa výšky' },
           { id: 'fw25',  label: 'Stena WOOD — sibírsky smrekovec',  note: 'podľa výšky' },
-          { id: 'l44es', label: 'Stena L44-ES — ťahokov',            note: 'podľa výšky' },
-          { id: 'l44alu', label: 'Stena L44-ALU 20/20 — hliník',     note: 'podľa výšky' },
+          /* L44-ES a L44-ALU 20/20 tu boli ako bočné steny, ale v cenníku nie
+             sú steny: sú to plášte lopy — „LOPA / L44-ES", „LOPA / L44-ALU
+             20/20" — a účtujú sa ako celý zadný box daného rozmeru, nie na
+             bežný meter steny. Cenník pevných stien pozná dve: FW25 zo
+             sibírskeho smrekovca do 4 m a FI30 z ISO panela do 6 m. Na
+             terasách a pergolách L44 v cenníku 2026 nie je vôbec. Ostávajú
+             teda tam, kam patria — medzi prevedenia boxu. */
           { id: 'e300',  label: 'Brisoleje E300',                    note: 'na nacenenie' }
         ];
         const SIDE_OPTS = (Array.isArray(BIO.sideOpts) && BIO.sideOpts.length)
@@ -890,6 +895,15 @@
             topHex: '#5d7350', bottomHex: '#b4b8b6',
             chipTop: '#5d7350', chipLow: '#b4b8b6' }
         ];
+        /* Krytina tretia: ISO panel. Cenník ju vedie ako krytinu tejto rodiny
+           spolu so sklom a zelenou strechou — „ISO panel 3 cm, laminirano
+           kaljeno steklo ali zelena streha" — ale nie je to voľba: modely F
+           ju majú napevno a modely G ju nemajú. Krok s krytinou ju preto
+           ukazuje ako danú, nie ako tlačidlo; bez toho vyzeral zoznam krytín
+           tak, že ISO panel neexistuje. Vrch a spodok panela sa vyberá o kus
+           vyššie, medzi farbami. */
+        const ROOF_FIXED = { id: 'iso', label: 'ISO panel 30 mm', sec: 'integrovaný spád 2 %',
+          caps: 'podľa modelu', about: 'Sendvičový panel s 30 mm izoláciou proti prehriatiu aj hluku dažďa.' };
 
         /* The blade cannot swing past the point where its tips break out
            through the section: arcsin(170/200) for a 200 blade in a 170
@@ -1231,19 +1245,13 @@
                the span drifted with it - 2 959 mm on an 8,7 m carport - so the
                bay a car parks in grew with the roof. A pergola's book gives no
                position, so that one still stands at mid-span. */
+            /* Nerovnaké polia nie sú chyba, je to parkovanie: do kratšieho
+               poľa sa zaparkuje jedno auto, do dlhšieho dve — auto stojí
+               dĺžkou naprieč šírkou prístrešku, takže polia delia frontu.
+               Preto P5 drží pevný odstup bez ohľadu na dĺžku strechy a
+               nesmie sa „opraviť" na rovnomerné delenie. */
             const p5 = model().p5;
-            if (p5) {
-              const at = Math.round(Math.min(p5, span / 2));
-              /* Lenže P5 je „mozna pozicija" odmeraná na streche, akú kniha
-                 nakreslila, a tá istá kniha hovorí, že po dĺžku post4 model
-                 nesú dve rady stĺpov. Držať odstup napevno na deväťmetrovom
-                 prestrešení znamená pole 6,6 m — dlhšie než celá strecha,
-                 ktorá stojí na štyroch stĺpoch — a stredný stĺp vyzerá, akoby
-                 sa zošmykol ku kraju. Pole nesmie byť dlhšie než post4;
-                 kde by fixný odstup taký vyrobil, delí sa rozpätie rovnako. */
-              if (span - at <= (Number(model().post4) || span)) return [0, at, span];
-              return [0, Math.round(span / 2), span];
-            }
+            if (p5) return [0, Math.round(Math.min(p5, span / 2)), span];
             const t = model().roof === 'panel' ? 0.34 : 0.5;   // access bay, or mid-span
             return [0, Math.round(span * t), span];
           }
@@ -1539,7 +1547,7 @@
               const bands = Object.keys(t).map(Number).sort((a, b) => a - b);
               return t[bands[dimensionBandIndex(bands, state.height)]];
             };
-            const WALL_CODE = { fi30: 'iso', fw25: 'wood', l44es: 'l44es', l44alu: 'l44alu' };
+            const WALL_CODE = { fi30: 'iso', fw25: 'wood' };
 
             /* Published numeric keys are lower bounds of discrete price bands. */
             const bandKey = (obj, want) => {
@@ -1880,9 +1888,13 @@
                bez vyhladzovania vôbec — merané na tom istom zábere trapézovej
                strechy, ktorá je zo šikmých hrán celá. Vlastný filter započíta
                každý vykreslený pixel, nie iba tie, ktoré si prehliadač vyberie.
-               MSAA na hlavnom buffri preto netreba — kreslíme doň už len
-               hotový obdĺžnik. */
-            const gl = surface.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
+               Na zastavený snímok teda MSAA netreba — do hlavného buffra ide
+               už len hotový obdĺžnik a viacnásobné vzorkovanie obdĺžnika nemá
+               čo vyhladiť. Počas otáčania sa však kreslí rovno na plátno bez
+               tej medzitextúry, a práve tam boli hrany zubaté. MSAA je preto
+               zapnuté: v pohybe vyhladzuje skutočnú geometriu a v pokoji stojí
+               dva trojuholníky navyše. */
+            const gl = surface.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
             if (!gl) { depthPainter = false; return false; }
             const compile = (type, source) => {
               const shader = gl.createShader(type);
@@ -5483,9 +5495,31 @@
             host = wrap.querySelector('[data-sp-roof-skins]');
           }
           if (!wrap || !host) return;
-          const available = model().glazed === true;
+          /* Panelová strecha má krytinu vždy — buď na výber (G), alebo danú
+             (F s ISO panelom). Lamelová a trapézová strecha krytinu nevolí. */
+          const volitelna = model().glazed === true;
+          const available = model().roof === 'panel' && model().roofKit !== 'koverta';
           wrap.hidden = !available;
           if (!available) { host.textContent = ''; return; }
+          if (!volitelna) {
+            const f = ROOF_FIXED;
+            const value = wrap.querySelector('[data-sp-roof-skin-val]');
+            if (value) value.textContent = f.label;
+            const note = wrap.querySelector('[data-sp-roof-skin-note]');
+            if (note) note.textContent = `${f.about} Tento model ju má napevno —`
+              + ' sklo a zelenú strechu nesie rada G. Vrch a spodok panela vyberiete vyššie.';
+            host.textContent = '';
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'sp-roofchip';
+            b.disabled = true;
+            b.setAttribute('aria-pressed', 'true');
+            b.innerHTML = '<span class="sp-roofchip__sample" aria-hidden="true">'
+              + '<i style="--sp-roof-top:#d7d5c8"></i><i style="--sp-roof-bottom:#a7aaa8"></i></span>'
+              + `<span><strong>${f.label}</strong><small>${f.sec}</small></span>`;
+            host.appendChild(b);
+            return;
+          }
           const chosen = roofSkin();
           const value = wrap.querySelector('[data-sp-roof-skin-val]');
           if (value) value.textContent = chosen.label;
@@ -6534,7 +6568,11 @@
             state.widthValue = m.width;
           }
           let li = m.lengths.findIndex((l) => l >= 5000);
-          if (li < 0) li = Math.round((m.lengths.length - 1) * 0.6);
+          /* Keď model na päť metrov nedosiahne, otvára sa v spodnej polovici
+             zoznamu. Zaokrúhľovaním nahor padol dvojpoložkový zoznam
+             záhradného prístreška rovno na maximum a posuvník dĺžky sa už
+             nemal kam pohnúť. */
+          if (li < 0) li = Math.floor((m.lengths.length - 1) * 0.6);
           state.length = li;
           state.lengthValue = m.lengths[li];
           clampToModel();

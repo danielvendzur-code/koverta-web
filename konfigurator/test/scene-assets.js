@@ -63,7 +63,15 @@ assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:0},'car','2').items.le
 // sedan nezmestí.
 assert(dimensions.city[3]-dimensions.city[0]<dimensions.sedan[3]-dimensions.sedan[0],'malé auto nie je kratšie');
 assert(dimensions.city[4]-dimensions.city[1]<dimensions.sedan[4]-dimensions.sedan[1],'malé auto nie je užšie');
-assert.equal(plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2').items.length,0);
+// Zadný box zožerie koniec dĺžky, takže pozdĺž už auto nemá kam. Naprieč áno:
+// pod šesťmetrovou šírkou sa auto postaví bokom a pred boxom mu stačí jeho
+// vlastná šírka. Musí tam byť práve jedno, otočené, a s prístupom k boxu.
+{
+  const r=plan({L:6000,W:6000,H:2400,post:150,boxDepth:2700},'car','2');
+  assert.equal(r.items.length,1,'pred 2,7 m boxom sa zmestí bokom práve jedno auto');
+  assert(r.items[0].rotation>0,'auto pred boxom musí stáť naprieč, pozdĺž tam nie je miesto');
+  assert(footprint(r.items[0])[0]>=2700+750,'auto zablokovalo prístup k boxu');
+}
 // Interior posts must reduce capacity or split rows, never pierce a car.
 for(const obstacles of [[[2600,2850,2750,3000]],[[1000,1500,1150,1650],[4200,4400,4350,4550]]]) {
   const r=plan({L:6000,W:8000,H:2400,post:150,boxDepth:0,obstacles},'car','auto');

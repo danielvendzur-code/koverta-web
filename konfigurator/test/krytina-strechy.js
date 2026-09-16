@@ -30,7 +30,7 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     const total = document.querySelector('[data-sp-total]');
     return {
       viditeľné: !!wrap && !wrap.hidden,
-      volieb: wrap ? wrap.querySelectorAll('[data-sp-roof-skin]').length : 0,
+      volieb: wrap ? wrap.querySelectorAll('.sp-roofchip').length : 0,
       hodnota: wrap ? (wrap.querySelector('[data-sp-roof-skin-val]') || {}).textContent : null,
       poznámka: wrap ? (wrap.querySelector('[data-sp-roof-skin-note]') || {}).textContent : null,
       cena: total ? total.textContent.trim() : null
@@ -89,6 +89,8 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     await krytina(0);
   }
 
+  /* Modely s ISO panelom krytinu nevolia, ale musí byť napísaná: bez toho
+     zoznam krytín vyzeral tak, že ISO panel neexistuje. */
   for (const [stranka, modely] of [['canopy', ['F170', 'F240']], ['carport', ['F170', 'SL170']]]) {
     if (stranka !== 'canopy') {
       await page.goto(`${BASE}?page=${stranka}`, { waitUntil: 'load', timeout: 60000 });
@@ -97,8 +99,30 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     for (const m of modely) {
       await model(m);
       const s = await stav();
-      chyba(!s.viditeľné, `${stranka}/${m}: voľba krytiny sa zobrazuje, hoci model má ISO panel`);
+      chyba(s.viditeľné, `${stranka}/${m}: krytina strechy sa vôbec nezobrazuje`);
+      chyba(s.volieb === 1, `${stranka}/${m}: ISO panel sa ponúka ako voľba (${s.volieb} tlačidiel)`);
+      chyba(/ISO panel/i.test(s.hodnota || ''), `${stranka}/${m}: krytina nie je pomenovaná ako ISO panel`);
+      const zamknuté = await page.evaluate(() =>
+        [...document.querySelectorAll('[data-sp-roof-skin-wrap] .sp-roofchip')].every(b => b.disabled));
+      chyba(zamknuté, `${stranka}/${m}: ISO panel sa dá preklikať, hoci voľba to nie je`);
     }
+  }
+
+  /* Bočné výplne sú v cenníku dve pevné steny — FW25 a FI30. L44-ES a
+     L44-ALU 20/20 sú plášte lopy, nie steny, a na terasách ich cenník 2026
+     nemá vôbec. */
+  for (const stranka of ['carport', 'canopy', 'bio']) {
+    await page.goto(`${BASE}?page=${stranka}`, { waitUntil: 'load', timeout: 60000 });
+    await page.waitForTimeout(2000);
+    await page.evaluate(() => { const g = document.querySelector('[data-sp-goto="4"]'); if (g) g.click(); });
+    await page.waitForTimeout(500);
+    const boky = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-sp-side-opt]')].map(e => e.dataset.spSideOpt));
+    chyba(boky.length > 0, `${stranka}: krok s bokmi neponúka nič`);
+    chyba(!boky.includes('l44es') && !boky.includes('l44alu'),
+      `${stranka}: medzi bočnými stenami je plášť lopy L44 (${boky.join(', ')})`);
+    chyba(boky.includes('fw25') && boky.includes('fi30'),
+      `${stranka}: chýba niektorá z katalógových pevných stien FW25/FI30`);
   }
 
   await browser.close();
@@ -107,5 +131,5 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     console.error(zle.join('\n'));
     throw new Error(`Krytina strechy: ${zle.length} nezrovnalostí`);
   }
-  console.log('Roof covering PASS: G ponúka sklo aj zelenú strechu, cena sa nemení, dopyt to hovorí, F a SL voľbu nemajú.');
+  console.log('Roof covering PASS: G ponúka sklo aj zelenú strechu, cena sa nemení, dopyt to hovorí, F a SL majú ISO panel napevno a boky nenesú plášť lopy.');
 })().catch((error) => { console.error(error.message || error); process.exit(1); });

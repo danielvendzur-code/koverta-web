@@ -96,98 +96,97 @@
     return {items:[],capacity:0,reason:''};
   }
   function parkCars(c,count,key,mix) {
-      const result=[];
       const bb=models[key].bounds,carL=bb[3]-bb[0],carW=bb[4]-bb[1],carH=bb[5]-bb[2];
+      if(c.H<carH+150) return {items:[],capacity:0,
+        reason:'Pod túto výšku sa auto nezmestí. Zvýšte prístrešok.'};
       /* Odstup od stĺpa. 350 mm je pohodlie — miesto na otvorenie dverí. Malé
          auto sa ale pod najužší prístrešok zmestí aj bez neho: pri 2,5 m
-         šírky ostane medzi stĺpmi 2,2 m svetla a Peugeot 208 so zrkadlami
-         má 1,97 m. Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom
-         aute preto stačí konštrukčná medzera, a koľko ho naozaj ostane, sa
-         napíše pod náhľad. Sedan si pohodlný odstup drží. */
+         šírky ostane medzi stĺpmi 2,2 m svetla a Mini so zrkadlami má 2,0 m.
+         Tak sa aj parkuje, len sa vystupuje opatrne. Pri malom aute preto
+         stačí konštrukčná medzera, a koľko ho naozaj ostane, sa napíše pod
+         náhľad. Sedan si pohodlný odstup drží. */
       const roomy=Math.max(350,c.post+200);
       const side=key==='city'?Math.max(140,c.post*0.9):roomy;
-      const rear=c.boxDepth+(c.boxDepth?750:300),front=c.L-300,gap=600;
-      /* Za sebou, nie vedľa seba. Doteraz sa parkovalo do jediného radu naprieč
-         šírkou, takže tretie auto nemalo kam — carport býva široký najviac šesť
-         metrov a tam sa vedľa seba zmestia dve. Dĺžka je pritom to, čo Soltec
-         predáva až do 9,3 m: za autom tam ostáva miesto na celé ďalšie. Medzi
-         nárazníkom a kapotou v druhom rade stačí 500 mm; medzi seba sa tam
-         nechodí, vychádza sa do strany. */
-      const tandem=500;
-      const depth=front-rear;
-      const rows=(c.H<carH+150||depth<carL)?0:Math.min(3,Math.floor((depth+tandem)/(carL+tandem)));
-      /* Rady sa rozložia po celej hĺbke rovnomerne, takže auto nestojí na
-         samom kraji, keď je prístrešok výrazne dlhší než potrebuje. */
-      const rowX=n=>{
-        const span=n*carL+(n-1)*tandem, start=rear+(depth-span)/2;
-        return Array.from({length:n},(_,i)=>start+i*(carL+tandem));
-      };
-      const lanesAt=(x)=>{
-        let intervals=[[side+carW/2,c.W-side-carW/2]];
-        for(const o of c.obstacles||[]) {
-          if(o[2]+80<x||o[0]-80>x+carL)continue;
-          const a=o[1]-80-carW/2,b=o[3]+80+carW/2,next=[];
-          for(const [lo,hi] of intervals){if(b<lo||a>hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
-          intervals=next;
+      const gap=600;
+
+      /* Auto stojí v prístrešku jednou z dvoch polôh: dĺžkou po dĺžke stavby,
+         alebo dĺžkou naprieč jej šírkou. Pri veľkom carporte je správna tá
+         druhá — a vidno to na stĺpoch. Trojstĺpová varianta delí frontu na
+         nerovnaké polia práve preto, že do kratšieho poľa sa zaparkuje jedno
+         auto a do dlhšieho dve; keby autá stáli po dĺžke, tá nerovnosť by
+         nedávala zmysel. Skúsime obe polohy a necháme tú, do ktorej sa zmestí
+         viac áut; pri zhode ostáva pozdĺžna, lebo úzky prístrešok na jedno
+         auto je prejazd, nie front. */
+      const plan=(rot)=>{
+        /* Koľko auto zaberie po dĺžke stavby (x) a koľko po jej šírke (y). */
+        const along=rot?carW:carL, across=rot?carL:carW;
+        const depth=c.W-2*side;
+        const rows=Math.floor((depth+gap)/(across+gap));
+        if(rows<1) return null;
+        const rowSpan=rows*across+(rows-1)*gap;
+        const yStart=side+(depth-rowSpan)/2;
+        const ys=Array.from({length:rows},(_,i)=>yStart+i*(across+gap));
+        /* Box zaberá koniec dĺžky a pred ním treba miesto na dvere. */
+        const from=c.boxDepth+(c.boxDepth?750:300),to=c.L-300;
+        const bays=(y)=>{
+          let free=[[from,to]];
+          for(const o of c.obstacles||[]) {
+            /* Naprieč sa autom prechádza pomedzi stĺpy, takže každý stĺp delí
+               frontu bez ohľadu na to, kde v hĺbke stojí — a práve to robí
+               z nerovnakých polí trojstĺpovej varianty parkovací plán.
+               Pozdĺžne auto ide popri stĺpoch a prekáža mu len ten, ktorý
+               stojí v jeho pruhu. */
+            if(!rot&&(o[3]<y-80||o[1]>y+across+80)) continue;
+            const a=o[0]-side,b=o[2]+side,next=[];
+            for(const [lo,hi] of free){if(b<=lo||a>=hi)next.push([lo,hi]);else{if(a>lo)next.push([lo,a]);if(b<hi)next.push([b,hi]);}}
+            free=next;
+          }
+          return free.filter(([lo,hi])=>hi-lo>=along);
+        };
+        /* Miesta sa vyrábajú po poliach a v každom sa vycentrujú, aby autá
+           nestáli pri jednom stĺpe a pri druhom neostalo prázdno. */
+        const stalls=[];
+        for(const y of ys) for(const [lo,hi] of bays(y)) {
+          const n=Math.floor((hi-lo+gap)/(along+gap));
+          const span=n*along+(n-1)*gap,start=lo+((hi-lo)-span)/2;
+          for(let i=0;i<n;i++) stalls.push({x:start+i*(along+gap),y});
         }
-        return intervals.filter(i=>i[1]>=i[0]);
+        if(!stalls.length) return null;
+        return {rot,along,across,stalls,capacity:Math.min(3,stalls.length)};
       };
-      const laneYs=(intervals,n)=>{
-        const ys=[];let last=-Infinity;
-        for(const [lo,hi] of intervals)for(let y=Math.max(lo,last+carW+gap);y<=hi+.01&&ys.length<n;y+=carW+gap){ys.push(y);last=y;}
-        if(ys.length!==n)return [];
-        const shift=c.W/2-(ys[0]+ys[ys.length-1])/2;
-        if(ys.every(y=>intervals.some(([lo,hi])=>y+shift>=lo&&y+shift<=hi)))return ys.map(y=>y+shift);
-        return ys;
-      };
-      /* Koľko áut sa zmestí: najprv sa zaplní rad naprieč, až potom sa ide
-         dozadu. Dve autá vedľa seba vyzerajú ako carport, dve za sebou ako
-         prejazd. */
-      const spots=[];
-      for(const x of rowX(rows||1)) {
-        if(!rows) break;
-        const intervals=lanesAt(x);
-        let lanes=0;for(let n=1;n<=3;n++)if(laneYs(intervals,n).length===n)lanes=n;
-        spots.push({x,intervals,lanes});
-      }
-      const laneMax=Math.max(0,...spots.map(s=>s.lanes));
-      /* Rozloženie pre daný počet: rozdelí sa medzi rady čo najrovnomernejšie,
-         prvý rad plnší. */
-      const layout=(want)=>{
-        if(!spots.length||want<1) return [];
-        const use=Math.min(spots.length,Math.ceil(want/Math.max(1,laneMax)));
-        const per=[];let left=want;
-        for(let i=0;i<use;i++){const n=Math.min(spots[i].lanes,Math.ceil(left/(use-i)));per.push(n);left-=n;}
-        if(left>0) return [];
-        const out=[];
-        per.forEach((n,i)=>{
-          const ys=laneYs(spots[i].intervals,n);
-          if(ys.length!==n){out.length=0;return;}
-          ys.forEach(y=>out.push({x:spots[i].x,y}));
-        });
-        return out.length===want?out:[];
-      };
-      let capacity=0;for(let n=1;n<=3;n++)if(layout(n).length===n)capacity=n;
-      const wanted=count==='auto'?capacity:Math.min(Number(count)||1,capacity);
-      const slots=layout(wanted);
-      const ys=slots.map(s=>s.y);
+      const varianty=[plan(0),plan(1)].filter(Boolean);
+      if(!varianty.length) return {items:[],capacity:0,
+        reason:'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
+      const best=varianty.reduce((a,b)=>b.capacity>a.capacity?b:a);
+
+      const wanted=count==='auto'?best.capacity:Math.min(Number(count)||1,best.capacity);
+      /* Miesta sa berú v poradí, v akom vznikli: pole po poli od predného.
+         Pri troch autách a poliach 1 + 2 z toho vyjde presne to, čo má
+         trojstĺpová varianta — jedno v kratšom poli, dve v dlhšom. */
+      const miesta=best.stalls.slice(0,wanted);
       /* Keď stoja pod prístreškom dve autá, nemajú to byť dve kópie toho
          istého: druhé miesto dostane druhý model, aby bolo z náhľadu vidieť
          obe ponúkané veľkosti. Platí to len pri automatickom výbere — kto si
          model zvolil sám, dostane ten, ktorý si zvolil. */
       const other=key==='city'?'sedan':'city',ob=models[other].bounds;
-      const otherFits=mix&&ob[4]-ob[1]<=bb[4]-bb[1]&&ob[3]-ob[0]<=bb[3]-bb[0]&&ob[5]-ob[2]<=c.H-150;
-      slots.forEach((s,i)=>{
-        const k=otherFits&&i===1?other:key,kb=models[k].bounds;
-        /* Auto sa v rade zarovná na stred svojho miesta, aby kratší model
-           nestál kapotou vpredu a zadkom v prázdne. */
-        result.push({key:k,x:s.x+(carL-(kb[3]-kb[0]))/2-kb[0],y:s.y,z:2,rotation:0});
+      const otherFits=mix&&ob[4]-ob[1]<=carW&&ob[3]-ob[0]<=carL&&ob[5]-ob[2]<=c.H-150;
+      const result=miesta.map((m,i)=>{
+        const k=otherFits&&i===1?other:key;
+        const tb=turned(models[k].bounds,best.rot);
+        /* Kratší model sa v mieste vycentruje, aby nestál kapotou vpredu
+           a zadkom v prázdne. */
+        return {key:k,rotation:best.rot?Math.PI/2:0,z:2,
+          x:m.x+(best.along-(tb[3]-tb[0]))/2-tb[0],
+          y:m.y+(best.across-(tb[4]-tb[1]))/2-tb[1]};
       });
       const gapBeside=result.length?Math.round(Math.min(...result.map(i=>{
-        const kb=models[i.key].bounds;return Math.min(i.y+kb[1],c.W-(i.y+kb[4]));}))):null;
-      return {items:result,capacity,clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0,
-        beside:gapBeside,roomy:gapBeside!=null&&gapBeside>=roomy},
-        reason:capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
+        const tb=turned(models[i.key].bounds,best.rot);
+        return Math.min(i.y+tb[1],c.W-(i.y+tb[4]));}))):null;
+      return {items:result,capacity:best.capacity,
+        clearance:{betweenCars:gap,side,boxAccess:c.boxDepth?750:0,
+          beside:gapBeside,roomy:gapBeside!=null&&gapBeside>=roomy,
+          across:Boolean(best.rot)},
+        reason:best.capacity?'':'Auto sa sem s rezervou pri stĺpoch a na vystupovanie nezmestí. Predĺžte alebo rozšírte prístrešok; box potrebuje vlastný prístup.'};
   }
   function seatPlan(c,count,margin,available,x0,x1,result) {
       /* Do priestoru, kde je na to miesto, patrí celá zostava — pohovka, dve
@@ -200,12 +199,27 @@
          lounge a bistro, pri prednastavenej šírke záhradnej pergoly (2,5 m)
          nezostalo nič lepšie než stolík pre dvoch — hoci pohovka s koberčekom
          sa medzi stĺpy pohodlne zmestí. */
+      /* Zostava sa smie postaviť aj otočená o štvrť otáčky a na dlhej terase
+         ich stojí viac než jedna. Jedna pohovka pod šesťmetrovým prístreškom
+         vyzerala ako zabudnutý kus nábytku uprostred prázdna. */
       for(const key of ['lounge','sofa']) {
         const lb=models[key].bounds;
-        if(available>=(lb[3]-lb[0])+500 && c.W-2*margin>=(lb[4]-lb[1])+400) {
-          result.push({key,x:(x0+x1)/2-(lb[0]+lb[3])/2,y:c.W/2-(lb[1]+lb[4])/2,z:2,rotation:0});
-          return {items:result,capacity:1,reason:''};
-        }
+        const sedi=r=>{const t=turned(lb,r);
+          return available>=(t[3]-t[0])+500 && c.W-2*margin>=(t[4]-t[1])+400;};
+        const rot=sedi(0)?0:sedi(Math.PI/2)?Math.PI/2:null;
+        if(rot===null) continue;
+        /* 600 mm medzi dvomi zostavami je prechod, nie škára — pod šesť­
+           metrovým prístreškom sa tak zmestia dve a terasa prestane vyzerať
+           prázdna okolo jedného kusa nábytku. */
+        const odstup=600;
+        const tb=turned(lb,rot), krok=(tb[3]-tb[0])+odstup;
+        const kapacita=Math.max(1,Math.min(2,Math.floor((available+odstup)/krok)));
+        const kolko=count==='auto'?kapacita:Math.min(Number(count)||1,kapacita);
+        const stred=(x0+x1)/2-(tb[0]+tb[3])/2, y=c.W/2-(tb[1]+tb[4])/2;
+        for(let i=0;i<kolko;i++)
+          result.push({key,rotation:rot,z:2,y,
+            x:stred+(kolko===2?(i?krok/2:-krok/2):0)});
+        return {items:result,capacity:kapacita,reason:''};
       }
       /* Stolík so stoličkami sa zmestí pozdĺž aj naprieč. Užšia pergola ho
          vezme otočený o štvrť otáčky: pri prednastavenej šírke 2,5 m by inak

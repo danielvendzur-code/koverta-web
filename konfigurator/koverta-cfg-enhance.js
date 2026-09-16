@@ -256,9 +256,14 @@
 
   /* --- 3 · Koverta obchodná logika a payload ---------------------------- */
 
+  /* Obchodná logika Koverty platí pre obidva jej výrobky: prístrešok pre auto
+     aj záhradný prístrešok. Je to tá istá oceľová skladba, ten istý odkvap
+     v zostave a tá istá veta o cene — líšia sa len rozmery, ceny a to, že
+     záhradný má stĺpy vždy v rohoch. */
+  var KOVERTA_PAGES = ['koverta', 'zahrada'];
   function isKovertaPage() {
     var root = document.querySelector(ROOT_SEL);
-    return !!root && root.getAttribute('data-sp-page') === 'koverta';
+    return !!root && KOVERTA_PAGES.indexOf(root.getAttribute('data-sp-page')) > -1;
   }
 
   function cleanText(value) {
@@ -440,7 +445,7 @@
     var baseSnapshot = window.SP_TEST.snapshot;
     window.SP_TEST.snapshot = function () {
       var snap = baseSnapshot();
-      if (!snap || snap.page !== 'koverta' || !snap.price || !snap.price.open) return snap;
+      if (!snap || KOVERTA_PAGES.indexOf(snap.page) < 0 || !snap.price || !snap.price.open) return snap;
       var subtotal = snap.price.total;
       snap.price = Object.assign({}, snap.price, {
         catalogueSubtotal: subtotal,

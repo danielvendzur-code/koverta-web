@@ -1048,7 +1048,7 @@ body { background: var(--k-white); color: var(--k-ink); }
    pomenúvajú tým, čo pod nimi stojí: auto, terasa, lamely. Značka a materiál
    ostávajú v druhom riadku, kde patria, a pred nimi je obrázok, lebo jedna
    kresba povie viac než ktorékoľvek z tých mien. */
-.k .kv-cfg__tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; flex: 1 1 520px; }
+.k .kv-cfg__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; flex: 1 1 640px; }
 .k .kv-cfg__tabs a {
   display: flex;
   align-items: center;
@@ -1100,6 +1100,9 @@ body { background: var(--k-white); color: var(--k-ink); }
 }
 .k .kv-cfg__tabs a[aria-current="page"] small { color: rgba(255, 255, 255, .72); }
 .k .kv-cfg__tabs a[aria-current="page"] .kv-cfg__ico { opacity: 0.9; }
+@media (max-width: 1399px) {
+  .k .kv-cfg__tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (max-width: 1099px) {
   .k .kv-cfg__tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

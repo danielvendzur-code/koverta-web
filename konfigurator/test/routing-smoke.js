@@ -42,7 +42,11 @@ module.exports = async function routingSmoke(browser) {
       const step = await page.locator(selector).first().evaluate(el => Number(el.closest('[data-sp-stepno]').dataset.spStepno));
       await page.locator(`[data-sp-goto="${step}"]`).click();
     };
-    for (const route of ['koverta', 'carport', 'canopy', 'bio']) {
+    for (const route of ['koverta', 'zahrada', 'carport', 'canopy', 'bio']) {
+      /* Záhradný prístrešok je ten istý oceľový výrobok ako prístrešok pre
+         auto — tá istá skladba, tie isté lamelové výplne, tá istá cenová
+         logika. Kontroly písané pre Kovertu preto platia aj naň. */
+      const kv = route === 'koverta' || route === 'zahrada';
       await page.goto(`http://127.0.0.1:8901/konfigurator/?page=${route}`, {waitUntil:'load',timeout:60000});
       const consent = page.getByRole('button', {name:'Iba nevyhnutné'});
       if (await consent.count()) await consent.first().click();
@@ -50,7 +54,7 @@ module.exports = async function routingSmoke(browser) {
       const initial = await snapshot();
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);
-      if (route === 'koverta') {
+      if (kv) {
         assert(initial.price.open === true && initial.price.total === null &&
           initial.price.catalogueSubtotal > 0 && Number.isFinite(initial.price.catalogueSubtotal),
           `${route}: mandatory quote-only drainage lost the numeric catalogue subtotal`);
@@ -66,8 +70,8 @@ module.exports = async function routingSmoke(browser) {
       await page.waitForTimeout(180);
       const resized = await snapshot();
       assert(resized.length !== initial.length, `${route}: length did not change`);
-      const initialComparable = route === 'koverta' ? initial.price.catalogueSubtotal : initial.price.total;
-      const resizedComparable = route === 'koverta' ? resized.price.catalogueSubtotal : resized.price.total;
+      const initialComparable = kv ? initial.price.catalogueSubtotal : initial.price.total;
+      const resizedComparable = kv ? resized.price.catalogueSubtotal : resized.price.total;
       assert(resizedComparable !== initialComparable, `${route}: dimension change did not change price`);
       /* Jeden krok môže mať viac panelov — rozmer a pod ním model — ale všetky
          musia patriť tomu istému kroku. Keby sa niektorý odpojil, zákazník by
@@ -91,10 +95,10 @@ module.exports = async function routingSmoke(browser) {
       assert((await snapshot()).frameColor !== resized.frameColor, `${route}: colour did not change`);
       await gotoControl('[data-sp-side]');
       await page.locator('[data-sp-side]').first().click();
-      await page.locator(route === 'koverta' ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
+      await page.locator(kv ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      if (route === 'koverta') {
+      if (kv) {
         assert(withSide.price.open === true && withSide.price.total === null &&
           withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
           `${route}: quote-only side is missing from price lines`);
@@ -102,7 +106,7 @@ module.exports = async function routingSmoke(browser) {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
       }
 
-      if (route === 'koverta') {
+      if (kv) {
         /* Odkvap so zvodom je súčasťou zostavy, nie voľbou — prepínač aj
            kotvenie sú z ponuky preč. Musí teda platiť oboje: voľby sa
            nevrátili a odvodnenie je aj tak v modeli aj v súhrne ako položka
@@ -135,6 +139,10 @@ module.exports = async function routingSmoke(browser) {
       await page.locator('[data-sp-cfg-close]').click();
       assert(!(await page.locator('[data-sp-section]').evaluate(el => el.classList.contains('is-full'))), `${route}: fullscreen did not close`);
 
+      /* Odmerané scény z Expivi existujú len pre prístrešok pre auto — sú to
+         konkrétne katalógové zostavy 7000 × 5200 a 7000 × 6000. Záhradný
+         prístrešok také rozmery nemá a kreslí sa z parametrov, takže sa proti
+         nim porovnávať nedá. */
       if (route === 'koverta') {
         await gotoControl('[data-sp-w]');
         for (const length of [5200,6000]) {
