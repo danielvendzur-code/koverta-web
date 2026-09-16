@@ -381,7 +381,7 @@
        alebo pohľad, nie na každom snímku. animates ostane false, kým hostiteľ
        nepotvrdí, že snímok dažďa vie prekresliť — na SVG zálohe sa dážď
        neanimuje a panel to povie namiesto toho, aby ticho nič nerobil. */
-    let planningKey='',rainKey='',rainData=null,roofSurface=null,roofKey='',flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0;
+    let planningKey='',rainKey='',rainData=null,roofSurface=null,roofKey='',flowKey='',animates=true,budget=0,fast=false,stalled=false,pace=0,paints=0,lastPaint=0,step=16;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const stage=root.querySelector('.sp-stage');
     /* Karta stojí pootvorená: vidno jej názov a čo je práve v scéne, telo sa
@@ -600,8 +600,12 @@
           float x=seed.x*(extent.x+2600.)-1300.;float y=seed.y*(extent.y+2600.)-1300.;
           float top=roofBase+roofRise+2400.;float stopZ=impact.x;
           float phase=fract(seed.z+clock*(4300.+seed.w*1800.)/max(300.,top-stopZ));
-          float z=mix(top,stopZ,phase);float land=smoothstep(.965,1.,phase);
+          float z=mix(top,stopZ,phase);float land=smoothstep(.955,1.,phase);
           vec3 across=vec3(orbit.x,orbit.y,0.);
+          // The drop falls plumb and must keep doing so. Its impact point is
+          // solved on the CPU for the column (x,y); leaning the fall sideways
+          // slid drops that land beside the carport across the roof outline
+          // on their way down, which read as rain getting in underneath.
           vec3 fall=vec3(x,y,z)+across*corner.x*(4.2+3.4*seed.w)+vec3(0.,0.,corner.y*(105.+seed.w*110.)*(1.-land));
           vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
           vec3 b=cross(n,t);
@@ -610,7 +614,13 @@
           // A contact ring belongs to the wet side of its surface. Seen from
           // underneath, it must not shine through a thin sheet or the ground.
           float facing=smoothstep(0.,.12,dot(n,normalize(eye-vec3(x,y,stopZ))));
-          opacity=(.28+seed.w*.24)*(1.-land*.65)*density*mix(1.,facing,land);splash=land;}`,
+          // Nothing may appear or vanish in one step: the streak fades up as
+          // the cycle starts and the ring dies out before phase wraps back to
+          // zero. Without that the same drop jumped from the puddle to the
+          // sky at full strength every cycle, and the eye caught it.
+          float birth=smoothstep(0.,.05,phase);
+          float death=1.-smoothstep(.93,1.,phase);
+          opacity=(.28+seed.w*.24)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
@@ -757,9 +767,12 @@
     function tick(now) {
       raf=0;if(!raining())return;
       if(lastTime)time+=Math.min(.05,(now-lastTime)/1000);lastTime=now;
-      /* Kreslí sa najviac tridsaťkrát za sekundu; čas medzitým beží ďalej, tak
-         dážď nespomalí, len nezaberie každý snímok prehliadača. */
-      if(frame&&now-lastPaint>=30) {
+      /* Cieľom je šesťdesiat snímkov za sekundu. Krok sa predĺži až vtedy,
+         keď zariadenie samo ukáže, že to nestíha — najskôr na tridsať, potom
+         sa siahne na pohybové rozlíšenie a až nakoniec sa dážď zastaví.
+         Čas medzitým beží ďalej, tak dážď nespomalí, len nezaberie každý
+         snímok prehliadača. */
+      if(frame&&now-lastPaint>=step-1) {
         const t0=clockNow(),ok=frame(fast),cost=clockNow()-t0;
         budget=budget?budget*.75+cost*.25:cost;
         if(ok===false){animates=false;sync();return;}
@@ -769,7 +782,11 @@
            nestačí ani to, radšej zastane a povie to. */
         if(lastPaint) {
           const gap=now-lastPaint;pace=pace?pace*.8+gap*.2:gap;paints++;
-          if(!fast&&paints>6&&pace>48){fast=true;paints=0;pace=0;}
+          /* Prvý ústupok je snímková frekvencia, nie ostrosť: pri 60 sa meria,
+             či ich zariadenie naozaj stíha, a keď nie, spadne sa na 30 skôr,
+             než sa scéna začne kresliť nahrubo. */
+          if(step<30&&paints>8&&pace>26){step=33;paints=0;pace=0;}
+          else if(step>=30&&!fast&&paints>6&&pace>48){fast=true;paints=0;pace=0;}
           else if(fast&&paints>12&&pace>260){stalled=true;sync();stop();return;}
         }
         lastPaint=now;
@@ -782,14 +799,21 @@
       /* Po zastavení dažďa sa scéna dokreslí ostro — pohybové rozlíšenie
          nemá prečo ostať na statickom zábere. */
       if(fast&&frame){fast=false;pace=0;paints=0;lastPaint=0;frame(false);}
+      step=16;
     }
     document.addEventListener('visibilitychange',run);
     reduced.addEventListener('change',()=>{if(reduced.matches)state.paused=true;sync();run();});
     if(window.IntersectionObserver)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;run();},{threshold:0}).observe(stage);
     sync();
+    /* Počasie sa dá prepnúť aj mimo tlačidiel. Test presakovania potrebuje
+       suchý referenčný záber v tom istom svetle, v akom prší — inak sa dve
+       snímky líšia osvetlením celého modelu a ten rozdiel sa počíta ako voda.
+       Hodnota 'cloud' už nemá tlačidlo, ale renderer jej rozumie a svieti
+       ňou rovnako ako dažďom. */
     return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
+      setWeather(w){state.weather=w;sync();run();if(!raining()&&frame)frame(false);},
       snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
-        weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,
+        weather:state.weather,intensity:state.intensity,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,step,
         pace:Math.round(pace),
         frameCost:Math.round(budget*100)/100,clock:Math.round(time*1000)/1000,
         /* surfaceZ je skutočná výška krytiny pod dažďom, nie vrch lemovania.

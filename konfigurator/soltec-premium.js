@@ -853,7 +853,11 @@
           placement: 'tip1',
           width: 0, length: 0, widthValue: null, lengthValue: null, height: 2500,
           louverT: 0.84,          // 0 shut, 1 as far open as the section allows
-          frameColor: BIO.colors[0],
+          /* Poradie v palete je majiteľovo a začína bielou; predvolený odtieň
+             konštrukcie to však nie je. Antracit je to, čo sa najčastejšie
+             objednáva aj to, na čom je konštrukcia vôbec vidieť, tak sa vyberá
+             podľa kódu, nie podľa poradia v zozname. */
+          frameColor: BIO.colors.find((c) => c.ral === 'RAL 7016') || BIO.colors[0],
           louverColor: BIO.colors[0],
           roofFinish: 0,
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
@@ -6444,7 +6448,8 @@
             try { depthPainter.replay(); } catch (e) { return false; }
             return true;
           });
-          if(window.SP_TEST) window.SP_TEST.scene=()=>sceneLife.snapshot();
+          if(window.SP_TEST) { window.SP_TEST.scene=()=>sceneLife.snapshot();
+            window.SP_TEST.sceneWeather=(w)=>sceneLife.setWeather(w); }
         }
         buildModels();
         renderAll();

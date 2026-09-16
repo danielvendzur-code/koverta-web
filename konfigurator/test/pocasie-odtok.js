@@ -101,8 +101,12 @@ const HELPERS = () => {
     await page.evaluate(() => { const c = document.querySelector('.sp-scene'); c.open = true; c.classList.remove('is-peek'); });
     return { page, assertNoErrors };
   };
+  /* Suchý referenčný záber musí byť v rovnakom svetle ako dážď. Slnečno
+     presvetľuje celý model, takže rozdiel dvoch snímok by potom nebola voda,
+     ale osvetlenie. Zamračené už nemá tlačidlo, tak sa nastaví priamo. */
   const weather = async (page, on) => {
-    await page.getByRole('button', { name: on ? 'Dážď' : 'Zamračené', exact: true }).click();
+    if (on) await page.getByRole('button', { name: 'Dážď', exact: true }).click();
+    else await page.evaluate(() => window.SP_TEST.sceneWeather('cloud'));
     await page.waitForTimeout(600);
   };
   /* Pauza sa nečaká na čas, ale na scénu. Pevných 500 ms na pomalom stroji
