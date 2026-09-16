@@ -853,7 +853,11 @@
           placement: 'tip1',
           width: 0, length: 0, widthValue: null, lengthValue: null, height: 2500,
           louverT: 0.84,          // 0 shut, 1 as far open as the section allows
-          frameColor: BIO.colors[0],
+          /* Poradie v palete je majiteľovo a začína bielou; predvolený odtieň
+             konštrukcie to však nie je. Antracit je to, čo sa najčastejšie
+             objednáva aj to, na čom je konštrukcia vôbec vidieť, tak sa vyberá
+             podľa kódu, nie podľa poradia v zozname. */
+          frameColor: BIO.colors.find((c) => c.ral === 'RAL 7016') || BIO.colors[0],
           louverColor: BIO.colors[0],
           roofFinish: 0,
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
@@ -1029,8 +1033,8 @@
            strecha jej na oboch koncoch prečnieva vyše metra. Šesťstĺpová má
            krajné rady v osiach čelných rámov, teda pri hranách strechy, a
            stredný rad pod prostrednou väznicou. Odmerané zo všetkých exportov
-           (prierez 110 × 190 pri štvorstĺpovej, 150 × 150 v rohoch pri
-           šesťstĺpovej) — nie je to voľba, vyplýva to zo šírky. */
+           (prierez podľa podkladu majiteľa 100 × 100 v rohoch aj v strede,
+           2026-09-16) — nie je to voľba, vyplýva to zo šírky. */
         const kvOsiStlpov = () => {
           const measured = kvMeasured();
           if (measured) return measured.postAxes.slice();
@@ -1054,7 +1058,7 @@
         const kvStlpRez = (i, n) => {
           const R = model().kvRef || {}, b = kvBand();
           const rohovy = i === 0 || i === n - 1;
-          const side = kvExportPost100() ? 100 : (Number(R.postW) || 150);
+          const side = kvExportPost100() ? 100 : (Number(R.postW) || 100);
           // Connection role is independent of section: four-post cantilever
           // assemblies still connect along the side beam, not the end frame.
           const roh = rohovy && !(b && b.stlpyNaVaznici);
@@ -2275,7 +2279,39 @@
              odraz má do modra, lebo v ňom je obloha. Preto sa odlesk pridáva
              po kanáloch, nie ako šedá. */
           const ZINC_SPEC = [0.93, 0.985, 1.07];
-          const litFill = (c, n, material) => {
+          /* Ambient occlusion. Every face is otherwise lit as though it stood
+             alone under an open sky, which is why the underside reads as one
+             even tone and the posts look stuck onto the paving instead of
+             standing on it. Nothing needs tracing here: the only two occluders
+             in this scene are the roof rectangle overhead and the ground, and
+             both are known, so the sky term can simply be taken back where
+             they block it. Faces keep at least 58 % of their light, so no
+             corner ever turns into a hole. */
+          const AO_FOOT = 380;    // how high up a member still feels the paving
+          const aoAt = (c, n) => {
+            /* How much of the sky the deck takes away, from where this face
+               sits. Straight out at the eaves half the sky is still open, and
+               it closes over as you go in: at a point one clear height inside
+               the edge the deck covers about half of what is left, which is
+               what depth/(depth+height) says. No rays, just the one rectangle
+               that is actually overhead. */
+            let k = 1;
+            const below = H - c[2];
+            if (below > 1) {
+              const depth = Math.min(c[0], L - c[0], c[1], W - c[1]);
+              if (depth > 0) {
+                const cover = depth / (depth + below);
+                /* A face turned up into the deck loses the most; one turned
+                   down is lit by bounce off the paving, which the deck does
+                   not block, so it loses least. */
+                k -= 0.46 * cover * (0.34 + 0.66 * Math.max(0, n[2]));
+              }
+            }
+            /* Contact with the paving, which closes off the lower hemisphere. */
+            if (c[2] < AO_FOOT) k -= 0.15 * (1 - c[2] / AO_FOOT);
+            return k < 0.52 ? 0.52 : k;
+          };
+          const litFill = (c, n, material, at) => {
             const base = toRGB(c);
             const kd = Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
             const fd = Math.max(0, n[0] * FILL[0] + n[1] * FILL[1] + n[2] * FILL[2]);
@@ -2286,10 +2322,11 @@
                svetlosivý obdĺžnik bez tvaru. Ambient ide dole, kľúč a obloha
                hore, takže sa stojina, pásnica a žliabok C profilu zdola
                rozlíšia. */
-            const l = satin
+            let l = satin
               ? AMB * 0.80 + KEY_I * 1.45 * kd + FILL_I * 0.9 * fd
                 + BOUNCE_I * 0.85 * Math.max(0, -n[2]) + SKY_I * 2.4 * Math.max(0, n[2])
               : AMB + KEY_I * kd + FILL_I * fd + BOUNCE_I * Math.max(0, -n[2]) + SKY_I * Math.max(0, n[2]);
+            if (at) l *= aoAt(at, n);
             const hn = Math.max(0, n[0] * HALF[0] + n[1] * HALF[1] + n[2] * HALF[2]);
             const spec = kd > 0 ? (satin ? 0.30 : SPEC_I) * Math.pow(hn, satin ? 16 : SPEC_P) * 255 : 0;
             /* Pri šmyku pohľadu pozdĺž plechu sa odraz zosilní — to je ten
@@ -2396,7 +2433,30 @@
             const pp = pts.map((v) => cam(v[0], v[1], v[2]));
             const depths = pp.map((point) => point.d);
             const depthAvg = depths.reduce((sum, value) => sum + value, 0) / depths.length;
-            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material), depthAvg);
+            /* The face's own place in the scene decides how much sky reaches
+               it, so occlusion is measured at its centre, not at the origin. */
+            let centre = null;
+            if (!o.raw) {
+              centre = [0, 0, 0];
+              for (const v of pts) { centre[0] += v[0]; centre[1] += v[1]; centre[2] += v[2]; }
+              centre[0] /= pts.length; centre[1] /= pts.length; centre[2] /= pts.length;
+            }
+            let lit = o.raw ? fill : haze(litFill(fill, normal, o.material, centre), depthAvg);
+            /* One tone per face is enough for a post, but not for the soffit:
+               it is a single large panel whose occlusion runs from bright at
+               the eaves to dark well inside, and a flat fill turned it into a
+               grey slab. Where occlusion actually varies across a face, the
+               corners are shaded separately and the rasteriser interpolates,
+               which costs nothing on the small members that do not vary. */
+            let vertexFills = o.vertexNormals
+              ? o.vertexNormals.map((n) => haze(litFill(fill, n, o.material, centre), depthAvg))
+              : null;
+            if (!vertexFills && !o.raw) {
+              let lo = 1, hi = 0;
+              for (const v of pts) { const a = aoAt(v, normal); if (a < lo) lo = a; if (a > hi) hi = a; }
+              if (hi - lo > 0.02)
+                vertexFills = pts.map((v) => haze(litFill(fill, normal, o.material, v), depthAvg));
+            }
             if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
               const tint=toRGB(fill);
               if(tint[0]<80 && tint[1]<80 && tint[2]<80)lit='rgba('+tint.slice(0,3).join(',')+','+(tint[3]*.48)+')';
@@ -2405,7 +2465,7 @@
               w: pts.map((point) => point.slice()),
               p: pp,
               fill: lit, sourceFill: fill, decal: o.decal || false,
-              vertexFills: o.vertexNormals ? o.vertexNormals.map(n => litFill(fill, n)) : null,
+              vertexFills: vertexFills,
               edge: o.edge !== false,
               /* arris:false keeps the stroke but paints it in the face's own
                  colour, so members merge into one surface without a gap */
@@ -3913,8 +3973,8 @@
 
             /* --- obvodový rám. Jeden C profil 74 × 220, nie dvojica —
                v kompletnej scéne 14069 sú na každej strane presne dva kusy
-               (74 × 5 820 po bokoch a 6 964 × 74 na čelách) a stĺp 150 × 150
-               je od nich hrubší, takže spod rámu dovnútra vyčnieva. Vonkajšie
+               (74 × 5 820 po bokoch a 6 964 × 74 na čelách) a stĺp je od nich
+               hrubší, takže spod rámu dovnútra vyčnieva. Vonkajšie
                líce rámu je 18 mm za lícom lemovania. Čelá sú zatiahnuté 15 mm
                od zadku a 159 od odkvapu — v tej kapse visí žľab. */
             const RAM_PAR = RAM_W;                         // hrúbka profilu rámu
@@ -5855,7 +5915,7 @@
                nevie, ako vysoko pod prístreškom prejde. */
             + (m.fixedHeight ? ` Svetlá výška pod rámom ${mm(Number(m.fixedHeight))}.` : '');
           if (modelNote && m.kvGeom) modelNote.textContent = kvMeasured()
-            ? 'Zobrazená zostava: rovnaké stĺpy 150 × 150 mm v rohoch aj v strede, výška pod rámom 2 398 mm.'
+            ? 'Zobrazená zostava: rovnaké stĺpy 100 × 100 mm v rohoch aj v strede, výška pod rámom 2 398 mm.'
             : 'Prierez a rozmiestnenie stĺpov závisia od konkrétnej zostavy. Nosnú konštrukciu a kotvenie potvrdíme pri návrhu.';
           syncSliders();
           /* Voľba a model sú tá istá vec z dvoch strán — drž ich v páre. */
@@ -6444,7 +6504,8 @@
             try { depthPainter.replay(); } catch (e) { return false; }
             return true;
           });
-          if(window.SP_TEST) window.SP_TEST.scene=()=>sceneLife.snapshot();
+          if(window.SP_TEST) { window.SP_TEST.scene=()=>sceneLife.snapshot();
+            window.SP_TEST.sceneWeather=(w)=>sceneLife.setWeather(w); }
         }
         buildModels();
         renderAll();

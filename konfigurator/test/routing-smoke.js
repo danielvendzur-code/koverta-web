@@ -24,7 +24,7 @@ function verifyMeasuredScene(snapshot) {
   assert(columns.length === 6 && snapshot.geometry.postSections.length === 3, 'Measured six-post layout is missing');
   for (let i = 0; i < posts.length; i++) {
     const actual = snapshot.geometry.postSections[i];
-    assert(actual.w === 150 && actual.d === 150, 'Owner-confirmed equal square columns must be used at every row');
+    assert(actual.w === 100 && actual.d === 100, 'Owner-confirmed equal square columns must be used at every row');
   }
   assert(snapshot.height === 2398, 'Measured column height differs from Expivi');
   console.log('EXPIVI_RUNTIME ' + JSON.stringify({ catalog: scene.id, ...snapshot.geometry }));

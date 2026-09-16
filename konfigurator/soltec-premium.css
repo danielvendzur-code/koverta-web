@@ -366,11 +366,6 @@
       max-width: 100%; pointer-events: none;
     }
     #SoltecPremium .sp-stage__depth[hidden] { display: none; }
-    #SoltecPremium .sp-stage[data-weather="cloud"] .sp-stage__canvas {
-      background:
-        radial-gradient(120% 90% at 50% 108%, rgba(24,30,36,.12) 0%, rgba(24,30,36,0) 62%),
-        linear-gradient(180deg, #f2f3f4 0%, #eaebec 48%, #e2e3e4 70%, #dcdddd 100%);
-    }
     #SoltecPremium .sp-stage[data-weather="rain"] .sp-stage__canvas {
       background:
         radial-gradient(120% 90% at 50% 108%, rgba(20,27,34,.16) 0%, rgba(20,27,34,0) 60%),

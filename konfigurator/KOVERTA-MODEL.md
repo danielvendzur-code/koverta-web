@@ -1,5 +1,21 @@
 # Koverta configurator: sources, measured geometry and open questions
 
+## Owner correction — 100 x 100 posts and the standard palette, 2026-09-16
+
+The owner's written brief ("Koverta odpovede pre web") states the posts are a
+solid steel section of **100 x 100 mm**, with a 4 mm wall, standing on a
+telescopic base plate 15 mm thick. He also said on review that the rendered
+posts looked far too heavy and should definitely be slimmer.
+
+That brief overrides the archived Expivi sections (110 x 190 and 150 x 150)
+for the rendered Koverta assemblies. `kvRef.postW` is now 100 and
+`kvStlpRez` falls back to 100 rather than 150. The archive measurements stay
+in the notes below as provenance; they are no longer what the renderer draws.
+
+The standard range is **14 colours**, in the owner's own order: RAL 9010,
+9006, 9007, 7005, 7016, 9005, 8017, 8028, 6003, 6005, 6020, 3000, 3009, 5010.
+The roof is always drawn white; another shade is possible but rarely ordered.
+
 ## Reference geometry repair — 2026-09-11
 
 Reopened catalogue 14069's original binary export from

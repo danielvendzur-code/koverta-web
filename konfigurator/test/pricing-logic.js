@@ -92,7 +92,8 @@ async function revealControl(page, selector) {
       && catalogue.placements[0].id === 'kv-free',
       'Hidden or unsupported placement variants are still exposed in Koverta product data');
     assert(JSON.stringify(catalogue.colors.map(item => item.ral)) === JSON.stringify([
-      'RAL 7016','RAL 9005','RAL 9006','RAL 9010','RAL 7037','RAL 7011','RAL 8017','RAL 6003','RAL 5010','RAL 3000'
+      'RAL 9010','RAL 9006','RAL 9007','RAL 7005','RAL 7016','RAL 9005','RAL 8017',
+      'RAL 8028','RAL 6003','RAL 6005','RAL 6020','RAL 3000','RAL 3009','RAL 5010'
     ]), 'Koverta current RAL palette changed');
     assert(catalogue.surcharge && catalogue.surcharge.frame == null && catalogue.surcharge.louver == null,
       'Configurator invented a Koverta colour surcharge');

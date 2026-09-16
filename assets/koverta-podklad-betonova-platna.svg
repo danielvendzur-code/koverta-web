@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="t d">
+<title id="t">Kotvenie do betónovej platne</title><desc id="d">Technický rez: oceľový stĺp 100 × 100 mm na teleskopickej pätke, kotvený do súvislej betónovej platne.</desc>
+<rect width="800" height="600" rx="24" fill="#f6f5f2"/>
+<g fill="none" stroke="#12171a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+  <rect x="368" y="90" width="64" height="268" rx="3" fill="#eef0ef"/>
+  <path d="M356 358h88" stroke-width="6"/>
+  <rect x="344" y="358" width="112" height="22" rx="3" fill="#d9dcda"/>
+</g>
+<g stroke="#9aa1a4" stroke-width="2" fill="none"><path d="M90 380h620"/></g>
+<g fill="#e3e1db" stroke="#12171a" stroke-width="5" stroke-linejoin="round">
+  <path d="M90 380h620v72H90z"/>
+</g>
+<g stroke="#b9bdb6" stroke-width="3" fill="none" stroke-dasharray="9 11">
+  <path d="M90 486h620"/>
+</g>
+<g fill="none" stroke="#12171a" stroke-width="4" stroke-linecap="round">
+  <path d="M372 380v58M428 380v58"/>
+</g>
+<g stroke="#ffcc00" stroke-width="4" fill="none" stroke-linecap="round">
+  <path d="M250 120h96M250 104v32M346 104v32"/>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" fill="#12171a">
+  <text x="60" y="58" font-size="21" font-weight="700" letter-spacing="2">PODKLAD / KOTVENIE</text>
+  <text x="400" y="560" font-size="26" text-anchor="middle" font-weight="700">Betónová platňa</text>
+  <text x="240" y="150" font-size="17" text-anchor="end" fill="#667176">stĺp 100 × 100</text>
+  <text x="470" y="378" font-size="17" fill="#667176">teleskopická pätka</text>
+</g>
+<g fill="#ffcc00"><rect x="60" y="72" width="104" height="5" rx="2.5"/></g>
+</svg>
