@@ -1,0 +1,16 @@
+{
+  "name": "Koverta",
+  "short_name": "Koverta",
+  "description": "Prístrešky, pergoly a tienenie na mieru. Vlastná výroba na Slovensku.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#12171a",
+  "theme_color": "#12171a",
+  "lang": "sk",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
