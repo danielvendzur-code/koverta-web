@@ -131,5 +131,5 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     console.error(zle.join('\n'));
     throw new Error(`Krytina strechy: ${zle.length} nezrovnalostí`);
   }
-  console.log('Roof covering PASS: G ponúka sklo aj zelenú strechu, cena sa nemení, dopyt to hovorí, F a SL majú ISO panel napevno a boky nenesú plášť lopy.');
+  console.log('Roof covering PASS: G ponúka sklo aj zelenú strechu, cena sa nemení, dopyt to hovorí, F a SL majú ISO panel napevno a boky nenesú strešný plášť.');
 })().catch((error) => { console.error(error.message || error); process.exit(1); });
