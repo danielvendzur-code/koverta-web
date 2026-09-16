@@ -170,3 +170,14 @@ module.exports = async function routingSmoke(browser) {
     await context.close();
   }
 };
+
+/* Spustenie priamo z príkazového riadku. Doteraz sa tento súbor dal len
+   vyžiadať z layout-smoke; `node routing-smoke.js` sa ticho skončil nulou,
+   takže vyzeral, že prešiel, hoci neurobil nič. To je horšie ako pád. */
+if (require.main === module) {
+  const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
+  (async () => {
+    const browser = await chromium.launch();
+    try { await module.exports(browser); } finally { await browser.close(); }
+  })().catch((error) => { console.error(error.stack || error); process.exit(1); });
+}
