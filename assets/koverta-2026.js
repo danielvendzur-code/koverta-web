@@ -3251,15 +3251,10 @@
       /* Na telefóne sme košík vyčistili z úzkej hlavičky, preto ostáva
          dostupný v zásuvke. Pridáva sa skriptom, aby sa nemusel kopírovať
          rovnaký odkaz do každej statickej podstránky. */
-      if (!drawer.querySelector('[data-k-drawer-cart]')) {
-        const cartLink = document.createElement('a');
-        cartLink.className = 'kv-drawer__odkaz';
-        cartLink.href = 'https://koverta.sk/cart';
-        cartLink.textContent = 'Košík';
-        cartLink.setAttribute('data-k-drawer-cart', '');
-        drawer.appendChild(cartLink);
-        drawer.dataset.kvDrawerCartAdded = 'true';
-      }
+      /* Košík na tomto webe nie je. Nič sa nikam nepridáva, cena je
+         orientačná a objednávka ide cez cenovú ponuku. Odkaz mieril na
+         /cart starého e-shopu, takže by po prepnutí domény skončil na 404
+         a pritom stál v hlavičke na každej stránke. */
 
       /* Zásuvka je zavretá posunutím mimo obrazovku, nie skrytím. Odkazy v nej
          teda ostávali na tabulátore: po hlavičke skočil kurzor do zavretého
