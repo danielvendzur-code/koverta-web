@@ -7694,6 +7694,21 @@ footer.kf { background: var(--k-ink); color: #fff; }
   text-shadow: 0 1px 0 var(--k-bone), 0 0 6px var(--k-bone);
 }
 .kh-mapa__bod:focus-visible { outline: 2px solid var(--k-ink); outline-offset: 6px; border-radius: 6px; }
+/* Terč na dotyk. Bod na mape je 11 px, čo sa prstom netrafí — na telefóne
+   sa dva susedné body prekryjú skôr, než sa podarí zasiahnuť ten správny.
+   Neviditeľná plocha okolo bodu má 28 px na každú stranu, takže bod ostáva
+   opticky rovnaký a dá sa stlačiť. Plocha leží pod menom obce, aby
+   neprekryla popisok susedného bodu. */
+.kh-mapa__bod::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
 
 .kh-mapa__karta {
   margin: 0;
