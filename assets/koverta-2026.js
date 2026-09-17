@@ -2686,7 +2686,13 @@
     if (!vsetky.length) return;
     if (REDUCED.matches) return;
     const siet = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (siet && (siet.saveData === true || /(^|-)2g$/.test(siet.effectiveType || ''))) return;
+    if (siet && (siet.saveData === true || /(^|-)[23]g$/.test(siet.effectiveType || ''))) return;
+    /* Úvodné video má 7,6 MB. Na počítači sa stiahne na pozadí a nikto si to
+       nevšimne, na telefóne je to celý dátový balík za jednu návštevu — a to
+       pri zábere, ktorý sa na úzkej obrazovke aj tak oreže na stred. Telefón
+       preto dostane úvodnú fotografiu, ktorá je pod videom a vyzerá rovnako.
+       Hranica je 900 px, teda pod ňou je telefón aj otočený tablet. */
+    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
 
     vsetky.forEach((v) => {
       if (v.dataset.kReady === 'true') return;
