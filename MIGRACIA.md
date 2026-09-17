@@ -34,21 +34,64 @@ nastaviť trvalé presmerovanie (301) na novú:
 
 Bez presmerovaní sa stratí to, čo staré adresy vo vyhľadávačoch nazbierali.
 
-## 4 · Formulár dopytu
+## 4 · CNAME a prepnutie domény
 
-Formulár posiela na `https://koverta.sk/contact` (Shopify). Po presune webu na
-tú istú doménu prestane byť požiadavka cross-origin — potom sa **dá** čítať
-stav odpovede a poďakovanie môže byť potvrdené, nie len ohlásené. Vtedy treba
-prejsť `initDopyt` v `assets/koverta-2026.js`.
+Repozitár nemá súbor `CNAME`, takže GitHub Pages zatiaľ obsluhuje len
+`danielvendzur-code.github.io/koverta-web/`. Bez neho sa `koverta.sk`
+na Pages nikdy nechytí.
 
-**Otvorené aj tak:** overiť, či Shopify kontaktný formulár naozaj doručí
-prílohy (`contact[Prílohy][]`). Ak nie, prílohy potrebujú vlastný endpoint.
+Poradie, ktoré nič nerozbije:
 
-## 5 · Overiť po spustení
+1. V DNS nastaviť `koverta.sk` na GitHub Pages (štyri A záznamy na
+   185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153
+   a `www` ako CNAME na `danielvendzur-code.github.io`).
+2. Do koreňa repozitára pridať súbor `CNAME` s jediným riadkom
+   `koverta.sk` a zlúčiť do vetvy, z ktorej Pages publikuje.
+3. V nastaveniach repozitára na GitHube zapnúť „Enforce HTTPS", keď
+   dobehne vystavenie certifikátu.
+
+Pozor na poradie: hneď ako `CNAME` pribudne, github.io adresa presmeruje
+na `koverta.sk`. Kým tam ešte beží Shopify, náhľad prestane fungovať.
+Preto sa `CNAME` pridáva až v deň prepnutia DNS, nie skôr.
+
+## 5 · Formulár dopytu
+
+Formulár už neposiela nič na `https://koverta.sk/contact`. Tá adresa patrí
+Shopify a v deň prepnutia domény prestane existovať; odosielalo sa navyše
+v režime `no-cors`, v ktorom sa stav odpovede prečítať nedá, takže by
+zákazník videl poďakovanie aj vtedy, keď dopyt nikam nedošiel.
+
+Statický hosting formulár spracovať nevie, tak po kliknutí otvorí poštu s
+hotovým dopytom. Odchádza z adresy zákazníka, takže sa stratiť nemôže.
+Panel po odoslaní to aj hovorí.
+
+**Keď pribudne server, ktorý POST prijme** (vlastný endpoint alebo služba
+na formuláre), stačí ho vpísať do konštanty `SERVER` vo funkcii
+`initDopyt` v `assets/koverta-2026.js`. Podmienka je jediná: musí byť na
+`koverta.sk` alebo posielať hlavičky CORS, inak sa nedá prečítať, či
+odoslanie prešlo. Kód už vtedy stav odpovede kontroluje a pri zlyhaní
+ponúkne ten istý e-mail jedným klikom.
+
+**Prílohy.** Pole na fotky ostáva, ale e-mailom sa súbory samy nepripoja.
+Panel po odoslaní preto povie, kam ich poslať, a ukáže sa len vtedy, keď
+zákazník naozaj nejaký súbor vybral.
+
+## 6 · Katalógové PDF
+
+Päť katalógov Soltec visí na `cdn.shopify.com` pod ID starého obchodu.
+Kým obchod existuje, súbory fungujú. Po jeho zrušení prestanú.
+
+Pod mriežkou katalógov je preto riadok s e-mailom pre prípad, že sa
+niektorý neotvorí. Trvalé riešenie je jedno z dvoch: nechať Shopify plán
+bežať, kým sa súbory nepresunú, alebo ich vystaviť inde (v Drive sú
+originály, majú 37 až 44 MB, do repozitára sa nehodia).
+
+## 7 · Overiť po spustení
 
 - [ ] Search Console: pridať doménu, overiť vlastníctvo, poslať `sitemap.xml`
 - [ ] Bing Webmaster Tools to isté
 - [ ] `curl -I https://koverta.sk/pristresky-pre-auta/` vráti 200
 - [ ] náhodných 10 starých adries vráti 301 na správne nové
-- [ ] test formulára koncom na koncom, vrátane príloh
+- [ ] test formulára: klik otvorí poštu s vyplneným dopytom
+- [ ] lišta súhlasu: „Prijať všetko" naozaj zapne meranie v Google Analytics
 - [ ] test vyhľadávania `?q=pergola`
