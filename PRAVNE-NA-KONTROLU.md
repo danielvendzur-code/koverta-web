@@ -87,6 +87,13 @@ v cene. Rovnako to teraz hovorí aj web a konfigurátor.
 - Pribudol článok **Meranie návštevnosti a cookies**: čo sa ukladá, štyri
   kategórie súhlasu, ako súhlas zmeniť a odvolať, a veta o Google Fonts,
   ktoré sa načítavajú aj bez súhlasu.
+- Účel **E-shop** sa volá **Cenová ponuka a zmluva o dielo** a hovorí o
+  príprave ponuky, nie o vybavení objednávky z košíka. Medzi údajmi sú
+  dodacie údaje nahradené miestom montáže.
+- Účel **Užívateľský účet** je celý preč. Opisoval heslá, zoznam objednávok
+  a obsah košíka, teda spracúvanie, ktoré sa nedeje.
+- Účel **Kontaktný formulár** sa volá **Dopytový formulár** a uvádza aj
+  miesto realizácie a nepovinné fotografie miesta, ktoré formulár zbiera.
 
 Dôvod: web spúšťa Google Tag Manager a Consent Mode v2, ale dokument o tom
 nemal ani slovo, a lišta súhlasu na webe dovtedy vôbec nebola, takže sa
