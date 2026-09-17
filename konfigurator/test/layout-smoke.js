@@ -21,6 +21,27 @@ function assert(condition, message) {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const errors = [];
   const installAnalyticsStubs = require('./browser-qa').prepareContext;
+
+  /* Dve zlyhania nehovoria nič o stránke a test by na nich padal náhodne.
+     `ERR_ABORTED` znamená, že prehliadač požiadavku zrušil, lebo sme medzitým
+     odišli na ďalšiu stránku — pri prechode piatich stránok za sebou je to
+     bežné. `ERR_TUNNEL_CONNECTION_FAILED` je brána prostredia, v ktorom test
+     beží, nie chyba webu. Všetko ostatné musí test zhodiť. */
+  const SUM = /ERR_ABORTED|ERR_TUNNEL_CONNECTION_FAILED|ERR_PROXY_CONNECTION_FAILED/;
+  const zaznam = (zoznam, predpona) => (page) => {
+    page.on('pageerror', (e) => zoznam.push(predpona + ' pageerror: ' + e.message));
+    page.on('console', (msg) => {
+      if (msg.type() !== 'error') return;
+      const t = msg.text();
+      if (SUM.test(t) || t === 'Failed to load resource: net::ERR_ABORTED') return;
+      zoznam.push(predpona + ' console: ' + t);
+    });
+    page.on('requestfailed', (r) => {
+      const d = r.failure() ? r.failure().errorText : 'unknown';
+      if (SUM.test(d)) return;
+      zoznam.push(predpona + ' request: ' + d + ' ' + r.url());
+    });
+  };
   const dismissConsent = async (page) => {
     const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
     if (await reject.count()) {
@@ -32,11 +53,7 @@ function assert(condition, message) {
     const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(desktop);
     const page = await desktop.newPage();
-    page.on('pageerror', e => errors.push('desktop pageerror: ' + e.message));
-    page.on('console', msg => { if (msg.type() === 'error') errors.push('desktop console: ' + msg.text()); });
-    /* „Failed to load resource" bez adresy sa nedá vyšetriť. Zlyhanú
-       požiadavku preto zaznamenávame aj s URL a dôvodom. */
-    page.on('requestfailed', r => errors.push('desktop request: ' + (r.failure() ? r.failure().errorText : 'unknown') + ' ' + r.url()));
+    zaznam(errors, 'desktop')(page);
 
     await page.goto('http://127.0.0.1:8901/', { waitUntil: 'load', timeout: 60000 });
     await dismissConsent(page);
@@ -136,8 +153,7 @@ function assert(condition, message) {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
     await installAnalyticsStubs(mobile);
     const mp = await mobile.newPage();
-    mp.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
-    mp.on('console', msg => { if (msg.type() === 'error') errors.push('mobile console: ' + msg.text()); });
+    zaznam(errors, 'mobile')(mp);
     await mp.goto('http://127.0.0.1:8901/', { waitUntil: 'load', timeout: 60000 });
     await dismissConsent(mp);
     await mp.waitForTimeout(800);
@@ -192,8 +208,7 @@ function assert(condition, message) {
     const productCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(productCtx);
     const pp = await productCtx.newPage();
-    pp.on('pageerror', e => errors.push('product pageerror: ' + e.message));
-    pp.on('console', msg => { if (msg.type() === 'error') errors.push('product console: ' + msg.text()); });
+    zaznam(errors, 'product')(pp);
     const productPages = [
       ['pristresky-pre-auta/', 'auto'],
       ['zahradne-pristresky/', 'garden'],
@@ -243,9 +258,7 @@ function assert(condition, message) {
     const productMobileCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
     await installAnalyticsStubs(productMobileCtx);
     const pmp = await productMobileCtx.newPage();
-    pmp.on('pageerror', e => errors.push('product-mobile pageerror: ' + e.message));
-    pmp.on('console', msg => { if (msg.type() === 'error') errors.push('product-mobile console: ' + msg.text()); });
-    pmp.on('requestfailed', r => errors.push('product-mobile request: ' + (r.failure() ? r.failure().errorText : 'unknown') + ' ' + r.url()));
+    zaznam(errors, 'product-mobile')(pmp);
     for (const [path, key] of productPages.slice(0, 5)) {
       await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
       await dismissConsent(pmp);
@@ -275,8 +288,7 @@ function assert(condition, message) {
     const cfgCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await installAnalyticsStubs(cfgCtx);
     const cp = await cfgCtx.newPage();
-    cp.on('pageerror', e => errors.push('config pageerror: ' + e.message));
-    cp.on('console', msg => { if (msg.type() === 'error') errors.push('config console: ' + msg.text()); });
+    zaznam(errors, 'config')(cp);
     await cp.goto('http://127.0.0.1:8901/konfigurator/?page=koverta', { waitUntil: 'load', timeout: 60000 });
     await dismissConsent(cp);
     await cp.waitForTimeout(2200);
