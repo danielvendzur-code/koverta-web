@@ -78,17 +78,21 @@ zákazník naozaj nejaký súbor vybral.
 
 ## 6 · Meranie a cookies
 
-Web nemeria nič. Google Tag Manager, Analytics aj Microsoft Clarity prišli
-s témou zo Shopify; s doménou odchádzajú aj ony. Odstránený je aj Consent
-Mode a lišta súhlasu, ktorú by nemal čo obsluhovať.
+Meranie ostáva: Google Tag Manager, Analytics aj Microsoft Clarity bežia
+ďalej a v hlavičke pred nimi stojí Google Consent Mode v2 so všetkými
+kategóriami zamietnutými. Kým teda nikto nedá súhlas, žiadna značka
+nesmie do prehliadača zapísať nič.
 
-Stránka preto nenastavuje žiadne cookies a do prehliadača neukladá nič.
-Písmo Archivo a Titillium Web sa ťahalo z Google Fonts; súbory sú teraz
-v `assets/pismo/`, takže web nevolá von vôbec. Drží to kontrola
-`bez-merania`, ktorá zhodí test, keď sa objaví akýkoľvek cudzí server.
+Cookie lištu si rieši platené rozšírenie na strane obchodu. Vlastnú tu
+preto nemáme; dve lišty vedľa seba by si odporovali a návštevník by
+nevedel, ktorá platí.
 
-Keby sa meranie malo niekedy vrátiť, vráti sa s ním aj povinnosť pýtať si
-súhlas a doplniť o tom článok do ochrany súkromia.
+Písmo Archivo a Titillium Web sa ťahalo z Google Fonts. Súbory sú teraz
+v `assets/pismo/`, takže sa písmo načíta z tej istej domény ako zvyšok
+stránky a nečaká sa na cudzí server.
+
+Drží to kontrola `cookies-a-suhlas`: bez súhlasu žiadne cookies, prázdny
+prehliadač, všetky kategórie zamietnuté a žiadna vlastná lišta.
 
 ## 7 · Katalógové PDF
 
