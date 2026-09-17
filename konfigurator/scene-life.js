@@ -41,7 +41,13 @@
   const particleSeeds=[];
   let seedState=9307;
   const random=()=>{seedState=(seedState*1664525+1013904223)>>>0;return seedState/4294967296;};
-  for(let i=0;i<600;i++)particleSeeds.push([random(),random(),random(),random()]);
+  /* Kvapiek je viac a sú tenšie. Šesťsto širokých a dosť krytých pruhov
+     čítalo skôr ako roztrúsené čiarky než ako dážď: oko vidí jednotlivé
+     kusy. Štrnásťsto tenkých a priehľadnejších splynie do clony, v ktorej
+     sa jednotlivá kvapka nedá sledovať, a to je presne to, čo dážď robí.
+     Dopady sa počítajú raz na zostavu a držia sa v pamäti, takže vyšší
+     počet stojí len ten jeden prepočet pri zmene. */
+  for(let i=0;i<1400;i++)particleSeeds.push([random(),random(),random(),random()]);
   /* Laky auta. Podklad je zámerne tmavší, než by farba "mala" byť: shader
      nad neho kladie číry lak, ostrý odlesk a odraz oblohy, a tie majú voči
      čomu vyniknúť len na tmavšom podklade. Preto je aj metalíza v hodnote,
@@ -732,14 +738,15 @@
         void main(){
           float x=seed.x*(extent.x+2600.)-1300.;float y=seed.y*(extent.y+2600.)-1300.;
           float top=roofBase+roofRise+2400.;float stopZ=impact.x;
-          float phase=fract(seed.z+clock*(4300.+seed.w*1800.)/max(300.,top-stopZ));
+          float h1=fract(seed.w*197.13+seed.z*41.7);float h2=fract(seed.z*311.7+seed.x*57.31);
+          float phase=fract(seed.z+clock*(3600.+seed.w*3200.)/max(300.,top-stopZ));
           float z=mix(top,stopZ,phase);float land=smoothstep(.955,1.,phase);
           vec3 across=vec3(orbit.x,orbit.y,0.);
           // The drop falls plumb and must keep doing so. Its impact point is
           // solved on the CPU for the column (x,y); leaning the fall sideways
           // slid drops that land beside the carport across the roof outline
           // on their way down, which read as rain getting in underneath.
-          vec3 fall=vec3(x,y,z)+across*corner.x*(7.+5.5*seed.w)+vec3(0.,0.,corner.y*(135.+seed.w*135.)*(1.-land));
+          vec3 fall=vec3(x,y,z)+across*corner.x*(4.6+4.2*h2)+vec3(0.,0.,corner.y*(90.+h1*230.)*(1.-land));
           vec3 n=normalize(impact.yzw);vec3 t=normalize(abs(n.z)>.9?cross(n,vec3(0.,1.,0.)):cross(n,vec3(0.,0.,1.)));
           vec3 b=cross(n,t);
           vec3 pool=vec3(x,y,stopZ)+n*2.+(t*corner.x+b*(corner.y*2.-1.))*(20.+40.*seed.w)*land;
@@ -753,7 +760,7 @@
           // sky at full strength every cycle, and the eye caught it.
           float birth=smoothstep(0.,.05,phase);
           float death=1.-smoothstep(.93,1.,phase);
-          opacity=(.44+seed.w*.34)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
+          opacity=(.30+h2*.30)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
         `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
