@@ -2317,12 +2317,11 @@
      ktorý sa dá presne ohraničiť, takže panel nikdy nevyjde zo svojej plochy.
      Panel má vlastnú farebnú plochu, preto sa hýbe jeho obsah, nie on sám. */
 
-  /* --- Súhlas s meraním ---------------------------------------------------
-     Vlastnú lištu tu už nemáme. Obchod beží na Shopify a ten si súhlas
-     vyžiada sám; dve lišty vedľa seba by si odporovali a návštevník by
-     nevedel, ktorá platí. Google Consent Mode v hlavičke ostáva a kým ho
-     niekto nepovolí, sú všetky kategórie zamietnuté — Tag Manager sa načíta,
-     ale žiadna značka nesmie zapisovať do prehliadača. */
+  /* --- Meranie ------------------------------------------------------------
+     Web nemeria nič. Tag Manager, Analytics aj Clarity prišli s témou zo
+     Shopify a odišli s ňou; nie je teda ani čo zisťovať súhlasom. Stránka
+     nenastavuje cookies a do prehliadača neukladá nič okrem zavretej výzvy
+     na celú obrazovku v konfigurátore. */
   /* --- Video v úvode ------------------------------------------------------
      Fotografia ostáva v značke aj naďalej: nesie alternatívny text, načíta sa
      prvá a je to ona, čo prehliadač meria ako najväčší prvok. Video sa na ňu
