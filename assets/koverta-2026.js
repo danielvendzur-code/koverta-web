@@ -2436,6 +2436,28 @@
         }).then(() => {
           window.clearTimeout(cakac);
           uvolni();
+          /* Záložná cesta. Formulár posiela dopyt na jeden endpoint a odpoveď
+             z neho sa v režime no-cors prečítať nedá — takže ani 404 by sme
+             nespoznali a divák by videl poďakovanie aj vtedy, keď dopyt
+             nikam nedošiel. Preto v paneli po odoslaní čaká odkaz, ktorý
+             otvorí e-mail s tým istým obsahom. Jedno kliknutie a dopyt je
+             doručený bez ohľadu na to, čo sa stalo na druhej strane. */
+          try {
+            const odkaz = dakujem.querySelector('[data-k-mailto]');
+            if (odkaz) {
+              const fd = new FormData(f);
+              const hod = (k) => String(fd.get(k) || '').trim();
+              const riadky = [];
+              const pole = [['contact[name]','Meno'],['contact[phone]','Telefón'],
+                            ['contact[email]','E-mail'],['contact[Miesto realizácie]','Miesto realizácie'],
+                            ['contact[Čo rieši]','Čo rieši'],['contact[body]','Správa']];
+              pole.forEach(([k, nazov]) => { const v = hod(k); if (v) riadky.push(nazov + ': ' + v); });
+              riadky.push('', 'Odoslané zo stránky ' + location.href);
+              odkaz.setAttribute('href', 'mailto:obchod@koverta.sk?subject='
+                + encodeURIComponent('Dopyt z webu' + (hod('contact[name]') ? ', ' + hod('contact[name]') : ''))
+                + '&body=' + encodeURIComponent(riadky.join('\n')));
+            }
+          } catch (e) {}
           ukaz(subory);
         }).catch(() => {
           window.clearTimeout(cakac);

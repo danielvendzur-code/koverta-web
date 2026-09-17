@@ -14358,3 +14358,12 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .kh-vs tbody td + td { border-left: 1px solid var(--k-hair-soft); }
   .kh-vs tbody td small { font-size: 12px; }
 }
+
+
+/* Záložný odkaz v paneli po odoslaní. Formulár posiela dopyt na jeden
+   endpoint a či tam naozaj dorazil, sa zo stránky zistiť nedá. Tento odkaz
+   otvorí e-mail s tým istým obsahom, takže dopyt má vždy druhú cestu. */
+.kh-dakujem__zaloha { margin-top: 10px; font-size: 13.5px; line-height: 1.6; }
+.kh-dakujem__zaloha a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
+.kh-dakujem__zaloha a:hover { color: var(--k-amber-deep); }
+.kh-dakujem__zaloha span { display: block; margin-top: 2px; color: var(--k-grey-soft); font-size: 12.5px; }
