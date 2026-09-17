@@ -636,7 +636,13 @@
           const tab = event.target.closest('[data-sp-cfg-tab]');
           if (!tab) return;
           cfgSectionEl.querySelectorAll('[data-sp-cfg-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
-          const go = root.querySelector(tab.dataset.spCfgTab === 'quote' ? '[data-sp-goto="' + (STEPS - 1) + '"]' : '[data-sp-goto="1"]');
+          /* Počet krokov sa počíta až vnútri konfigurátora, sem nedosiahne —
+             prepnutie na Kalkuláciu preto padalo na „STEPS is not defined“ a
+             záložka nerobila nič. Cieľ sa berie rovno z lišty krokov: posledný
+             krok je súhrn s rozpisom ceny, prvý je začiatok konfigurácie.
+             Zároveň to prežije akúkoľvek zmenu počtu krokov. */
+          const kroky = [...root.querySelectorAll('.sp-rail [data-sp-goto]')];
+          const go = tab.dataset.spCfgTab === 'quote' ? kroky[kroky.length - 1] : kroky[0];
           if (go) go.click();
         });
       }
