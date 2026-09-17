@@ -12718,3 +12718,36 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .k .k-stitok > span,
   .k-stitok > span { display: none; }
 }
+
+
+/* ==========================================================================
+   VRSTVA 121 · Konfigurátor na domovskej: dve značky, nie päť dlaždíc
+   ==========================================================================
+   Sekcia ponúkala štyri dlaždice typov, hoci konfigurátor má päť stránok —
+   záhradný prístrešok v zozname chýbal. Namiesto dopĺňania piatej dlaždice
+   je vstup rozdelený podľa značky: Koverta (naša oceľ) a Soltec (hliník).
+   Ktorý model, to si človek vyberie vnútri, kde je aj 3D náhľad.
+
+   Dve dlaždice namiesto štyroch ale nechávali v pravom stĺpci prázdno, tak
+   sú na výšku: fotka 4 : 5 zaplní stĺpec vedľa krokov. */
+@media (min-width: 900px) {
+  .k .kh-kfg__typy { align-content: center; }
+  .k .kh-kfg__typy:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Pomer drží karta, nie fotka vnútri: fotka sa do karty naťahuje, takže
+     pomer nastavený na nej sa neprejaví. */
+  .k .kh-kfg__typy:has(> :nth-child(2):last-child) .kh-kfg__karta,
+  .k .kh-kfg__typy:has(> :nth-child(2):last-child) .kh-kfg__foto { aspect-ratio: 4 / 5; }
+}
+
+/* Technický nákres nie je fotografia. `object-fit: cover` mu orezal pravý
+   okraj aj s pôdorysnou vložkou, ktorá práve hovorí, čím sa tri podklady
+   líšia. Kreslené podklady sa preto do rámu zmestia celé a nepribližujú sa
+   pri príchode sekcie. */
+.k .kh-mat__media:has(img[src$=".svg"]) { background: #f7f6f3; }
+.k .kh-mat__media img[src$=".svg"] {
+  object-fit: contain;
+  padding: clamp(10px, 1.2vw, 18px);
+  transform: none;
+}
+.k-rise .kh-mat__media img[src$=".svg"],
+.k-rise.is-in .kh-mat__media img[src$=".svg"] { transform: none; }
