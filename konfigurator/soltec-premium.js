@@ -1,5 +1,9 @@
 (() => {
       const root = document.getElementById('SoltecPremium');
+      /* Dopytový formulár stojí pod konfigurátorom, ale mimo jeho koreňa —
+         vnútri by zdedil úzku šírku konfigurátora a rozbil si rozloženie.
+         Runtime ho preto hľadá aj v stránke. */
+      const najdi = (vyber) => root.querySelector(vyber) || document.querySelector(vyber);
       if (!root || root.dataset.spReady === 'true') return;
       root.dataset.spReady = 'true';
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -543,14 +547,14 @@
 
         const quoteButton = calc.querySelector('[data-sp-quote]');
         if (quoteButton) quoteButton.addEventListener('click', () => {
-          const message = root.querySelector('textarea[name="contact[body]"]');
+          const message = najdi('textarea[name="contact[body]"]');
           if (message) {
             const addonText = out('addons-desc')?.textContent || 'Bez doplnkov z kalkulačky.';
             const summary = `Mám záujem o ${out('model').textContent}, rozmer ${out('size').textContent}, krytá plocha ${out('area').textContent}, zaťaženie ${out('load').textContent}. Konštrukcia: ${out('base-price').textContent}. Doplnky: ${addonText}. Cena zostavy vrátane montáže: ${out('price').textContent}.`;
             message.value = message.value.trim() ? `${message.value.trim()}\n\n${summary}` : `${summary}\n\nObec realizácie: `;
             message.dispatchEvent(new Event('input', { bubbles: true }));
           }
-          const target = root.querySelector('#sp-dopyt');
+          const target = najdi('#sp-dopyt');
           if (target) scrollToSection(target);
           window.setTimeout(() => { if (message) message.focus({ preventScroll: true }); }, reducedMotion ? 0 : 700);
         });
@@ -6571,7 +6575,7 @@
             state.ledSet.qty = Math.max(1, Math.min(12, (state.ledSet.qty || 1) + Number(t.dataset.spLed)));
             state.ledSet.on = true;
           } else if (t.hasAttribute('data-sp-cfg-quote')) {
-            const message = root.querySelector('textarea[name="contact[body]"]');
+            const message = najdi('textarea[name="contact[body]"]');
             const { total, open } = priceLines();
             const chosen = ['front', 'rear', 'left', 'right']
               .filter((s) => state.sides[s] !== 'open')
@@ -6633,7 +6637,7 @@
               window.location.href = mailto;
               return;
             }
-            const target = root.querySelector('#sp-dopyt');
+            const target = najdi('#sp-dopyt');
             if (target) target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
             return;
           } else if (t.hasAttribute('data-kv-custom')) {
@@ -6641,7 +6645,7 @@
                nepočúval ho nikto. Teraz zapíše požiadavku do dopytu a odošle
                ho tou istou cestou ako „Chcem presnú ponuku", takže obchodník
                vidí aj rozmer, od ktorého zákazník vychádzal. */
-            const message = root.querySelector('textarea[name="contact[body]"]');
+            const message = najdi('textarea[name="contact[body]"]');
             if (message) {
               const note = 'Potrebujem rozmer na mieru, katalógový najbližšie zodpovedá '
                 + `${mm(widthMM())} × ${mm(lengthMM())} mm.`;

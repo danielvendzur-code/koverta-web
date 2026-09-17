@@ -68,9 +68,9 @@ const adresaStranky = (name) => (/[?&]page=[a-z]+/.test(BASE) ? BASE.replace(/([
     chyba(/individuálne pre každý projekt/i.test(zelená.poznámka || ''),
       `${m}: poznámka nehovorí, že sa krytina oceňuje na projekt`);
 
-    /* Samostatná stránka konfigurátora nemá formulár, tak dopyt skladá do
-       mailto a odkaz si necháva na koreni — odtiaľ sa dá prečítať bez toho,
-       aby test otváral poštového klienta. */
+    /* Zostava ide do dopytového formulára pod konfigurátorom. Keby tam
+       formulár nebol, runtime ju zloží do mailto a odkaz nechá na koreni —
+       test vie prečítať oboje bez toho, aby otváral poštového klienta. */
     const dopyt = await page.evaluate(async () => {
       const btn = document.querySelector('[data-sp-cfg-quote]');
       if (!btn) return null;

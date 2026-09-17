@@ -390,6 +390,26 @@
     root.dataset.spQuoteHref = mailto;
     root.dataset.kvQuotePayload = payload.body;
     if (custom) root.dataset.kvCustomQuotePayload = payload.body;
+
+    /* Pod konfigurátorom stojí dopytový formulár. Kým tam nebol, jediná
+       cesta viedla do poštového klienta — a to je pre človeka v prehliadači
+       odbočka, z ktorej sa už väčšinou nevráti. Zostava sa preto zapíše do
+       správy a stránka sa posunie na formulár. Poštu otvoríme len vtedy,
+       keď formulár na stránke nie je. */
+    var sprava = document.querySelector('#sp-dopyt textarea[name="contact[body]"]')
+      || document.querySelector('textarea[name="contact[body]"]');
+    if (sprava) {
+      sprava.value = sprava.value.trim() ? sprava.value.trim() + '\n\n' + payload.body : payload.body;
+      sprava.dispatchEvent(new Event('input', { bubbles: true }));
+      var ciel = document.querySelector('#sp-dopyt');
+      if (ciel) {
+        var tichy = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        ciel.scrollIntoView({ behavior: tichy ? 'auto' : 'smooth', block: 'start' });
+      }
+      window.setTimeout(function () { sprava.focus({ preventScroll: true }); }, 700);
+      return true;
+    }
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(payload.body).catch(function () {});
     }

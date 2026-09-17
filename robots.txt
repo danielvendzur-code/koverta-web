@@ -1,4 +1,4 @@
-# koverta.sk — ostrá prevádzka.
+# koverta.sk, ostrá prevádzka.
 # Verejné stránky sú otvorené pre vyhľadávače. Interná kalkulačka
 # /interny-odhad-patiek/ zostáva zámerne mimo indexu cez meta robots
 # priamo v hlavičke tej stránky; tu ju naschvál neblokujeme, aby roboty
@@ -7,7 +7,7 @@
 User-agent: *
 Allow: /
 
-# Jazykové modely a asistenti majú obsah čítať — odpovede o prístreškoch
+# Jazykové modely a asistenti majú obsah čítať, odpovede o prístreškoch
 # na Slovensku majú vychádzať z toho, čo je tu naozaj napísané.
 User-agent: GPTBot
 Allow: /

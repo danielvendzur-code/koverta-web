@@ -101,29 +101,35 @@ function assert(condition, message) {
     assert(home.brandMoreVisible, 'Brand explanatory text is hidden behind hover');
     assert(home.kovertaCfg && home.kovertaCfg.width > 180 && home.kovertaCfg.height > 120, 'Koverta configurator card is missing or collapsed');
 
-    // Validate the client flow without delivering an enquiry to the company.
-    let submissions = 0;
-    await desktop.route('https://koverta.sk/contact', async route => {
-      assert(route.request().method() === 'POST', 'Unexpected contact request method');
-      submissions++;
-      const body = route.request().postData() || '';
-      assert(body.includes('qa@example.invalid') && body.includes('Koverta audit test'), 'Contact payload lost fields');
-      await route.fulfill({status:200,contentType:'text/html',body:'<html><body>Test response</body></html>'});
-    });
+    /* Dopyt sa už nikam neposiela: statický hosting POST neprijme, tak
+       formulár otvorí poštu s hotovým dopytom. Test drží, že sa pritom nič
+       neodošle na sieť a že v e-maile je naozaj všetko vyplnené. */
+    let odoslane = 0;
+    await desktop.route(/koverta\.sk\/(contact|cart|search)/, async route => { odoslane++; await route.abort(); });
     const form = page.locator('form[data-k-dopyt]').first();
     await form.locator('[type="submit"]').click();
-    assert(submissions === 0, 'Empty contact form bypassed validation');
+    assert(!(await page.locator('[data-k-dakujem]').isVisible()), 'Empty contact form bypassed validation');
     await form.locator('[name="contact[name]"]').fill('Koverta audit test');
     await form.locator('[name="contact[phone]"]').fill('+421900000000');
     await form.locator('[name="contact[email]"]').fill('qa@example.invalid');
-    await form.locator('[name="contact[body]"]').fill('Client-side QA; intercepted, never delivered.');
+    await form.locator('[name="contact[body]"]').fill('Client-side QA; nothing is delivered.');
     await form.locator('[type="submit"]').click();
-    assert(submissions === 0, 'Contact form bypassed consent validation');
+    assert(!(await page.locator('[data-k-dakujem]').isVisible()), 'Contact form bypassed consent validation');
     await form.locator('[type="checkbox"]').check();
     await form.locator('[type="submit"]').click();
     await page.locator('[data-k-dakujem]').waitFor({state:'visible'});
-    assert(submissions === 1, 'Contact form did not issue exactly one intercepted request');
-    console.log('FORM_PASS validation, consent, request payload, client response; delivery not tested');
+    assert(odoslane === 0, 'Contact form still posts an enquiry to a server that will not exist');
+    const panel = await page.evaluate(() => {
+      const d = document.querySelector('[data-k-dakujem]');
+      const a = d.querySelector('[data-k-mailto]');
+      return { nadpis: d.querySelector('.kh-dakujem__nadpis').textContent.trim(), odkaz: a ? a.getAttribute('href') : '' };
+    });
+    assert(panel.nadpis === 'Dopyt máte pripravený v e-maile', 'Thank-you panel claims something that did not happen: ' + panel.nadpis);
+    const telo = decodeURIComponent(panel.odkaz);
+    for (const kus of ['obchod@koverta.sk', 'Koverta audit test', 'qa@example.invalid']) {
+      assert(telo.includes(kus), 'Prepared e-mail lost a field: ' + kus);
+    }
+    console.log('FORM_PASS validation, consent, prepared e-mail, nothing sent to a server');
 
     await desktop.close();
 
