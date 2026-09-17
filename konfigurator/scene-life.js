@@ -537,7 +537,7 @@
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého
          nákresu nepatria. Namiesto ticha to panel povie. */
       const flat=Boolean(context&&context.renderer&&context.renderer!=='webgl-depth');
-      const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres — vybavenie sa v ňom nezobrazí.':
+      const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres, vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
         (state.mode==='car'?(()=>{
           const keys=[...new Set(currentPlan.items.map(i=>i.key))];
@@ -552,7 +552,7 @@
           if(!cl||cl.beside==null)return line;
           const cm=Math.round(cl.beside/10);
           return line+(cl.roomy?` · po bokoch ${cm} cm`
-            :` · po bokoch len ${cm} cm — auto sa zmestí, na otvorenie dverí je to tesné`);})():
+            :` · po bokoch len ${cm} cm, auto sa zmestí, na otvorenie dverí je to tesné`);})():
          state.mode==='bistro'?(()=>{const k=currentPlan.items[0]&&currentPlan.items[0].key;
            return k==='lounge'?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec':
              k==='sofa'?'Posedenie · dvojkreslo, konferenčný stolík, koberec a kvetináč':

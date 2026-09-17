@@ -391,7 +391,7 @@
             details.push(`box ${material === 'wood' ? 'drevo' : 'ISO'} ${money.format(Number(width))} × ${money.format(Number(depth))} mm: ${money.format(boxPrice)} €`);
             if (boxPriceOut) boxPriceOut.textContent = `${money.format(boxPrice)} €`;
           } else if (boxPriceOut) {
-            boxPriceOut.textContent = '—';
+            boxPriceOut.textContent = '–';
           }
 
           const ceilingType = ceiling?.value || 'none';
@@ -463,7 +463,7 @@
             panel.classList.toggle('is-selected', selected);
           });
           const boxSummary = calc.querySelector('[data-sp-addon-summary="box"]');
-          if (boxSummary) boxSummary.textContent = boxEnabled?.checked && boxPriceOut?.textContent && boxPriceOut.textContent !== '—' ? boxPriceOut.textContent : 'od 3 681 €';
+          if (boxSummary) boxSummary.textContent = boxEnabled?.checked && boxPriceOut?.textContent && boxPriceOut.textContent !== '–' ? boxPriceOut.textContent : 'od 3 681 €';
 
           if (widthSlider) paintTrack(widthSlider);
           if (lengthSlider) paintTrack(lengthSlider);
@@ -546,7 +546,7 @@
           const message = root.querySelector('textarea[name="contact[body]"]');
           if (message) {
             const addonText = out('addons-desc')?.textContent || 'Bez doplnkov z kalkulačky.';
-            const summary = `Mám záujem o ${out('model').textContent} — rozmer ${out('size').textContent}, krytá plocha ${out('area').textContent}, zaťaženie ${out('load').textContent}. Konštrukcia: ${out('base-price').textContent}. Doplnky: ${addonText}. Cena zostavy vrátane montáže: ${out('price').textContent}.`;
+            const summary = `Mám záujem o ${out('model').textContent}, rozmer ${out('size').textContent}, krytá plocha ${out('area').textContent}, zaťaženie ${out('load').textContent}. Konštrukcia: ${out('base-price').textContent}. Doplnky: ${addonText}. Cena zostavy vrátane montáže: ${out('price').textContent}.`;
             message.value = message.value.trim() ? `${message.value.trim()}\n\n${summary}` : `${summary}\n\nObec realizácie: `;
             message.dispatchEvent(new Event('input', { bubbles: true }));
           }
@@ -761,11 +761,11 @@
           d.dataset.spHowto = '';
           d.innerHTML = '<summary>Ako sa to ovláda</summary>'
             + '<ul>'
-            + '<li><b>Otáčanie</b> — ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
-            + '<li><b>Priblíženie</b> — koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
-            + '<li><b>Vybavenie a počasie</b> — karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
-            + '<li><b>Cena</b> — mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu.</li>'
-            + '<li><a href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a> — autori a licencie áut a záhradného nábytku v scéne.</li>'
+            + '<li><b>Otáčanie</b>: ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
+            + '<li><b>Priblíženie</b>: koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
+            + '<li><b>Vybavenie a počasie</b>: karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
+            + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu.</li>'
+            + '<li><a href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a>: autori a licencie áut a záhradného nábytku v scéne.</li>'
             + '</ul>';
           kolona.appendChild(d);
         };
@@ -831,14 +831,14 @@
            lamely z dreva, WPC alebo hliníka — a nič iné. Zoznam preto smie
            prísť z dát stránky; keď nepríde, ostáva Soltec. */
         const SOLTEC_SIDE_OPTS = [
-          { id: 'open',  label: 'Otvorená',                     note: '—' },
+          { id: 'open',  label: 'Otvorená',                     note: 'bez výplne' },
           { id: 'zip',   label: 'ZIP roleta K130',              note: 'podľa šírky' },
           { id: 'g1',    label: 'Sklenené posuvné panely G1',   note: 'podľa rozmeru' },
           { id: 'g2',    label: 'Sklenené skladacie panely G2', note: 'podľa rozmeru' },
-          { id: 'h50l',  label: 'Posuvné panely H50 — drevo',   note: 'podľa rozmeru' },
-          { id: 'h50a',  label: 'Posuvné panely H50 — hliník',  note: 'podľa rozmeru' },
-          { id: 'fi30',  label: 'Stena ISO 3 — izolačný panel 30 mm', note: 'podľa výšky' },
-          { id: 'fw25',  label: 'Stena WOOD — sibírsky smrekovec',  note: 'podľa výšky' },
+          { id: 'h50l',  label: 'Posuvné panely H50, drevo',   note: 'podľa rozmeru' },
+          { id: 'h50a',  label: 'Posuvné panely H50, hliník',  note: 'podľa rozmeru' },
+          { id: 'fi30',  label: 'Stena ISO 3, izolačný panel 30 mm', note: 'podľa výšky' },
+          { id: 'fw25',  label: 'Stena WOOD, sibírsky smrekovec',  note: 'podľa výšky' },
           /* L44-ES a L44-ALU 20/20 tu boli ako bočné steny, ale v cenníku nie
              sú steny: sú to plášte lopy — „LOPA / L44-ES", „LOPA / L44-ALU
              20/20" — a účtujú sa ako celý zadný box daného rozmeru, nie na
@@ -1182,7 +1182,7 @@
           { id: 'tip2', label: 'Pri stene, kolmo', walls: ['rear'] },
           { id: 'tip4', label: 'Pri stene, pozdĺž', walls: ['left'] },
           { id: 'tip7', label: 'V rohu', walls: ['rear', 'left'] },
-          { id: 'tip0', label: 'Bez stĺpov — medzi stenami', walls: ['rear'], noPosts: true },
+          { id: 'tip0', label: 'Bez stĺpov, medzi stenami', walls: ['rear'], noPosts: true },
           { id: 'tip6', label: 'Voľné stĺpy', walls: [], freePosts: true }
         ];
         const PLACEMENTS = (Array.isArray(BIO.placements) && BIO.placements.length) ? BIO.placements : FALLBACK_PLACEMENTS;
