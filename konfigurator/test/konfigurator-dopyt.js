@@ -10,7 +10,6 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
   const c = await b.newContext({ viewport: { width: 1440, height: 1000 } });
-  await c.addInitScript(() => { try { localStorage.setItem('koverta-suhlas', JSON.stringify({ verzia: 1, analytika: false, marketing: false, preferencie: false })); } catch (e) {} });
   const p = await c.newPage();
   p.on('pageerror', (e) => chyby.push('pageerror: ' + e.message));
 

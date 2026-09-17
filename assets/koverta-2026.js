@@ -2361,147 +2361,6 @@
 
      Bez skriptu ostáva formulár obyčajným POSTom na koverta.sk a odpoveď
      vykreslí server sám. */
-  /* --- 3e2 · Lišta súhlasu -------------------------------------------------
-     Consent Mode v2 stojí v hlavičke každej stránky a všetko má na začiatku
-     zakázané. Doteraz to ale nemal kto povoliť — na webe nebolo nič, čo by
-     kľúč `koverta-suhlas` zapísalo, takže meranie bolo trvalo vypnuté a
-     návštevník sa k voľbe nedostal.
-
-     Lišta sa skladá tu v skripte, nie v HTML. Sedemnásť stránok by inak
-     nieslo ten istý kus markupu a pri každej zmene by sa musel prepísať
-     sedemnásťkrát. Bez skriptu sa nezobrazí, čo je v poriadku: bez skriptu
-     sa nespustí ani Tag Manager, takže nie je čomu dávať súhlas.
-
-     Zavretie krížikom ani Escape nie je súhlas. Lišta v tom prípade ostáva,
-     lebo mlčanie podľa pravidiel súhlasom nie je. */
-  const SUHLAS_KATEGORIE = [
-    { id: 'analytika', nazov: 'Štatistika',
-      popis: 'Koľko ľudí stránku otvorilo a ktoré podstránky čítali. Bez mena, len počty.' },
-    { id: 'marketing', nazov: 'Marketing',
-      popis: 'Meranie reklamy, aby sme ju neukazovali ľuďom, ktorí už dopyt poslali.' },
-    { id: 'preferencie', nazov: 'Preferencie',
-      popis: 'Zapamätá si drobnosti, ktoré ste si zavreli, napríklad výzvu na celú obrazovku v konfigurátore.' }
-  ];
-
-  function initSuhlas() {
-    if (document.querySelector('[data-k-suhlas]')) return;
-    const uloz = (volba) => {
-      const zaznam = { verzia: 1, cas: new Date().toISOString(),
-        analytika: !!volba.analytika, marketing: !!volba.marketing, preferencie: !!volba.preferencie };
-      try { window.localStorage.setItem(window.KV_SUHLAS_KLUC || 'koverta-suhlas', JSON.stringify(zaznam)); } catch (e) {}
-      window.kvSuhlas = zaznam;
-      if (typeof window.kvGtag === 'function') {
-        window.kvGtag('consent', 'update', {
-          ad_storage: zaznam.marketing ? 'granted' : 'denied',
-          ad_user_data: zaznam.marketing ? 'granted' : 'denied',
-          ad_personalization: zaznam.marketing ? 'granted' : 'denied',
-          analytics_storage: zaznam.analytika ? 'granted' : 'denied',
-          functionality_storage: zaznam.preferencie ? 'granted' : 'denied',
-          personalization_storage: zaznam.preferencie ? 'granted' : 'denied',
-          security_storage: 'granted'
-        });
-        window.kvGtag('set', 'ads_data_redaction', !zaznam.marketing);
-      }
-      try { window.dataLayer && window.dataLayer.push({ event: 'kv_suhlas', kv_suhlas: zaznam }); } catch (e) {}
-    };
-
-    const lista = document.createElement('div');
-    lista.className = 'kv-suhlas';
-    lista.setAttribute('data-k-suhlas', '');
-    lista.setAttribute('role', 'dialog');
-    lista.setAttribute('aria-modal', 'false');
-    lista.setAttribute('aria-labelledby', 'kvSuhlasNadpis');
-    lista.hidden = true;
-    lista.innerHTML =
-      '<div class="kv-suhlas__panel">'
-      + '<div class="kv-suhlas__text">'
-      + '<h2 class="kv-suhlas__nadpis" id="kvSuhlasNadpis">Meriame, len keď dovolíte</h2>'
-      + '<p>Aby stránka fungovala, nepotrebujeme nič ukladať. Ak nám to dovolíte, budeme merať, '
-      + 'čo ľudí zaujíma, a podľa toho web zlepšovať. Rozhodnutie viete kedykoľvek zmeniť dole v pätke. '
-      + '<a data-k-suhlas-viac href="./ochrana-sukromia/">Ako chránime súkromie</a></p>'
-      + '</div>'
-      + '<div class="kv-suhlas__volby" data-k-suhlas-volby hidden>'
-      + '<label class="kv-suhlas__volba kv-suhlas__volba--pevna">'
-      + '<input type="checkbox" checked disabled><span><strong>Nevyhnutné</strong>'
-      + 'Bez nich sa stránka nezobrazí. Neukladajú nič, čím by sa dalo niekoho rozpoznať.</span></label>'
-      + SUHLAS_KATEGORIE.map((k) =>
-          '<label class="kv-suhlas__volba"><input type="checkbox" data-k-suhlas-pole="' + k.id + '">'
-          + '<span><strong>' + k.nazov + '</strong>' + k.popis + '</span></label>').join('')
-      + '</div>'
-      + '<div class="kv-suhlas__akcie">'
-      + '<button class="k-btn k-btn--primary" type="button" data-k-suhlas-vsetko>Prijať všetko</button>'
-      + '<button class="k-btn k-btn--line" type="button" data-k-suhlas-nic>Iba nevyhnutné</button>'
-      + '<button class="k-btn k-btn--ink kv-suhlas__ulozit" type="button" data-k-suhlas-ulozit hidden>Uložiť voľbu</button>'
-      + '<button class="kv-suhlas__viac" type="button" data-k-suhlas-nastav aria-expanded="false">Nastaviť</button>'
-      + '</div>'
-      + '</div>';
-    document.body.appendChild(lista);
-
-    /* Odkaz na ochranu súkromia musí sedieť z každej hĺbky. */
-    const viac = lista.querySelector('[data-k-suhlas-viac]');
-    const vzor = document.querySelector('.kf__bottom a[href*="ochrana-sukromia"]')
-      || document.querySelector('a[href*="ochrana-sukromia"]');
-    if (viac && vzor) viac.setAttribute('href', vzor.getAttribute('href'));
-
-    const volby = lista.querySelector('[data-k-suhlas-volby]');
-    const nastav = lista.querySelector('[data-k-suhlas-nastav]');
-    const ulozit = lista.querySelector('[data-k-suhlas-ulozit]');
-    const polia = () => [...lista.querySelectorAll('[data-k-suhlas-pole]')];
-
-    const ukaz = () => {
-      const v = window.kvSuhlas;
-      polia().forEach((p) => { p.checked = Boolean(v && v[p.dataset.kSuhlasPole]); });
-      lista.hidden = false;
-      requestAnimationFrame(() => lista.classList.add('je-vidno'));
-    };
-    const skry = () => {
-      lista.classList.remove('je-vidno');
-      window.setTimeout(() => { lista.hidden = true; }, REDUCED.matches ? 0 : 260);
-    };
-
-    const rozhodni = (volba) => { uloz(volba); skry(); };
-
-    lista.querySelector('[data-k-suhlas-vsetko]').addEventListener('click',
-      () => rozhodni({ analytika: true, marketing: true, preferencie: true }));
-    lista.querySelector('[data-k-suhlas-nic]').addEventListener('click',
-      () => rozhodni({ analytika: false, marketing: false, preferencie: false }));
-    ulozit.addEventListener('click', () => {
-      const volba = {};
-      polia().forEach((p) => { volba[p.dataset.kSuhlasPole] = p.checked; });
-      rozhodni(volba);
-    });
-    nastav.addEventListener('click', () => {
-      const otvorene = !volby.hidden;
-      volby.hidden = otvorene;
-      ulozit.hidden = otvorene;
-      nastav.setAttribute('aria-expanded', String(!otvorene));
-      nastav.textContent = otvorene ? 'Nastaviť' : 'Skryť možnosti';
-      if (!otvorene) { const prve = polia()[0]; if (prve) prve.focus(); }
-    });
-
-    /* Otvorenie z pätky. Tlačidlo pribudne tam, kde stoja právne odkazy. */
-    document.querySelectorAll('.kf__bottom nav').forEach((nav) => {
-      if (nav.querySelector('[data-k-suhlas-otvor]')) return;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'kf__suhlas';
-      b.setAttribute('data-k-suhlas-otvor', '');
-      b.textContent = 'Nastavenia súkromia';
-      nav.appendChild(b);
-    });
-    document.addEventListener('click', (e) => {
-      const t = e.target.closest && e.target.closest('[data-k-suhlas-otvor]');
-      if (!t) return;
-      e.preventDefault();
-      if (volby.hidden) nastav.click();
-      ukaz();
-      const prve = polia()[0];
-      if (prve) prve.focus();
-    });
-
-    if (!window.kvSuhlas) ukaz();
-  }
-
   /* Hľadanie, ktoré nič nenašlo, vedie na kontakt s `?hladane=`. Výraz sa
      dopíše do správy, aby ho človek nemusel písať druhýkrát a aby sme vedeli,
      čo na webe hľadal a nenašiel. */
@@ -3551,10 +3410,10 @@
   /* Naštartovanie stránky trvalo šesťdesiat milisekúnd v jedinom snímku —
      to je štyri snímky, počas ktorých prehliadač nestihol nič vykresliť a
      stránka na začiatku sekla. Hneď preto beží len to, čo je vidieť alebo
-     čo musí odpovedať na prvý dotyk: odkrytie obsahu, nadpis, hlavička,
-     video v úvode a lišta súhlasu. Zvyšok sa rozdelí do snímkov po ôsmich
+     čo musí odpovedať na prvý dotyk: odkrytie obsahu, nadpis, hlavička
+     a video v úvode. Zvyšok sa rozdelí do snímkov po ôsmich
      milisekundách, takže žiadny z nich nezmešká svoj termín. */
-  const HNED = [initReveal, initHeadline, initAnchors, initVideo, initSuhlas];
+  const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
                  initDopyt, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];

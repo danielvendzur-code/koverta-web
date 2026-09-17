@@ -1,7 +1,7 @@
 /* Vyskladanú zostavu chce človek poslať ďalej alebo si ju odložiť. Adresa je
    na to jediné miesto, ktoré si poradí bez ukladania do prehliadača: rozmer
    sa do nej zapisuje a dá sa z nej aj načítať. Druhá polovica testu drží, že
-   bez súhlasu na preferencie sa naozaj nič iné neuloží. */
+   web neukladá do prehliadača nič a nenastavuje cookies. */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const B = (process.env.KV_WEB || 'http://127.0.0.1:8901').replace(/\/$/, '');
 const chyby = [];
@@ -9,7 +9,6 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
   const c = await b.newContext({ viewport: { width: 1440, height: 1000 } });
-  await c.addInitScript(() => { try { localStorage.setItem('koverta-suhlas', JSON.stringify({ verzia: 1, analytika: false, marketing: false, preferencie: false })); } catch (e) {} });
   const p = await c.newPage();
   p.on('pageerror', (e) => chyby.push('pageerror: ' + e.message));
 
@@ -43,16 +42,17 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
   ok(sn2.width === sn.width && sn2.length === sn.length,
     'po znovuotvorení adresy je iný rozmer: ' + sn2.width + '×' + sn2.length + ' namiesto ' + sn.width + '×' + sn.length);
 
-  // bez súhlasu na preferencie sa nič nesmie zapamätať
-  const ulozene = await p.evaluate(() => {
-    const von = {};
-    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); von[k] = localStorage.getItem(k); }
-    return von;
+  /* Web nemeria a neukladá nič. Jediná výnimka je zapamätané zavretie výzvy na
+     celú obrazovku, a to sa zapíše až vtedy, keď ju človek naozaj zavrie. */
+  const stav = await p.evaluate(() => {
+    const kluce = [];
+    for (let i = 0; i < localStorage.length; i++) kluce.push(localStorage.key(i));
+    return { kluce, cookies: document.cookie };
   });
-  const cudzie = Object.keys(ulozene).filter((k) => k !== 'koverta-suhlas');
-  ok(cudzie.length === 0, 'bez súhlasu sa uložilo: ' + cudzie.join(', '));
+  ok(stav.kluce.length === 0, 'niečo sa uložilo do prehliadača: ' + stav.kluce.join(', '));
+  ok(!stav.cookies, 'stránka nastavila cookies: ' + stav.cookies);
 
   await b.close();
   if (chyby.length) { console.log('ADRESA_FAIL\n' + chyby.join('\n')); process.exit(1); }
-  console.log('ADRESA_PASS: rozmer ide do adresy aj z nej, bez súhlasu sa nič neukladá');
+  console.log('ADRESA_PASS: rozmer ide do adresy aj z nej, prehliadač ostáva prázdny');
 })().catch((e) => { console.error(e.stack || e); process.exit(1); });

@@ -54,50 +54,26 @@ vybavenie reklamácie a poučenie o právach vychádzajú z tej istej starej
 
 ## Zmenené 17. 9. 2026, na schválenie pred spustením
 
-Web prestáva byť e-shop na Shopify a stáva sa statickou stránkou s
-konfigurátorom. Podmienky ale opisovali košík, tlačidlo „Objednať s
-povinnosťou platby", platobnú bránu a užívateľské účty. Nič z toho na webe
-nie je a po prepnutí domény ani nebude, takže by podmienky opisovali
-neexistujúci postup. Tieto miesta sú prepísané a **potrebujú schválenie**:
+Znenie ostáva také, aké bolo na starom webe. Zmenili sa iba tri miesta,
+ktoré by po prepnutí domény hovorili o niečom, čo na webe nie je:
 
-| Kde | Bolo | Je |
+| Kde | Čo sa stalo | Prečo |
 |---|---|---|
-| Čl. II | definície „Užívateľský účet" a „Prihlasovacie údaje" | definície „Konfigurátor" a „Dopyt" |
-| Čl. IV ods. 1 | zoznam produktov sa dá objednať cez web stránku | ceny sú orientačné a nie sú návrhom na uzatvorenie zmluvy; web neumožňuje objednať ani zaplatiť |
-| Čl. IV ods. 2 | objednávka cez košík a „Objednať s povinnosťou platby" | dopyt cez formulár, e-mail alebo telefón; ponuka; potvrdenie ponuky je záväzná objednávka |
-| Čl. V | užívateľský účet a registrácia | konfigurátor a orientačná cena; web neponúka registráciu |
-| Čl. VII ods. 1 | ceny na stránke sú s DPH | cenu určuje ponuka, ceny na stránke sú orientačné |
-| Čl. VII ods. 2 | v cene je montáž | v cene je doprava **aj** montáž, neúčtujú sa osobitne ani podľa vzdialenosti |
-| Čl. VII ods. 3 | doprava sa účtuje osobitne podľa nákladov z Nitry | osobitne sa účtuje len to, čo ponuka výslovne neobsahuje (podklad, základy, elektroinštalácia, odstránenie prekážok) |
-| Čl. VII ods. 4 | zhotoviteľ je viazaný cenou po celý čas jej zverejnenia na webe | viazaný cenou v ponuke počas jej platnosti; ak ju ponuka neuvádza, platí 7 dní, ako sľubuje web |
-| Čl. VIII | platba prevodom alebo kartou cez platobnú bránu | platba prevodom; web nemá platobnú bránu a zhotoviteľ nežiada údaje o karte |
-| Čl. IX ods. 10 | vlastníctvo prechádza zaplatením ceny vrátane dopravy | vlastníctvo prechádza zaplatením ceny |
+| Čl. IV ods. 2 | vypustený odsek **Objednávka cez web stránku** (vloženie do košíka a tlačidlo „Objednať s povinnosťou platby") | web nemá košík ani objednávkové tlačidlo; objednáva sa e-mailom podľa odseku, ktorý ostal |
+| Čl. VII ods. 2 a 3 | doprava **aj** montáž sú v cene; osobitne sa účtuje len to, čo ponuka výslovne neobsahuje (podklad, základy, elektroinštalácia, odstránenie prekážok) | rozhodnutie majiteľa; rovnako to hovorí web aj konfigurátor |
+| Čl. VIII | vypustená možnosť **online platobnou kartou cez platobnú bránu** | web nemá platobnú bránu |
 
-**Rozhodnutie majiteľa, z ktorého to vychádza:** doprava a montáž sú vždy
-v cene. Rovnako to teraz hovorí aj web a konfigurátor.
+Nič iné sa v obchodných podmienkach nemenilo.
+
+**Ostáva na rozhodnutie majiteľa:** čl. II definuje užívateľský účet a
+prihlasovacie údaje a čl. V opisuje registráciu. Nový web registráciu
+neponúka. Text sme nechali tak, ako bol; ak sa má vypustiť, treba to
+povedať.
 
 ### `ochrana-sukromia/index.html`
 
-- Medzi sprostredkovateľmi bol **Shopify**. Nahradili ho tí, ktorí na webe
-  naozaj bežia: GitHub (hosting), Google (Tag Manager, Analytics, Fonts),
-  Microsoft (Clarity).
-- Tretie krajiny: veta o „prevádzke internetového obchodu" je nahradená
-  prevádzkou web stránky a meraním návštevnosti, s odkazom na právny základ
-  prenosu.
-- Pribudol článok **Meranie návštevnosti a cookies**: čo sa ukladá, štyri
-  kategórie súhlasu, ako súhlas zmeniť a odvolať, a veta o Google Fonts,
-  ktoré sa načítavajú aj bez súhlasu.
-- Účel **E-shop** sa volá **Cenová ponuka a zmluva o dielo** a hovorí o
-  príprave ponuky, nie o vybavení objednávky z košíka. Medzi údajmi sú
-  dodacie údaje nahradené miestom montáže.
-- Účel **Užívateľský účet** je celý preč. Opisoval heslá, zoznam objednávok
-  a obsah košíka, teda spracúvanie, ktoré sa nedeje.
-- Účel **Kontaktný formulár** sa volá **Dopytový formulár** a uvádza aj
-  miesto realizácie a nepovinné fotografie miesta, ktoré formulár zbiera.
-
-Dôvod: web spúšťa Google Tag Manager a Consent Mode v2, ale dokument o tom
-nemal ani slovo, a lišta súhlasu na webe dovtedy vôbec nebola, takže sa
-súhlas nedal dať ani odvolať.
+Dokument ostáva bez zmeny. Meranie návštevnosti sa z webu odstránilo, takže
+nebolo čo dopĺňať.
 
 ## Ako to zapracovať
 

@@ -3,59 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
-     kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
-<script>
-(function (w) {
-  // Queue Clarity calls before GTM can run its consent tag. The loaded
-  // Clarity client consumes this queue; no analytics call is discarded.
-  if (typeof w.clarity !== 'function') {
-    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
-  }
-  w.dataLayer = w.dataLayer || [];
-  function gtag() { w.dataLayer.push(arguments); }
-  w.kvGtag = gtag;
-  w.KV_SUHLAS_KLUC = 'koverta-suhlas';
-  var v = null;
-  try { v = JSON.parse(w.localStorage.getItem(w.KV_SUHLAS_KLUC) || 'null'); } catch (e) {}
-  if (v && v.verzia !== 1) v = null;
-  w.kvSuhlas = v;
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    analytics_storage: 'denied',
-    functionality_storage: 'denied',
-    personalization_storage: 'denied',
-    security_storage: 'granted',
-    wait_for_update: 500
-  });
-  if (v) {
-    gtag('consent', 'update', {
-      ad_storage: v.marketing ? 'granted' : 'denied',
-      ad_user_data: v.marketing ? 'granted' : 'denied',
-      ad_personalization: v.marketing ? 'granted' : 'denied',
-      analytics_storage: v.analytika ? 'granted' : 'denied',
-      functionality_storage: v.preferencie ? 'granted' : 'denied',
-      personalization_storage: v.preferencie ? 'granted' : 'denied',
-      security_storage: 'granted'
-    });
-  }
-  gtag('set', 'ads_data_redaction', !(v && v.marketing));
-  gtag('set', 'url_passthrough', true);
-})(window);
-</script>
-<!-- Google Tag Manager -->
-<script>
-(function (w, d, s, l, i) {
-  w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-  var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
-  j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
-})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
-</script>
-<!-- Koniec Google Tag Manager -->
-
 <title>Obchodné podmienky | Koverta</title>
 <meta name="description" content="Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku, od objednávky po odovzdanie.">
 <!-- KOVERTA-SEO -->
@@ -146,7 +93,6 @@
 </style>
 </head>
 <body>
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <a class="kv-skip" href="#obsah">Preskočiť na obsah</a>
 
 <!-- ======================================================== HLAVIČKA -->
@@ -446,9 +392,9 @@
 </ol>
 </li>
 <li>
-<strong>Konfigurátorom</strong><span> </span>je nástroj na web stránke, v ktorom si záujemca nastaví rozmer, farbu a doplnky produktu a ktorý mu k tejto zostave ukáže orientačnú cenu.</li>
+<strong>Užívateľským účtom</strong><span> </span>je účet objednávateľa obsahujúci jeho osobné údaje a údaje získané v súvislosti s jeho činnosťou na web stránke.</li>
 <li>
-<strong>Dopytom</strong><span> </span>je nezáväzná žiadosť o cenovú ponuku, ktorú záujemca odošle z formulára na web stránke, e-mailom alebo telefonicky.</li>
+<strong>Prihlasovacími údajmi</strong><span> </span>sú údaje, ktoré užívateľ musí zadať pri vstupe do svojho užívateľského účtu (užívateľské meno, heslo).</li>
 <li>
 <strong>Obsahom</strong><span> </span>sa rozumejú všetky zvukové záznamy, obrazové záznamy, zvukovo-obrazové záznamy, text, grafy, softvér, a iné dáta, ktoré je možné uložiť a vytvorené, použité v súvislosti s využívaním služby.</li>
 <li>
@@ -462,8 +408,8 @@
 <h2 id="cast-4">Článok IV</h2>
 <p><strong>Uzatvorenie zmluvy o dielo</strong></p>
 <ol>
-<li>Zoznam produktov na web stránkach je katalógom produktov bežne vyrábaných zhotoviteľom. Ceny uvedené na web stránke a v konfigurátore sú orientačné a nie sú návrhom na uzatvorenie zmluvy. Web stránka neumožňuje produkt priamo objednať ani zaplatiť; zmluva o dielo vzniká postupom podľa nasledujúcich odsekov.</li>
-<li>Objednávke predchádza cenová ponuka. Záujemca pošle zhotoviteľovi dopyt a zhotoviteľ na jeho základe spracuje cenovú ponuku, základný popis diela a výkres, ktoré pošle záujemcovi na schválenie. Potvrdenie cenovej ponuky záujemcom sa považuje za záväznú objednávku. Do potvrdenia ponuky nie je záujemca ničím viazaný; dopyt ani nastavenie produktu v konfigurátore ho k ničomu nezaväzujú.<br><br><strong>Dopyt cez web stránku<br></strong><br>Pri dopyte cez web stránku si záujemca v konfigurátore nastaví požadovaný produkt podľa ponúkaných parametrov a odošle kontaktný formulár. Nastavená zostava sa pripojí k dopytu, aby zhotoviteľ vedel, z čoho má ponuku pripraviť. Odoslanie formulára je nezáväzné a nie je objednávkou.<br><br><strong>Dopyt e-mailom alebo telefonicky</strong><br><br>Záujemca môže poslať dopyt aj priamo na e-mail<span> </span><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a><span> </span>alebo zavolať na<span> </span><a href="tel:+421948482266">+421 948 482 266</a>. Aby vedel zhotoviteľ pripraviť ponuku, potrebuje tieto údaje:
+<li>Zoznam produktov na web stránkach je katalógom produktov bežne vyrábaných zhotoviteľom. Záujemca si môže produkt objednať prostredníctvom web stránky alebo e-mailom.</li>
+<li>Objednávateľ si môže dohodnúť so zhotoviteľ aj odlišné parametre alebo prevedenie diela. Pokiaľ má záujemca osobitné požiadavky na dielo, môže zaslať svoje požiadavky e-mailom. Následne zhotoviteľ spracuje cenovú ponuku, základný popis diela a výkres, ktoré pošle záujemcovi na schválenie. Potvrdenie cenovej ponuky sa považuje za záväznú objednávku.<br><br><strong>Objednávka e-mailom</strong><br><br>Pri objednávke prostredníctvom e-mailu je potrebné odoslať na email<span> </span><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a><span> </span>objednávku s nasledovnými údajmi:
 <ul>
 <li>meno a priezvisko objednávateľa</li>
 <li>adresa na fakturačné účely</li>
@@ -472,20 +418,20 @@
 <li>výber parametrov produktu</li>
 <li>počet kusov z každej položky produktu</li>
 
-<li>miesto montáže a prístup k nemu</li>
+<li>spôsob úhrady</li>
+<li>miesto montáže</li>
 </ul>
 </li>
-<li>V prípade právnickej osoby aj fakturačné údaje (obchodné meno, sídlo, IČO, DIČ, IČ DPH).<br>Bez týchto údajov nevie zhotoviteľ ponuku pripraviť ani vystaviť zálohovú faktúru.<br>Potvrdenie cenovej ponuky uskutočnené prostredníctvom akéhokoľvek prostriedku diaľkovej komunikácie je záväzné.</li>
-<li>Prijatie záväznej objednávky, teda potvrdenej cenovej ponuky, potvrdí zhotoviteľ mailom, ktorého prílohou sú obchodné podmienky, technický výkres a zálohová faktúra.</li>
+<li>V prípade právnickej osoby aj fakturačné údaje (obchodné meno, sídlo, IČO, DIČ, IČ DPH)<br>Podmienkou pre platnosť objednávky je vyplnenie všetkých vyššie uvedených údajov.<br>Objednávka uskutočnená prostredníctvom akéhokoľvek prostriedku diaľkovej komunikácie je záväzná.</li>
+<li>Prijatie objednávky potvrdí zhotoviteľ mailom, ktorého prílohou sú obchodné podmienky, technický výkres a zálohová faktúra.</li>
 <li>Zmluva o dielo sa považuje za uzatvorenú okamihom doručenia potvrdenia o uzatvorení zmluvy, zaslaného elektronickou poštou. Zhotoviteľ nie je povinný uzatvoriť s objednávateľom zmluvu, pokiaľ požiadavky objednávateľa nezodpovedajú ponúkaným parametrom alebo ich z iného dôvodu nie je možné splniť.</li>
 </ol>
 <h2 id="cast-5">Článok V</h2>
-<p><strong>Konfigurátor a orientačná cena</strong></p>
+<p><strong>Užívateľský účet</strong></p>
 <ol>
-<li>Web stránka neponúka registráciu ani užívateľské účty. Konfigurátor sa dá používať bez prihlásenia a bez zadania osobných údajov.</li>
-<li>Konfigurátor počíta orientačnú cenu z aktuálneho cenníka pre zostavu, ktorú si záujemca nastavil. Pri každom produkte je uvedené, čo cena obsahuje a či je s DPH alebo bez DPH.</li>
-<li>Orientačná cena nezohľadňuje podmienky konkrétneho miesta montáže, najmä prístup, terén, základy a kotvenie do existujúcej konštrukcie. Záväznou sa cena stáva až v cenovej ponuke podľa článku IV.</li>
-<li>Konfigurátor neukladá nastavenú zostavu na server ani v prehliadači. Nastavený rozmer sa zapisuje do adresy stránky, takže sa dá odkaz uložiť alebo poslať ďalej. Zhotoviteľ vidí zostavu, až keď mu záujemca odošle dopyt.</li>
+<li>Záujemca si môže vytvoriť na web stránke užívateľský účet vyplnením registračného formulára. Záujemca je povinný pri registrácii uviesť pravdivé a úplné informácie.</li>
+<li>Užívateľský účet obsahuje osobné údaje registrovaného užívateľa a údaje o objednávkach.</li>
+<li>Vytvorenie užívateľského účtu je nepovinné. Záujemca môže vytvoriť a odoslať objednávku aj bez registrácie.</li>
 </ol>
 <h2 id="cast-6">Článok VI</h2>
 <p><strong>Práva a povinnosti zmluvných strán</strong></p>
@@ -513,10 +459,10 @@
 <h2 id="cast-7">Článok VII</h2>
 <p><strong>Cena za dielo</strong></p>
 <ol>
-<li>Cenu za dielo určuje cenová ponuka podľa článku IV. Ceny zobrazené na web stránke a v konfigurátore sú orientačné a pri každej je uvedené, či je s daňou z pridanej hodnoty (DPH) alebo bez nej. Zhotoviteľ je platcom DPH a konečná cena v ponuke je vždy uvedená s DPH.</li>
+<li>Ceny produktov sú zobrazené na týchto webových stránkach. Uvádzané sú s daňou z pridanej hodnoty (DPH), keďže zhotoviteľ je jej platcom.</li>
 <li>Cena uvedená v cenovej ponuke zahŕňa dopravu aj montáž v mieste určenia v rámci Slovenskej republiky. Zhotoviteľ ich neúčtuje osobitne a nemenia sa podľa vzdialenosti miesta montáže.</li>
 <li>Osobitne sa účtujú len práce, ktoré cenová ponuka výslovne neobsahuje, najmä príprava podkladu, betónové základy, elektroinštalácia a odstránenie prekážok v mieste montáže. Ak sú takéto práce potrebné, zhotoviteľ ich uvedie a nacení v ponuke ešte pred jej potvrdením.</li>
-<li>Zhotoviteľ je viazaný cenou uvedenou v cenovej ponuke počas doby platnosti, ktorá je v ponuke uvedená. Ak doba platnosti uvedená nie je, je ponuka platná 7 dní odo dňa jej odoslania.</li>
+<li>Zhotoviteľ je viazaný svojou ponukou, vrátane ceny, po celý čas jej zverejnenia na webových stránkach.</li>
 <li>Dokladom o predaji je faktúra (daňový doklad), ktorá je zaslaná objednávateľovi na email alebo osobne odovzdaná v deň montáže produktu.</li>
 <li>Objednávateľ je povinný zaplatiť cenu za dielo nasledovne:
 <ol>
@@ -531,8 +477,12 @@
 <h2 id="cast-8">Článok VIII</h2>
 <p><strong>Platobné podmienky</strong></p>
 <ol>
-<li>Objednávateľ zaplatí cenu za dielo<span> </span><strong>bankovým prevodom</strong><span> </span>na účet zhotoviteľa, a to na základe zálohovej a vyúčtovacej faktúry podľa článku VII. Platobné údaje sú uvedené na faktúre, ktorú zhotoviteľ pošle mailom spolu s potvrdením prijatia objednávky.</li>
-<li>Web stránka neobsahuje platobnú bránu a zhotoviteľ na nej neprijíma platby kartou. Zhotoviteľ nikdy nežiada o zaslanie údajov o platobnej karte e-mailom ani telefonicky.</li>
+<li>Objednávateľ zaplatí cenu za niektorým z nasledovných spôsobov:
+<ol>
+<li>
+<strong>vopred bankovým prevodom</strong><span> </span>na účet zhotoviteľa podľa platobných podmienok zaslaných mailom spolu s potvrdením prijatia objednávky.</li>
+</ol>
+</li>
 </ol>
 <h2 id="cast-9">Článok IX</h2>
 <p><strong>Zhotovenie a dodanie diela</strong></p>
@@ -552,7 +502,7 @@
 </li>
 <li>Pokiaľ z dôvodov na strane objednávateľa nedôjde k montáži diela v dohodnutý termín, príp. aj v náhradný termín, je objednávateľ povinný vyzdvihnúť si diely na mieste určenom zhotoviteľom v lehote do 30 dní odo dňa doručenia výzvy na vyzdvihnutie si diela.</li>
 <li>Ak zhotoviteľa zdržali vo vykonávaní diela okolnosti na strane objednávateľa, patrí mu za to primeraná náhrada.</li>
-<li>Vlastnícke právo k dielu prechádza na objednávateľa až úplným zaplatením ceny za dielo.</li>
+<li>Vlastnícke právo k dielu prechádza na objednávateľa až úplným zaplatením ceny za dielo, vrátane nákladov na dopravu.</li>
 </ol>
 <h2 id="cast-10">Článok X</h2>
 <p><strong>Technické predpoklady pre montáž</strong></p>

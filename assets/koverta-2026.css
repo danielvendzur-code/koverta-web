@@ -12599,82 +12599,6 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 .kh-vs__foto figcaption { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft); }
 
 
-/* ============================================================ SÚHLAS
-   Lišta sa skladá v skripte, sem patrí len jej vzhľad. Stojí dole pri
-   spodnej hrane, aby neprekryla nadpis ani úvodné foto, a pod pätku si
-   pridá presne toľko miesta, koľko sama zaberá — inak by prekryla posledný
-   riadok, kým je na obrazovke. */
-.kv-suhlas {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 70;
-  padding: 0 16px 16px;
-  pointer-events: none;
-}
-.kv-suhlas__panel {
-  pointer-events: auto;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 20px 22px;
-  background: var(--k-white);
-  border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-sm);
-  box-shadow: 0 18px 44px rgba(17, 17, 17, .16);
-  transform: translateY(14px);
-  opacity: 0;
-  transition: transform 260ms var(--k-ease-out), opacity 260ms var(--k-ease-out);
-}
-.kv-suhlas.je-vidno .kv-suhlas__panel { transform: none; opacity: 1; }
-
-.kv-suhlas__nadpis {
-  margin: 0 0 6px;
-  font-family: var(--k-head);
-  font-size: clamp(17px, 1.5vw, 20px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.kv-suhlas__text p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--k-grey-soft); }
-.kv-suhlas__text a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
-.kv-suhlas__text a:hover { color: var(--k-amber-deep); }
-
-.kv-suhlas__volby[hidden] { display: none; }
-.kv-suhlas__volby {
-  display: grid;
-  gap: 10px;
-  margin: 16px 0 2px;
-  padding-top: 14px;
-  border-top: 1px solid var(--k-hair);
-}
-.kv-suhlas__volba { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; cursor: pointer; }
-.kv-suhlas__volba input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--k-ink); }
-.kv-suhlas__volba span { font-size: 13px; line-height: 1.55; color: var(--k-grey-soft); }
-.kv-suhlas__volba strong { display: block; font-size: 14px; font-weight: 600; color: var(--k-ink); }
-.kv-suhlas__volba--pevna { cursor: default; opacity: .72; }
-
-.kv-suhlas__akcie { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
-.kv-suhlas__akcie .k-btn { min-height: 46px; padding: 0 20px; font-size: 14px; }
-.kv-suhlas__viac {
-  margin-left: auto;
-  padding: 0 4px;
-  min-height: 46px;
-  background: none;
-  border: 0;
-  font-family: var(--k-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--k-ink);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-.kv-suhlas__viac:hover { color: var(--k-amber-deep); }
-/* Kým sú možnosti rozbalené, uloženie vlastnej voľby je rovnocenné tlačidlo,
-   nie poznámka pod nimi. Skryté musí ostať skryté aj proti `.k-btn`. */
-.kv-suhlas__ulozit[hidden] { display: none; }
-
-/* Tlačidlo v pätke vyzerá ako ostatné právne odkazy vedľa neho. */
 /* Katalógy sú súbory výrobcu na cudzom serveri. Keby niektorý prestal byť
    dostupný, riadok pod mriežkou dá človeku druhú cestu, nie mŕtvy odkaz. */
 .kh-kat__pozn { margin: 18px 0 0; font-size: 14px; color: var(--k-grey-soft); }
@@ -12683,36 +12607,8 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 
 /* Tlačidlo v texte právneho dokumentu vyzerá ako odkaz vedľa neho, lebo sa
    tak aj správa: otvorí lištu so súhlasom. */
-.kv-legal__suhlas {
-  padding: 0;
-  background: none;
-  border: 0;
-  font: inherit;
-  color: var(--k-ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.kv-legal__suhlas:hover { color: var(--k-amber-deep); }
 
-.kf__suhlas {
-  padding: 0;
-  background: none;
-  border: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-.kf__suhlas:hover { color: var(--k-amber); }
 
-@media (max-width: 720px) {
-  .kv-suhlas { padding: 0; }
-  .kv-suhlas__panel { border-radius: var(--k-r-sm) var(--k-r-sm) 0 0; border-bottom: 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
-  .kv-suhlas__akcie { gap: 8px; }
-  .kv-suhlas__akcie .k-btn { flex: 1 1 100%; }
-  .kv-suhlas__viac, .kv-suhlas__ulozit { margin-left: 0; }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .kv-suhlas__panel { transition: none; transform: none; }
-}
+
+

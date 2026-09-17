@@ -76,7 +76,20 @@ ponúkne ten istý e-mail jedným klikom.
 Panel po odoslaní preto povie, kam ich poslať, a ukáže sa len vtedy, keď
 zákazník naozaj nejaký súbor vybral.
 
-## 6 · Katalógové PDF
+## 6 · Meranie a cookies
+
+Web nemeria nič. Google Tag Manager, Analytics aj Microsoft Clarity prišli
+s témou zo Shopify; s doménou odchádzajú aj ony. Odstránený je aj Consent
+Mode a lišta súhlasu, ktorú by nemal čo obsluhovať.
+
+Stránka preto nenastavuje žiadne cookies a do prehliadača neukladá nič.
+Jediný cudzí server, ktorý volá, je Google Fonts kvôli písmu. Drží to
+kontrola `bez-merania`.
+
+Keby sa meranie malo niekedy vrátiť, vráti sa s ním aj povinnosť pýtať si
+súhlas a doplniť o tom článok do ochrany súkromia.
+
+## 7 · Katalógové PDF
 
 Päť katalógov Soltec visí na `cdn.shopify.com` pod ID starého obchodu.
 Kým obchod existuje, súbory fungujú. Po jeho zrušení prestanú.
@@ -86,12 +99,11 @@ niektorý neotvorí. Trvalé riešenie je jedno z dvoch: nechať Shopify plán
 bežať, kým sa súbory nepresunú, alebo ich vystaviť inde (v Drive sú
 originály, majú 37 až 44 MB, do repozitára sa nehodia).
 
-## 7 · Overiť po spustení
+## 8 · Overiť po spustení
 
 - [ ] Search Console: pridať doménu, overiť vlastníctvo, poslať `sitemap.xml`
 - [ ] Bing Webmaster Tools to isté
 - [ ] `curl -I https://koverta.sk/pristresky-pre-auta/` vráti 200
 - [ ] náhodných 10 starých adries vráti 301 na správne nové
 - [ ] test formulára: klik otvorí poštu s vyplneným dopytom
-- [ ] lišta súhlasu: „Prijať všetko" naozaj zapne meranie v Google Analytics
 - [ ] test vyhľadávania `?q=pergola`
