@@ -362,8 +362,8 @@
         body.push('- ' + row.label + (row.value ? ': ' + row.value : ''));
       });
     }
-    body.push('Orientačná cena z konfigurátora: ' + total + ', vrátane DPH a montáže.');
-    body.push('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.');
+    body.push('Orientačná cena z konfigurátora: ' + total + ', vrátane DPH, dopravy aj montáže.');
+    body.push('Položky označené „na nacenenie“ potvrdíme v ponuke.');
     body.push('');
     body.push('Meno:');
     body.push('Telefón:');

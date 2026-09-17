@@ -770,7 +770,7 @@
             + '<li><b>Otáčanie</b>: ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
             + '<li><b>Priblíženie</b>: koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
             + '<li><b>Vybavenie a počasie</b>: karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
-            + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu.</li>'
+            + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu. Doprava a montáž sú v konečnej ponuke vždy zahrnuté.</li>'
             + '<li><a href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a>: autori a licencie áut a záhradného nábytku v scéne.</li>'
             + '</ul>';
           kolona.appendChild(d);
@@ -1687,13 +1687,12 @@
             lines.push({ k: `${g.title}: ${o.t}`, v, sum: v || 0 });
           });
           /* Odkvap so zvodom je pri prístreškoch Koverta súčasťou zostavy a
-             nie voľbou, takže sa už neponúka ako prepínač. Cenu odvodnenia
-             ale výrobca potvrdzuje až v ponuke, takže položka musí ostať v
-             súhrne bez čísla — inak by súčet vyzeral ako konečná cena za
-             zostavu, ktorej časť ešte nie je nacenená. */
+             nie voľbou, takže sa už neponúka ako prepínač. V cene je, tak to
+             tak aj stojí v súhrne. Predtým tu bolo „na nacenenie", čo si
+             zákazník čítal ako príplatok — a stránka pritom na tom istom
+             dychu sľubovala odkvap v základnej cene. */
           if (maOdkvap() && model().roofKit === 'koverta') {
-            open = true;
-            lines.push({ k: 'Odkvap a zvod, súčasť zostavy', v: null, sum: 0 });
+            lines.push({ k: 'Odkvap a zvod', v: null, sum: 0, vCene: true });
           }
           if (!state.frameColor.std) lines.push({ k: 'Príplatok za farbu konštrukcie', v: BIO.surcharge.frame, sum: BIO.surcharge.frame });
           if (!state.louverColor.std) lines.push({ k: 'Príplatok za farbu lamiel', v: BIO.surcharge.louver, sum: BIO.surcharge.louver });
@@ -6395,7 +6394,7 @@
           host.textContent = '';
           lines.forEach((ln) => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${ln.k}</span><b>${ln.v === null ? 'na nacenenie' : money.format(ln.v) + ' €'}</b>`;
+            li.innerHTML = `<span>${ln.k}</span><b>${ln.vCene ? 'v cene' : ln.v === null ? 'na nacenenie' : money.format(ln.v) + ' €'}</b>`;
             host.appendChild(li);
           });
           if (REF) {

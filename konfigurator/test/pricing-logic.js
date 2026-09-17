@@ -86,8 +86,10 @@ async function revealControl(page, selector) {
     assert(catalogue.maxW === 7000 && catalogue.maxL === 6000, 'Configurator catalogue scope is not 7000 × 6000 mm');
     assert(catalogue.wallSide === null && catalogue.wallBack === null && catalogue.wallSideBySize === null,
       'Unverified side-wall prices must not remain numeric');
-    assert(/vrátane DPH a montáže/.test(catalogue.priceNote) && /dopravu.*potvrdíme/i.test(catalogue.priceNote),
-      'Koverta price note does not preserve verified installation scope and unresolved transport scope');
+    /* Doprava aj montáž sú v cene vždy, na každej podstránke to tak stojí.
+       Poznámka pri cene v konfigurátore to musí hovoriť rovnako. */
+    assert(/vrátane DPH, dopravy aj montáže/.test(catalogue.priceNote) && !/dopravu.*potvrdíme/i.test(catalogue.priceNote),
+      'Koverta price note does not state that VAT, transport and installation are included');
     assert(catalogue.placements.length === 1
       && catalogue.placements[0].id === 'kv-free',
       'Hidden or unsupported placement variants are still exposed in Koverta product data');
@@ -125,20 +127,22 @@ async function revealControl(page, selector) {
     for (const forbidden of ['Táto dĺžka potrebuje', 'Profil obvodový', 'Najväčší rozmer', 'Svetlá výška']) {
       assert(!visibleText.includes(forbidden), 'Technical info block is still visible: ' + forbidden);
     }
-    assert(!visibleText.includes('s DPH, dopravou aj montážou'), 'Unsafe mini-price transport claim is still visible');
-    assert(visibleText.includes('s DPH a montážou'), 'Verified installation inclusion is missing from the compact price note');
-    assert(!visibleText.includes('vrátane DPH, dopravy aj montáže'), 'Unsafe summary transport claim is still visible');
+    assert(visibleText.includes('s DPH, dopravou aj montážou'), 'Compact price note omits transport and installation');
+    assert(allTemplateText.includes('vrátane DPH, dopravy aj montáže'), 'Summary price note omits transport and installation');
 
     const initialWidth = await page.locator('[data-sp-w-out]').textContent();
     const initialLength = await page.locator('[data-sp-l-out]').textContent();
     assert(/2\s*500/.test(initialWidth), 'Unexpected initial Koverta width: ' + initialWidth);
     assert(/5\s*200/.test(initialLength), 'Unexpected initial Koverta depth: ' + initialLength);
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 4 497 €',
-      'Mandatory unpriced drainage must preserve the verified catalogue subtotal as a starting price');
+    /* Odkvap so zvodom je v cene, nie na nacenenie — základná zostava má
+       teda celú cenu, nie cenu „od". */
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '4 497 €',
+      'Included drainage must leave the verified catalogue price closed, not a starting price');
     const initialSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(initialSnapshot.price.open === true && initialSnapshot.price.total === null &&
-      initialSnapshot.price.catalogueSubtotal === 4497,
-      'Runtime and displayed mandatory-drainage price state disagree');
+    assert(initialSnapshot.price.open === false && initialSnapshot.price.total === 4497,
+      'Runtime and displayed price state disagree once drainage is included');
+    const drainageRow = await page.locator('[data-sp-lines]').innerText();
+    assert(/Odkvap a zvod[\s\S]*?v cene/.test(drainageRow), 'Included drainage is not shown as part of the price');
 
     // Exercise all 54 published catalogue points through the real controls.
     for (let li = 0; li < expectedLengths.length; li++) {
@@ -163,10 +167,9 @@ async function revealControl(page, selector) {
           const totalText = total ? String(total.textContent || '').trim() : '';
           return snap.width === width
             && snap.length === length
-            && snap.price.total === null
-            && snap.price.catalogueSubtotal === price
-            && snap.price.open === true
-            && /^od\s/i.test(totalText)
+            && snap.price.total === price
+            && snap.price.open === false
+            && !/^od\s/i.test(totalText)
             && totalText.replace(/[^0-9]/g, '') === String(price);
         }, { width, length, price }, { timeout: 4000 });
       }
@@ -186,7 +189,7 @@ async function revealControl(page, selector) {
     await waitRender(page);
     assert(/6\s*200/.test(await page.locator('[data-sp-w-out]').textContent()), '6200 mm width is not selectable');
     assert(/6\s*000/.test(await page.locator('[data-sp-l-out]').textContent()), '6000 mm depth is not selectable');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 8 397 €',
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '8 397 €',
       '6200 × 6000 base price changed from the verified public catalogue');
     assert(/4\s+stĺpy/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
       'Current base renderer no longer uses the documented four-post visualization at 6200 mm');
@@ -199,7 +202,7 @@ async function revealControl(page, selector) {
     });
     await waitRender(page);
     assert(/6\s*600/.test(await page.locator('[data-sp-w-out]').textContent()), '6600 mm width is not selectable');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === 'od 10 897 €',
+    assert((await page.locator('[data-sp-total]').textContent()).trim().replace(/\s+/g, ' ') === '10 897 €',
       '6600 × 6000 base price changed from the verified public catalogue');
     assert(/6\s+stĺpov/.test((await page.locator('[data-sp-dims]').textContent()).replace(/\s+/g, ' ')),
       'Current base renderer no longer uses the documented six-post visualization at 6600 mm');
@@ -310,9 +313,10 @@ async function revealControl(page, selector) {
     assert(payload.body.includes('LED'), 'Payload omits selected sourced accessory');
     assert(payload.body.includes('Farba konštrukcie:') && payload.body.includes('(cenový dopad na nacenenie)'),
       'Payload incorrectly implies a verified zero color surcharge');
-    assert(payload.body.includes('vrátane DPH a montáže'), 'Payload omits verified VAT/installation scope');
-    assert(payload.body.includes('Dopravu a položky označené „na nacenenie“ potvrdíme v ponuke.'),
-      'Payload omits unresolved transport/quote-only disclaimer');
+    assert(payload.body.includes('vrátane DPH, dopravy aj montáže'), 'Payload omits verified VAT/transport/installation scope');
+    assert(payload.body.includes('Položky označené „na nacenenie“ potvrdíme v ponuke.'),
+      'Payload omits quote-only disclaimer');
+    assert(!payload.body.includes('Dopravu a položky'), 'Payload still treats transport as unresolved');
     /* Kotvenie a odkvap sa už nevyberajú, ale odvodnenie je súčasťou zostavy
        a jeho cena sa potvrdzuje v ponuke — v dopyte teda musí ostať uvedené. */
     assert(!payload.body.includes('Kotvenie stĺpov:'), 'Payload still offers the removed anchoring choice');
@@ -321,7 +325,9 @@ async function revealControl(page, selector) {
       'Payload leaks helper copy into selected-option values');
     assert((payload.body.match(/Umiestnenie:/g) || []).length === 1 && !payload.body.includes('Umiestnenie —'),
       'Payload duplicates placement in the summary lines');
-    assert(!payload.body.includes('s dopravou a montážou'), 'Payload contains obsolete included-transport claim');
+    /* Doprava aj montáž sú v cene vždy — stránka to sľubuje na každej
+       podstránke, takže to musí sedieť aj v dopyte z konfigurátora. */
+    assert(payload.body.includes('Odkvap a zvod: v cene'), 'Payload prices the included drainage as an extra');
 
     // Reset is an explicit fresh Koverta route, so it cannot leave stale options behind.
     const reset = page.locator('[data-kv-reset]');
@@ -339,9 +345,8 @@ async function revealControl(page, selector) {
     assert(resetPayload.body.includes('Umiestnenie: Samostatne stojaci.'),
       'Reset payload did not restore the implicit standalone placement');
     const resetSnapshot = await page.evaluate(() => window.SP_TEST.snapshot());
-    assert(resetSnapshot.price.total === null && resetSnapshot.price.catalogueSubtotal === 4497 &&
-      resetSnapshot.price.open === true,
-      'Reset lost the catalogue subtotal or mandatory quote-only drainage state');
+    assert(resetSnapshot.price.total === 4497 && resetSnapshot.price.open === false,
+      'Reset lost the verified catalogue price or reopened it without a reason');
     assert(!Object.keys(resetSnapshot.picks).length,
       'Reset brought the removed anchoring/gutter choices back');
     assert(resetSnapshot.geometry.accessories.gutter && resetSnapshot.geometry.accessories.downpipe,

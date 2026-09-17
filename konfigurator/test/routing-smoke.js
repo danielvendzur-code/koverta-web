@@ -55,9 +55,9 @@ module.exports = async function routingSmoke(browser) {
       assert(initial.page === route, `${route}: incorrect runtime/template`);
       assert(await page.locator(`[data-kv-tab="${route}"]`).getAttribute('aria-current') === 'page', `${route}: incorrect tab`);
       if (kv) {
-        assert(initial.price.open === true && initial.price.total === null &&
-          initial.price.catalogueSubtotal > 0 && Number.isFinite(initial.price.catalogueSubtotal),
-          `${route}: mandatory quote-only drainage lost the numeric catalogue subtotal`);
+        /* Odkvap so zvodom je v cene, takže základná zostava má celú cenu. */
+        assert(initial.price.open === false && initial.price.total > 0 && Number.isFinite(initial.price.total),
+          `${route}: included drainage left the catalogue price open`);
       } else {
         assert(initial.price.total > 0 && Number.isFinite(initial.price.total), `${route}: no numeric price`);
       }
@@ -70,8 +70,9 @@ module.exports = async function routingSmoke(browser) {
       await page.waitForTimeout(180);
       const resized = await snapshot();
       assert(resized.length !== initial.length, `${route}: length did not change`);
-      const initialComparable = kv ? initial.price.catalogueSubtotal : initial.price.total;
-      const resizedComparable = kv ? resized.price.catalogueSubtotal : resized.price.total;
+      const cena = (snap) => (snap.price.total === null ? snap.price.catalogueSubtotal : snap.price.total);
+      const initialComparable = cena(initial);
+      const resizedComparable = cena(resized);
       assert(resizedComparable !== initialComparable, `${route}: dimension change did not change price`);
       /* Jeden krok môže mať viac panelov — rozmer a pod ním model — ale všetky
          musia patriť tomu istému kroku. Keby sa niektorý odpojil, zákazník by
@@ -109,15 +110,15 @@ module.exports = async function routingSmoke(browser) {
       if (kv) {
         /* Odkvap so zvodom je súčasťou zostavy, nie voľbou — prepínač aj
            kotvenie sú z ponuky preč. Musí teda platiť oboje: voľby sa
-           nevrátili a odvodnenie je aj tak v modeli aj v súhrne ako položka
-           bez ceny, takže súčet ostáva otvorený. */
+           nevrátili a odvodnenie je aj tak v modeli aj v súhrne, a to ako
+           položka v cene, nie na nacenenie. */
         assert(await page.locator('[data-sp-add-opt^="pick:"]').count() === 0,
           'Koverta again offers the removed anchoring/gutter choices');
         const drained = await snapshot();
         assert(drained.geometry.accessories.gutter && drained.geometry.accessories.downpipe,
           'Koverta lost the drainage that belongs to the assembly');
-        assert(drained.price.open === true && drained.price.lines.some(line => line.v === null && /Odkvap/.test(line.k)),
-          'Koverta drainage is missing from the quote lines as an unpriced item');
+        assert(drained.price.lines.some(line => line.vCene === true && /Odkvap/.test(line.k)),
+          'Koverta drainage is missing from the quote lines as an included item');
       } else {
         const extraGroup = route === 'bio' ? 'x-ovl' : 'x-konstr';
         const groupSelector = `[data-sp-add-on="${extraGroup}"]`;
