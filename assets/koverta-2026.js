@@ -1290,7 +1290,7 @@
 
       if (!slova.length) {
         empty.hidden = false;
-        empty.textContent = 'Napíšte, čo hľadáte — napríklad „pergola", „ZIP roleta" alebo „prístrešok pre dve autá".';
+        empty.textContent = 'Napíšte, čo hľadáte, napríklad „pergola", „ZIP roleta" alebo „prístrešok pre dve autá".';
         hlas.textContent = '';
         return;
       }
@@ -1332,7 +1332,7 @@
       const hits = prve.concat(zvysok).slice(0, 10);
 
       empty.hidden = hits.length > 0;
-      if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte — poradíme.';
+      if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte, poradíme.';
       hlas.textContent = hits.length
         ? (hits.length === 1 ? '1 výsledok' : (hits.length < 5 ? hits.length + ' výsledky' : hits.length + ' výsledkov'))
         : 'Žiadny výsledok';
@@ -1740,7 +1740,7 @@
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
         foto: './assets/soltec-canopy-panels-real.jpg',
-        preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou — jedna dodávka zo Slovinska a jedna montáž.' },
+        preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou, jedna dodávka zo Slovinska a jedna montáž.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
         foto: './assets/soltec-kuchyna-terasa.jpg',
         preco: 'Hliníková konštrukcia s exteriérovým kompozitným obkladom a pracovnou doskou z technického kameňa. Zostava sa skladá z modulov.' }
@@ -1759,19 +1759,19 @@
           return { hlavne: 'bio', doplnok: 'Tieň zhora drží strecha, nie roleta. Lamely sa navyše dajú zavrieť do vodotesnej plochy, keď začne pršať.' };
         }
         return { hlavne: 'tienenie', doplnok: o.kde === 'hotove'
-          ? 'Do hotovej konštrukcie sa ZIP roleta dá osadiť, ak má profil na to miesto — pošlite nám fotografiu, povieme to hneď.'
+          ? 'Do hotovej konštrukcie sa ZIP roleta dá osadiť, ak má profil na to miesto, pošlite nám fotografiu, povieme to hneď.'
           : (o.kde === 'nove' ? 'Objednajte tienenie spolu s konštrukciou: jedna dodávka zo Slovinska a jedna montáž namiesto dvoch.' : null) };
       }
       if (o.ciel === 'kuchyna') {
         var pozn2 = 'Elektrinu, vodu a odpad treba vyriešiť ešte pred betónovaním podlahy.';
-        if (o.kuchyna === 'volne') pozn2 = 'Kuchyňu vieme zavesiť na konštrukciu prístrešku alebo pergoly — vyjde to lacnejšie, než ju zastrešovať dodatočne.';
-        else if (o.vybava === 'gril') pozn2 = 'Na samotný gril stačí jeden modul — elektrina do stĺpa a hotovo.';
-        else if (o.vybava === 'linka') pozn2 = 'Pri celej linke treba vodu, odpad aj zásuvky pod podlahou — rozvody rieši projekt pred betónovaním.';
+        if (o.kuchyna === 'volne') pozn2 = 'Kuchyňu vieme zavesiť na konštrukciu prístrešku alebo pergoly, vyjde to lacnejšie, než ju zastrešovať dodatočne.';
+        else if (o.vybava === 'gril') pozn2 = 'Na samotný gril stačí jeden modul, elektrina do stĺpa a hotovo.';
+        else if (o.vybava === 'linka') pozn2 = 'Pri celej linke treba vodu, odpad aj zásuvky pod podlahou, rozvody rieši projekt pred betónovaním.';
         return { hlavne: 'kuchyna', doplnok: pozn2 };
       }
       if (o.ciel === 'vstup') {
         return { hlavne: 'pevne', doplnok: o.strechaVstup === 'svetlo'
-          ? 'Presvetlenú strechu nesie rad G so sklom — pod vstupom tak neostane tma.'
+          ? 'Presvetlenú strechu nesie rad G so sklom, pod vstupom tak neostane tma.'
           : (o.coVstup === 'technika' ? 'Nad technikou sa oplatí doplniť aj bočnú stenu: kryje pred vetrom a schová jednotku z pohľadu.' : null) };
       }
       if (o.ciel === 'auto') {
@@ -3328,7 +3328,7 @@
      padlo odkrývanie obsahu a stránka ostala prázdna biela. */
   const spusti = (fn, ciel) => {
     try { fn(ciel); }
-    catch (e) { if (window.console) console.warn('koverta: ' + fn.name + ' — ' + e.message); }
+    catch (e) { if (window.console) console.warn('koverta: ' + fn.name + ': ' + e.message); }
   };
 
   /* Naštartovanie stránky trvalo šesťdesiat milisekúnd v jedinom snímku —

@@ -372,8 +372,8 @@
     return {
       body: body.join('\n'),
       subject: custom
-        ? 'Prístrešok Koverta — rozmer na mieru ' + custom.w + ' × ' + custom.l + ' mm'
-        : 'Konfigurácia Koverta — ' + (configuredSize || 'dopyt'),
+        ? 'Prístrešok Koverta, rozmer na mieru ' + custom.w + ' × ' + custom.l + ' mm'
+        : 'Konfigurácia Koverta: ' + (configuredSize || 'dopyt'),
       placement: placement,
       total: total,
       rows: rows
@@ -415,7 +415,7 @@
       var stamp = placement.id + '|' + placement.label;
       if (old.dataset.kvStamp !== stamp) {
         old.dataset.kvStamp = stamp;
-        old.innerHTML = '<span>Umiestnenie — ' + placement.label + '</span><b>na nacenenie</b>';
+        old.innerHTML = '<span>Umiestnenie: ' + placement.label + '</span><b>na nacenenie</b>';
       }
     } else if (old) {
       old.parentNode.removeChild(old);
@@ -432,7 +432,7 @@
       var el = root.querySelector(selector);
       if (!el) return;
       var value = cleanText(el.textContent);
-      if (!value || value === '—') return;
+      if (!value || value === '–') return;
       var baseValue = value.replace(/^od\s+/i, '');
       var nextValue = mustBeOpen ? 'od ' + baseValue : baseValue;
       if (cleanText(el.textContent) !== nextValue) el.textContent = nextValue;

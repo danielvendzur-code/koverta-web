@@ -1617,7 +1617,7 @@
               note = `${sideLeaves('g2', span)} krídel po max. ${G2_LEAF_MAX} mm`;
             }
             if (value === null) open = true;
-            lines.push({ k: `${SIDE_LABEL[side]} — ${opt.label}${note ? ' · ' + note : ''}`, v: value, sum: value || 0 });
+            lines.push({ k: `${SIDE_LABEL[side]}: ${opt.label}${note ? ' · ' + note : ''}`, v: value, sum: value || 0 });
           }
           const bp = state.box.on ? boxPrice() : null;
           if (bp) {
@@ -1629,7 +1629,7 @@
           if (state.ceiling !== 'none' && ceilingOptions().length) {
             const cv = ceilingPrice();
             lines.push({
-              k: `Dekoratívny strop — ${state.ceiling === 'wood' ? 'drevené lamely' : 'ALU lamely'} · ${area1.format(ceilingArea())} m²`,
+              k: `Dekoratívny strop: ${state.ceiling === 'wood' ? 'drevené lamely' : 'ALU lamely'} · ${area1.format(ceilingArea())} m²`,
               v: cv, sum: cv || 0
             });
             if (cv === null) open = true;
@@ -1687,7 +1687,7 @@
              zostavu, ktorej časť ešte nie je nacenená. */
           if (maOdkvap() && model().roofKit === 'koverta') {
             open = true;
-            lines.push({ k: 'Odkvap a zvod — súčasť zostavy', v: null, sum: 0 });
+            lines.push({ k: 'Odkvap a zvod, súčasť zostavy', v: null, sum: 0 });
           }
           if (!state.frameColor.std) lines.push({ k: 'Príplatok za farbu konštrukcie', v: BIO.surcharge.frame, sum: BIO.surcharge.frame });
           if (!state.louverColor.std) lines.push({ k: 'Príplatok za farbu lamiel', v: BIO.surcharge.louver, sum: BIO.surcharge.louver });
@@ -5679,7 +5679,7 @@
             const value = wrap.querySelector('[data-sp-roof-skin-val]');
             if (value) value.textContent = f.label;
             const note = wrap.querySelector('[data-sp-roof-skin-note]');
-            if (note) note.textContent = `${f.about} Tento model ju má napevno —`
+            if (note) note.textContent = `${f.about} Tento model ju má napevno,`
               + ' sklo a zelenú strechu nesie rada G. Vrch a spodok panela vyberiete vyššie.';
             host.textContent = '';
             const b = document.createElement('button');
@@ -5699,7 +5699,7 @@
           const note = wrap.querySelector('[data-sp-roof-skin-note]');
           if (note) {
             note.textContent = `${chosen.about} Nosný profil ${chosen.sec}, stupne zaťaženia`
-              + ` ${chosen.caps}. Krytinu cenník neuvádza sumou — Soltec ju oceňuje`
+              + ` ${chosen.caps}. Krytinu cenník neuvádza sumou, Soltec ju oceňuje`
               + ' individuálne pre každý projekt, preto nie je v cene vyššie.';
           }
           host.textContent = '';
@@ -5730,9 +5730,9 @@
           if (!movable) { host.textContent = ''; return; }
           host.innerHTML = `<div class="sp-side-move__head"><b>Pohyb: ${SIDE_LABEL[side].toLowerCase()} strana</b><span>potiahnite alebo podržte</span></div>`
             + `<div class="sp-louver-run">`
-            + `<button type="button" class="sp-louver-btn" data-sp-louver-hold="-1" data-sp-hold-ch="side" aria-label="Zatvárať ${movable} na ${where} strane — podržte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9l-6 6-6-6"/></svg></button>`
+            + `<button type="button" class="sp-louver-btn" data-sp-louver-hold="-1" data-sp-hold-ch="side" aria-label="Zatvárať ${movable} na ${where} strane, podržte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9l-6 6-6-6"/></svg></button>`
             + `<input class="sp-louver-range" type="range" min="0" max="100" step="1" data-sp-side-range aria-label="Odsunutie ${where} strany, 0 zatvorené až 100 odsunuté">`
-            + `<button type="button" class="sp-louver-btn" data-sp-louver-hold="1" data-sp-hold-ch="side" aria-label="Odsúvať ${movable} na ${where} strane — podržte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>`
+            + `<button type="button" class="sp-louver-btn" data-sp-louver-hold="1" data-sp-hold-ch="side" aria-label="Odsúvať ${movable} na ${where} strane, podržte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>`
             + `</div><span class="sp-louver-pct" data-sp-side-pct aria-live="polite"></span>`;
           syncSideMove();
         };
@@ -5807,7 +5807,7 @@
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
           if (state.sides[side] === 'zip' && (span > 6500 || state.height > 2800)) {
-            note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 2 800 mm — pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
+            note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 2 800 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
           }
           q('[data-sp-side-note]').textContent = note;
           renderSideMover();
@@ -5938,7 +5938,7 @@
             row('box', state.box.on && fits, 'Zadný box',
                 fits
                 ? `Uzamykateľný sklad na konci prístrešku. Od ${money.format(bp.v)} €.`
-                : `Najmenší box z cenníka je ${mm(minW)} × ${mm(minD)} — zväčšite rozmer v kroku 2.`,
+                : `Najmenší box z cenníka je ${mm(minW)} × ${mm(minD)}. Zväčšite rozmer v kroku 2.`,
               () => [
                 addChips('Šírka boxu', ws.map((o) => ({ t: mm(o.v), s: o.ok ? '' : 'širší ako prístrešok', off: !o.ok })), bp.wi, 'boxw'),
                 addChips('Hĺbka boxu', ds.map((o) => ({ t: mm(o.v), s: o.ok ? '' : (o.overBay ? 'nad pole P1–P5' : 'dlhší ako prístrešok'), off: !o.ok })), bp.di, 'boxd'),
@@ -5951,7 +5951,7 @@
             const labels = Object.keys(add.box.modelFamily || {})
               .filter((k) => BIO.models[k]).map((k) => BIO.models[k].label);
             row('box', false, 'Zadný box',
-              labels.length ? `Cenník uvádza box pri modeloch ${labels.join(' a ')} — model prepnete v kroku 1.`
+              labels.length ? `Cenník uvádza box pri modeloch ${labels.join(' a ')}. Model prepnete v kroku 1.`
                             : 'Pri tomto modeli cenník box neuvádza.',
               () => '', true);
           }
@@ -6596,11 +6596,11 @@
               /* Krytina G nie je v cene, tak to dopyt musí povedať — inak by
                  obchodník posielal ponuku, ktorú zákazník čítal ako úplnú. */
               roofSkin()
-                ? `Krytina strechy: ${roofSkin().label.toLowerCase()} — ${roofSkin().about} Nosný profil ${roofSkin().sec}. Cenník ju neuvádza sumou, oceňuje sa individuálne pre každý projekt.` : '',
+                ? `Krytina strechy: ${roofSkin().label.toLowerCase()}, ${roofSkin().about} Nosný profil ${roofSkin().sec}. Cenník ju neuvádza sumou, oceňuje sa individuálne pre každý projekt.` : '',
               /* Prístrešok Koverta sa neumiestňuje voľbou — krok s riešením
                  nemá, tak by veta tvrdila niečo, čo zákazník nevybral. */
-              ONE_MODEL ? '' : `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ' — '}${placement().label}.`,
-              chosen.length ? `Strany — ${chosen.join('; ')}.` : 'Všetky strany otvorené.',
+              ONE_MODEL ? '' : `Umiestnenie: ${placement().tip == null ? '' : 'TYP ' + placement().tip + ', '}${placement().label}.`,
+              chosen.length ? `Strany: ${chosen.join('; ')}.` : 'Všetky strany otvorené.',
               state.box.on && boxPrice() ? `Zadný box: ${mm(boxPrice().w)} × ${mm(boxPrice().d)}, ${boxFinishLabel()}, ${(state.boxColor || state.frameColor).name} (${(state.boxColor || state.frameColor).ral}).` : '',
               state.ceiling !== 'none' && ceilingOptions().length
                 ? `Dekoratívny strop: ${state.ceiling === 'wood' ? 'drevené lamely' : 'ALU lamely'}, ${area1.format(ceilingArea())} m².` : '',
@@ -6638,7 +6638,7 @@
                vidí aj rozmer, od ktorého zákazník vychádzal. */
             const message = root.querySelector('textarea[name="contact[body]"]');
             if (message) {
-              const note = 'Potrebujem rozmer na mieru — katalógový najbližšie zodpovedá '
+              const note = 'Potrebujem rozmer na mieru, katalógový najbližšie zodpovedá '
                 + `${mm(widthMM())} × ${mm(lengthMM())} mm.`;
               message.value = message.value.trim() ? `${message.value.trim()}\n${note}` : note;
               message.dispatchEvent(new Event('input', { bubbles: true }));
