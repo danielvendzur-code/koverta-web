@@ -10,6 +10,8 @@ const { chromium } = require(PLAYWRIGHT);
 const { prepareContext, watchErrors } = require('./browser-qa');
 
 const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
+const adresaStranky = (name) => (/[?&]page=[a-z]+/.test(BASE) ? BASE.replace(/([?&]page=)[a-z]+/, '$1' + name) : BASE + (BASE.includes('?') ? '&' : '?') + 'page=' + name);
+
 
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
@@ -20,7 +22,7 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
   const zle = [];
   let overených = 0;
 
-  await page.goto(`${BASE}?page=carport`, { waitUntil: 'load', timeout: 60000 });
+  await page.goto(adresaStranky('carport'), { waitUntil: 'load', timeout: 60000 });
   await page.waitForTimeout(2200);
   await page.evaluate(() => { const e = document.querySelector('[data-scene-mode="car"]'); if (e) e.click(); });
   await page.waitForTimeout(2500);

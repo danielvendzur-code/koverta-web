@@ -14383,6 +14383,12 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 .kh-dakujem__zaloha a:hover { color: var(--k-amber-deep); }
 .kh-dakujem__zaloha span { display: block; margin-top: 2px; color: var(--k-grey-soft); font-size: 12.5px; }
 
+/* V chybovom stave nie je e-mail záložná poznámka pod textom, ale to jediné,
+   čím sa dopyt naozaj doručí. Preto je z odkazu tlačidlo a popis pod ním. */
+.kh-dakujem__zaloha a.k-btn { text-decoration: none; margin-top: 4px; }
+.kh-dakujem--chyba .kh-dakujem__zaloha { margin-top: 16px; }
+.kh-dakujem--chyba .kh-dakujem__zaloha span { margin-top: 8px; }
+
 
 /* Dátová tabuľka v tom istom ráme ako porovnanie dvoch radov. Rozdiel je
    v tom, že tu nie sú dva stĺpce na porovnanie, ale niekoľko údajov k

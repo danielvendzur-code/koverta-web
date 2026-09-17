@@ -238,7 +238,7 @@
         </div>
         <div class="kv-search__results" data-k-search-results></div>
         <p class="kv-search__empty" data-k-search-empty></p>
-        <a class="kv-search__shop" data-k-search-shop href="https://koverta.sk/search" hidden><span></span><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="kv-search__shop" data-k-search-shop href="../kontakt/" hidden><span></span><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </div>
   </div>
@@ -595,7 +595,7 @@
           <p class="k-copy">Terasa, vstup alebo bazén. Pri zameraní povieme, aký panel a aký spád sa k tomu hodí.</p>
         </div>
 
-        <form class="kh-form" method="post" action="https://koverta.sk/contact#ContactForm" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+        <form id="dopyt" class="kh-form" method="post" action="../kontakt/#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
           <input type="hidden" name="form_type" value="contact">
           <input type="hidden" name="utf8" value="✓">
 <label class="kh-field kh-field--interest"><span>Máte záujem o</span><select name="contact[Čo rieši]" required>
@@ -635,8 +635,8 @@
         </form>
         <div class="kh-dakujem" data-k-dakujem hidden>
           <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
-          <h3 class="kh-dakujem__nadpis">Dopyt sme odoslali</h3>
-          <p class="kh-dakujem__text">Ozveme sa vám do jedného pracovného dňa. Ak sa dovtedy nikto neozve, radšej zavolajte. Mohlo sa stať, že dopyt k nám nedošiel. Takto to bude pokračovať:</p>
+          <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>
+          <p class="kh-dakujem__text">Prišiel nám v poriadku. Ozveme sa do jedného pracovného dňa. Takto to bude pokračovať:</p>
           <ol class="kh-dakujem__kroky">
             <li><strong>Ozveme sa do jedného pracovného dňa</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
             <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne, aj keď si nakoniec vyberiete inak.</span></li>
@@ -650,9 +650,10 @@
         </div>
         <div class="kh-dakujem kh-dakujem--chyba" data-k-chyba hidden>
           <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v6" stroke-linecap="round"/><path d="M12 17.2v.1" stroke-linecap="round"/></svg></p>
-          <h3 class="kh-dakujem__nadpis">Odoslanie sa nepodarilo potvrdiť</h3>
-          <p class="kh-dakujem__text">Server nám nevrátil odpoveď, takže nevieme povedať, či dopyt prešiel. Nečakajte na nás, ozvite sa priamo a vybavíme to hneď:</p>
-          <p class="kh-dakujem__spoj"><a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
+          <h3 class="kh-dakujem__nadpis">Dopyt sa neodoslal</h3>
+          <p class="kh-dakujem__text">Spojenie zlyhalo, takže dopyt k nám nedošiel. Nič ste nestratili, všetko vyplnené vám otvoríme v e-maile jedným klikom:</p>
+          <p class="kh-dakujem__zaloha"><a class="k-btn k-btn--primary" data-k-mailto href="mailto:obchod@koverta.sk">Otvoriť e-mail s dopytom<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a> <span>Odíde na obchod@koverta.sk aj s tým, čo ste vyplnili.</span></p>
+          <p class="kh-dakujem__spoj">Alebo rovno zavolajte: <a href="tel:+421948482266">+421 948 482 266</a></p>
           <button class="k-link" type="button" data-k-spat>Skúsiť odoslať znova <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
 

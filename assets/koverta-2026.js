@@ -1281,13 +1281,6 @@
       list.innerHTML = '';
       active = -1;
 
-      if (shopLink) {
-        shopLink.hidden = !nq;
-        shopLink.href = 'https://koverta.sk/search?q=' + encodeURIComponent(q);
-        const label = shopLink.querySelector('span');
-        if (label) label.textContent = 'Hľadať „' + q + '" v celom e-shope';
-      }
-
       if (!slova.length) {
         empty.hidden = false;
         empty.textContent = 'Napíšte, čo hľadáte, napríklad „pergola", „ZIP roleta" alebo „prístrešok pre dve autá".';
@@ -1333,6 +1326,22 @@
 
       empty.hidden = hits.length > 0;
       if (!hits.length) empty.textContent = 'Nič sme nenašli. Skúste iné slovo alebo nám napíšte, poradíme.';
+
+      /* Kým bol web na Shopify, viedol tento riadok do e-shopového hľadania.
+         E-shop končí, takže by odkaz po spustení viedol na neexistujúcu
+         adresu. Teraz sa ukáže len vtedy, keď hľadanie nič nenašlo, a vedie
+         tam, kde človek naozaj dostane odpoveď — na kontakt s hľadaným
+         výrazom v predvyplnenej správe. */
+      if (shopLink) {
+        shopLink.hidden = !(nq && !hits.length);
+        if (!shopLink.hidden) {
+          const zaklad = shopLink.getAttribute('data-k-zaklad')
+            || (shopLink.setAttribute('data-k-zaklad', shopLink.getAttribute('href')), shopLink.getAttribute('href'));
+          shopLink.href = zaklad + '?hladane=' + encodeURIComponent(q);
+          const label = shopLink.querySelector('span');
+          if (label) label.textContent = 'Napíšte nám, čo hľadáte';
+        }
+      }
       hlas.textContent = hits.length
         ? (hits.length === 1 ? '1 výsledok' : (hits.length < 5 ? hits.length + ' výsledky' : hits.length + ' výsledkov'))
         : 'Žiadny výsledok';
@@ -2352,7 +2361,36 @@
 
      Bez skriptu ostáva formulár obyčajným POSTom na koverta.sk a odpoveď
      vykreslí server sám. */
+  /* Hľadanie, ktoré nič nenašlo, vedie na kontakt s `?hladane=`. Výraz sa
+     dopíše do správy, aby ho človek nemusel písať druhýkrát a aby sme vedeli,
+     čo na webe hľadal a nenašiel. */
+  function predvyplnHladane(root) {
+    let vyraz = '';
+    try { vyraz = new URLSearchParams(window.location.search).get('hladane') || ''; } catch (e) { return; }
+    vyraz = vyraz.trim().slice(0, 120);
+    if (!vyraz) return;
+    root.querySelectorAll('form[data-k-dopyt] [name="contact[body]"]').forEach((pole) => {
+      if (pole.value.trim()) return;
+      pole.value = 'Hľadal som na webe „' + vyraz + '" a nenašiel som to. Viete mi poradiť?';
+    });
+  }
+
   function initDopyt(root) {
+    /* ─────────────────────────────────────────────────────────────────────
+       Kam sa posielajú dopyty.
+
+       Prázdna hodnota znamená, že web nemá server, ktorý by POST prijal —
+       stránky bežia ako statické súbory a statický hosting formulár spracovať
+       nevie. V tom stave formulár nič nepredstiera: po kliknutí otvorí poštu
+       s hotovým dopytom a povie to na rovinu.
+
+       Keď pribudne adresa, ktorá POST prijíma (vlastný endpoint alebo služba
+       na formuláre), stačí ju vpísať sem. Podmienka je jediná: musí byť na
+       koverta.sk alebo posielať hlavičky CORS, inak sa nedá prečítať, či
+       odoslanie prešlo, a formulár by opäť len hádal.
+       ───────────────────────────────────────────────────────────────────── */
+    const SERVER = '';
+
     const formulare = root.querySelectorAll('form[data-k-dopyt]');
     if (!formulare.length) return;
     if (typeof window.fetch !== 'function' || typeof window.FormData !== 'function') return;
@@ -2398,6 +2436,23 @@
       const maSubory = () => [...f.querySelectorAll('input[type="file"]')]
         .some((i) => i.files && i.files.length);
 
+      /* Dopyt prepísaný do e-mailu. Stavia sa z tých istých polí, aké by šli
+         na server, takže obe cesty doručia to isté. */
+      const doMailu = () => {
+        const fd = new FormData(f);
+        const hod = (k) => String(fd.get(k) || '').trim();
+        const riadky = [];
+        const pole = [['contact[Čo rieši]','Čo rieši'],['contact[name]','Meno'],
+                      ['contact[phone]','Telefón'],['contact[email]','E-mail'],
+                      ['contact[Miesto realizácie]','Miesto realizácie'],
+                      ['contact[body]','Správa']];
+        pole.forEach(([k, nazov]) => { const v = hod(k); if (v) riadky.push(nazov + ': ' + v); });
+        riadky.push('', 'Odoslané zo stránky ' + location.href);
+        return 'mailto:obchod@koverta.sk?subject='
+          + encodeURIComponent('Dopyt z webu' + (hod('contact[name]') ? ', ' + hod('contact[name]') : ''))
+          + '&body=' + encodeURIComponent(riadky.join('\n'));
+      };
+
       const ukaz = (boliSubory) => {
         f.hidden = true;
         if (hlava) hlava.hidden = true;
@@ -2409,11 +2464,41 @@
 
       /* Stav chyby. Formulár ostáva na stránke aj s vyplnenými poľami, aby
          sa dal odoslať znova bez prepisovania. */
-      const zlyhalo = () => {
+      const zlyhalo = (adresaMailu) => {
         uvolni();
         if (!chyba) return;
+        const odkaz = chyba.querySelector('[data-k-mailto]');
+        if (odkaz && adresaMailu) odkaz.setAttribute('href', adresaMailu);
         chyba.hidden = false;
         zameraj(chyba);
+      };
+
+      /* Panel po odoslaní hovorí presne to, čo sa stalo. Pri e-mailovej ceste
+         má iný nadpis aj prvú vetu než pri potvrdenom odoslaní na server. */
+      const nadpis = dakujem.querySelector('.kh-dakujem__nadpis');
+      const uvod = dakujem.querySelector('.kh-dakujem__text');
+      const zalohaOdkaz = dakujem.querySelector('[data-k-mailto]');
+      const zalohaBlok = dakujem.querySelector('.kh-dakujem__zaloha');
+      const zalohaPopis = zalohaBlok && zalohaBlok.querySelector('span');
+      const PRVOTNE = {
+        nadpis: nadpis ? nadpis.textContent : '',
+        uvod: uvod ? uvod.textContent : '',
+        odkaz: zalohaOdkaz ? zalohaOdkaz.textContent : '',
+        popis: zalohaPopis ? zalohaPopis.textContent : ''
+      };
+
+      const textyPreMail = () => {
+        if (nadpis) nadpis.textContent = 'Dopyt máte pripravený v e-maile';
+        if (uvod) uvod.textContent = 'Otvorili sme vám poštu s vyplneným dopytom. Stačí e-mail odoslať a máme ho. '
+          + 'Ak sa okno neotvorilo, použite odkaz nižšie alebo nám zavolajte. Potom to bude pokračovať takto:';
+        if (zalohaOdkaz) zalohaOdkaz.textContent = 'Otvoriť e-mail s dopytom';
+        if (zalohaPopis) zalohaPopis.textContent = 'Ide na obchod@koverta.sk. Nič viac dopĺňať netreba.';
+      };
+      const textySpat = () => {
+        if (nadpis) nadpis.textContent = PRVOTNE.nadpis;
+        if (uvod) uvod.textContent = PRVOTNE.uvod;
+        if (zalohaOdkaz) zalohaOdkaz.textContent = PRVOTNE.odkaz;
+        if (zalohaPopis) zalohaPopis.textContent = PRVOTNE.popis;
       };
 
       f.addEventListener('submit', (e) => {
@@ -2425,43 +2510,39 @@
         if (b) { b.disabled = true; b.classList.add('je-odosielane'); }
 
         const subory = maSubory();
+        const adresaMailu = doMailu();
+        if (zalohaOdkaz) zalohaOdkaz.setAttribute('href', adresaMailu);
+
+        /* Bez servera netreba nikam posielať nič. Klik na tlačidlo je gesto
+           používateľa, takže poštový klient sa otvorí spoľahlivo — a dopyt
+           odchádza z adresy zákazníka, teda nemôže sa stratiť po ceste. */
+        if (!SERVER) {
+          textyPreMail();
+          uvolni();
+          ukaz(subory);
+          try { window.location.href = adresaMailu; } catch (chyba) {}
+          return;
+        }
+
         const stop = ('AbortController' in window) ? new AbortController() : null;
         const cakac = window.setTimeout(() => { if (stop) stop.abort(); }, 20000);
 
-        fetch(f.action, {
+        fetch(SERVER, {
           method: 'POST',
-          mode: 'no-cors',
           body: new FormData(f),
           signal: stop ? stop.signal : undefined
-        }).then(() => {
+        }).then((odpoved) => {
           window.clearTimeout(cakac);
+          /* Stav odpovede sa dá prečítať, len keď je cieľ na tej istej doméne
+             alebo posiela hlavičky CORS. Keď sa prečítať nedá, tvárime sa, že
+             sme nič nepotvrdili — radšej e-mail navyše ako stratený dopyt. */
+          if (odpoved && odpoved.type !== 'opaque' && !odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           uvolni();
-          /* Záložná cesta. Formulár posiela dopyt na jeden endpoint a odpoveď
-             z neho sa v režime no-cors prečítať nedá — takže ani 404 by sme
-             nespoznali a divák by videl poďakovanie aj vtedy, keď dopyt
-             nikam nedošiel. Preto v paneli po odoslaní čaká odkaz, ktorý
-             otvorí e-mail s tým istým obsahom. Jedno kliknutie a dopyt je
-             doručený bez ohľadu na to, čo sa stalo na druhej strane. */
-          try {
-            const odkaz = dakujem.querySelector('[data-k-mailto]');
-            if (odkaz) {
-              const fd = new FormData(f);
-              const hod = (k) => String(fd.get(k) || '').trim();
-              const riadky = [];
-              const pole = [['contact[name]','Meno'],['contact[phone]','Telefón'],
-                            ['contact[email]','E-mail'],['contact[Miesto realizácie]','Miesto realizácie'],
-                            ['contact[Čo rieši]','Čo rieši'],['contact[body]','Správa']];
-              pole.forEach(([k, nazov]) => { const v = hod(k); if (v) riadky.push(nazov + ': ' + v); });
-              riadky.push('', 'Odoslané zo stránky ' + location.href);
-              odkaz.setAttribute('href', 'mailto:obchod@koverta.sk?subject='
-                + encodeURIComponent('Dopyt z webu' + (hod('contact[name]') ? ', ' + hod('contact[name]') : ''))
-                + '&body=' + encodeURIComponent(riadky.join('\n')));
-            }
-          } catch (e) {}
+          textySpat();
           ukaz(subory);
         }).catch(() => {
           window.clearTimeout(cakac);
-          zlyhalo();
+          zlyhalo(adresaMailu);
         });
       });
 
@@ -3335,7 +3416,7 @@
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
+                 initDopyt, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
 
   const davkuj = (ulohy) => {
     let i = 0;

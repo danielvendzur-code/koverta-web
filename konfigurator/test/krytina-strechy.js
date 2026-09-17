@@ -8,6 +8,8 @@ const { chromium } = require(PLAYWRIGHT);
 const { prepareContext, watchErrors } = require('./browser-qa');
 
 const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
+const adresaStranky = (name) => (/[?&]page=[a-z]+/.test(BASE) ? BASE.replace(/([?&]page=)[a-z]+/, '$1' + name) : BASE + (BASE.includes('?') ? '&' : '?') + 'page=' + name);
+
 
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
@@ -44,7 +46,7 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
     await page.waitForTimeout(350);
   };
 
-  await page.goto(`${BASE}?page=canopy`, { waitUntil: 'load', timeout: 60000 });
+  await page.goto(adresaStranky('canopy'), { waitUntil: 'load', timeout: 60000 });
   await page.waitForTimeout(2000);
 
   for (const m of ['G170', 'G240']) {
@@ -93,7 +95,7 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
      zoznam krytín vyzeral tak, že ISO panel neexistuje. */
   for (const [stranka, modely] of [['canopy', ['F170', 'F240']], ['carport', ['F170', 'SL170']]]) {
     if (stranka !== 'canopy') {
-      await page.goto(`${BASE}?page=${stranka}`, { waitUntil: 'load', timeout: 60000 });
+      await page.goto(adresaStranky(stranka), { waitUntil: 'load', timeout: 60000 });
       await page.waitForTimeout(2000);
     }
     for (const m of modely) {
@@ -112,7 +114,7 @@ const BASE = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/';
      L44-ALU 20/20 sú plášte lopy, nie steny, a na terasách ich cenník 2026
      nemá vôbec. */
   for (const stranka of ['carport', 'canopy', 'bio']) {
-    await page.goto(`${BASE}?page=${stranka}`, { waitUntil: 'load', timeout: 60000 });
+    await page.goto(adresaStranky(stranka), { waitUntil: 'load', timeout: 60000 });
     await page.waitForTimeout(2000);
     await page.evaluate(() => { const g = document.querySelector('[data-sp-goto="4"]'); if (g) g.click(); });
     await page.waitForTimeout(500);
