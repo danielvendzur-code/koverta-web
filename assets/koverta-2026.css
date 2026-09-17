@@ -288,7 +288,12 @@
 .k-invert .k-copy { color: var(--k-muted-invert); }
 
 /* Jemná redakčná linka: zvýrazní slovo, ale neprekrýva jeho spodnú časť. */
-.k-mark { position: relative; white-space: nowrap; }
+/* Zvýraznené slovo sa nesmie brániť zalomeniu. `white-space: nowrap` tu
+   držalo dvojslovné spojenia pokope, ale pri polovici monitora (960, 800,
+   720 px) vytŕčali dlhšie zvýraznenia zo svojho nadpisu von — namerané až
+   +43 px cez okraj. Vnútri `inline-block` sa text zalomí sám, podčiarknutie
+   ostáva pod poslednou linkou. */
+.k-mark { position: relative; }
 .k-mark::after {
   content: "";
   position: absolute;
@@ -1579,6 +1584,10 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-cat__body { transition: none; }
 /* Akcie ako jasná dvojica: hlavný odkaz a konfigurátor. */
 .kh-cat__actions { align-items: center; padding-top: 4px; }
+/* Pri úzkom stĺpci (polovica monitora, 800 px) bolo tlačidlo o 9 px širšie
+   než karta a vytŕčalo cez jej okraj. Smie sa zmenšiť aj zalomiť. */
+.kh-cat__actions .k-btn { max-width: 100%; height: auto; padding-top: 12px; padding-bottom: 12px; }
+.kh-cat__actions .k-btn span, .kh-cat__actions .k-btn { white-space: normal; }
 .kh-cat__actions .k-link { font-weight: 700; }
 
 /* --- PRÉMIOVÁ RADA: väčší obraz, čitateľnejšie riadky -------------------
@@ -12374,14 +12383,19 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 /* Compact contact intro: breadcrumb remains on top, title and lead share the width. */
 .k .kh-hlava { padding-top:clamp(22px,2.4vw,34px); padding-bottom:clamp(24px,2.8vw,38px); }
 .k .kh-hlava__intro {
-  display:grid; grid-template-columns:minmax(240px,.72fr) minmax(360px,1fr);
+  display:grid; grid-template-columns:minmax(min(240px,100%),.72fr) minmax(min(360px,100%),1fr);
   align-items:end; gap:clamp(28px,5vw,80px);
 }
 .k .kh-hlava__nadpis { margin:0; }
 .k .kh-hlava__lead { justify-self:end; max-width:58ch; }
 .k .kh-rychlo { margin-top:clamp(20px,2.2vw,30px); }
-@media (max-width:619px) {
+/* Dva stĺpce potrebujú 240 + 360 px a medzeru medzi nimi. Pri 720 px okna
+   ostane vnútri obsahu 662 px, pri 640 px už len 589 — teda menej, než dvojica
+   zaberie. Kolaps preto nastáva pod 760 px, nie až pod 620. */
+@media (max-width:759px) {
   .k .kh-hlava__intro { grid-template-columns:1fr; gap:12px; }
+}
+@media (max-width:619px) {
   body:not(.k-home) .k .kh-hero__chip { min-height:52px; font-size:9px; line-height:1.25; }
   body:not(.k-home) .k .kh-hero__chip strong { font-size:14px; }
 }

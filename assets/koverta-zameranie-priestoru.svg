@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" role="img" aria-labelledby="zt zd">
+<title id="zt">Zameranie priestoru pred výrobou</title>
+<desc id="zd">Náčrt z obhliadky: pôdorys miesta pri dome so zakresleným prístreškom, šírkou, dĺžkou, výškou vjazdu, typom podkladu a smerom spádu.</desc>
+<defs>
+  <pattern id="dlazba" width="34" height="34" patternUnits="userSpaceOnUse">
+    <rect width="34" height="34" fill="#eeebe4"/>
+    <path d="M0 0h34M0 0v34" stroke="#ded9cf" stroke-width="2"/>
+  </pattern>
+  <pattern id="trava" width="24" height="24" patternUnits="userSpaceOnUse">
+    <rect width="24" height="24" fill="#f1f2ec"/>
+    <path d="M5 18v-6M12 20v-8M19 17v-5" stroke="#d3d8c9" stroke-width="2.2" stroke-linecap="round"/>
+  </pattern>
+  <pattern id="murivo" width="26" height="13" patternUnits="userSpaceOnUse">
+    <rect width="26" height="13" fill="#e2ded6"/>
+    <path d="M0 0h26M0 6.5h26M13 0v6.5M0 6.5v6.5M26 6.5v6.5" stroke="#cdc7bb" stroke-width="1.6"/>
+  </pattern>
+</defs>
+<rect width="1000" height="700" rx="22" fill="#f7f6f3"/>
+
+<!-- pozemok: tráva a dláždená plocha -->
+<rect x="52" y="120" width="896" height="520" rx="8" fill="url(#trava)"/>
+<rect x="212" y="188" width="620" height="386" rx="4" fill="url(#dlazba)" stroke="#d6d1c6" stroke-width="2"/>
+
+<!-- dom -->
+<rect x="52" y="120" width="160" height="520" fill="url(#murivo)" stroke="#12171a" stroke-width="3"/>
+<text x="132" y="392" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" fill="#5d666c" text-anchor="middle" transform="rotate(-90 132 392)">DOM</text>
+<rect x="196" y="300" width="16" height="140" fill="#fff" stroke="#12171a" stroke-width="3"/>
+<path d="M212 370h34" stroke="#9aa2a8" stroke-width="2" fill="none"/>
+<text x="252" y="376" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#5d666c">vstup</text>
+
+<!-- zakreslený prístrešok -->
+<rect x="264" y="230" width="520" height="300" rx="4" fill="rgba(255,204,0,.13)" stroke="#12171a" stroke-width="3.5" stroke-dasharray="14 10"/>
+<g fill="#12171a">
+  <rect x="254" y="220" width="26" height="26" rx="3"/><rect x="768" y="220" width="26" height="26" rx="3"/>
+  <rect x="254" y="514" width="26" height="26" rx="3"/><rect x="768" y="514" width="26" height="26" rx="3"/>
+</g>
+<text x="524" y="388" font-family="Arial,Helvetica,sans-serif" font-size="26" font-weight="700" fill="#12171a" text-anchor="middle">tu bude stáť prístrešok</text>
+
+<!-- kóty -->
+<g stroke="#FFCC00" stroke-width="4" fill="none" stroke-linecap="round">
+  <path d="M264 172h520"/><path d="M264 158v28M784 158v28"/>
+  <path d="M868 230v300"/><path d="M854 230h28M854 530h28"/>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" fill="#12171a" font-weight="700">
+  <text x="524" y="146" font-size="26" text-anchor="middle">šírka</text>
+  <text x="906" y="388" font-size="26" text-anchor="middle" transform="rotate(90 906 388)">dĺžka</text>
+</g>
+
+<!-- čo sa na mieste ešte overuje -->
+<g font-family="Arial,Helvetica,sans-serif" font-size="20" fill="#5d666c">
+  <g stroke="#9aa2a8" stroke-width="2" fill="none">
+    <path d="M300 574v34h150"/><path d="M700 574v34h-96"/>
+  </g>
+  <text x="458" y="616" font-size="20" fill="#12171a" font-weight="700">podklad: dlažba, betón alebo tráva</text>
+  <text x="264" y="672" font-size="20">spád plochy →</text>
+  <path d="M400 665h84" stroke="#FFCC00" stroke-width="4" stroke-linecap="round"/>
+  <path d="M470 656l16 9-16 9" stroke="#FFCC00" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="648" y="672" font-size="20">výška vjazdu a prístup pre montáž</text>
+</g>
+
+<!-- meter -->
+<g transform="translate(60 44)">
+  <rect x="0" y="0" width="118" height="52" rx="10" fill="#FFCC00" stroke="#12171a" stroke-width="3"/>
+  <circle cx="34" cy="26" r="15" fill="#f7f6f3" stroke="#12171a" stroke-width="3"/>
+  <circle cx="34" cy="26" r="4" fill="#12171a"/>
+  <rect x="118" y="16" width="176" height="22" rx="3" fill="#fff" stroke="#12171a" stroke-width="3"/>
+  <g stroke="#12171a" stroke-width="2.4"><path d="M146 16v9M174 16v13M202 16v9M230 16v13M258 16v9"/></g>
+  <rect x="290" y="10" width="14" height="34" rx="2" fill="#12171a"/>
+</g>
+<text x="392" y="82" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700" fill="#12171a">Zameranie u vás, zadarmo</text>
+</svg>
