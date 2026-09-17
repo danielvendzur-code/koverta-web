@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="sk">
+<meta charset="utf-8">
+<title>Skúška 3D vykresľovača</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #f6f5f2; }
+  #plocha { display: block; width: 100vw; height: 100vh; }
+</style>
+<canvas id="plocha"></canvas>
+<script src="../kv-render3d.js"></script>
+<script>
+/* Skúšobná scéna: prístrešok zo štyroch stĺpov, obvodového rámu, strešného
+   panelu a dlažby pod ním. Slúži na to, aby sa vykresľovač dal overiť bez
+   celého konfigurátora — a aby sa dala porovnať kvalita materiálu, tieňa
+   a zatienenia na geometrii, ktorú poznáme do milimetra. */
+
+const L = 6000, W = 6000, H = 2500;   /* mm */
+const STLP = 120, RAM = 220;
+
+const plochy = [];
+
+function kvader(x0, y0, z0, x1, y1, z1, farba, material) {
+  const b = [
+    [[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]],  /* -Y */
+    [[x1,y1,z0],[x0,y1,z0],[x0,y1,z1],[x1,y1,z1]],  /* +Y */
+    [[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],  /* +X */
+    [[x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1]],  /* -X */
+    [[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],  /* +Z */
+    [[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],[x0,y0,z0]]   /* -Z */
+  ];
+  const n = [[0,-1,0],[0,1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
+  b.forEach((w, i) => plochy.push({ w, normal: n[i], sourceFill: farba, __mat: material, depthAvg: 0 }));
+}
+
+/* dlažba */
+plochy.push({
+  w: [[-6000,-6000,0],[L+6000,-6000,0],[L+6000,W+6000,0],[-6000,W+6000,0]],
+  normal: [0,0,1], sourceFill: '#dedbd4', __mat: 'dlazba', depthAvg: 0, bg: true
+});
+
+/* štyri stĺpy */
+for (const [px, py] of [[0,0],[L-STLP,0],[0,W-STLP],[L-STLP,W-STLP]])
+  kvader(px, py, 0, px+STLP, py+STLP, H, '#2f3438', 'lak');
+
+/* obvodový rám */
+kvader(0, 0, H, L, RAM, H+RAM, '#2f3438', 'lak');
+kvader(0, W-RAM, H, L, W, H+RAM, '#2f3438', 'lak');
+kvader(0, RAM, H, RAM, W-RAM, H+RAM, '#2f3438', 'lak');
+kvader(L-RAM, RAM, H, L, W-RAM, H+RAM, '#2f3438', 'lak');
+
+/* strešný panel medzi rámom */
+kvader(RAM, RAM, H+RAM-60, L-RAM, W-RAM, H+RAM-30, '#e9e6de', 'panel');
+
+/* lamely pod panelom, aby bolo vidieť jemné tiene v úzkych medzerách */
+for (let x = RAM + 200; x < L - RAM - 200; x += 420)
+  kvader(x, RAM, H - 60, x + 60, W - RAM, H + 40, '#3a4045', 'lak');
+
+const MAT = {
+  lak: KvRender3D.MATERIALY.lak,
+  panel: KvRender3D.MATERIALY.panel,
+  dlazba: KvRender3D.MATERIALY.dlazba
+};
+
+const canvas = document.getElementById('plocha');
+const r = KvRender3D.vytvor(canvas);
+if (!r) { document.title = 'BEZ WEBGL2'; document.body.innerHTML = '<p>WebGL2 nie je k dispozícii.</p>'; }
+
+let az = Number(new URLSearchParams(location.search).get('az') || 0.62);
+let el = Number(new URLSearchParams(location.search).get('el') || 0.30);
+
+function kresli() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+
+  const DIST = Math.max(L, W, H) * 2.9;
+  const ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
+  const smer = [-sa * ce, ca * ce, se];
+  /* mierka: nech sa model zmestí do záberu */
+  const scale = Math.min(w / (L * 1.55), h / (L * 1.15));
+
+  r.nastavKameru({
+    VW: w, VH: h, scale, ox: w / 2, oy: h / 2, DIST,
+    target: [L / 2, W / 2, H / 2], smer
+  });
+  r.nastavSvetlo({ slnko: [-0.38, 0.52, 0.72], zamracene: 0 });
+  r.kresli(w, h);
+}
+
+r && r.nastavScenu(plochy, (f) => MAT[f.__mat] || KvRender3D.MATERIALY.zakladny);
+r && kresli();
+window.addEventListener('resize', kresli);
+
+/* ťahaním sa scéna otáča — na overenie plynulosti */
+let drag = null;
+canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, az, el }; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  az = drag.az + (e.clientX - drag.x) * 0.006;
+  el = Math.max(-0.2, Math.min(1.3, drag.el + (e.clientY - drag.y) * 0.004));
+  kresli();
+});
+canvas.addEventListener('pointerup', () => { drag = null; });
+
+window.__r3d = r;
+window.kvKresli = kresli;
+window.kvNastav = (a, e) => { az = a; el = e; kresli(); };
+</script>
