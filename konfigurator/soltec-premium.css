@@ -524,7 +524,11 @@
     #SoltecPremium .sp-quote__lines { margin: 1.8rem 0 0; padding: 0; list-style: none; }
     #SoltecPremium .sp-quote__lines li { display: flex; align-items: baseline; justify-content: space-between; gap: 1.2rem; padding: .8rem 0; border-bottom: 1px solid rgba(255,255,255,.14); font-size: 1.32rem; }
     #SoltecPremium .sp-quote__lines li span { color: rgba(255,255,255,.62); }
-    #SoltecPremium .sp-quote__lines li b { font-weight: 400; text-align: right; }
+    /* Suma sa na telefóne lámala tak, že „4 497" ostalo na jednom riadku a „€"
+       spadlo na ďalší. Číslo s menou patrí k sebe, tak sa nezalomí; miesto si
+       vezme popis naľavo, ktorý sa zalomiť pokojne môže. */
+    #SoltecPremium .sp-quote__lines li b { flex: 0 0 auto; font-weight: 400; text-align: right; white-space: nowrap; }
+    #SoltecPremium .sp-quote__lines li span { min-width: 0; }
     #SoltecPremium .sp-quote .button { width: 100%; margin-top: 2rem; }
     #SoltecPremium .sp-quote__note { margin: 1.4rem 0 0; color: rgba(255,255,255,.6); font-size: 1.2rem; line-height: 1.5; }
     #SoltecPremium .sp-hint { display: flex; gap: .8rem; margin: 1.2rem 0 0; padding: 1rem 1.2rem; border-left: 2px solid var(--sp-yellow); background: rgba(255,192,7,.09); color: var(--sp-ink); font-size: 1.25rem; line-height: 1.5; }
