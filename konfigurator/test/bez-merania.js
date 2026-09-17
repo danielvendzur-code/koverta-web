@@ -1,7 +1,8 @@
 /* Web nič nemeria a nič neukladá. Tag Manager, Analytics aj Clarity prišli s
    témou zo Shopify a odišli s ňou; s nimi odišla aj lišta súhlasu, ktorú by
    inak nemal kto potrebovať. Test drží, že sa nevrátia: žiadne cookies, prázdny
-   prehliadač, žiadne meracie skripty a jediný cudzí server je písmo. */
+   prehliadač, žiadne meracie skripty a žiadny cudzí server. Písmo je v
+   repozitári, tak nie je čo načítavať zvonku. */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const B = (process.env.KV_WEB || 'http://127.0.0.1:8901').replace(/\/$/, '');
 const STRANKY = ['/', '/pristresky-pre-auta/', '/kontakt/', '/realizacie/', '/ochrana-sukromia/', '/konfigurator/?page=koverta'];
@@ -35,8 +36,8 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
     ok(stav.clarity === 'undefined', s + ': clarity existuje');
   }
   await b.close();
-  const zle = [...cudzie].filter((h) => !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
-  ok(zle.length === 0, 'stránka volá cudzie servery: ' + zle.join(', '));
+  /* Písmo je v repozitári, takže stránka nemá dôvod volať nikam von. */
+  ok(cudzie.size === 0, 'stránka volá cudzie servery: ' + [...cudzie].join(', '));
   console.log('cudzie hosty, ktoré stránka volá:', [...cudzie].join(', ') || 'žiadne');
   if (chyby.length) { console.log('BEZ_MERANIA_FAIL\n' + chyby.join('\n')); process.exit(1); }
   console.log('BEZ_MERANIA_PASS: žiadne cookies, prázdny prehliadač, žiadne meracie skripty');

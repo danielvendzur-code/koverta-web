@@ -83,8 +83,9 @@ s témou zo Shopify; s doménou odchádzajú aj ony. Odstránený je aj Consent
 Mode a lišta súhlasu, ktorú by nemal čo obsluhovať.
 
 Stránka preto nenastavuje žiadne cookies a do prehliadača neukladá nič.
-Jediný cudzí server, ktorý volá, je Google Fonts kvôli písmu. Drží to
-kontrola `bez-merania`.
+Písmo Archivo a Titillium Web sa ťahalo z Google Fonts; súbory sú teraz
+v `assets/pismo/`, takže web nevolá von vôbec. Drží to kontrola
+`bez-merania`, ktorá zhodí test, keď sa objaví akýkoľvek cudzí server.
 
 Keby sa meranie malo niekedy vrátiť, vráti sa s ním aj povinnosť pýtať si
 súhlas a doplniť o tom článok do ochrany súkromia.
