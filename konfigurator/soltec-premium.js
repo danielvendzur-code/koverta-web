@@ -1987,6 +1987,20 @@
           /* V pohybe ide o plynulosť, v pokoji o obraz. Prepínač je ten istý
              `motionDetail`, ktorý doteraz znižoval rozlíšenie. */
           r.nastavKvalitu(motionDetail);
+
+          /* Autá, posedenie, dopadový tieň a dážď majú vlastný vykresľovač.
+             Kreslia sa do tej istej vyrovnávacej pamäte ako konštrukcia,
+             takže sa im hĺbka aj vyhladzovanie zhodujú. Kamera im ide ako
+             matica — ich `project` ju vie prevziať. */
+          r.kresliNavyse = sceneLife ? (faza, gl, kam) => {
+            const opis = {
+              VW: camera.VW, VH: camera.VH, scale: camera.scale,
+              ox: camera.ox, oy: camera.oy, DIST: camera.DIST,
+              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia
+            };
+            if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
+            else sceneLife.draw(gl, opis, true);
+          } : null;
           canvas.dataset.renderer = 'webgl2-pbr';
           const hotovo = r.kresli(w, h);
           /* Samoladenie. Meria sa odstup dvoch po sebe idúcich snímok, nie

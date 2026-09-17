@@ -124,19 +124,26 @@
 
      Prášková farba nie je holý kov: pod lakom je hliník, ale vidno lak.
      Preto nízky kov a stredná drsnosť — má sheen, nie zrkadlo. */
+  /* `odraz` je oprava, bez ktorej by scéna vybledla. Farby v geometrii
+     pochádzajú z doterajšieho vykresľovača, ktorý svetlo nepočítal — sú to
+     teda farby už nasvietené, nie odrazivosť materiálu. Keby sa vo
+     fyzikálnom modeli použili tak, ako sú, svetlo by sa započítalo druhý
+     raz. Najviac to bolo vidieť na dlažbe: zadaná ako 0,72, hoci betón
+     odráža okolo 0,35, a scéna z nej mala bielu podlahu bez tieňov.
+     Čísla nižšie sú skutočné odrazivosti tých materiálov. */
   const MATERIALY = {
-    lak:      { kov: 0.06, drsnost: 0.42 },  /* prášková farba na hliníku aj oceli */
-    zinok:    { kov: 0.72, drsnost: 0.40 },  /* žiarový zinok — kov s matným povrchom */
-    hlinik:   { kov: 0.88, drsnost: 0.28 },  /* holý brúsený hliník, lemovanie */
-    sklo:     { kov: 0.00, drsnost: 0.05 },
-    panel:    { kov: 0.04, drsnost: 0.58 },  /* zateplený strešný panel, biely plech */
-    drevo:    { kov: 0.00, drsnost: 0.72 },
-    polykarb: { kov: 0.00, drsnost: 0.18 },
-    dlazba:   { kov: 0.00, drsnost: 0.86 },
-    trava:    { kov: 0.00, drsnost: 0.95 },
-    auto:     { kov: 0.35, drsnost: 0.25 },  /* karoséria — lak s čírym lakom navrchu */
-    guma:     { kov: 0.00, drsnost: 0.88 },
-    zakladny: { kov: 0.04, drsnost: 0.50 }
+    lak:      { kov: 0.08, drsnost: 0.33, odraz: 1.00 },  /* prášková farba — tmavé RAL sedia */
+    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.92 },  /* žiarový zinok */
+    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.95 },  /* holý hliník, lemovanie */
+    sklo:     { kov: 0.00, drsnost: 0.05, odraz: 1.00 },
+    panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.86 },  /* biely plech odráža okolo 0,7 */
+    drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.80 },
+    polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
+    dlazba:   { kov: 0.00, drsnost: 0.84, odraz: 0.50 },  /* betón odráža okolo 0,35 */
+    trava:    { kov: 0.00, drsnost: 0.95, odraz: 0.55 },
+    auto:     { kov: 0.35, drsnost: 0.25, odraz: 0.95 },
+    guma:     { kov: 0.00, drsnost: 0.88, odraz: 0.70 },
+    zakladny: { kov: 0.04, drsnost: 0.50, odraz: 0.92 }
   };
 
   /* --------------------------------------------------------------- SHADERY */
@@ -298,6 +305,8 @@ uniform float uZamracene;
 uniform sampler2D uTienMapa;
 uniform vec2 uTienKrok;
 uniform int uTienVzoriek;
+uniform vec3 uStred;
+uniform float uDosah;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
 
 layout(location = 0) out vec4 oFarba;
@@ -329,6 +338,11 @@ float rozdielHlbky() {
   return s.z - texture(uTienMapa, s.xy).r;
 }
 
+/* Mäkkosť okraja nie je konštanta. Tieň päty stĺpa je ostrý, tieň strechy
+   na zemi o dva a pol metra nižšie je rozmazaný — a práve ten rozdiel
+   prezradí, že sa scéna deje v priestore. Postup je dvojkrokový: najprv sa
+   niekoľkými vzorkami nájde, ako ďaleko pred plochou stojí to, čo ju tieni,
+   a z tej vzdialenosti sa určí polomer rozostrenia. */
 float vTieni(vec3 n) {
   vec3 s = vTien.xyz / vTien.w;
   if (s.z > 1.0) return 1.0;
@@ -343,6 +357,25 @@ float vTieni(vec3 n) {
   float c = cos(uhol), si = sin(uhol);
   mat2 rot = mat2(c, -si, si, c);
 
+  /* Hľadanie tieniaceho telesa. Päť vzoriek v malom okolí stačí: potrebujeme
+     len priemernú hĺbku toho, čo je pred nami, nie jeho tvar. */
+  float blokHlbka = 0.0; float blokPocet = 0.0;
+  for (int i = 0; i < 5; i++) {
+    vec2 o = rot * KOTUC[i * 3] * uTienKrok * 3.2;
+    float d = texture(uTienMapa, s.xy + o).r;
+    if (d < s.z - posun) { blokHlbka += d; blokPocet += 1.0; }
+  }
+  /* Bez tieniaceho telesa je plocha na slnku — ďalej sa počítať netreba. */
+  if (blokPocet < 0.5) return 1.0;
+  blokHlbka /= blokPocet;
+
+  /* Polomer rastie so vzdialenosťou medzi plochou a tým, čo ju tieni.
+     Konštanta zodpovedá uhlovej veľkosti slnka (pol stupňa) prepočítanej na
+     túto scénu — preto tieň stĺpa pri päte drží tvar a tieň strechy sa
+     na zemi rozplýva. */
+  float rozostup = clamp((s.z - blokHlbka) * 42.0, 0.0, 1.0);
+  vec2 krok = uTienKrok * mix(1.0, 7.0, rozostup);
+
   /* Počet vzoriek sa mení podľa toho, či sa model práve otáča. V pohybe
      oko mäkkosť okraja nestihne prečítať a osem vzoriek je polovičná cena;
      po zastavení sa dokreslí plných šestnásť. */
@@ -350,7 +383,7 @@ float vTieni(vec3 n) {
   int pocet = uTienVzoriek;
   for (int i = 0; i < 16; i++) {
     if (i >= pocet) break;
-    vec2 o = rot * KOTUC[i] * uTienKrok;
+    vec2 o = rot * KOTUC[i] * krok;
     float d = texture(uTienMapa, s.xy + o).r;
     suma += (s.z - posun) > d ? 0.0 : 1.0;
   }
@@ -373,15 +406,33 @@ void main() {
      a mierna zmena drsnosti stačia — ostatné dorobí svetlo. */
   vec3 podkladFarba = vFarba;
   if (vParam.w > 0.5) {
-    vec2 uv = vPoz.xy / 600.0;                    /* dlaždica 60 cm */
-    vec2 mriezka = abs(fract(uv) - 0.5);
-    float skara = 1.0 - smoothstep(0.455, 0.497, max(mriezka.x, mriezka.y));
-    /* dve vrstvy šumu: veľké fľaky a jemné zrno */
-    float velke = fract(sin(dot(floor(uv), vec2(41.7, 289.1))) * 43758.5453);
-    float zrno = fract(sin(dot(floor(vPoz.xy / 22.0), vec2(12.99, 78.23))) * 43758.5453);
-    podkladFarba *= 0.955 + velke * 0.075 + zrno * 0.035;
-    podkladFarba *= mix(1.0, 0.80, skara);
-    drsnost = clamp(drsnost * (0.90 + zrno * 0.20) + skara * 0.06, 0.035, 1.0);
+    /* Dlažba 60 × 60 cm. Predchádzajúca verzia kreslila pravidelnú mriežku
+       a vyzerala ako milimetrový papier: každá dlaždica rovnaká, každá škára
+       rovnako tmavá. Skutočný betón je na každej doske o kúsok inak svetlý,
+       škára je úzka a miestami zanesená a cez celú plochu ide pomalá vlna
+       vlhkosti. To je všetko, čo treba — zvyšok dorobí svetlo. */
+    vec2 uv = vPoz.xy / 600.0;
+    vec2 bunka = floor(uv);
+    vec2 vnutri = fract(uv);
+
+    /* Škára: úzka a nie úplne rovnomerná. */
+    vec2 kOkraju = abs(vnutri - 0.5);
+    float sirkaSkary = 0.468 + 0.010 * fract(sin(dot(bunka, vec2(7.3, 19.7))) * 9137.1);
+    float skara = 1.0 - smoothstep(sirkaSkary, sirkaSkary + 0.022, max(kOkraju.x, kOkraju.y));
+
+    /* Tón dosky. Rozdiely sú malé — päť percent stačí, aby plocha prestala
+       byť jedna doska a stala sa z nej dlažba. */
+    float tonDosky = fract(sin(dot(bunka, vec2(41.7, 289.1))) * 43758.5453);
+    /* Pomalá vlna cez celú plochu: mierne svetlejšie a tmavšie pásy, aké
+       zanechá schnúca voda. */
+    float vlna = sin(vPoz.x * 0.00042 + vPoz.y * 0.00031) * 0.5 + 0.5;
+    /* Jemné zrno v mierke centimetrov. */
+    float zrno = fract(sin(dot(floor(vPoz.xy / 18.0), vec2(12.99, 78.23))) * 43758.5453);
+
+    podkladFarba *= 0.955 + tonDosky * 0.052 + vlna * 0.030 + zrno * 0.022;
+    podkladFarba *= mix(1.0, 0.86, skara);
+    /* Škára je matnejšia než doska, doska má miestami hladšie miesta. */
+    drsnost = clamp(drsnost * (0.93 + zrno * 0.14) + skara * 0.05, 0.035, 1.0);
   }
   float a = drsnost * drsnost;
 
@@ -440,7 +491,19 @@ void main() {
   float mlha = 1.0 - exp(-vzdial * 2.2e-5);
   farba = mix(farba, farbaOblohy(normalize(vPoz - uOko), uSlnko, uZamracene) * 0.9, mlha * 0.55);
 
-  oFarba = vec4(farba, vParam.z);
+  /* Podklad nekončí hranou. Doterajší okraj dlažby bol na zábere vidieť ako
+     rovná čiara cez celú šírku — a nič tak spoľahlivo neprezradí, že model
+     stojí na doske, nie na dvore. Plocha sa preto do diaľky rozplynie do
+     farby prostredia. */
+  float priehladnost = vParam.z;
+  if (vParam.w > 0.5) {
+    float r = length(vPoz.xy - uStred.xy) / max(1.0, uDosah);
+    float zanik = 1.0 - smoothstep(0.72, 1.06, r);
+    vec3 dalka = farbaOblohy(normalize(vec3(vPoz.xy - uOko.xy, -0.06)), uSlnko, uZamracene);
+    farba = mix(dalka, farba, zanik);
+  }
+
+  oFarba = vec4(farba, priehladnost);
   oNormHlbka = vec4(n * 0.5 + 0.5, 1.0);
 }
 `;
@@ -499,8 +562,13 @@ void main() {
   float d = texture(uHlbka, vUV).r;
   if (d >= 1.0) { oFarba = vec4(1.0); return; }
 
+  vec4 nv = texture(uNorm, vUV);
+  /* Pixel, do ktorého normálu nikto nezapísal (obloha, autá, dážď), sa
+     nezatieňuje — inak by sa na ňom počítalo s normálou oblohy. */
+  if (nv.a < 0.5) { oFarba = vec4(1.0); return; }
+
   vec3 p = pozZHlbky(vUV, d);
-  vec3 n = normalize(texture(uNorm, vUV).xyz * 2.0 - 1.0);
+  vec3 n = normalize(nv.xyz * 2.0 - 1.0);
 
   float uhol = sum(vUV * uRozmer) * 6.2831853;
   vec3 nahod = vec3(cos(uhol), sin(uhol), 0.0);
@@ -786,7 +854,8 @@ void main() {
           for (const p of [w[0], w[i], w[i + 1]]) {
             data[at] = p[0]; data[at + 1] = p[1]; data[at + 2] = p[2];
             data[at + 3] = n[0]; data[at + 4] = n[1]; data[at + 5] = n[2];
-            data[at + 6] = farba[0]; data[at + 7] = farba[1]; data[at + 8] = farba[2];
+            const od = mat.odraz === undefined ? 1 : mat.odraz;
+            data[at + 6] = farba[0] * od; data[at + 7] = farba[1] * od; data[at + 8] = farba[2] * od;
             data[at + 9] = mat.kov; data[at + 10] = mat.drsnost;
             data[at + 11] = farba[3]; data[at + 12] = f.bg ? 1.0 : 0.0;
             at += PLAVAKOV;
@@ -1069,6 +1138,14 @@ void main() {
       gl.uniform2f(P.u.uTienKrok, 2.2 / t.rozmer, 2.2 / t.rozmer);
       gl.uniform1f(P.u.uPosunPoNormale, stav.posunPoNormale);
       gl.uniform1i(P.u.uTienVzoriek, stav.kvalita.tienVzoriek);
+      {
+        const o = stav.obal || [0, 0, 0, 1, 1, 1];
+        gl.uniform3f(P.u.uStred, (o[0] + o[3]) / 2, (o[1] + o[4]) / 2, (o[2] + o[5]) / 2);
+        const ov = stav.obalVrhacov || o;
+        /* Dosah, na ktorom sa podklad stratí: štvornásobok konštrukcie. Bližšie
+           by sa dlažba končila v zábere, ďalej by sa švík vrátil. */
+        gl.uniform1f(P.u.uDosah, Math.hypot(ov[3] - ov[0], ov[4] - ov[1]) * 2.0);
+      }
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, t.t);
       gl.uniform1i(P.u.uTienMapa, 0);
@@ -1078,6 +1155,26 @@ void main() {
       gl.depthMask(true);
       gl.drawArrays(gl.TRIANGLES, 0, s.pocetNepriehl);
 
+      /* Sem sa vojde to, čo do scény patrí, ale nie je konštrukcia: autá,
+         posedenie, dopadový tieň. Kreslí sa do tej istej vyrovnávacej pamäte,
+         takže má rovnaké vyhladzovanie aj rovnakú hĺbku ako prístrešok. */
+      if (stav.kresliNavyse) {
+        /* Cudzí vykresľovač píše len farbu, nie normály. Kým kreslí, druhý
+           výstup sa musí odpojiť — inak WebGL2 kresbu odmietne s tým, že
+           aktívnemu výstupu chýba zodpovedajúci výstup shadera. Jeho pixely
+           preto ostanú v mape normál označené ako „bez normály" a zatienenie
+           ich preskočí; vlastný dopadový tieň si kreslí sám. */
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.bindVertexArray(null);
+        stav.kresliNavyse('nepriehladne', gl, stav.kamera);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        gl.useProgram(P);
+        gl.bindVertexArray(s.vao);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthMask(true);
+        gl.disable(gl.BLEND);
+      }
+
       if (s.pocetCelkom > s.pocetNepriehl) {
         gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -1085,6 +1182,16 @@ void main() {
         gl.drawArrays(gl.TRIANGLES, s.pocetNepriehl, s.pocetCelkom - s.pocetNepriehl);
         gl.depthMask(true);
         gl.disable(gl.BLEND);
+      }
+
+      /* Dážď, odtekajúca voda a všetko priesvitné ide až po skle. */
+      if (stav.kresliNavyse) {
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.bindVertexArray(null);
+        stav.kresliNavyse('priehladne', gl, stav.kamera);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        gl.disable(gl.BLEND);
+        gl.depthMask(true);
       }
 
       /* --- 3 · rozlíšenie MSAA ----------------------------------------- */
