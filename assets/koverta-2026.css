@@ -14382,3 +14382,43 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 .kh-dakujem__zaloha a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
 .kh-dakujem__zaloha a:hover { color: var(--k-amber-deep); }
 .kh-dakujem__zaloha span { display: block; margin-top: 2px; color: var(--k-grey-soft); font-size: 12.5px; }
+
+
+/* Dátová tabuľka v tom istom ráme ako porovnanie dvoch radov. Rozdiel je
+   v tom, že tu nie sú dva stĺpce na porovnanie, ale niekoľko údajov k
+   jednému modelu — na telefóne sa preto skladajú pod seba, nie vedľa seba. */
+.kh-vs--data tbody th { width: 22%; }
+.kh-vs--data thead th:first-child span {
+  font-family: var(--k-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+.kh-vs--data thead th { vertical-align: bottom; font-family: var(--k-head); font-size: 13.5px; font-weight: 700; }
+.kh-vs--data tbody th small {
+  display: block; margin-top: 3px;
+  font-family: var(--k-body); font-size: 12px; font-weight: 500; color: var(--k-grey-soft);
+}
+@media (max-width: 720px) {
+  .kh-vs--data tbody tr { grid-template-columns: 1fr; }
+  .kh-vs--data tbody th { width: auto; padding: 14px 14px 4px; font-family: var(--k-head);
+                          font-size: 15px; letter-spacing: 0; text-transform: none;
+                          color: var(--k-ink); white-space: nowrap; }
+  .kh-vs--data tbody td { border-left: 0; padding: 3px 14px; display: grid;
+                          grid-template-columns: 38% 1fr; gap: 10px; align-items: baseline; }
+  .kh-vs--data tbody tr td:last-child { padding-bottom: 14px; }
+  .kh-vs--data tbody td::before {
+    content: attr(data-popis);
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--k-grey-soft);
+  }
+  .kh-vs--data thead tr { grid-template-columns: 1fr; }
+  .kh-vs--data thead th { display: none; }
+}
+/* Graf výberu pod tabuľkou. */
+.kh-vs__foto { margin: clamp(26px, 3vw, 44px) 0 0; }
+.kh-vs__foto img { display: block; width: 100%; height: auto; background: var(--k-white);
+                   border-radius: var(--k-r-sm); }
+.kh-vs__foto figcaption { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--k-grey-soft); }
