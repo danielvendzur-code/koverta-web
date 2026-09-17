@@ -319,6 +319,19 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 <link rel="stylesheet" href="./soltec-premium.css?v=20260913-canvas-layer">
 <!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
 <link rel="stylesheet" href="./koverta-cfg-skin.css?v=1788950127231">
+<style>
+  /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
+     text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
+     má vyzerať rovnako ako na kontakte, tak si premenné prepíše späť na
+     vlastné a prestrk zruší. Konfigurátora samotného sa to netýka. */
+  [data-k-cta-obal] {
+    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: normal;
+  }
+  [data-k-cta-obal] h2,
+  [data-k-cta-obal] h3 { font-family: var(--font-heading-family); }
+</style>
 </head>
 <body>
 <a class="kv-skip" href="#kv-root">Preskočiť na konfigurátor</a>
