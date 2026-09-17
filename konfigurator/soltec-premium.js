@@ -6813,9 +6813,16 @@
             if (!on) {setZoom(1);}
           };
           zoomUI.addEventListener('click', () => setZoomMode(!zoomOn));
+          /* Stred obálky modelu je v polovici výšky, a tam pri prístrešku nič
+             nie je — je to vzduch medzi stĺpmi. Priblíženie do stredu preto
+             pri 350 % ukázalo prázdnu dlažbu a konštrukcia ostala mimo záber.
+             Tlačidlá aj klávesy preto mieria kúsok nad stred, na rám a strechu,
+             teda na to, čo si zákazník prezerá. Ťah myšou ani dva prsty sa
+             nemenia — tam si miesto určuje sám. */
+          const ZOOM_CIEL = { x: 0, y: -0.32 };
           zoomTools.addEventListener('click',e=>{const b=e.target.closest('[data-zoom-step]');if(!b)return;
             if(b.dataset.zoomStep==='reset'){setZoom(1);}
-            else setZoom(zoomTarget*(b.dataset.zoomStep==='in'?1.15:1/1.15));
+            else setZoom(zoomTarget*(b.dataset.zoomStep==='in'?1.15:1/1.15), ZOOM_CIEL);
           });
           canvas.addEventListener('wheel',e=>{
             if(!zoomOn)return;
@@ -6830,8 +6837,8 @@
           stageEl.appendChild(hint);
           stageEl.addEventListener('keydown', (e) => {
             if(e.target.closest('button,input,select,textarea'))return;
-            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget*1.15);return;}
-            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget/1.15);return;}
+            if(e.key==='+'||e.key==='='){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget*1.15, ZOOM_CIEL);return;}
+            if(e.key==='-'){if(!zoomOn)return;e.preventDefault();setZoom(zoomTarget/1.15, ZOOM_CIEL);return;}
             stopCamera();
             const step = e.shiftKey ? 0.28 : 0.11;
             let used = true;
