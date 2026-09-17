@@ -783,7 +783,7 @@
         // Shade a hex colour towards white (amt > 0) or black (amt < 0).
         /* a fixed hash, so a board keeps its tone from one render to the next */
         const grain = (i) => { const s = Math.sin(i * 12.9898 + 4.137) * 43758.5453; return s - Math.floor(s); };
-        const LARCH = '#b0824e';
+        const LARCH = '#b08b61';
         const COURSE = 74;     // "wood rhomb 70x24" plus the shadow gap
         /* Jedna stena rombového smrekovca má 33 radov a šesť plôch na rad —
            tieň, dva skosy, líce a dve kresby dreva — a stojí za to. Šestnásť
@@ -808,7 +808,7 @@
            hrubá, rozteč 140 mm, teda 40 mm medzera. Stena beží od 298 mm nad
            zemou po 2 218 mm a jej líce sedí 15 mm pod vonkajším lícom rámu. */
         const KV_SLAT = { pitch: 140, vyska: 100, hrubka: 20, od: 298, po: 2218, zapust: 15 };
-        const KV_TONE = { drevo: '#a8763f', wpc: '#7c6a5c' };
+        const KV_TONE = { drevo: '#a8845c', wpc: '#7c6a5c' };
         /* the tone of the board at a given height, the same on every face */
         const boardTone = (k, hex) => {
           /* Larch varies board to board, but not as much as a random spread
