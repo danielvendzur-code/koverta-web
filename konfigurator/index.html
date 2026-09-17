@@ -703,6 +703,46 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
      Nadstavba nad runtime, nič v ňom neprepisuje. -->
 <script src="./koverta-cfg-enhance.js?v=1788950127231"></script>
 
+<!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
+     ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
+     dĺžka, oboje v milimetroch. Posuvník si hodnotu zarovná na najbližší
+     katalógový krok, takže aj nepresné číslo skončí na platnom rozmere. -->
+<script>
+(function kvRozmerZAdresy() {
+  var q;
+  try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  var w = parseInt(q.get('w'), 10);
+  var l = parseInt(q.get('l'), 10);
+  if (!w && !l) return;
+
+  var pokusov = 0;
+  function nastav() {
+    var sw = document.querySelector('[data-sp-w]');
+    var sl = document.querySelector('[data-sp-l]');
+    /* Posuvníky sú v šablóne od začiatku, ale rozsah v milimetroch im
+       nastaví až runtime. Kým je max ešte jednotka zo šablóny, nemá zmysel
+       nič nastavovať. */
+    var pripravene = sw && sl && Number(sw.max) > 100 && Number(sl.max) > 100;
+    if (!pripravene) {
+      if (++pokusov > 100) return;
+      return window.setTimeout(nastav, 100);
+    }
+    [[sw, w], [sl, l]].forEach(function (par) {
+      var pole = par[0], hodnota = par[1];
+      if (!hodnota) return;
+      var min = Number(pole.min), max = Number(pole.max);
+      if (Number.isFinite(min) && hodnota < min) hodnota = min;
+      if (Number.isFinite(max) && hodnota > max) hodnota = max;
+      pole.value = String(hodnota);
+      pole.dispatchEvent(new Event('input', { bubbles: true }));
+      pole.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nastav);
+  else nastav();
+})();
+</script>
+
 <!-- Výzva na celú obrazovku. Ukáže sa len na nízkom okne a len raz — kto ju
      zavrie, už ju neuvidí. Fullscreen nie je nikde podmienkou používania. -->
 <script>

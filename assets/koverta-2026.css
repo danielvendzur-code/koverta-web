@@ -14506,6 +14506,12 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 .kv-suhlas__ulozit[hidden] { display: none; }
 
 /* Tlačidlo v pätke vyzerá ako ostatné právne odkazy vedľa neho. */
+/* Katalógy sú súbory výrobcu na cudzom serveri. Keby niektorý prestal byť
+   dostupný, riadok pod mriežkou dá človeku druhú cestu, nie mŕtvy odkaz. */
+.kh-kat__pozn { margin: 18px 0 0; font-size: 14px; color: var(--k-grey-soft); }
+.kh-kat__pozn a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
+.kh-kat__pozn a:hover { color: var(--k-amber-deep); }
+
 /* Tlačidlo v texte právneho dokumentu vyzerá ako odkaz vedľa neho, lebo sa
    tak aj správa: otvorí lištu so súhlasom. */
 .kv-legal__suhlas {
