@@ -911,6 +911,42 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 })();
 </script>
 
+<!-- Rozmer späť do adresy. Kto si niečo vyskladá, chce to poslať ďalej alebo
+     si to odložiť na neskôr — a adresa je na to jediné miesto, ktoré si
+     poradí aj bez toho, aby sme čokoľvek ukladali do prehliadača. Zápis ide
+     cez replaceState, takže tlačidlo Späť ostáva na predošlej stránke, nie
+     na predošlom rozmere. -->
+<script>
+(function kvRozmerDoAdresy() {
+  var cakac = null;
+  function zapis() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var w = null, l = null;
+    if (window.SP_TEST && typeof window.SP_TEST.snapshot === 'function') {
+      try { var sn = window.SP_TEST.snapshot(); w = sn.width; l = sn.length; } catch (e) {}
+    }
+    if (!w || !l) {
+      var sw = document.querySelector('[data-sp-w]');
+      var sl = document.querySelector('[data-sp-l]');
+      if (!sw || !sl || Number(sw.max) <= 100) return;
+      w = Number(sw.value); l = Number(sl.value);
+    }
+    if (!w || !l) return;
+    if (q.get('w') === String(w) && q.get('l') === String(l)) return;
+    q.set('w', String(w));
+    q.set('l', String(l));
+    try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
+  }
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t || !t.matches || !t.matches('[data-sp-w], [data-sp-l]')) return;
+    window.clearTimeout(cakac);
+    cakac = window.setTimeout(zapis, 400);
+  }, true);
+})();
+</script>
+
 <!-- Výzva na celú obrazovku. Ukáže sa len na nízkom okne a len raz — kto ju
      zavrie, už ju neuvidí. Fullscreen nie je nikde podmienkou používania. -->
 <script>
@@ -919,8 +955,13 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   if (!bar) return;
   var KEY = 'kv-fs-dismissed';
   var tesno = window.innerHeight < 900 || window.innerWidth < 1280;
+  /* Zapamätanie zavretej výzvy je preferencia, nie nevyhnutnosť. Bez súhlasu
+     sa teda nič neukladá ani nečíta a výzva sa po návrate ukáže znova. */
+  var smiemePamatat = function () {
+    return Boolean(window.kvSuhlas && window.kvSuhlas.preferencie);
+  };
   var zavrete = false;
-  try { zavrete = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  try { if (smiemePamatat()) zavrete = localStorage.getItem(KEY) === '1'; } catch (e) {}
   if (!tesno || zavrete || !document.documentElement.requestFullscreen) return;
 
   /* Výzva stála vo vlastnom páse nad konfigurátorom a brala 58 px práve tam,
@@ -948,7 +989,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   });
   bar.querySelector('[data-kv-fs-close]').addEventListener('click', function () {
     bar.hidden = true;
-    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    try { if (smiemePamatat()) localStorage.setItem(KEY, '1'); } catch (e) {}
   });
 })();
 </script>

@@ -22,17 +22,20 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
     const stav = await p.evaluate(() => {
       const kor = document.getElementById('SoltecPremium');
       const sek = document.querySelector('#sp-dopyt');
+      const stranka = document.getElementById('kv-root');
+      const obal = sek && sek.closest('[data-k-cta-obal]');
       return {
-        vnutri: Boolean(kor && sek && kor.contains(sek)),
-        poradie: kor ? kor.lastElementChild && kor.lastElementChild.hasAttribute('data-k-cta-obal') : false,
+        vnutri: Boolean(stranka && obal && obal.parentElement === stranka && !kor.contains(sek)),
+        poradie: Boolean(stranka && stranka.lastElementChild === obal
+          && kor && kor.compareDocumentPosition(obal) & Node.DOCUMENT_POSITION_FOLLOWING),
         co: (document.querySelector('[data-k-select-input]') || {}).value,
         stitok: (document.querySelector('[data-k-select-label]') || {}).textContent,
         formular: Boolean(document.querySelector('#sp-dopyt form[data-k-dopyt]')),
         pripraveny: (document.querySelector('#sp-dopyt form[data-k-dopyt]') || {}).dataset?.kReady
       };
     });
-    ok(stav.vnutri, stranka + ': dopyt nie je vnútri koreňa konfigurátora');
-    ok(stav.poradie, stranka + ': dopyt nie je posledný pod konfigurátorom');
+    ok(stav.vnutri, stranka + ': dopyt nie je v stránke vedľa konfigurátora');
+    ok(stav.poradie, stranka + ': dopyt nestojí ako posledný pod konfigurátorom');
     ok(stav.formular, stranka + ': formulár chýba');
     ok(stav.pripraveny === 'true', stranka + ': formulár nie je naviazaný na skript (kReady=' + stav.pripraveny + ')');
     ok(stav.co === coCakame, stranka + ': predvoľba je "' + stav.co + '", čakalo sa "' + coCakame + '"');
@@ -56,5 +59,5 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
   }
   await b.close();
   if (chyby.length) { console.log('CFG_DOPYT_FAIL\n' + chyby.join('\n')); process.exit(1); }
-  console.log('CFG_DOPYT_PASS: formulár v koreňi, predvoľba podľa stránky, zostava sa zapíše do správy');
+  console.log('CFG_DOPYT_PASS: formulár pod konfigurátorom, predvoľba podľa stránky, zostava sa zapíše do správy');
 })().catch((e) => { console.error(e.stack || e); process.exit(1); });

@@ -2380,7 +2380,7 @@
     { id: 'marketing', nazov: 'Marketing',
       popis: 'Meranie reklamy, aby sme ju neukazovali ľuďom, ktorí už dopyt poslali.' },
     { id: 'preferencie', nazov: 'Preferencie',
-      popis: 'Zapamätá si, čo ste si nastavili v konfigurátore, aby ste nezačínali odznova.' }
+      popis: 'Zapamätá si drobnosti, ktoré ste si zavreli, napríklad výzvu na celú obrazovku v konfigurátore.' }
   ];
 
   function initSuhlas() {

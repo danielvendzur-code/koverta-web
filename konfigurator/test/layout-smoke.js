@@ -245,6 +245,7 @@ function assert(condition, message) {
     const pmp = await productMobileCtx.newPage();
     pmp.on('pageerror', e => errors.push('product-mobile pageerror: ' + e.message));
     pmp.on('console', msg => { if (msg.type() === 'error') errors.push('product-mobile console: ' + msg.text()); });
+    pmp.on('requestfailed', r => errors.push('product-mobile request: ' + (r.failure() ? r.failure().errorText : 'unknown') + ' ' + r.url()));
     for (const [path, key] of productPages.slice(0, 5)) {
       await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
       await dismissConsent(pmp);
