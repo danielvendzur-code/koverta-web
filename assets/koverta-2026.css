@@ -12751,3 +12751,154 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 }
 .k-rise .kh-mat__media img[src$=".svg"],
 .k-rise.is-in .kh-mat__media img[src$=".svg"] { transform: none; }
+
+
+/* ==========================================================================
+   VRSTVA 122 · Kuchyňa rozobraná na kusy
+   ==========================================================================
+   Výrobca má v katalógu schému s popiskami priamo pri dieloch. Tú istú vec
+   tu robíme po slovensky — ale nie ako obrázok s vypáleným textom. Je to
+   živý prvok: render, k nemu body v percentách a popisky ako text. Vďaka
+   tomu je ostrý pri každom zväčšení, dá sa preložiť, prečíta ho čítačka
+   a na telefóne sa z neho stane číslovaný zoznam.
+
+   Scéna má pevný pomer strán, takže sa zmenšuje celá naraz a body ostávajú
+   presne na svojich dieloch. Veľkosť písma ide z `cqw` — percenta šírky
+   scény — nie z veľkosti okna, inak by sa popisky pri zúžení rozišli
+   s čiarami, ktoré k nim vedú. */
+.kh-anat__scena {
+  container-type: inline-size;
+  position: relative;
+  margin: clamp(26px, 3.2vw, 48px) 0 0;
+  aspect-ratio: 1836 / 700;
+}
+.kh-anat__obraz {
+  position: absolute;
+  left: 17.974%; top: 3%;
+  width: 64.270%; height: 89.214%;
+}
+.kh-anat__obraz img {
+  display: block; width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+}
+
+/* Vodiace čiary. Pomer scény je rovnaký ako viewBox, takže `none` nič
+   nedeformuje — a `non-scaling-stroke` drží vlas rovnako tenký vždy. */
+.kh-anat__ciary {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.kh-anat__ciary path {
+  fill: none;
+  stroke: rgba(18, 23, 26, 0.26);
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Bod na diele nesie rovnaké číslo ako popisok, takže sa dvojica nájde aj
+   vtedy, keď čiara vedie cez pol obrázka. */
+.kh-anat__bod {
+  position: absolute;
+  left: var(--x); top: var(--y);
+  translate: -50% -50%;
+  display: grid; place-items: center;
+  width: 2.9cqw; height: 2.9cqw; min-width: 18px; min-height: 18px;
+  border-radius: 999px;
+  background: var(--k-amber);
+  box-shadow: 0 0 0 1.4px rgba(18, 23, 26, 0.8), 0 2px 7px rgba(18, 23, 26, 0.2);
+}
+.kh-anat__bod i {
+  font-style: normal; font-weight: 800;
+  font-size: 1.45cqw; line-height: 1; color: var(--k-ink);
+}
+
+.kh-anat__popis {
+  position: absolute;
+  top: var(--y);
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 0.72cqw;
+  width: 16.4%;
+  line-height: 1.28;
+}
+.kh-anat__popis--vlavo  { left: 0;  flex-direction: row-reverse; justify-content: flex-start; text-align: right; }
+.kh-anat__popis--vpravo { right: 0; justify-content: flex-start; text-align: left; }
+.kh-anat__popis > i {
+  flex: none;
+  display: grid; place-items: center;
+  width: 2.4cqw; height: 2.4cqw; min-width: 17px; min-height: 17px;
+  border-radius: 999px;
+  background: var(--k-ink); color: var(--k-white);
+  font-style: normal; font-weight: 800; font-size: 1.28cqw;
+}
+.kh-anat__popis > span { display: block; min-width: 0; }
+.kh-anat__popis b {
+  display: block;
+  font-family: var(--k-head);
+  font-size: 1.5cqw; font-weight: 650; letter-spacing: -0.008em;
+  color: var(--k-ink);
+  text-wrap: balance;
+}
+.kh-anat__popis em {
+  display: block;
+  font-style: normal;
+  font-size: 1.3cqw;
+  color: var(--k-grey-soft);
+}
+
+/* Zoznam pod schémou je na širokej obrazovke zbytočný — popisky tam sedia
+   pri dieloch. Ostáva len pre čítačku a pre úzke obrazovky. */
+.kh-anat__zoznam { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+/* Pečiatka záruky a dve vlastnosti sú pod schémou, nie v nej: v scéne
+   prekrývali batériu nad drezom. */
+.kh-anat__pata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(20px, 2.4vw, 40px);
+  margin: clamp(26px, 3vw, 44px) 0 0;
+  padding: clamp(20px, 2.2vw, 30px) 0 0;
+  border-top: 1px solid var(--k-hair);
+}
+.kh-anat__zaruka,
+.kh-anat__vlastnost { display: grid; gap: 4px; align-content: start; }
+.kh-anat__zaruka img {
+  width: 82px; height: auto; margin: 0 0 6px;
+  opacity: .72;
+}
+.kh-anat__zaruka b,
+.kh-anat__vlastnost b {
+  font-family: var(--k-head); font-size: clamp(17px, 1.3vw, 20px);
+  font-weight: 650; color: var(--k-ink);
+}
+.kh-anat__zaruka em,
+.kh-anat__vlastnost em {
+  font-style: normal; font-size: clamp(14px, 1vw, 15px);
+  line-height: 1.5; color: var(--k-grey-soft); max-width: 34ch;
+}
+
+/* --- Úzka obrazovka: popisky sa k dielom nezmestia --------------------- */
+@media (max-width: 899px) {
+  .kh-anat__scena { aspect-ratio: auto; }
+  .kh-anat__obraz { position: relative; left: auto; top: auto; width: 100%; height: auto; display: block; }
+  .kh-anat__obraz img { height: auto; }
+  .kh-anat__ciary,
+  .kh-anat__popis { display: none; }
+  .kh-anat__bod { width: 26px; height: 26px; }
+  .kh-anat__bod i { font-size: 13px; }
+
+  .kh-anat__zoznam {
+    position: static; width: auto; height: auto; overflow: visible; clip-path: none;
+    display: grid; gap: 13px; margin: 22px 0 0; padding: 0; list-style: none;
+  }
+  .kh-anat__zoznam li { display: flex; align-items: center; gap: 12px; }
+  .kh-anat__zoznam i {
+    flex: none;
+    display: grid; place-items: center; width: 25px; height: 25px;
+    border-radius: 999px; background: var(--k-amber); color: var(--k-ink);
+    font-style: normal; font-weight: 800; font-size: 13px;
+  }
+  .kh-anat__zoznam b { display: block; font-family: var(--k-head); font-size: 16px; font-weight: 650; }
+  .kh-anat__zoznam em { display: block; font-style: normal; font-size: 14px; color: var(--k-grey-soft); }
+}
