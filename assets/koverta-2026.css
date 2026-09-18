@@ -12933,3 +12933,142 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
 @media (max-width: 899px) {
   .k .kh-duo__akcia { display: grid; }
 }
+
+/* ==========================================================================
+   VRSTVA 122 · Osadenie pergoly — kreslené schémy
+   ==========================================================================
+   Deväť izometrických kresieb z podkladov Soltecu. Nie sú to fotografie:
+   kreslí sa na nich, o čo sa rám opiera a koľko stĺpov z toho vyjde. Preto
+   majú svetlé pozadie, tenký rám a vkladajú sa celé — orezať schému na
+   pomer karty by odrezalo stenu, ktorá je na nej to podstatné.
+   ====================================================================== */
+.k .kh-osad {
+  display: grid;
+  gap: clamp(12px, 1.4vw, 20px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 760px) { .k .kh-osad { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.k .kh-osad__polozka {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: clamp(10px, 1vw, 16px) clamp(12px, 1.2vw, 18px) clamp(14px, 1.4vw, 20px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.k .kh-osad__schema {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 602 / 456;
+  object-fit: contain;
+  margin-bottom: 6px;
+  /* Kresba je čiernobiela na bielej. Bez podkladu splýva s kartou, tenký
+     rám by zase súperil s rámom karty. Stačí vlások svetla pod ňou. */
+  border-bottom: 1px solid var(--k-hair);
+  padding-bottom: clamp(8px, 1vw, 12px);
+}
+.k .kh-osad__nazov {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.15vw, 17px);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--k-ink);
+}
+.k .kh-osad__popis {
+  margin: 0;
+  font-size: clamp(13px, 0.95vw, 14.5px);
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+
+/* ==========================================================================
+   VRSTVA 123 · Vzorkovník odtieňov
+   ==========================================================================
+   Komponent bol v štýle rozpísaný na polovicu — mriežka a mikroštruktúra
+   existovali, samotná vzorka nie, takže sa nikde nepoužil. Hodnoty sú
+   z podkladov výrobcu, nie z pamäte: vzorky sú vo firemných SVG uložené
+   presnou výplňou a tá sa sem prepísala jedna k jednej.
+
+   Vzorka je bodka na tmavom páse. Štyri z odtieňov sú takmer biele a na
+   svetlom podklade by splynuli do jednej plochy; na uhlíkovej sa čítajú
+   ako postupný krok svetlosti.
+   ====================================================================== */
+.k .kh-odtien {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  text-align: center;
+  margin: 0;
+}
+.k .kh-odtien i {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 92px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  overflow: hidden;
+  /* Traffic White na uhlíkovej bez rámu splýva s bodkou vedľa. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  background: var(--odtien, #888);
+}
+.k .kh-odtien b {
+  font-family: var(--k-head);
+  font-size: clamp(13.5px, 1vw, 15px);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--k-white);
+}
+.k .kh-odtien span {
+  font-size: clamp(12px, 0.9vw, 13px);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+}
+.k .kh-vzor .kh-odtiene { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+@media (max-width: 719px) {
+  /* Šesť krúžkov vedľa seba by malo priemer nechtu. Z pásu je zoznam:
+     bodka vľavo, názov a kód vpravo. */
+  .k .kh-vzor .kh-odtiene { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .k .kh-odtien {
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+    text-align: left;
+    gap: 2px 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .k .kh-odtien:last-child { border-bottom: 0; }
+  .k .kh-odtien i { grid-row: span 2; width: 34px; }
+}
+
+/* Široký záber nad mriežkou výbavy. Ukáže naraz to, čo karty pod ním
+   rozoberajú po jednom — a ukáže to na jednej pergole, nie na šiestich
+   rôznych. Popis stojí pod fotografiou, nie na nej. */
+.k .kh-prehlad {
+  margin: 0 0 clamp(20px, 2.4vw, 32px);
+}
+.k .kh-prehlad img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2118 / 1486;
+  object-fit: cover;
+  border-radius: var(--k-r-sm);
+}
+.k .kh-prehlad figcaption {
+  margin: clamp(10px, 1.1vw, 14px) 0 0;
+  font-size: clamp(13.5px, 1vw, 15px);
+  line-height: 1.6;
+  color: var(--k-grey-soft);
+  max-width: 96ch;
+}
+.k .kh-prehlad figcaption strong { color: var(--k-ink); font-weight: 650; }
