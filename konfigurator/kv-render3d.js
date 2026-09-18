@@ -1274,11 +1274,19 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
        pixeloch displeja a šetrí sa na tom, čo nevidieť. */
     stav.nastavKvalitu = function (pohyb, stupen) {
       const st = Math.max(0, Math.min(2, stupen === undefined ? 2 : stupen | 0));
+      /* Viacnásobné vzorkovanie je posledné, čo sa uberá — a aj tak nikdy
+         nie rozlíšenie. Na stroji bez grafickej karty (a taký je aj
+         prehliadač so softvérovým vykresľovaním) stojí štvornásobné
+         vzorkovanie celého plátna viac než všetko ostatné dokopy; tam je
+         lepšie mať plné rozlíšenie s tvrdšou hranou než polovičné s mäkkou.
+         Na akejkoľvek skutočnej karte sa na tento stupeň nikdy nezostúpi. */
       stav.kvalita = pohyb
         ? { tienVzoriek: st === 0 ? 1 : st === 1 ? 4 : 8,
-            ssao: false, ziara: false, podkladDetail: st >= 1 }
+            ssao: false, ziara: false, podkladDetail: st >= 1,
+            vzoriek: st === 0 ? 1 : stav.maxVzoriek }
         : { tienVzoriek: st === 0 ? 8 : 16,
-            ssao: st >= 1, ziara: st >= 1, podkladDetail: true };
+            ssao: st >= 1, ziara: st >= 1, podkladDetail: true,
+            vzoriek: st === 0 ? 2 : stav.maxVzoriek };
     };
 
     /* Koľko svetla vráti zem. Je to odrazivosť podkladu krát to, čo naň
@@ -1307,7 +1315,13 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       const s = stav.slnko, i = stav.svetloSlnka, z = Math.max(0, s[2]);
       const obloha = stav.zamracene > 0.5 ? 0.62 : 0.42;
       const odrazivost = stav.odrazivostPodkladu || [0.34, 0.33, 0.31];
-      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 1.35;
+      /* Podhľad strechy je celý v tieni a svieti ho len to, čo sa odrazí
+         od zeme. Jeden odraz je málo: svetlo sa medzi dlažbou, autom a
+         podhľadom odrazí viackrát, a práve preto je pod skutočným
+         prístreškom vidieť tvar profilu, nie čierna diera. Kým bol
+         súčiniteľ 1,35, vychádzali kanály vlny na podhľade tmavé a plech
+         medzi väznicami vyzeral, akoby tam chýbal. */
+      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 2.30;
       return new Float32Array([k(i[0], 0), k(i[1], 1), k(i[2], 2)]);
     };
 
@@ -1342,11 +1356,11 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
     }
 
     function pripravCiele(w, h) {
+      const vzoriek = Math.max(1, Math.min(stav.maxVzoriek,
+        (stav.kvalita && stav.kvalita.vzoriek) || stav.maxVzoriek));
       const c = stav.ciele;
-      if (c && c.w === w && c.h === h) return c;
+      if (c && c.w === w && c.h === h && c.vzoriek === vzoriek) return c;
       if (c) zrus(c);
-
-      const vzoriek = stav.maxVzoriek;
       const msaa = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, msaa);
       const farbaRB = gl.createRenderbuffer();
@@ -1395,7 +1409,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       return (stav.ciele = {
-        w, h, aw, ah, zw, zh,
+        w, h, vzoriek, aw, ah, zw, zh,
         msaa, farbaRB, normRB, hlbkaRB,
         rozlisFB, farbaT, normT, hlbkaT,
         aoFB, aoT, ao2FB, ao2T, ziaraFB, ziaraT, zbierFB, zbierT

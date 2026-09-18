@@ -4453,17 +4453,7 @@
                  continuous top arm. Its underside stays 0.5 mm above the
                  corrugation crowns, so no roof facet is cut and the flashing
                  owns the complete top sight line. */
-              /* Rameno dosadá na hrebene vlny, nie do nich.
-
-                 Kým bol jeho spodok na 258,5 mm a hrebeň trapézu na 259,
-                 prerastal plech cez rameno o pol milimetra — na zábere to bol
-                 rad bielych zúbkov pozdĺž celej hrany strechy, presne
-                 v rozstupe vlny. Nebol to hĺbkový test, bola to geometria:
-                 aj skutočné lemovanie leží na hrebeňoch, nie pod nimi.
-                 Rameno je tým o milimeter vyššie, čo je na obraze desatina
-                 pixela. */
-              const ramenoZ = Math.max(zTop - LEM_ARM, trapTop + 0.5);
-              put(outer, outer + (sirka + LEM_COVER) * dir, ramenoZ + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
+              put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
@@ -4885,14 +4875,8 @@
                      Predošlé kontrasty -5,5/+3,5 % vytvorili pri zmenšení
                      interferenčné vlny a strecha vyzerala pokrčená. Jemný
                      rozdiel zachová čitateľný smer rebier bez moiré. */
-                  /* Vlna má byť vidieť. Jemné rozdiely z čias, keď sa
-                     scéna kreslila bez vyhladzovania, dávali pri zmenšení
-                     interferenčné pásy — preto boli také opatrné. Doostrovanie
-                     dvanástimi posunutými snímkami tie pásy zloží do plynulého
-                     tónu, takže kontrast môže byť taký, aký na plechu naozaj
-                     je: hrebeň svetlý, bok do spádu tmavší. */
-                  tone = flat ? shade(hex, high ? 0.028 : -0.020)
-                              : shade(hex, zb > za ? -0.052 : 0.016);
+                  tone = flat ? shade(hex, high ? 0.010 : -0.006)
+                              : shade(hex, zb > za ? -0.014 : 0.004);
                 }
                 const cavity = upward ? 0 : trapProfile01((a + b) / 2);
                 // Less skylight reaches the recessed upper channel. The paint
@@ -4929,29 +4913,21 @@
             drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
             drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
 
-            /* Uzáver vlny pod čelným lemovaním.
+            /* One exact cut plane closes each concealed sheet edge. It belongs
+               to the flashing pocket, not to the visible single-colour soffit,
+               and therefore keeps one roof/flashing finish through its height.
+               Splitting it into light and dark halves exposed the light half
+               through every valley when viewed from above. */
+            // The L flashing stays open beneath its horizontal arm. Artificial
+            // vertical closure curtains hid the corrugated sheet's actual ends.
 
-               Trapézový plech má na čele otvorený profil — medzi hrebeňmi sú
-               priechodné kanály vysoké 36 mm. Pri pohľade zhora sa dalo popod
-               rameno lemovania pozrieť priamo do nich a cez celú strechu bolo
-               vidieť pozinkované väznice: na zábere z toho bol rad bielych
-               zúbkov pozdĺž hrany, presne v rozstupe vlny. Nebol to hĺbkový
-               test ani lemovanie, bol to výhľad dierou.
 
-               Skutočná strecha tam má uzáver vlny — tvarovaný profil, ktorý
-               kanály uzavrie. Tu je to rovnaký kus: tenká stena od dna vlny
-               po rameno lemovania, zasunutá pod jeho krytie, takže z nej
-               vidno len to, čo z uzáveru vidno aj na streche. */
-            if (vlnaVidno) {
-              const UZAVER_T = 3;
-              const uzaverZ0 = trapBot + TRAP_SKIN_VIS;
-              const uzaverH = Math.max(1, (trapTop + 0.5) - uzaverZ0);
-              [LEM_CELO - UZAVER_T, L - LEM_CELO].forEach((ux) => {
-                if (ux <= tx0 || ux + UZAVER_T >= tx1) return;
-                boxFaces(ux, ty0, uzaverZ0, UZAVER_T, ty1 - ty0, uzaverH,
-                  frame, [], SHAFT, 0, true, true);
-              });
-            }
+            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
+               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
+               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
                here and would reintroduce the dotted z-fighting seam. */
