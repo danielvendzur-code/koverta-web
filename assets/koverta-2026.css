@@ -8596,16 +8596,13 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-rady > *,
 .k .kh-vcene__rad > *,
 .k .kh-fakty__rad > * { transition-delay: 0ms; }
-.k .kh-cat__grid > *:nth-child(2),
-.k .kh-mat__grid > *:nth-child(2),
-.k .kh-rady > *:nth-child(2),
-.k .kh-vcene__rad > *:nth-child(2),
-.k .kh-cat__grid > *:nth-child(3),
-.k .kh-mat__grid > *:nth-child(3),
-.k .kh-vcene__rad > *:nth-child(3),
-.k .kh-cat__grid > *:nth-child(n + 4),
-.k .kh-mat__grid > *:nth-child(n + 4),
-.k .kh-vcene__rad > *:nth-child(n + 4),
+/* Odstup jednotlivých kariet je nastavený nižšie, vo vrstve príchodov. Tu
+   stál zoznam tých istých selektorov bez vlastného bloku — čiže sa čiarkou
+   spojil s pravidlom pre úvodný pás pod ním a každá karta od druhej ďalej
+   dostala `translateY(26px)`. Natrvalo: `.is-in` to už neprebíjalo, lebo
+   `:nth-child` má vyššiu váhu. Na každej podstránke tak prvá karta v rade
+   stála o 26 px vyššie než ostatné — fotografie, popisky aj päty kariet boli
+   rozhodené. */
 
 /* Úvodný pás sa skladá po vrstvách: najprv nadpis, potom veta, tlačidlá a
    nakoniec dôkaz. Je to tá istá dráha ako inde, len s dlhšími odstupmi —
@@ -11463,7 +11460,8 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-size-pick strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.15; letter-spacing:-.02em; }
 .k .kh-size-pick small { font-size:12px; color:var(--k-muted); }
 .k .kh-size-guide {
-  margin-top:14px;
+  /* Vysvetlivka stojí pod mriežkou kariet a 14 px ju k nim lepilo. */
+  margin-top:clamp(18px, 2vw, 26px);
   font-size:13px;
   line-height:1.55;
   color:var(--k-muted);
@@ -12902,3 +12900,60 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .kh-anat__zoznam b { display: block; font-family: var(--k-head); font-size: 16px; font-weight: 650; }
   .kh-anat__zoznam em { display: block; font-style: normal; font-size: 14px; color: var(--k-grey-soft); }
 }
+
+/* ==========================================================================
+   VRSTVA 120 · Karty v rade majú jednu mierku
+   ==========================================================================
+   Zadávateľ na to ukázal jednou vetou: „prečo nič nie je zarovno". Rad
+   kariet mal tri rôzne výšky fotografie, tri rôzne miesta, kde sa začínal
+   popis, a päty s údajmi na troch rôznych linkách. Karta pritom nie je
+   samostatný obrázok — je to jeden riadok tabuľky. Čo je v ňom rovnaké, má
+   stáť na rovnakej linke.
+
+   Prvá príčina bola v príchodovej animácii a je opravená vyššie. Druhá je
+   tu: fotografie majú rôzne pomery strán a karta ich nechala rásť, ako im
+   vyšlo. Dostávajú preto pevný pomer 4 : 3 a výrez, takže rad fotografií
+   začína aj končí na jednej linke bez ohľadu na to, čím bol nafotený.
+   ====================================================================== */
+.k .kh-mat__grid,
+.k .kh-cat__grid { align-items: stretch; }
+.k .kh-mat__card,
+.k .kh-cat__item { height: 100%; }
+
+.k .kh-mat__media,
+.k .kh-cat__media { aspect-ratio: 4 / 3; overflow: hidden; }
+.k .kh-mat__media > img,
+.k .kh-cat__media > img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Telo karty je stĺpec a päta v ňom sadá na dno. Údaje pod textom tak
+   stoja na jednej linke, aj keď je jeden popis o dva riadky dlhší. */
+.k .kh-mat__body { display: flex; flex-direction: column; flex: 1 1 auto; }
+.k .kh-mat__pata { margin-top: auto; }
+.k .kh-cat__body { display: flex; flex-direction: column; }
+
+/* Nadpisy v rade sú jedno- aj dvojriadkové. Bez spodnej hranice sa text pod
+   nimi rozíde o celý riadok; s ňou si rad drží spoločnú linku. Na telefóne
+   je karta sama v riadku a hranica by robila prázdne miesto. */
+@media (min-width: 620px) {
+  .k .kh-mat__title { min-height: 2.4em; }
+  .k .kh-vcene__nazov { min-height: 2.6em; }
+}
+.k .kh-vcene__rad { align-items: stretch; }
+.k .kh-vcene__polozka { display: flex; flex-direction: column; height: 100%; }
+/* Zoznam v každom stĺpci začína na jednej linke hneď pod nadpisom. Sadínm
+   na dno by sa krátky zoznam odtlačil od svojho nadpisu — pri odrážkach
+   nerozhoduje, kde končia, ale kde začínajú. */
+.k .kh-vcene__body { margin-top: 0; }
+
+/* Päta karty sadá na dno, takže rad kariet končí na jednej linke. Aby na
+   jednej linke začínala aj — teda aby deliaca čiarka nad údajmi nebola na
+   každej karte inde — dostáva hodnota spodnú hranicu dvoch riadkov. Bez nej
+   sa jednoriadková a dvojriadková hodnota rozídu o celý riadok. */
+@media (min-width: 620px) {
+  .k .kh-mat__hodnota { min-height: 2.6em; }
+}
+
+/* Kresba rezu nie je fotografia: orezať ju na 4 : 3 by odrezalo pätku aj
+   kótu. Schémy sa preto do rámca vkladajú celé. */
+.k .kh-mat__media > img[src$=".svg"],
+.k .kh-cat__media > img[src$=".svg"] { object-fit: contain; }
