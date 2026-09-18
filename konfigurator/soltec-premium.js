@@ -2060,13 +2060,33 @@
              než trvá pohľad naň. */
           if (hotovo && !vPohybe && r.maxDoostrenia > 1) {
             let vzorka = 1;
+            let predoslyRamec = 0;
+            let strop = r.maxDoostrenia;
             const zaciatok = performance.now();
-            const krok = () => {
+            const krok = (teraz) => {
               painter3D.doostr = 0;
               if (motionDetail || !painter3D) return;
+              /* Cena jednej vzorky sa nedá prečítať z trvania volania —
+                 volania na grafickú kartu sa vracajú hneď a kreslí sa až
+                 potom. Povie ju odstup dvoch po sebe idúcich snímok
+                 doostrovania, rovnako ako pri samoladení nižšie.
+
+                 Na stroji bez grafickej karty stojí jedna vzorka desatiny
+                 sekundy. Dvanásť ich znamená držať vlákno niekoľko sekúnd
+                 po tom, čo človek pustil myš: obraz sa dokresľuje dlhšie,
+                 než trvá pohľad naň, a stránka medzitým nereaguje. Strop
+                 sa preto sťahuje podľa toho, čo stroj stíha. Kde je
+                 doostrenie lacné, beží celé — tam je práve na to, aby sa
+                 vlna plechu nerozpadla na bodky. */
+              if (predoslyRamec) {
+                const odstup = teraz - predoslyRamec;
+                if (odstup > 200) strop = Math.min(strop, 2);
+                else if (odstup > 60) strop = Math.min(strop, 3);
+              }
+              predoslyRamec = teraz;
               if (!r.kresli(w, h, vzorka)) return;
               vzorka++;
-              if (vzorka < r.maxDoostrenia && performance.now() - zaciatok < 1500) {
+              if (vzorka < strop && performance.now() - zaciatok < 1500) {
                 painter3D.doostr = requestAnimationFrame(krok);
               }
             };

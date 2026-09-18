@@ -20,6 +20,14 @@ const VRSTVA = '[data-sp-render3d], [data-sp-depth-canvas]';
       const context = await browser.newContext({ viewport:mobile ? {width:390,height:844} : {width:1440,height:1000}, deviceScaleFactor:mobile?2:1 });
       await prepareContext(context);
       const page = await context.newPage();
+      /* Na stroji bez grafickej karty kreslí softvérový rasterizér jeden
+         pohľad aj pol sekundy, a tento test ich prejde štyridsaťosem na
+         každý rad. Kým sa fronta prekreslení vyprázdni, Playwright nestihne
+         spraviť snímku v základných tridsiatich sekundách — nie preto, že by
+         sa niečo zaseklo, ale preto, že stroj kreslí pomaly. Merané: snímka
+         samotná trvá dvesto milisekúnd, keď fronta dobehne. Výkon stráži
+         `soltec-motion-regression`, tento test stráži obraz. */
+      page.setDefaultTimeout(180000);
       const errors=[];
       page.on('pageerror',error=>errors.push(error.message));
       for (const kind of ['koverta','zahrada','carport','canopy','bio']) {

@@ -13072,3 +13072,25 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   max-width: 96ch;
 }
 .k .kh-prehlad figcaption strong { color: var(--k-ink); font-weight: 650; }
+
+/* Fotografia v ponuke vyplní, čo po texte ostane — karta má pevnú výšku a
+   obrázok je v nej pružný. Keď sa teda popis na jednej karte zalomil do
+   dvoch riadkov, ukázala o dvadsať pixelov menej obrázka než susedná a jej
+   nadpis aj výzva stáli inde. Zadávateľ na to ukázal presne: fotografia sa
+   má zarovnať s textom pod ňou.
+
+   Riešením nie je pevný pomer obrázka — ten by obsah vytlačil pod okraj
+   karty. Je ním spodná hranica popisu na dva riadky: text má potom na
+   všetkých kartách rovnakú výšku a obrázkom ostane rovnaký zvyšok. */
+.k .kh-ponuka__udaj { min-height: 2.9em; }
+
+/* Výzva sadá na dno karty, takže rad tlačidiel stojí na jednej linke.
+   Je zabalená v päte, takže odsadenie patrí tej. */
+.k .kh-ponuka__pata { margin-top: auto; }
+@media (max-width: 619px) {
+  /* Na telefóne sú karty po dvoch vedľa seba a do úzkeho stĺpca sa zalomí
+     aj nadpis, nielen popis. Hranica preto platí na oboje, inak sa fotky
+     v dvojici rozídu o celý riadok. */
+  .k .kh-ponuka__nazov { min-height: 2.3em; }
+  .k .kh-ponuka__udaj { min-height: 4.4em; }
+}
