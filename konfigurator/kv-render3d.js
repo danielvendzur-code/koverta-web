@@ -1321,7 +1321,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
          prístreškom vidieť tvar profilu, nie čierna diera. Kým bol
          súčiniteľ 1,35, vychádzali kanály vlny na podhľade tmavé a plech
          medzi väznicami vyzeral, akoby tam chýbal. */
-      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 2.30;
+      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 4.60;
       return new Float32Array([k(i[0], 0), k(i[1], 1), k(i[2], 2)]);
     };
 

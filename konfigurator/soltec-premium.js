@@ -3262,10 +3262,14 @@
              plochu a `sgn` smer, ktorým hlava z líca vystupuje. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
             const r = R || 9, sd = sgn || 1, h = dlzka || 7;
-            /* Menej než dva a pol pixela na hlavu znamená, že z nej na
-               obraze nebude šesťhran, ale bodka o inom jase než okolie —
-               a tých bodiek sú na ráme stovky. */
-            if (r * 2 < mmNaPixel * 2.5) return;
+            /* Skrutka sa kreslí, až keď je z nej naozaj skrutka.
+
+               Pri dvoch a pol pixeloch na hlavu z nej na obraze nie je
+               šesťhran, ale bodka o inom jase než okolie — a tých bodiek sú
+               na ráme a na podhľade stovky, takže to vyzerá ako špina. Desať
+               pixelov je hranica, za ktorou hlava dostane tvar; dovtedy
+               patrí pod rozlíšenie, nie do obrazu. Pri priblížení sa vráti. */
+            if (r * 2 < mmNaPixel * 10) return;
             const P = (t, a) => {
               const c = Math.cos(a) * r, d = Math.sin(a) * r;
               if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
