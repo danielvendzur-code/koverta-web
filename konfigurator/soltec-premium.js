@@ -2007,6 +2007,11 @@
             DIST: camera.DIST, target: camera.target, smer: camera.smer
           });
           r.nastavSvetlo({ zamracene: camera.zamracene ? 1 : 0 });
+          /* Pod horizontom je kamera pod rovinou zeme a dlažba, stokrát
+             väčšia než stavba, by vyplnila celý záber. Nekreslí sa — ale
+             ostáva v sieti, takže sa pri prechode cez horizont nemusí
+             prestavovať geometria. */
+          r.kresliPodklad = camera.smer[2] > 0.01;
           /* V pohybe ide o plynulosť, v pokoji o obraz. Prepínač je ten istý
              `motionDetail`, ktorý doteraz znižoval rozlíšenie. */
           r.nastavKvalitu(motionDetail, painter3D.stupen);
@@ -2019,7 +2024,7 @@
             const opis = {
               VW: camera.VW, VH: camera.VH, scale: camera.scale,
               ox: camera.ox, oy: camera.oy, DIST: camera.DIST,
-              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia
+              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia, hdr: 1
             };
             if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
             else sceneLife.draw(gl, opis, true);
@@ -2806,13 +2811,8 @@
           const geometryViewKey = model().kvGeom
             ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
             : [];
-          /* Či je kamera nad horizontom, patrí do kľúča pri každom rade, nie
-             len pri Koverte: pod horizontom sa nekreslí podklad, a keby sa
-             geometria neprestavala, ostala by v sieti dlažba z predošlého
-             pohľadu — na obraze potom vyplnila celý záber a prístrešok bol za
-             ňou. Prechod cez horizont je jedna prestavba, nie stovky. */
           const geometryKey = JSON.stringify(state) + '|'
-            + [overcast, stupenDetailu, krokPrahu, se > 0.01].concat(geometryViewKey).join(',');
+            + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const re3D = Boolean(pripravPainter3D());
@@ -2849,13 +2849,6 @@
                  kreslia nad horizontom a s vlastným poradím (`bias`);
                  samotná dlažba ho nemá. */
               if (o.aboveHorizon && o.bias) return;
-              /* Podklad sa pri pohľade spod horizontu nekreslí.
-
-                 Kamera je vtedy pod rovinou zeme a dlažba je stokrát väčšia
-                 než prístrešok — vyplní celý záber a model je za ňou. Na
-                 obraze to vyzerá, akoby prístrešok zmizol. Doterajší maliar
-                 mal presne to isté pravidlo; novému vykresľovaču chýbalo. */
-              if (o.aboveHorizon && se <= 0.01) return;
               /* Drobnosť menšia než pixel sa nekreslí. Meria sa uhlopriečka
                  obalu plochy, takže tenká, ale dlhá hrana profilu ostáva —
                  tá je na obraze vidieť ako svetlá čiara a patrí tam. */

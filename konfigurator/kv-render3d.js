@@ -383,6 +383,7 @@ uniform vec3 uStred;
 uniform float uDosah;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
 uniform float uPodkladDetail;
+uniform float uPodkladSkryt;
 
 layout(location = 0) out vec4 oFarba;
 layout(location = 1) out vec4 oNormHlbka;
@@ -517,6 +518,11 @@ void main() {
   vec2 podkladLad = vec2(0.0);
   float priehladnostSkla = -1.0;
   bool jePodklad = (priznakyBit & 1) != 0;
+  /* Pod horizontom sa podklad nekreslí: kamera je vtedy pod rovinou zeme a
+     dlažba, stokrát väčšia než stavba, by vyplnila celý záber. Rieši sa to
+     tu, nie vynechaním z geometrie — inak by sa pri každom prechode cez
+     horizont musela sieť prestavať a otáčanie by sa zaseklo. */
+  if (jePodklad && uPodkladSkryt > 0.5) discard;
   if (jePodklad && uPodkladDetail > 0.5) {
     /* Dlažba 90 × 90 cm — rovnaký raster, aký kreslila doterajšia scéna. Predchádzajúca verzia kreslila pravidelnú mriežku
        a vyzerala ako milimetrový papier: každá dlaždica rovnaká, každá škára
@@ -1625,6 +1631,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       gl.uniform3fv(P.u.uOzarBok, oz.bok);
       gl.uniform3fv(P.u.uOzarDole, oz.dole);
       gl.uniform1f(P.u.uPodkladDetail, stav.kvalita.podkladDetail === false ? 0 : 1);
+      gl.uniform1f(P.u.uPodkladSkryt, stav.kresliPodklad === false ? 1 : 0);
       gl.uniform1f(P.u.uOrezavat, stav.orezavat === false ? 0 : 1);
       {
         const o = stav.obal || [0, 0, 0, 1, 1, 1];
