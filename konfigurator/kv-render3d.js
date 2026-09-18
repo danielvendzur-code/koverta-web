@@ -143,8 +143,13 @@
        tak, ako je, antracit na stĺpe vyjde o dve tretiny svetlejší. Odmerané
        na tom istom zábere oboma vykresľovačmi. */
     lak:      { kov: 0.02, drsnost: 0.58, odraz: 0.80 },
-    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.62 },  /* žiarový zinok */
-    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.60 },  /* holý hliník, lemovanie */
+    /* Pozinkovaný plech podhľadu je zdola jediné, čo z konštrukcie vidno,
+       a je celý v tieni. Odrazivosť je vyššia než u hliníka zámerne: zinok
+       je svetlý a matný, hliník tmavší a zrkadlivý — kým mali obe rovnakú,
+       vyšiel podhľad Koverty tmavý a hliníkový rám Soltecu zdola prepálený
+       do biela. */
+    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 1.35 },  /* žiarový zinok */
+    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.44 },  /* holý hliník, lemovanie */
     /* Sklo sa nesvieti ako plocha. Nemá takmer žiadne rozptýlené svetlo:
        čo naň dopadne, buď sa odrazí, alebo prejde. Kým sa počítalo ako
        biely plech s priehľadnosťou, vyzerala zasklená strecha ako doska
@@ -1324,7 +1329,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
          prístreškom vidieť tvar profilu, nie čierna diera. Kým bol
          súčiniteľ 1,35, vychádzali kanály vlny na podhľade tmavé a plech
          medzi väznicami vyzeral, akoby tam chýbal. */
-      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 4.60;
+      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 2.00;
       return new Float32Array([k(i[0], 0), k(i[1], 1), k(i[2], 2)]);
     };
 

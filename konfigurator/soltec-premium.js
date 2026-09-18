@@ -2806,8 +2806,13 @@
           const geometryViewKey = model().kvGeom
             ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
             : [];
+          /* Či je kamera nad horizontom, patrí do kľúča pri každom rade, nie
+             len pri Koverte: pod horizontom sa nekreslí podklad, a keby sa
+             geometria neprestavala, ostala by v sieti dlažba z predošlého
+             pohľadu — na obraze potom vyplnila celý záber a prístrešok bol za
+             ňou. Prechod cez horizont je jedna prestavba, nie stovky. */
           const geometryKey = JSON.stringify(state) + '|'
-            + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
+            + [overcast, stupenDetailu, krokPrahu, se > 0.01].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const re3D = Boolean(pripravPainter3D());
