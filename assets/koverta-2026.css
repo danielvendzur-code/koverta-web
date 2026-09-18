@@ -12908,3 +12908,28 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
    kótu. Schémy sa preto do rámca vkladajú celé. */
 .k .kh-mat__media > img[src$=".svg"],
 .k .kh-cat__media > img[src$=".svg"] { object-fit: contain; }
+
+/* ==========================================================================
+   VRSTVA 121 · Dvojica fotografia + text je pás, nie celá obrazovka
+   ==========================================================================
+   Zadávateľ: „moc veľké rozloženie, ledva to vidno celé". Pás mal na
+   notebooku 811 px — celú výšku okna na jednu fotografiu a tri riadky
+   nadpisu. Nadpis šiel na 62 px, čo je viac než úvodný pás stránky, a
+   fotografia sa naťahovala za textom, takže čím viac textu, tým vyššia.
+
+   Nadpis ide na mierku ostatných nadpisov sekcií a fotografia dostáva
+   hornú hranicu. Obsah ostáva ten istý, len sa zmestí na obrazovku.
+   ====================================================================== */
+.k .kh-duo__telo .k-h2 { font-size: clamp(31px, 3.4vw, 48px); }
+.k .kh-duo__foto { min-height: clamp(260px, 30vw, 430px); max-height: 560px; }
+
+/* Dve výzvy vedľa seba sa do stĺpca zmestia — spolu merajú 573 px v stĺpci
+   širokom 662. Stáli pod sebou len preto, že riadok výziev nebol ohybný. */
+.k .kh-duo__akcia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 899px) {
+  .k .kh-duo__akcia { display: grid; }
+}
