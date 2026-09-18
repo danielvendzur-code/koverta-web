@@ -432,7 +432,7 @@ float vTieni(vec3 n) {
 
      V pohybe sa nehľadá vôbec — premenlivá mäkkosť okraja je to prvé, čo sa
      pri otáčaní stratí, a stojí päť čítaní z textúry na každý pixel. */
-  if (uTienVzoriek <= 4) {
+  if (uTienVzoriek <= 2) {
     float d0 = texture(uTienMapa, s.xy).r;
     return (s.z - posun) > d0 ? 0.0 : 1.0;
   }
@@ -1274,19 +1274,22 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
        pixeloch displeja a šetrí sa na tom, čo nevidieť. */
     stav.nastavKvalitu = function (pohyb, stupen) {
       const st = Math.max(0, Math.min(2, stupen === undefined ? 2 : stupen | 0));
-      /* Viacnásobné vzorkovanie je posledné, čo sa uberá — a aj tak nikdy
-         nie rozlíšenie. Na stroji bez grafickej karty (a taký je aj
-         prehliadač so softvérovým vykresľovaním) stojí štvornásobné
-         vzorkovanie celého plátna viac než všetko ostatné dokopy; tam je
-         lepšie mať plné rozlíšenie s tvrdšou hranou než polovičné s mäkkou.
-         Na akejkoľvek skutočnej karte sa na tento stupeň nikdy nezostúpi. */
-      stav.kvalita = pohyb
-        ? { tienVzoriek: st === 0 ? 1 : st === 1 ? 4 : 8,
-            ssao: false, ziara: false, podkladDetail: st >= 1,
-            vzoriek: st === 0 ? 1 : stav.maxVzoriek }
-        : { tienVzoriek: st === 0 ? 8 : 16,
-            ssao: st >= 1, ziara: st >= 1, podkladDetail: true,
-            vzoriek: st === 0 ? 2 : stav.maxVzoriek };
+      /* V pohybe a v pokoji musí byť obraz ten istý.
+
+         Doteraz sa počas ťahania vypínalo zatienenie v kútoch, žiara aj
+         kresba dlažby. Každá z nich mení tón celého záberu, takže po pustení
+         myši obraz zmenil farbu a divák to videl ako skok. To je horšie než
+         pár snímok navyše: kto model otáča, porovnáva tvar, a keď sa mu pod
+         rukou mení aj farba, nevie, čo vlastne vidí.
+
+         Zostáva preto jediný rozdiel, ktorý farbu nemení — počet vzoriek
+         tieňa. Ten rozhoduje o mäkkosti okraja tieňa, nie o jase plochy,
+         a pri otáčaní ho oko nestihne prečítať. Rozlíšenie sa neuberá nikdy. */
+      stav.kvalita = {
+        tienVzoriek: pohyb ? (st === 0 ? 4 : st === 1 ? 6 : 8) : (st === 0 ? 10 : 16),
+        ssao: true, ziara: true, podkladDetail: true,
+        vzoriek: stav.maxVzoriek
+      };
     };
 
     /* Koľko svetla vráti zem. Je to odrazivosť podkladu krát to, čo naň

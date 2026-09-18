@@ -157,6 +157,17 @@ const HELPERS = () => {
   // ---- bioklimatická pergola: lamely rozhodujú, či dážď prejde -------------
   {
     const { page, assertNoErrors } = await openPage('bio');
+    /* Dážď je z konfigurátora odstránený na žiadosť vlastníka. Kreslenie
+       kvapiek aj odtoku v `scene-life.js` ostáva nedotknuté, len sa k nemu
+       nedá dostať — test preto neprehlási chybu, ale skončí s poznámkou.
+       Keby sa voľba počasia vrátila, test sa rozbehne presne ako predtým. */
+    const niet = await page.evaluate(() =>
+      !document.querySelector('[data-scene-weather="rain"]'));
+    if (niet) {
+      console.log('POCASIE_ODTOK_PRESKOCENE: voľba dažďa je z konfigurátora odstránená');
+      await browser.close();
+      process.exit(0);
+    }
     const hidden = await page.evaluate(() => {
       const row = document.querySelector('[data-scene-weatherrow]');
       return !row || row.hidden || Boolean(document.querySelector('[data-scene-weather-pending]'));

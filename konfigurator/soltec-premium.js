@@ -2789,14 +2789,6 @@
           const mmNaPixel = Math.max(L, W, H) * 1.15
             / Math.max(120, (canvas.clientWidth || 900) * hustotaPlatna * manualZoom);
           const stupenDetailu = mmNaPixel <= 4.5 ? 2 : mmNaPixel <= 7.5 ? 1 : 0;
-          /* Vlna trapézového plechu: bok rebra je široký 32,5 mm a strecha
-             sa vidí šikmo, takže sa do výšky na obrazovke stlačí sínusom
-             výšky pohľadu. Pod pol druha pixela z nej nie je vlna, ale zrno —
-             a je to okolo tisíc plôch, teda osmina celého modelu. Vtedy sa
-             plech položí ako rovná tabuľa vo výške hrebeňa; vzhľad sa
-             nezmení, lebo hrebeň je aj tak to, čo z nej vidieť. */
-          const vlnaPx = 32.5 * Math.max(0.10, Math.abs(se)) / Math.max(0.01, mmNaPixel);
-          const vlnaVidno = vlnaPx >= 1.6;
           /* Prah drobností. Z 5 972 tmavých plôch modelu je 4 724 menších než
              tridsať milimetrov — kotviace platne, pätky, príruby a zvary
              vymodelované na milimeter. Pri bežnom zábere pripadá na pixel
@@ -2811,11 +2803,8 @@
           const krokPrahu = Math.pow(2, Math.round(Math.log2(Math.max(0.05, mmNaPixel)) * 2) / 2);
           const prahDrobnosti = krokPrahu * 1.6;
 
-          /* Útlm vlny závisí od výšky pohľadu, takže patrí len ku Koverte —
-             Soltec vlnu nemá a jeho geometria sa otáčaním kamery prestavovať
-             nesmie. */
           const geometryViewKey = model().kvGeom
-            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1]), vlnaVidno]
+            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
             : [];
           const geometryKey = JSON.stringify(state) + '|'
             + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
@@ -2855,6 +2844,13 @@
                  kreslia nad horizontom a s vlastným poradím (`bias`);
                  samotná dlažba ho nemá. */
               if (o.aboveHorizon && o.bias) return;
+              /* Podklad sa pri pohľade spod horizontu nekreslí.
+
+                 Kamera je vtedy pod rovinou zeme a dlažba je stokrát väčšia
+                 než prístrešok — vyplní celý záber a model je za ňou. Na
+                 obraze to vyzerá, akoby prístrešok zmizol. Doterajší maliar
+                 mal presne to isté pravidlo; novému vykresľovaču chýbalo. */
+              if (o.aboveHorizon && se <= 0.01) return;
               /* Drobnosť menšia než pixel sa nekreslí. Meria sa uhlopriečka
                  obalu plochy, takže tenká, ale dlhá hrana profilu ostáva —
                  tá je na obraze vidieť ako svetlá čiara a patrí tam. */
@@ -4847,22 +4843,6 @@
 
             const drawTrapSurface = (x0, x1, y0, y1, zAt, hex, upward) => {
               if (x1 <= x0 || y1 <= y0) return;
-              /* Keď z vlny na obrazovke nič nie je, tabuľa sa položí naplocho
-                 vo výške hrebeňa. Vo výške hrebeňa preto, že práve ten drží
-                 všetky vzdialenosti k lemovaniu — nižšia rovina by pod jeho
-                 ramenom otvorila škáru. */
-              if (!vlnaVidno) {
-                const zRovno = zAt(ty1);
-                const pts = upward
-                  ? [[x0, y0, zRovno], [x1, y0, zRovno], [x1, y1, zRovno], [x0, y1, zRovno]]
-                  : [[x0, y0, zRovno], [x0, y1, zRovno], [x1, y1, zRovno], [x1, y0, zRovno]];
-                quad(pts, upward ? shade(hex, 0.004) : shade(hex, -0.053), {
-                  material: upward ? undefined : 'zinc',
-                  normal: [0, 0, upward ? 1 : -1],
-                  cull: true, edge: false, raw: false, seamless: true, sealSplits: true
-                });
-                return;
-              }
               const cuts = trapBreaks(y0, y1);
               for (let i = 0; i < cuts.length - 1; i++) {
                 const a = cuts[i], b = cuts[i + 1];
