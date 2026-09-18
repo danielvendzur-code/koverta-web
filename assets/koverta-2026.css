@@ -12664,59 +12664,10 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
    v HTML ho nediktuje čítačke druhýkrát — tú istú vetu má nadpis vedľa. */
 .k-viz { position: relative; display: block; overflow: hidden; }
 
-.k .k-stitok,
-.k-stitok {
-  position: absolute;
-  left: clamp(11px, 1.9vw, 22px);
-  bottom: clamp(11px, 1.9vw, 22px);
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: min(calc(100% - 2 * clamp(11px, 1.9vw, 22px)), 32ch);
-  padding: clamp(8px, 0.85vw, 12px) clamp(11px, 1.15vw, 16px);
-  border-radius: var(--k-r-sm);
-  /* Priesvitná uhlíková plocha drží kontrast aj nad oblohou aj nad snehom,
-     a pritom nezakryje to, kvôli čomu tam fotka je. */
-  background: rgba(18, 23, 26, 0.56);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  color: var(--k-white);
-  text-align: left;
-  pointer-events: none;
-}
-.k .k-stitok b,
-.k-stitok b {
-  font-family: var(--k-head);
-  font-size: clamp(14px, 1.05vw, 16.5px);
-  font-weight: 650;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-.k .k-stitok > span,
-.k-stitok > span {
-  font-size: clamp(12.5px, 0.9vw, 14px);
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-/* Prehliadač bez rozostrenia pozadia (staršie Firefoxy, úsporný režim)
-   dostane hustejšiu plochu — inak by text na svetlej oblohe zmizol. */
-@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-  .k .k-stitok,
-  .k-stitok { background: rgba(18, 23, 26, 0.74); }
-}
-
-/* Na úzkej obrazovke sedí štítok tesnejšie pri hrane, aby mu ostal priestor
-   na text. Druhý riadok je doplnok, nie nosná informácia — na najmenších
-   šírkach ustúpi, aby štítok nezaberal tretinu fotky. */
-@media (max-width: 480px) {
-  .k .k-stitok,
-  .k-stitok { left: 10px; bottom: 10px; max-width: calc(100% - 20px); }
-  .k .k-stitok > span,
-  .k-stitok > span { display: none; }
-}
-
+/* Popiskový štítok na fotografii je preč. Zadávateľ: „popisok nemá byť na
+   fotke nikde, nechcel som to." Čo fotka ukazuje, povie nadpis alebo veta
+   vedľa nej — nie plachta cez roh snímky. `.k-viz` ostáva, je to rámec
+   vizualizácie, nie štítok. */
 
 /* ==========================================================================
    VRSTVA 121 · Konfigurátor na domovskej: dve značky, nie päť dlaždíc
