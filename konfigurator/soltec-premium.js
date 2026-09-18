@@ -1924,6 +1924,12 @@
            geometrie — podľa toho sa totiž stavia inak. */
         const pripravPainter3D = () => {
           if (painter3D !== null) return painter3D;
+          /* Núdzový vypínač. `?render=klasika` vráti doterajší hĺbkový maliar —
+             pre prípad, že by sa na nejakom stroji ukázal problém, ktorý sa
+             inak nedá obísť, a pre porovnanie oboch ciest pri ladení. */
+          try {
+            if (/[?&]render=klasika\b/.test(location.search)) { painter3D = false; return false; }
+          } catch (e) {}
           if (!window.KvRender3D) { painter3D = false; return false; }
           const surface = document.createElement('canvas');
           const r = window.KvRender3D.vytvor(surface);
@@ -1941,6 +1947,9 @@
             scheduleStage();
           }, false);
           painter3D = { r, surface, pohybMierka: 0.8, casy: [], poslednyCas: 0 };
+          /* Ladiaci prístup k vykresľovaču: `__KV3D_DEBUG.ladenie = 1..9`
+             vymení hotový obraz za jednu zložku (tieň, normála, albedo). */
+          try { window.__KV3D_DEBUG = r; } catch (e) {}
           return painter3D;
         };
 
@@ -1977,10 +1986,15 @@
             klucSiete = kluc;
           }
 
+          /* Kamera sa neprepočítava na pixely. `VW`, `scale`, `ox` a `oy` sú
+             v súradniciach výrezu SVG, nie v pixeloch plátna — a zrezaný ihlan
+             z nich vychádza v pomeroch, ktoré sú na rozlíšení nezávislé.
+             Prenásobenie hustotou displeja model o kúsok posunulo; na obraze
+             to nebolo vidieť, ale test prekrytia čítal pixel vedľa a hlásil
+             lemovanie zakryté strechou. Rozlíšenie patrí len do `kresli`. */
           r.nastavKameru({
-            VW: camera.VW * (w / cssW), VH: camera.VH * (h / cssH),
-            scale: camera.scale * (w / cssW),
-            ox: camera.ox * (w / cssW), oy: camera.oy * (h / cssH),
+            VW: camera.VW, VH: camera.VH, scale: camera.scale,
+            ox: camera.ox, oy: camera.oy,
             DIST: camera.DIST, target: camera.target, smer: camera.smer
           });
           r.nastavSvetlo({ zamracene: camera.zamracene ? 1 : 0 });
@@ -2002,6 +2016,9 @@
             else sceneLife.draw(gl, opis, true);
           } : null;
           canvas.dataset.renderer = 'webgl2-pbr';
+          /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
+          canvas.dataset.faceCount = String(faces.length);
+          try { window.__KV3D_FACES = faces; } catch (e) {}
           const hotovo = r.kresli(w, h);
           /* Samoladenie. Meria sa odstup dvoch po sebe idúcich snímok, nie
              trvanie volania: volania na grafickú kartu sa vracajú hneď a
@@ -2734,12 +2751,31 @@
                neprepočíta ani jedna plocha. To je celý rozdiel medzi
                sekaním a plynulým modelom. */
             if (re3D) {
+              /* Ozdoby podkladu — nakreslené škáry dlažby a zosvetľovací
+                 závoj — sú z čias, keď mal podklad jednu plochú farbu.
+                 Skutočné 3D si dlažbu kreslí samo, aj so škárou, tónom dosky
+                 a útlmom do diaľky. Tieto prekryvy ležia s podkladom v jednej
+                 rovine, takže by s ním súperili o hĺbku a pri horizonte sa
+                 rozpadli na hranaté fľaky. Sú poznateľné podľa toho, že sa
+                 kreslia nad horizontom a s vlastným poradím (`bias`);
+                 samotná dlažba ho nemá. */
+              if (o.aboveHorizon && o.bias) return;
               faces.push({
                 w: pts.map((point) => point.slice()),
                 normal,
                 sourceFill: fill,
                 material: o.material || '',
                 decal: o.decal || false,
+                /* Ktoré plochy sú jednostranné, vie geometria — tá istá
+                   informácia, ktorou doteraz orezávala odvrátené steny. */
+                cull: Boolean(o.cull),
+                /* Poradie, ktoré si geometria pýta. Doterajší maliar podľa
+                   neho kreslil detail nad jeho susedom — lemovanie nad plech,
+                   svetelný pás nad podhľad. Hĺbkový buffer o takom zámere nevie
+                   a pri dvoch plochách na jednej rovine rozhodne náhodne, takže
+                   trapéz začal prerážať cez lemovanie. Číslo ide na kartu a tam
+                   sa premení na nepatrný náskok v hĺbke. */
+                bias: Number(o.bias) || 0,
                 bg: layer <= -3 * ROOF_LAYER + 1000,
                 order: faces.length
               });
@@ -5594,10 +5630,14 @@
         // Serialising a canvas element alone would silently export a blank image.
         if (window.SP_TEST) window.SP_TEST.exportSVG = () => {
           drawStage();
-          if (!depthPainter) return new XMLSerializer().serializeToString(canvas);
+          /* Rastrová vrstva môže byť nová (3D) alebo doterajšia (hĺbkový
+             maliar). Bez tejto vetvy vracal export prázdne SVG, lebo `canvas`
+             je pri rastri len prázdna interakčná plocha. */
+          const raster = (painter3D && painter3D.surface) || (depthPainter && depthPainter.surface);
+          if (!raster) return new XMLSerializer().serializeToString(canvas);
           const vb = canvas.getAttribute('viewBox').split(' ').map(Number);
           const svg = svgEl('svg', { xmlns: 'http://www.w3.org/2000/svg', width: vb[2], height: vb[3], viewBox: canvas.getAttribute('viewBox') });
-          svg.appendChild(svgEl('image', { width: vb[2], height: vb[3], href: depthPainter.surface.toDataURL('image/png') }));
+          svg.appendChild(svgEl('image', { width: vb[2], height: vb[3], href: raster.toDataURL('image/png') }));
           return new XMLSerializer().serializeToString(svg);
         };
 

@@ -3,6 +3,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { chromium } = require('playwright');
 const { prepareContext } = require('./browser-qa');
+
+/* Rastrová vrstva má dve možné podoby: nový 3D vykresľovač (`webgl2-pbr`,
+   plátno `data-sp-render3d`) a pod ním doterajší hĺbkový maliar
+   (`webgl-depth`, plátno `data-sp-depth-canvas`). Test kontroluje to isté
+   na oboch — vrstvenie, zarovnanie, priblíženie aj plynulosť sú spoločné.
+   Preto sa nikde nevyžaduje konkrétny vykresľovač, iba to, že raster beží. */
+const RASTER = ['webgl2-pbr', 'webgl-depth'];
+const VRSTVA = '[data-sp-render3d], [data-sp-depth-canvas]';
 (async () => {
   fs.mkdirSync('qa-artifacts/depth', {recursive:true});
   const browser = await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -27,10 +35,10 @@ const { prepareContext } = require('./browser-qa');
         const stage = page.locator('[data-sp-canvas]').first();
         await stage.scrollIntoViewIfNeeded();
         await page.locator('[data-sp-cfg]').first().dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse'});
-        await page.waitForFunction(()=>document.querySelector('[data-sp-canvas]')?.dataset.renderer==='webgl-depth');
+        await page.waitForFunction((r)=>r.includes(document.querySelector('[data-sp-canvas]')?.dataset.renderer),RASTER);
         const layer = await page.evaluate(() => {
           const svg = document.querySelector('[data-sp-canvas]');
-          const surface = document.querySelector('[data-sp-depth-canvas]');
+          const surface = [...document.querySelectorAll('[data-sp-render3d], [data-sp-depth-canvas]')].find(n=>!n.hidden);
           const sr = svg && svg.getBoundingClientRect();
           const cr = surface && surface.getBoundingClientRect();
           return {
@@ -107,7 +115,7 @@ const { prepareContext } = require('./browser-qa');
               window.SP_TEST.setView(i*Math.PI*2/48,-0.18+1.3*(i%12)/11);
               window.SP_TEST.redrawStage();
               const el=document.querySelector('[data-sp-canvas]');
-              if(el.dataset.renderer!=='webgl-depth'||+el.dataset.faceCount<20) throw new Error('Missing model');
+              if(!['webgl2-pbr','webgl-depth'].includes(el.dataset.renderer)||+el.dataset.faceCount<20) throw new Error('Missing model');
               return performance.now()-t;
             },i));
           }
@@ -157,8 +165,10 @@ const { prepareContext } = require('./browser-qa');
                čo renderer nakreslil. */
             const grab = (moves) => page.evaluate((moves) => {
               for (const [az, el] of moves) { SP_TEST.setView(az, el); SP_TEST.redrawStage(); }
-              const c = document.querySelector('[data-sp-depth-canvas]');
-              const gl = c.getContext('webgl');
+              const c = [...document.querySelectorAll('[data-sp-render3d], [data-sp-depth-canvas]')].find(n=>!n.hidden);
+              /* Kontext sa musí pýtať v tej verzii, v akej ho plátno má —
+                 `getContext('webgl')` na plátne s WebGL2 vráti nulu. */
+              const gl = c.getContext('webgl2') || c.getContext('webgl');
               const px = new Uint8Array(c.width * c.height * 4);
               gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, px);
               /* Prázdna kresliaca pamäť by prešla ako „rovnaké pixely" — a
@@ -210,7 +220,7 @@ const { prepareContext } = require('./browser-qa');
               + JSON.stringify({base: baseFrame, after: orbit}));
             if (orbit.differing) {
               console.log('ORBIT MISMATCH', kind, key, mobile?'mobile':'desktop', JSON.stringify(orbit));
-              await page.locator('[data-sp-depth-canvas]').first()
+              await page.locator('[data-sp-render3d], [data-sp-depth-canvas]').first()
                 .screenshot({path:`qa-artifacts/depth/ORBIT-${kind}-${slug}-${mobile?'mobile':'desktop'}.png`});
             }
             assert.equal(orbit.differing, 0,

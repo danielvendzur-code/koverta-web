@@ -43,9 +43,9 @@ const HELPERS = () => {
       const cx = corners.reduce((a, q) => a + q.x, 0) / 4;
       const cy = corners.reduce((a, q) => a + q.y, 0) / 4;
       window.SP_TEST.redrawStage();
-      const canvas = svg.parentElement.querySelector('[data-sp-depth-canvas]');
+      const canvas = [...svg.parentElement.querySelectorAll('[data-sp-render3d], [data-sp-depth-canvas]')].find(n => !n.hidden);
       if (!canvas) { window['__slot' + slot] = null; done(null); return; }
-      const gl = canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
       const w = canvas.width, h = canvas.height, px = new Uint8Array(w * h * 4);
       gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
       const sx = w / vb[2], sy = h / vb[3];

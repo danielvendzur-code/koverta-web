@@ -158,6 +158,8 @@ precision highp int;
      vonkajšiu scénu s jednou oblohou dá presne to, čo treba: jasný pás pri
      horizonte, tmavší zenit, slnko a odraz zeme zdola. */
   const OBLOHA = `
+uniform vec3 uOdrazZeme;
+
 vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
   float h = clamp(dir.z * 0.5 + 0.5, 0.0, 1.0);
 
@@ -181,9 +183,13 @@ vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
   float t = pow(clamp(dir.z, 0.0, 1.0), 0.42);
   vec3 c = mix(horiz, zenit, t);
 
-  /* Pod horizontom je zem — jej odrazené svetlo je to, čo zospodu zosvetlí
-     podhľad strechy. Bez neho ostane celý spodok konštrukcie čierny. */
-  vec3 zem = mix(vec3(0.268, 0.262, 0.252), vec3(0.330, 0.330, 0.328), zamracene);
+  /* Pod horizontom je zem. Jej odrazené svetlo je to, čo zospodu zosvetlí
+     podhľad strechy — a nie je to konštanta: dlažba na poludňajšom slnku
+     odrazí niekoľkonásobne viac než tá istá dlažba pod mrakmi. Hodnota sa
+     preto počíta z odrazivosti podkladu a zo sily slnka a prichádza sem
+     hotová. Bez nej ostal celý spodok konštrukcie tmavý a drobné kotvenia
+     na ňom vyskočili ako svetlé bodky. */
+  vec3 zem = uOdrazZeme;
   c = mix(zem, c, smoothstep(-0.055, 0.035, dir.z));
 
   /* Slnečný kotúč a jeho halo. Pri zamračení sa kotúč stratí a ostane len
@@ -265,10 +271,12 @@ layout(location = 0) in vec3 aPoz;
 layout(location = 1) in vec3 aNorm;
 layout(location = 2) in vec3 aFarba;
 layout(location = 3) in vec4 aParam;   /* kov, drsnosť, priehľadnosť, príznak */
+layout(location = 4) in float aPoradie; /* náskok v hĺbke, ktorý si pýta geometria */
 
 uniform mat4 uPohladProjekcia;
 uniform mat4 uSlnkoMatica;
 uniform float uPosunPoNormale;
+uniform float uKrokPoradia;
 
 out vec3 vPoz;
 out vec3 vNorm;
@@ -277,7 +285,8 @@ out vec4 vParam;
 out vec4 vTien;
 
 void main() {
-  vPoz = aPoz;
+  vec3 poz = aPoz;
+  vPoz = poz;
   vNorm = aNorm;
   vFarba = aFarba;
   vParam = aParam;
@@ -286,8 +295,13 @@ void main() {
      alebo veľký (tieň odlepený od predmetu). Posun o niekoľko svetových
      texelov tieňovej mapy von z plochy tento kompromis nemá: je v tých
      istých jednotkách, v akých vzniká chyba. */
-  vTien = uSlnkoMatica * vec4(aPoz + aNorm * uPosunPoNormale, 1.0);
-  gl_Position = uPohladProjekcia * vec4(aPoz, 1.0);
+  vTien = uSlnkoMatica * vec4(poz + aNorm * uPosunPoNormale, 1.0);
+  gl_Position = uPohladProjekcia * vec4(poz, 1.0);
+  /* Detail, ktorý si geometria pýta navrch, dostane nepatrný náskok. Je to
+     to isté, čo robil doterajší maliar poradím kreslenia — len vyjadrené
+     tak, aby tomu rozumel hĺbkový test. */
+  if (aPoradie != 0.0) gl_Position.z -= uKrokPoradia * aPoradie * gl_Position.w;
+
 }
 `;
 
@@ -305,6 +319,7 @@ uniform float uZamracene;
 uniform sampler2D uTienMapa;
 uniform vec2 uTienKrok;
 uniform int uTienVzoriek;
+uniform float uOrezavat;
 uniform vec3 uStred;
 uniform float uDosah;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
@@ -391,12 +406,36 @@ float vTieni(vec3 n) {
 }
 
 void main() {
-  vec3 n = normalize(vNorm);
+  /* Dve normály, nie jedna.
+
+     nGeo je skutočná normála plochy tak, ako ju má geometria; n je tá
+     istá normála otočená k oku, keď sa naň plocha pozerá chrbtom — v scéne
+     je veľa jednostranných plechov hrúbky pol milimetra a bez otočenia by sa
+     podhľad strechy pri pohľade zdola prepadol do čierna.
+
+     Rozdelené musia byť preto, že otočená normála smie svietiť len z oblohy.
+     Keď sa použila aj na priame slnko, slnko „presvitalo" cez strechu na
+     podhľad — a keďže tieňová mapa mu v tom čiastočne bránila, vznikla na
+     podhľade bodkovaná mriežka. Priame svetlo preto počíta s tým, ako plocha
+     naozaj stojí; rozptýlené z oblohy s tým, ktorú stranu vidíme. */
+  vec3 nGeo = normalize(vNorm);
   vec3 v = normalize(uOko - vPoz);
-  /* Plocha otočená chrbtom: normálu otočíme, nech sa nezatemní. V scéne je
-     veľa jednostranných plechov hrúbky pol milimetra a bez tohto by sa
-     podhľad strechy pri pohľade zdola prepadol do čierna. */
-  if (dot(n, v) < 0.0) n = -n;
+
+  /* Jednostranná plocha sa odzadu nekreslí vôbec.
+
+     Plechy v tejto scéne majú nulovú hrúbku: horná a spodná strana ležia na
+     tej istej rovine. Keď sa kreslia obe, hĺbkový test medzi nimi rozhoduje
+     pixel po pixeli a z podhľadu je bodkovaná mriežka — raz vyhrá spodok,
+     raz vrch, a ten druhý dostane slnko, ktoré by cez strechu nikdy
+     neprešlo. Orezanie tu, vo fragmente, je presné a nezávisí od kamery,
+     takže geometria môže ostať na karte bez prestavby. */
+  float priznaky = vParam.w;
+  /* Jednostranná plocha sa odzadu nekreslí — tak, ako to robila aj doterajšia
+     geometria. Ostatné sa kreslia z oboch strán; po rozostúpení o hrúbku
+     plechu si už neprekážajú. */
+  if (uOrezavat > 0.5 && priznaky >= 2.0 && dot(nGeo, v) < 0.0) discard;
+
+  vec3 n = dot(nGeo, v) < 0.0 ? -nGeo : nGeo;
 
   float kov = vParam.x;
   float drsnost = clamp(vParam.y, 0.035, 1.0);
@@ -405,20 +444,36 @@ void main() {
      v zábere a práve ona prezradí, že ide o render. Škáry dlažby, zrnitosť
      a mierna zmena drsnosti stačia — ostatné dorobí svetlo. */
   vec3 podkladFarba = vFarba;
-  if (vParam.w > 0.5) {
-    /* Dlažba 60 × 60 cm. Predchádzajúca verzia kreslila pravidelnú mriežku
+  bool jePodklad = (priznaky == 1.0 || priznaky == 3.0);
+  if (jePodklad) {
+    /* Dlažba 90 × 90 cm — rovnaký raster, aký kreslila doterajšia scéna. Predchádzajúca verzia kreslila pravidelnú mriežku
        a vyzerala ako milimetrový papier: každá dlaždica rovnaká, každá škára
        rovnako tmavá. Skutočný betón je na každej doske o kúsok inak svetlý,
        škára je úzka a miestami zanesená a cez celú plochu ide pomalá vlna
        vlhkosti. To je všetko, čo treba — zvyšok dorobí svetlo. */
-    vec2 uv = vPoz.xy / 600.0;
+    vec2 uv = vPoz.xy / 900.0;
+
+    /* Útlm kresby do diaľky — dva, lebo dlaždica a jej škára majú celkom
+       iné rozmery. Doska má 90 cm a na tridsiatich metroch má ešte tridsať
+       pixelov; škára má dva centimetre a na tej istej vzdialenosti nemá ani
+       jeden. Kým sa útlm počítal z dosky, škáry sa do diaľky rozsypali na
+       tmavé bodky — presne to, čo na zábere rušilo pri horizonte. Každá
+       zložka sa preto utlmí podľa vlastnej šírky, tak ako by to spravilo
+       filtrovanie textúry. */
+    vec2 zmena = vec2(length(dFdx(uv)), length(dFdy(uv)));
+    float naPixel = max(zmena.x, zmena.y);
+    float ostrost = 1.0 - smoothstep(0.016, 0.075, naPixel);      /* doska 90 cm */
+    float ostrostSkary = 1.0 - smoothstep(0.006, 0.028, naPixel); /* škára 2 cm */
+    float ostrostZrna = ostrostSkary;                              /* zrno 1,8 cm */
+
     vec2 bunka = floor(uv);
     vec2 vnutri = fract(uv);
 
     /* Škára: úzka a nie úplne rovnomerná. */
     vec2 kOkraju = abs(vnutri - 0.5);
     float sirkaSkary = 0.468 + 0.010 * fract(sin(dot(bunka, vec2(7.3, 19.7))) * 9137.1);
-    float skara = 1.0 - smoothstep(sirkaSkary, sirkaSkary + 0.022, max(kOkraju.x, kOkraju.y));
+    float skara = 1.0 - smoothstep(sirkaSkary, sirkaSkary + 0.024, max(kOkraju.x, kOkraju.y));
+    skara *= ostrostSkary;
 
     /* Tón dosky. Rozdiely sú malé — päť percent stačí, aby plocha prestala
        byť jedna doska a stala sa z nej dlažba. */
@@ -429,10 +484,19 @@ void main() {
     /* Jemné zrno v mierke centimetrov. */
     float zrno = fract(sin(dot(floor(vPoz.xy / 18.0), vec2(12.99, 78.23))) * 43758.5453);
 
-    podkladFarba *= 0.955 + tonDosky * 0.052 + vlna * 0.030 + zrno * 0.022;
+    /* Vlna je veľká a do diaľky sa nerozpadne, tak ostáva v plnej sile;
+       všetko ostatné sa s dlaždicou zmenšuje, tak sa s ňou aj utlmí. */
+    /* Každá zložka sa utlmí podľa vlastnej mierky a to, čo sa utlmí, sa
+       nahradí svojou strednou hodnotou — inak by plocha do diaľky menila jas
+       a vznikol by z toho pás. */
+    podkladFarba *= 0.955
+                  + tonDosky * 0.052 * ostrost + (1.0 - ostrost) * 0.026
+                  + zrno * 0.022 * ostrostZrna + (1.0 - ostrostZrna) * 0.011
+                  + vlna * 0.030;
     podkladFarba *= mix(1.0, 0.86, skara);
     /* Škára je matnejšia než doska, doska má miestami hladšie miesta. */
-    drsnost = clamp(drsnost * (0.93 + zrno * 0.14) + skara * 0.05, 0.035, 1.0);
+    drsnost = clamp(drsnost * (0.93 + zrno * 0.14 * ostrostZrna + (1.0 - ostrostZrna) * 0.07)
+                  + skara * 0.05, 0.035, 1.0);
   }
   float a = drsnost * drsnost;
 
@@ -445,13 +509,15 @@ void main() {
   /* --- priame slnko --------------------------------------------------- */
   vec3 l = uSlnko;
   vec3 h = normalize(l + v);
-  float ndl = max(dot(n, l), 0.0);
-  float ndh = max(dot(n, h), 0.0);
+  /* Priame slnko ide cez skutočnú normálu: chrbát plochy slnko nedostane. */
+  float ndl = max(dot(nGeo, l), 0.0);
+  float ndh = max(dot(nGeo, h), 0.0);
   float vdh = max(dot(v, h), 0.0);
+  float ndvGeo = max(dot(nGeo, v), 1e-4);
 
-  float tien = ndl > 0.0 ? vTieni(n) : 1.0;
+  float tien = ndl > 0.0 ? vTieni(nGeo) : 1.0;
 
-  vec3 spec = fresnel(f0, vdh) * rozdelenieGGX(ndh, a) * viditelnostSmith(ndv, ndl, a);
+  vec3 spec = fresnel(f0, vdh) * rozdelenieGGX(ndh, a) * viditelnostSmith(ndvGeo, ndl, a);
   vec3 dif = difAlbedo / PI;
   vec3 priame = (dif + spec) * uSvetloSlnka * ndl * tien;
 
@@ -484,6 +550,8 @@ void main() {
   else if (uLadenie == 7) { float r = rozdielHlbky(); farba = r < 0.0 ? vec3(0.0, 0.0, 1.0) : vec3(r * 900.0); }
   else if (uLadenie == 8) { vec3 s = vTien.xyz / vTien.w * 0.5 + 0.5; farba = vec3(s.z); }
   else if (uLadenie == 9) { vec3 s = vTien.xyz / vTien.w * 0.5 + 0.5; farba = vec3(texture(uTienMapa, s.xy).r); }
+  else if (uLadenie == 10) { float d = dot(nGeo, v); farba = d < 0.0 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0); }
+  else if (uLadenie == 11) farba = nGeo * 0.5 + 0.5;
 
   /* Tenký vzdušný závoj do hĺbky. Drží oddelenie predného a zadného stĺpa
      aj vtedy, keď majú rovnakú farbu. */
@@ -496,9 +564,13 @@ void main() {
      stojí na doske, nie na dvore. Plocha sa preto do diaľky rozplynie do
      farby prostredia. */
   float priehladnost = vParam.z;
-  if (vParam.w > 0.5) {
+  if (jePodklad) {
     float r = length(vPoz.xy - uStred.xy) / max(1.0, uDosah);
-    float zanik = 1.0 - smoothstep(0.72, 1.06, r);
+    /* Zánik začína skôr, než by sa dalo. Ďaleká dlažba už nemá čo ukázať:
+       dlaždica má na obrazovke pár pixelov, kresba sa utlmila do hladkého
+       tónu a zatienenie do šumu. Skorší prechod do prostredia to všetko
+       schová a zároveň drží dojem otvoreného dvora. */
+    float zanik = 1.0 - smoothstep(0.42, 0.92, r);
     vec3 dalka = farbaOblohy(normalize(vec3(vPoz.xy - uOko.xy, -0.06)), uSlnko, uZamracene);
     farba = mix(dalka, farba, zanik);
   }
@@ -538,6 +610,7 @@ uniform mat4 uProjekcia;
 uniform mat4 uProjekciaInv;
 uniform vec2 uRozmer;
 uniform float uPolomer;
+uniform float uDosahAO;
 out vec4 oFarba;
 
 vec3 pozZHlbky(vec2 uv, float d) {
@@ -568,6 +641,15 @@ void main() {
   if (nv.a < 0.5) { oFarba = vec4(1.0); return; }
 
   vec3 p = pozZHlbky(vUV, d);
+
+  /* Zatienenie v kútoch je efekt dotyku dvoch plôch — na tridsiatich metroch
+     nemá čo robiť. Pri horizonte navyše jedna vzorka preskočí desiatky metrov
+     a z plochy sa stane blokový šum, ktorý rozostrenie roztiahne do
+     obdĺžnikov. Za hranicou dosahu sa preto nepočíta vôbec. */
+  float vzdial = -p.z;
+  if (vzdial > uDosahAO) { oFarba = vec4(1.0); return; }
+  float utlm = 1.0 - smoothstep(uDosahAO * 0.72, uDosahAO, vzdial);
+
   vec3 n = normalize(nv.xyz * 2.0 - 1.0);
 
   float uhol = sum(vUV * uRozmer) * 6.2831853;
@@ -586,9 +668,16 @@ void main() {
     float dv = texture(uHlbka, uv).r;
     vec3 pv = pozZHlbky(uv, dv);
     float rozsah = smoothstep(0.0, 1.0, uPolomer / max(1e-4, abs(p.z - pv.z)));
-    zatienenie += (pv.z >= vzorka.z + 0.012 ? 1.0 : 0.0) * rozsah;
+    /* Predsudok musí byť v jednotkách scény, nie v abstraktných stotinách.
+       Scéna je v milimetroch, takže 0,012 znamenalo dvanásť mikrometrov —
+       hlboko pod presnosťou hĺbkovej pamäte. Každá vzorka na rovnej dlažbe
+       tým vyšla náhodne a z celej plochy bol jemný šum, ktorý rozostrenie
+       roztiahlo do fľakov. Teraz je viazaný na polomer vzorkovania aj na
+       vzdialenosť od kamery, kde presnosť hĺbky prirodzene klesá. */
+    float predsudok = max(uPolomer * 0.035, abs(p.z) * 0.0016);
+    zatienenie += (pv.z >= vzorka.z + predsudok ? 1.0 : 0.0) * rozsah;
   }
-  oFarba = vec4(vec3(1.0 - zatienenie / 16.0), 1.0);
+  oFarba = vec4(vec3(1.0 - (zatienenie / 16.0) * utlm), 1.0);
 }
 `;
 
@@ -759,7 +848,10 @@ void main() {
       depth: false,
       stencil: false,
       premultipliedAlpha: false,
-      preserveDrawingBuffer: false,
+      /* Zachovaná kresliaca pamäť: test aj export obrázka čítajú z plátna až
+         po dokreslení snímku. Bez nej by dostali prázdno. Stojí to trochu
+         pamäte navyše, nie výkon. */
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance'
     });
     if (!gl) return null;
@@ -819,7 +911,7 @@ void main() {
       for (const f of plochy) if (f.w && f.w.length > 2) pocetVrcholov += (f.w.length - 2) * 3;
       if (!pocetVrcholov) { stav.siet = null; return; }
 
-      const PLAVAKOV = 13;
+      const PLAVAKOV = 14;
       const data = new Float32Array(pocetVrcholov * PLAVAKOV);
 
       /* Nepriehľadné a priehľadné zvlášť: priehľadné sa musia kresliť
@@ -857,7 +949,10 @@ void main() {
             const od = mat.odraz === undefined ? 1 : mat.odraz;
             data[at + 6] = farba[0] * od; data[at + 7] = farba[1] * od; data[at + 8] = farba[2] * od;
             data[at + 9] = mat.kov; data[at + 10] = mat.drsnost;
-            data[at + 11] = farba[3]; data[at + 12] = f.bg ? 1.0 : 0.0;
+            /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
+            data[at + 11] = farba[3];
+            data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0);
+            data[at + 13] = f.bias || 0;
             at += PLAVAKOV;
             for (let k = 0; k < 3; k++) {
               if (p[k] < hranice[k]) hranice[k] = p[k];
@@ -897,6 +992,7 @@ void main() {
       g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 3, g.FLOAT, false, krok, 12);
       g.enableVertexAttribArray(2); g.vertexAttribPointer(2, 3, g.FLOAT, false, krok, 24);
       g.enableVertexAttribArray(3); g.vertexAttribPointer(3, 4, g.FLOAT, false, krok, 36);
+      g.enableVertexAttribArray(4); g.vertexAttribPointer(4, 1, g.FLOAT, false, krok, 52);
       g.bindVertexArray(null);
 
       s.pocetNepriehl = deliaci;
@@ -918,10 +1014,48 @@ void main() {
     stav.nastavKameru = function (k) {
       const { VW, VH, scale, ox, oy, DIST, target, smer } = k;
       const oko = vec3.add(target, vec3.mul(smer, DIST));
-      const pohlad = mat4.lookAt(oko, target, [0, 0, 1]);
 
-      const near = Math.max(DIST * 0.02, 1);
-      const far = DIST * 4.0;
+      /* Pohľadová matica sa neskladá cez `lookAt`, ale presne z tých osí,
+         v ktorých premieta zvyšok konfigurátora.
+
+         Dôvod je vážny: bežný `lookAt` má os doprava ako cross(hore, dozadu),
+         čo je opačná strana, než akú používa doterajšie premietanie. Model sa
+         tým zrkadlil — a na prístrešku, ktorý je skoro symetrický, to nie je
+         na prvý pohľad vidieť. Vidieť to bolo až na aute: stálo na opačnej
+         strane než v skutočnosti, rovnako box aj spád strechy. Osi preto
+         vychádzajú z tých istých vzorcov ako `project`, ktorým merajú aj
+         kontroly.
+
+           doprava  ( cos az,  sin az, 0 )
+           hore     ( sin az · sin el, −cos az · sin el, cos el )
+           dozadu   (−sin az · cos el,  cos az · cos el, sin el )   = smer */
+      const ce = Math.hypot(smer[0], smer[1]);          /* cos(el) */
+      const se = smer[2];                                /* sin(el) */
+      const ca = ce > 1e-9 ?  smer[1] / ce : 1;          /* cos(az) */
+      const sa = ce > 1e-9 ? -smer[0] / ce : 0;          /* sin(az) */
+      const doprava = [ca, sa, 0];
+      const hore = [sa * se, -ca * se, ce];
+      const dozadu = [smer[0], smer[1], smer[2]];
+      const pohlad = new Float32Array([
+        doprava[0], hore[0], dozadu[0], 0,
+        doprava[1], hore[1], dozadu[1], 0,
+        doprava[2], hore[2], dozadu[2], 0,
+        -vec3.dot(doprava, oko), -vec3.dot(hore, oko), -vec3.dot(dozadu, oko), 1
+      ]);
+
+      /* Orezové roviny sa priložia tesne na scénu. Doterajších 2 % z
+         vzdialenosti kamery dávalo pomer blízka : diaľka okolo 1 : 200 a pri
+         takom rozsahu nezvládne ani 24-bitová hĺbka rozlíšiť dve strany
+         plechu hrubého pol milimetra — na podhľade aj na streche z toho boli
+         bodkované škvrny, kde si horná a spodná plocha vymieňali prvenstvo.
+         Priložené roviny dajú pomer okolo 1 : 2 a súboj zmizne. */
+      const o = stav.obal;
+      const polomerScény = o
+        ? Math.hypot(o[3] - o[0], o[4] - o[1], o[5] - o[2]) / 2
+        : DIST * 0.5;
+      const rezerva = Math.max(polomerScény * 1.25, DIST * 0.08);
+      const near = Math.max(DIST - rezerva, DIST * 0.04, 1);
+      const far = DIST + rezerva;
       const m = near / DIST;
       const l = (0 - ox) / scale * m;
       const r = (VW - ox) / scale * m;
@@ -943,7 +1077,20 @@ void main() {
         : { tienVzoriek: 16, ssao: true, ziara: true };
     };
 
+    /* Koľko svetla vráti zem. Je to odrazivosť podkladu krát to, čo naň
+       dopadne — priame slnko podľa jeho výšky plus obloha — delené π, lebo
+       ide o jas, nie o ožiarenie. Súčiniteľ na konci je za viacnásobný
+       odraz, ktorý sa inak nepočíta. */
+    stav.odrazZeme = function () {
+      const s = stav.slnko, i = stav.svetloSlnka, z = Math.max(0, s[2]);
+      const obloha = stav.zamracene > 0.5 ? 0.62 : 0.42;
+      const odrazivost = stav.odrazivostPodkladu || [0.34, 0.33, 0.31];
+      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 1.35;
+      return new Float32Array([k(i[0], 0), k(i[1], 1), k(i[2], 2)]);
+    };
+
     stav.nastavSvetlo = function (s) {
+      if (s.odrazivostPodkladu) stav.odrazivostPodkladu = s.odrazivostPodkladu;
       if (s.slnko) stav.slnko = vec3.norm(s.slnko);
       if (s.zamracene !== undefined) stav.zamracene = s.zamracene;
       if (s.svetloSlnka) stav.svetloSlnka = s.svetloSlnka;
@@ -1122,6 +1269,7 @@ void main() {
         gl.uniform3fv(p.u.uOko, stav.kamera.oko);
         gl.uniform3fv(p.u.uSlnko, stav.slnko);
         gl.uniform1f(p.u.uZamracene, stav.zamracene);
+        gl.uniform3fv(p.u.uOdrazZeme, stav.odrazZeme());
       });
       gl.enable(gl.DEPTH_TEST);
       gl.depthMask(true);
@@ -1134,10 +1282,17 @@ void main() {
       gl.uniform3fv(P.u.uSlnko, stav.slnko);
       gl.uniform3fv(P.u.uSvetloSlnka, stav.svetloSlnka);
       gl.uniform1f(P.u.uZamracene, stav.zamracene);
+      gl.uniform3fv(P.u.uOdrazZeme, stav.odrazZeme());
       gl.uniform1i(P.u.uLadenie, stav.ladenie | 0);
       gl.uniform2f(P.u.uTienKrok, 2.2 / t.rozmer, 2.2 / t.rozmer);
       gl.uniform1f(P.u.uPosunPoNormale, stav.posunPoNormale);
+      /* Náskok je v hĺbke po orezaní. Roviny sú priložené tesne na scénu, tak
+         stačí zlomok promile — dosť na to, aby lemovanie vyhralo nad plechom,
+         a málo na to, aby čokoľvek preplávalo cez susedný diel. */
+      gl.uniform1f(P.u.uKrokPoradia, 1.6e-6);
+
       gl.uniform1i(P.u.uTienVzoriek, stav.kvalita.tienVzoriek);
+      gl.uniform1f(P.u.uOrezavat, stav.orezavat === false ? 0 : 1);
       {
         const o = stav.obal || [0, 0, 0, 1, 1, 1];
         gl.uniform3f(P.u.uStred, (o[0] + o[3]) / 2, (o[1] + o[4]) / 2, (o[2] + o[5]) / 2);
@@ -1235,6 +1390,11 @@ void main() {
         gl.uniformMatrix4fv(p.u.uProjekciaInv, false, invertuj(stav.kamera.projekcia));
         gl.uniform2f(p.u.uRozmer, c.aw, c.ah);
         gl.uniform1f(p.u.uPolomer, rozmerScény * 0.016);
+        /* Dosah sa počíta od kamery a je to vzdialenosť ku stavbe plus jej
+           veľkosť. Za ňou už zatienenie nemá čo hľadať: sú tam len rovné
+           plochy bez kútov a jediné, čo by pridalo, je blokový šum — presne
+           ten pás pri horizonte, ktorý sa na zábere ukázal. */
+        gl.uniform1f(p.u.uDosahAO, stav.kamera.DIST + rozmerScény * 0.55);
       });
       }
 
