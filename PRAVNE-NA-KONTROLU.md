@@ -54,26 +54,38 @@ vybavenie reklamácie a poučenie o právach vychádzajú z tej istej starej
 
 ## Zmenené 17. 9. 2026, na schválenie pred spustením
 
-Znenie ostáva také, aké bolo na starom webe. Zmenili sa iba tri miesta,
-ktoré by po prepnutí domény hovorili o niečom, čo na webe nie je:
+Znenie ostáva také, aké bolo na starom webe. Zmenilo sa jediné miesto:
 
 | Kde | Čo sa stalo | Prečo |
 |---|---|---|
-| Čl. IV ods. 2 | vypustený odsek **Objednávka cez web stránku** (vloženie do košíka a tlačidlo „Objednať s povinnosťou platby") | web nemá košík ani objednávkové tlačidlo; objednáva sa e-mailom podľa odseku, ktorý ostal |
 | Čl. VII ods. 2 a 3 | doprava **aj** montáž sú v cene; osobitne sa účtuje len to, čo ponuka výslovne neobsahuje (podklad, základy, elektroinštalácia, odstránenie prekážok) | rozhodnutie majiteľa; rovnako to hovorí web aj konfigurátor |
-| Čl. VIII | vypustená možnosť **online platobnou kartou cez platobnú bránu** | web nemá platobnú bránu |
 
 Nič iné sa v obchodných podmienkach nemenilo.
 
-**Ostáva na rozhodnutie majiteľa:** čl. II definuje užívateľský účet a
-prihlasovacie údaje a čl. V opisuje registráciu. Nový web registráciu
-neponúka. Text sme nechali tak, ako bol; ak sa má vypustiť, treba to
-povedať.
+**Rozhodnutie majiteľa zo 17. 9. 2026: web bude e-shop.** Odseky, ktoré sme
+predtým vypustili, lebo web v deň spustenia košík nemá, sú preto späť v
+pôvodnom znení:
+
+- Čl. IV ods. 2, **Objednávka cez web stránku** — vloženie do košíka a
+  tlačidlo „Objednať s povinnosťou platby"
+- Čl. VIII — **online platobnou kartou cez platobnú bránu**
+- Čl. II a V — užívateľský účet, prihlasovacie údaje a registrácia ostávajú
+
+Prístrešky Koverta pre autá aj záhradné prístrešky sú v štruktúrovaných
+údajoch vedené ako produkty s cenou, dostupnosťou a odkazom do konfigurátora,
+tak ako boli na starom webe.
+
+**Čo z toho vyplýva pre deň spustenia:** kým košík a platobná brána reálne
+nebežia, tieto tri odseky opisujú stav, ktorý na webe ešte nie je. Je to
+zámer majiteľa, nie prehliadnutie — ale právnik má o tom vedieť, lebo
+spotrebiteľ sa o podmienky opiera.
 
 ### `ochrana-sukromia/index.html`
 
-Dokument ostáva bez zmeny. Meranie návštevnosti sa z webu odstránilo, takže
-nebolo čo dopĺňať.
+Dokument ostáva bez zmeny. Meranie návštevnosti (Google Tag Manager a
+Microsoft Clarity) na webe beží ďalej a dokument ho menuje, takže nebolo čo
+dopĺňať. Lištu so súhlasom s cookies rieši platené rozšírenie na strane
+obchodu, nie tento web.
 
 ## Ako to zapracovať
 

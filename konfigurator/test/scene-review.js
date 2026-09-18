@@ -20,7 +20,7 @@ const {prepareContext}=require('./browser-qa');
       await page.locator('.kv-suhlas').waitFor({state:'detached',timeout:10000}).catch(()=>{});
       const stage=page.locator('[data-sp-canvas]').first();await stage.scrollIntoViewIfNeeded();
       await page.locator('[data-sp-cfg]').first().dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse'});
-      await page.waitForFunction(()=>window.SP_TEST?.scene&&document.querySelector('[data-sp-canvas]').dataset.renderer==='webgl-depth');
+      await page.waitForFunction(()=>window.SP_TEST?.scene&&['webgl2-pbr','webgl-depth'].includes(document.querySelector('[data-sp-canvas]').dataset.renderer));
       await page.evaluate(({garden})=>{
         for(const [sel,value] of [['[data-sp-w]',garden?4500:6000],['[data-sp-l]',6000]]){
           const e=document.querySelector(sel);if(!e)continue;

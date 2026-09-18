@@ -458,9 +458,17 @@
     gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);gl.deleteShader(v);gl.deleteShader(f);
     if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;
   }
+  /* Dve premietania v jednom. Doterajší vykresľovač dodáva kameru ako
+     obrazovkové čísla (mierka, posun, vzdialenosť) a `project` z nich skladá
+     výstup rovno v orezových súradniciach. Nový 3D vykresľovač má poriadnu
+     maticu — vtedy stačí ňou vynásobiť a hĺbka sadne na tú istú os ako
+     u konštrukcie. Bez toho by autá aj dážď zmizli: kreslili sa do kontextu,
+     ktorý už nikto nepoužíva. */
   const projection=`
     uniform vec3 extent; uniform vec4 orbit; uniform vec4 fit; uniform vec3 lens;
+    uniform mat4 mvp; uniform float useMvp;
     vec4 project(vec3 p) {
+      if (useMvp > 0.5) return mvp * vec4(p, 1.0);
       vec3 q=p-extent*0.5;
       float rx=q.x*orbit.x+q.y*orbit.y;
       float ry=-q.x*orbit.y+q.y*orbit.x;
@@ -675,6 +683,10 @@
     const U=(program,name)=>place(program,name,false);
     const A=(program,name)=>place(program,name,true);
     function uniformCamera(gl,p,camera) {
+      /* Matica má prednosť; keď nie je, ostáva pôvodná cesta. */
+      const umvp=place(p,'mvp'), uuse=place(p,'useMvp');
+      if(camera.mvp){ if(umvp)gl.uniformMatrix4fv(umvp,false,camera.mvp); if(uuse)gl.uniform1f(uuse,1); }
+      else if(uuse)gl.uniform1f(uuse,0);
       const u=(n)=>U(p,n),c=context;
       gl.uniform3f(u('extent'),c.L,c.W,c.H);
       gl.uniform4f(u('orbit'),Math.cos(c.az),Math.sin(c.az),Math.cos(c.el),Math.sin(c.el));

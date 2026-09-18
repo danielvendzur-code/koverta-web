@@ -1890,6 +1890,212 @@
           const want = median > 320 ? 1.3 : median > 180 ? 1.7 : median < 90 ? 2.2 : 2;
           if (want !== stillScale) { stillScale = want; stillTimes.length = 0; }
         };
+        /* ==================================================== SKUTOČNÉ 3D
+           Doterajší maliar dostáva plochy už premietnuté do roviny a s farbou
+           vypočítanou na procesore. Tu ide na grafickú kartu geometria vo
+           svetových súradniciach aj s normálami a materiálmi; svetlo, tiene,
+           zatienenie aj odrazy sa počítajú tam. Dva dôsledky: scéna vyzerá
+           ako výrobok a nie ako výkres, a otočenie modelu je zmena jednej
+           matice namiesto prepočtu dvestotisíc čísel na snímok. */
+        let painter3D = null, klucSiete = null;
+
+        /* Z akého materiálu je plocha. Geometria pozná farbu a pár príznakov;
+           z nich sa dá druh povrchu určiť spoľahlivo, lebo v tejto scéne
+           platí: priehľadné je sklo, veľmi svetlé je strešný plech alebo
+           podhľad, drevené odtiene sú drevo a zvyšok je prášková farba. */
+        const triedaMaterialu = (face) => {
+          const M = window.KvRender3D.MATERIALY;
+          if (face.bg) return M.dlazba;
+          if (face.material === 'zinc') return M.zinok;
+          const text = String(face.sourceFill || '');
+          const c = window.KvRender3D.rozlozFarbu(text);
+          if (c[3] < 0.96) return M.sklo;
+          /* Jas v lineárnom priestore. Biely plech strechy a podhľadu je nad
+             0,55; prášková farba rámu býva pod 0,10. */
+          const jas = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+          if (face.decal) return M.lak;
+          if (jas > 0.42) return M.panel;
+          /* Drevo má výrazne teplý odtieň — červená nad modrou o polovicu. */
+          if (c[0] > c[2] * 1.45 && jas > 0.04 && jas < 0.40) return M.drevo;
+          return M.lak;
+        };
+
+        /* Či je skutočné 3D k dispozícii, musí byť jasné ešte pred stavbou
+           geometrie — podľa toho sa totiž stavia inak. */
+        const pripravPainter3D = () => {
+          if (painter3D !== null) return painter3D;
+          /* Núdzový vypínač. `?render=klasika` vráti doterajší hĺbkový maliar —
+             pre prípad, že by sa na nejakom stroji ukázal problém, ktorý sa
+             inak nedá obísť, a pre porovnanie oboch ciest pri ladení. */
+          try {
+            if (/[?&]render=klasika\b/.test(location.search)) { painter3D = false; return false; }
+          } catch (e) {}
+          if (!window.KvRender3D) { painter3D = false; return false; }
+          const surface = document.createElement('canvas');
+          const r = window.KvRender3D.vytvor(surface);
+          if (!r) { painter3D = false; return false; }
+          cfgRoot.querySelectorAll('[data-sp-render3d]').forEach((n) => n.remove());
+          surface.className = 'sp-stage__depth';
+          surface.setAttribute('data-sp-render3d', '');
+          surface.setAttribute('aria-hidden', 'true');
+          canvas.insertAdjacentElement('afterend', surface);
+          canvas.replaceChildren();
+          surface.addEventListener('webglcontextlost', (event) => {
+            event.preventDefault();
+            surface.hidden = true;
+            painter3D = false;
+            scheduleStage();
+          }, false);
+          painter3D = { r, surface, stupen: 2, casy: [], poslednyCas: 0 };
+          /* Ladiaci prístup k vykresľovaču: `__KV3D_DEBUG.ladenie = 1..9`
+             vymení hotový obraz za jednu zložku (tieň, normála, albedo). */
+          try { window.__KV3D_DEBUG = r; } catch (e) {}
+          return painter3D;
+        };
+
+        const paint3D = (faces, camera) => {
+          if (!pripravPainter3D()) return false;
+          const { r, surface } = painter3D;
+          /* Doostrovanie z predchádzajúceho pohľadu už neplatí — nový snímok
+             kreslí niečo iné. */
+          if (painter3D.doostr) { cancelAnimationFrame(painter3D.doostr); painter3D.doostr = 0; }
+          const cssW = Math.max(1, canvas.clientWidth), cssH = Math.max(1, canvas.clientHeight);
+          /* Kreslí sa v pixeloch displeja. MSAA rieši hrany, takže
+             prevzorkovanie navyše by už len stálo výkon.
+
+             V pohybe sa ide nižšie. Nie kvôli lenivosti: pri otáčaní je
+             rozhodujúci počet snímok za sekundu, nie ostrosť jedného z nich,
+             a oko rozdiel v rozlíšení počas pohybu nezachytí. Po pustení sa
+             scéna prekreslí naplno. Rovnaký princíp mal aj doterajší maliar;
+             tu je len navrch adaptívny krok, ktorý sa sám prispôsobí stroju. */
+          const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+          const vPohybe = motionDetail;
+          if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
+          /* Vždy v plných pixeloch displeja — aj počas ťahania.
+
+             Doterajší vykresľovač si v pohybe uberal rozlíšenie až na 0,4
+             a práve to divák vidí ako kockovanie: hrana profilu prestane byť
+             hranou. Keď sa musí ubrať, uberá sa na výpočte (vzorky tieňa,
+             zatienenie v kútoch, žiara, kresba dlažby) — to pri otáčaní
+             nikto nerozozná. */
+          const w = Math.max(2, Math.round(cssW * dpr));
+          const h = Math.max(2, Math.round(cssH * dpr));
+          if (surface.width !== w || surface.height !== h) { surface.width = w; surface.height = h; }
+          if (surface.style.width !== cssW + 'px') {
+            surface.style.width = cssW + 'px';
+            surface.style.height = cssH + 'px';
+          }
+          surface.hidden = false;
+
+          /* Sieť sa prestavia len vtedy, keď sa zmenila geometria. Pri
+             otáčaní sa na kartu neposiela ani bajt navyše. */
+          const kluc = camera.geometryKey;
+          if (kluc !== klucSiete) {
+            r.nastavScenu(faces, triedaMaterialu);
+            klucSiete = kluc;
+          }
+
+          /* Kamera sa neprepočítava na pixely. `VW`, `scale`, `ox` a `oy` sú
+             v súradniciach výrezu SVG, nie v pixeloch plátna — a zrezaný ihlan
+             z nich vychádza v pomeroch, ktoré sú na rozlíšení nezávislé.
+             Prenásobenie hustotou displeja model o kúsok posunulo; na obraze
+             to nebolo vidieť, ale test prekrytia čítal pixel vedľa a hlásil
+             lemovanie zakryté strechou. Rozlíšenie patrí len do `kresli`. */
+          r.nastavKameru({
+            VW: camera.VW, VH: camera.VH, scale: camera.scale,
+            ox: camera.ox, oy: camera.oy,
+            DIST: camera.DIST, target: camera.target, smer: camera.smer
+          });
+          r.nastavSvetlo({ zamracene: camera.zamracene ? 1 : 0 });
+          /* V pohybe ide o plynulosť, v pokoji o obraz. Prepínač je ten istý
+             `motionDetail`, ktorý doteraz znižoval rozlíšenie. */
+          r.nastavKvalitu(motionDetail, painter3D.stupen);
+
+          /* Autá, posedenie, dopadový tieň a dážď majú vlastný vykresľovač.
+             Kreslia sa do tej istej vyrovnávacej pamäte ako konštrukcia,
+             takže sa im hĺbka aj vyhladzovanie zhodujú. Kamera im ide ako
+             matica — ich `project` ju vie prevziať. */
+          r.kresliNavyse = sceneLife ? (faza, gl, kam) => {
+            const opis = {
+              VW: camera.VW, VH: camera.VH, scale: camera.scale,
+              ox: camera.ox, oy: camera.oy, DIST: camera.DIST,
+              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia
+            };
+            if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
+            else sceneLife.draw(gl, opis, true);
+          } : null;
+          canvas.dataset.renderer = 'webgl2-pbr';
+          /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
+          canvas.dataset.faceCount = String(faces.length);
+          /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
+             záber zložený a či nejaká plocha vyšla nezmyselne. Ten druhý
+             prejde každý vrchol každej plochy, takže sa počíta len zo
+             zastaveného záberu — ten sa dokreslí hneď po pustení a kontroly
+             ho čítajú práve z neho. */
+          if (!vPohybe) {
+            window.SP_TEST.renderMaterials = [...new Set(faces.map((f) => f.sourceFill))];
+            canvas.dataset.invalidFaceCount = String(faces.filter(
+              (f) => !f.w || f.w.length < 3 || f.w.some((q) => q.some((v) => !Number.isFinite(v)))).length);
+          }
+          try { window.__KV3D_FACES = faces; } catch (e) {}
+          const hotovo = r.kresli(w, h);
+
+          /* Doostrovanie. Po zastavení sa ten istý pohľad nakreslí ešte
+             niekoľkokrát, zakaždým posunutý o zlomok pixela, a snímky sa
+             spriemerujú. Nie je to okrasa: vlna trapézového plechu má na
+             obrazovke menej než pixel na rebro a štyri vzorky vyhladzovania
+             z nej spravia bodky — raz sa trafí vrch rebra, raz jeho tmavý
+             bok. Odmerané na zábere prístrešku: zo 66 bodiek, ktoré sa od
+             okolia líšili o takmer polovicu jasu, ostane zopár na hranici
+             viditeľnosti.
+
+             Beží to len v pokoji a len pokiaľ sa nič nedeje; prvý pohyb
+             myšou ho zruší. Rozpočet času aj počet snímok sú zhora
+             obmedzené, aby na slabšom stroji nebežalo doostrovanie dlhšie,
+             než trvá pohľad naň. */
+          if (hotovo && !vPohybe && r.maxDoostrenia > 1) {
+            let vzorka = 1;
+            const zaciatok = performance.now();
+            const krok = () => {
+              painter3D.doostr = 0;
+              if (motionDetail || !painter3D) return;
+              if (!r.kresli(w, h, vzorka)) return;
+              vzorka++;
+              if (vzorka < r.maxDoostrenia && performance.now() - zaciatok < 1500) {
+                painter3D.doostr = requestAnimationFrame(krok);
+              }
+            };
+            painter3D.doostr = requestAnimationFrame(krok);
+          }
+          /* Samoladenie. Meria sa odstup dvoch po sebe idúcich snímok, nie
+             trvanie volania: volania na grafickú kartu sa vracajú hneď a
+             skutočná práca prebehne až potom, takže z ich dĺžky sa výkon
+             prečítať nedá. Odstup snímok ho povie presne. Cieľ je pod 22 ms,
+             čo je plynulé otáčanie; medián z ôsmich preto, aby jeden zaseknutý
+             snímok nezhodil kvalitu celej scény. */
+          if (vPohybe && hotovo) {
+            const teraz = performance.now();
+            const odstup = painter3D.poslednyCas ? teraz - painter3D.poslednyCas : 0;
+            painter3D.poslednyCas = teraz;
+            const c = painter3D.casy;
+            if (odstup > 0 && odstup < 2000) c.push(odstup);
+            if (c.length > 8) c.shift();
+            if (c.length === 8) {
+              const m = c.slice().sort((a, b) => a - b)[4];
+              /* Nadol hneď, nahor opatrne. Keď stroj nestíha, divák to vidí
+                 okamžite; keď stíha, jeden rýchly snímok ešte nič nedokazuje.
+                 Ubratý stupeň znamená menej vzoriek tieňa a menej kresby na
+                 dlažbe — nie menšie plátno. */
+              const chcem = m > 30 ? painter3D.stupen - 1
+                          : m < 13 ? painter3D.stupen + 1
+                          : painter3D.stupen;
+              const novy = Math.max(0, Math.min(2, chcem));
+              if (novy !== painter3D.stupen) { painter3D.stupen = novy; c.length = 0; }
+            }
+          }
+          return hotovo;
+        };
+
         const paintDepth = (faces, camera) => {
           if (depthPainter === false) return false;
           if (!depthPainter) {
@@ -2530,6 +2736,10 @@
           const ROOF_LAYER = 1e7;
           const UNDER_SIDE = 1e5;   // frame and beams, in front of the skin from below
           const ON_SKIN = 5e4;      // joints and ribbing, just on top of the skin
+          /* Hlava skrutky leží na plechu, takže musí byť pred ním. Kým mala
+             to isté poradie ako plech, rozhodoval medzi nimi hĺbkový test
+             náhodne a zo skrutiek na streche ostali kúsky. */
+          const HEAD_ON_SKIN = 6e4;
 
           const faces = [];
           /* Vzdušná perspektíva. Dva rovnaké stĺpy, jeden o päť metrov ďalej,
@@ -2562,12 +2772,56 @@
              and those isolated stalls still occupied p95. Koverta retains its
              established view bands because its trapezoid skin details select
              the upper or lower physical face at the roof-plane crossing. */
+          /* Koľko milimetrov stavby pripadne na jeden pixel obrazovky.
+
+             Presné číslo vyjde až z mierky, ktorá sa počíta o kus nižšie —
+             tu stačí odhad, lebo záber je vždy nastavený tak, aby stavba
+             vyplnila plátno. Rozhoduje sa podľa neho, či má zmysel kresliť
+             drobnosti: skrutka má hlavu osemnásť milimetrov a pri bežnom
+             zábere z nej vyjdú dva pixely. Tie dva pixely nie sú skrutka —
+             je to zrno, ktoré na tmavom ráme vyzerá ako špina. Skutočný
+             model ju má, a pri priblížení ju aj ukážeme; kým je menšia než
+             obraz unesie, do záberu nepatrí.
+
+             Stupne sú tri a hrubé naschvál: geometria sa prestavia len pri
+             prechode medzi nimi, nie pri každom otočení kolieska. */
+          const hustotaPlatna = Math.max(1, Math.min(3, (window.devicePixelRatio || 1)));
+          const mmNaPixel = Math.max(L, W, H) * 1.15
+            / Math.max(120, (canvas.clientWidth || 900) * hustotaPlatna * manualZoom);
+          const stupenDetailu = mmNaPixel <= 4.5 ? 2 : mmNaPixel <= 7.5 ? 1 : 0;
+          /* Vlna trapézového plechu: bok rebra je široký 32,5 mm a strecha
+             sa vidí šikmo, takže sa do výšky na obrazovke stlačí sínusom
+             výšky pohľadu. Pod pol druha pixela z nej nie je vlna, ale zrno —
+             a je to okolo tisíc plôch, teda osmina celého modelu. Vtedy sa
+             plech položí ako rovná tabuľa vo výške hrebeňa; vzhľad sa
+             nezmení, lebo hrebeň je aj tak to, čo z nej vidieť. */
+          const vlnaPx = 32.5 * Math.max(0.10, Math.abs(se)) / Math.max(0.01, mmNaPixel);
+          const vlnaVidno = vlnaPx >= 1.6;
+          /* Prah drobností. Z 5 972 tmavých plôch modelu je 4 724 menších než
+             tridsať milimetrov — kotviace platne, pätky, príruby a zvary
+             vymodelované na milimeter. Pri bežnom zábere pripadá na pixel
+             deväť milimetrov, takže z takej plochy nie je detail, ale jeden
+             pixel o inom jase: nevidno ju, ale kreslí sa a stojí presne
+             toľko ako každá iná. Diera, ktorá po nej ostane, je menšia než
+             pixel a susedné plochy ju prekryjú.
+
+             Prah je odstupňovaný po polovici oktávy, aby sa geometria
+             neprestavovala pri každom otočení kolieska, a pri priblížení
+             sa detail vráti sám. */
+          const krokPrahu = Math.pow(2, Math.round(Math.log2(Math.max(0.05, mmNaPixel)) * 2) / 2);
+          const prahDrobnosti = krokPrahu * 1.6;
+
+          /* Útlm vlny závisí od výšky pohľadu, takže patrí len ku Koverte —
+             Soltec vlnu nemá a jeho geometria sa otáčaním kamery prestavovať
+             nesmie. */
           const geometryViewKey = model().kvGeom
-            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
+            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1]), vlnaVidno]
             : [];
-          const geometryKey = JSON.stringify(state) + '|' + [overcast].concat(geometryViewKey).join(',');
+          const geometryKey = JSON.stringify(state) + '|'
+            + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
+          const re3D = Boolean(pripravPainter3D());
           const rawFaces = [];
           const weatherSolids = [];
           let sceneryObstacles = [];
@@ -2582,11 +2836,71 @@
               pts, fill, layer,
               opts: o.normal ? o : Object.assign({}, o, { normal })
             });
+            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
+
+            /* ------------------------------------------------ skutočné 3D
+               Grafická karta si premietne, zatieni aj zoradí sama — z normál
+               a z hĺbky. Procesor tu preto nerobí nič z toho: ani projekciu,
+               ani výpočet farby, ani odstraňovanie odvrátených stien. Vďaka
+               tomu geometria vôbec nezávisí od kamery a pri otáčaní sa
+               neprepočíta ani jedna plocha. To je celý rozdiel medzi
+               sekaním a plynulým modelom. */
+            if (re3D) {
+              /* Ozdoby podkladu — nakreslené škáry dlažby a zosvetľovací
+                 závoj — sú z čias, keď mal podklad jednu plochú farbu.
+                 Skutočné 3D si dlažbu kreslí samo, aj so škárou, tónom dosky
+                 a útlmom do diaľky. Tieto prekryvy ležia s podkladom v jednej
+                 rovine, takže by s ním súperili o hĺbku a pri horizonte sa
+                 rozpadli na hranaté fľaky. Sú poznateľné podľa toho, že sa
+                 kreslia nad horizontom a s vlastným poradím (`bias`);
+                 samotná dlažba ho nemá. */
+              if (o.aboveHorizon && o.bias) return;
+              /* Drobnosť menšia než pixel sa nekreslí. Meria sa uhlopriečka
+                 obalu plochy, takže tenká, ale dlhá hrana profilu ostáva —
+                 tá je na obraze vidieť ako svetlá čiara a patrí tam. */
+              if (!o.bg && prahDrobnosti > 0) {
+                let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+                for (const q of pts) {
+                  if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0];
+                  if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1];
+                  if (q[2] < z0) z0 = q[2]; if (q[2] > z1) z1 = q[2];
+                }
+                if (Math.hypot(x1 - x0, y1 - y0, z1 - z0) < prahDrobnosti) return;
+              }
+              /* Tieň strechy, tieň pri päte stĺpa a pruhy svetla medzi
+                 lamelami boli namaľované na zem, lebo doterajší maliar nič
+                 iné nevedel. Tu ich kreslí slnko: tieňová mapa ich má
+                 v správnom smere, so správnym polotieňom a s tvarom, ktorý
+                 sedí na konštrukciu. Ponechať aj tie namaľované by znamenalo
+                 tieň dvakrát — a keďže ležia presne v rovine dlažby, súperili
+                 by s ňou o hĺbku a v diaľke z nich ostal pás. */
+              if (o.zemTien) return;
+              faces.push({
+                w: pts.map((point) => point.slice()),
+                normal,
+                sourceFill: fill,
+                material: o.material || '',
+                decal: o.decal || false,
+                /* Ktoré plochy sú jednostranné, vie geometria — tá istá
+                   informácia, ktorou doteraz orezávala odvrátené steny. */
+                cull: Boolean(o.cull),
+                /* Poradie, ktoré si geometria pýta. Doterajší maliar podľa
+                   neho kreslil detail nad jeho susedom — lemovanie nad plech,
+                   svetelný pás nad podhľad. Hĺbkový buffer o takom zámere nevie
+                   a pri dvoch plochách na jednej rovine rozhodne náhodne, takže
+                   trapéz začal prerážať cez lemovanie. Číslo ide na kartu a tam
+                   sa premení na nepatrný náskok v hĺbke. */
+                bias: Number(o.bias) || 0,
+                bg: layer <= -3 * ROOF_LAYER + 1000,
+                order: faces.length
+              });
+              return;
+            }
+
             /* Dlažba patrí do rovnakej svetovej cache, no pri pohľade pod
                horizont sa nesmie premietnuť. Viditeľnosť sa vyhodnotí pri
                replayi jednej plochy; nesmie zneplatniť celý prístrešok. */
             if (o.aboveHorizon && se <= 0.01) return;
-            if (layer > -3 * ROOF_LAYER + 1000 && !o.decal) weatherSolids.push(pts);
             // Perspective culling uses the eye relative to this face, not a
             // parallel direction at the scene origin (which popped roof faces).
             if (o.cull && normal.reduce((sum, n, i) => sum + n * (eye[i] - pts[0][i]), 0) <= 0) return;
@@ -2638,6 +2952,11 @@
             faces.push({
               w: pts.map((point) => point.slice()),
               p: pp,
+              /* Normála a druh materiálu patria k ploche, nie k premietaniu.
+                 Skutočný 3D vykresľovač si z nich počíta tieňovanie na
+                 grafickej karte; doterajší maliar ich ignoruje. */
+              normal,
+              material: o.material || '',
               fill: lit, sourceFill: fill, decal: o.decal || false,
               vertexFills: vertexFills,
               edge: o.edge !== false,
@@ -2943,6 +3262,14 @@
              plochu a `sgn` smer, ktorým hlava z líca vystupuje. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
             const r = R || 9, sd = sgn || 1, h = dlzka || 7;
+            /* Skrutka sa kreslí, až keď je z nej naozaj skrutka.
+
+               Pri dvoch a pol pixeloch na hlavu z nej na obraze nie je
+               šesťhran, ale bodka o inom jase než okolie — a tých bodiek sú
+               na ráme a na podhľade stovky, takže to vyzerá ako špina. Desať
+               pixelov je hranica, za ktorou hlava dostane tvar; dovtedy
+               patrí pod rozlíšenie, nie do obrazu. Pri priblížení sa vráti. */
+            if (r * 2 < mmNaPixel * 10) return;
             const P = (t, a) => {
               const c = Math.cos(a) * r, d = Math.sin(a) * r;
               if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
@@ -2958,9 +3285,9 @@
               const c = Math.cos((a + b) / 2), d = Math.sin((a + b) / 2);
               const sideNormal = os === 'x' ? [0,c,d] : os === 'y' ? [c,0,d] : [c,d,0];
               quad([P(0, a), P(h, a), P(h, b), P(0, b)], hex,
-                   { normal: sideNormal, cull: false, bias: ON_SKIN });
+                   { normal: sideNormal, cull: false, bias: HEAD_ON_SKIN });
             }
-            quad(cap, hex, { normal: n, bias: ON_SKIN });
+            quad(cap, hex, { normal: n, bias: HEAD_ON_SKIN });
           };
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
@@ -3022,7 +3349,7 @@
           const shadow = (grow, alpha) => quad([
             [-grow + shX, -grow + shY, 0], [L + grow + shX, -grow + shY, 0],
             [L + grow + shX, W + grow + shY, 0], [-grow + shX, W + grow + shY, 0]
-          ], 'rgba(20,22,24,' + alpha + ')', { raw: true, edge: false, fit: false });
+          ], 'rgba(20,22,24,' + alpha + ')', { raw: true, edge: false, fit: false, zemTien: true });
           /* A penumbra is dense at the core and thins quickly at the edge.
              An even alpha across every ring gave a linear ramp, which reads as
              a grey rectangle with soft corners rather than a shadow. */
@@ -3058,7 +3385,7 @@
                    tieňa pod sebou (bias 1 a 2) — nič viac. Bias 1000 ho
                    posadil až za stĺpy a svetlo z podlahy sa potom kreslilo
                    cez ne; na zábere bolo pruhovanie priamo na stĺpe. */
-                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 3 });
+                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 3, zemTien: true });
               }
             }
           }
@@ -3249,7 +3576,7 @@
                 quad([[px - grow, py - grow, 0], [px + pd + grow, py - grow, 0],
                       [px + pd + grow, py + pw + grow, 0], [px - grow, py + pw + grow, 0]],
                      'rgba(18,20,22,' + (0.018 + 0.052 * t * t).toFixed(4) + ')',
-                     { raw: true, edge: false, fit: false, normal: [0,0,1] });
+                     { raw: true, edge: false, fit: false, normal: [0,0,1], zemTien: true });
               }
               layer = savedLayer;
               /* The water exits are at one end, so the posts there stand
@@ -4520,6 +4847,22 @@
 
             const drawTrapSurface = (x0, x1, y0, y1, zAt, hex, upward) => {
               if (x1 <= x0 || y1 <= y0) return;
+              /* Keď z vlny na obrazovke nič nie je, tabuľa sa položí naplocho
+                 vo výške hrebeňa. Vo výške hrebeňa preto, že práve ten drží
+                 všetky vzdialenosti k lemovaniu — nižšia rovina by pod jeho
+                 ramenom otvorila škáru. */
+              if (!vlnaVidno) {
+                const zRovno = zAt(ty1);
+                const pts = upward
+                  ? [[x0, y0, zRovno], [x1, y0, zRovno], [x1, y1, zRovno], [x0, y1, zRovno]]
+                  : [[x0, y0, zRovno], [x0, y1, zRovno], [x1, y1, zRovno], [x1, y0, zRovno]];
+                quad(pts, upward ? shade(hex, 0.004) : shade(hex, -0.053), {
+                  material: upward ? undefined : 'zinc',
+                  normal: [0, 0, upward ? 1 : -1],
+                  cull: true, edge: false, raw: false, seamless: true, sealSplits: true
+                });
+                return;
+              }
               const cuts = trapBreaks(y0, y1);
               for (let i = 0; i < cuts.length - 1; i++) {
                 const a = cuts[i], b = cuts[i + 1];
@@ -4573,6 +4916,22 @@
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
             drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+
+            /* One exact cut plane closes each concealed sheet edge. It belongs
+               to the flashing pocket, not to the visible single-colour soffit,
+               and therefore keeps one roof/flashing finish through its height.
+               Splitting it into light and dark halves exposed the light half
+               through every valley when viewed from above. */
+            // The L flashing stays open beneath its horizontal arm. Artificial
+            // vertical closure curtains hid the corrugated sheet's actual ends.
+
+
+            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
+               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
+               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
                here and would reintroduce the dotted z-fighting seam. */
@@ -5329,6 +5688,20 @@
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
           canvas.setAttribute('aria-label', `${model().label || state.model}, ${widthMM()} krát ${lengthMM()} milimetrov, ${state.frameColor.name}, pohľad ${aboveDepth}`);
+          const kameraOpis = {
+            VW, VH, scale, ox, oy, DIST,
+            target: [L / 2, W / 2, H / 2],
+            smer: VIEWDIR,
+            geometryKey,
+            zamracene: overcast
+          };
+          if (paint3D(faces, kameraOpis)) {
+            const stary = cfgRoot.querySelector('[data-sp-depth-canvas]');
+            if (stary) stary.hidden = true;
+            return;
+          }
+          const nove = cfgRoot.querySelector('[data-sp-render3d]');
+          if (nove) nove.hidden = true;
           if (paintDepth(faces, { VW, VH, scale, ox, oy, DIST })) return;
           const depthSurface = cfgRoot.querySelector('[data-sp-depth-canvas]');
           if (depthSurface) depthSurface.hidden = true;
@@ -5412,10 +5785,14 @@
         // Serialising a canvas element alone would silently export a blank image.
         if (window.SP_TEST) window.SP_TEST.exportSVG = () => {
           drawStage();
-          if (!depthPainter) return new XMLSerializer().serializeToString(canvas);
+          /* Rastrová vrstva môže byť nová (3D) alebo doterajšia (hĺbkový
+             maliar). Bez tejto vetvy vracal export prázdne SVG, lebo `canvas`
+             je pri rastri len prázdna interakčná plocha. */
+          const raster = (painter3D && painter3D.surface) || (depthPainter && depthPainter.surface);
+          if (!raster) return new XMLSerializer().serializeToString(canvas);
           const vb = canvas.getAttribute('viewBox').split(' ').map(Number);
           const svg = svgEl('svg', { xmlns: 'http://www.w3.org/2000/svg', width: vb[2], height: vb[3], viewBox: canvas.getAttribute('viewBox') });
-          svg.appendChild(svgEl('image', { width: vb[2], height: vb[3], href: depthPainter.surface.toDataURL('image/png') }));
+          svg.appendChild(svgEl('image', { width: vb[2], height: vb[3], href: raster.toDataURL('image/png') }));
           return new XMLSerializer().serializeToString(svg);
         };
 
