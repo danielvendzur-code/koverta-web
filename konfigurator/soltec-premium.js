@@ -1956,6 +1956,9 @@
         const paint3D = (faces, camera) => {
           if (!pripravPainter3D()) return false;
           const { r, surface } = painter3D;
+          /* Doostrovanie z predchádzajúceho pohľadu už neplatí — nový snímok
+             kreslí niečo iné. */
+          if (painter3D.doostr) { cancelAnimationFrame(painter3D.doostr); painter3D.doostr = 0; }
           const cssW = Math.max(1, canvas.clientWidth), cssH = Math.max(1, canvas.clientHeight);
           /* Kreslí sa v pixeloch displeja. MSAA rieši hrany, takže
              prevzorkovanie navyše by už len stálo výkon.
@@ -2018,8 +2021,46 @@
           canvas.dataset.renderer = 'webgl2-pbr';
           /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
           canvas.dataset.faceCount = String(faces.length);
+          /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
+             záber zložený a či nejaká plocha vyšla nezmyselne. Ten druhý
+             prejde každý vrchol každej plochy, takže sa počíta len zo
+             zastaveného záberu — ten sa dokreslí hneď po pustení a kontroly
+             ho čítajú práve z neho. */
+          if (!vPohybe) {
+            window.SP_TEST.renderMaterials = [...new Set(faces.map((f) => f.sourceFill))];
+            canvas.dataset.invalidFaceCount = String(faces.filter(
+              (f) => !f.w || f.w.length < 3 || f.w.some((q) => q.some((v) => !Number.isFinite(v)))).length);
+          }
           try { window.__KV3D_FACES = faces; } catch (e) {}
           const hotovo = r.kresli(w, h);
+
+          /* Doostrovanie. Po zastavení sa ten istý pohľad nakreslí ešte
+             niekoľkokrát, zakaždým posunutý o zlomok pixela, a snímky sa
+             spriemerujú. Nie je to okrasa: vlna trapézového plechu má na
+             obrazovke menej než pixel na rebro a štyri vzorky vyhladzovania
+             z nej spravia bodky — raz sa trafí vrch rebra, raz jeho tmavý
+             bok. Odmerané na zábere prístrešku: zo 66 bodiek, ktoré sa od
+             okolia líšili o takmer polovicu jasu, ostane zopár na hranici
+             viditeľnosti.
+
+             Beží to len v pokoji a len pokiaľ sa nič nedeje; prvý pohyb
+             myšou ho zruší. Rozpočet času aj počet snímok sú zhora
+             obmedzené, aby na slabšom stroji nebežalo doostrovanie dlhšie,
+             než trvá pohľad naň. */
+          if (hotovo && !vPohybe && r.maxDoostrenia > 1) {
+            let vzorka = 1;
+            const zaciatok = performance.now();
+            const krok = () => {
+              painter3D.doostr = 0;
+              if (motionDetail || !painter3D) return;
+              if (!r.kresli(w, h, vzorka)) return;
+              vzorka++;
+              if (vzorka < r.maxDoostrenia && performance.now() - zaciatok < 1500) {
+                painter3D.doostr = requestAnimationFrame(krok);
+              }
+            };
+            painter3D.doostr = requestAnimationFrame(krok);
+          }
           /* Samoladenie. Meria sa odstup dvoch po sebe idúcich snímok, nie
              trvanie volania: volania na grafickú kartu sa vracajú hneď a
              skutočná práca prebehne až potom, takže z ich dĺžky sa výkon
@@ -2688,6 +2729,10 @@
           const ROOF_LAYER = 1e7;
           const UNDER_SIDE = 1e5;   // frame and beams, in front of the skin from below
           const ON_SKIN = 5e4;      // joints and ribbing, just on top of the skin
+          /* Hlava skrutky leží na plechu, takže musí byť pred ním. Kým mala
+             to isté poradie ako plech, rozhodoval medzi nimi hĺbkový test
+             náhodne a zo skrutiek na streche ostali kúsky. */
+          const HEAD_ON_SKIN = 6e4;
 
           const faces = [];
           /* Vzdušná perspektíva. Dva rovnaké stĺpy, jeden o päť metrov ďalej,
@@ -2723,7 +2768,25 @@
           const geometryViewKey = model().kvGeom
             ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
             : [];
-          const geometryKey = JSON.stringify(state) + '|' + [overcast].concat(geometryViewKey).join(',');
+          /* Koľko milimetrov stavby pripadne na jeden pixel obrazovky.
+
+             Presné číslo vyjde až z mierky, ktorá sa počíta o kus nižšie —
+             tu stačí odhad, lebo záber je vždy nastavený tak, aby stavba
+             vyplnila plátno. Rozhoduje sa podľa neho, či má zmysel kresliť
+             drobnosti: skrutka má hlavu osemnásť milimetrov a pri bežnom
+             zábere z nej vyjdú dva pixely. Tie dva pixely nie sú skrutka —
+             je to zrno, ktoré na tmavom ráme vyzerá ako špina. Skutočný
+             model ju má, a pri priblížení ju aj ukážeme; kým je menšia než
+             obraz unesie, do záberu nepatrí.
+
+             Stupne sú tri a hrubé naschvál: geometria sa prestavia len pri
+             prechode medzi nimi, nie pri každom otočení kolieska. */
+          const hustotaPlatna = Math.max(1, Math.min(3, (window.devicePixelRatio || 1)));
+          const mmNaPixel = Math.max(L, W, H) * 1.15
+            / Math.max(120, (canvas.clientWidth || 900) * hustotaPlatna * manualZoom);
+          const stupenDetailu = mmNaPixel <= 4.5 ? 2 : mmNaPixel <= 7.5 ? 1 : 0;
+          const geometryKey = JSON.stringify(state) + '|'
+            + [overcast, stupenDetailu].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const re3D = Boolean(pripravPainter3D());
@@ -2760,6 +2823,14 @@
                  kreslia nad horizontom a s vlastným poradím (`bias`);
                  samotná dlažba ho nemá. */
               if (o.aboveHorizon && o.bias) return;
+              /* Tieň strechy, tieň pri päte stĺpa a pruhy svetla medzi
+                 lamelami boli namaľované na zem, lebo doterajší maliar nič
+                 iné nevedel. Tu ich kreslí slnko: tieňová mapa ich má
+                 v správnom smere, so správnym polotieňom a s tvarom, ktorý
+                 sedí na konštrukciu. Ponechať aj tie namaľované by znamenalo
+                 tieň dvakrát — a keďže ležia presne v rovine dlažby, súperili
+                 by s ňou o hĺbku a v diaľke z nich ostal pás. */
+              if (o.zemTien) return;
               faces.push({
                 w: pts.map((point) => point.slice()),
                 normal,
@@ -3147,6 +3218,10 @@
              plochu a `sgn` smer, ktorým hlava z líca vystupuje. */
           const skrutkuj = (cx0, cy0, cz0, os, hex, R, sgn, dlzka) => {
             const r = R || 9, sd = sgn || 1, h = dlzka || 7;
+            /* Menej než dva a pol pixela na hlavu znamená, že z nej na
+               obraze nebude šesťhran, ale bodka o inom jase než okolie —
+               a tých bodiek sú na ráme stovky. */
+            if (r * 2 < mmNaPixel * 2.5) return;
             const P = (t, a) => {
               const c = Math.cos(a) * r, d = Math.sin(a) * r;
               if (os === 'x') return [cx0 + sd * t, cy0 + c, cz0 + d];
@@ -3162,9 +3237,9 @@
               const c = Math.cos((a + b) / 2), d = Math.sin((a + b) / 2);
               const sideNormal = os === 'x' ? [0,c,d] : os === 'y' ? [c,0,d] : [c,d,0];
               quad([P(0, a), P(h, a), P(h, b), P(0, b)], hex,
-                   { normal: sideNormal, cull: false, bias: ON_SKIN });
+                   { normal: sideNormal, cull: false, bias: HEAD_ON_SKIN });
             }
-            quad(cap, hex, { normal: n, bias: ON_SKIN });
+            quad(cap, hex, { normal: n, bias: HEAD_ON_SKIN });
           };
           /* Skrutky sú pozinkované — majú farbu C profilov, nie prístrešku. */
           const skrutkaHlavy = (cx0, cy0, cz0) => {
@@ -3226,7 +3301,7 @@
           const shadow = (grow, alpha) => quad([
             [-grow + shX, -grow + shY, 0], [L + grow + shX, -grow + shY, 0],
             [L + grow + shX, W + grow + shY, 0], [-grow + shX, W + grow + shY, 0]
-          ], 'rgba(20,22,24,' + alpha + ')', { raw: true, edge: false, fit: false });
+          ], 'rgba(20,22,24,' + alpha + ')', { raw: true, edge: false, fit: false, zemTien: true });
           /* A penumbra is dense at the core and thins quickly at the edge.
              An even alpha across every ring gave a linear ramp, which reads as
              a grey rectangle with soft corners rather than a shadow. */
@@ -3262,7 +3337,7 @@
                    tieňa pod sebou (bias 1 a 2) — nič viac. Bias 1000 ho
                    posadil až za stĺpy a svetlo z podlahy sa potom kreslilo
                    cez ne; na zábere bolo pruhovanie priamo na stĺpe. */
-                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 3 });
+                ], 'rgba(255,247,228,.34)', { raw: true, edge: false, fit: false, bias: 3, zemTien: true });
               }
             }
           }
@@ -3453,7 +3528,7 @@
                 quad([[px - grow, py - grow, 0], [px + pd + grow, py - grow, 0],
                       [px + pd + grow, py + pw + grow, 0], [px - grow, py + pw + grow, 0]],
                      'rgba(18,20,22,' + (0.018 + 0.052 * t * t).toFixed(4) + ')',
-                     { raw: true, edge: false, fit: false, normal: [0,0,1] });
+                     { raw: true, edge: false, fit: false, normal: [0,0,1], zemTien: true });
               }
               layer = savedLayer;
               /* The water exits are at one end, so the posts there stand
