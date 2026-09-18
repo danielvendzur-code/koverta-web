@@ -519,9 +519,10 @@
         <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
         <select class="sp-scene__paint" aria-label="Lak auta">${Object.entries(PAINTS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
-        <div class="sp-scene__row" data-scene-weatherrow><div class="sp-scene__choices" role="group" aria-label="Počasie">
-          <button type="button" data-scene-weather="sun">Slnečno</button><button type="button" data-scene-weather="rain">Dážď</button></div></div>
-        <div class="sp-scene__rain sp-scene__more" hidden><button type="button" data-scene-pause>Pozastaviť</button><label><input type="checkbox" data-scene-flow checked> Odtok vody</label></div>
+        <!-- Dážď je z konfigurátora odstránený na žiadosť vlastníka: voľba
+             počasia rozptyľovala od výrobku a kvapky na plátne pôsobili na
+             zastavenom zábere rušivo. Kreslenie dažďa nižšie ostáva nedotknuté
+             a dá sa vrátiť späť vrátením tohto riadku. -->
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
         <a class="sp-scene__credits sp-scene__more" href="../pouzite-modely/" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
@@ -543,11 +544,13 @@
       panel.querySelectorAll('[data-scene-weather]').forEach(b=>b.setAttribute('aria-pressed',String(state.weather===b.dataset.sceneWeather)));
       panel.querySelector('[data-scene-countrow]').hidden=state.mode==='none';
       panel.querySelector('.sp-scene__paint').hidden=state.mode!=='car';
-      panel.querySelector('.sp-scene__rain').hidden=state.weather!=='rain';
+      const dazdRiadok=panel.querySelector('.sp-scene__rain');
+      if(dazdRiadok)dazdRiadok.hidden=state.weather!=='rain';
       panel.querySelector('[data-scene-car]').hidden=state.mode!=='car';
       countSelect.value=state.count;carSelect.value=state.car;
       [...countSelect.options].forEach(o=>{o.disabled=o.value!=='auto' && Number(o.value)>currentPlan.capacity;});
-      panel.querySelector('[data-scene-pause]').textContent=state.paused?'Spustiť':'Pozastaviť';
+      const pauza=panel.querySelector('[data-scene-pause]');
+      if(pauza)pauza.textContent=state.paused?'Spustiť':'Pozastaviť';
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého
          nákresu nepatria. Namiesto ticha to panel povie. */
       const flat=Boolean(context&&context.renderer&&context.renderer!=='webgl-depth');
@@ -599,7 +602,8 @@
     countSelect.addEventListener('change',()=>{state.count=countSelect.value;update();});
     paintSelect.addEventListener('change',()=>{state.paint=paintSelect.value;update();});
     carSelect.addEventListener('change',()=>{state.car=carSelect.value;update();});
-    panel.querySelector('[data-scene-flow]').addEventListener('change',e=>{state.flow=e.target.checked;update();});
+    const odtok=panel.querySelector('[data-scene-flow]');
+    if(odtok)odtok.addEventListener('change',e=>{state.flow=e.target.checked;update();});
     /* Predstih namiesto točiaceho kolieska.
        Sieť auta sa doteraz sťahovala až po kliknutí na „Auto" — 0,6 s na
        lokálnej sieti, 2,2 s pri 1,5 Mb/s, a presne to je čas, ktorý by

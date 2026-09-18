@@ -143,8 +143,13 @@
        tak, ako je, antracit na stĺpe vyjde o dve tretiny svetlejší. Odmerané
        na tom istom zábere oboma vykresľovačmi. */
     lak:      { kov: 0.02, drsnost: 0.58, odraz: 0.80 },
-    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.62 },  /* žiarový zinok */
-    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.60 },  /* holý hliník, lemovanie */
+    /* Pozinkovaný plech podhľadu je zdola jediné, čo z konštrukcie vidno,
+       a je celý v tieni. Odrazivosť je vyššia než u hliníka zámerne: zinok
+       je svetlý a matný, hliník tmavší a zrkadlivý — kým mali obe rovnakú,
+       vyšiel podhľad Koverty tmavý a hliníkový rám Soltecu zdola prepálený
+       do biela. */
+    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 1.35 },  /* žiarový zinok */
+    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.44 },  /* holý hliník, lemovanie */
     /* Sklo sa nesvieti ako plocha. Nemá takmer žiadne rozptýlené svetlo:
        čo naň dopadne, buď sa odrazí, alebo prejde. Kým sa počítalo ako
        biely plech s priehľadnosťou, vyzerala zasklená strecha ako doska
@@ -432,7 +437,7 @@ float vTieni(vec3 n) {
 
      V pohybe sa nehľadá vôbec — premenlivá mäkkosť okraja je to prvé, čo sa
      pri otáčaní stratí, a stojí päť čítaní z textúry na každý pixel. */
-  if (uTienVzoriek <= 4) {
+  if (uTienVzoriek <= 2) {
     float d0 = texture(uTienMapa, s.xy).r;
     return (s.z - posun) > d0 ? 0.0 : 1.0;
   }
@@ -1274,19 +1279,22 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
        pixeloch displeja a šetrí sa na tom, čo nevidieť. */
     stav.nastavKvalitu = function (pohyb, stupen) {
       const st = Math.max(0, Math.min(2, stupen === undefined ? 2 : stupen | 0));
-      /* Viacnásobné vzorkovanie je posledné, čo sa uberá — a aj tak nikdy
-         nie rozlíšenie. Na stroji bez grafickej karty (a taký je aj
-         prehliadač so softvérovým vykresľovaním) stojí štvornásobné
-         vzorkovanie celého plátna viac než všetko ostatné dokopy; tam je
-         lepšie mať plné rozlíšenie s tvrdšou hranou než polovičné s mäkkou.
-         Na akejkoľvek skutočnej karte sa na tento stupeň nikdy nezostúpi. */
-      stav.kvalita = pohyb
-        ? { tienVzoriek: st === 0 ? 1 : st === 1 ? 4 : 8,
-            ssao: false, ziara: false, podkladDetail: st >= 1,
-            vzoriek: st === 0 ? 1 : stav.maxVzoriek }
-        : { tienVzoriek: st === 0 ? 8 : 16,
-            ssao: st >= 1, ziara: st >= 1, podkladDetail: true,
-            vzoriek: st === 0 ? 2 : stav.maxVzoriek };
+      /* V pohybe a v pokoji musí byť obraz ten istý.
+
+         Doteraz sa počas ťahania vypínalo zatienenie v kútoch, žiara aj
+         kresba dlažby. Každá z nich mení tón celého záberu, takže po pustení
+         myši obraz zmenil farbu a divák to videl ako skok. To je horšie než
+         pár snímok navyše: kto model otáča, porovnáva tvar, a keď sa mu pod
+         rukou mení aj farba, nevie, čo vlastne vidí.
+
+         Zostáva preto jediný rozdiel, ktorý farbu nemení — počet vzoriek
+         tieňa. Ten rozhoduje o mäkkosti okraja tieňa, nie o jase plochy,
+         a pri otáčaní ho oko nestihne prečítať. Rozlíšenie sa neuberá nikdy. */
+      stav.kvalita = {
+        tienVzoriek: pohyb ? (st === 0 ? 4 : st === 1 ? 6 : 8) : (st === 0 ? 10 : 16),
+        ssao: true, ziara: true, podkladDetail: true,
+        vzoriek: stav.maxVzoriek
+      };
     };
 
     /* Koľko svetla vráti zem. Je to odrazivosť podkladu krát to, čo naň
@@ -1321,7 +1329,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
          prístreškom vidieť tvar profilu, nie čierna diera. Kým bol
          súčiniteľ 1,35, vychádzali kanály vlny na podhľade tmavé a plech
          medzi väznicami vyzeral, akoby tam chýbal. */
-      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 4.60;
+      const k = (x, j) => odrazivost[j] * (x * z + obloha) / Math.PI * 2.00;
       return new Float32Array([k(i[0], 0), k(i[1], 1), k(i[2], 2)]);
     };
 
