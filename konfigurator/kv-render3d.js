@@ -142,7 +142,7 @@
        zadaná farba teda nie je odrazivosť, ale hotový obraz. Keby sa použila
        tak, ako je, antracit na stĺpe vyjde o dve tretiny svetlejší. Odmerané
        na tom istom zábere oboma vykresľovačmi. */
-    lak:      { kov: 0.02, drsnost: 0.58, odraz: 0.40 },
+    lak:      { kov: 0.02, drsnost: 0.58, odraz: 0.80 },
     zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.62 },  /* žiarový zinok */
     hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.60 },  /* holý hliník, lemovanie */
     /* Sklo sa nesvieti ako plocha. Nemá takmer žiadne rozptýlené svetlo:
@@ -150,7 +150,7 @@
        biely plech s priehľadnosťou, vyzerala zasklená strecha ako doska
        z bieleho plastu. */
     sklo:     { kov: 0.00, drsnost: 0.04, odraz: 1.00, sklo: 1 },
-    panel:    { kov: 0.04, drsnost: 0.55, odraz: 1.00 },
+    panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.86 },
     drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.62 },
     polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
     /* Odmerané: pri 0,66 mala podlaha jas 208 a pozadie 213 — na obraze
@@ -158,7 +158,7 @@
        zreteľne tmavšia než stena za ňou, inak nie je vidieť, na čom stavba
        stojí. To isté robí fotograf v štúdiu: podlahu dá tmavšiu než
        horizont. */
-    dlazba:   { kov: 0.00, drsnost: 0.84, odraz: 0.50 },  /* betón na slnku */
+    dlazba:   { kov: 0.00, drsnost: 0.84, odraz: 0.62 },  /* betón na slnku */
     trava:    { kov: 0.00, drsnost: 0.95, odraz: 0.55 },
     auto:     { kov: 0.35, drsnost: 0.25, odraz: 0.95 },
     guma:     { kov: 0.00, drsnost: 0.88, odraz: 0.70 },
@@ -176,6 +176,16 @@ precision highp int;
      priamo zo smeru — je to jedna funkcia, nepotrebuje ani bajt navyše a pre
      vonkajšiu scénu s jednou oblohou dá presne to, čo treba: jasný pás pri
      horizonte, tmavší zenit, slnko a odraz zeme zdola. */
+  /* Tie isté čísla potrebuje shader aj procesor: shader na pozadie, procesor
+     na rozptýlené svetlo, ktoré doň ide ako uniforma. Preto sú na jednom
+     mieste a do shadera sa dosadia. */
+  const NEBO = {
+    zenitJasno:  [0.640, 0.668, 0.706],
+    horizJasno:  [0.925, 0.938, 0.952],
+    zenitZamrac: [0.700, 0.722, 0.752],
+    horizZamrac: [0.900, 0.912, 0.926]
+  };
+
   const OBLOHA = `
 uniform vec3 uOdrazZeme;
 uniform float uPozadie;
@@ -190,10 +200,15 @@ vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
      ktorú zákazník na svojom dvore neuvidí. Je to štúdiové prostredie —
      chladnejšie hore, svetlejšie pri horizonte, takmer bez sýtosti. Hliník
      z neho dostane presne ten prechod, po ktorom vyzerá ako kov. */
-  vec3 zenitJasno   = vec3(0.330, 0.394, 0.492);
-  vec3 horizJasno   = vec3(0.800, 0.826, 0.858);
-  vec3 zenitZamrac  = vec3(0.545, 0.575, 0.612);
-  vec3 horizZamrac  = vec3(0.790, 0.805, 0.822);
+  /* Pozadie je stena štúdia, nie obloha. Fotograf ju svieti tak, aby bola
+     takmer biela s jemným prechodom — výrobok potom na nej stojí a nič
+     mu neuberá pozornosť. Kým mal zenit hodnotu skutočnej oblohy, vyšla
+     stena o tridsať jasových stupňov tmavšia než na doterajšom zábere a
+     celý obraz pôsobil zašedene. */
+  vec3 zenitJasno   = vec3(${NEBO.zenitJasno});
+  vec3 horizJasno   = vec3(${NEBO.horizJasno});
+  vec3 zenitZamrac  = vec3(${NEBO.zenitZamrac});
+  vec3 horizZamrac  = vec3(${NEBO.horizZamrac});
 
   vec3 zenit  = mix(zenitJasno,  zenitZamrac,  zamracene);
   vec3 horiz  = mix(horizJasno,  horizZamrac,  zamracene);
@@ -214,7 +229,7 @@ vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
      pozadie premietlo aj do odrazov, tmavý antracit na stĺpe vyšiel o dve
      tretiny svetlejší, než v skutočnosti je. Prepínač uPozadie rozhodne,
      ktorá z dvoch úloh sa práve počíta. */
-  vec3 zem = mix(uOdrazZeme, vec3(0.62, 0.618, 0.610), uPozadie * 0.58);
+  vec3 zem = mix(uOdrazZeme, vec3(1.02, 1.015, 1.000), uPozadie * 0.72);
   c = mix(zem, c, smoothstep(-0.055, 0.035, dir.z));
 
   /* Slnečný kotúč a jeho halo. Pri zamračení sa kotúč stratí a ostane len
@@ -232,12 +247,21 @@ vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
    by potreboval mapu; toto je jeho lacná a v tejto scéne nerozoznateľná
    náhrada: priemer oblohy nad normálou a zeme pod ňou, vážený tým, koľko
    pologule normála vidí. */
+/* Tri smery oblohy — hore, do boku a dole — sa v jednom snímku nemenia,
+   tak sa počítajú raz na procesore a prídu ako uniformy. Ušetrí to tri
+   vyhodnotenia oblohy na každý pixel; a keďže ich má fragment ďalšie tri
+   (odraz, závoj, zánik podkladu), je to polovica celej práce shadera.
+   Obloha je navyše okolo zvislej osi rovnaká, takže na smere do boku
+   nezáleží — jediné, čo tam záviselo od azimutu, bol slnečný kotúč, ktorý
+   do rozptýleného svetla aj tak nepatrí. */
+uniform vec3 uOzarHore;
+uniform vec3 uOzarBok;
+uniform vec3 uOzarDole;
+
 vec3 ozarenie(vec3 n, vec3 slnko, float zamracene) {
-  /* Bez slnečného kotúča: ten je v scéne priamym svetlom a keby sa započítal
-     aj sem, dopadol by dvakrát. */
-  vec3 hore = farbaOblohy(vec3(0.0, 0.0, 1.0), -slnko, zamracene);
-  vec3 bok  = farbaOblohy(normalize(vec3(n.x, n.y, 0.22)), -slnko, zamracene);
-  vec3 dole = farbaOblohy(vec3(0.0, 0.0, -1.0), -slnko, zamracene);
+  vec3 hore = uOzarHore;
+  vec3 bok  = uOzarBok;
+  vec3 dole = uOzarDole;
   float k = n.z * 0.5 + 0.5;
   vec3 c = mix(dole, hore, k * k);
   c = mix(c, bok, 0.40);
@@ -249,7 +273,7 @@ vec3 ozarenie(vec3 n, vec3 slnko, float zamracene) {
      to, čo výrobok predáva. Nižšia hodnota prehĺbi tiene aj tmavé materiály;
      stratené svetlo sa vracia v slnku, takže osvetlené plochy ostanú rovnako
      jasné a obraz dostane kontrast. */
-  c *= 0.50;
+  c *= 0.70;
   /* Tieň vonku nie je modrý tak, ako je modrá obloha: než svetlo dopadne,
      odrazí sa od zeme, od steny, od auta. Každý odraz uberie sýtosť. Toto
      je jeden krok toho premiešania — bez neho vyzerá tieň ako fotomontáž. */
@@ -353,6 +377,7 @@ uniform float uOrezavat;
 uniform vec3 uStred;
 uniform float uDosah;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
+uniform float uPodkladDetail;
 
 layout(location = 0) out vec4 oFarba;
 layout(location = 1) out vec4 oNormHlbka;
@@ -403,7 +428,14 @@ float vTieni(vec3 n) {
   mat2 rot = mat2(c, -si, si, c);
 
   /* Hľadanie tieniaceho telesa. Päť vzoriek v malom okolí stačí: potrebujeme
-     len priemernú hĺbku toho, čo je pred nami, nie jeho tvar. */
+     len priemernú hĺbku toho, čo je pred nami, nie jeho tvar.
+
+     V pohybe sa nehľadá vôbec — premenlivá mäkkosť okraja je to prvé, čo sa
+     pri otáčaní stratí, a stojí päť čítaní z textúry na každý pixel. */
+  if (uTienVzoriek <= 4) {
+    float d0 = texture(uTienMapa, s.xy).r;
+    return (s.z - posun) > d0 ? 0.0 : 1.0;
+  }
   float blokHlbka = 0.0; float blokPocet = 0.0;
   for (int i = 0; i < 5; i++) {
     vec2 o = rot * KOTUC[i * 3] * uTienKrok * 3.2;
@@ -419,7 +451,7 @@ float vTieni(vec3 n) {
      túto scénu — preto tieň stĺpa pri päte drží tvar a tieň strechy sa
      na zemi rozplýva. */
   float rozostup = clamp((s.z - blokHlbka) * 42.0, 0.0, 1.0);
-  vec2 krok = uTienKrok * mix(1.0, 7.0, rozostup);
+  vec2 krok = uTienKrok * mix(1.2, 8.0, rozostup);
 
   /* Počet vzoriek sa mení podľa toho, či sa model práve otáča. V pohybe
      oko mäkkosť okraja nestihne prečítať a osem vzoriek je polovičná cena;
@@ -480,7 +512,7 @@ void main() {
   vec2 podkladLad = vec2(0.0);
   float priehladnostSkla = -1.0;
   bool jePodklad = (priznakyBit & 1) != 0;
-  if (jePodklad) {
+  if (jePodklad && uPodkladDetail > 0.5) {
     /* Dlažba 90 × 90 cm — rovnaký raster, aký kreslila doterajšia scéna. Predchádzajúca verzia kreslila pravidelnú mriežku
        a vyzerala ako milimetrový papier: každá dlaždica rovnaká, každá škára
        rovnako tmavá. Skutočný betón je na každej doske o kúsok inak svetlý,
@@ -548,8 +580,8 @@ void main() {
     /* Rozdiel medzi doskami je väčší, než sa zdá. Pri piatich percentách
        vyšla dlažba ako jedna liata plocha; betónová doska sa od susednej
        líši viac a práve to z plochy spraví dvor. */
-    podkladFarba *= 0.930
-                  + tonDosky * 0.086 * ostrost + (1.0 - ostrost) * 0.043
+    podkladFarba *= 0.946
+                  + tonDosky * 0.062 * ostrost + (1.0 - ostrost) * 0.031
                   + zrno * 0.030 * ostrostZrna + (1.0 - ostrostZrna) * 0.015
                   + vlna * 0.036;
     /* Škára musí byť vidieť. Pri 0,86 sa z nej po filmovej krivke stal
@@ -557,9 +589,9 @@ void main() {
     /* Čo sa utlmí, nahradí svoja stredná hodnota. Škára zaberá z dlaždice
        asi osminu; keby v diaľke jednoducho zmizla, plocha by tam zosvetlela
        a na prechode by vyšiel pás. */
-    float strednaSkara = 1.0 - 0.128 * 0.30;
+    float strednaSkara = 1.0 - 0.128 * 0.16;
     float utlm = max(ostrostX, ostrostY);
-    podkladFarba *= mix(strednaSkara, mix(1.0, 0.70, skara), utlm);
+    podkladFarba *= mix(strednaSkara, mix(1.0, 0.84, skara), utlm);
     /* Škára je matnejšia než doska, doska má miestami hladšie miesta. */
     drsnost = clamp(drsnost * (0.93 + zrno * 0.14 * ostrostZrna + (1.0 - ostrostZrna) * 0.07)
                   + skara * 0.05, 0.035, 1.0);
@@ -598,7 +630,12 @@ void main() {
      primieša k rozptýlenému ožiareniu — na tejto scéne je to na nerozoznanie
      a nestojí ani textúru, ani jej prípravu. */
   vec3 rOhnuty = normalize(mix(r, n, drsnost * drsnost * 0.82));
-  vec3 odraz = mix(farbaOblohy(rOhnuty, uSlnko, uZamracene), ozar, drsnost * 0.55);
+  /* Drsný povrch vracia namiesto obrazu oblohy jej priemer — a ten už máme
+     spočítaný. Vyhodnotiť pre matný lak celú oblohu je zbytočná práca na
+     každom pixeli, a práve matných plôch je v scéne najviac. */
+  vec3 odraz = drsnost > 0.58
+    ? ozar
+    : mix(farbaOblohy(rOhnuty, uSlnko, uZamracene), ozar, drsnost * 0.55);
   /* Drsný dielektrik nevracia toľko zrkadlového svetla, koľko mu prisúdi
      analytická aproximácia — jej zvyšková zložka je počítaná štedro a časť
      tej istej energie je už v rozptýlenom svetle. Na tmavom laku to bolo
@@ -655,8 +692,13 @@ void main() {
   /* Tenký vzdušný závoj do hĺbky. Drží oddelenie predného a zadného stĺpa
      aj vtedy, keď majú rovnakú farbu. */
   float vzdial = length(uOko - vPoz);
-  float mlha = 1.0 - exp(-vzdial * 2.2e-5);
-  farba = mix(farba, farbaOblohy(normalize(vPoz - uOko), uSlnko, uZamracene) * 0.9, mlha * 0.55);
+  /* Závoj má dať hĺbku, nie hmlu. Kým miešal do jasnej oblohy silou 0,55,
+     tvoril na tmavom ráme štyri pätiny jeho jasu — antracit sa cez celý
+     záber rozplynul do svetlosivej a obraz vyzeral zahmlený. Odmerané:
+     najtmavšie percentá obrazu mali 88 namiesto 46. Ostáva z neho toľko,
+     aby vzdialenejší stĺp bol o kúsok bledší než bližší. */
+  float mlha = 1.0 - exp(-vzdial * 1.1e-5);
+  farba = mix(farba, mix(uOzarDole, uOzarBok, 0.5), mlha * 0.10);
 
   /* Podklad nekončí hranou. Doterajší okraj dlažby bol na zábere vidieť ako
      rovná čiara cez celú šírku — a nič tak spoľahlivo neprezradí, že model
@@ -676,7 +718,7 @@ void main() {
     /* Aj tam, kde už dlažba nemá kresbu, ostáva podlahou — prechádza do
        tónu odrazu zeme, nie do farby steny. Práve ten rozdiel drží
        horizont. */
-    vec3 dalka = farbaOblohy(normalize(vec3(vPoz.xy - uOko.xy, -0.06)), uSlnko, uZamracene) * 0.88;
+    vec3 dalka = mix(uOzarDole, uOzarBok, 0.55) * 0.92;
     farba = mix(dalka, farba, zanik);
   }
 
@@ -1009,12 +1051,16 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       ciele: null,             /* vyrovnávacie pamäte */
       tien: null,
       kamera: null,
-      slnko: vec3.norm([-0.38, 0.52, 0.72]),
-      svetloSlnka: [3.90, 3.80, 3.62],
+      slnko: vec3.norm([-0.30, 0.42, 0.86]),
+      svetloSlnka: [2.95, 2.90, 2.80],
       zamracene: 0,
       silaAO: 0.62,
       silaZiary: 0.55,
-      vineta: 0.24,
+      /* Vinetácia sa na fotografii výrobku nerobí. Pri 0,24 ubrala v rohu
+         záberu štrnásť percent jasu a zo svetlej steny štúdia bola sivá —
+         práve to robilo z obrazu zašedený render namiesto fotky. Ostáva
+         nepatrný zvyšok, ktorý usadí pohľad do stredu. */
+      vineta: 0.06,
       /* Dve úrovne kvality. V pohybe ide o plynulosť: menej vzoriek tieňa,
          bez zatienenia v kútoch a bez žiary. Po zastavení sa scéna dokreslí
          naplno. Rozdiel v pohybe nie je vidieť, rozdiel v snímkoch áno. */
@@ -1035,6 +1081,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
        trojuholníky vejárom — polygóny sú konvexné (vznikajú ako obdĺžniky
        a rezy rovinou), takže vejár stačí a je najlacnejší. */
     stav.nastavScenu = function (plochy, klasifikuj) {
+      stav.tienPlatny = false;
       const g = stav.gl;
       let pocetVrcholov = 0;
       for (const f of plochy) if (f.w && f.w.length > 2) pocetVrcholov += (f.w.length - 2) * 3;
@@ -1216,17 +1263,46 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       };
     };
 
-    /* Prepnutie kvality. `pohyb` znamená, že používateľ práve ťahá modelom. */
-    stav.nastavKvalitu = function (pohyb) {
+    /* Prepnutie kvality. `pohyb` znamená, že používateľ práve ťahá modelom,
+       `stupen` 0 až 2 je to, koľko toho stroj unesie.
+
+       Podstatné je, čo sa pri slabšom stroji uberá: výpočet, nie rozlíšenie.
+       Doteraz si vykresľovač v pohybe sám zmenšoval plátno až na 0,4 —
+       a práve to divák vidí ako kockovanie, lebo hrany profilu prestanú byť
+       hrany. Počet vzoriek tieňa, zatienenie v kútoch a žiara sú pritom veci,
+       ktoré pri otáčaní nikto nerozozná. Kreslí sa preto vždy v plných
+       pixeloch displeja a šetrí sa na tom, čo nevidieť. */
+    stav.nastavKvalitu = function (pohyb, stupen) {
+      const st = Math.max(0, Math.min(2, stupen === undefined ? 2 : stupen | 0));
       stav.kvalita = pohyb
-        ? { tienVzoriek: 6, ssao: false, ziara: false }
-        : { tienVzoriek: 16, ssao: true, ziara: true };
+        ? { tienVzoriek: st === 0 ? 1 : st === 1 ? 4 : 8,
+            ssao: false, ziara: false, podkladDetail: st >= 1 }
+        : { tienVzoriek: st === 0 ? 8 : 16,
+            ssao: st >= 1, ziara: st >= 1, podkladDetail: true };
     };
 
     /* Koľko svetla vráti zem. Je to odrazivosť podkladu krát to, čo naň
        dopadne — priame slnko podľa jeho výšky plus obloha — delené π, lebo
        ide o jas, nie o ožiarenie. Súčiniteľ na konci je za viacnásobný
        odraz, ktorý sa inak nepočíta. */
+    /* Tri smery oblohy pre rozptýlené svetlo — hore, do boku, dole.
+       Počítajú sa tými istými číslami, aké má shader, len raz za snímok
+       namiesto raz za pixel. Bok je pri dvadsiatich stupňoch nad horizontom:
+       tam smeruje priemer pologule, ktorú vidí zvislá stena. */
+    stav.ozarenieSmery = function () {
+      const z = stav.zamracene > 0.5 ? 1 : stav.zamracene;
+      const mix3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+      const zenit = mix3(NEBO.zenitJasno, NEBO.zenitZamrac, z);
+      const horiz = mix3(NEBO.horizJasno, NEBO.horizZamrac, z);
+      /* t = pow(dir.z, 0.42) pre dir.z = 0,2148, teda smer (1, 0, 0,22) */
+      const tBok = Math.pow(0.21478, 0.42);
+      return {
+        hore: new Float32Array(zenit),
+        bok: new Float32Array(mix3(horiz, zenit, tBok)),
+        dole: stav.odrazZeme()
+      };
+    };
+
     stav.odrazZeme = function () {
       const s = stav.slnko, i = stav.svetloSlnka, z = Math.max(0, s[2]);
       const obloha = stav.zamracene > 0.5 ? 0.62 : 0.42;
@@ -1237,8 +1313,16 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
 
     stav.nastavSvetlo = function (s) {
       if (s.odrazivostPodkladu) stav.odrazivostPodkladu = s.odrazivostPodkladu;
-      if (s.slnko) stav.slnko = vec3.norm(s.slnko);
-      if (s.zamracene !== undefined) stav.zamracene = s.zamracene;
+      if (s.slnko) {
+        const novy = vec3.norm(s.slnko);
+        if (Math.abs(novy[0] - stav.slnko[0]) + Math.abs(novy[1] - stav.slnko[1])
+          + Math.abs(novy[2] - stav.slnko[2]) > 1e-6) stav.tienPlatny = false;
+        stav.slnko = novy;
+      }
+      if (s.zamracene !== undefined) {
+        if (s.zamracene !== stav.zamracene) stav.tienPlatny = false;
+        stav.zamracene = s.zamracene;
+      }
       if (s.svetloSlnka) stav.svetloSlnka = s.svetloSlnka;
     };
 
@@ -1325,11 +1409,24 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
     }
 
     function pripravTien() {
+      /* Rozmer mapy sa riadi tým, čo stroj unesie. Mapa sa prekresľuje len
+         pri zmene modelu alebo slnka, ale práve vtedy je najdrahšia: dvadsať
+         tisíc trojuholníkov cez celú jej plochu. Na slabšom stroji stačí
+         polovičná — okraj tieňa je o vlások hrubší a nikto si to pri ťahaní
+         posuvníka nevšimne. */
+      const chcem = stav.kvalita && stav.kvalita.tienVzoriek <= 4
+        ? Math.min(1024, TIEN_ROZMER) : TIEN_ROZMER;
+      if (stav.tien && stav.tien.rozmer !== chcem) {
+        gl.deleteFramebuffer(stav.tien.fb);
+        gl.deleteTexture(stav.tien.t);
+        stav.tien = null;
+        stav.tienPlatny = false;
+      }
       if (stav.tien) return stav.tien;
       const fb = gl.createFramebuffer();
       const t = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, TIEN_ROZMER, TIEN_ROZMER, 0,
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, chcem, chcem, 0,
         gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
       /* NEAREST, nie LINEAR. Hĺbková textúra v tomto formáte nie je vo WebGL2
          filtrovateľná bez porovnávacieho vzorkovača — s LINEAR je textúra
@@ -1345,7 +1442,7 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       gl.drawBuffers([gl.NONE]);
       gl.readBuffer(gl.NONE);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      return (stav.tien = { fb, t, rozmer: TIEN_ROZMER });
+      return (stav.tien = { fb, t, rozmer: chcem });
     }
 
     /* Matica slnka. Ortografický pohľad presne na obal scény — keby bol
@@ -1427,10 +1524,12 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       stav.posunPoNormale = stav.tienPolomer ? (2.0 * stav.tienPolomer / t.rozmer) * 2.5 : 4;
 
       /* --- 1 · tieňová mapa -------------------------------------------- */
-      /* Pri doostrovaní sa nekreslí znova. Slnko ani geometria sa medzi
-         posunutými snímkami nehnú, takže by z toho vyšla tá istá mapa —
-         a je to najdrahší priechod z celého snímku. */
-      if (n === 0) {
+      /* Kreslí sa len vtedy, keď sa zmenila geometria alebo slnko. Pri
+         otáčaní sa nemení ani jedno, takže by z nej vyšla tá istá mapa —
+         a pritom je to najdrahší priechod celého snímku: dvadsaťštyri tisíc
+         trojuholníkov a plocha dva tisíc krát dva tisíc pixelov. Za jedno
+         ťahanie je to zopár stoviek zbytočných priechodov. */
+      if (!stav.tienPlatny) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
       gl.viewport(0, 0, t.rozmer, t.rozmer);
       gl.enable(gl.DEPTH_TEST);
@@ -1448,6 +1547,8 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       gl.bindVertexArray(s.vao);
       gl.drawArrays(gl.TRIANGLES, 0, s.pocetVrhacov);
       gl.disable(gl.CULL_FACE);
+      stav.tienPlatny = true;
+      stav.tienMatica = sm;
       }
 
       /* --- 2 · hlavný priechod ----------------------------------------- */
@@ -1488,13 +1589,20 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       /* Náskok je v hĺbke po orezaní. Roviny sú priložené tesne na scénu, tak
          stačí zlomok promile — dosť na to, aby lemovanie vyhralo nad plechom,
          a málo na to, aby čokoľvek preplávalo cez susedný diel. */
-      /* Jeden stupeň poradia. Štyri stotisíciny súradnice hĺbky vychádzajú
-         pri bežnom zábere na necelý milimeter sveta — nad presnosťou
-         dvadsaťštyribitovej hĺbky o tri rády, a pritom priďaleko od toho,
-         aby detail predbehol stĺp pred sebou. */
-      gl.uniform1f(P.u.uKrokPoradia, 4.0e-5);
+      /* Jeden stupeň poradia. Musí byť menší než najtesnejšia skutočná
+         vôľa v modeli, inak ju prekročí a rozhodne proti geometrii: rameno
+         lemovania má nad hrebeňom vlny pol milimetra a pri kroku 0,46 mm
+         začal plech cez rameno presvitať ako rad bielych zúbkov. Šesť
+         milióntin je sedem stotín milimetra — dosť na rozsúdenie dvoch
+         plôch v jednej rovine a dvadsaťkrát menej, než je tá vôľa. */
+      gl.uniform1f(P.u.uKrokPoradia, 6.0e-6);
 
       gl.uniform1i(P.u.uTienVzoriek, stav.kvalita.tienVzoriek);
+      const oz = stav.ozarenieSmery();
+      gl.uniform3fv(P.u.uOzarHore, oz.hore);
+      gl.uniform3fv(P.u.uOzarBok, oz.bok);
+      gl.uniform3fv(P.u.uOzarDole, oz.dole);
+      gl.uniform1f(P.u.uPodkladDetail, stav.kvalita.podkladDetail === false ? 0 : 1);
       gl.uniform1f(P.u.uOrezavat, stav.orezavat === false ? 0 : 1);
       {
         const o = stav.obal || [0, 0, 0, 1, 1, 1];

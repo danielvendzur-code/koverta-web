@@ -1946,7 +1946,7 @@
             painter3D = false;
             scheduleStage();
           }, false);
-          painter3D = { r, surface, pohybMierka: 0.8, casy: [], poslednyCas: 0 };
+          painter3D = { r, surface, stupen: 2, casy: [], poslednyCas: 0 };
           /* Ladiaci prístup k vykresľovaču: `__KV3D_DEBUG.ladenie = 1..9`
              vymení hotový obraz za jednu zložku (tieň, normála, albedo). */
           try { window.__KV3D_DEBUG = r; } catch (e) {}
@@ -1971,9 +1971,15 @@
           const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
           const vPohybe = motionDetail;
           if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
-          const mierka = vPohybe ? painter3D.pohybMierka : 1;
-          const w = Math.max(2, Math.round(cssW * dpr * mierka));
-          const h = Math.max(2, Math.round(cssH * dpr * mierka));
+          /* Vždy v plných pixeloch displeja — aj počas ťahania.
+
+             Doterajší vykresľovač si v pohybe uberal rozlíšenie až na 0,4
+             a práve to divák vidí ako kockovanie: hrana profilu prestane byť
+             hranou. Keď sa musí ubrať, uberá sa na výpočte (vzorky tieňa,
+             zatienenie v kútoch, žiara, kresba dlažby) — to pri otáčaní
+             nikto nerozozná. */
+          const w = Math.max(2, Math.round(cssW * dpr));
+          const h = Math.max(2, Math.round(cssH * dpr));
           if (surface.width !== w || surface.height !== h) { surface.width = w; surface.height = h; }
           if (surface.style.width !== cssW + 'px') {
             surface.style.width = cssW + 'px';
@@ -2003,7 +2009,7 @@
           r.nastavSvetlo({ zamracene: camera.zamracene ? 1 : 0 });
           /* V pohybe ide o plynulosť, v pokoji o obraz. Prepínač je ten istý
              `motionDetail`, ktorý doteraz znižoval rozlíšenie. */
-          r.nastavKvalitu(motionDetail);
+          r.nastavKvalitu(motionDetail, painter3D.stupen);
 
           /* Autá, posedenie, dopadový tieň a dážď majú vlastný vykresľovač.
              Kreslia sa do tej istej vyrovnávacej pamäte ako konštrukcia,
@@ -2076,14 +2082,15 @@
             if (c.length > 8) c.shift();
             if (c.length === 8) {
               const m = c.slice().sort((a, b) => a - b)[4];
-              const chcem = m > 26 ? painter3D.pohybMierka * 0.80
-                          : m < 15 ? painter3D.pohybMierka * 1.10
-                          : painter3D.pohybMierka;
-              const nova = Math.max(0.4, Math.min(1, chcem));
-              if (Math.abs(nova - painter3D.pohybMierka) > 0.02) {
-                painter3D.pohybMierka = nova;
-                c.length = 0;
-              }
+              /* Nadol hneď, nahor opatrne. Keď stroj nestíha, divák to vidí
+                 okamžite; keď stíha, jeden rýchly snímok ešte nič nedokazuje.
+                 Ubratý stupeň znamená menej vzoriek tieňa a menej kresby na
+                 dlažbe — nie menšie plátno. */
+              const chcem = m > 30 ? painter3D.stupen - 1
+                          : m < 13 ? painter3D.stupen + 1
+                          : painter3D.stupen;
+              const novy = Math.max(0, Math.min(2, chcem));
+              if (novy !== painter3D.stupen) { painter3D.stupen = novy; c.length = 0; }
             }
           }
           return hotovo;
@@ -2765,9 +2772,6 @@
              and those isolated stalls still occupied p95. Koverta retains its
              established view bands because its trapezoid skin details select
              the upper or lower physical face at the roof-plane crossing. */
-          const geometryViewKey = model().kvGeom
-            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1])]
-            : [];
           /* Koľko milimetrov stavby pripadne na jeden pixel obrazovky.
 
              Presné číslo vyjde až z mierky, ktorá sa počíta o kus nižšie —
@@ -2785,8 +2789,36 @@
           const mmNaPixel = Math.max(L, W, H) * 1.15
             / Math.max(120, (canvas.clientWidth || 900) * hustotaPlatna * manualZoom);
           const stupenDetailu = mmNaPixel <= 4.5 ? 2 : mmNaPixel <= 7.5 ? 1 : 0;
+          /* Vlna trapézového plechu: bok rebra je široký 32,5 mm a strecha
+             sa vidí šikmo, takže sa do výšky na obrazovke stlačí sínusom
+             výšky pohľadu. Pod pol druha pixela z nej nie je vlna, ale zrno —
+             a je to okolo tisíc plôch, teda osmina celého modelu. Vtedy sa
+             plech položí ako rovná tabuľa vo výške hrebeňa; vzhľad sa
+             nezmení, lebo hrebeň je aj tak to, čo z nej vidieť. */
+          const vlnaPx = 32.5 * Math.max(0.10, Math.abs(se)) / Math.max(0.01, mmNaPixel);
+          const vlnaVidno = vlnaPx >= 1.6;
+          /* Prah drobností. Z 5 972 tmavých plôch modelu je 4 724 menších než
+             tridsať milimetrov — kotviace platne, pätky, príruby a zvary
+             vymodelované na milimeter. Pri bežnom zábere pripadá na pixel
+             deväť milimetrov, takže z takej plochy nie je detail, ale jeden
+             pixel o inom jase: nevidno ju, ale kreslí sa a stojí presne
+             toľko ako každá iná. Diera, ktorá po nej ostane, je menšia než
+             pixel a susedné plochy ju prekryjú.
+
+             Prah je odstupňovaný po polovici oktávy, aby sa geometria
+             neprestavovala pri každom otočení kolieska, a pri priblížení
+             sa detail vráti sám. */
+          const krokPrahu = Math.pow(2, Math.round(Math.log2(Math.max(0.05, mmNaPixel)) * 2) / 2);
+          const prahDrobnosti = krokPrahu * 1.6;
+
+          /* Útlm vlny závisí od výšky pohľadu, takže patrí len ku Koverte —
+             Soltec vlnu nemá a jeho geometria sa otáčaním kamery prestavovať
+             nesmie. */
+          const geometryViewKey = model().kvGeom
+            ? [se > 0.01, fromAbove, Math.sign(VIEWDIR[0]), Math.sign(VIEWDIR[1]), vlnaVidno]
+            : [];
           const geometryKey = JSON.stringify(state) + '|'
-            + [overcast, stupenDetailu].concat(geometryViewKey).join(',');
+            + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const re3D = Boolean(pripravPainter3D());
@@ -2823,6 +2855,18 @@
                  kreslia nad horizontom a s vlastným poradím (`bias`);
                  samotná dlažba ho nemá. */
               if (o.aboveHorizon && o.bias) return;
+              /* Drobnosť menšia než pixel sa nekreslí. Meria sa uhlopriečka
+                 obalu plochy, takže tenká, ale dlhá hrana profilu ostáva —
+                 tá je na obraze vidieť ako svetlá čiara a patrí tam. */
+              if (!o.bg && prahDrobnosti > 0) {
+                let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+                for (const q of pts) {
+                  if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0];
+                  if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1];
+                  if (q[2] < z0) z0 = q[2]; if (q[2] > z1) z1 = q[2];
+                }
+                if (Math.hypot(x1 - x0, y1 - y0, z1 - z0) < prahDrobnosti) return;
+              }
               /* Tieň strechy, tieň pri päte stĺpa a pruhy svetla medzi
                  lamelami boli namaľované na zem, lebo doterajší maliar nič
                  iné nevedel. Tu ich kreslí slnko: tieňová mapa ich má
@@ -4409,7 +4453,17 @@
                  continuous top arm. Its underside stays 0.5 mm above the
                  corrugation crowns, so no roof facet is cut and the flashing
                  owns the complete top sight line. */
-              put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
+              /* Rameno dosadá na hrebene vlny, nie do nich.
+
+                 Kým bol jeho spodok na 258,5 mm a hrebeň trapézu na 259,
+                 prerastal plech cez rameno o pol milimetra — na zábere to bol
+                 rad bielych zúbkov pozdĺž celej hrany strechy, presne
+                 v rozstupe vlny. Nebol to hĺbkový test, bola to geometria:
+                 aj skutočné lemovanie leží na hrebeňoch, nie pod nimi.
+                 Rameno je tým o milimeter vyššie, čo je na obraze desatina
+                 pixela. */
+              const ramenoZ = Math.max(zTop - LEM_ARM, trapTop + 0.5);
+              put(outer, outer + (sirka + LEM_COVER) * dir, ramenoZ + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
               put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
@@ -4799,6 +4853,22 @@
 
             const drawTrapSurface = (x0, x1, y0, y1, zAt, hex, upward) => {
               if (x1 <= x0 || y1 <= y0) return;
+              /* Keď z vlny na obrazovke nič nie je, tabuľa sa položí naplocho
+                 vo výške hrebeňa. Vo výške hrebeňa preto, že práve ten drží
+                 všetky vzdialenosti k lemovaniu — nižšia rovina by pod jeho
+                 ramenom otvorila škáru. */
+              if (!vlnaVidno) {
+                const zRovno = zAt(ty1);
+                const pts = upward
+                  ? [[x0, y0, zRovno], [x1, y0, zRovno], [x1, y1, zRovno], [x0, y1, zRovno]]
+                  : [[x0, y0, zRovno], [x0, y1, zRovno], [x1, y1, zRovno], [x1, y0, zRovno]];
+                quad(pts, upward ? shade(hex, 0.004) : shade(hex, -0.053), {
+                  material: upward ? undefined : 'zinc',
+                  normal: [0, 0, upward ? 1 : -1],
+                  cull: true, edge: false, raw: false, seamless: true, sealSplits: true
+                });
+                return;
+              }
               const cuts = trapBreaks(y0, y1);
               for (let i = 0; i < cuts.length - 1; i++) {
                 const a = cuts[i], b = cuts[i + 1];
@@ -4815,8 +4885,14 @@
                      Predošlé kontrasty -5,5/+3,5 % vytvorili pri zmenšení
                      interferenčné vlny a strecha vyzerala pokrčená. Jemný
                      rozdiel zachová čitateľný smer rebier bez moiré. */
-                  tone = flat ? shade(hex, high ? 0.010 : -0.006)
-                              : shade(hex, zb > za ? -0.014 : 0.004);
+                  /* Vlna má byť vidieť. Jemné rozdiely z čias, keď sa
+                     scéna kreslila bez vyhladzovania, dávali pri zmenšení
+                     interferenčné pásy — preto boli také opatrné. Doostrovanie
+                     dvanástimi posunutými snímkami tie pásy zloží do plynulého
+                     tónu, takže kontrast môže byť taký, aký na plechu naozaj
+                     je: hrebeň svetlý, bok do spádu tmavší. */
+                  tone = flat ? shade(hex, high ? 0.028 : -0.020)
+                              : shade(hex, zb > za ? -0.052 : 0.016);
                 }
                 const cavity = upward ? 0 : trapProfile01((a + b) / 2);
                 // Less skylight reaches the recessed upper channel. The paint
@@ -4852,6 +4928,30 @@
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
             drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+
+            /* Uzáver vlny pod čelným lemovaním.
+
+               Trapézový plech má na čele otvorený profil — medzi hrebeňmi sú
+               priechodné kanály vysoké 36 mm. Pri pohľade zhora sa dalo popod
+               rameno lemovania pozrieť priamo do nich a cez celú strechu bolo
+               vidieť pozinkované väznice: na zábere z toho bol rad bielych
+               zúbkov pozdĺž hrany, presne v rozstupe vlny. Nebol to hĺbkový
+               test ani lemovanie, bol to výhľad dierou.
+
+               Skutočná strecha tam má uzáver vlny — tvarovaný profil, ktorý
+               kanály uzavrie. Tu je to rovnaký kus: tenká stena od dna vlny
+               po rameno lemovania, zasunutá pod jeho krytie, takže z nej
+               vidno len to, čo z uzáveru vidno aj na streche. */
+            if (vlnaVidno) {
+              const UZAVER_T = 3;
+              const uzaverZ0 = trapBot + TRAP_SKIN_VIS;
+              const uzaverH = Math.max(1, (trapTop + 0.5) - uzaverZ0);
+              [LEM_CELO - UZAVER_T, L - LEM_CELO].forEach((ux) => {
+                if (ux <= tx0 || ux + UZAVER_T >= tx1) return;
+                boxFaces(ux, ty0, uzaverZ0, UZAVER_T, ty1 - ty0, uzaverH,
+                  frame, [], SHAFT, 0, true, true);
+              });
+            }
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
                here and would reintroduce the dotted z-fighting seam. */
