@@ -2844,6 +2844,11 @@
       v.addEventListener('error', vzdaj);
 
       if (!('IntersectionObserver' in window)) { pusti(); return; }
+      /* Úvodné video je na prvej obrazovke, takže na pozorovateľa čakať nemá
+         načo: kým sa zavolá, prejde ešte jeden snímok a divák medzitým vidí
+         fotografiu. Ak je značka vidieť už pri načítaní, spustí sa hneď;
+         pozorovateľ potom slúži len na zastavenie, keď sa odscrolluje preč. */
+      if (v.getBoundingClientRect().top < window.innerHeight) pusti();
       const sled = new IntersectionObserver((zaznamy) => {
         zaznamy.forEach((z) => {
           if (z.isIntersecting) pusti();
@@ -3043,7 +3048,12 @@
       const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
       const href = link ? (link.getAttribute('href') || '') : '';
       const base = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
-      return base + name;
+      /* Náhľad v ponuke je najviac 230 px široký. Sťahovať naň celú
+         fotografiu znamená 300 až 400 kB na jeden obrázok a sedem obrázkov
+         v jednej ponuke — a na obrazovke z toho vidno dvestotridsať pixelov.
+         Tisícpixelová verzia vo WebP existuje ku každej z nich a na hustom
+         displeji je stále ostrá. */
+      return base + name.replace(/\.(jpe?g|png)$/i, '-w1000.webp');
     };
 
     const menuLabel = (item) => {
@@ -3170,7 +3180,7 @@
       setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
       setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pevne-prestresenie-mokrance.jpg');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
-      setMenuPhoto(byHref('tienenie'), 'soltec-tienenie-posuvne-panely-h50.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-pergola-zip-rolety-pri-bazene.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
       addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
       addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
@@ -3184,7 +3194,7 @@
       const panel = realItem.querySelector('.kv-mega');
       const list = panel && panel.querySelector('.kv-pod');
       if (panel && list) {
-        const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+        const photos = ['koverta-pristresok-pre-auto-pred-domom.jpg', 'koverta-pristresok-drevene-lamely-bocna-vypln.jpg'];
         [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
           const a = li.querySelector(':scope > a');
           if (!a) return;
@@ -3217,7 +3227,7 @@
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pevne-prestresenie-mokrance.jpg');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
-    setDrawerPhoto('tienenie', 'soltec-tienenie-posuvne-panely-h50.jpg');
+    setDrawerPhoto('tienenie', 'soltec-pergola-zip-rolety-pri-bazene.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
 
     const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
@@ -3226,7 +3236,7 @@
     });
     if (drawerReal && drawerReal.dataset.kBatch5 !== 'true') {
       const list = drawerReal.querySelector('.kv-drawer__rad');
-      const photos = ['koverta-pristresok-auto-trnava-sikmy.jpg', 'koverta-carport-lamely-stena.jpg'];
+      const photos = ['koverta-pristresok-pre-auto-pred-domom.jpg', 'koverta-pristresok-drevene-lamely-bocna-vypln.jpg'];
       if (list) {
         list.classList.remove('kv-drawer__rad--text');
         list.classList.add('kv-drawer__rad--real');
