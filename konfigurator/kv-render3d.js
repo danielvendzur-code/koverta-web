@@ -132,18 +132,32 @@
      odráža okolo 0,35, a scéna z nej mala bielu podlahu bez tieňov.
      Čísla nižšie sú skutočné odrazivosti tých materiálov. */
   const MATERIALY = {
-    lak:      { kov: 0.08, drsnost: 0.33, odraz: 1.00 },  /* prášková farba — tmavé RAL sedia */
-    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.92 },  /* žiarový zinok */
-    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.95 },  /* holý hliník, lemovanie */
+    /* Prášková farba je dielektrikum s jemne zrnitým povrchom, nie lesklý
+       lak. Pri drsnosti 0,33 pribral tmavý antracit toľko odrazu oblohy, že
+       z neho bola stredná sivá — výrobok pritom predáva práve tá tmavá.
+       0,50 je hodnota, pri ktorej má profil stále lesklú hranu, ale plocha
+       ostane taká tmavá, ako je v skutočnosti. */
+    /* 0,42 nie je odhad. Doterajší vykresľovač násobil zadanú farbu
+       súčiniteľom okolo 0,4 a až to bol vzhľad, ktorý si dizajnér schválil —
+       zadaná farba teda nie je odrazivosť, ale hotový obraz. Keby sa použila
+       tak, ako je, antracit na stĺpe vyjde o dve tretiny svetlejší. Odmerané
+       na tom istom zábere oboma vykresľovačmi. */
+    lak:      { kov: 0.02, drsnost: 0.58, odraz: 0.40 },
+    zinok:    { kov: 0.72, drsnost: 0.40, odraz: 0.62 },  /* žiarový zinok */
+    hlinik:   { kov: 0.88, drsnost: 0.28, odraz: 0.60 },  /* holý hliník, lemovanie */
     sklo:     { kov: 0.00, drsnost: 0.05, odraz: 1.00 },
-    panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.86 },  /* biely plech odráža okolo 0,7 */
-    drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.80 },
+    /* `poradie` dáva plechu nepatrný náskok v hĺbke pred tým, čo leží pod
+       ním v tej istej rovine — pred väzníkmi, príchytkami a spojkami. Bez
+       neho rozhodoval hĺbkový test medzi nimi náhodne a na bielej streche
+       vyskočili tmavé bodky, ktoré vyzerali ako špina. */
+    panel:    { kov: 0.04, drsnost: 0.55, odraz: 1.00, poradie: 40 },
+    drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.62 },
     polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
-    dlazba:   { kov: 0.00, drsnost: 0.84, odraz: 0.50 },  /* betón odráža okolo 0,35 */
+    dlazba:   { kov: 0.00, drsnost: 0.84, odraz: 0.66 },  /* betón na slnku */
     trava:    { kov: 0.00, drsnost: 0.95, odraz: 0.55 },
     auto:     { kov: 0.35, drsnost: 0.25, odraz: 0.95 },
     guma:     { kov: 0.00, drsnost: 0.88, odraz: 0.70 },
-    zakladny: { kov: 0.04, drsnost: 0.50, odraz: 0.92 }
+    zakladny: { kov: 0.04, drsnost: 0.50, odraz: 0.50 }
   };
 
   /* --------------------------------------------------------------- SHADERY */
@@ -159,6 +173,7 @@ precision highp int;
      horizonte, tmavší zenit, slnko a odraz zeme zdola. */
   const OBLOHA = `
 uniform vec3 uOdrazZeme;
+uniform float uPozadie;
 
 vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
   float h = clamp(dir.z * 0.5 + 0.5, 0.0, 1.0);
@@ -189,7 +204,12 @@ vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
      preto počíta z odrazivosti podkladu a zo sily slnka a prichádza sem
      hotová. Bez nej ostal celý spodok konštrukcie tmavý a drobné kotvenia
      na ňom vyskočili ako svetlé bodky. */
-  vec3 zem = uOdrazZeme;
+  /* Pod horizontom je zem. Do obrazu ide ako svetlá stena štúdia, do
+     zrkadlenia ako skutočná dlažba — a to nie je to isté: keď sa svetlé
+     pozadie premietlo aj do odrazov, tmavý antracit na stĺpe vyšiel o dve
+     tretiny svetlejší, než v skutočnosti je. Prepínač uPozadie rozhodne,
+     ktorá z dvoch úloh sa práve počíta. */
+  vec3 zem = mix(uOdrazZeme, vec3(0.62, 0.618, 0.610), uPozadie * 0.58);
   c = mix(zem, c, smoothstep(-0.055, 0.035, dir.z));
 
   /* Slnečný kotúč a jeho halo. Pri zamračení sa kotúč stratí a ostane len
@@ -219,7 +239,12 @@ vec3 ozarenie(vec3 n, vec3 slnko, float zamracene) {
   /* Jas oblohy v jednom smere nie je ožiarenie plochy. Integrál cez pologuľu
      dá zlomok z neho — bez tohto delenia je obloha silnejšia než poludňajšie
      slnko a scéna je celá modrá bez tieňov. */
-  c *= 0.74;
+  /* Obloha nie je rovnomerná kupola. Pri 0,74 dostával tmavý antracit toľko
+     rozptýleného svetla, že z neho bola stredná sivá — a práve tá tmavá je
+     to, čo výrobok predáva. Nižšia hodnota prehĺbi tiene aj tmavé materiály;
+     stratené svetlo sa vracia v slnku, takže osvetlené plochy ostanú rovnako
+     jasné a obraz dostane kontrast. */
+  c *= 0.50;
   /* Tieň vonku nie je modrý tak, ako je modrá obloha: než svetlo dopadne,
      odrazí sa od zeme, od steny, od auta. Každý odraz uberie sýtosť. Toto
      je jeden krok toho premiešania — bez neho vyzerá tieň ako fotomontáž. */
@@ -532,7 +557,11 @@ void main() {
      a nestojí ani textúru, ani jej prípravu. */
   vec3 rOhnuty = normalize(mix(r, n, drsnost * drsnost * 0.82));
   vec3 odraz = mix(farbaOblohy(rOhnuty, uSlnko, uZamracene), ozar, drsnost * 0.55);
-  vec3 specIbl = odraz * envBRDF(f0, drsnost, ndv);
+  /* Drsný dielektrik nevracia toľko zrkadlového svetla, koľko mu prisúdi
+     analytická aproximácia — jej zvyšková zložka je počítaná štedro a časť
+     tej istej energie je už v rozptýlenom svetle. Na tmavom laku to bolo
+     vidieť najviac: práve ona z antracitu spravila strednú sivú. */
+  vec3 specIbl = odraz * envBRDF(f0, drsnost, ndv) * mix(1.0, 0.16, drsnost);
 
   /* Odraz sa nesmie kresliť pod horizont tam, kde je zem — inak sa v zvislom
      stĺpe zrkadlí obloha aj zospodu. */
@@ -706,6 +735,7 @@ uniform float uSilaAO;
 uniform float uSilaZiary;
 uniform float uVineta;
 uniform float uExpozicia;
+uniform float uKontrast;
 uniform int uLadenieTon;   /* 1 = len zatienenie, 2 = len žiara */
 out vec4 oFarba;
 
@@ -731,6 +761,14 @@ void main() {
   /* Do sRGB. Celý výpočet vyššie beží v lineárnom priestore, inak by sa
      svetlá sčítavali nesprávne a tiene by boli šedé. */
   c = pow(c, vec3(1.0 / 2.2));
+
+  /* Filmová krivka ACES zdvihne tmavé tóny — je to jej účel, na fotografii
+     to funguje. Na výrobku nie: antracitový profil z nej vyšiel ako stredná
+     sivá, hoci práve tá tmavá je to, čo zákazník kupuje. Jemná S-krivka
+     vráti tmavým tónom hĺbku a svetlým nechá roll-off, ktorý ACES dáva.
+     Je to to isté, čo robí fotograf v úprave — nie zásah do fyziky. */
+  vec3 s = c * c * (3.0 - 2.0 * c);
+  c = mix(c, s, uKontrast);
 
   /* Vinetácia je jemná — má len usadiť pohľad do stredu, nie kresliť rám. */
   vec2 q = vUV - 0.5;
@@ -885,7 +923,7 @@ void main() {
       tien: null,
       kamera: null,
       slnko: vec3.norm([-0.38, 0.52, 0.72]),
-      svetloSlnka: [3.35, 3.10, 2.72],
+      svetloSlnka: [3.90, 3.80, 3.62],
       zamracene: 0,
       silaAO: 0.62,
       silaZiary: 0.55,
@@ -897,6 +935,7 @@ void main() {
       ladenie: 0,
       ladenieTon: 0,
       expozicia: 1.0,
+      kontrast: 1.0,
       prazdnyVAO: gl.createVertexArray()
     };
 
@@ -952,7 +991,7 @@ void main() {
             /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
             data[at + 11] = farba[3];
             data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0);
-            data[at + 13] = f.bias || 0;
+            data[at + 13] = (f.bias || 0) + (mat.poradie || 0);
             at += PLAVAKOV;
             for (let k = 0; k < 3; k++) {
               if (p[k] < hranice[k]) hranice[k] = p[k];
@@ -1270,6 +1309,7 @@ void main() {
         gl.uniform3fv(p.u.uSlnko, stav.slnko);
         gl.uniform1f(p.u.uZamracene, stav.zamracene);
         gl.uniform3fv(p.u.uOdrazZeme, stav.odrazZeme());
+        gl.uniform1f(p.u.uPozadie, 1);
       });
       gl.enable(gl.DEPTH_TEST);
       gl.depthMask(true);
@@ -1283,6 +1323,7 @@ void main() {
       gl.uniform3fv(P.u.uSvetloSlnka, stav.svetloSlnka);
       gl.uniform1f(P.u.uZamracene, stav.zamracene);
       gl.uniform3fv(P.u.uOdrazZeme, stav.odrazZeme());
+      gl.uniform1f(P.u.uPozadie, 0);
       gl.uniform1i(P.u.uLadenie, stav.ladenie | 0);
       gl.uniform2f(P.u.uTienKrok, 2.2 / t.rozmer, 2.2 / t.rozmer);
       gl.uniform1f(P.u.uPosunPoNormale, stav.posunPoNormale);
@@ -1445,6 +1486,7 @@ void main() {
         gl.uniform1f(p.u.uSilaZiary, stav.silaZiary);
         gl.uniform1f(p.u.uVineta, stav.vineta);
         gl.uniform1f(p.u.uExpozicia, stav.expozicia);
+        gl.uniform1f(p.u.uKontrast, stav.kontrast);
         gl.uniform1i(p.u.uLadenieTon, stav.ladenieTon | 0);
       });
 
