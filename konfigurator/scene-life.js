@@ -511,7 +511,7 @@
        obrázkom ukrojilo z výšky náhľadu toľko, že model ostal malý a pod ním
        pás textu. Ako karta v rohu plátna je vidieť hneď, dá sa zabaliť do
        úzkeho prúžku a model dostane celú plochu. */
-    panel.innerHTML=`<summary><span>Vybavenie a počasie</span><span class="sp-scene__summary">Náhľad</span></summary>
+    panel.innerHTML=`<summary><span>Vybavenie priestoru</span><span class="sp-scene__summary">Náhľad</span></summary>
       <div class="sp-scene__body">
         <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
           <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
@@ -585,7 +585,7 @@
       const message=[equipment,weather].filter(Boolean).join(' · ');
       if(status.textContent!==message)status.textContent=message;
       const label=state.mode==='car'?'Auto':state.mode==='bistro'?'Posedenie':'Prázdny';
-      panel.querySelector('.sp-scene__summary').textContent=state.weather==='rain'?label+' · dážď':label;
+      panel.querySelector('.sp-scene__summary').textContent=label;
     }
     const update=()=>{failure='';if(context)prepare(context);changed();run();};
     panel.addEventListener('click',e=>{
@@ -697,7 +697,37 @@
       gl.uniform4f(u('fit'),camera.scale,camera.ox,camera.oy,camera.VW);
       gl.uniform1f(u('viewportHeight'),camera.VH);
       gl.uniform3f(u('lens'),camera.DIST,camera.near,camera.far);
+      /* Kreslí sa do lineárnej vyrovnávacej pamäte nového vykresľovača, alebo
+         rovno na plátno doterajšieho maliara? Od toho závisí, či sa farba
+         musí previesť späť cez tónovaciu krivku. */
+      const uh=place(p,'hdr'); if(uh)gl.uniform1f(uh,camera.hdr?1:0);
     }
+    /* Spätná tónovacia krivka.
+
+       Vybavenie scény si farbu počíta samo a vydá ju hotovú — tak, ako má
+       vyzerať na obrazovke. Nový vykresľovač prístrešku ju však zapisuje do
+       spoločnej vyrovnávacej pamäte v lineárnom priestore a celý záber potom
+       ešte raz prejde filmovou krivkou. Auto tým dostalo krivku dvakrát a
+       z grafitového laku bola bledá modrastá plocha, ktorá vyzerala
+       polopriehľadne.
+
+       Farba sa preto pred zápisom prevedie späť: zruší sa S-krivka, gama aj
+       ACES. Čo z toho vyjde, prejde tónovaním presne na tú farbu, akú
+       vybavenie zamýšľalo. Pri kreslení rovno na plátno (doterajší maliar)
+       je `hdr` nula a neprepočítava sa nič. */
+    const SPAT_TON = `uniform float hdr;
+      vec3 spatTon(vec3 c) {
+        if (hdr < 0.5) return c;
+        c = clamp(c, 0.0004, 0.9996);
+        /* späť cez S-krivku (inverzia smoothstepu) */
+        vec3 g = 0.5 - sin(asin(clamp(1.0 - 2.0 * c, -1.0, 1.0)) / 3.0);
+        /* späť cez gamu */
+        vec3 y = pow(max(g, 0.0), vec3(2.2));
+        /* späť cez ACES: krivka je racionálna kvadratika, dá sa obrátiť presne */
+        vec3 d = max(vec3(0.0), -1.0127 * y * y + 1.3702 * y + 0.0009);
+        return max(vec3(0.0), (0.03 - 0.59 * y - sqrt(d)) / (2.0 * (2.43 * y - 2.51)));
+      }`;
+
     function init(gl) {
       if(gpu&&gpu.gl===gl)return;
       const main=program(gl,`precision highp float;attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute float material;
@@ -711,7 +741,7 @@
            všade jedna a nemení sa nič; pri aute, ktoré má karosériu
            v textúre, si takto svetlá a tmavé miesta ponechá a lak sa aj tak
            dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
-        `precision highp float;varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
+        `precision highp float;${SPAT_TON}varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
         uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
         void main(){vec3 n=normalize(normal);vec3 v=normalize(eye-world);if(dot(n,v)<0.)n=-n;
           vec3 key=normalize(vec3(-.25,.62,.74)),fill=normalize(vec3(.86,-.1,.50));
@@ -742,7 +772,7 @@
           if(kind>3.5&&kind<4.5)result=mix(result,base,.7);
           if(kind>4.5&&kind<5.5){float weave=sin(world.x*1.8)*sin(world.y*1.7+world.z*1.6);result=base*l*(.99+.01*weave);}
           if(kind>5.5){float grain=sin(world.x*.075+sin(world.y*.31)*.8);result=base*l*(.97+.03*grain);}
-          gl_FragColor=vec4(clamp(result,0.,1.),alpha);}`);
+          gl_FragColor=vec4(spatTon(clamp(result,0.,1.)),alpha);}`);
       /* Dážď. Každá kvapka pozná, čo je pod ňou: pultovú rovinu strechy aj
          s jej stúpaním, plný rám okolo pásma lamiel, krytie lamely podľa jej
          uhla — otvorenou medzerou prejde na zem, na zatvorenej sa zastaví —
@@ -777,18 +807,18 @@
           float birth=smoothstep(0.,.05,phase);
           float death=1.-smoothstep(.93,1.,phase);
           opacity=(.30+h2*.30)*density*birth*mix(1.,.35*death,land)*mix(1.,facing,land);splash=land;}`,
-        `precision mediump float;varying float opacity;varying float splash;varying vec2 vUv;
+        `precision mediump float;${SPAT_TON}varying float opacity;varying float splash;varying vec2 vUv;
         void main(){float edge=1.-smoothstep(.25,1.,abs(vUv.x));
           float ring=(1.-smoothstep(.78,1.,length(vUv)))*smoothstep(.32,.58,length(vUv));
           float a=opacity*mix(edge,ring,splash);if(a<.005)discard;
-          gl_FragColor=vec4(mix(vec3(.60,.73,.81),vec3(.82,.89,.94),splash),a);}`);
+          gl_FragColor=vec4(spatTon(mix(vec3(.60,.73,.81),vec3(.82,.89,.94),splash)),a);}`);
       /* Voda z odtoku. Rovnaký program pre film na streche, hladinu v žľabe,
          padajúci prúd aj kruhy na dlažbe — líšia sa len druhom a rýchlosťou. */
       const flowProg=program(gl,`precision highp float;attribute vec3 p;attribute vec2 uv;attribute float kind;attribute float alpha;
         uniform float viewportHeight;${projection}
         varying vec2 vUv;varying float vKind;varying float vAlpha;
         void main(){vUv=uv;vKind=kind;vAlpha=alpha;gl_Position=project(p);}`,
-`precision mediump float;varying vec2 vUv;varying float vKind;varying float vAlpha;uniform float clock;uniform float strength;
+`precision mediump float;${SPAT_TON}varying vec2 vUv;varying float vKind;varying float vAlpha;uniform float clock;uniform float strength;
         void main(){
           float across=1.-smoothstep(.45,1.,abs(vUv.y));float a=0.;vec3 col=vec3(.60,.77,.88);
           /* Mokrý plech je tmavší ako suchý a až hrebeň stekajúcej vody je
@@ -814,7 +844,7 @@
             a=(.20+.24*smoothstep(.4,1.,s))*across*(1.-smoothstep(.55,1.,vUv.x));
             col=mix(vec3(.22,.29,.34),vec3(.72,.83,.90),smoothstep(.4,1.,s));
           }
-          gl_FragColor=vec4(col,a*strength*vAlpha);}`);
+          gl_FragColor=vec4(spatTon(col),a*strength*vAlpha);}`);
       /* Kontaktný tieň. Bez neho vybavenie viselo nad dlažbou — auto aj
          posedenie pôsobili prilepené na obrazovku, nie postavené na zemi.
          Je to mäkká elipsa na úrovni podlahy s tmavším jadrom: pod strechou
@@ -824,14 +854,14 @@
       const contact=program(gl,`precision highp float;attribute vec2 corner;uniform float viewportHeight;${projection}
         uniform vec3 center;uniform vec2 radius;varying vec2 uv;
         void main(){uv=corner;gl_Position=project(vec3(center.xy+corner*radius,center.z));}`,
-        `precision mediump float;varying vec2 uv;uniform float strength;uniform float boxy;
+        `precision mediump float;${SPAT_TON}varying vec2 uv;uniform float strength;uniform float boxy;
         void main(){float d=length(uv);
           float round=(1.-smoothstep(.10,.58,d))*.34+(1.-smoothstep(.46,1.,d))*.17;
           /* Prístrešok nie je guľatý. Jeho tieň drží pôdorys strechy a mäkne
              až na okraji, kde ho rozostruje obloha. */
           float box=(1.-smoothstep(.62,1.,abs(uv.x)))*(1.-smoothstep(.62,1.,abs(uv.y)));
           float a=mix(round,box*.46,boxy);
-          gl_FragColor=vec4(.05,.06,.07,a*strength);}`);
+          gl_FragColor=vec4(spatTon(vec3(.05,.06,.07)),a*strength);}`);
       const contactBuffer=gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER,contactBuffer);
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,1,1,-1,-1,1,1,-1,1]),gl.STATIC_DRAW);

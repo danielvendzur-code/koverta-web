@@ -8596,16 +8596,13 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-rady > *,
 .k .kh-vcene__rad > *,
 .k .kh-fakty__rad > * { transition-delay: 0ms; }
-.k .kh-cat__grid > *:nth-child(2),
-.k .kh-mat__grid > *:nth-child(2),
-.k .kh-rady > *:nth-child(2),
-.k .kh-vcene__rad > *:nth-child(2),
-.k .kh-cat__grid > *:nth-child(3),
-.k .kh-mat__grid > *:nth-child(3),
-.k .kh-vcene__rad > *:nth-child(3),
-.k .kh-cat__grid > *:nth-child(n + 4),
-.k .kh-mat__grid > *:nth-child(n + 4),
-.k .kh-vcene__rad > *:nth-child(n + 4),
+/* Odstup jednotlivých kariet je nastavený nižšie, vo vrstve príchodov. Tu
+   stál zoznam tých istých selektorov bez vlastného bloku — čiže sa čiarkou
+   spojil s pravidlom pre úvodný pás pod ním a každá karta od druhej ďalej
+   dostala `translateY(26px)`. Natrvalo: `.is-in` to už neprebíjalo, lebo
+   `:nth-child` má vyššiu váhu. Na každej podstránke tak prvá karta v rade
+   stála o 26 px vyššie než ostatné — fotografie, popisky aj päty kariet boli
+   rozhodené. */
 
 /* Úvodný pás sa skladá po vrstvách: najprv nadpis, potom veta, tlačidlá a
    nakoniec dôkaz. Je to tá istá dráha ako inde, len s dlhšími odstupmi —
@@ -11463,7 +11460,8 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-size-pick strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.15; letter-spacing:-.02em; }
 .k .kh-size-pick small { font-size:12px; color:var(--k-muted); }
 .k .kh-size-guide {
-  margin-top:14px;
+  /* Vysvetlivka stojí pod mriežkou kariet a 14 px ju k nim lepilo. */
+  margin-top:clamp(18px, 2vw, 26px);
   font-size:13px;
   line-height:1.55;
   color:var(--k-muted);
@@ -12666,59 +12664,10 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
    v HTML ho nediktuje čítačke druhýkrát — tú istú vetu má nadpis vedľa. */
 .k-viz { position: relative; display: block; overflow: hidden; }
 
-.k .k-stitok,
-.k-stitok {
-  position: absolute;
-  left: clamp(11px, 1.9vw, 22px);
-  bottom: clamp(11px, 1.9vw, 22px);
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: min(calc(100% - 2 * clamp(11px, 1.9vw, 22px)), 32ch);
-  padding: clamp(8px, 0.85vw, 12px) clamp(11px, 1.15vw, 16px);
-  border-radius: var(--k-r-sm);
-  /* Priesvitná uhlíková plocha drží kontrast aj nad oblohou aj nad snehom,
-     a pritom nezakryje to, kvôli čomu tam fotka je. */
-  background: rgba(18, 23, 26, 0.56);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  color: var(--k-white);
-  text-align: left;
-  pointer-events: none;
-}
-.k .k-stitok b,
-.k-stitok b {
-  font-family: var(--k-head);
-  font-size: clamp(14px, 1.05vw, 16.5px);
-  font-weight: 650;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-.k .k-stitok > span,
-.k-stitok > span {
-  font-size: clamp(12.5px, 0.9vw, 14px);
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-/* Prehliadač bez rozostrenia pozadia (staršie Firefoxy, úsporný režim)
-   dostane hustejšiu plochu — inak by text na svetlej oblohe zmizol. */
-@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-  .k .k-stitok,
-  .k-stitok { background: rgba(18, 23, 26, 0.74); }
-}
-
-/* Na úzkej obrazovke sedí štítok tesnejšie pri hrane, aby mu ostal priestor
-   na text. Druhý riadok je doplnok, nie nosná informácia — na najmenších
-   šírkach ustúpi, aby štítok nezaberal tretinu fotky. */
-@media (max-width: 480px) {
-  .k .k-stitok,
-  .k-stitok { left: 10px; bottom: 10px; max-width: calc(100% - 20px); }
-  .k .k-stitok > span,
-  .k-stitok > span { display: none; }
-}
-
+/* Popiskový štítok na fotografii je preč. Zadávateľ: „popisok nemá byť na
+   fotke nikde, nechcel som to." Čo fotka ukazuje, povie nadpis alebo veta
+   vedľa nej — nie plachta cez roh snímky. `.k-viz` ostáva, je to rámec
+   vizualizácie, nie štítok. */
 
 /* ==========================================================================
    VRSTVA 121 · Konfigurátor na domovskej: dve značky, nie päť dlaždíc
@@ -12901,4 +12850,247 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   }
   .kh-anat__zoznam b { display: block; font-family: var(--k-head); font-size: 16px; font-weight: 650; }
   .kh-anat__zoznam em { display: block; font-style: normal; font-size: 14px; color: var(--k-grey-soft); }
+}
+
+/* ==========================================================================
+   VRSTVA 120 · Karty v rade majú jednu mierku
+   ==========================================================================
+   Zadávateľ na to ukázal jednou vetou: „prečo nič nie je zarovno". Rad
+   kariet mal tri rôzne výšky fotografie, tri rôzne miesta, kde sa začínal
+   popis, a päty s údajmi na troch rôznych linkách. Karta pritom nie je
+   samostatný obrázok — je to jeden riadok tabuľky. Čo je v ňom rovnaké, má
+   stáť na rovnakej linke.
+
+   Prvá príčina bola v príchodovej animácii a je opravená vyššie. Druhá je
+   tu: fotografie majú rôzne pomery strán a karta ich nechala rásť, ako im
+   vyšlo. Dostávajú preto pevný pomer 4 : 3 a výrez, takže rad fotografií
+   začína aj končí na jednej linke bez ohľadu na to, čím bol nafotený.
+   ====================================================================== */
+.k .kh-mat__grid,
+.k .kh-cat__grid { align-items: stretch; }
+.k .kh-mat__card,
+.k .kh-cat__item { height: 100%; }
+
+.k .kh-mat__media,
+.k .kh-cat__media { aspect-ratio: 4 / 3; overflow: hidden; }
+.k .kh-mat__media > img,
+.k .kh-cat__media > img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Telo karty je stĺpec a päta v ňom sadá na dno. Údaje pod textom tak
+   stoja na jednej linke, aj keď je jeden popis o dva riadky dlhší. */
+.k .kh-mat__body { display: flex; flex-direction: column; flex: 1 1 auto; }
+.k .kh-mat__pata { margin-top: auto; }
+.k .kh-cat__body { display: flex; flex-direction: column; }
+
+/* Nadpisy v rade sú jedno- aj dvojriadkové. Bez spodnej hranice sa text pod
+   nimi rozíde o celý riadok; s ňou si rad drží spoločnú linku. Na telefóne
+   je karta sama v riadku a hranica by robila prázdne miesto. */
+@media (min-width: 620px) {
+  .k .kh-mat__title { min-height: 2.4em; }
+  .k .kh-vcene__nazov { min-height: 2.6em; }
+}
+.k .kh-vcene__rad { align-items: stretch; }
+.k .kh-vcene__polozka { display: flex; flex-direction: column; height: 100%; }
+/* Zoznam v každom stĺpci začína na jednej linke hneď pod nadpisom. Sadínm
+   na dno by sa krátky zoznam odtlačil od svojho nadpisu — pri odrážkach
+   nerozhoduje, kde končia, ale kde začínajú. */
+.k .kh-vcene__body { margin-top: 0; }
+
+/* Päta karty sadá na dno, takže rad kariet končí na jednej linke. Aby na
+   jednej linke začínala aj — teda aby deliaca čiarka nad údajmi nebola na
+   každej karte inde — dostáva hodnota spodnú hranicu dvoch riadkov. Bez nej
+   sa jednoriadková a dvojriadková hodnota rozídu o celý riadok. */
+@media (min-width: 620px) {
+  .k .kh-mat__hodnota { min-height: 2.6em; }
+}
+
+/* Kresba rezu nie je fotografia: orezať ju na 4 : 3 by odrezalo pätku aj
+   kótu. Schémy sa preto do rámca vkladajú celé. */
+.k .kh-mat__media > img[src$=".svg"],
+.k .kh-cat__media > img[src$=".svg"] { object-fit: contain; }
+
+/* ==========================================================================
+   VRSTVA 121 · Dvojica fotografia + text je pás, nie celá obrazovka
+   ==========================================================================
+   Zadávateľ: „moc veľké rozloženie, ledva to vidno celé". Pás mal na
+   notebooku 811 px — celú výšku okna na jednu fotografiu a tri riadky
+   nadpisu. Nadpis šiel na 62 px, čo je viac než úvodný pás stránky, a
+   fotografia sa naťahovala za textom, takže čím viac textu, tým vyššia.
+
+   Nadpis ide na mierku ostatných nadpisov sekcií a fotografia dostáva
+   hornú hranicu. Obsah ostáva ten istý, len sa zmestí na obrazovku.
+   ====================================================================== */
+.k .kh-duo__telo .k-h2 { font-size: clamp(31px, 3.4vw, 48px); }
+.k .kh-duo__foto { min-height: clamp(260px, 30vw, 430px); max-height: 560px; }
+
+/* Dve výzvy vedľa seba sa do stĺpca zmestia — spolu merajú 573 px v stĺpci
+   širokom 662. Stáli pod sebou len preto, že riadok výziev nebol ohybný. */
+.k .kh-duo__akcia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 899px) {
+  .k .kh-duo__akcia { display: grid; }
+}
+
+/* ==========================================================================
+   VRSTVA 122 · Osadenie pergoly — kreslené schémy
+   ==========================================================================
+   Deväť izometrických kresieb z podkladov Soltecu. Nie sú to fotografie:
+   kreslí sa na nich, o čo sa rám opiera a koľko stĺpov z toho vyjde. Preto
+   majú svetlé pozadie, tenký rám a vkladajú sa celé — orezať schému na
+   pomer karty by odrezalo stenu, ktorá je na nej to podstatné.
+   ====================================================================== */
+.k .kh-osad {
+  display: grid;
+  gap: clamp(12px, 1.4vw, 20px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 760px) { .k .kh-osad { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.k .kh-osad__polozka {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: clamp(10px, 1vw, 16px) clamp(12px, 1.2vw, 18px) clamp(14px, 1.4vw, 20px);
+  border: 1px solid var(--k-hair);
+  border-radius: var(--k-r-sm);
+  background: var(--k-white);
+}
+.k .kh-osad__schema {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 602 / 456;
+  object-fit: contain;
+  margin-bottom: 6px;
+  /* Kresba je čiernobiela na bielej. Bez podkladu splýva s kartou, tenký
+     rám by zase súperil s rámom karty. Stačí vlások svetla pod ňou. */
+  border-bottom: 1px solid var(--k-hair);
+  padding-bottom: clamp(8px, 1vw, 12px);
+}
+.k .kh-osad__nazov {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: clamp(15px, 1.15vw, 17px);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--k-ink);
+}
+.k .kh-osad__popis {
+  margin: 0;
+  font-size: clamp(13px, 0.95vw, 14.5px);
+  line-height: 1.5;
+  color: var(--k-grey-soft);
+}
+
+/* ==========================================================================
+   VRSTVA 123 · Vzorkovník odtieňov
+   ==========================================================================
+   Komponent bol v štýle rozpísaný na polovicu — mriežka a mikroštruktúra
+   existovali, samotná vzorka nie, takže sa nikde nepoužil. Hodnoty sú
+   z podkladov výrobcu, nie z pamäte: vzorky sú vo firemných SVG uložené
+   presnou výplňou a tá sa sem prepísala jedna k jednej.
+
+   Vzorka je bodka na tmavom páse. Štyri z odtieňov sú takmer biele a na
+   svetlom podklade by splynuli do jednej plochy; na uhlíkovej sa čítajú
+   ako postupný krok svetlosti.
+   ====================================================================== */
+.k .kh-odtien {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  text-align: center;
+  margin: 0;
+}
+.k .kh-odtien i {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 92px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  overflow: hidden;
+  /* Traffic White na uhlíkovej bez rámu splýva s bodkou vedľa. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  background: var(--odtien, #888);
+}
+.k .kh-odtien b {
+  font-family: var(--k-head);
+  font-size: clamp(13.5px, 1vw, 15px);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--k-white);
+}
+.k .kh-odtien span {
+  font-size: clamp(12px, 0.9vw, 13px);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+}
+.k .kh-vzor .kh-odtiene { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+@media (max-width: 719px) {
+  /* Šesť krúžkov vedľa seba by malo priemer nechtu. Z pásu je zoznam:
+     bodka vľavo, názov a kód vpravo. */
+  .k .kh-vzor .kh-odtiene { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .k .kh-odtien {
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+    text-align: left;
+    gap: 2px 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .k .kh-odtien:last-child { border-bottom: 0; }
+  .k .kh-odtien i { grid-row: span 2; width: 34px; }
+}
+
+/* Široký záber nad mriežkou výbavy. Ukáže naraz to, čo karty pod ním
+   rozoberajú po jednom — a ukáže to na jednej pergole, nie na šiestich
+   rôznych. Popis stojí pod fotografiou, nie na nej. */
+.k .kh-prehlad {
+  margin: 0 0 clamp(20px, 2.4vw, 32px);
+}
+.k .kh-prehlad img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2118 / 1486;
+  object-fit: cover;
+  border-radius: var(--k-r-sm);
+}
+.k .kh-prehlad figcaption {
+  margin: clamp(10px, 1.1vw, 14px) 0 0;
+  font-size: clamp(13.5px, 1vw, 15px);
+  line-height: 1.6;
+  color: var(--k-grey-soft);
+  max-width: 96ch;
+}
+.k .kh-prehlad figcaption strong { color: var(--k-ink); font-weight: 650; }
+
+/* Fotografia v ponuke vyplní, čo po texte ostane — karta má pevnú výšku a
+   obrázok je v nej pružný. Keď sa teda popis na jednej karte zalomil do
+   dvoch riadkov, ukázala o dvadsať pixelov menej obrázka než susedná a jej
+   nadpis aj výzva stáli inde. Zadávateľ na to ukázal presne: fotografia sa
+   má zarovnať s textom pod ňou.
+
+   Riešením nie je pevný pomer obrázka — ten by obsah vytlačil pod okraj
+   karty. Je ním spodná hranica popisu na dva riadky: text má potom na
+   všetkých kartách rovnakú výšku a obrázkom ostane rovnaký zvyšok. */
+.k .kh-ponuka__udaj { min-height: 2.9em; }
+
+/* Výzva sadá na dno karty, takže rad tlačidiel stojí na jednej linke.
+   Je zabalená v päte, takže odsadenie patrí tej. */
+.k .kh-ponuka__pata { margin-top: auto; }
+@media (max-width: 619px) {
+  /* Na telefóne sú karty po dvoch vedľa seba a do úzkeho stĺpca sa zalomí
+     aj nadpis, nielen popis. Hranica preto platí na oboje, inak sa fotky
+     v dvojici rozídu o celý riadok. */
+  .k .kh-ponuka__nazov { min-height: 2.3em; }
+  .k .kh-ponuka__udaj { min-height: 4.4em; }
 }

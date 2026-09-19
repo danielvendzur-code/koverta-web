@@ -801,7 +801,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
         </div>
 
         <figure class="kh-cta__foto">
-          <img src="../assets/soltec-canopy-f170-real-w1000.webp" alt="Hotové prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async" srcset="../assets/soltec-canopy-f170-real-w640.webp 640w, ../assets/soltec-canopy-f170-real-w1000.webp 1000w, ../assets/soltec-canopy-f170-real-w1600.webp 1600w" sizes="(max-width: 900px) 252px, 402px">
+          <img src="../assets/soltec-canopy-f170-real-w1000.webp" alt="Hotové prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async">
         </figure>
       </aside>
 
@@ -950,11 +950,24 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     q.set('l', String(l));
     try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
   }
-  document.addEventListener('input', function (e) {
+  function jeRozmer(e) {
     var t = e.target;
-    if (!t || !t.matches || !t.matches('[data-sp-w], [data-sp-l]')) return;
+    return t && t.matches && t.matches('[data-sp-w], [data-sp-l]');
+  }
+  /* Počas ťahania sa zapisuje s odstupom, aby adresa neprepisovala pri každom
+     pixeli. Po pustení posuvníka (`change`) sa zapíše hneď: je to jedno
+     zapísanie, nie stovka, a čakať s ním nie je na čo. Odstup navyše
+     nefunguje spoľahlivo v okamihu, keď je vlákno zabraté vykresľovaním —
+     časovač sa spustí až po ňom a adresa vtedy meškala aj sekundu. */
+  document.addEventListener('input', function (e) {
+    if (!jeRozmer(e)) return;
     window.clearTimeout(cakac);
     cakac = window.setTimeout(zapis, 400);
+  }, true);
+  document.addEventListener('change', function (e) {
+    if (!jeRozmer(e)) return;
+    window.clearTimeout(cakac);
+    zapis();
   }, true);
 })();
 </script>
