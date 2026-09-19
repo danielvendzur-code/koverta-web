@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 137244)
-Total output lines: 13298
+Warning: truncated output (original token count: 137260)
+Total output lines: 13305
 
 /* ============================================================ PÍSMO
    Archivo sa doteraz ťahalo z Google Fonts. To znamenalo cudzí server v
@@ -1007,6 +1007,20 @@ Total output lines: 13298
 
 .kh-work__grid { display: grid; gap: clamp(14px, 1.5vw, 22px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 900px) { .kh-work__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 719px) {
+  #realGrid.kh-work__grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    margin-inline: calc(var(--k-gut) * -1);
+    padding: 4px var(--k-gut) 18px;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+  #realGrid.kh-work__grid::-webkit-scrollbar { display: none; }
+  #realGrid .kh-work__item { flex: 0 0 min(86vw, 420px); scroll-snap-align: center; }
+}
 
 .kh-work__item { position: relative; }
 .kh-work__item[hidden] { display: none; }
@@ -2257,14 +2271,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 :root { --k-slate: #455a64; }
 
 /* Oba štítky vyzerajú rovnako — značku odlišuje logo, nie farba plochy. */
-.kh-work__cap span.is-premium { background: rgba(255, 255, 255, 0.92); }
-.kh-work__cap .k-brand--soltec { color: var(--k-slate); }
-
-/* ========================================================================
-   AKO TO PREBIEHA: kroky ako záložky
-   Päť panelov pod sebou robilo zo sekcie 1 700 px vysoký stĺpec, ktorým sa
-   muselo prejsť celé. Vľavo je zoznam krokov ako záložky, vpravo jeden
-   veľký panel — sekcia sa zmestí na obrazovku a krok si vyberie n…87244 tokens truncated…ansform: uppercase;
+.kh-work__cap span.is-premi…87260 tokens truncated…ansform: uppercase;
   color: var(--k-amber-deep);
   font-variant-numeric: tabular-nums;
 }
