@@ -13139,3 +13139,56 @@ body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
   .k .kh-ponuka__nazov { min-height: 2.3em; }
   .k .kh-ponuka__udaj { min-height: 4.4em; }
 }
+
+/* --- „Čo je v cene“: preč všetky čiarky ------------------------------------
+   Zadávateľ na túto časť ukázal dvakrát: „tie mini ciarky atd sa mi nepacia“.
+   Predchádzajúca oprava vymenila vlasové linky medzi riadkami za panely, ale
+   nad každý panel položila jantárový pások 4 px — čiže zase čiarku. A pod
+   číslom ostala animovaná linka 2,2 rem. Obe idú preč.
+
+   Namiesto nich nesie kartu to, čo v značkovaní už je a bolo schované:
+   poradové číslo. Veľká jantárová číslica drží rad pokope aj bez rámu, bez
+   pásika a bez odrážok — a zadávateľ číslovanie inde výslovne chcel
+   („stvrty udaj s cslom daj nie bez“). Nadpis preto stráca fajku; číslo a
+   fajka vedľa seba sú dve značky pre jednu položku. */
+.k .kh-vcene__polozka {
+  padding: clamp(26px, 2.6vw, 34px) clamp(22px, 2.2vw, 30px) clamp(28px, 2.8vw, 36px);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .055);
+}
+.k .kh-vcene__polozka::after { content: none; }
+
+.k .kh-vcene__cislo {
+  display: block;
+  margin: 0 0 clamp(14px, 1.4vw, 20px);
+  font-family: var(--k-head);
+  font-size: clamp(34px, 3.4vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-amber);
+}
+.k .kh-vcene__cislo::after { content: none; }
+
+.k .kh-vcene__nazov { display: block; margin: 0 0 clamp(14px, 1.3vw, 18px); }
+.k .kh-vcene__nazov::before { content: none; }
+
+/* Riadky nedelí nič — stačí medzera. Zoznam je trojriadkový, čitateľ ho
+   prečíta ako zoznam aj bez značky. */
+.k .kh-vcene__body { gap: clamp(9px, 0.9vw, 12px); }
+.k .kh-vcene__body li { font-size: 14.5px; line-height: 1.55; }
+
+/* Nadpisy v rade sú jedno- aj dvojriadkové, zoznamy pod nimi majú začínať na
+   spoločnej linke. Doteraz to držala spodná hranica nadpisu 2,6 em — pod
+   jednoriadkovým nadpisom tým vznikla diera na celý riadok. Subgrid urobí to
+   isté bez diery: rad má tri dráhy (číslo, nadpis, zoznam), karta ich dedí,
+   takže dráha nadpisu je vysoká presne podľa najdlhšieho nadpisu v rade. */
+@media (min-width: 700px) {
+  .k .kh-vcene__rad { grid-template-rows: auto auto auto; }
+  .k .kh-vcene__polozka { grid-row: span 3; grid-template-rows: subgrid; align-content: start; }
+  @supports (grid-template-rows: subgrid) {
+    .k .kh-vcene__polozka { display: grid; }
+    .k .kh-vcene__nazov { min-height: 0; }
+  }
+}
