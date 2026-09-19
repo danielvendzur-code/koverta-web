@@ -216,7 +216,7 @@ def strankuj():
     </div>
 
     <h2 class="k-h3">Blízke rozmery</h2>
-    <ul class="kh-kfg__zoznam">{odkazy}<li><a href="../../">Celý katalóg rozmerov</a></li></ul>
+    <ul class="kv-related">{odkazy}<li><a href="../../">Celý katalóg rozmerov</a></li></ul>
   </div>
 </section>
 </main>'''

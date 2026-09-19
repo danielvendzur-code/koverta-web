@@ -29,7 +29,7 @@ async function dismissConsent(page) {
   await page.locator('.kv-lupa__sipka--dalsi').click();
   const secondSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
   assert.notEqual(secondSource, firstSource, 'Next arrow must advance to another photograph');
-  await page.screenshot({ path: 'qa-artifacts/realizacie-gallery-desktop.png', fullPage: true });
+  await page.screenshot({ path: 'qa-artifacts/realizacie-gallery-desktop.png' });
   await page.keyboard.press('ArrowLeft');
   assert.equal(await page.locator('.kv-lupa__ram img').getAttribute('src'), firstSource,
     'Keyboard navigation must return to the previous photograph');
@@ -62,7 +62,10 @@ async function dismissConsent(page) {
   assert.match(layout.snap, /x/);
   assert(layout.cardWidth > layout.viewport * 0.7 && layout.cardWidth < layout.viewport,
     `Mobile gallery card has an invalid width: ${JSON.stringify(layout)}`);
-  await mobile.screenshot({ path: 'qa-artifacts/realizacie-gallery-mobile.png', fullPage: true });
+  await mobile.locator('#realGrid').scrollIntoViewIfNeeded();
+  await mobile.locator('#realGrid img').first().waitFor({ state: 'visible' });
+  await mobile.waitForTimeout(500);
+  await mobile.screenshot({ path: 'qa-artifacts/realizacie-gallery-mobile.png' });
 
   await browser.close();
   console.log('REALIZACIE_GALLERY_PASS 200-photo modal, arrows, keyboard, filtered sequence and mobile snap slider');
