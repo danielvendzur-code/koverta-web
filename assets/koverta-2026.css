@@ -269,7 +269,7 @@
   border-radius: 0;
   background: transparent;
   font-family: var(--k-body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
   line-height: 1;
@@ -346,6 +346,14 @@
 
 .k-btn--line { border-color: var(--k-hair); color: var(--k-ink); background: var(--k-white); }
 .k-btn--line:hover { border-color: var(--k-ink); }
+
+/* Sekundárne tlačidlá boli prakticky neviditeľné: orámovanie malo krytie
+   11 %, takže biele tlačidlo na svetlom páse splynulo s pozadím. Majiteľ
+   žiadal minimálne tmavosivé. Orámovanie je preto plné a text tmavý.
+   Výnimka ostáva na tmavých pásoch (.k-invert) — tam je tlačidlo na videu
+   alebo na tmavom podklade a bledšie orámovanie je tam správne. */
+.k-btn--line { border-color: rgba(18, 23, 26, 0.55); border-width: 1.5px; }
+.k-btn--line:hover { border-color: var(--k-ink); background: var(--k-bone); }
 
 /* Druhoradá veľkosť. Používa sa vnútri kariet, kde by tlačidlo v plnej
    výške (54 px) prekričalo hlavnú výzvu sekcie. Tvar, rez aj farba ostávajú
@@ -999,6 +1007,8 @@
 
 .kh-work__item { position: relative; }
 .kh-work__item[hidden] { display: none; }
+.kh-work__item[role="button"] { cursor: zoom-in; }
+.kh-work__item[role="button"]:focus-visible { outline: 3px solid var(--k-amber); outline-offset: 4px; }
 .kh-work__cap { z-index: 2; align-items: flex-end; justify-content: space-between; gap: 14px;
   color: #fff;
 }
@@ -1279,7 +1289,7 @@
 a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none; transform: none; }
 .kh-cta__ico { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border-radius: 0; background: transparent; }
 .kh-cta__ico svg { width: 20px; height: 20px; fill: none; stroke: var(--k-amber); stroke-width: 1.8; }
-.kh-cta__row small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.kh-cta__row small { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(255,255,255,.55); }
 .kh-cta__row strong { display: block; margin-top: 4px; font-family: var(--k-head); font-size: clamp(16px, 1.3vw, 19px); font-weight: 700; letter-spacing: -0.018em; line-height: 1.3; }
 
 .kh-cta__score { display: flex; flex-direction: column; gap: 14px; padding: 24px 0 22px; border-radius: 0; background: transparent; color: var(--k-white); }
@@ -1582,6 +1592,14 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-cat__card { height: 100%; }
 .kh-cat__media { transition: none; }
 .kh-cat__body { transition: none; }
+/* Galéria realizácií má stáť. Telo karty sa pri prejdení myšou stále menilo
+   zo 142 na 238 px, a keďže prechod je vypnutý, bol z toho skok. Majiteľ to
+   chcel statické, tak sa výška tela nemení vôbec — ani pri hoveri, ani pri
+   fokuse, v žiadnej šírke obrazovky. */
+.kh-cat__item:hover .kh-cat__body,
+.kh-cat__item:focus-within .kh-cat__body { flex-basis: 142px; }
+.kh-cat__item:hover .kh-cat__media,
+.kh-cat__item:focus-within .kh-cat__media { flex-basis: auto; }
 /* Akcie ako jasná dvojica: hlavný odkaz a konfigurátor. */
 .kh-cat__actions { align-items: center; padding-top: 4px; }
 /* Pri úzkom stĺpci (polovica monitora, 800 px) bolo tlačidlo o 9 px širšie
@@ -1726,7 +1744,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   padding: 0;
   background: transparent;
   color: var(--k-amber);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.17em;
   text-transform: uppercase;
@@ -1945,7 +1963,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 
 /* Drobné odchýlky z auditu: eyebrow v kontaktnom paneli mal inú veľkosť
    a textové odkazy dve rôzne hrúbky. */
-.kh-cta__aside-head .k-eyebrow { font-size: 11px; letter-spacing: 0.13em; }
+.kh-cta__aside-head .k-eyebrow { font-size: 12px; letter-spacing: 0.13em; }
 .k-link { font-weight: 700; }
 
 /* ========================================================================
@@ -2191,7 +2209,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   border-radius: var(--k-r-xs);
   background: rgba(255, 255, 255, 0.92);
 }
-.kh-work__cap .k-brand--soltec { font-size: 10px; letter-spacing: 0.22em; }
+.kh-work__cap .k-brand--soltec { font-size: 12px; letter-spacing: 0.22em; }
 
 /* Logo v štítku sa nesmie stlačiť — SVG má pomer ~6:1 a vo flexe mu inak
    ostane len jantárová zátvorka. */
@@ -2277,7 +2295,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-form legend { margin-bottom: 8px; }
 .kh-form__grid { gap: 12px; }
 .kh-field { gap: 5px; }
-.kh-field > span { font-size: 11px; }
+.kh-field > span { font-size: 12px; }
 .kh-field input { min-height: 44px; }
 .kh-field textarea { min-height: 68px; }.kh-cta__steps li { padding-block: 12px; }
 
@@ -2915,7 +2933,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   transform: none;
   gap: 8px;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.22em;
 }
 .kh-hero__cue span { height: 32px; }
@@ -5531,7 +5549,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-tab:not(:has(thead th:nth-child(4))) tbody td::before {
   content: attr(data-popis);
   margin-bottom: 3px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -5940,7 +5958,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   display: inline;
   margin: 0;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -6276,22 +6294,31 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* Panel má výšku celého zoznamu, ale text a tlačidlo zaberú necelú polovicu —
-   spodok ostával prázdny čierny. Fotografia večernej realizácie pod textom
-   ho zaplní bez toho, aby si pýtala pozornosť: je stlmená a zospodu sa
-   vytráca do farby panelu. Cesta v `url()` sa počíta od tohto súboru, takže
-   platí rovnako na úvode aj na podstránkach. */
+   spodok ostával prázdny čierny. Zaplní ho značka Koverta otočená o 90°:
+   presne tam, kde predtým bola stlmená fotografia, rovnako priehľadná a cez
+   celú výšku panelu. Zadávateľ to takto chcel a fotografia tam nepatrila.
+
+   Otáčanie robí samotný súbor, nie CSS. `transform: rotate()` na podklade
+   otočí celý rám aj s jeho začiatkom, takže nápis vyšiel mimo panelu a
+   `overflow` ho odstrihol. `koverta-mark-zvisla.svg` je tá istá kresba už
+   otočená v svojom viewBoxe (77 × 516) a s bielou výplňou — pôvodná výplň
+   #455a64 by na tmavom paneli zanikla. Podklad sa potom len položí, bez
+   transformácie, a nič sa nemá kam stratiť.
+
+   Výška 135 % znamená, že nápis panel presahuje a hore aj dole sa oreže.
+   To je zámer: orezaná značka pôsobí ako značka, nie ako obrázok v rohu.
+   Vodorovne stojí na strede panelu, nie pri hrane.
+   Cesta v `url()` sa počíta od tohto súboru, takže platí rovnako na úvode
+   aj na podstránkach. */
 @media (min-width: 1000px) {
-  .k .kh-faq__intro { position: relative; isolation: isolate; }
+  .k .kh-faq__intro { position: relative; isolation: isolate; overflow: hidden; }
   .k .kh-faq__intro::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    border-radius: inherit;
-    background: url("kh-faq-podklad.jpg") center bottom / cover no-repeat;
-    opacity: 0.3;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
-    mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
+    background: url("koverta-mark-zvisla.svg") center / auto 135% no-repeat;
+    opacity: 0.13;
     pointer-events: none;
   }
 }
@@ -6322,7 +6349,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-faq__item > div { padding-left: calc(2.1em + 16px); }
 @media (max-width: 599px) {
   .k .kh-faq__item summary { gap: 12px; }
-  .k .kh-faq__item summary::before { width: 1.9em; font-size: 11px; }
+  .k .kh-faq__item summary::before { width: 1.9em; font-size: 12px; }
   .k .kh-faq__item > div { padding-left: calc(1.9em + 12px); }
 }
 
@@ -6426,7 +6453,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-radius: 0;
   background: none;
   backdrop-filter: none;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.11em;
   color: rgba(255, 255, 255, 0.66);
   text-shadow: 0 1px 10px rgba(9, 12, 14, 0.45);
@@ -6461,7 +6488,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     min-width: 0;
     padding-right: 10px;
     margin-right: 10px;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.07em;
   }
   .k .kh-hero__chip strong { font-size: 14.5px; letter-spacing: -0.025em; }
@@ -6717,7 +6744,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (min-width: 1040px) {
   .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__title {
     max-width: none;
-    font-size: clamp(20px, 1.5vw, 24px);
   }
 }
 
@@ -6850,7 +6876,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-size__sirka span {
   font-family: var(--k-head);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -6871,7 +6897,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-size__dlzky { gap: 6px; }
   .k .kh-size__grid--matica .kh-size__chip { padding: 7px 8px 8px; text-align: center; }
   .k .kh-size__grid--matica .kh-size__chip > span { font-size: 13px; }
-  .k .kh-size__grid--matica .kh-size__chip small { font-size: 11px; }
+  .k .kh-size__grid--matica .kh-size__chip small { font-size: 12px; }
   .k .kh-size__grid--matica .kh-size__cfg { padding: 0 9px; font-size: 10.5px; }
 }
 
@@ -7549,7 +7575,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   padding: 0;
   border-radius: 0;
   background: none;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--k-grey-soft);
 }
@@ -7646,7 +7672,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .kh-udaje__zoznam dt {
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -8122,6 +8148,31 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kv-lupa__zavri svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.1; }
 .kv-lupa__zavri:hover { background: var(--k-amber); }
 .kv-lupa__zavri:focus-visible { outline: 2px solid var(--k-white); outline-offset: 3px; }
+.kv-lupa__sipka {
+  position:absolute; top:50%; transform:translateY(-50%); display:grid; place-items:center;
+  width:48px; height:48px; padding:0; border:0; border-radius:999px;
+  background:rgba(255,255,255,.94); color:var(--k-ink); cursor:pointer;
+  box-shadow:0 3px 16px rgba(0,0,0,.32);
+}
+.kv-lupa__sipka--pred { left:14px; }
+.kv-lupa__sipka--dalsi { right:14px; }
+.kv-lupa__sipka svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; }
+.kv-lupa__sipka:hover { background:var(--k-amber); }
+.kv-lupa__sipka:focus-visible { outline:2px solid var(--k-white); outline-offset:3px; }
+.kv-lupa__pocitadlo { font-size:12px; font-weight:700; letter-spacing:.08em; color:rgba(255,255,255,.72); }
+@media (max-width: 719px) {
+  #realGrid.kh-work__grid {
+    display:flex; overflow-x:auto; gap:12px; margin-inline:calc(var(--k-gut) * -1);
+    padding:4px var(--k-gut) 18px; scroll-snap-type:x mandatory;
+    overscroll-behavior-inline:contain; scrollbar-width:none;
+  }
+  #realGrid.kh-work__grid::-webkit-scrollbar { display:none; }
+  #realGrid .kh-work__item { flex:0 0 min(86vw,420px); scroll-snap-align:center; }
+  .kv-lupa { padding:12px; }
+  .kv-lupa__sipka { width:42px; height:42px; }
+  .kv-lupa__sipka--pred { left:6px; }
+  .kv-lupa__sipka--dalsi { right:6px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .kv-lupa, .kv-lupa__ram img { transition: none; }
 }
@@ -8463,7 +8514,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-mat__label {
   margin: 0 0 var(--k-s2);
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -8825,7 +8876,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-udaje__zoznam dt,
 .k .kh-size__sirka span {
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -9012,7 +9063,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     display: block;
     position: static;
     margin-bottom: 5px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.14em;
     color: var(--k-amber-deep);
@@ -9045,7 +9096,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-tab:not(:has(thead th:nth-child(4))) thead th {
     padding: 0;
     border: 0;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -9215,7 +9266,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-mat__pojem {
   margin: 0 0 6px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -9573,7 +9624,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-pojem {
   margin: 0 0 6px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -9654,7 +9705,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-cat__grid--sirka .kh-cat__znacka {
   margin: 0 0 14px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -11397,7 +11448,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-shade-needs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:clamp(26px,3vw,42px) 0; }
 .k .kh-shade-needs a { display:grid; align-content:start; gap:8px; min-height:150px; padding:22px; border:1px solid rgba(18,23,26,.15); border-top:4px solid var(--k-amber); border-radius:14px; background:#fff; color:var(--k-ink); text-decoration:none; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
 .k .kh-shade-needs a:hover, .k .kh-shade-needs a:focus-visible { transform:translateY(-3px); border-color:rgba(18,23,26,.32); box-shadow:0 14px 34px rgba(18,23,26,.09); }
-.k .kh-shade-needs span { color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; }
+.k .kh-shade-needs span { color:var(--k-amber-dark); font-size:12px; font-weight:850; letter-spacing:.1em; }
 .k .kh-shade-needs strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.1; }
 .k .kh-shade-needs small { color:var(--k-muted); font-size:13px; line-height:1.5; }
 .k .kh-shade-subtitle { margin:clamp(34px,4vw,54px) 0 0; font-family:var(--k-head); font-size:clamp(20px,2vw,30px); line-height:1.15; }
@@ -11410,12 +11461,12 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-shade-product__story { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
 .k .kh-shade-product__story > div { padding:clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
 .k .kh-shade-product__story > div:first-child { border-left:0; }
-.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:12px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
 .k .kh-shade-product__story p { margin:0; color:#50585c; font-size:14px; line-height:1.58; }
 .k .kh-shade-product__facts { grid-column:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; border-top:1px solid var(--k-hair-soft); background:var(--k-bone); }
 .k .kh-shade-product__facts > div { display:grid; gap:5px; padding:15px clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
 .k .kh-shade-product__facts > div:first-child { border-left:0; }
-.k .kh-shade-product__facts dt { color:#747b7e; font-size:11px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+.k .kh-shade-product__facts dt { color:#747b7e; font-size:12px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
 .k .kh-shade-product__facts dd { margin:0; color:var(--k-ink); font-size:14px; font-weight:760; line-height:1.35; }
 @media (max-width:999px) {
   .k .kh-shade-needs { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -11513,7 +11564,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   min-height:54px;
   padding:0 10px !important;
   border-left:1px solid var(--k-hair) !important;
-  font-size:11px !important;
+  font-size:12px !important;
   font-weight:750;
   letter-spacing:.04em;
   color:var(--k-grey) !important;
@@ -11556,7 +11607,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .kh-size--decision .kh-size__chip { min-height:56px; padding:8px 8px 8px 10px !important; }
   .k .kh-size--decision .kh-size__chip > span { font-size:14px !important; }
   .k .kh-size--decision .kh-size__chip small { font-size:10.5px !important; }
-  .k .kh-size--decision .kh-size__cfg { min-width:44px; min-height:56px; padding:0 7px !important; font-size:10px !important; }
+  .k .kh-size--decision .kh-size__cfg { min-width:44px; min-height:56px; padding:0 7px !important; font-size:12px !important; }
   .k .kh-size--single .kh-size__dlzky { grid-template-columns:minmax(0,1fr) !important; }
   .k .kh-size-custom .k-btn { width:100%; }
 }
@@ -11882,7 +11933,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-ponuka__volby { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 2px; }
 .k .kh-ponuka__volby span {
   padding:5px 9px; border:1px solid rgba(18,23,26,.28);
-  border-radius:999px; font-size:11px; font-weight:750;
+  border-radius:999px; font-size:12px; font-weight:750;
 }
 .k .kh-ponuka__kus--vstup .kh-ponuka__akcia { background: var(--k-ink); color:#fff;
 }
@@ -11897,7 +11948,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   display:flex; align-items:center; justify-content:center;
   height:28px; border-inline:2px solid var(--k-amber);
   border-bottom:2px solid var(--k-amber); color:#fff;
-  font-size:11px; font-weight:750; letter-spacing:.04em;
+  font-size:12px; font-weight:750; letter-spacing:.04em;
   text-shadow:0 1px 3px rgba(0,0,0,.75);
 }
 @media (max-width:719px) { .k .kh-kfg__typy { grid-template-columns:1fr; } }
@@ -11931,7 +11982,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   display: inline-flex;
   margin-bottom: 9px;
   color: var(--k-amber);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -11945,7 +11996,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 }
 .k .k-carport-series__facts div { border-bottom: 1px solid rgba(18,23,26,.1); }
 .k .k-carport-series__facts div:nth-child(odd) { border-right: 1px solid rgba(18,23,26,.1); }
-.k .k-carport-series__facts dt { margin-bottom: 5px; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.k .k-carport-series__facts dt { margin-bottom: 5px; font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .k .k-carport-series__facts dd { margin: 0; color: var(--k-ink); font-size: 12.5px; line-height: 1.38; }
 @media (max-width: 1020px) {
   .k .k-carport-compare { grid-template-columns: 1fr; }
@@ -12085,17 +12136,20 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs { max-width:calc(var(--k-max) - 
 .k-home .kh-fakty__co { margin-top:9px; font-size:clamp(15px,1.25vw,18px); }
 .k-home .kh-fakty__pod { margin-top:4px; font-size:12.5px; line-height:1.48; }
 
-/* “Čo je v cene” is an editorial checklist rather than a wall of white cards. */
+/* “Čo je v cene” uses solid grouped panels. Hairline separators disappeared
+   against some displays and made the section look like an unfinished table. */
 .k .kh-vcene { background:var(--k-ink); color:#fff; }
-.k .kh-vcene__rad { gap:0; border-top:1px solid rgba(255,255,255,.18); border-bottom:1px solid rgba(255,255,255,.18); }
+.k .kh-vcene__rad { gap:clamp(10px,1.4vw,18px); border:0; }
 .k .kh-vcene__polozka {
-  min-height:0; padding:clamp(24px,3vw,38px); border:0; border-left:1px solid rgba(255,255,255,.14);
-  border-radius:0; background:transparent; box-shadow:none;
+  position:relative; min-height:0; padding:clamp(24px,3vw,38px); border:0;
+  border-radius:16px; background:rgba(255,255,255,.075); box-shadow:none; overflow:hidden;
 }
-.k .kh-vcene__polozka:first-child { border-left:0; }
+.k .kh-vcene__polozka::after {
+  content:""; position:absolute; inset:0 0 auto; height:4px; background:var(--k-amber);
+}
 .k .kh-vcene__nazov { color:#fff; font-size:clamp(18px,1.6vw,24px); }
 .k .kh-vcene__nazov::before { background:var(--k-amber); }
-.k .kh-vcene__body li { color:rgba(255,255,255,.7); border-color:rgba(255,255,255,.12); }
+.k .kh-vcene__body li { color:rgba(255,255,255,.76); border:0; }
 
 @media (max-width:719px) {
   .kh-brand-dialog__links { grid-template-columns:1fr; }
@@ -12103,8 +12157,7 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs { max-width:calc(var(--k-max) - 
   body:not(.k-home) .k .kh-hero__box { padding-top:88px; }
   body:not(.k-home) .k .kh-hero .k-display { font-size:clamp(38px,11vw,52px); }
   .k .kh-size-custom { grid-template-columns:1fr; border-left-width:4px; }
-  .k .kh-vcene__polozka { border-left:0; border-top:1px solid rgba(255,255,255,.14); }
-  .k .kh-vcene__polozka:first-child { border-top:0; }
+  .k .kh-vcene__polozka { border:0; }
 }
 
 @media (min-width:720px) and (max-height:850px) {
@@ -12366,7 +12419,7 @@ body:not(.k-home) .k .kh-hero__actions .k-btn--line:focus-visible {
   background:var(--k-amber); border-color:var(--k-amber); color:var(--k-ink);
 }
 body:not(.k-home) .k .kh-hero__chip strong { font-size:clamp(16px,1.25vw,19px); }
-body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
+body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
 .k .k-band { padding-block:clamp(48px,5.2vw,76px); }
 .k .k-head { margin-bottom:clamp(26px,3.1vw,42px); }
 
@@ -13094,3 +13147,122 @@ body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
   .k .kh-ponuka__nazov { min-height: 2.3em; }
   .k .kh-ponuka__udaj { min-height: 4.4em; }
 }
+
+/* --- „Čo je v cene“: preč všetky čiarky ------------------------------------
+   Zadávateľ na túto časť ukázal dvakrát: „tie mini ciarky atd sa mi nepacia“.
+   Predchádzajúca oprava vymenila vlasové linky medzi riadkami za panely, ale
+   nad každý panel položila jantárový pások 4 px — čiže zase čiarku. A pod
+   číslom ostala animovaná linka 2,2 rem. Obe idú preč.
+
+   Namiesto nich nesie kartu to, čo v značkovaní už je a bolo schované:
+   poradové číslo. Veľká jantárová číslica drží rad pokope aj bez rámu, bez
+   pásika a bez odrážok — a zadávateľ číslovanie inde výslovne chcel
+   („stvrty udaj s cslom daj nie bez“). Nadpis preto stráca fajku; číslo a
+   fajka vedľa seba sú dve značky pre jednu položku. */
+.k .kh-vcene__polozka {
+  padding: clamp(26px, 2.6vw, 34px) clamp(22px, 2.2vw, 30px) clamp(28px, 2.8vw, 36px);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .055);
+}
+.k .kh-vcene__polozka::after { content: none; }
+
+.k .kh-vcene__cislo {
+  display: block;
+  margin: 0 0 clamp(14px, 1.4vw, 20px);
+  font-family: var(--k-head);
+  font-size: clamp(34px, 3.4vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-amber);
+}
+.k .kh-vcene__cislo::after { content: none; }
+
+.k .kh-vcene__nazov { display: block; margin: 0 0 clamp(14px, 1.3vw, 18px); }
+.k .kh-vcene__nazov::before { content: none; }
+
+/* Riadky nedelí nič — stačí medzera. Zoznam je trojriadkový, čitateľ ho
+   prečíta ako zoznam aj bez značky. */
+.k .kh-vcene__body { gap: clamp(9px, 0.9vw, 12px); }
+.k .kh-vcene__body li { font-size: 14.5px; line-height: 1.55; }
+
+/* Nadpisy v rade sú jedno- aj dvojriadkové, zoznamy pod nimi majú začínať na
+   spoločnej linke. Doteraz to držala spodná hranica nadpisu 2,6 em — pod
+   jednoriadkovým nadpisom tým vznikla diera na celý riadok. Subgrid urobí to
+   isté bez diery: rad má tri dráhy (číslo, nadpis, zoznam), karta ich dedí,
+   takže dráha nadpisu je vysoká presne podľa najdlhšieho nadpisu v rade. */
+@media (min-width: 700px) {
+  .k .kh-vcene__rad { grid-template-rows: auto auto auto; }
+  .k .kh-vcene__polozka { grid-row: span 3; grid-template-rows: subgrid; align-content: start; }
+  @supports (grid-template-rows: subgrid) {
+    .k .kh-vcene__polozka { display: grid; }
+    .k .kh-vcene__nazov { min-height: 0; }
+  }
+}
+
+
+/* ==========================================================================
+   VRSTVA 122 · Jedna stupnica nadpisov
+   ==========================================================================
+   Zadávateľ: nadpisy sú každý inde veľké. Boli — a nie náhodou. Rovnaká
+   trieda dostala inú veľkosť podľa toho, v ktorej vrstve ju niekto naposledy
+   prepísal. Zmerané pri 1440 px:
+
+     H1  úvod 66 px · podstránky 58 px · Kontakt 64 px
+     H2  sekcie 40 px · dvojica foto + text 48 px · dialóg značiek 44 px
+     H3  karty materiálov raz 24 px, raz 22 px — tá istá trieda
+
+   Stupnica je štvorstupňová a ďalšiu nepotrebuje: display (úvodný pás),
+   h2 (nadpis sekcie), h3 (nadpis karty), h4 (popisok). Čo z nej vypadlo,
+   sa sem vracia. Úvodný pás úvodnej stránky ostáva väčší zámerne — je to
+   jediný nadpis na stránke, ktorý má byť vidieť z druhej strany miestnosti.
+   ====================================================================== */
+
+/* Kontakt mal vlastný nadpis stránky o šesť pixelov väčší než ostatné
+   podstránky. Ide na tú istú mierku. */
+.k .kh-hlava__nadpis { font-size: clamp(40px, 4.25vw, 58px); }
+
+/* Dvojica fotografia + text a dialóg výberu značky sadzili nadpis sekcie
+   väčšmi než sekcie okolo. Obe idú na mierku `.k-h2`. */
+.k .kh-duo__telo .k-h2 { font-size: clamp(27px, 2.8vw, 42px); }
+.kh-brand-dialog__panel .k-h3 { font-size: clamp(27px, 2.8vw, 42px); }
+
+/* Nadpis v karte „Po celom Slovensku“ na Kontakte stál medzi h2 a h3.
+   Je to nadpis karty, čiže h3. */
+.k .kh-kde__nadpis { font-size: clamp(19px, 1.6vw, 25px); }
+
+/* H3 mal osem stupňov medzi 18 a 29 pixelmi. Toľko rozdielov oko nečíta ako
+   hierarchiu, iba ako neporiadok. Ostávajú tri, a každý má svoju úlohu:
+
+     --k-h3-panel  nadpis panelu vnútri sekcie (bočný panel pri formulári,
+                   karta produktu na Tienení, rad carportov, potvrdenie dopytu)
+     --k-h3        nadpis karty (materiály, „Čo je v cene“, sprievodca kuchyňou,
+                   kroky postupu, utilita .k-h3)
+     --k-h3-mensi  popisok v drobnej karte (oddelenia na Kontakte, výber kuchyne)
+
+   Kvíz má vlastnú mierku a nechávame mu ju: je to celoobrazovkový panel,
+   nie karta v sekcii. */
+:root {
+  --k-h3-panel: clamp(22px, 2vw, 28.8px);
+  --k-h3: clamp(20px, 1.7vw, 24px);
+  --k-h3-mensi: clamp(16px, 1.3vw, 19px);
+}
+
+.k .kh-cta__aside-head h3,
+.k .kh-shade-product__head h3,
+.k .k-carport-series__head h3,
+.k .kh-dakujem__nadpis { font-size: var(--k-h3-panel); }
+
+.k .k-h3,
+.k .kh-mat__title,
+.k .kh-vcene__nazov,
+.k .k-kitchen-specs .kh-kitchen-guide__panel h3,
+.k .k-kitchen-plan__step h3 { font-size: var(--k-h3); }
+
+.k .kh-odd__nazov,
+.k .k-kitchen-option h3 { font-size: var(--k-h3-mensi); }
+
+/* Dialóg výberu značky nesie triedu `.k-h3`, ale je to nadpis sekcie — mierku
+   `.k-h2` mu dáva vrstva vyššie a tá tu nesmie prehrať. */
+.kh-brand-dialog__panel .k-h3 { font-size: clamp(27px, 2.8vw, 42px); }

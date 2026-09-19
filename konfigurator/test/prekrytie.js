@@ -86,9 +86,25 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
             if (Math.abs(viewX) > 1e-6) body.push([viewX >= 0 ? L : 0, t * W]);
             if (Math.abs(viewY) > 1e-6) body.push([t * L, viewY >= 0 ? W : 0]);
           }
+          /* The vertical face can be clean while corrugation ribs still leak
+             through the horizontal flashing arm. Probe its interior well
+             away from the roof opening and exterior silhouette. */
+          const top = [];
+          if (el >= 0.75 && ai % 3 === 0) {
+            const front = actual.geometry.roof.lemCelo;
+            const side = actual.geometry.roof.lemBok;
+            const zTop = actual.height + actual.geometry.roof.lemH;
+            for (let t = 0.06; t < 0.94; t += 0.01) for (const u of [0.25, 0.45, 0.65, 0.8]) {
+              top.push([u * front, t * W, zTop + 1.5]);
+              top.push([L - u * front, t * W, zTop + 1.5]);
+              top.push([t * L, u * side, zTop]);
+              top.push([t * L, W - u * side, zTop]);
+            }
+          }
           let zlych = 0, prvy = null, prvyPx = null, prvyRgb = null;
-          for (const [x, y] of body) {
-            const q = window.SP_TEST.project(x, y, zFace);
+          for (const [x, y, z, horizontal] of body.map(([x, y]) => [x, y, zFace, false])
+            .concat(top.map(([x, y, z]) => [x, y, z, true]))) {
+            const q = window.SP_TEST.project(x, y, z);
             const px = Math.round(q.x), py = Math.round(q.y);
             if (px < 1 || py < 1 || px >= s.w - 1 || py >= s.h - 1) continue;
             const d = s.g.getImageData(px - 1, py - 1, 3, 3).data;
@@ -100,10 +116,10 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
                pixel presne za hranou. Reálny prienik musí zaberať väčšinu
                3 × 3 okolia; jediný zelený subpixel na spoločnej siluete nie
                je plocha plechu pretlačená cez lemovanie. */
-            if (green >= 5) {
+            if (green >= (horizontal ? 1 : 5)) {
               zlych++;
               if (!prvy) {
-                prvy = Math.round(x) + ',' + Math.round(y);
+                prvy = Math.round(x) + ',' + Math.round(y) + ',' + Math.round(z) + (horizontal ? ' (horný lem)' : '');
                 prvyPx = px + ',' + py;
                 prvyRgb = Array.from(d.slice(12, 16)).join(',');
               }
@@ -132,7 +148,7 @@ const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=kove
     await p.locator('.sp-stage').first().screenshot({path:'qa-artifacts/overlap-first.png'});
     console.log('zlých pohľadov spolu:', zle.length);
   } else {
-    console.log('lemovanie nikde neprekryté (180 pohľadov × ~270 bodov)');
+    console.log('lemovanie nikde neprekryté (180 pohľadov; zvislé líce aj horné ramená)');
   }
   await b.close();
   assertNoErrors();
