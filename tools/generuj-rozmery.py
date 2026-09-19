@@ -202,7 +202,9 @@ def strankuj():
 
     <div class="kh-hero__actions" style="margin:2rem 0">
       <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
-      <a class="k-btn k-btn--line" href="../../#ponuka">Nezáväzná cenová ponuka</a>
+      <!-- Rozmer ide do adresy, nie do data atribútu: formulár je na
+           katalógovej stránke, takže kontext musí prežiť preklik. -->
+      <a class="k-btn k-btn--line" href="../../?w={w}&amp;l={l}#ponuka">Nezáväzná cenová ponuka</a>
     </div>
 
     <h2 class="k-h3">Blízke rozmery</h2>

@@ -3550,3 +3550,44 @@
 
   document.addEventListener('shopify:section:load', (e) => init(e.target));
 })();
+
+/* Predvyplnenie dopytu.
+   Majiteľ vytkol, že kto klikne na „chcem rozmer na mieru", musí rozmer
+   napísať znova, hoci ho web už pozná. Odkaz na dopyt preto môže niesť
+   data-k-dopyt s textom, ktorý sa vloží do poľa správy. Vlastný text
+   návštevníka sa neprepisuje — vyplní sa len prázdne pole. */
+(function () {
+  'use strict';
+  const POLE = 'textarea[name="contact[body]"]';
+
+  function vloz(text) {
+    const pole = document.querySelector(POLE);
+    if (!pole || !text) return;
+    if (pole.value.trim()) return;          // človek už písal, nesiahame na to
+    pole.value = text;
+    pole.dispatchEvent(new Event('input', { bubbles: true }));
+    /* Kurzor na koniec, nech sa dá rovno dopisovať. Fokus až po doskrolovaní
+       na kotvu, inak prehliadač skok na formulár prepíše. */
+    window.setTimeout(() => {
+      try { pole.focus({ preventScroll: true }); pole.setSelectionRange(pole.value.length, pole.value.length); }
+      catch (e) {}
+    }, 420);
+  }
+
+  document.addEventListener('click', (e) => {
+    const odkaz = e.target.closest('a[data-k-dopyt]');
+    if (odkaz) vloz(odkaz.dataset.kDopyt);
+  });
+
+  /* Rozmer v adrese vyplní dopyt aj bez kliknutia na odkaz — človek sa sem
+     mohol dostať odkazom z konfigurátora, kde si rozmer nastavil sám. */
+  document.addEventListener('DOMContentLoaded', () => {
+    const q = new URLSearchParams(window.location.search);
+    const w = Number(q.get('w')), l = Number(q.get('l'));
+    if (w > 0 && l > 0) vloz(`Mám záujem o rozmer ${w} × ${l} mm.`);
+    if (window.location.hash === '#ponuka') {
+      const odkaz = document.querySelector('a[data-k-dopyt][href$="#ponuka"]');
+      if (odkaz && !(w > 0)) vloz(odkaz.dataset.kDopyt);
+    }
+  });
+})();
