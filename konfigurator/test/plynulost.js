@@ -19,6 +19,24 @@ const { prepareContext, watchErrors, setModelColors } = require('./browser-qa');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
 
+/* Rozdelenie podľa rozmerov, rovnako ako pri hlbokých kontrolách. Test
+   prejde 1 095 pohľadov a každý z nich serializuje SVG, dekóduje ho ako
+   obrázok a prekreslí na plátno; to je časť, ktorú zmenšený raster
+   nezrýchli, a na GitHub runneri celok vždy narazil na 30-minútový limit
+   úlohy. Zrušená úloha sa tvári ako výsledok, ktorý nikto nedostal.
+
+   Delí sa počet rozmerov, nie počet pohľadov: každý shard prejde svoje
+   rozmery celé, so všetkými sklonmi aj azimutmi. Bez premenných prostredia
+   sa správa ako predtým a zbehne všetky tri. */
+const SHARD_INDEX = Number(process.env.KV_SHARD_INDEX || 0);
+const SHARD_TOTAL = Number(process.env.KV_SHARD_TOTAL || 1);
+if (!Number.isInteger(SHARD_INDEX) || !Number.isInteger(SHARD_TOTAL) ||
+    SHARD_TOTAL < 1 || SHARD_INDEX < 0 || SHARD_INDEX >= SHARD_TOTAL) {
+  throw new Error('Neplatný shard ' + SHARD_INDEX + '/' + SHARD_TOTAL);
+}
+const VSETKY_ROZMERY = [[4000, 6000], [2500, 5200], [7000, 6000]];
+const ROZMERY = VSETKY_ROZMERY.filter((_, i) => i % SHARD_TOTAL === SHARD_INDEX);
+
 (async () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 1000, height: 750 } });
@@ -29,7 +47,7 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
   await p.waitForTimeout(2200);
   if (!await p.evaluate(() => Boolean(window.SP_TEST))) { console.log('SP_TEST chýba'); await b.close(); process.exit(2); }
 
-  const nalezy = await p.evaluate(async ([PRAH]) => {
+  const nalezy = await p.evaluate(async ([PRAH, ROZMERY]) => {
     const svg = document.querySelector('[data-sp-canvas]');
     const plocha = async () => {
       const xml = window.SP_TEST.exportSVG();
@@ -53,7 +71,7 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
     };
     const set = (a, v) => { const e = document.querySelector(a); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); };
     const out = [];
-    for (const [W, L] of [[4000, 6000], [2500, 5200], [7000, 6000]]) {
+    for (const [W, L] of ROZMERY) {
       set('[data-sp-w]', W); set('[data-sp-l]', L);
       await new Promise((r) => setTimeout(r, 150));
       for (const el of [-0.16, 0.10, 0.42, 0.80, 1.12]) {
@@ -72,7 +90,7 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
       }
     }
     return out;
-  }, [PRAH]);
+  }, [PRAH, ROZMERY]);
 
   if (nalezy.length) {
     console.log('SKOK V SILUETE — niečo sa objavilo alebo zmizlo:');

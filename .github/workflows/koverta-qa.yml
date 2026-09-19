@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok, realizacie-gallery]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, routing-smoke, browser-qa, pocasie-odtok, realizacie-gallery]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,6 +77,46 @@ jobs:
           name: koverta-visual-qa-${{ matrix.test }}
           path: qa-artifacts
           if-no-files-found: ignore
+
+  # Plynulosť siluety prejde 1 095 pohľadov a pri každom serializuje SVG,
+  # dekóduje ho a prekreslí na plátno. V bežnej matici s 30-minútovým limitom
+  # skončila zakaždým ako `cancelled` — výsledok, ktorý nikto nedostal. Delí sa
+  # po rozmeroch; každý shard prejde svoje rozmery celé a doručí vlastný verdikt.
+  plynulost:
+    name: plynulost (${{ matrix.shard }}/3)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+      - name: Silhouette continuity
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+          KV_SHARD_INDEX: ${{ matrix.shard }}
+          KV_SHARD_TOTAL: 3
+        run: node konfigurator/test/plynulost.js
 
   occlusion-deep:
     name: occlusion-deep (${{ matrix.script }} ${{ matrix.shard }}/${{ matrix.shards }})
