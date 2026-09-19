@@ -16,9 +16,13 @@ assert.equal(upper.length, 1, 'Koverta upper roof skin must be generated exactly
 
 assert.match(source, /if \(!lowPowerGraphics\) \{\s*for \(let i = 10; i >= 0; i--\)/,
   'Decorative shadow rings must be skipped on low-power devices');
+assert.match(source, /if \(!interacting\) detailTimer = window\.setTimeout\(\(\) => \{\s*motionDetail = false;\s*drawStage\(\);/,
+  'Camera settle must switch back to a full-detail still render');
+assert.match(source, /if \(!motionDetail\) ratio = dpr \* Math\.max\(1, Math\.floor\(ratio \/ dpr \+ 1e-6\)\);/,
+  'Still-frame ratio must remain an integer multiple of physical pixels');
 assert.match(source, /material === 'fascia' \? 0\.035 : HAZE_I/,
   'Fascia must use restrained depth haze');
 assert.match(source, /true, 'fascia'\)/,
   'Koverta flashing faces must identify their fascia material');
 
-console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, single roof skin, low-power shadow guard and fascia haze');
+console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, single roof skin, sharp settle path, low-power shadow guard and fascia haze');

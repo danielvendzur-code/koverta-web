@@ -43,6 +43,7 @@ const errors = [];
 const warnings = [];
 const canonicals = new Map();
 const noindexPages = [];
+const indexablePaths = [];
 const nonPublic = /^(?:404\.html|interny-odhad-patiek\/|konfigurator\/test\/)/;
 
 for (const file of htmlFiles.sort()) {
@@ -51,15 +52,18 @@ for (const file of htmlFiles.sort()) {
   const source = fs.readFileSync(file, 'utf8');
   const head = (source.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i) || ['', ''])[1];
   if (/<meta\b[^>]*name=["']robots["'][^>]*content=["'][^"']*noindex/i.test(head)) noindexPages.push(rel);
+  else indexablePaths.push(publicPath(file));
   const visible = source.replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '');
   const titles = [...head.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/gi)];
   const descriptions = [...head.matchAll(/<meta\b[^>]*name=["']description["'][^>]*>/gi)];
   const canonicalTags = [...head.matchAll(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi)];
+  const ogUrls = [...head.matchAll(/<meta\b[^>]*property=["']og:url["'][^>]*>/gi)];
   const h1s = [...visible.matchAll(/<h1\b/gi)];
 
   if (titles.length !== 1 || !titles[0][1].trim()) errors.push(`${rel}: expected one non-empty <title>`);
   if (descriptions.length !== 1 || !attr(descriptions[0][0], 'content')) errors.push(`${rel}: expected one meta description`);
   if (canonicalTags.length !== 1) errors.push(`${rel}: expected one canonical link`);
+  if (ogUrls.length !== 1) errors.push(`${rel}: expected one og:url`);
   if (h1s.length !== 1) errors.push(`${rel}: expected one H1, found ${h1s.length}`);
   if (!/<html\b[^>]*lang=["']sk["']/i.test(source)) errors.push(`${rel}: missing lang="sk"`);
   if (!/<meta\b[^>]*name=["']viewport["']/i.test(source)) errors.push(`${rel}: missing viewport meta`);
@@ -67,9 +71,16 @@ for (const file of htmlFiles.sort()) {
   if (canonicalTags.length === 1) {
     const canonical = attr(canonicalTags[0][0], 'href') || '';
     if (!/^https:\/\/koverta\.sk\//.test(canonical)) errors.push(`${rel}: invalid canonical ${canonical}`);
+    if (ogUrls.length === 1 && attr(ogUrls[0][0], 'content') !== canonical) {
+      errors.push(`${rel}: og:url differs from canonical`);
+    }
     const previous = canonicals.get(canonical);
     if (previous && canonical) errors.push(`${rel}: duplicate canonical also used by ${previous}`);
     else if (canonical) canonicals.set(canonical, rel);
+  }
+  if (/href=["'],,\//i.test(source)) errors.push(`${rel}: broken neighbouring dimension URL`);
+  if (/https:\/\/danielvendzur-code\.github\.io\/koverta-web/i.test(head)) {
+    errors.push(`${rel}: old GitHub Pages origin in metadata`);
   }
 
   for (const script of source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
@@ -101,10 +112,15 @@ if (!/^Sitemap:\s*https:\/\/koverta\.sk\/sitemap\.xml\s*$/im.test(robots)) {
   errors.push('robots.txt: missing absolute sitemap declaration');
 }
 const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
+const sitemapPaths = new Set();
 for (const [, url] of sitemap.matchAll(/<loc>(https:\/\/koverta\.sk\/[^<]*)<\/loc>/g)) {
   const pathname = new URL(url).pathname;
+  sitemapPaths.add(pathname);
   const target = pathname === '/' ? path.join(root, 'index.html') : path.join(root, pathname, 'index.html');
   if (!fs.existsSync(target)) errors.push(`sitemap.xml: URL has no page (${url})`);
+}
+for (const pathname of indexablePaths) {
+  if (!sitemapPaths.has(pathname)) errors.push(`sitemap.xml: indexable page missing (${pathname})`);
 }
 
 console.log(`SEO_AUDIT ${canonicals.size} HTML pages with unique canonicals`);
@@ -118,5 +134,5 @@ if (errors.length) {
   errors.forEach((error) => console.error(`ERROR ${error}`));
   process.exitCode = 1;
 } else {
-  console.log('SEO_AUDIT_PASS metadata, canonicals, JSON-LD, local targets, image alt text and sitemap');
+  console.log('SEO_AUDIT_PASS metadata, canonical/OG URLs, JSON-LD, local targets, image alt text and sitemap');
 }
