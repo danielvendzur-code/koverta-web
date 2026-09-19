@@ -26,6 +26,12 @@ jobs:
           node-version: 22
       - name: Validate realization map content
         run: node konfigurator/test/realizacie-map.js
+      - name: Validate generated pages, SEO and renderer invariants
+        run: |
+          node konfigurator/test/koverta-render-regression.js
+          node tools/seo-audit.js
+          python3 tools/generuj-rozmery.py
+          git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
 
   configurator:
     runs-on: ubuntu-24.04
@@ -33,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok, realizacie-gallery]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -73,15 +79,23 @@ jobs:
           if-no-files-found: ignore
 
   occlusion-deep:
+    name: occlusion-deep (${{ matrix.script }} ${{ matrix.shard }}/${{ matrix.shards }})
     runs-on: ubuntu-24.04
-    # 02-occlusion-sweep renders ~7000 views across 54 dimensions and needs
-    # more than 35 minutes on a hosted runner; at 35 it was cancelled mid-run
-    # and never reported. It passes when allowed to finish.
-    timeout-minutes: 60
+    # Dlhé testy sú rozdelené podľa rozmerov. Každý shard musí skončiť s
+    # vlastným výsledkom; timeout sa už nesmie vydávať za zelenú kontrolu.
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:
-        script: [02-occlusion-sweep, 02-component-visibility, 02-focused-render-qa]
+        include:
+          - { script: 02-occlusion-sweep, shard: 0, shards: 3 }
+          - { script: 02-occlusion-sweep, shard: 1, shards: 3 }
+          - { script: 02-occlusion-sweep, shard: 2, shards: 3 }
+          - { script: 02-component-visibility, shard: 0, shards: 4 }
+          - { script: 02-component-visibility, shard: 1, shards: 4 }
+          - { script: 02-component-visibility, shard: 2, shards: 4 }
+          - { script: 02-component-visibility, shard: 3, shards: 4 }
+          - { script: 02-focused-render-qa, shard: 0, shards: 1 }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,12 +122,14 @@ jobs:
       - name: Deep render QA
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+          KV_SHARD_INDEX: ${{ matrix.shard }}
+          KV_SHARD_TOTAL: ${{ matrix.shards }}
         run: node "coordination/koverta/${{ matrix.script }}.js"
       - name: Upload deep QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-deep-qa-${{ matrix.script }}
+          name: koverta-deep-qa-${{ matrix.script }}-${{ matrix.shard }}
           path: qa-artifacts
           if-no-files-found: ignore
 

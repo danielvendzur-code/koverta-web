@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 
-const URL = process.env.KV_URL || 'http://127.0.0.1:8901/realizacie/';
+const URL = process.env.KV_REALIZACIE_URL || 'http://127.0.0.1:8901/realizacie/';
 
 async function dismissConsent(page) {
   const reject = page.getByRole('button', { name: 'Iba nevyhnutné' });
@@ -11,6 +12,7 @@ async function dismissConsent(page) {
 }
 
 (async () => {
+  fs.mkdirSync('qa-artifacts', { recursive: true });
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
   await page.goto(URL, { waitUntil: 'domcontentloaded' });
@@ -27,6 +29,7 @@ async function dismissConsent(page) {
   await page.locator('.kv-lupa__sipka--dalsi').click();
   const secondSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
   assert.notEqual(secondSource, firstSource, 'Next arrow must advance to another photograph');
+  await page.screenshot({ path: 'qa-artifacts/realizacie-gallery-desktop.png', fullPage: true });
   await page.keyboard.press('ArrowLeft');
   assert.equal(await page.locator('.kv-lupa__ram img').getAttribute('src'), firstSource,
     'Keyboard navigation must return to the previous photograph');
@@ -59,6 +62,7 @@ async function dismissConsent(page) {
   assert.match(layout.snap, /x/);
   assert(layout.cardWidth > layout.viewport * 0.7 && layout.cardWidth < layout.viewport,
     `Mobile gallery card has an invalid width: ${JSON.stringify(layout)}`);
+  await mobile.screenshot({ path: 'qa-artifacts/realizacie-gallery-mobile.png', fullPage: true });
 
   await browser.close();
   console.log('REALIZACIE_GALLERY_PASS 200-photo modal, arrows, keyboard, filtered sequence and mobile snap slider');

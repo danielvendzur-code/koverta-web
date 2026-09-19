@@ -8,8 +8,15 @@ const { prepareContext } = require('../../konfigurator/test/browser-qa');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
+const SHARD_INDEX = Number(process.env.KV_SHARD_INDEX || 0);
+const SHARD_TOTAL = Number(process.env.KV_SHARD_TOTAL || 1);
 const ROTATION_STEPS = 36; // 10° component-isolation sweep
-const DIMENSIONS = [[4000, 6000], [6200, 6000], [7000, 5200], [7000, 6000]];
+const ALL_DIMENSIONS = [[4000, 6000], [6200, 6000], [7000, 5200], [7000, 6000]];
+if (!Number.isInteger(SHARD_INDEX) || !Number.isInteger(SHARD_TOTAL) ||
+    SHARD_TOTAL < 1 || SHARD_INDEX < 0 || SHARD_INDEX >= SHARD_TOTAL) {
+  throw new Error('Invalid shard ' + SHARD_INDEX + '/' + SHARD_TOTAL);
+}
+const DIMENSIONS = ALL_DIMENSIONS.filter((_, index) => index % SHARD_TOTAL === SHARD_INDEX);
 const COMPONENTS = [
   { id: 'purlins', flag: '__QA_HIDE_PURLINS', elevations: [-0.16, 0.04] },
   { id: 'angles', flag: '__QA_HIDE_UHOLNIK', elevations: [-0.16, 0.04] },
@@ -290,6 +297,7 @@ async function saveBaselineScreenshot(page, width, length, component, elevation,
     }
 
     const result = {
+      shard: { index: SHARD_INDEX, total: SHARD_TOTAL },
       dimensions: DIMENSIONS,
       rotationSteps: ROTATION_STEPS,
       components: COMPONENTS.map(({ id, elevations }) => ({ id, elevations })),

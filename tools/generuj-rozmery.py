@@ -63,8 +63,8 @@ def telo(kluc, w, l, cena, vsetky):
         n = auta(w)
         kapacita = 'jedno auto' if n == 1 else 'dve autá'
         uvod = (f'Prístrešok so šírkou {wtxt} m a hĺbkou {ltxt} m zakryje {plocha} m² '
-                f'a pohodlne pod ním zaparkujete {kapacita}. Je to katalógový rozmer, takže naň '
-                f'máme hotové podklady aj cenu — nemusíte čakať na individuálne nacenenie.')
+                f'a pohodlne pod ním zaparkujete {kapacita}. Je to katalógový rozmer so základnou '
+                f'cenou; konečnú cenu potvrdíme podľa podkladu, farby a doplnkov.')
         detail = (f'Hĺbka {ltxt} m stačí na bežné osobné auto aj s priestorom na otvorenie dverí '
                   f'a obchôdzku okolo. Pri šírke {wtxt} m ' +
                   ('ostáva miesto aj na bicykle alebo smetné nádoby pri stĺpe.' if n == 1 else
@@ -122,6 +122,14 @@ def strankuj():
     hlava = re.sub(r'<!-- KOVERTA-SEO -->.*?<!-- /KOVERTA-SEO -->', '<!--SEO-->', hlava, flags=re.S)
     hlava = re.sub(r'<title>.*?</title>', '<!--TITLE-->', hlava, flags=re.S)
     hlava = re.sub(r'<meta name="description"[^>]*>', '<!--DESC-->', hlava)
+    # Produktová schéma rodičovskej stránky leží mimo SEO bloku. Na variante
+    # rozmeru by vytvorila druhý, nesprávny produkt (a pri záhradnej verzii
+    # dokonca produkt „Prístrešok pre auto“). Rozmer dostane vlastnú schému.
+    def bez_rodicovskeho_produktu(m):
+        return '' if re.search(r'"@type"\s*:\s*"Product"', m.group(1)) else m.group(0)
+    hlava = re.sub(
+        r'<script type="application/ld\+json">(.*?)</script>',
+        bez_rodicovskeho_produktu, hlava, flags=re.S)
     pocet = 0
     for kluc, mo in kat.items():
         t = SABLONY[kluc]
@@ -135,12 +143,11 @@ def strankuj():
                 rel = f'{t["nadradUrl"]}/rozmer/{slug}/'
                 wtxt, ltxt = f'{w/1000:g}'.replace('.', ','), f'{l/1000:g}'.replace('.', ',')
                 nazov = f'{t["druh"]} {wtxt} × {ltxt} m'
-                popis = (f'{nazov} — cena {medzery(cena)} € s DPH, dopravou aj montážou. '
-                         f'Zakrytá plocha {plocha} m². Katalógový rozmer, hotové podklady aj cena.')
-                seo = f'''<title>{nazov} · cena {medzery(cena)} € | Koverta</title>
+                popis = (f'{nazov} — cena od {medzery(cena)} € s DPH, dopravou aj montážou. '
+                         f'Zakrytá plocha {plocha} m². Konečná cena závisí od farby, podkladu a doplnkov.')
+                seo = f'''<title>{nazov} · od {medzery(cena)} € | Koverta</title>
 <meta name="description" content="{popis}">
 <link rel="canonical" href="{ZAKLAD}/{rel}">
-<meta name="robots" content="noindex, nofollow">
 <meta property="og:type" content="product">
 <meta property="og:title" content="{nazov}">
 <meta property="og:description" content="{popis}">
@@ -152,7 +159,7 @@ def strankuj():
   "width":{"@type":"QuantitativeValue","value":w,"unitCode":"MMT"},
   "depth":{"@type":"QuantitativeValue","value":l,"unitCode":"MMT"},
   "offers":{"@type":"Offer","price":cena,"priceCurrency":"EUR",
-            "availability":"https://schema.org/InStock",
+            "availability":"https://schema.org/PreOrder",
             "url":f"{ZAKLAD}/{rel}",
             "priceSpecification":{"@type":"PriceSpecification","price":cena,
               "priceCurrency":"EUR","valueAddedTaxIncluded":True}}
@@ -177,8 +184,8 @@ def strankuj():
     <p class="k-lead" style="max-width:60ch">{uvod}</p>
 
     <ul class="kh-fakty__rad" style="margin:2.4rem 0">
-      <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{medzery(cena)} €</span>
-        <span class="kh-fakty__co">Cena s DPH</span>
+      <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">od {medzery(cena)} €</span>
+        <span class="kh-fakty__co">Základná cena s DPH</span>
         <span class="kh-fakty__pod">Doprava aj montáž v cene.</span></li>
       <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{str(plocha).replace('.', ',')} m²</span>
         <span class="kh-fakty__co">Zakrytá plocha</span>
@@ -199,6 +206,7 @@ def strankuj():
     </figure>
 
     <p class="k-copy" style="max-width:62ch">{detail}</p>
+    <p class="k-copy" style="max-width:62ch"><strong>Uvedená cena je cena základnej zostavy.</strong> Konečnú sumu ovplyvní zvolený odtieň, pripravenosť podkladu a doplnky; potvrdíme ju v nezáväznej ponuke.</p>
 
     <div class="kh-hero__actions" style="margin:2rem 0">
       <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
@@ -216,6 +224,38 @@ def strankuj():
                 os.makedirs(cesta, exist_ok=True)
                 io.open(os.path.join(cesta, 'index.html'), 'w', encoding='utf-8').write(h + main + p)
                 pocet += 1
+    # Primárny klik na rozmer vedie na jeho vysvetľujúcu stránku. Samostatný
+    # odkaz „3D“ ostáva priamou skratkou do konfigurátora.
+    for kluc, t in SABLONY.items():
+        cesta = os.path.join(KOREN, t['nadradUrl'], 'index.html')
+        html = io.open(cesta, encoding='utf-8').read()
+        vzor = re.compile(
+            r'(<a class="kh-size__chip" href=")\.\./konfigurator/\?page=' + re.escape(t['cfg']) +
+            r'&amp;w=(\d+)&amp;l=(\d+)(" aria-label=")[^"]+("[^>]*>)')
+        def prepoj(m):
+            w, l = int(m.group(2)), int(m.group(3))
+            label = f'Pozrieť rozmer {metre(w)} m × {metre(l)} m'
+            return m.group(1) + f'./rozmer/{w}x{l}/' + m.group(4) + label + m.group(5)
+        html, zmeny = vzor.subn(prepoj, html)
+        if zmeny:
+            io.open(cesta, 'w', encoding='utf-8').write(html)
+
+    # Rozmerové stránky sú normálne produktové varianty, preto patria do mapy
+    # webu. Pred zápisom odstránime staré rozmerové záznamy, aby bol skript
+    # opakovateľný a nevytváral duplicity.
+    sitemap_cesta = os.path.join(KOREN, 'sitemap.xml')
+    sitemap = io.open(sitemap_cesta, encoding='utf-8').read()
+    sitemap = re.sub(r'\s*<url><loc>https://koverta\.sk/(?:pristresky-pre-auta|zahradne-pristresky)/rozmer/[^<]+</loc>.*?</url>', '', sitemap)
+    zaznamy = []
+    for kluc, mo in kat.items():
+        t = SABLONY[kluc]
+        for l in mo['lengths']:
+            for w in mo['widths']:
+                zaznamy.append(
+                    f'  <url><loc>{ZAKLAD}/{t["nadradUrl"]}/rozmer/{w}x{l}/</loc>'
+                    '<changefreq>monthly</changefreq><priority>0.7</priority></url>')
+    sitemap = sitemap.replace('</urlset>', '\n'.join(zaznamy) + '\n</urlset>')
+    io.open(sitemap_cesta, 'w', encoding='utf-8').write(sitemap)
     return pocet
 
 if __name__ == '__main__':

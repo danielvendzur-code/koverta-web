@@ -37,9 +37,16 @@ const PRAH = Number(process.env.KV_PRAH || 0.22);   // povolený skok siluety
       await new Promise((r, j) => { img.onload = r; img.onerror = j;
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml))); });
       const vb = svg.getAttribute('viewBox').split(' ').map(Number);
-      const c = document.createElement('canvas'); c.width = vb[2]; c.height = vb[3];
-      const g = c.getContext('2d'); g.drawImage(img, 0, 0, vb[2], vb[3]);
-      const d = g.getImageData(0, 0, vb[2], vb[3]).data;
+      /* Na skok siluety netreba rasterizovať celý 1000 × 750 viewport.
+         Pôvodná verzia čítala pri 1 095 pohľadoch vyše 820 miliónov pixelov
+         a na GitHub runneri vždy narazila na 30-minútový limit. Normalizovaná
+         plocha siluety zostáva pri menšom rastri rovnaká, test však skončí
+         približne desaťkrát rýchlejšie. */
+      const rasterW = 320;
+      const rasterH = Math.max(1, Math.round(rasterW * vb[3] / vb[2]));
+      const c = document.createElement('canvas'); c.width = rasterW; c.height = rasterH;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, rasterW, rasterH);
+      const d = g.getImageData(0, 0, rasterW, rasterH).data;
       let n = 0;
       for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40) n++;
       return n;

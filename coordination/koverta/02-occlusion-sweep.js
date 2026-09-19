@@ -8,6 +8,8 @@ const { prepareContext } = require('../../konfigurator/test/browser-qa');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
+const SHARD_INDEX = Number(process.env.KV_SHARD_INDEX || 0);
+const SHARD_TOTAL = Number(process.env.KV_SHARD_TOTAL || 1);
 const SILHOUETTE_JUMP_LIMIT = 0.22;
 const POLYGON_JUMP_LIMIT = 0.45;
 const ROTATION_STEPS = 24;
@@ -221,12 +223,17 @@ async function saveCandidateScreenshots(page, candidate, prefix) {
   fs.mkdirSync(path.join(ROOT, 'qa-artifacts'), { recursive: true });
 
   const dimensions = loadSupportedDimensions();
-  const configurations = dimensions.widths.flatMap(width =>
+  const allConfigurations = dimensions.widths.flatMap(width =>
     dimensions.lengths.map(length => [width, length])
   );
-  if (configurations.length !== 54) {
-    throw new Error('Expected 54 supported Koverta dimension combinations, got ' + configurations.length);
+  if (allConfigurations.length !== 54) {
+    throw new Error('Expected 54 supported Koverta dimension combinations, got ' + allConfigurations.length);
   }
+  if (!Number.isInteger(SHARD_INDEX) || !Number.isInteger(SHARD_TOTAL) ||
+      SHARD_TOTAL < 1 || SHARD_INDEX < 0 || SHARD_INDEX >= SHARD_TOTAL) {
+    throw new Error('Invalid shard ' + SHARD_INDEX + '/' + SHARD_TOTAL);
+  }
+  const configurations = allConfigurations.filter((_, index) => index % SHARD_TOTAL === SHARD_INDEX);
 
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const context = await browser.newContext({
@@ -427,12 +434,12 @@ async function saveCandidateScreenshots(page, candidate, prefix) {
       await saveCandidateScreenshots(page, candidate, 'silhouette-diagnostic');
     }
 
-    const contrastCases = [
+    const contrastCases = SHARD_INDEX === 0 ? [
       [2500, 5200],
       [4000, 6000],
       [7000, 5200],
       [7000, 6000]
-    ];
+    ] : [];
     for (const ral of ['RAL 9010', 'RAL 9005']) {
       await setFrameColor(page, ral);
       for (const [width, length] of contrastCases) {
@@ -493,7 +500,8 @@ async function saveCandidateScreenshots(page, candidate, prefix) {
       coarseCandidateCount: coarseCandidates.length,
       refinedCandidateCount: refinementDiagnostics.length,
       refinementDiagnostics,
-      contrastViews: 2 * 4 * CRITICAL_VIEWS.length,
+      shard: { index: SHARD_INDEX, total: SHARD_TOTAL },
+      contrastViews: 2 * contrastCases.length * CRITICAL_VIEWS.length,
       renderedViews,
       firstPartyConsoleOrPageErrors: browserErrors,
       findings
@@ -510,7 +518,7 @@ async function saveCandidateScreenshots(page, candidate, prefix) {
       console.log(
         'OCCLUSION_SWEEP_PASS ' + configurations.length +
         ' supported dimensions, ' + renderedViews +
-        ' rendered views, RAL 9010/9005 contrast checks'
+        ' rendered views' + (contrastCases.length ? ', RAL 9010/9005 contrast checks' : '')
       );
     }
     console.log('FIRST_PARTY_CONSOLE_PAGEERROR ' + browserErrors.length);

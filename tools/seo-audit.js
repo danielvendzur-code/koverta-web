@@ -87,6 +87,15 @@ for (const file of htmlFiles.sort()) {
     try { JSON.parse(script[1]); }
     catch (error) { errors.push(`${rel}: invalid JSON-LD (${error.message})`); }
   }
+  if (/\/(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\//.test(publicPath(file))) {
+    const products = [...source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+      .map(match => { try { return JSON.parse(match[1]); } catch { return null; } })
+      .filter(data => data && data['@type'] === 'Product');
+    if (products.length !== 1) errors.push(`${rel}: expected exactly one Product JSON-LD, found ${products.length}`);
+    if (products[0]?.offers?.availability === 'https://schema.org/InStock') {
+      errors.push(`${rel}: made-to-order variant must not claim InStock`);
+    }
+  }
 
   for (const tag of visible.matchAll(/<(?:img|a|link|script)\b[^>]*>/gi)) {
     const markup = tag[0];
