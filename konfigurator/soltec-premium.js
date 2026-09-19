@@ -4931,7 +4931,14 @@
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+            /* Keep the real soffit under the flashing. The upper skin needs
+               only a narrow hidden lap beneath the inner edge: cropping it
+               exactly at the aperture exposed a jagged lower-skin cut, while
+               the full hidden sheet won isolated depth samples on the arm. */
+            const trapLap = 6;
+            drawTrapSurface(Math.max(tx0, vx0 - trapLap), Math.min(tx1, vx1 + trapLap),
+              Math.max(ty0, vy0 - trapLap), Math.min(ty1, vy1 + trapLap),
+              trapUpperZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
