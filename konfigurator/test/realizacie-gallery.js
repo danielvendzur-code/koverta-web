@@ -42,7 +42,8 @@ async function dismissConsent(page) {
   assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), '1 / 26');
   await page.keyboard.press('Escape');
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const mobile = await mobileContext.newPage();
   await mobile.goto(URL, { waitUntil: 'load' });
   await dismissConsent(mobile);
   await mobile.waitForSelector('#realGrid .kh-work__item[role="button"]');
@@ -67,6 +68,7 @@ async function dismissConsent(page) {
   await mobile.locator('#realGrid img').first().waitFor({ state: 'visible' });
   await mobile.waitForTimeout(500);
   await mobile.screenshot({ path: 'qa-artifacts/realizacie-gallery-mobile.png' });
+  await mobileContext.close();
 
   await browser.close();
   console.log('REALIZACIE_GALLERY_PASS 200-photo modal, arrows, keyboard, filtered sequence and mobile snap slider');
