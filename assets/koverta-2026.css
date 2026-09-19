@@ -6743,7 +6743,6 @@ footer.kf { background: var(--k-ink); color: #fff; }
 @media (min-width: 1040px) {
   .k .kh-mat__grid:has(> :last-child:nth-child(3)) .kh-mat__title {
     max-width: none;
-    font-size: clamp(20px, 1.5vw, 24px);
   }
 }
 
@@ -13200,3 +13199,69 @@ body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
     .k .kh-vcene__nazov { min-height: 0; }
   }
 }
+
+
+/* ==========================================================================
+   VRSTVA 122 · Jedna stupnica nadpisov
+   ==========================================================================
+   Zadávateľ: nadpisy sú každý inde veľké. Boli — a nie náhodou. Rovnaká
+   trieda dostala inú veľkosť podľa toho, v ktorej vrstve ju niekto naposledy
+   prepísal. Zmerané pri 1440 px:
+
+     H1  úvod 66 px · podstránky 58 px · Kontakt 64 px
+     H2  sekcie 40 px · dvojica foto + text 48 px · dialóg značiek 44 px
+     H3  karty materiálov raz 24 px, raz 22 px — tá istá trieda
+
+   Stupnica je štvorstupňová a ďalšiu nepotrebuje: display (úvodný pás),
+   h2 (nadpis sekcie), h3 (nadpis karty), h4 (popisok). Čo z nej vypadlo,
+   sa sem vracia. Úvodný pás úvodnej stránky ostáva väčší zámerne — je to
+   jediný nadpis na stránke, ktorý má byť vidieť z druhej strany miestnosti.
+   ====================================================================== */
+
+/* Kontakt mal vlastný nadpis stránky o šesť pixelov väčší než ostatné
+   podstránky. Ide na tú istú mierku. */
+.k .kh-hlava__nadpis { font-size: clamp(40px, 4.25vw, 58px); }
+
+/* Dvojica fotografia + text a dialóg výberu značky sadzili nadpis sekcie
+   väčšmi než sekcie okolo. Obe idú na mierku `.k-h2`. */
+.k .kh-duo__telo .k-h2 { font-size: clamp(27px, 2.8vw, 42px); }
+.kh-brand-dialog__panel .k-h3 { font-size: clamp(27px, 2.8vw, 42px); }
+
+/* Nadpis v karte „Po celom Slovensku“ na Kontakte stál medzi h2 a h3.
+   Je to nadpis karty, čiže h3. */
+.k .kh-kde__nadpis { font-size: clamp(19px, 1.6vw, 25px); }
+
+/* H3 mal osem stupňov medzi 18 a 29 pixelmi. Toľko rozdielov oko nečíta ako
+   hierarchiu, iba ako neporiadok. Ostávajú tri, a každý má svoju úlohu:
+
+     --k-h3-panel  nadpis panelu vnútri sekcie (bočný panel pri formulári,
+                   karta produktu na Tienení, rad carportov, potvrdenie dopytu)
+     --k-h3        nadpis karty (materiály, „Čo je v cene“, sprievodca kuchyňou,
+                   kroky postupu, utilita .k-h3)
+     --k-h3-mensi  popisok v drobnej karte (oddelenia na Kontakte, výber kuchyne)
+
+   Kvíz má vlastnú mierku a nechávame mu ju: je to celoobrazovkový panel,
+   nie karta v sekcii. */
+:root {
+  --k-h3-panel: clamp(22px, 2vw, 28.8px);
+  --k-h3: clamp(20px, 1.7vw, 24px);
+  --k-h3-mensi: clamp(16px, 1.3vw, 19px);
+}
+
+.k .kh-cta__aside-head h3,
+.k .kh-shade-product__head h3,
+.k .k-carport-series__head h3,
+.k .kh-dakujem__nadpis { font-size: var(--k-h3-panel); }
+
+.k .k-h3,
+.k .kh-mat__title,
+.k .kh-vcene__nazov,
+.k .k-kitchen-specs .kh-kitchen-guide__panel h3,
+.k .k-kitchen-plan__step h3 { font-size: var(--k-h3); }
+
+.k .kh-odd__nazov,
+.k .k-kitchen-option h3 { font-size: var(--k-h3-mensi); }
+
+/* Dialóg výberu značky nesie triedu `.k-h3`, ale je to nadpis sekcie — mierku
+   `.k-h2` mu dáva vrstva vyššie a tá tu nesmie prehrať. */
+.kh-brand-dialog__panel .k-h3 { font-size: clamp(27px, 2.8vw, 42px); }
