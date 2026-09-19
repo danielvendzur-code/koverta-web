@@ -605,42 +605,56 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     <p class="kv-cfg__label">Čo potrebujete zastrešiť</p>
     <nav class="kv-cfg__tabs" aria-label="Čo potrebujete zastrešiť">
       <a href="?page=koverta" data-kv-tab="koverta">
+        <!-- Koverta: strecha má spád, preto je čiara šikmá. Pod ňou auto. -->
         <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 11h42M6 11v18M42 11v18" />
-          <path d="M12 26h3M33 26h3" />
-          <path d="M12 26c0-4 3-7 7-7h10c4 0 7 3 7 7" />
-          <circle cx="17" cy="26" r="2.4" /><circle cx="31" cy="26" r="2.4" />
+          <path d="M3 8.5 45 12.5" />
+          <path d="M6 9v19.5M42 12.2v16.3" />
+          <path d="M13 27.5c0-3.7 2.7-6.6 6.5-6.6h9c3.8 0 6.5 2.9 6.5 6.6" />
+          <circle cx="18" cy="27.5" r="2.2" /><circle cx="31" cy="27.5" r="2.2" />
         </svg>
         <span><strong>Oceľový prístrešok pre auto</strong><small>Koverta, vlastná výroba</small></span>
       </a>
       <a href="?page=carport" data-kv-tab="carport">
+        <!-- Soltec: rovná strecha, tenký hliníkový profil kreslený dvoma
+             čiarami. Rozdiel oproti Koverte je práve spád a hrúbka. -->
         <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 9h42l-3 4H6z" /><path d="M7 13v16M41 13v16" />
-          <path d="M12 26c0-4 3-7 7-7h10c4 0 7 3 7 7" />
-          <circle cx="17" cy="26" r="2.4" /><circle cx="31" cy="26" r="2.4" />
+          <path d="M3 9h42M3 12.4h42" />
+          <path d="M6.5 12.4v16.1M41.5 12.4v16.1" />
+          <path d="M13 27.5c0-3.7 2.7-6.6 6.5-6.6h9c3.8 0 6.5 2.9 6.5 6.6" />
+          <circle cx="18" cy="27.5" r="2.2" /><circle cx="31" cy="27.5" r="2.2" />
         </svg>
         <span><strong>Hliníkový prístrešok pre auto</strong><small>Soltec Carport</small></span>
       </a>
       <a href="?page=canopy" data-kv-tab="canopy">
+        <!-- Pevná strecha visí na fasáde: vľavo stena, vpredu jeden stĺp.
+             Pod ňou stôl a dve stoličky — terasa, nie auto. -->
         <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 10h42M6 10v19M42 10v19" />
-          <path d="M14 29v-7h8v7M28 24h8" /><path d="M28 27h8" />
+          <path d="M5 3v26" />
+          <path d="M5 7.5 9 3.5M5 13 9 9M5 18.5 9 14.5" />
+          <path d="M5 10.5h39M42 10.5v18" />
+          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
         </svg>
         <span><strong>Prestrešenie terasy a vstupu</strong><small>Soltec, pevná strecha</small></span>
       </a>
       <a href="?page=zahrada" data-kv-tab="zahrada">
+        <!-- Koverta v záhrade stojí sama na štyroch stĺpoch v rohoch: dva
+             vpredu cez celú výšku, dva vzadu kratšie. Spád ako pri aute. -->
         <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 11h42M6 11v18M42 11v18" />
-          <path d="M15 29v-8h7v8" /><path d="M28 25h8M28 28h8" />
-          <path d="M24 7l2-3 2 3" />
+          <path d="M3 8.5 45 12.5" />
+          <path d="M6 9v19.5M42 12.2v16.3" />
+          <path d="M12 10.3v5.5M36 12.6v5.5" />
+          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
         </svg>
         <span><strong>Prístrešok nad terasu a záhradu</strong><small>Koverta, oceľový so stĺpmi v rohoch</small></span>
       </a>
       <a href="?page=bio" data-kv-tab="bio">
+        <!-- Lamely sa otáčajú, preto sú nakreslené našikmo a s medzerami —
+             to je jediné, čím sa pergola od pevnej strechy líši. -->
         <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M6 9v20M42 9v20" />
-          <path d="M8 10.5h32M8 14h32M8 17.5h32" />
-          <path d="M12 29v-6h8v6M28 26h9" />
+          <path d="M4 8h40" />
+          <path d="M6.5 8v20.5M41.5 8v20.5" />
+          <path d="M10 15 13.5 11M16 15 19.5 11M22 15 25.5 11M28 15 31.5 11M34 15 37.5 11" />
+          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
         </svg>
         <span><strong>Pergola s otočnými lamelami</strong><small>Soltec, bioklimatická</small></span>
       </a>
