@@ -347,6 +347,14 @@
 .k-btn--line { border-color: var(--k-hair); color: var(--k-ink); background: var(--k-white); }
 .k-btn--line:hover { border-color: var(--k-ink); }
 
+/* Sekundárne tlačidlá boli prakticky neviditeľné: orámovanie malo krytie
+   11 %, takže biele tlačidlo na svetlom páse splynulo s pozadím. Majiteľ
+   žiadal minimálne tmavosivé. Orámovanie je preto plné a text tmavý.
+   Výnimka ostáva na tmavých pásoch (.k-invert) — tam je tlačidlo na videu
+   alebo na tmavom podklade a bledšie orámovanie je tam správne. */
+.k-btn--line { border-color: rgba(18, 23, 26, 0.55); border-width: 1.5px; }
+.k-btn--line:hover { border-color: var(--k-ink); background: var(--k-bone); }
+
 /* Druhoradá veľkosť. Používa sa vnútri kariet, kde by tlačidlo v plnej
    výške (54 px) prekričalo hlavnú výzvu sekcie. Tvar, rez aj farba ostávajú
    rovnaké — mení sa len výška a odsadenie, takže je to stále to isté
@@ -1582,6 +1590,14 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-cat__card { height: 100%; }
 .kh-cat__media { transition: none; }
 .kh-cat__body { transition: none; }
+/* Galéria realizácií má stáť. Telo karty sa pri prejdení myšou stále menilo
+   zo 142 na 238 px, a keďže prechod je vypnutý, bol z toho skok. Majiteľ to
+   chcel statické, tak sa výška tela nemení vôbec — ani pri hoveri, ani pri
+   fokuse, v žiadnej šírke obrazovky. */
+.kh-cat__item:hover .kh-cat__body,
+.kh-cat__item:focus-within .kh-cat__body { flex-basis: 142px; }
+.kh-cat__item:hover .kh-cat__media,
+.kh-cat__item:focus-within .kh-cat__media { flex-basis: auto; }
 /* Akcie ako jasná dvojica: hlavný odkaz a konfigurátor. */
 .kh-cat__actions { align-items: center; padding-top: 4px; }
 /* Pri úzkom stĺpci (polovica monitora, 800 px) bolo tlačidlo o 9 px širšie
