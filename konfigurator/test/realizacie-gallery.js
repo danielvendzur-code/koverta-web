@@ -45,8 +45,16 @@ async function dismissConsent(page) {
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const mobile = await mobileContext.newPage();
   await mobile.goto(URL, { waitUntil: 'load' });
+  await mobile.setViewportSize({ width: 390, height: 844 });
   await dismissConsent(mobile);
   await mobile.waitForSelector('#realGrid .kh-work__item[role="button"]');
+  const viewport = await mobile.evaluate(() => ({
+    innerWidth,
+    media: matchMedia('(max-width: 719px)').matches
+  }));
+  console.log('REALIZACIE_MOBILE_VIEWPORT ' + JSON.stringify(viewport));
+  assert.equal(viewport.innerWidth, 390, 'Mobile CSS viewport must be 390 px');
+  assert.equal(viewport.media, true, 'Mobile gallery media query must match');
   await mobile.waitForFunction(() => getComputedStyle(document.querySelector('#realGrid')).display === 'flex');
   const layout = await mobile.locator('#realGrid').evaluate((grid) => {
     const card = grid.querySelector('.kh-work__item:not([hidden])');
