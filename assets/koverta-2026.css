@@ -6294,22 +6294,30 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 
 /* Panel má výšku celého zoznamu, ale text a tlačidlo zaberú necelú polovicu —
-   spodok ostával prázdny čierny. Fotografia večernej realizácie pod textom
-   ho zaplní bez toho, aby si pýtala pozornosť: je stlmená a zospodu sa
-   vytráca do farby panelu. Cesta v `url()` sa počíta od tohto súboru, takže
-   platí rovnako na úvode aj na podstránkach. */
+   spodok ostával prázdny čierny. Zaplní ho značka Koverta otočená o 90°:
+   presne tam, kde predtým bola stlmená fotografia, rovnako priehľadná a cez
+   celú výšku panelu. Zadávateľ to takto chcel a fotografia tam nepatrila.
+
+   Otáčanie robí samotný súbor, nie CSS. `transform: rotate()` na podklade
+   otočí celý rám aj s jeho začiatkom, takže nápis vyšiel mimo panelu a
+   `overflow` ho odstrihol. `koverta-mark-zvisla.svg` je tá istá kresba už
+   otočená v svojom viewBoxe (77 × 516) a s bielou výplňou — pôvodná výplň
+   #455a64 by na tmavom paneli zanikla. Podklad sa potom len položí, bez
+   transformácie, a nič sa nemá kam stratiť.
+
+   Výška 135 % znamená, že nápis panel presahuje a hore aj dole sa oreže.
+   To je zámer: orezaná značka pôsobí ako značka, nie ako obrázok v rohu.
+   Cesta v `url()` sa počíta od tohto súboru, takže platí rovnako na úvode
+   aj na podstránkach. */
 @media (min-width: 1000px) {
-  .k .kh-faq__intro { position: relative; isolation: isolate; }
+  .k .kh-faq__intro { position: relative; isolation: isolate; overflow: hidden; }
   .k .kh-faq__intro::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    border-radius: inherit;
-    background: url("kh-faq-podklad.jpg") center bottom / cover no-repeat;
-    opacity: 0.3;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
-    mask-image: linear-gradient(to bottom, transparent 30%, #000 92%);
+    background: url("koverta-mark-zvisla.svg") right 8% center / auto 135% no-repeat;
+    opacity: 0.13;
     pointer-events: none;
   }
 }
