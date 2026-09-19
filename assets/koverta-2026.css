@@ -6307,6 +6307,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 
    Výška 135 % znamená, že nápis panel presahuje a hore aj dole sa oreže.
    To je zámer: orezaná značka pôsobí ako značka, nie ako obrázok v rohu.
+   Vodorovne stojí na strede panelu, nie pri hrane.
    Cesta v `url()` sa počíta od tohto súboru, takže platí rovnako na úvode
    aj na podstránkach. */
 @media (min-width: 1000px) {
@@ -6316,7 +6317,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: url("koverta-mark-zvisla.svg") right 8% center / auto 135% no-repeat;
+    background: url("koverta-mark-zvisla.svg") center / auto 135% no-repeat;
     opacity: 0.13;
     pointer-events: none;
   }
