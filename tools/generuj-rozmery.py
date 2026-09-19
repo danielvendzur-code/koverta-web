@@ -13,7 +13,7 @@ ručne prepísané čísla. Keď sa cena zmení tam, stačí spustiť tento skri
 import io, json, os, re, sys
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ZAKLAD = 'https://danielvendzur-code.github.io/koverta-web'
+ZAKLAD = 'https://koverta.sk'
 
 def katalog():
     src = io.open(os.path.join(KOREN, 'konfigurator/cfg-pages.js'), encoding='utf-8').read()
@@ -26,6 +26,9 @@ def katalog():
 
 def medzery(n):
     return f'{n:,}'.replace(',', ' ')
+
+def metre(n):
+    return f'{n/1000:g}'.replace('.', ',')
 
 def auta(sirka):
     """Koľko áut sa zmestí. Prahy sú tie, podľa ktorých je delená katalógová
@@ -78,7 +81,7 @@ def telo(kluc, w, l, cena, vsetky):
     okolie = [x for x in (vsetky[idx-1] if idx > 0 else None,
                           vsetky[idx+1] if idx+1 < len(vsetky) else None) if x]
     odkazy = ''.join(
-        f'<li><a href="../{a}x{b}/">{a/1000:g} × {b/1000:g} m</a></li>'.replace('.', ',')
+        f'<li><a href="../{a}x{b}/">{metre(a)} × {metre(b)} m</a></li>'
         for a, b in okolie)
     return uvod, detail, odkazy, plocha
 
@@ -97,7 +100,9 @@ def skrutka(html, hlbka):
     def uprav(m):
         meno, hodnota = m.group(1), m.group(2)
         kusy = []
-        for kus in hodnota.split(','):
+        # Iba srcset je zoznam oddelený čiarkou. Bežnú hodnotu URL
+        # spracujeme ako jeden kus a nepremeníme ju na zoznam.
+        for kus in (hodnota.split(',') if meno == 'srcset' else [hodnota]):
             hlava_, _, chvost = kus.strip().partition(' ')
             if hlava_.startswith('../'):
                 hlava_ = novy + hlava_[3:]

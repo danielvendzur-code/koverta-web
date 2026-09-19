@@ -2646,13 +2646,54 @@
      deväťdesiat kariet nenesie deväťdesiat skrytých vrstiev. Bez skriptu je
      náhľad obyčajné tlačidlo, ktoré nič nerozbije. */
   function initLupa(root) {
-    const spinace = root.querySelectorAll('[data-k-lupa]');
+    const explicitne = [].slice.call(root.querySelectorAll('[data-k-lupa]'));
+    const galerie = [].slice.call(root.querySelectorAll('.kh-work__item')).filter((item) => item.querySelector('img'));
+    const spinace = explicitne.concat(galerie.filter((item) => explicitne.indexOf(item) < 0));
     if (!spinace.length) return;
 
     let vrstva = null;
     let obrazok = null;
     let popis = null;
+    let pocitadlo = null;
+    let pred = null;
+    let dalsi = null;
     let odkial = null;
+    let poradie = [];
+    let pozicia = 0;
+    let dotykX = null;
+
+    const udaje = (tl) => {
+      const nahlad = tl.querySelector('img');
+      const zdroj = tl.getAttribute('data-k-lupa')
+        || (nahlad && (nahlad.currentSrc || nahlad.getAttribute('src')));
+      const caption = tl.querySelector('.kh-work__cap');
+      const captionParts = caption
+        ? [].slice.call(caption.children).map((part) => part.textContent.trim()).filter(Boolean)
+        : [];
+      const titulok = tl.getAttribute('data-k-lupa-popis')
+        || captionParts.join(' · ')
+        || (nahlad && nahlad.alt) || '';
+      return { zdroj, titulok, alt: nahlad ? nahlad.alt : '' };
+    };
+
+    const viditelnePoradie = (tl) => {
+      if (!tl.classList.contains('kh-work__item')) return [tl];
+      return galerie.filter((item) => !item.hidden && item.getClientRects().length);
+    };
+
+    const ukaz = (index) => {
+      if (!poradie.length) return;
+      pozicia = (index + poradie.length) % poradie.length;
+      const data = udaje(poradie[pozicia]);
+      if (!data.zdroj) return;
+      obrazok.alt = data.alt;
+      obrazok.src = data.zdroj;
+      popis.textContent = data.titulok;
+      const maSuseda = poradie.length > 1;
+      pred.hidden = dalsi.hidden = !maSuseda;
+      pocitadlo.hidden = !maSuseda;
+      pocitadlo.textContent = maSuseda ? `${pozicia + 1} / ${poradie.length}` : '';
+    };
 
     const zavri = () => {
       if (!vrstva || vrstva.hidden) return;
@@ -2682,6 +2723,19 @@
       obrazok.decoding = 'async';
       popis = document.createElement('p');
       popis.className = 'kv-lupa__popis';
+      pocitadlo = document.createElement('span');
+      pocitadlo.className = 'kv-lupa__pocitadlo';
+      const sipka = (trieda, nazov, smer) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'kv-lupa__sipka ' + trieda;
+        b.setAttribute('aria-label', nazov);
+        b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M${smer < 0 ? '15 5l-7 7 7 7' : '9 5l7 7-7 7'}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        b.addEventListener('click', () => ukaz(pozicia + smer));
+        return b;
+      };
+      pred = sipka('kv-lupa__sipka--pred', 'Predchádzajúca fotografia', -1);
+      dalsi = sipka('kv-lupa__sipka--dalsi', 'Nasledujúca fotografia', 1);
       const x = document.createElement('button');
       x.type = 'button';
       x.className = 'kv-lupa__zavri';
@@ -2690,30 +2744,56 @@
       x.addEventListener('click', zavri);
       ram.appendChild(obrazok);
       ram.appendChild(popis);
+      ram.appendChild(pocitadlo);
+      ram.appendChild(pred);
+      ram.appendChild(dalsi);
       ram.appendChild(x);
       vrstva.appendChild(ram);
       vrstva.addEventListener('click', (e) => { if (e.target === vrstva) zavri(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavri(); });
+      vrstva.addEventListener('touchstart', (e) => {
+        dotykX = e.touches.length === 1 ? e.touches[0].clientX : null;
+      }, { passive: true });
+      vrstva.addEventListener('touchend', (e) => {
+        if (dotykX == null || !e.changedTouches.length || poradie.length < 2) return;
+        const rozdiel = e.changedTouches[0].clientX - dotykX;
+        dotykX = null;
+        if (Math.abs(rozdiel) > 44) ukaz(pozicia + (rozdiel < 0 ? 1 : -1));
+      }, { passive: true });
+      document.addEventListener('keydown', (e) => {
+        if (!vrstva || vrstva.hidden) return;
+        if (e.key === 'Escape') zavri();
+        else if (e.key === 'ArrowLeft') ukaz(pozicia - 1);
+        else if (e.key === 'ArrowRight') ukaz(pozicia + 1);
+      });
       document.body.appendChild(vrstva);
       return x;
     };
 
     spinace.forEach((tl) => {
-      tl.addEventListener('click', () => {
-        const zdroj = tl.getAttribute('data-k-lupa');
-        if (!zdroj) return;
+      if (tl.classList.contains('kh-work__item')) {
+        tl.tabIndex = 0;
+        tl.setAttribute('role', 'button');
+        const img = tl.querySelector('img');
+        tl.setAttribute('aria-label', `Zväčšiť fotografiu: ${(img && img.alt) || 'realizácia'}`);
+      }
+      const otvor = () => {
+        if (!udaje(tl).zdroj) return;
         const x = vrstva ? vrstva.querySelector('.kv-lupa__zavri') : postav();
         odkial = tl;
-        const nahlad = tl.querySelector('img');
-        obrazok.alt = nahlad ? nahlad.alt : '';
-        obrazok.src = zdroj;
-        popis.textContent = tl.getAttribute('data-k-lupa-popis') || '';
+        poradie = viditelnePoradie(tl);
+        ukaz(Math.max(0, poradie.indexOf(tl)));
         vrstva.hidden = false;
         document.documentElement.style.overflow = 'hidden';
         window.requestAnimationFrame(() => {
           vrstva.classList.add('je-vidno');
           x.focus();
         });
+      };
+      tl.addEventListener('click', otvor);
+      if (tl.classList.contains('kh-work__item')) tl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        otvor();
       });
     });
   }

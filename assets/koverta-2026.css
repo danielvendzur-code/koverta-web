@@ -1007,6 +1007,8 @@
 
 .kh-work__item { position: relative; }
 .kh-work__item[hidden] { display: none; }
+.kh-work__item[role="button"] { cursor: zoom-in; }
+.kh-work__item[role="button"]:focus-visible { outline: 3px solid var(--k-amber); outline-offset: 4px; }
 .kh-work__cap { z-index: 2; align-items: flex-end; justify-content: space-between; gap: 14px;
   color: #fff;
 }
@@ -8138,6 +8140,31 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kv-lupa__zavri svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.1; }
 .kv-lupa__zavri:hover { background: var(--k-amber); }
 .kv-lupa__zavri:focus-visible { outline: 2px solid var(--k-white); outline-offset: 3px; }
+.kv-lupa__sipka {
+  position:absolute; top:50%; transform:translateY(-50%); display:grid; place-items:center;
+  width:48px; height:48px; padding:0; border:0; border-radius:999px;
+  background:rgba(255,255,255,.94); color:var(--k-ink); cursor:pointer;
+  box-shadow:0 3px 16px rgba(0,0,0,.32);
+}
+.kv-lupa__sipka--pred { left:14px; }
+.kv-lupa__sipka--dalsi { right:14px; }
+.kv-lupa__sipka svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; }
+.kv-lupa__sipka:hover { background:var(--k-amber); }
+.kv-lupa__sipka:focus-visible { outline:2px solid var(--k-white); outline-offset:3px; }
+.kv-lupa__pocitadlo { font-size:12px; font-weight:700; letter-spacing:.08em; color:rgba(255,255,255,.72); }
+@media (max-width: 719px) {
+  #realGrid.kh-work__grid {
+    display:flex; overflow-x:auto; gap:12px; margin-inline:calc(var(--k-gut) * -1);
+    padding:4px var(--k-gut) 18px; scroll-snap-type:x mandatory;
+    overscroll-behavior-inline:contain; scrollbar-width:none;
+  }
+  #realGrid.kh-work__grid::-webkit-scrollbar { display:none; }
+  #realGrid .kh-work__item { flex:0 0 min(86vw,420px); scroll-snap-align:center; }
+  .kv-lupa { padding:12px; }
+  .kv-lupa__sipka { width:42px; height:42px; }
+  .kv-lupa__sipka--pred { left:6px; }
+  .kv-lupa__sipka--dalsi { right:6px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .kv-lupa, .kv-lupa__ram img { transition: none; }
 }
@@ -12101,17 +12128,20 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs { max-width:calc(var(--k-max) - 
 .k-home .kh-fakty__co { margin-top:9px; font-size:clamp(15px,1.25vw,18px); }
 .k-home .kh-fakty__pod { margin-top:4px; font-size:12.5px; line-height:1.48; }
 
-/* “Čo je v cene” is an editorial checklist rather than a wall of white cards. */
+/* “Čo je v cene” uses solid grouped panels. Hairline separators disappeared
+   against some displays and made the section look like an unfinished table. */
 .k .kh-vcene { background:var(--k-ink); color:#fff; }
-.k .kh-vcene__rad { gap:0; border-top:1px solid rgba(255,255,255,.18); border-bottom:1px solid rgba(255,255,255,.18); }
+.k .kh-vcene__rad { gap:clamp(10px,1.4vw,18px); border:0; }
 .k .kh-vcene__polozka {
-  min-height:0; padding:clamp(24px,3vw,38px); border:0; border-left:1px solid rgba(255,255,255,.14);
-  border-radius:0; background:transparent; box-shadow:none;
+  position:relative; min-height:0; padding:clamp(24px,3vw,38px); border:0;
+  border-radius:16px; background:rgba(255,255,255,.075); box-shadow:none; overflow:hidden;
 }
-.k .kh-vcene__polozka:first-child { border-left:0; }
+.k .kh-vcene__polozka::after {
+  content:""; position:absolute; inset:0 0 auto; height:4px; background:var(--k-amber);
+}
 .k .kh-vcene__nazov { color:#fff; font-size:clamp(18px,1.6vw,24px); }
 .k .kh-vcene__nazov::before { background:var(--k-amber); }
-.k .kh-vcene__body li { color:rgba(255,255,255,.7); border-color:rgba(255,255,255,.12); }
+.k .kh-vcene__body li { color:rgba(255,255,255,.76); border:0; }
 
 @media (max-width:719px) {
   .kh-brand-dialog__links { grid-template-columns:1fr; }
@@ -12119,8 +12149,7 @@ body:not(.k-home) .k .kh-hero__box > .kh-crumbs { max-width:calc(var(--k-max) - 
   body:not(.k-home) .k .kh-hero__box { padding-top:88px; }
   body:not(.k-home) .k .kh-hero .k-display { font-size:clamp(38px,11vw,52px); }
   .k .kh-size-custom { grid-template-columns:1fr; border-left-width:4px; }
-  .k .kh-vcene__polozka { border-left:0; border-top:1px solid rgba(255,255,255,.14); }
-  .k .kh-vcene__polozka:first-child { border-top:0; }
+  .k .kh-vcene__polozka { border:0; }
 }
 
 @media (min-width:720px) and (max-height:850px) {

@@ -1,16 +1,62 @@
 # Odovzdanie: dokončenie webu Koverta
 
 Vetva `vendzur/gallant-euler-bkvsqa`, postavená na `master` (`61b838c`).
-Pred týmto odovzdaním bola vetva **6 commitov ahead / 0 behind** oproti masteru.
-Posledný aplikačný commit je `f2cfa39` (66 katalógových rozmerových stránok).
-Tento odovzdávací commit má meniť iba tento súbor.
-
-**Nemerguj do `master`.** Majiteľ chce najprv náhľad a kontrolu.
+Pôvodný stav odovzdania bol `f2cfa39`; pri pokračovaní už vetva mala `daae547`.
+**Nemerguj do `master`** — majiteľ to výslovne
+zakázal, chce náhľadový odkaz.
 **Nemeň fotky ani marketingové texty bez výslovného súhlasu majiteľa.**
+
+## Doplnenie 2026-09-19 (nadväzuje na `daae547`)
+
+Majiteľ navyše žiada celé lamely Koverta (nie polovica hore aj dole), ostrý
+model bez zbytočného pixelovania, rýchlu stránku a SEO. Aktuálne zmeny sú
+určené **len na náhľad a schválenie**, nie na produkciu ani merge do `master`.
+
+- `konfigurator/soltec-premium.js`: obvodové lamely Koverta sa začínajú a
+  končia až za rámom; duplicita kreslenia strešnej plochy je odstránená.
+  Výpočet fullscreen záberu berie do úvahy aj mäkký tieň, hmla na leme je
+  slabšia a na slabších zariadeniach sa vynechá 11 dekoratívnych tieňových
+  plôch. Toto nie je záruka presnosti modelu 1:1 ani garantované FPS.
+- `assets/koverta-2026.js` a `.css`: galéria realizácií má modal so šípkami,
+  klávesnicou, dotykom, počítadlom a mobilný posuvný pás; filtre určujú
+  poradie v modale. Vizuál „Čo je v cene“ je zoskupený bez tenkých deliacich
+  čiar. Fotografie a texty neboli redakčne menené ani schválené.
+- `tools/generuj-rozmery.py`: opravený hostiteľ canonical/OG/JSON-LD na
+  `koverta.sk` a odkaz na susedné rozmery (pôvodná funkcia menila bodky aj
+  vo vnútri URL). Všetkých 66 stránok bolo znovu vygenerovaných, neupravovať
+  ich ručne. Pridaný `tools/seo-audit.js` kontroluje 82 verejných HTML stránok.
+  **Pozor:** 66 rozmerových stránok má naďalej `noindex, nofollow` z pôvodnej
+  šablóny; indexovanie povoľ až po rozhodnutí majiteľa, či je katalóg
+  statický alebo má nadväzovať na Shopify, a po kontrole obsahu.
+- Doplnené rozmery obrázkov v `pouzite-modely` a lokálny responsívny zdroj
+  existujúcej fotografie v `zahradne-pristresky` (rovnaká fotografia).
+- Overené: `node --check`, `git diff --check`, statický SEO audit,
+  `koverta-render-regression`, `realizacie-gallery`, `soltec-motion-regression`;
+  základné `scene-assets`, `technical-fidelity`, `pricing-logic` prešli pred
+  zásahom. Záverečný `routing-smoke` prešiel na desktope aj mobile (5 modelov).
+  `layout-smoke` pri prvom behu narazil na externý obrázok (`ORB`); po zmene
+  na lokálny zdroj prešiel celý opakovaný beh vrátane mobilu, formulára a
+  všetkých ciest konfigurátora.
+
+Ďalší Codex: doplň vizuálny QA zostávajúcich podstránok a reálneho telefónu;
+rieš body 2–4,
+8–11, 13–16 a zvyšok bodu 17. Bod 5 je už v existujúcom formulári predvyplnený
+(nepridávaj duplicitnú funkciu); bod 6 treba overiť v ďalších uhloch modelu.
+Sedem kategórií, zdroj fotografií a vodoznak potrebujú podklady/schválenie
+majiteľa. V prepojenom Vercel účte sa pri kontrole zobrazil iba projekt
+`kava-chatbot-backend`, nie `koverta-web`; náhľadový deployment teda nie je
+zatiaľ overený. Po publikovaní vetvy prever existujúcu GitHub integráciu,
+nevytváraj nevysvetlený produkčný projekt. Texty a fotografie najprv predlož
+majiteľovi po očíslovaných položkách.
 
 ---
 
-## KRITICKÉ: prerušený lokálny Codex beh z 19. 9. 2026 približne 13:43
+## Archívny kontext: prerušený lokálny beh z 19. 9. 2026 približne 13:43
+
+Nasledujúci záznam bol napísaný pred vyššie uvedeným commitom. Jeho tvrdenia,
+že súbory nie sú na GitHube a opravy ešte treba reprodukovať, sú **historické**.
+Aktuálny stav a zostávajúce úlohy sú v doplnení hore; nižšie uvedené technické
+podklady a pôvodný backlog zostávajú užitočné.
 
 Predchádzajúci Codex dostal pokyn dokončiť rozrobené opravy, spustiť finálne
 testy, aktualizovať toto odovzdanie a až potom prácu odovzdať. Beh sa prerušil
