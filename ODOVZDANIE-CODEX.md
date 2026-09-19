@@ -29,6 +29,39 @@ Tieto posledné lokálne zmeny **nie sú na branche pushnuté**:
 - `tools/generuj-rozmery.py` na branche stále obsahuje dve chyby, ktoré
   predchádzajúci Codex už v logu identifikoval a lokálne začal opravovať.
 
+### Posledné známe lokálne diffy z približne 13:50
+
+Používateľ dodatočne zachoval dva konkrétne diffy z posledných minút prerušeného
+behu. Považuj ich za súčasť nedokončenej práce a pri záchrane lokálneho
+worktree ich neprepíš.
+
+1. `tools/generuj-rozmery.py`
+
+```diff
+-ZAKLAD = 'https://danielvendzur-code.github.io/koverta-web'
++ZAKLAD = 'https://koverta.sk'
+```
+
+2. `assets/koverta-2026.js` — popis fotografie v lightboxe
+
+```diff
+       const zdroj = tl.getAttribute('data-k-lupa-src')
+         || (nahlad && (nahlad.currentSrc || nahlad.getAttribute('src')));
++      const caption = tl.querySelector('.kh-work__cap');
++      const captionParts = caption
++        ? [].slice.call(caption.children).map((part) => part.textContent.trim()).filter(Boolean)
++        : [];
+       const titulok = tl.getAttribute('data-k-lupa-popis')
+-        || (tl.querySelector('.kh-work__cap') && tl.querySelector('.kh-work__cap').textContent.trim())
++        || captionParts.join(' · ')
+         || (nahlad && nahlad.alt) || '';
+```
+
+Druhý diff na aktuálnom GitHub branche **nie je**; vyhľadanie `captionParts`
+na branche nič nevrátilo. Jeho účel je zachovať čitateľný lightbox caption z
+jednotlivých detí `.kh-work__cap` a oddeliť ich znakom ` · `, namiesto
+zlepeného `textContent`.
+
 Ak pokračuješ na **tom istom lokálnom stroji/worktree**, úplne prvá vec:
 
 ```bash
