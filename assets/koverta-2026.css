@@ -269,7 +269,7 @@
   border-radius: 0;
   background: transparent;
   font-family: var(--k-body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
   line-height: 1;
@@ -1287,7 +1287,7 @@
 a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none; transform: none; }
 .kh-cta__ico { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border-radius: 0; background: transparent; }
 .kh-cta__ico svg { width: 20px; height: 20px; fill: none; stroke: var(--k-amber); stroke-width: 1.8; }
-.kh-cta__row small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.kh-cta__row small { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: rgba(255,255,255,.55); }
 .kh-cta__row strong { display: block; margin-top: 4px; font-family: var(--k-head); font-size: clamp(16px, 1.3vw, 19px); font-weight: 700; letter-spacing: -0.018em; line-height: 1.3; }
 
 .kh-cta__score { display: flex; flex-direction: column; gap: 14px; padding: 24px 0 22px; border-radius: 0; background: transparent; color: var(--k-white); }
@@ -1742,7 +1742,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   padding: 0;
   background: transparent;
   color: var(--k-amber);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.17em;
   text-transform: uppercase;
@@ -1961,7 +1961,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 
 /* Drobné odchýlky z auditu: eyebrow v kontaktnom paneli mal inú veľkosť
    a textové odkazy dve rôzne hrúbky. */
-.kh-cta__aside-head .k-eyebrow { font-size: 11px; letter-spacing: 0.13em; }
+.kh-cta__aside-head .k-eyebrow { font-size: 12px; letter-spacing: 0.13em; }
 .k-link { font-weight: 700; }
 
 /* ========================================================================
@@ -2207,7 +2207,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   border-radius: var(--k-r-xs);
   background: rgba(255, 255, 255, 0.92);
 }
-.kh-work__cap .k-brand--soltec { font-size: 10px; letter-spacing: 0.22em; }
+.kh-work__cap .k-brand--soltec { font-size: 12px; letter-spacing: 0.22em; }
 
 /* Logo v štítku sa nesmie stlačiť — SVG má pomer ~6:1 a vo flexe mu inak
    ostane len jantárová zátvorka. */
@@ -2293,7 +2293,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-form legend { margin-bottom: 8px; }
 .kh-form__grid { gap: 12px; }
 .kh-field { gap: 5px; }
-.kh-field > span { font-size: 11px; }
+.kh-field > span { font-size: 12px; }
 .kh-field input { min-height: 44px; }
 .kh-field textarea { min-height: 68px; }.kh-cta__steps li { padding-block: 12px; }
 
@@ -2931,7 +2931,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   transform: none;
   gap: 8px;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.22em;
 }
 .kh-hero__cue span { height: 32px; }
@@ -5547,7 +5547,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .kh-tab:not(:has(thead th:nth-child(4))) tbody td::before {
   content: attr(data-popis);
   margin-bottom: 3px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -5956,7 +5956,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   display: inline;
   margin: 0;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -6338,7 +6338,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-faq__item > div { padding-left: calc(2.1em + 16px); }
 @media (max-width: 599px) {
   .k .kh-faq__item summary { gap: 12px; }
-  .k .kh-faq__item summary::before { width: 1.9em; font-size: 11px; }
+  .k .kh-faq__item summary::before { width: 1.9em; font-size: 12px; }
   .k .kh-faq__item > div { padding-left: calc(1.9em + 12px); }
 }
 
@@ -6442,7 +6442,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   border-radius: 0;
   background: none;
   backdrop-filter: none;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.11em;
   color: rgba(255, 255, 255, 0.66);
   text-shadow: 0 1px 10px rgba(9, 12, 14, 0.45);
@@ -6477,7 +6477,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     min-width: 0;
     padding-right: 10px;
     margin-right: 10px;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.07em;
   }
   .k .kh-hero__chip strong { font-size: 14.5px; letter-spacing: -0.025em; }
@@ -6866,7 +6866,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .k .kh-size__sirka span {
   font-family: var(--k-head);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -6887,7 +6887,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-size__dlzky { gap: 6px; }
   .k .kh-size__grid--matica .kh-size__chip { padding: 7px 8px 8px; text-align: center; }
   .k .kh-size__grid--matica .kh-size__chip > span { font-size: 13px; }
-  .k .kh-size__grid--matica .kh-size__chip small { font-size: 11px; }
+  .k .kh-size__grid--matica .kh-size__chip small { font-size: 12px; }
   .k .kh-size__grid--matica .kh-size__cfg { padding: 0 9px; font-size: 10.5px; }
 }
 
@@ -7565,7 +7565,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   padding: 0;
   border-radius: 0;
   background: none;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--k-grey-soft);
 }
@@ -7662,7 +7662,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 }
 .kh-udaje__zoznam dt {
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -8479,7 +8479,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-mat__label {
   margin: 0 0 var(--k-s2);
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -8841,7 +8841,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-udaje__zoznam dt,
 .k .kh-size__sirka span {
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -9028,7 +9028,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     display: block;
     position: static;
     margin-bottom: 5px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.14em;
     color: var(--k-amber-deep);
@@ -9061,7 +9061,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   .k .kh-tab:not(:has(thead th:nth-child(4))) thead th {
     padding: 0;
     border: 0;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -9231,7 +9231,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-mat__pojem {
   margin: 0 0 6px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -9589,7 +9589,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-pojem {
   margin: 0 0 6px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -9670,7 +9670,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
 .k .kh-cat__grid--sirka .kh-cat__znacka {
   margin: 0 0 14px;
   font-family: var(--k-head);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -11413,7 +11413,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-shade-needs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:clamp(26px,3vw,42px) 0; }
 .k .kh-shade-needs a { display:grid; align-content:start; gap:8px; min-height:150px; padding:22px; border:1px solid rgba(18,23,26,.15); border-top:4px solid var(--k-amber); border-radius:14px; background:#fff; color:var(--k-ink); text-decoration:none; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
 .k .kh-shade-needs a:hover, .k .kh-shade-needs a:focus-visible { transform:translateY(-3px); border-color:rgba(18,23,26,.32); box-shadow:0 14px 34px rgba(18,23,26,.09); }
-.k .kh-shade-needs span { color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; }
+.k .kh-shade-needs span { color:var(--k-amber-dark); font-size:12px; font-weight:850; letter-spacing:.1em; }
 .k .kh-shade-needs strong { font-family:var(--k-head); font-size:clamp(18px,1.5vw,22px); line-height:1.1; }
 .k .kh-shade-needs small { color:var(--k-muted); font-size:13px; line-height:1.5; }
 .k .kh-shade-subtitle { margin:clamp(34px,4vw,54px) 0 0; font-family:var(--k-head); font-size:clamp(20px,2vw,30px); line-height:1.15; }
@@ -11426,12 +11426,12 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-shade-product__story { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
 .k .kh-shade-product__story > div { padding:clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
 .k .kh-shade-product__story > div:first-child { border-left:0; }
-.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:11px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+.k .kh-shade-product__story strong { display:block; margin-bottom:9px; color:var(--k-amber-dark); font-size:12px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
 .k .kh-shade-product__story p { margin:0; color:#50585c; font-size:14px; line-height:1.58; }
 .k .kh-shade-product__facts { grid-column:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; border-top:1px solid var(--k-hair-soft); background:var(--k-bone); }
 .k .kh-shade-product__facts > div { display:grid; gap:5px; padding:15px clamp(22px,2.2vw,30px); border-left:1px solid var(--k-hair-soft); }
 .k .kh-shade-product__facts > div:first-child { border-left:0; }
-.k .kh-shade-product__facts dt { color:#747b7e; font-size:11px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+.k .kh-shade-product__facts dt { color:#747b7e; font-size:12px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
 .k .kh-shade-product__facts dd { margin:0; color:var(--k-ink); font-size:14px; font-weight:760; line-height:1.35; }
 @media (max-width:999px) {
   .k .kh-shade-needs { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -11529,7 +11529,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   min-height:54px;
   padding:0 10px !important;
   border-left:1px solid var(--k-hair) !important;
-  font-size:11px !important;
+  font-size:12px !important;
   font-weight:750;
   letter-spacing:.04em;
   color:var(--k-grey) !important;
@@ -11572,7 +11572,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .k .kh-size--decision .kh-size__chip { min-height:56px; padding:8px 8px 8px 10px !important; }
   .k .kh-size--decision .kh-size__chip > span { font-size:14px !important; }
   .k .kh-size--decision .kh-size__chip small { font-size:10.5px !important; }
-  .k .kh-size--decision .kh-size__cfg { min-width:44px; min-height:56px; padding:0 7px !important; font-size:10px !important; }
+  .k .kh-size--decision .kh-size__cfg { min-width:44px; min-height:56px; padding:0 7px !important; font-size:12px !important; }
   .k .kh-size--single .kh-size__dlzky { grid-template-columns:minmax(0,1fr) !important; }
   .k .kh-size-custom .k-btn { width:100%; }
 }
@@ -11898,7 +11898,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-ponuka__volby { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 2px; }
 .k .kh-ponuka__volby span {
   padding:5px 9px; border:1px solid rgba(18,23,26,.28);
-  border-radius:999px; font-size:11px; font-weight:750;
+  border-radius:999px; font-size:12px; font-weight:750;
 }
 .k .kh-ponuka__kus--vstup .kh-ponuka__akcia { background: var(--k-ink); color:#fff;
 }
@@ -11913,7 +11913,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   display:flex; align-items:center; justify-content:center;
   height:28px; border-inline:2px solid var(--k-amber);
   border-bottom:2px solid var(--k-amber); color:#fff;
-  font-size:11px; font-weight:750; letter-spacing:.04em;
+  font-size:12px; font-weight:750; letter-spacing:.04em;
   text-shadow:0 1px 3px rgba(0,0,0,.75);
 }
 @media (max-width:719px) { .k .kh-kfg__typy { grid-template-columns:1fr; } }
@@ -11947,7 +11947,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   display: inline-flex;
   margin-bottom: 9px;
   color: var(--k-amber);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -11961,7 +11961,7 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 }
 .k .k-carport-series__facts div { border-bottom: 1px solid rgba(18,23,26,.1); }
 .k .k-carport-series__facts div:nth-child(odd) { border-right: 1px solid rgba(18,23,26,.1); }
-.k .k-carport-series__facts dt { margin-bottom: 5px; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.k .k-carport-series__facts dt { margin-bottom: 5px; font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .k .k-carport-series__facts dd { margin: 0; color: var(--k-ink); font-size: 12.5px; line-height: 1.38; }
 @media (max-width: 1020px) {
   .k .k-carport-compare { grid-template-columns: 1fr; }
@@ -12382,7 +12382,7 @@ body:not(.k-home) .k .kh-hero__actions .k-btn--line:focus-visible {
   background:var(--k-amber); border-color:var(--k-amber); color:var(--k-ink);
 }
 body:not(.k-home) .k .kh-hero__chip strong { font-size:clamp(16px,1.25vw,19px); }
-body:not(.k-home) .k .kh-hero__chip { font-size:10px; }
+body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
 .k .k-band { padding-block:clamp(48px,5.2vw,76px); }
 .k .k-head { margin-bottom:clamp(26px,3.1vw,42px); }
 
