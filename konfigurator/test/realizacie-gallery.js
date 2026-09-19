@@ -15,7 +15,7 @@ async function dismissConsent(page) {
   fs.mkdirSync('qa-artifacts', { recursive: true });
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
-  await page.goto(URL, { waitUntil: 'domcontentloaded' });
+  await page.goto(URL, { waitUntil: 'load' });
   await dismissConsent(page);
   await page.waitForSelector('#realGrid .kh-work__item[role="button"]');
 
@@ -43,9 +43,10 @@ async function dismissConsent(page) {
   await page.keyboard.press('Escape');
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  await mobile.goto(URL, { waitUntil: 'domcontentloaded' });
+  await mobile.goto(URL, { waitUntil: 'load' });
   await dismissConsent(mobile);
   await mobile.waitForSelector('#realGrid .kh-work__item[role="button"]');
+  await mobile.waitForFunction(() => getComputedStyle(document.querySelector('#realGrid')).display === 'flex');
   const layout = await mobile.locator('#realGrid').evaluate((grid) => {
     const card = grid.querySelector('.kh-work__item:not([hidden])');
     const style = getComputedStyle(grid);
