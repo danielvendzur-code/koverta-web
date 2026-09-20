@@ -13300,3 +13300,21 @@ body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
   border-color: var(--k-amber);
   background: rgba(255, 204, 0, 0.12);
 }
+
+/* Pätička na telefóne: dotykový cieľ nemá k sebe pridávať ešte medzeru.
+
+   Odkazy v pätičke dostávajú v dotykovej vrstve `min-height: 44px` — to je
+   správne, palec potrebuje 44 px. Zoznamy `.kf__nav` a `.kf__contact` k tomu
+   ale pridávali vlastnú medzeru 11 px, takže riadky stáli 55 px od seba a
+   text v nich plával v prázdne. Pätička merala na 390 px 1 149 px a čítala
+   sa ako rozsypaná.
+
+   Medzera ide preč: výšku riadku určuje dotykový cieľ. Nadpis stĺpca si
+   odsadenie drží sám. */
+@media (hover: none), (pointer: coarse) {
+  .kf__nav,
+  .kf__contact { gap: 0; }
+  .kf__nav strong,
+  .kf__contact > strong { margin-bottom: 4px; }
+  .kf__social { margin-top: 6px; }
+}
