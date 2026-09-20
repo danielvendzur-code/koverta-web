@@ -603,6 +603,10 @@ koverta-pristresok-pre-auto-cierne-auto-w1000.webp	assets/koverta-pristresok-pre
 koverta-pristresok-pre-auto-cierne-auto-w1600.webp	assets/koverta-pristresok-pre-auto-cierne-auto-w1600.webp
 koverta-pristresok-pre-auto-cierne-auto-w640.webp	assets/koverta-pristresok-pre-auto-cierne-auto-w640.webp
 koverta-pristresok-pre-auto-cierne-auto.jpg	assets/koverta-pristresok-pre-auto-cierne-auto.jpg
+koverta-pristresok-pre-auto-pred-domom-w1000.webp	assets/koverta-pristresok-pre-auto-pred-domom-w1000.webp
+koverta-pristresok-pre-auto-pred-domom-w1600.webp	assets/koverta-pristresok-pre-auto-pred-domom-w1600.webp
+koverta-pristresok-pre-auto-pred-domom-w640.webp	assets/koverta-pristresok-pre-auto-pred-domom-w640.webp
+koverta-pristresok-pre-auto-pred-domom.jpg	assets/koverta-pristresok-pre-auto-pred-domom.jpg
 koverta-pristresok-pre-auto-pri-plote-w1000.webp	assets/koverta-pristresok-pre-auto-pri-plote-w1000.webp
 koverta-pristresok-pre-auto-pri-plote-w1600.webp	assets/koverta-pristresok-pre-auto-pri-plote-w1600.webp
 koverta-pristresok-pre-auto-pri-plote-w640.webp	assets/koverta-pristresok-pre-auto-pri-plote-w640.webp
@@ -614,6 +618,10 @@ koverta-pristresok-pre-dve-auta-kotevne-platne.jpg	assets/koverta-pristresok-pre
 koverta-pristresok-pre-jedno-auto-lamelova-vypln-w1000.webp	assets/koverta-pristresok-pre-jedno-auto-lamelova-vypln-w1000.webp
 koverta-pristresok-pre-jedno-auto-lamelova-vypln-w640.webp	assets/koverta-pristresok-pre-jedno-auto-lamelova-vypln-w640.webp
 koverta-pristresok-pre-jedno-auto-lamelova-vypln.jpg	assets/koverta-pristresok-pre-jedno-auto-lamelova-vypln.jpg
+koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1000.webp
+koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
+koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
+koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena.jpg	assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg
@@ -1059,6 +1067,9 @@ soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strec
 soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
 soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
 soltec-pergola-plna-strecha-pri-dome.webp	assets/soltec-pergola-plna-strecha-pri-dome.webp
+soltec-pergola-podhlad-strechy-a-ram-w1000.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w1000.webp
+soltec-pergola-podhlad-strechy-a-ram-w640.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w640.webp
+soltec-pergola-podhlad-strechy-a-ram.jpg	assets/soltec-pergola-podhlad-strechy-a-ram.jpg
 soltec-pergola-presklenie-restauracia-w1000.webp	assets/soltec-pergola-presklenie-restauracia-w1000.webp
 soltec-pergola-presklenie-restauracia-w1600.webp	assets/soltec-pergola-presklenie-restauracia-w1600.webp
 soltec-pergola-presklenie-restauracia-w640.webp	assets/soltec-pergola-presklenie-restauracia-w640.webp
@@ -1077,6 +1088,9 @@ soltec-pergola-pri-dome-biele-lamely.webp	assets/soltec-pergola-pri-dome-biele-l
 soltec-pergola-pri-dome-otvorene-lamely-w1000.webp	assets/soltec-pergola-pri-dome-otvorene-lamely-w1000.webp
 soltec-pergola-pri-dome-otvorene-lamely-w640.webp	assets/soltec-pergola-pri-dome-otvorene-lamely-w640.webp
 soltec-pergola-pri-dome-otvorene-lamely.webp	assets/soltec-pergola-pri-dome-otvorene-lamely.webp
+soltec-pergola-screeny-led-terasa-w1000.webp	assets/soltec-pergola-screeny-led-terasa-w1000.webp
+soltec-pergola-screeny-led-terasa-w640.webp	assets/soltec-pergola-screeny-led-terasa-w640.webp
+soltec-pergola-screeny-led-terasa.webp	assets/soltec-pergola-screeny-led-terasa.webp
 soltec-pergola-vybava-vecer-prehlad-w1000.webp	assets/soltec-pergola-vybava-vecer-prehlad-w1000.webp
 soltec-pergola-vybava-vecer-prehlad-w1600.webp	assets/soltec-pergola-vybava-vecer-prehlad-w1600.webp
 soltec-pergola-vybava-vecer-prehlad-w640.webp	assets/soltec-pergola-vybava-vecer-prehlad-w640.webp
