@@ -1,0 +1,57 @@
+name: Shopify téma
+
+# Vetva `shopify` nesie tému v koreni, lebo Shopify ju z GitHubu vie vziať
+# len odtiaľ — podpriečinok nepozná. Vyrába sa tu, nie ručne, aby sa nemohla
+# rozísť so statickým webom: čo sa zmení v `master`, je o minútu v téme.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shopify-tema
+  cancel-in-progress: true
+
+jobs:
+  tema:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vyrobiť tému
+        run: |
+          node tools/spolocne-casti.js --kontrola
+          node tools/shopify-tema.js
+
+      - name: Preniesť ju do vetvy shopify
+        run: |
+          set -euo pipefail
+          git config user.name "koverta-bot"
+          git config user.email "noreply@koverta.sk"
+          # Strom sa skladá mimo pracovného adresára, takže sa `master`
+          # nedotkne ani pri chybe.
+          export GIT_INDEX_FILE="$(mktemp)"
+          git --work-tree=shopify-tema add -A
+          strom="$(git write-tree)"
+          sprava="Téma z $(git rev-parse --short HEAD)"
+          if git rev-parse --verify --quiet origin/shopify >/dev/null; then
+            rodic="$(git rev-parse origin/shopify)"
+            if [ "$(git rev-parse "$rodic^{tree}")" = "$strom" ]; then
+              echo "Téma sa nezmenila."
+              exit 0
+            fi
+            odovzdanie="$(git commit-tree "$strom" -p "$rodic" -m "$sprava")"
+          else
+            odovzdanie="$(git commit-tree "$strom" -m "$sprava")"
+          fi
+          git push origin "$odovzdanie:refs/heads/shopify"
+          echo "Vetva shopify je na $odovzdanie"

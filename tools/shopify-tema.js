@@ -50,6 +50,26 @@ const LEN_KONTROLA = process.argv.includes('--kontrola');
 /* Predpona adries nových stránok. Prázdny reťazec = čisté adresy. */
 const PREDPONA = process.env.KV_PREDPONA !== undefined ? process.env.KV_PREDPONA : 'nove-';
 
+/* Odkiaľ sa berú fotografie.
+ *
+ * Do témy sa nezmestia: 218 MB v 1309 súboroch prekročí strop aj zdravý rozum.
+ * Zostávajú dve cesty a obe sú tu prepínateľné jednou premennou:
+ *
+ *   KV_FOTKY=pages   (predvolené) fotografie servíruje GitHub Pages z tohto
+ *                    repozitára. Nenahráva sa nič; keď do repozitára pribudne
+ *                    fotografia, je na webe hneď. Cesty ostávajú pôvodné.
+ *   KV_FOTKY=obchod  fotografie ležia v Nastavenia → Súbory a odkazuje sa na
+ *                    ne cez `file_url`. Vtedy ich treba najprv nahrať podľa
+ *                    `SUBORY-DO-OBCHODU.txt`.
+ *
+ * Predvolené je `pages`, lebo funguje okamžite. Na dlhší čas patria fotografie
+ * do Súborov obchodu — GitHub si neželá, aby sa Pages používali ako úložisko
+ * obrázkov pre cudzí web, a obchod má vlastnú CDN bližšie k zákazníkovi.
+ * Prepnutie je jedna premenná a nový beh prevodníka. */
+const FOTKY = process.env.KV_FOTKY || 'pages';
+const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
+  'https://danielvendzur-code.github.io/koverta-web';
+
 /* Formulár v aplikácii Formful. */
 const FORMFUL = 'form_LaKRq0tyt4';
 
@@ -100,6 +120,7 @@ function naSubor(url) {
     return "{{ '" + meno + "' | asset_url }}";
   }
   doObchodu.set(meno, path.relative(KOREN, naDisku));
+  if (FOTKY === 'pages') return PAGES_ZAKLAD + '/assets/' + vnutri;
   return "{{ '" + meno + "' | file_url }}";
 }
 
@@ -273,10 +294,14 @@ ${v.spolocnaHlava.join('\n')}
      o 3D modeloch je v /pages/. */
   window.KV_ADRESY = {
     znackaKoverta: {{ 'koverta-mark.svg' | asset_url | json }},
-    znackaSoltec: {{ 'soltec-mark.png' | file_url | json }},
+    znackaSoltec: ${FOTKY === 'pages'
+      ? JSON.stringify(PAGES_ZAKLAD + '/assets/soltec-mark.png')
+      : "{{ 'soltec-mark.png' | file_url | json }}"},
     modely: '/pages/${PREDPONA}pouzite-modely'
   };
-  window.KV_SCENE_ASSETS = {{ 'bmw-g80-m3.bin.gz' | file_url | split: 'bmw-g80-m3.bin.gz' | first | json }};
+  window.KV_SCENE_ASSETS = ${FOTKY === 'pages'
+    ? JSON.stringify(PAGES_ZAKLAD + '/konfigurator/scene-assets/')
+    : "{{ 'bmw-g80-m3.bin.gz' | file_url | split: 'bmw-g80-m3.bin.gz' | first | json }}"};
 </script>
 {% section 'kv-hlavicka' %}
 {{ content_for_layout }}
@@ -327,6 +352,7 @@ if (require.main === module) {
   console.log('Spoločná hlava: ' + v.spolocnaHlava.length + ' prvkov, spoločný chvost: ' + v.spolocnyChvost.length);
   console.log('Do témy: ' + doTemy.size + ' súborov, do Súborov obchodu: ' + doObchodu.size);
   console.log('Predpona adries: ' + (PREDPONA || '(žiadna)'));
+  console.log('Fotografie: ' + (FOTKY === 'pages' ? 'GitHub Pages — netreba nahrávať nič' : 'Súbory obchodu — treba nahrať ' + doObchodu.size));
 
   if (chyby.length) {
     console.error('\nNálezy (' + chyby.length + '):');
