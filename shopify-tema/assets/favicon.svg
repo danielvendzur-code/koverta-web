@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Koverta">
+  <!-- Zátvorka je vystrihnutá z pôvodného loga Koverty: rovnaká krivka,
+       len prevedená do štvorca a na tmavý podklad, aby žltá držala aj na
+       svetlej lište prehliadača. -->
+  <rect width="64" height="64" rx="13" fill="#12171a"/>
+  <g transform="translate(32 32) scale(0.395) translate(-263.97 -448.5)">
+    <path fill="#FFCC00" d="M 327.1,410.44 315.02835,422.53609 211.54302,422.44 v 52 L 315.19743,474.41 327.1,486.44 200.84,486.57 V 410.44 H 327.1"/>
+  </g>
+</svg>
