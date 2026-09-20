@@ -4490,7 +4490,11 @@ function kvAdresa(kluc, zaloha) {
                 if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true, 'fascia');
                 else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, true, 'fascia');
               };
-              put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
+              /* Lemovanie nesiaha pod rám. Začínalo na `zBot`, teda 2 mm pod
+                 spodnou pásnicou, a tie dva milimetre boli zdola vidieť ako
+                 tmavá linka po celom obvode. Začína preto na spodku rámu
+                 a hore končí tam, kde končilo. */
+              put(outer, outer + LEM_T * dir, ramBot, zTop - ramBot);          // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
@@ -4500,15 +4504,6 @@ function kvAdresa(kluc, zaloha) {
                  corrugation crowns, so no roof facet is cut and the flashing
                  owns the complete top sight line. */
               put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
-              /* Zahyb ide hore do dutiny, nie vodorovne pod rám.
-                 Kým sa ohýbal dovnútra pri spodnej hrane, ležal 2 mm pod
-                 spodnou pásnicou rámu a zdola z neho bol šestnásťmilimetrový
-                 antracitový pruh po celom obvode — najviac v rohoch, kde sa
-                 dva stretli do L priamo vedľa rohového uholníka. Majiteľ
-                 hovorí, že zdola tam má byť vidieť C profily a nič iné.
-                 Ohnutý nahor je to ten istý zahyb plechu, len zavesený
-                 v kapse za lemovaním, kam sa zdola nevidí. */
-              put(outer + LEM_T * dir, outer + 2 * LEM_T * dir, zBot, LEM_LIP);  // zahyb hore
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
                  side faces which alternately win against every corrugation. */
@@ -4662,6 +4657,31 @@ function kvAdresa(kluc, zaloha) {
             cProfil('y', W - RAM_VSUN - RAM_PAR, RAM_PAR, ramBot, RAM_H, RAM_ZAD + 2, rx1 - 2, C_WEB, 0, false, true, -1);
             cProfil('x', RAM_ZAD, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, 1);
             cProfil('x', rx1 - RAM_PAR, RAM_PAR, ramBot, RAM_H, ry0, ry1, C_WEB, 0, false, true, -1);
+
+            /* Uzáver medzi lemovaním a rámom.
+             *
+             * Vonkajšie líce rámu je odmeraných 18 mm za lícom lemovania, ale
+             * samotné lemovanie má v modeli hrúbku poldruha milimetra. Medzi
+             * nimi tak ostávala škára široká 16,5 mm a otvorená cez celú výšku
+             * rámu. Zvonku ju nevidno, zvnútra áno: pozeralo sa cez ňu na
+             * vnútorné líce lemovania, teda na antracit, a v rohu sa dve také
+             * škáry stretli priamo za rohovým uholníkom. Majiteľ hovorí, že
+             * zvnútra tam má byť C profil a antracit až hore nad ním.
+             *
+             * Škáru preto zatvára pás vo farbe pozinku — to, čím v skutočnosti
+             * je: profil dosadá na lemovanie, nevisí od neho 16 mm ďaleko.
+             * Odmerané diely sa nehýbu, pribúda len to, čo medzi nimi je.
+             *
+             * Odkvapové čelo sa nezatvára: tam je rám zatiahnutý 159 mm dnu
+             * zámerne a v tej kapse visí žľab. */
+            const uzaver = (osX, u0, u1, a, b) => {
+              if (u1 - u0 <= 0.01) return;
+              if (osX) boxFaces(u0, a, ramBot, u1 - u0, b - a, RAM_H, zinok, [], SHAFT, 0, false, true);
+              else boxFaces(a, u0, ramBot, b - a, u1 - u0, RAM_H, zinok, [], SHAFT, 0, false, true);
+            };
+            uzaver(false, LEM_T, RAM_VSUN, RAM_ZAD, rx1);              // bok pri y = 0
+            uzaver(false, W - RAM_VSUN, W - LEM_T, RAM_ZAD, rx1);      // bok pri y = W
+            uzaver(true, LEM_T, RAM_ZAD, LEM_T, W - LEM_T);            // zadné čelo
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
