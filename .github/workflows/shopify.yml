@@ -41,6 +41,7 @@ jobs:
           fi
           node tools/spolocne-casti.js --kontrola
           node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
 
       - name: Preniesť ju do vetvy shopify
         run: |

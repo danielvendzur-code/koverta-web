@@ -71,6 +71,12 @@ jobs:
           node tools/rozmery-obrazkov.js
           python3 tools/generuj-rozmery.py
           git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
+      - name: Validate Shopify theme
+        run: |
+          node tools/spolocne-casti.js --kontrola
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
+          git diff --exit-code -- shopify-tema
 
   configurator:
     runs-on: ubuntu-24.04
