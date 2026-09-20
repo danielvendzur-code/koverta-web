@@ -2664,8 +2664,13 @@
 
     const udaje = (tl) => {
       const nahlad = tl.querySelector('img');
+      /* Na celú obrazovku patrí pôvodný súbor z `src`, nie ten, ktorý si
+         prehliadač vybral pre náhľad. Náhľad má `sizes` 130 až 461 px, takže
+         `currentSrc` ukazuje na najmenšiu kópiu; lupa ju kreslí až do 1180 px
+         a z ostrej fotografie ostane rozmazaná. `currentSrc` zostáva ako
+         záloha pre značkovanie, ktoré `src` nemá. */
       const zdroj = tl.getAttribute('data-k-lupa')
-        || (nahlad && (nahlad.currentSrc || nahlad.getAttribute('src')));
+        || (nahlad && (nahlad.getAttribute('src') || nahlad.currentSrc));
       const caption = tl.querySelector('.kh-work__cap');
       const captionParts = caption
         ? [].slice.call(caption.children).map((part) => part.textContent.trim()).filter(Boolean)

@@ -13318,3 +13318,53 @@ body:not(.k-home) .k .kh-hero__chip { font-size:12px; }
   .kf__contact > strong { margin-bottom: 4px; }
   .kf__social { margin-top: 6px; }
 }
+
+/* ==========================================================================
+   VRSTVA 123 · Pás faktov v hlavičke drží na telefóne jednu linku
+   ==========================================================================
+   Pod tlačidlami stoja tri údaje: hrubá hodnota a pod ňou popis. Pás je
+   `flex` a každý údaj si sám centruje obsah vo svojej bunke. Kým sa všetky
+   hodnoty zmestia na jeden riadok, vyzerá to ako tabuľka. Na 390 px sa však
+   „zateplená strecha" alebo „Nikdy nenatierate" zalomí na dva riadky, kým
+   „bez motora" ostane na jednom — a centrovanie potom každý údaj posunie
+   inam. Namerané na `pevne-prestresenia`: hodnoty začínali na 628, 629
+   a 635 px, popisy na 656, 643 a 649. Tri riadky, žiadny spoločný.
+
+   Pás je preto na telefóne mriežka s dvoma riadkami — jeden pre hodnoty,
+   druhý pre popisy — a každý údaj si ich cez `subgrid` požičia. Linky sú
+   tým spoločné pre všetky tri: hodnoty začínajú na jednej, popisy tiež,
+   a nezáleží na tom, koľko riadkov ktorá hodnota zaberie.
+
+   Prehliadač bez `subgrid` deklaráciu zahodí a ostane dnešný stav: údaj aj
+   tak vyplní obe bunky, len si linky nepožičia. */
+@media (max-width: 619px) {
+  body:not(.k-home) .k .kh-hero__trust {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+  body:not(.k-home) .k .kh-hero__chip {
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    align-content: start;
+    min-height: 0;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 124 · Pás faktov píše malými písmenami
+   ==========================================================================
+   Popis pod hodnotou sa sádzal verzálkami a na telefóne mal 9 px. Verzálky
+   v tejto veľkosti sa čítajú ťažšie než malé písmená, a keďže hodnoty nad
+   nimi sú písané normálne, pás mal v sebe dva zápisy naraz. Popis preto
+   ostáva malými písmenami, bez rozpaľovania, a smie byť o dva body väčší —
+   miesto na to je, lebo texty sú teraz krátke a rovnako dlhé. */
+body:not(.k-home) .k .kh-hero__chip {
+  letter-spacing: 0;
+  text-transform: none;
+}
+@media (max-width: 619px) {
+  body:not(.k-home) .k .kh-hero__chip { font-size: 11px; }
+}

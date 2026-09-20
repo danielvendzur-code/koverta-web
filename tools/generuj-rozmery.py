@@ -24,6 +24,32 @@ def katalog():
         out[kluc] = list(data['models'].values())[0]
     return out
 
+def obrazok(zaklad):
+    """Rozmer fotografie z hlavičky súboru JPEG.
+
+    Bez knižnice navyše: v behu kontrol nie je Pillow a nesmie od neho závisieť
+    generovanie stránok. Hodnoty idú do `og:image:width` a `og:image:height`,
+    podľa ktorých si sociálne siete vyhradia miesto na náhľad.
+    """
+    with io.open(os.path.join(KOREN, 'assets', zaklad + '.jpg'), 'rb') as f:
+        b = f.read()
+    i = 2
+    while i + 9 < len(b):
+        if b[i] != 0xFF:
+            i += 1
+            continue
+        znacka = b[i + 1]
+        if znacka == 0xD8 or znacka == 0x01 or 0xD0 <= znacka <= 0xD7:
+            i += 2
+            continue
+        dlzka = (b[i + 2] << 8) | b[i + 3]
+        if 0xC0 <= znacka <= 0xCF and znacka not in (0xC4, 0xC8, 0xCC):
+            vyska = (b[i + 5] << 8) | b[i + 6]
+            sirka = (b[i + 7] << 8) | b[i + 8]
+            return sirka, vyska
+        i += 2 + dlzka
+    raise ValueError('rozmer sa v ' + zaklad + '.jpg nenašiel')
+
 def medzery(n):
     return f'{n:,}'.replace(',', ' ')
 
@@ -145,6 +171,12 @@ def strankuj():
                 nazov = f'{t["druh"]} {wtxt} × {ltxt} m'
                 popis = (f'{nazov} — cena od {medzery(cena)} € s DPH, dopravou aj montážou. '
                          f'Zakrytá plocha {plocha} m². Konečná cena závisí od farby, podkladu a doplnkov.')
+                # Rodičovská stránka má v sociálnych metadátach fotografiu
+                # výrobku. Blok sa pri generovaní nahrádza celý, takže sa
+                # fotografia musí doplniť späť — bez nej má zdieľaný odkaz
+                # na ktorýkoľvek z rozmerov náhľad bez obrázka.
+                foto = f'{ZAKLAD}/assets/{t["foto"]}.jpg'
+                fw, fh = obrazok(t['foto'])
                 seo = f'''<title>{nazov} · od {medzery(cena)} € | Koverta</title>
 <meta name="description" content="{popis}">
 <link rel="canonical" href="{ZAKLAD}/{rel}">
@@ -152,10 +184,19 @@ def strankuj():
 <meta property="og:title" content="{nazov}">
 <meta property="og:description" content="{popis}">
 <meta property="og:url" content="{ZAKLAD}/{rel}">
+<meta property="og:image" content="{foto}">
+<meta property="og:image:width" content="{fw}">
+<meta property="og:image:height" content="{fh}">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:alt" content="{t['fotoAlt']}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{nazov}">
+<meta name="twitter:description" content="{popis}">
+<meta name="twitter:image" content="{foto}">
 <script type="application/ld+json">{json.dumps({
   "@context":"https://schema.org","@type":"Product","name":nazov,
   "description":popis,"brand":{"@type":"Brand","name":"Koverta"},
-  "category":t['nadrad'],
+  "image":foto,"category":t['nadrad'],
   "width":{"@type":"QuantitativeValue","value":w,"unitCode":"MMT"},
   "depth":{"@type":"QuantitativeValue","value":l,"unitCode":"MMT"},
   "offers":{"@type":"Offer","price":cena,"priceCurrency":"EUR",
@@ -173,6 +214,13 @@ def strankuj():
                 h = hlava.replace('<!--TITLE-->', '').replace('<!--DESC-->', '').replace('<!--SEO-->', seo)
                 h = skrutka(h, 3)
                 p = skrutka(pata, 3)
+                # Pätička aj spodná lišta sú prevzaté z rodiča a mieria na
+                # `#ponuka`. Na stránke rozmeru taká kotva nie je, takže obe
+                # tlačidlá nerobili nič. Vedú preto na formulár rodiča a nesú
+                # so sebou zvolený rozmer — rovnako ako tlačidlo v texte.
+                dopyt = f'../../?w={w}&amp;l={l}#ponuka'
+                h = h.replace('href="#ponuka"', f'href="{dopyt}"')
+                p = p.replace('href="#ponuka"', f'href="{dopyt}"')
                 cfg = f'../../../konfigurator/?page={t["cfg"]}&w={w}&l={l}'
                 main = f'''<main class="k" id="obsah" data-k-root>
 <section class="k-band">
