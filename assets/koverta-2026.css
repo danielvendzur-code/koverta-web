@@ -13450,3 +13450,43 @@ body:not(.k-home) .k .kh-hero__chip {
   body:not(.k-home) .k .kh-hero__trust { margin-top: 12px; }
   .k .kh-hero__rating { margin-top: 10px; }
 }
+
+/* ==========================================================================
+   VRSTVA 128 · Dlaždice z montáží sa pod kurzorom nehýbu a značka za
+   otázkami sa hýbe naozaj
+   ==========================================================================
+   Dlaždicám realizácií sa pri prejdení myšou podčiarkol popis cez celú šírku
+   a zmenil pomer plôch v páse, takže sa hýbali aj susedné dlaždice. Pri
+   mriežke s dvadsiatimi dlaždicami to znamená, že sa obraz hýbe pod kurzorom
+   vždy, keď ním človek prejde cez stránku. Zvýraznenie ostáva na klávesnici,
+   kde bez neho nie je vidieť, kde človek stojí; myš už nič nepresúva.
+
+   Jantárová linka pod popisom ostáva v dĺžke, akú má dlaždica po príchode. */
+@media (hover: hover) {
+  .k .kh-cat__item:hover .kh-cat__body::after { width: 3.2rem; }
+  .k .kh-cat__item:hover,
+  .k .kh-cat__item:hover .kh-cat__body,
+  .k .kh-cat__item:hover .kh-cat__media { flex-grow: initial; flex-basis: auto; }
+}
+.k .kh-cat__item:focus-within .kh-cat__body::after { width: 100%; }
+
+/* Značka za Častými otázkami stála. `animation-timeline: view()` sa viaže na
+   to, ako prvok prechádza oknom — lenže tento prvok je podklad s `inset`
+   väčším než panel a rodič má `overflow: hidden`, takže mu prehliadač
+   priradil časovú os, ktorá sa nikdy nepohla. Os sa preto berie od panelu
+   (`view-timeline` na ňom, `animation-timeline` na podklade); panel oknom
+   naozaj prechádza, takže sa značka posúva spolu s ním. Kto `view()` nepozná,
+   uvidí značku stáť — to je horší, nie pokazený stav. */
+@media (min-width: 1000px) {
+  @supports (animation-timeline: view()) {
+    .k .kh-faq__intro {
+      view-timeline-name: --kv-faq;
+      view-timeline-axis: block;
+    }
+    .k .kh-faq__intro::after {
+      animation: kv-faq-znacka linear both;
+      animation-timeline: --kv-faq;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
