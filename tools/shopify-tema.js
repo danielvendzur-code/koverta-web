@@ -165,7 +165,7 @@ function naStranku(url, mapa, zaklad) {
   return mapa.get(kluc) + chvost;
 }
 
-const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-menu-src|data-k-lupa|action)="([^"]*)"/g;
+const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-video-mobil|data-k-menu-src|data-k-lupa|action)="([^"]*)"/g;
 
 function prepis(html, mapa, zaklad) {
   return html.replace(ATRIBUTY, (cele, meno, hodnota) => {
@@ -268,6 +268,15 @@ function preved() {
     if (m.endsWith('.bin.gz')) doObchodu.set(m, path.relative(KOREN, path.join(modely, m)));
   }
 
+  /* Značka na kresbe v 3D. Renderer si ju berie sám, adresou odvodenou od
+     vlastného skriptu (`new URL('koverta-decal.svg', …soltec-premium.js.src)`),
+     takže na ňu v značkovaní ani v štýle nič neukazuje a prevod by ju
+     prehliadol. V téme preto musí ležať pod presne týmto menom, bez predpony
+     `kfg-` — inak ju tá adresa nenájde a v scéne ostane biely štvorec. */
+  const decal = path.join(KOREN, 'konfigurator', 'koverta-decal.svg');
+  if (fs.existsSync(decal)) doTemy.set('koverta-decal.svg', decal);
+  else chyby.push('chýba konfigurator/koverta-decal.svg');
+
   const zoznam = najdiStranky(KOREN);
   const mapa = new Map();
   for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.url); }
@@ -325,6 +334,21 @@ function preved() {
     return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky };
   });
 
+  /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
+     literály `'./assets/…'` a `'./stranka/'`; preložia sa tým istým
+     spôsobom ako adresy v značkovaní. */
+  const cestySkriptu = {};
+  const skript = path.join(KOREN, 'assets', 'koverta-2026.js');
+  if (fs.existsSync(skript)) {
+    const text = fs.readFileSync(skript, 'utf8');
+    for (const m of text.matchAll(/'(\.\/[^']+)'/g)) {
+      const cesta = m[1];
+      if (cestySkriptu[cesta] !== undefined) continue;
+      const nova = naSubor(cesta) || naStranku(cesta, mapa, '');
+      if (nova && nova !== cesta) cestySkriptu[cesta] = nova;
+    }
+  }
+
   if (hlavicky.size !== 1) chyby.push('hlavička má ' + hlavicky.size + ' verzií');
   if (paticky.size !== 1) chyby.push('pätička má ' + paticky.size + ' verzií');
 
@@ -337,7 +361,7 @@ function preved() {
     sablony.push(s);
   }
 
-  return { zoznam, sablony, spolocnaHlava, spolocnyChvost,
+  return { zoznam, sablony, spolocnaHlava, spolocnyChvost, cestySkriptu,
            hlavicka: [...hlavicky][0] || '', paticka: [...paticky][0] || '' };
 }
 
@@ -349,6 +373,25 @@ function zapis(v) {
   const navodText = fs.existsSync(navod) ? fs.readFileSync(navod) : null;
   for (const p of ['layout', 'sections', 'templates', 'assets', 'config', 'locales', 'snippets']) {
     fs.mkdirSync(path.join(CIEL, p), { recursive: true });
+  }
+
+  /* Vygenerované priečinky sa pred zápisom vyprázdnia.
+   *
+   * Prevod dovtedy len zapisoval. Keď sa stránka premenovala alebo zmazala,
+   * jej stará šablóna a útržok v téme ostali — kontrola ich prijala, lebo
+   * odkazy v nich vedú, a `shopify.yml` posiela do vetvy celý priečinok.
+   * Zrušená stránka by tak v obchode žila ďalej, na starej adrese a so
+   * starým textom, a nikto by o nej nevedel.
+   *
+   * Ručne udržiavané súbory sa nemažú: návod a nastavenia témy, do ktorých
+   * si Shopify píše zapnuté bloky aplikácií. */
+  const NEMAZAT = new Set(['config/settings_data.json']);
+  for (const p of ['templates', 'snippets', 'assets', 'sections', 'layout']) {
+    const kde = path.join(CIEL, p);
+    for (const meno of fs.readdirSync(kde)) {
+      if (NEMAZAT.has(p + '/' + meno)) continue;
+      fs.rmSync(path.join(kde, meno), { recursive: true, force: true });
+    }
   }
 
   const layout = `<!doctype html>
@@ -395,6 +438,11 @@ ${v.spolocnaHlava.join('\n')}
       : "{{ 'soltec-mark.png' | file_url | json }}"},
     modely: '/pages/${PREDPONA}pouzite-modely'
   };
+  /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
+     fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
+     prevod inak nevidí; bez tejto tabuľky by na Shopify ukazovali na
+     /pages/assets/… a /carport-soltec/, teda nikam. */
+  window.KV_CESTY = ${JSON.stringify(v.cestySkriptu, null, 2).replace(/\n/g, '\n  ')};
   window.KV_SCENE_ASSETS = ${FOTKY === 'pages'
     ? JSON.stringify(PAGES_ZAKLAD + '/konfigurator/scene-assets/')
     : "{{ 'bmw-g80-m3.bin.gz' | file_url | split: 'bmw-g80-m3.bin.gz' | first | json }}"};

@@ -9,6 +9,35 @@
    Všetko sa inicializuje idempotentne, aby to prežilo shopify:section:load.
    ========================================================================== */
 
+/* Kde leží súbor alebo stránka, ktorú skript spomína v texte.
+
+   Na statickom webe platia cesty, ktoré sú napísané rovno v kóde. Na Shopify
+   neplatia ani jedny: obrázky sú na CDN obchodu a stránky sú v `/pages/`.
+   Stránka preto smie adresy oznámiť cez `window.KV_ADRESY` a tie majú
+   prednosť. Keď ich neoznámi nikto, nemení sa nič.
+
+   Stojí to tu, mimo oboch uzáverov, lebo ju volajú obaja. Kým bola vnútri
+   toho druhého, prvý ju nevidel: výber značky na úvode si ňou skladá obrázky
+   značiek, spadol na `ReferenceError` a `spusti` tú výnimku spapal, takže
+   sa nikde neozvala — výber sa len ticho neposkladal a ponuka ostala prázdna.
+   Na statickom webe aj na Shopify. */
+function kvAdresa(kluc, zaloha) {
+  var a = (typeof window !== 'undefined' && window.KV_ADRESY) || null;
+  return (a && a[kluc]) || zaloha;
+}
+
+/* To isté pre cesty, ktoré skript skladá až za behu a sú napísané rovno
+   v jeho texte: fotografie a odkazy vo výbere riešenia. Na Shopify by
+   `./assets/x.jpg` ukázalo na `/pages/assets/x.jpg` a `./carport-soltec/`
+   na `/carport-soltec/` — ani jedno tam nie je. Prevodník preto vypíše do
+   `window.KV_CESTY` tabuľku „cesta zo skriptu → adresa v obchode" a tu sa
+   len prehľadá. Keď tabuľka nie je, vráti sa cesta, ako bola. */
+function kvCesta(cesta) {
+  var t = (typeof window !== 'undefined' && window.KV_CESTY) || null;
+  if (!t || !cesta) return cesta;
+  return Object.prototype.hasOwnProperty.call(t, cesta) ? t[cesta] : cesta;
+}
+
 (() => {
   /* Skryté východisko odhaľovania platí len vtedy, keď skript naozaj beží.
      Keby sa nenačítal alebo spadol, ostal by celý web prázdny — a to sa už
@@ -1900,7 +1929,7 @@
       cislo.textContent = spolu.textContent;
       const obr = panel.querySelector('[data-k-kviz-foto] img');
       if (obr) {
-        obr.src = d.foto;
+        obr.src = kvCesta(d.foto);
         obr.alt = d.nazov;
       }
       panel.querySelector('[data-k-kviz-znacka]').innerHTML = ZNACKY[d.znacka];
@@ -1910,7 +1939,7 @@
       dop.hidden = !r.doplnok;
       dop.textContent = r.doplnok || '';
       const odkaz = panel.querySelector('[data-k-kviz-odkaz]');
-      odkaz.setAttribute('href', d.odkaz);
+      odkaz.setAttribute('href', kvCesta(d.odkaz));
       odkaz.focus();
     };
 
@@ -1955,7 +1984,7 @@
         title: 'Čo chcete zastrešiť?',
         intro: 'Vyberte prístrešok pre auto alebo riešenie pre terasu a záhradu.',
         links: [
-          ['./pristresky-pre-auta/', 'Prístrešky pre autá', 'Katalógové aj atypické oceľové konštrukcie pre 1 až 3 autá.'],
+          ['./pristresky-pre-auta/', 'Prístrešky pre autá', 'Katalógové aj atypické oceľové konštrukcie, do 8 m bez stredového stĺpa.'],
           ['./zahradne-pristresky/', 'Záhradné prístrešky', 'Prestrešenie terasy, vstupu alebo záhradného posedenia.']
         ]
       },
@@ -1988,7 +2017,7 @@
       links.textContent = '';
       data.links.forEach((item) => {
         const a = document.createElement('a');
-        a.href = item[0];
+        a.href = kvCesta(item[0]);
         const strong = document.createElement('strong');
         strong.textContent = item[1];
         const span = document.createElement('span');
@@ -3571,16 +3600,6 @@
    návštevníka sa neprepisuje — vyplní sa len prázdne pole. */
 (function () {
   'use strict';
-/* Kde leží súbor alebo stránka, ktorú skript spomína v texte.
-
-   Na statickom webe platia cesty, ktoré sú napísané rovno v kóde. Na Shopify
-   neplatia ani jedny: obrázky sú na CDN obchodu a stránky sú v `/pages/`.
-   Stránka preto smie adresy oznámiť cez `window.KV_ADRESY` a tie majú
-   prednosť. Keď ich neoznámi nikto, nemení sa nič. */
-function kvAdresa(kluc, zaloha) {
-  var a = (typeof window !== 'undefined' && window.KV_ADRESY) || null;
-  return (a && a[kluc]) || zaloha;
-}
 
   const POLE = 'textarea[name="contact[body]"]';
 
