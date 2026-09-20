@@ -89,7 +89,7 @@
 <link rel="icon" href="/assets/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=2026091107">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=65c151e144">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
@@ -213,7 +213,7 @@
           <div class="kv-mega">
             <ul class="kv-mega__rad">
               <li><a href="../zahradne-pristresky/">
-                <span class="kv-mega__foto"><img data-k-menu-src="../assets/foto/20250522_144729-w600-w1000.webp" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/foto/20250522_144729-w600-w1000.webp" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async" width="600" height="450"></span>
                 <span class="kv-mega__znacka"><img data-k-menu-src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
                 <strong>Záhradné prístrešky</strong>
               </a></li>
@@ -233,7 +233,7 @@
                 <strong>Tienenie</strong>
               </a></li>
               <li><a href="../outdoor-kuchyne/">
-                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-bio-vecer-led-w1000.webp" width="1600" height="1067" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
+                <span class="kv-mega__foto"><img data-k-menu-src="../assets/soltec-bio-vecer-led-w1000.webp" width="1000" height="600" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
                 <span class="kv-mega__znacka"><img data-k-menu-src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
                 <strong>Vonkajšie kuchyne</strong>
               </a></li>
@@ -306,7 +306,7 @@
       <summary>Pre dom a záhradu<svg class="kv-drawer__plus" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
       <ul class="kv-drawer__rad">
         <li><a href="../zahradne-pristresky/">
-          <span class="kv-drawer__foto"><img src="../assets/foto/20250522_144729-w600-w1000.webp" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__foto"><img src="../assets/foto/20250522_144729-w600-w1000.webp" alt="Záhradný prístrešok Koverta s dreveným obkladom nad terasou" loading="lazy" decoding="async" width="600" height="450"></span>
           <span class="kv-drawer__telo">
             <span class="kv-mega__znacka"><img src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77" loading="lazy" decoding="async"></span>
             <strong>Záhradné prístrešky</strong>
@@ -334,7 +334,7 @@
           </span>
         </a></li>
         <li><a href="../outdoor-kuchyne/">
-          <span class="kv-drawer__foto"><img src="../assets/soltec-bio-vecer-led-w1000.webp" width="1600" height="1067" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
+          <span class="kv-drawer__foto"><img src="../assets/soltec-bio-vecer-led-w1000.webp" width="1000" height="600" alt="Vonkajšia kuchyňa pod pergolou" loading="lazy" decoding="async"></span>
           <span class="kv-drawer__telo">
             <span class="kv-mega__znacka"><img src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268" loading="lazy" decoding="async"></span>
             <strong>Vonkajšie kuchyne</strong>
@@ -356,14 +356,18 @@
 </header>
 
 <main class="k" id="obsah" data-k-root>
-  <section class="k-band" style="padding-top:clamp(90px,10vw,150px)">
+  <!-- Na telefóne bolo nad omrvinkami 90 px prázdna a z prvej obrazovky
+       tak ostala polovica. Spodná hranica sa preto zhoduje s ostatnými
+       stránkami bez fotografie v hlavičke (kontakt má 22 px), na stolnom
+       počítači sa nemení nič. -->
+  <section class="k-band" style="padding-top:clamp(40px,10vw,150px)">
     <div class="k-wrap" style="max-width:820px">
       <nav class="kh-crumbs" aria-label="Kde sa nachádzate" style="margin-bottom:18px">
         <a href="../">Koverta</a><span aria-hidden="true">/</span><span aria-current="page">O 3D modeloch</span>
       </nav>
-      <h1 id="pgTitle" class="k-h2">O 3D modeloch v konfigurátore</h1>
-      <p class="k-copy">Auto a posedenie sú v 3D náhľade len preto, aby bolo vidieť, koľko miesta pod prístreškom naozaj zaberú. Nemenia cenu ani rozmery zostavy a nie sú súčasťou dodávky. Rozmery modelov zodpovedajú skutočným rozmerom vozidiel a nábytku.</p>
-      <p class="k-copy">Sú to licencované modely tretích strán. Licencia CC&nbsp;BY&nbsp;4.0 dovoľuje komerčné použitie a vyžaduje uvedenie autora. Na to je tento zoznam. CC0 je voľné dielo bez podmienok; autora uvádzame aj tak.</p>
+      <h1 id="pgTitle" class="k-h2" style="margin:0 0 .6em">O 3D modeloch v konfigurátore</h1>
+      <p class="k-copy" style="margin:0 0 1em">Auto a posedenie sú v 3D náhľade len preto, aby bolo vidieť, koľko miesta pod prístreškom naozaj zaberú. Nemenia cenu ani rozmery zostavy a nie sú súčasťou dodávky. Rozmery modelov zodpovedajú skutočným rozmerom vozidiel a nábytku.</p>
+      <p class="k-copy">Päť z nich sú licencované modely tretích strán, šieste — kompaktné posedenie — je vlastný návrh pre tento konfigurátor. Licencia CC&nbsp;BY&nbsp;4.0 dovoľuje komerčné použitie a vyžaduje uvedenie autora. Na to je tento zoznam. CC0 je voľné dielo bez podmienok; autora uvádzame aj tak.</p>
     </div>
   </section>
 
@@ -425,6 +429,17 @@
             </dl>
           </div>
         </article>
+        <article class="k-model-card">
+          <div class="k-model-card__body">
+            <div class="k-model-card__top"><span class="k-model-card__use">posedenie do úzkych pergol</span></div>
+            <h3>Kompaktné posedenie</h3>
+            <dl class="k-model-facts">
+              <div><dt>Autor</dt><dd>Koverta</dd></div>
+              <div><dt>Zdroj</dt><dd>vlastný návrh pre tento konfigurátor</dd></div>
+              <div><dt>Licencia</dt><dd>nie je potrebná</dd></div>
+            </dl>
+          </div>
+        </article>
       </div>
 
       <p class="k-copy" style="margin-top:2.4rem">Modely sú upravené pre potreby konfigurátora: prevedené do milimetrov a súradníc scény, s farbami prenesenými do vrcholov siete. Podrobný zoznam úprav pri každom modeli vedieme v repozitári projektu.</p>
@@ -476,7 +491,7 @@
   </div>
 </footer>
 
-<script src="../assets/koverta-2026.js?v=2026091106" defer></script>
+<script src="../assets/koverta-2026.js?v=704ae62890" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

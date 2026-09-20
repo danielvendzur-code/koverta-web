@@ -7,6 +7,13 @@
       if (!root || root.dataset.spReady === 'true') return;
       root.dataset.spReady = 'true';
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      /* Ground shadows are the heaviest decorative layer in the scene. Small
+         devices keep the complete product geometry and controls, but omit
+         this layer so the final model can still be rendered sharply. */
+      const lowPowerGraphics = reducedMotion
+        || (Number(navigator.deviceMemory || 8) <= 4
+          && Number(navigator.hardwareConcurrency || 8) <= 4);
+      root.dataset.spLowPower = String(lowPowerGraphics);
       root.classList.add('sp-motion-ready');
       const header = document.querySelector('.section-header');
       // The Koverta header hides on scroll down and returns on scroll up. Recomputing the
@@ -2774,8 +2781,11 @@
           const HAZE_R = Math.max(L, W, H) * 0.62;
           const HAZE_I = 0.11;
           const HAZE_TO = [246, 245, 243];
-          const haze = (c, d) => {
-            const t = Math.max(0, Math.min(1, -d / HAZE_R)) * HAZE_I;
+          const haze = (c, d, material) => {
+            /* Fascia is one continuous folded sheet. Full haze on only its
+               distant side looked like a separate chalky panel. */
+            const strength = material === 'fascia' ? 0.035 : HAZE_I;
+            const t = Math.max(0, Math.min(1, -d / HAZE_R)) * strength;
             if (t < 0.002) return c;
             const v = toRGB(c);
             const s = v.slice(0, 3).map((x, i) => Math.round(x + (HAZE_TO[i] - x) * t)).join(',');
@@ -2941,7 +2951,7 @@
               const key = o.__sk + '|' + ao;
               let base = litCache.get(key);
               if (base === undefined) { base = litFill(fill, normal, o.material, ao); litCache.set(key, base); }
-              lit = haze(base, depthAvg);
+              lit = haze(base, depthAvg, o.material);
             }
             /* Jedna farba na plochu stačí na stĺp, nie na podhľad: je to jeden
                veľký panel, ktorého zatienenie ide od svetlého okraja po tmavý
@@ -2951,12 +2961,12 @@
             let vertexFills = null;
             if (!o.raw) {
               if (o.vertexNormals) {
-                vertexFills = o.vertexNormals.map((n) => haze(litFill(fill, n, o.material, ao), depthAvg));
+                vertexFills = o.vertexNormals.map((n) => haze(litFill(fill, n, o.material, ao), depthAvg, o.material));
               } else {
                 let lo = 1, hi = 0;
                 for (const v of pts) { const a = aoAt(v, normal); if (a < lo) lo = a; if (a > hi) hi = a; }
                 if (hi - lo > 0.02)
-                  vertexFills = pts.map((v) => haze(litFill(fill, normal, o.material, aoAt(v, normal)), depthAvg));
+                  vertexFills = pts.map((v) => haze(litFill(fill, normal, o.material, aoAt(v, normal)), depthAvg, o.material));
               }
             }
             if(overcast && o.raw && layer<=-2*ROOF_LAYER+1000 && typeof fill==='string' && fill.startsWith('rgba(')) {
@@ -3240,7 +3250,7 @@
           /* bias: a member laid on a face that is drawn as one long quad sorts
              against that quad's centroid, so a short member near the far end of
              it loses and gets painted over. Passing a bias settles it. */
-          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface) => {
+          const boxFaces = (x, y, z, dx, dy, dz, hex, skip, flat, bias, seamlessTop, cleanSurface, material) => {
             const X = x + dx, Y = y + dy, Z = z + dz;
             const s = skip || [], fl = flat || [];
             const put = (key, pts, n) => { if (s.indexOf(key) < 0) quad(pts, hex, {
@@ -3259,7 +3269,8 @@
               /* Seal only artificial BSP fragment edges on surfaces explicitly
                  marked clean. This never strokes the source polygon boundary and
                  does not change world-space geometry. */
-              sealSplits: cleanSurface === true
+              sealSplits: cleanSurface === true,
+              material: material
             }); };
             put('+z', [[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]], [0,0,1]);
             put('-z', [[x,y,z],[X,y,z],[X,Y,z],[x,Y,z]], [0,0,-1]);
@@ -3367,12 +3378,14 @@
           /* A penumbra is dense at the core and thins quickly at the edge.
              An even alpha across every ring gave a linear ramp, which reads as
              a grey rectangle with soft corners rather than a shadow. */
-          for (let i = 10; i >= 0; i--) {
-            const t = 1 - i / 10;
-            /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
-               oblohy, nie z jedného smeru. */
-            shadow(40 + i * (overcast ? 42 : 26),
-              +((0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1)).toFixed(4));
+          if (!lowPowerGraphics) {
+            for (let i = 10; i >= 0; i--) {
+              const t = 1 - i / 10;
+              /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
+                 oblohy, nie z jedného smeru. */
+              shadow(40 + i * (overcast ? 42 : 26),
+                +((0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1)).toFixed(4));
+            }
           }
 
           /* Sun through open blades. Dropping the gaps between them onto the
@@ -4138,7 +4151,12 @@
               } else if (kind === 'l44alu') {
                 clad(gt, 1 - gt, zBase, zTop, back, ALU_COURSE, shade(sideHex, 0.12));
               } else if (KV_MAT[kind]) {
-                slats(gt, 1 - gt, zBase, zTop, back, KV_MAT[kind]);
+                /* The perimeter profiles cover their own strip of the opening.
+                   Starting the slat field below the bottom profile and ending
+                   it above the top profile keeps every visible Koverta slat
+                   whole. Previously both profiles masked part of an end slat,
+                   which read as one half at the bottom and another at the top. */
+                slats(gt, 1 - gt, zBase + gw, zTop - gw, back, KV_MAT[kind]);
               } else if (kind === 'fw25') {
                 boards(gt, 1 - gt, zBase, zTop, back);
               } else {
@@ -4459,8 +4477,8 @@
                rameno na obryse, horné rameno dovnútra a dole krátky zahyb. */
             const lemL = (axis, outer, dir, a, b, sirka) => {
               const put = (u0, u1, z, dz, seamlessTop) => {
-                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true);
-                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, true);
+                if (axis === 'x') boxFaces(Math.min(u0, u1), a, z, Math.abs(u1 - u0), b - a, dz, frame, [], SHAFT, 0, seamlessTop, true, 'fascia');
+                else boxFaces(a, Math.min(u0, u1), z, b - a, Math.abs(u1 - u0), dz, frame, [], SHAFT, 0, seamlessTop, true, 'fascia');
               };
               put(outer, outer + LEM_T * dir, zBot, LEM_H);                    // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
@@ -4913,22 +4931,14 @@
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
-
-            /* One exact cut plane closes each concealed sheet edge. It belongs
-               to the flashing pocket, not to the visible single-colour soffit,
-               and therefore keeps one roof/flashing finish through its height.
-               Splitting it into light and dark halves exposed the light half
-               through every valley when viewed from above. */
-            // The L flashing stays open beneath its horizontal arm. Artificial
-            // vertical closure curtains hid the corrugated sheet's actual ends.
-
-
-            /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
-               Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
-               hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true);
+            /* Keep the real soffit under the flashing. The upper skin needs
+               only a narrow hidden lap beneath the inner edge: cropping it
+               exactly at the aperture exposed a jagged lower-skin cut, while
+               the full hidden sheet won isolated depth samples on the arm. */
+            const trapLap = 6;
+            drawTrapSurface(Math.max(tx0, vx0 - trapLap), Math.min(tx1, vx1 + trapLap),
+              Math.max(ty0, vy0 - trapLap), Math.min(ty1, vy1 + trapLap),
+              trapUpperZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
@@ -5679,6 +5689,21 @@
             minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
             minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
           })));
+          /* The soft shadow is part of the visible composition. Fitting only
+             the steel envelope clipped it in fullscreen and made the shelter
+             sit optically too high in its viewport. */
+          if (!lowPowerGraphics) {
+            const shadowGrow = 40 + 10 * (overcast ? 42 : 26);
+            const fitShadowSoft = overcast ? 0.16 : 1;
+            const fitShadowX = 0.22 * H * (-KEY[0] / KEY[2]) * fitShadowSoft;
+            const fitShadowY = 0.22 * H * (-KEY[1] / KEY[2]) * fitShadowSoft;
+            [-shadowGrow + fitShadowX, L + shadowGrow + fitShadowX].forEach(x =>
+              [-shadowGrow + fitShadowY, W + shadowGrow + fitShadowY].forEach(y => {
+                const q = cam(x, y, 0);
+                minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x);
+                minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
+              }));
+          }
           const scale = manualZoom * Math.min((VW - pad * 2) / Math.max(1, maxX - minX), (VH - pad * 2) / Math.max(1, maxY - minY));
           const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2 + zoomPan.x*VW;
           const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2 + zoomPan.y*VH;

@@ -1,0 +1,67 @@
+# Náhľad vetvy na GitHub Pages
+#
+# Majiteľ chce vidieť rozrobenú verziu skôr, než sa čokoľvek zlúči do
+# `master`. Vercel odmietol, takže ostávajú Pages — lenže tie majú na
+# repozitár jediný zdroj. Zapnutie tohto postupu teda znamená, že Pages
+# prestanú servírovať `master` a začnú servírovať vetvu z `vetva` nižšie.
+# Späť na `master` sa vráti prepnutím zdroja v Settings → Pages.
+#
+# Zapnúť: Settings → Pages → Build and deployment → Source: GitHub Actions.
+# Potom Actions → „Náhľad vetvy na GitHub Pages" → Run workflow.
+#
+# Náhľad nesmie skončiť vo vyhľadávači: nasadená kópia dostane robots.txt
+# so zákazom a do hlavičky každej stránky ide `noindex, nofollow`. Texty
+# a fotografie na vetve nie sú schválené, a čo si Google raz stiahne, to
+# vie zobrazovať aj potom, ako to z webu zmizne.
+name: Náhľad vetvy na GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      vetva:
+        description: Vetva, ktorá sa má zobraziť
+        required: true
+        default: vendzur/gallant-euler-bkvsqa
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  nasad:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.nasadenie.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.vetva }}
+
+      # Do náhľadu patrí web, nie to, z čoho sa staval. `qa-artifacts` má
+      # samo o sebe 150 MB snímok z testov.
+      - name: Vyhodiť, čo na web nepatrí
+        run: rm -rf qa-artifacts node_modules .git 04_REFERENCIE coordination archiv-expivi
+
+      - name: Zakázať indexovanie
+        run: |
+          printf 'User-agent: *\nDisallow: /\n' > robots.txt
+          # Značka ide hneď za <head>, aby ju robot našiel skôr, než čokoľvek
+          # iné. Stránky, ktoré `robots` už majú, sa preskočia — tie si svoj
+          # pokyn nesú samy a prepisovať ho by znamenalo tvrdiť dve veci.
+          find . -name '*.html' -not -path './.github/*' -print0 \
+            | xargs -0 grep -LZ 'name="robots"' \
+            | xargs -0 --no-run-if-empty \
+              sed -i 's|<head>|<head>\n<meta name="robots" content="noindex, nofollow">|'
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: nasadenie
+        uses: actions/deploy-pages@v4

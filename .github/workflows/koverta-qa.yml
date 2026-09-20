@@ -26,6 +26,14 @@ jobs:
           node-version: 22
       - name: Validate realization map content
         run: node konfigurator/test/realizacie-map.js
+      - name: Validate generated pages, SEO and renderer invariants
+        run: |
+          node konfigurator/test/koverta-render-regression.js
+          node tools/seo-audit.js
+          node tools/verzie-suborov.js
+          node tools/rozmery-obrazkov.js
+          python3 tools/generuj-rozmery.py
+          git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
 
   configurator:
     runs-on: ubuntu-24.04
@@ -33,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, plynulost, routing-smoke, browser-qa, pocasie-odtok]
+        test: [pricing-logic, osnova-podla-expivi, technical-fidelity, koverta-accessories, layout-smoke, stlpy-vidno, stlpy-rozostup, krytina-strechy, prekrytie, strecha-nepresvita, routing-smoke, browser-qa, pocasie-odtok, realizacie-gallery]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,16 +80,78 @@ jobs:
           path: qa-artifacts
           if-no-files-found: ignore
 
-  occlusion-deep:
+  # Plynulosť siluety prejde 1 095 pohľadov a pri každom serializuje SVG,
+  # dekóduje ho a prekreslí na plátno. V bežnej matici s 30-minútovým limitom
+  # skončila zakaždým ako `cancelled` — výsledok, ktorý nikto nedostal. Delí sa
+  # po rozmeroch; každý shard prejde svoje rozmery celé a doručí vlastný verdikt.
+  plynulost:
+    name: plynulost (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
-    # 02-occlusion-sweep renders ~7000 views across 54 dimensions and needs
-    # more than 35 minutes on a hosted runner; at 35 it was cancelled mid-run
-    # and never reported. It passes when allowed to finish.
-    timeout-minutes: 60
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        script: [02-occlusion-sweep, 02-component-visibility, 02-focused-render-qa]
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save /etc/apt/sources.list.d/google-chrome.sources
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8901 >/tmp/koverta-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS 'http://127.0.0.1:8901/konfigurator/?page=koverta' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/koverta-http.log
+          exit 1
+      - name: Silhouette continuity
+        env:
+          KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+          KV_SHARD_INDEX: ${{ matrix.shard }}
+          KV_SHARD_TOTAL: 3
+        run: node konfigurator/test/plynulost.js
+
+  occlusion-deep:
+    name: occlusion-deep (${{ matrix.script }} ${{ matrix.shard }}/${{ matrix.shards }})
+    runs-on: ubuntu-24.04
+    # Dlhé testy sú rozdelené podľa rozmerov. Každý shard musí skončiť s
+    # vlastným výsledkom; timeout sa už nesmie vydávať za zelenú kontrolu.
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        # Namerané na behu 35469231125: štyri časti component-visibility
+        # dobehli za 25 až 37 minút, ale occlusion-sweep aj focused-render-qa
+        # skončili presne na 55. minúte ako `cancelled`. Sweep prejde 54
+        # kombinácií rozmerov, takže na tretiny to bolo 18 na časť — priveľa.
+        # Deväť častí dá šesť kombinácií na časť, čiže okolo osemnástich minút.
+        # Focused-render-qa delenie nemalo vôbec; má tri rozmery, tak tri časti.
+        include:
+          - { script: 02-occlusion-sweep, shard: 0, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 1, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 2, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 3, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 4, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 5, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 6, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 7, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 8, shards: 9 }
+          - { script: 02-component-visibility, shard: 0, shards: 4 }
+          - { script: 02-component-visibility, shard: 1, shards: 4 }
+          - { script: 02-component-visibility, shard: 2, shards: 4 }
+          - { script: 02-component-visibility, shard: 3, shards: 4 }
+          - { script: 02-focused-render-qa, shard: 0, shards: 3 }
+          - { script: 02-focused-render-qa, shard: 1, shards: 3 }
+          - { script: 02-focused-render-qa, shard: 2, shards: 3 }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,12 +178,14 @@ jobs:
       - name: Deep render QA
         env:
           KV_URL: http://127.0.0.1:8901/konfigurator/?page=koverta
+          KV_SHARD_INDEX: ${{ matrix.shard }}
+          KV_SHARD_TOTAL: ${{ matrix.shards }}
         run: node "coordination/koverta/${{ matrix.script }}.js"
       - name: Upload deep QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: koverta-deep-qa-${{ matrix.script }}
+          name: koverta-deep-qa-${{ matrix.script }}-${{ matrix.shard }}
           path: qa-artifacts
           if-no-files-found: ignore
 

@@ -253,6 +253,27 @@ function assert(condition, message) {
       await revealPage(pp);
       await pp.screenshot({ path: 'qa-artifacts/product-' + key + '-desktop.png', fullPage: true });
     }
+    const dimensionPages = [
+      ['pristresky-pre-auta/rozmer/2500x5200/', 'auto-size'],
+      ['zahradne-pristresky/rozmer/8000x4000/', 'garden-size']
+    ];
+    for (const [path, key] of dimensionPages) {
+      await pp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
+      await dismissConsent(pp);
+      const metrics = await pp.evaluate(() => ({
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        heading: document.querySelector('h1')?.textContent.trim(),
+        hasBasePrice: /Základná cena s DPH/.test(document.body.innerText),
+        productSchemas: [...document.querySelectorAll('script[type="application/ld+json"]')]
+          .filter(node => /"@type"\s*:\s*"Product"/.test(node.textContent)).length
+      }));
+      assert(metrics.overflow <= 4, key + ' page has horizontal overflow: ' + metrics.overflow);
+      assert(metrics.heading, key + ' page heading is missing');
+      assert(metrics.hasBasePrice, key + ' page does not label its price as a base price');
+      assert(metrics.productSchemas === 1, key + ' page must expose exactly one Product schema');
+      await revealPage(pp);
+      await pp.screenshot({ path: 'qa-artifacts/product-' + key + '-desktop.png', fullPage: true });
+    }
     await productCtx.close();
 
     const productMobileCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -280,6 +301,16 @@ function assert(condition, message) {
       assert(metrics.heroHeight && metrics.heroHeight >= 560, key + ' mobile hero is too short/collapsed');
       assert(metrics.h1Width && metrics.h1Width <= 360, key + ' mobile hero heading overflows');
       assert(metrics.actionWidths.length >= 1 && metrics.actionWidths.every(w => w <= 360), key + ' mobile hero CTA overflows');
+      await revealPage(pmp);
+      await pmp.screenshot({ path: 'qa-artifacts/product-' + key + '-mobile.png', fullPage: true });
+    }
+    for (const [path, key] of dimensionPages) {
+      await pmp.goto('http://127.0.0.1:8901/' + path, { waitUntil: 'load', timeout: 60000 });
+      await dismissConsent(pmp);
+      const overflow = await pmp.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth
+      );
+      assert(overflow <= 4, key + ' mobile page has horizontal overflow: ' + overflow);
       await revealPage(pmp);
       await pmp.screenshot({ path: 'qa-artifacts/product-' + key + '-mobile.png', fullPage: true });
     }

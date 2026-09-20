@@ -118,8 +118,13 @@ async function revealControl(page, selector) {
     const allTemplateText = await page.locator('#SoltecPremium').textContent();
     assert(!allTemplateText.includes('celá paleta RAL v cene'),
       'Unsupported claim that the full RAL palette is included is still present');
-    assert(allTemplateText.includes('Cenový dopad zvoleného odtieňa: na nacenenie'),
-      'Unknown Koverta color price impact is not disclosed');
+    /* Neštandardný odtieň musí byť priznaný ako vec na nacenenie — to je
+       podstata tejto kontroly a tá platí ďalej. Strážila sa však doslovným
+       znením „Cenový dopad zvoleného odtieňa: na nacenenie“, ktoré majiteľ
+       odmietol ako úradnícke. Nové znenie hovorí to isté ľudsky, tak sa
+       kontroluje požiadavka, nie tá jedna veta. */
+    assert(/na mieru/i.test(allTemplateText) && /pre cenu a termín/i.test(allTemplateText),
+      'Unknown Koverta color is no longer disclosed as made to order with a price impact');
 
     const visibleText = await page.locator('#SoltecPremium').innerText();
     assert(allTemplateText.includes('Iný počet stĺpov je na individuálne nacenenie'),

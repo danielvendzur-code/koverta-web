@@ -8,7 +8,20 @@ const { prepareContext, setModelColors } = require('../../konfigurator/test/brow
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
-const DIMENSIONS = [[4000, 6000], [7000, 5200], [7000, 6000]];
+/* Rozdelenie podľa rozmerov, rovnako ako pri ostatných hlbokých kontrolách.
+   Celá kontrola prejde tri rozmery a pri každom 72 azimutov × 5 sklonov plus
+   prechodové a pomenované pohľady; na GitHub runneri to zakaždým narazilo na
+   55-minútový limit úlohy a skončilo ako `cancelled` — výsledok, ktorý nikto
+   nedostal. Delí sa počet rozmerov, nie počet pohľadov: každý shard prejde
+   svoje rozmery celé. Bez premenných prostredia zbehne všetky tri. */
+const SHARD_INDEX = Number(process.env.KV_SHARD_INDEX || 0);
+const SHARD_TOTAL = Number(process.env.KV_SHARD_TOTAL || 1);
+if (!Number.isInteger(SHARD_INDEX) || !Number.isInteger(SHARD_TOTAL) ||
+    SHARD_TOTAL < 1 || SHARD_INDEX < 0 || SHARD_INDEX >= SHARD_TOTAL) {
+  throw new Error('Neplatný shard ' + SHARD_INDEX + '/' + SHARD_TOTAL);
+}
+const ALL_DIMENSIONS = [[4000, 6000], [7000, 5200], [7000, 6000]];
+const DIMENSIONS = ALL_DIMENSIONS.filter((_, i) => i % SHARD_TOTAL === SHARD_INDEX);
 const FINE_AZ_STEPS = 72; // 5°
 const FINE_ELEVATIONS = [-0.10, 0.12, 0.28, 0.50, 0.82];
 const TRANSITION_AZIMUTHS = [-1.05, -0.35, 0.65, 1.35, 2.15];

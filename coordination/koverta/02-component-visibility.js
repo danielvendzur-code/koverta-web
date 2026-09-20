@@ -8,12 +8,26 @@ const { prepareContext } = require('../../konfigurator/test/browser-qa');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
+const SHARD_INDEX = Number(process.env.KV_SHARD_INDEX || 0);
+const SHARD_TOTAL = Number(process.env.KV_SHARD_TOTAL || 1);
 const ROTATION_STEPS = 36; // 10° component-isolation sweep
-const DIMENSIONS = [[4000, 6000], [6200, 6000], [7000, 5200], [7000, 6000]];
+const ALL_DIMENSIONS = [[4000, 6000], [6200, 6000], [7000, 5200], [7000, 6000]];
+if (!Number.isInteger(SHARD_INDEX) || !Number.isInteger(SHARD_TOTAL) ||
+    SHARD_TOTAL < 1 || SHARD_INDEX < 0 || SHARD_INDEX >= SHARD_TOTAL) {
+  throw new Error('Invalid shard ' + SHARD_INDEX + '/' + SHARD_TOTAL);
+}
+const DIMENSIONS = ALL_DIMENSIONS.filter((_, index) => index % SHARD_TOTAL === SHARD_INDEX);
 const COMPONENTS = [
   { id: 'purlins', flag: '__QA_HIDE_PURLINS', elevations: [-0.16, 0.04] },
   { id: 'angles', flag: '__QA_HIDE_UHOLNIK', elevations: [-0.16, 0.04] },
-  { id: 'roof-screws', flag: '__QA_HIDE_ROOF_SCREWS', elevations: [-0.16, 0.04] },
+  /* Skrutky sa pri zábere celej stavby zámerne nekreslia. `skrutkuj` má
+     pravidlo čitateľnosti: `if (r * 2 < mmNaPixel * 10) return;` — hlava
+     menšia než desať pixelov nie je šesťhran, ale bodka o inom jase, a tých
+     bodiek sú na ráme a podhľade stovky. Na stojane vychádza mmNaPixel okolo
+     8,6, hlava má polomer 8, takže 16 < 86 a skrutka nevznikne pri žiadnom
+     katalógovom rozmere. Čaká sa teda nulový pokles plôch; keby pribudli,
+     niekto to pravidlo odstránil. */
+  { id: 'roof-screws', flag: '__QA_HIDE_ROOF_SCREWS', elevations: [-0.16, 0.04], ocakavanyPokles: 0 },
   { id: 'base-plates', flag: '__QA_HIDE_BASE_PLATES', elevations: [0.10, 0.42] },
   { id: 'head-plates', flag: '__QA_HIDE_HEAD_PLATES', elevations: [-0.16, 0.04] },
   { id: 'gutter-downpipe', flag: '__QA_HIDE_GUTTER', elevations: [-0.16, 0.10, 0.42] }
@@ -133,6 +147,29 @@ async function componentDiff(page, flag, az, el) {
   }, { flag, az, el });
 }
 
+/* Koľko plôch model vydá s dielom a bez neho.
+
+   Toto je jediná otázka, na ktorú sa dá odpovedať bez ohľadu na kameru:
+   buď sa diel emituje, alebo nie. Rastrový rozdiel odpovedá na inú otázku —
+   či je diel z daného uhla vidieť — a tú si nemožno vykladať ako tú prvú.
+   `faceCount` zapisuje vykresľovač po každom prekreslení. */
+async function componentFaceDrop(page, flag) {
+  return page.evaluate(async ({ flag }) => {
+    const canvas = document.querySelector('[data-sp-canvas]');
+    const count = async hidden => {
+      window[flag] = hidden;
+      window.SP_TEST.redraw();
+      await new Promise(resolve => setTimeout(resolve, 60));
+      return Number(canvas.dataset.faceCount);
+    };
+    const visible = await count(false);
+    const hidden = await count(true);
+    window[flag] = false;
+    window.SP_TEST.redraw();
+    return { facesVisible: visible, facesHidden: hidden, faceDrop: visible - hidden };
+  }, { flag });
+}
+
 async function saveBaselineScreenshot(page, width, length, component, elevation, az, suffix) {
   await setDimensions(page, width, length);
   await page.evaluate(({ flag, az, el }) => {
@@ -197,6 +234,7 @@ async function saveBaselineScreenshot(page, width, length, component, elevation,
       await setDimensions(page, width, length);
 
       for (const component of COMPONENTS) {
+        const emission = await componentFaceDrop(page, component.flag);
         for (const elevation of component.elevations) {
           const samples = [];
           for (let step = 0; step < ROTATION_STEPS; step += 1) {
@@ -236,19 +274,59 @@ async function saveBaselineScreenshot(page, width, length, component, elevation,
             maxDiffEnergy,
             visibleAngles,
             isolatedDrops,
-            samples
+            samples,
+            ...emission
           };
           sweeps.push(sweep);
 
-          if (maxDiffPixels <= 2 || visibleAngles < 3) {
+          /* Pôvodne tu bola jediná podmienka na rastrový rozdiel a hlásila
+             „component-not-visible" s poznámkou, že diel buď nie je emitovaný,
+             alebo je orezaný, alebo je celkom skrytý. To sú tri rôzne veci a
+             len prvá je chyba. Merané na Koverte 7000 × 5200: päť zo šiestich
+             dielov znižuje počet plôch (odkvap o 1 234 z 2 404, uholníky o 288,
+             väznice o 175, hlavové platne o 60, pätné o 36), a pritom majú cez
+             všetkých 36 azimutov rastrový rozdiel presne nula. Sú v zostave,
+             len ich zvnútra ani zvonku nevidno — a vykresľovač ich preto
+             správne zahadzuje.
+
+             Chyba je, keď sa počet plôch nezmení: vtedy diel z modelu nevypadol
+             preto, že ho nevidno, ale preto, že sa vôbec nevydal. */
+          if (component.ocakavanyPokles === 0) {
+            if (emission.faceDrop !== 0) {
+              findings.push({
+                type: 'component-unexpectedly-emitted',
+                component: component.id,
+                width,
+                length,
+                elevation,
+                faceDrop: emission.faceDrop,
+                symptom: 'Component is drawn at stage framing although the legibility rule should suppress it',
+                probableCause: 'The size threshold in skrutkuj() was removed or weakened'
+              });
+            }
+          } else if (emission.faceDrop <= 0) {
             findings.push({
-              type: 'component-not-visible',
+              type: 'component-not-emitted',
               component: component.id,
               width,
               length,
               elevation,
-              symptom: 'Component isolation produced no meaningful visible raster footprint',
-              probableCause: 'Component is not emitted, is clipped, or is fully hidden for the tested view band'
+              facesVisible: emission.facesVisible,
+              facesHidden: emission.facesHidden,
+              symptom: 'Isolating the component left the emitted face count unchanged',
+              probableCause: 'Component is not emitted at all for this model and size'
+            });
+          } else if (maxDiffPixels <= 2 || visibleAngles < 3) {
+            diagnostics.push({
+              type: 'component-enclosed',
+              component: component.id,
+              width,
+              length,
+              elevation,
+              faceDrop: emission.faceDrop,
+              maxDiffPixels,
+              visibleAngles,
+              symptom: 'Component is emitted but produces no raster footprint in this view band'
             });
           }
 
@@ -290,6 +368,7 @@ async function saveBaselineScreenshot(page, width, length, component, elevation,
     }
 
     const result = {
+      shard: { index: SHARD_INDEX, total: SHARD_TOTAL },
       dimensions: DIMENSIONS,
       rotationSteps: ROTATION_STEPS,
       components: COMPONENTS.map(({ id, elevations }) => ({ id, elevations })),
