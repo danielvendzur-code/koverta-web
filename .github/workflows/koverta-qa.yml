@@ -127,15 +127,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Namerané na behu 35469231125: štyri časti component-visibility
+        # dobehli za 25 až 37 minút, ale occlusion-sweep aj focused-render-qa
+        # skončili presne na 55. minúte ako `cancelled`. Sweep prejde 54
+        # kombinácií rozmerov, takže na tretiny to bolo 18 na časť — priveľa.
+        # Deväť častí dá šesť kombinácií na časť, čiže okolo osemnástich minút.
+        # Focused-render-qa delenie nemalo vôbec; má tri rozmery, tak tri časti.
         include:
-          - { script: 02-occlusion-sweep, shard: 0, shards: 3 }
-          - { script: 02-occlusion-sweep, shard: 1, shards: 3 }
-          - { script: 02-occlusion-sweep, shard: 2, shards: 3 }
+          - { script: 02-occlusion-sweep, shard: 0, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 1, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 2, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 3, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 4, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 5, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 6, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 7, shards: 9 }
+          - { script: 02-occlusion-sweep, shard: 8, shards: 9 }
           - { script: 02-component-visibility, shard: 0, shards: 4 }
           - { script: 02-component-visibility, shard: 1, shards: 4 }
           - { script: 02-component-visibility, shard: 2, shards: 4 }
           - { script: 02-component-visibility, shard: 3, shards: 4 }
-          - { script: 02-focused-render-qa, shard: 0, shards: 1 }
+          - { script: 02-focused-render-qa, shard: 0, shards: 3 }
+          - { script: 02-focused-render-qa, shard: 1, shards: 3 }
+          - { script: 02-focused-render-qa, shard: 2, shards: 3 }
     steps:
       - uses: actions/checkout@v4
         with:
