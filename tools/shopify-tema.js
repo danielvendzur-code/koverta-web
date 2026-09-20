@@ -240,6 +240,11 @@ function preved() {
     /* Medzi koncom hlavného obsahu a pätičkou stoja skripty, ktoré patria
        len tejto stránke — konfigurátor tam má sedem súborov. Bez tohto úseku
        by sa do témy nedostali a stránka by ostala prázdna. */
+    /* Titulok stránky. V admine sa zadáva ako názov a Shopify z neho
+       odvodzuje handle — ten však musí sedieť so šablónou, takže sa zadáva
+       zvlášť. Preto je v zozname aj jedno, aj druhé. */
+    const titulok = (html.match(/<title>([^<]*)<\/title>/) || [, ''])[1]
+      .replace(/\s*[·|]\s*Koverta\s*$/, '').trim();
     const medzi = prepis(html.slice(html.indexOf('</main>') + 7, html.indexOf('<footer class="k kf"')), mapa, zaklad);
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
@@ -250,7 +255,7 @@ function preved() {
 
     if (hlavicka) hlavicky.add(hlavicka);
     if (paticka) paticky.add(paticka);
-    return { a, kde, hlavny, medzi, dopyt, hlavaPrvky, chvostPrvky };
+    return { a, kde, hlavny, medzi, dopyt, titulok, hlavaPrvky, chvostPrvky };
   });
 
   if (hlavicky.size !== 1) chyby.push('hlavička má ' + hlavicky.size + ' verzií');
@@ -342,8 +347,9 @@ ${v.spolocnyChvost.join('\n')}
   if (navodText) fs.writeFileSync(navod, navodText);
   fs.writeFileSync(path.join(CIEL, 'STRANKY-NA-ZALOZENIE.txt'),
     'Stránky, ktoré treba založiť v Online Store → Pages.\n' +
-    'Handle musí sedieť presne, inak si šablónu nenájdu.\n\n' +
-    v.sablony.map((s) => s.a.handle + '\t' + s.a.url).sort().join('\n') + '\n');
+    'Stĺpce: handle (musí sedieť presne, inak si stránka šablónu nenájde),\n' +
+    'názov stránky, adresa.\n\n' +
+    v.sablony.map((s) => s.a.handle + '\t' + s.titulok + '\t' + s.a.url).sort().join('\n') + '\n');
 }
 
 if (require.main === module) {
