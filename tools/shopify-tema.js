@@ -159,14 +159,19 @@ function preved() {
     const a = adresa(subor);
 
     const hlavicka = prepis(vyrez(html, '<header class="kv-header"', '</header>', kde), mapa);
-    const paticka = prepis(vyrez(html, '<footer class="k kf"', '</footer>', kde), mapa);
+    /* Tlačidlo na dopyt v pätičke nesie na stránkach rozmerov zvolený
+       rozmer. Pätička je jedna sekcia, takže sa z toho stane premenná:
+       šablóna stránky si ju nastaví a sekcia ju len vypíše. */
+    let paticka = prepis(vyrez(html, '<footer class="k kf"', '</footer>', kde), mapa);
+    const dopyt = (paticka.match(/<a class="k-btn k-btn--primary" href="([^"]*#ponuka)"/) || [, '#ponuka'])[1];
+    paticka = paticka.replace(/(<a class="k-btn k-btn--primary" href=")[^"]*#ponuka(")/, '$1{{ kv_dopyt }}$2');
     const hlavny = prepis(vyrez(html, '<main', '</main>', kde), mapa);
     if (hlavicka) hlavicky.add(hlavicka);
     if (paticka) paticky.add(paticka);
 
     /* Titulok a popis si na Shopify nesie stránka sama, preto sa z hlavy
        neberú. Ostatné značky v hlave sú na všetkých stránkach rovnaké. */
-    sablony.push({ a, hlavny, kde });
+    sablony.push({ a, hlavny, kde, dopyt });
   }
 
   if (hlavicky.size !== 1) chyby.push('hlavička nie je na všetkých stránkach rovnaká (' + hlavicky.size + ' verzií)');
@@ -196,7 +201,8 @@ if (require.main === module) {
   fs.writeFileSync(path.join(CIEL, 'sections', 'paticka.liquid'), paticka + '\n{% schema %}\n{"name":"Pätička"}\n{% endschema %}\n');
   for (const s of sablony) {
     const meno = s.a.druh === 'index' ? 'index.liquid' : 'page.' + s.a.handle + '.liquid';
-    fs.writeFileSync(path.join(CIEL, 'templates', meno), s.hlavny + '\n');
+    const hlavicka = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
+    fs.writeFileSync(path.join(CIEL, 'templates', meno), hlavicka + s.hlavny + '\n');
   }
   for (const [meno, zdroj] of doTemy) fs.copyFileSync(zdroj, path.join(CIEL, 'assets', meno));
   fs.writeFileSync(path.join(CIEL, 'SUBORY-DO-OBCHODU.txt'),

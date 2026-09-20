@@ -120,7 +120,10 @@ for (const stranka of html(KOREN)) {
 
   /* 1 · width/height na <img> */
   text = text.replace(/<img\b[^>]*>/g, (znacka) => {
-    const src = znacka.match(/\bsrc="([^"]+)"/);
+    /* Obrázky v mega-menu nemajú `src`, ale `data-k-menu-src` — skript ich
+       doplní až pri otvorení ponuky. Rozmer si však nesú rovnako a rovnako
+       podľa neho prehliadač vyhradzuje miesto, takže platí to isté. */
+    const src = znacka.match(/\bsrc="([^"]+)"/) || znacka.match(/\bdata-k-menu-src="([^"]+)"/);
     const w = znacka.match(/\bwidth="(\d+)"/);
     const h = znacka.match(/\bheight="(\d+)"/);
     if (!src || !w || !h) return znacka;
