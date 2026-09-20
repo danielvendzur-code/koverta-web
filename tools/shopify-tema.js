@@ -445,7 +445,12 @@ ${v.spolocnyChvost.join('\n')}
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
       theme_version: '1.0.0', theme_author: 'Koverta', theme_documentation_url: 'https://koverta.sk',
       theme_support_url: 'https://koverta.sk/kontakt/' }], null, 2) + '\n');
-  fs.writeFileSync(path.join(CIEL, 'config', 'settings_data.json'), '{"current":{}}\n');
+  /* `settings_data.json` píše aj Shopify. Editor témy si doň ukladá, ktoré
+     bloky aplikácií sú zapnuté — medzi nimi embed Formfulu s naším formulárom
+     `form_LaKRq0tyt4`. Prevod ho preto nesmie prepísať: prepisom by tlačidlo
+     na dopyt prestalo otvárať dialóg. Zakladá sa len vtedy, keď ešte nie je. */
+  const nastavenia = path.join(CIEL, 'config', 'settings_data.json');
+  if (!fs.existsSync(nastavenia)) fs.writeFileSync(nastavenia, '{"current":{}}\n');
   fs.writeFileSync(path.join(CIEL, 'locales', 'sk.default.json'), '{}\n');
 
   fs.writeFileSync(path.join(CIEL, 'SUBORY-DO-OBCHODU.txt'),

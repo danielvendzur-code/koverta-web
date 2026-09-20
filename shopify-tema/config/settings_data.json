@@ -1,1 +1,41 @@
-{"current":{}}
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "current": {
+    "sections": {
+      "kv-hlavicka": {
+        "type": "kv-hlavicka",
+        "settings": {}
+      },
+      "kv-paticka": {
+        "type": "kv-paticka",
+        "settings": {}
+      }
+    },
+    "content_for_index": [],
+    "blocks": {
+      "2376911714703784909": {
+        "type": "shopify://apps/formful/blocks/app-embed/be9de36b-78a1-4ce9-8de3-f1044fb2ee2e",
+        "disabled": false,
+        "settings": {
+          "form_id": "form_LaKRq0tyt4",
+          "icon_size": 30,
+          "title": "Don't miss out!",
+          "background_color": "#ffffff",
+          "text_color": "#000000",
+          "button_padding": 12,
+          "border_radius": 0,
+          "horizontal_position": 5,
+          "vertical_position": 95
+        }
+      }
+    }
+  }
+}

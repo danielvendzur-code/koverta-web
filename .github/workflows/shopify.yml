@@ -29,6 +29,16 @@ jobs:
 
       - name: Vyrobiť tému
         run: |
+          set -euo pipefail
+          # Nastavenia témy píše aj Shopify: editor si do `settings_data.json`
+          # ukladá zapnuté bloky aplikácií, medzi nimi embed Formfulu. Žijú
+          # len na vetve `shopify`, takže sa odtiaľ musia priniesť, inak by
+          # ich prevod prepísal a tlačidlo na dopyt by prestalo fungovať.
+          if git fetch origin shopify --depth=1 2>/dev/null &&
+             git cat-file -e FETCH_HEAD:config/settings_data.json 2>/dev/null; then
+            mkdir -p shopify-tema/config
+            git show FETCH_HEAD:config/settings_data.json > shopify-tema/config/settings_data.json
+          fi
           node tools/spolocne-casti.js --kontrola
           node tools/shopify-tema.js
 
@@ -39,7 +49,7 @@ jobs:
           git config user.email "noreply@koverta.sk"
           # Strom sa skladá mimo pracovného adresára, takže sa `master`
           # nedotkne ani pri chybe.
-          export GIT_INDEX_FILE="$(mktemp)"
+          export GIT_INDEX_FILE="$(mktemp -u)"
           git --work-tree=shopify-tema add -A
           strom="$(git write-tree)"
           sprava="Téma z $(git rev-parse --short HEAD)"
