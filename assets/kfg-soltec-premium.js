@@ -4500,7 +4500,15 @@ function kvAdresa(kluc, zaloha) {
                  corrugation crowns, so no roof facet is cut and the flashing
                  owns the complete top sight line. */
               put(outer, outer + (sirka + LEM_COVER) * dir, zTop - LEM_ARM + (axis === 'x' ? LEM_ARM : 0), LEM_ARM, true);  // horné rameno
-              put(outer + LEM_T * dir, outer + (LEM_T + LEM_LIP) * dir, zBot, LEM_T);  // zahyb
+              /* Zahyb ide hore do dutiny, nie vodorovne pod rám.
+                 Kým sa ohýbal dovnútra pri spodnej hrane, ležal 2 mm pod
+                 spodnou pásnicou rámu a zdola z neho bol šestnásťmilimetrový
+                 antracitový pruh po celom obvode — najviac v rohoch, kde sa
+                 dva stretli do L priamo vedľa rohového uholníka. Majiteľ
+                 hovorí, že zdola tam má byť vidieť C profily a nič iné.
+                 Ohnutý nahor je to ten istý zahyb plechu, len zavesený
+                 v kapse za lemovaním, kam sa zdola nevidí. */
+              put(outer + LEM_T * dir, outer + 2 * LEM_T * dir, zBot, LEM_LIP);  // zahyb hore
               /* The single closure plane is emitted with the roof materials
                  after they are resolved below. A box here adds two redundant
                  side faces which alternately win against every corrugation. */
@@ -4513,18 +4521,15 @@ function kvAdresa(kluc, zaloha) {
             lemL('x', 0, 1, 0, W, LEM_CELO);                 // čelné, cez celú šírku
             lemL('x', L, -1, 0, W, LEM_CELO);
 
-            /* Folded corner returns belong to the two end flashings. They
-               lap over the side pieces, never share their exterior plane.
-               The small exposed cut edge makes all four assembled corners
-               legible without painted lines or floating seam overlays.
-               Return length is a visual allowance, not a fabrication spec. */
-            const LEM_RETURN = 28;
-            [0, L - LEM_RETURN].forEach(x => {
-              boxFaces(x, -LEM_T, zBot, LEM_RETURN, LEM_T, LEM_H,
-                frame, [], SHAFT, 0, true, true);
-              boxFaces(x, W, zBot, LEM_RETURN, LEM_T, LEM_H,
-                frame, [], SHAFT, 0, true, true);
-            });
+            /* Rohové zahyby von tu boli preto, aby bol roh „čitateľný" —
+               dvadsaťosem milimetrov dlhý plech nalepený zvonka na lemovanie,
+               o poldruha milimetra pred jeho lícom. Vlastný komentár k nim
+               priznával, že dĺžka je výtvarná úvaha, nie výrobný rozmer,
+               a v odmeranom modeli taký diel nie je. Na modeli z nich bol vo
+               všetkých štyroch rohoch zvislý antracitový schod cez celú výšku
+               lemovania. Roh drží aj bez nich: čelné kusy idú cez celú šírku
+               a bočné sa pod ne zatiahnu, takže spoj je presne v hrane.
+               */
 
             /* --- obvodový rám. Jeden C profil 74 × 220, nie dvojica —
                v kompletnej scéne 14069 sú na každej strane presne dva kusy
