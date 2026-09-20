@@ -14,6 +14,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Hlboké kontroly vykresľovania trvajú takmer hodinu a kontrolujú jedinú
+  # vec: čo nakreslí konfigurátor. Pri zmene textu na stránke alebo štýlu
+  # nemajú čo overovať a len držia prácu v rade. Táto úloha zistí, či sa
+  # konfigurátora niečo dotklo, a ostatné sa podľa nej rozhodnú.
+  zmeny:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      konfigurator: ${{ steps.zisti.outputs.konfigurator }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - id: zisti
+        env:
+          ZAKLAD: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          # Pri behu nad vetvou (push) nie je s čím porovnávať, takže sa
+          # kontroluje všetko. Istota je dôležitejšia než ušetrený čas.
+          if [ -z "${ZAKLAD:-}" ]; then
+            echo "konfigurator=true" >> "$GITHUB_OUTPUT"
+            echo "push bez základu — hlboké kontroly bežia"
+            exit 0
+          fi
+          git fetch --no-tags --depth=200 origin "$ZAKLAD" || git fetch --no-tags origin
+          SUBORY=$(git diff --name-only "$ZAKLAD"...HEAD || git diff --name-only HEAD~1 HEAD)
+          echo "$SUBORY"
+          if echo "$SUBORY" | grep -qE '^(konfigurator/|coordination/koverta/|\.github/workflows/)'; then
+            echo "konfigurator=true" >> "$GITHUB_OUTPUT"
+            echo "konfigurátor sa zmenil — hlboké kontroly bežia"
+          else
+            echo "konfigurator=false" >> "$GITHUB_OUTPUT"
+            echo "konfigurátor sa nezmenil — hlboké kontroly sa preskočia"
+          fi
+
   site-content:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -85,6 +122,8 @@ jobs:
   # skončila zakaždým ako `cancelled` — výsledok, ktorý nikto nedostal. Delí sa
   # po rozmeroch; každý shard prejde svoje rozmery celé a doručí vlastný verdikt.
   plynulost:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     name: plynulost (${{ matrix.shard }}/3)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -121,6 +160,8 @@ jobs:
         run: node konfigurator/test/plynulost.js
 
   occlusion-deep:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     name: occlusion-deep (${{ matrix.script }} ${{ matrix.shard }}/${{ matrix.shards }})
     runs-on: ubuntu-24.04
     # Dlhé testy sú rozdelené podľa rozmerov. Každý shard musí skončiť s

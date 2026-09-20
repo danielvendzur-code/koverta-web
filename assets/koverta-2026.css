@@ -13368,3 +13368,60 @@ body:not(.k-home) .k .kh-hero__chip {
 @media (max-width: 619px) {
   body:not(.k-home) .k .kh-hero__chip { font-size: 11px; }
 }
+
+/* ==========================================================================
+   VRSTVA 125 · Karty realizácií stoja, značka za otázkami sa hýbe
+   ==========================================================================
+   Dlaždica s fotografiou sa pri prejdení myšou posunula. Pri mriežke, kde
+   je dlaždíc dvadsať, to znamená, že sa obraz hýbe pod kurzorom vždy, keď
+   ním človek prejde cez stránku. Zvýraznenie ostáva, pohyb nie. */
+.k .kh-cat__item:hover .kh-cat__media img,
+.k .kh-cat__item:hover .kh-cat__card,
+.k .kh-cat__card:hover,
+.k .kh-work__item:hover .kh-work__media img,
+.k .kh-work__item:hover .kh-work__cap span { transform: none; }
+
+/* Značka za častými otázkami stála na mieste. Predtým tam bola fotografia
+   pripnutá k oknu, takže pri posúvaní stránky ostávala stáť a panel cez ňu
+   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť rovnakým
+   spôsobom. Zmenšená je preto, že pri 135 % výšky jej spodok aj vršok
+   ostávali za hranou panelu. */
+@media (min-width: 1000px) {
+  .k .kh-faq__intro::after {
+    background: url("koverta-mark-zvisla.svg") center / auto 108% no-repeat;
+    background-attachment: fixed;
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 126 · Popisky v kartách malými písmenami
+   ==========================================================================
+   Tá istá vec ako v páse faktov v hlavičke: drobný popis nad hodnotou sa
+   sádzal verzálkami s rozpálením. V dvanástich bodoch sa to číta horšie než
+   malé písmená a vedľa hodnôt písaných normálne to pôsobí ako dva zápisy
+   v jednej karte. */
+.k .kh-mat__pojem,
+.k .kh-vcene__co,
+.k .kh-duo__popis,
+.k .kh-fakty__co {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ==========================================================================
+   VRSTVA 127 · Úvodná obrazovka na telefóne sadne do okna
+   ==========================================================================
+   Obsah hlavičky stál na spodnej hrane a pod hodnotením ostával pás, ktorý
+   nič nenesie. Na podstránkach bolo horšie: hlavička potrebovala 677 px,
+   okno má po odpočítaní lišty 603, takže pás faktov končil pod ohybom
+   a bolo ho vidieť len napoly.
+
+   Obsah preto klesá nižšie (menší spodný odstup) a na podstránkach sa horný
+   odstup skracuje zo 78 na 56 px, aby sa celá hlavička vošla do okna. Na
+   stolnom počítači sa nemení nič. */
+@media (max-width: 619px) {
+  .k .kh-hero__box { padding-bottom: 10px; }
+  body:not(.k-home) .k .kh-hero__box { padding-top: 46px; padding-bottom: 12px; }
+  body:not(.k-home) .k .kh-hero__trust { margin-top: 12px; }
+  .k .kh-hero__rating { margin-top: 10px; }
+}
