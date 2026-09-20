@@ -18,8 +18,10 @@
  *   asset_url    `{{ 'meno' | asset_url }}` musí mať súbor v `assets/`
  *   url() v CSS  relatívna adresa musí ležať vedľa v tej istej zložke
  *   include      `{% include 'x' %}` musí mať útržok v `snippets/`
- *   šablóny      téma musí mať `index.liquid` aj `page.liquid`, inak nemá
- *                domovskú stránku a stránky na `Default page` sú prázdne
+ *   šablóny      téma musí mať úvod aj `page.json`, inak nemá domovskú
+ *                stránku a stránky na `Default page` sú prázdne
+ *   sekcia       `kv-stranka` musí púšťať bloky aplikácií (@app), inak sa
+ *                formulár nedá vložiť priamo do stránky
  *   nastavenia   `settings_data.json` nesmie prísť o embed Formfulu, bez
  *                neho tlačidlo dopytu neotvorí nič
  */
@@ -103,12 +105,23 @@ for (const subor of vsetky) {
 
 /* 4 · šablóny, bez ktorých téma nefunguje --------------------------------- */
 
-for (const [meno, preco] of [
-  ['index.liquid', 'téma nemá domovskú stránku'],
-  ['page.liquid', 'stránky na „Default page" sú prázdne'],
+for (const [mena, preco] of [
+  [['index.liquid', 'index.json'], 'téma nemá domovskú stránku'],
+  [['page.json', 'page.liquid'], 'stránky na „Default page" sú prázdne'],
 ]) {
-  const cesta = path.join(TEMA, 'templates', meno);
-  if (!fs.existsSync(cesta)) nalezy.push('shopify-tema/templates/' + meno + ' chýba — ' + preco);
+  if (!mena.some((m) => fs.existsSync(path.join(TEMA, 'templates', m)))) {
+    nalezy.push('shopify-tema/templates/' + mena[0] + ' chýba — ' + preco);
+  }
+}
+
+/* Sekcia stránky je jediné miesto, kam sa dá umiestniť blok aplikácie —
+   teda jediná cesta, ako dostať formulár priamo do stránky, nie len do
+   vyskakovacieho okna. Bez `@app` v jej schéme editor bloky neponúkne. */
+const sekcia = path.join(TEMA, 'sections', 'kv-stranka.liquid');
+if (!fs.existsSync(sekcia)) {
+  nalezy.push('shopify-tema/sections/kv-stranka.liquid chýba — do stránky sa nedá vložiť formulár');
+} else if (!/"type"\s*:\s*"@app"/.test(fs.readFileSync(sekcia, 'utf8'))) {
+  nalez(sekcia, 'schéma nepúšťa bloky aplikácií (@app), formulár sa do stránky nedá vložiť');
 }
 
 /* 5 · embed Formfulu ------------------------------------------------------ */

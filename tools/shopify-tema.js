@@ -301,9 +301,14 @@ function preved() {
     paticka = paticka.replace(/(<a class="k-btn k-btn--primary" href=")[^"]*#ponuka(")/, '$1{{ kv_dopyt }}$2');
     let hlavny = prepis(vyrez(html, '<main', '</main>', kde), mapa, zaklad);
 
-    /* Náš formulár nemá na pláne Starter kam posielať. Tlačidlo ostáva naše
-       a otvorí dialóg Formfulu; ten nesie prílohy aj captchu. */
+    /* Náš formulár nemá na pláne Starter kam posielať, takže na jeho mieste
+       stojí miesto pre blok aplikácie — `{{ kv_formular }}`. Sekcia stránky
+       doň vloží bloky, ktoré má na sebe umiestnené (Formful alebo Forms), a
+       formulár tak stojí priamo v stránke, nie len vo vyskakovacom okne.
+       Kým tam blok nie je, ostáva tlačidlo, ktoré otvorí dialóg Formfulu —
+       aby stránka nebola bez cesty k dopytu ani prvý deň. */
     hlavny = hlavny.replace(/<form id="dopyt"[\s\S]*?<\/form>/,
+      '{{ kv_formular }}' +
       '<p class="kh-form__vyzva"><button type="button" class="k-btn k-btn--primary" ' +
       'onclick="Formful.openDialog(\'' + FORMFUL + '\')">Otvoriť formulár dopytu</button></p>');
 
@@ -470,37 +475,61 @@ ${v.spolocnyChvost.join('\n')}
    * page` je `templates/page.liquid`, ktorý téma vôbec nemala. Výsledkom je
    * prázdna stránka, nech sa zakladá akokoľvek pozorne.
    *
-   * `templates/page.liquid` preto telo nájde sám, podľa handle stránky.
-   * Starý `include` berie meno z premennej (`render` ho musí mať napísané),
-   * takže osemdesiattri stránok nepotrebuje ani jedno ručné priradenie
-   * šablóny. Šablóny `page.<handle>.liquid` ostávajú pre prípad, že sa
-   * niektorej stránke priradia ručne — vtedy vykreslia ten istý útržok. */
+   * `templates/page.json` preto telo nájde sám, podľa handle stránky. Starý
+   * `include` berie meno z premennej (`render` ho musí mať napísané) a na
+   * rozdiel od `render` vidí do okolia, takže útržok dosiahne na blok
+   * formulára, ktorý sekcia vykreslila. Osemdesiattri stránok tak nepotrebuje
+   * ani jedno ručné priradenie šablóny — a keďže šablóna je jedna, blok
+   * aplikácie sa umiestňuje raz a platí pre všetky. */
   for (const s of v.sablony) {
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
     const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
     const telo = hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
       (navyse ? '\n' + navyse + '\n' : '\n');
     fs.writeFileSync(path.join(CIEL, 'snippets', s.a.handle + '.liquid'), telo);
-    fs.writeFileSync(path.join(CIEL, 'templates', 'page.' + s.a.handle + '.liquid'),
-      "{% include '" + s.a.handle + "' %}\n");
   }
+
+  /* Sekcia stránky. Existuje kvôli jednej veci: bloky aplikácií sa dajú
+   * umiestniť len do sekcie, nie do obyčajnej šablóny. Vďaka nej si majiteľ
+   * v editore témy raz pridá blok Formfulu (alebo Forms) a formulár stojí
+   * priamo v stránke — nie len vo vyskakovacom okne, a na všetkých stránkach
+   * naraz, lebo ho nesie šablóna, nie jednotlivá stránka.
+   *
+   * Telo stránky sa berie podľa handle. Bloky sa vykreslia do `kv_formular`,
+   * teda presne tam, kde na statickom webe stojí formulár dopytu; keď nie je
+   * umiestnený žiadny, ostane tam prázdno a pod ním tlačidlo na dialóg. */
+  const handleVsetky = v.sablony.map((x) => x.a.handle);
+  fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
+    '{%- capture kv_formular -%}\n' +
+    '{%- for block in section.blocks -%}\n' +
+    '  <div class="kh-form__blok" {{ block.shopify_attributes }}>{% render block %}</div>\n' +
+    '{%- endfor -%}\n' +
+    '{%- endcapture -%}\n' +
+    '{%- assign kv_nase = "' + handleVsetky.join(',') + '" | split: "," -%}\n' +
+    '{%- if kv_nase contains page.handle -%}\n' +
+    '  {% include page.handle %}\n' +
+    '{%- else -%}\n' +
+    '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
+    '{{ page.content }}{{ kv_formular }}</div></main>\n' +
+    '{%- endif -%}\n' +
+    '\n{% schema %}\n' +
+    JSON.stringify({ name: 'Koverta stránka', blocks: [{ type: '@app' }], settings: [] }, null, 2) +
+    '\n{% endschema %}\n');
+
+  /* Šablóna stránky je JSON, aby tú sekciu niesla a blok aplikácie sa dal
+     v editore umiestniť. Liquid šablóna sekcie ani bloky nepozná. */
+  fs.writeFileSync(path.join(CIEL, 'templates', 'page.json'),
+    JSON.stringify({
+      sections: { hlavna: { type: 'kv-stranka', blocks: {}, block_order: [], settings: {} } },
+      order: ['hlavna']
+    }, null, 2) + '\n');
 
   /* Úvod. Bez `templates/index.liquid` téma nemá domovskú stránku vôbec. */
   const uvod = v.sablony.find((s) => s.a.druh === 'index');
   fs.writeFileSync(path.join(CIEL, 'templates', 'index.liquid'),
     uvod ? "{% include '" + uvod.a.handle + "' %}\n" : '\n');
 
-  /* Predvolená šablóna stránky. Handle sa overuje proti zoznamu, aby
-     `include` nehľadal útržok, ktorý neexistuje. */
-  const handle = v.sablony.map((s) => s.a.handle);
-  fs.writeFileSync(path.join(CIEL, 'templates', 'page.liquid'),
-    '{%- assign kv_nase = "' + handle.join(',') + '" | split: "," -%}\n' +
-    '{%- if kv_nase contains page.handle -%}\n' +
-    '  {% include page.handle %}\n' +
-    '{%- else -%}\n' +
-    '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
-    '{{ page.content }}</div></main>\n' +
-    '{%- endif -%}\n');
+
 
   /* CSS sa prepisuje, nie kopíruje — a prepis do zoznamu pridáva ďalšie
      súbory (písmo, kresby), takže sa chodí dokola, kým nepribúdajú. */

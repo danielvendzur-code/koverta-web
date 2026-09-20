@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "hlavna": {
+      "type": "kv-stranka",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    }
+  },
+  "order": [
+    "hlavna"
+  ]
+}

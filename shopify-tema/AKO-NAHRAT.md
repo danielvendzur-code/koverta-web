@@ -68,9 +68,16 @@ lebo by v hlavičke stáli dvakrát a druhý by Google ignoroval.
 Dopyty vybavuje **Formful**, formulár `form_LaKRq0tyt4`. Naše tlačidlo
 „Otvoriť formulár dopytu" volá `Formful.openDialog('form_LaKRq0tyt4')`.
 
-Aby to fungovalo, musí byť na stránke umiestnený **blok aplikácie Formful**.
-V editore témy (Customize) pridaj App block Formful na tú stránku, kde má
-dialóg fungovať. Bez neho sa skript Formfulu na stránku nedostane a tlačidlo
+Dopyt sa dá mať dvoma spôsobmi a téma zvláda oba.
+
+**Formulár priamo v stránke.** V editore témy (Customize) prepni hore na
+**Pages**, otvor ktorúkoľvek stránku a do sekcie **Koverta stránka** pridaj
+**App block** Formfulu (alebo Forms). Umiestňuje sa **raz**: všetky stránky
+stoja na tej istej šablóne `page.json`, takže sa formulár objaví na každej,
+presne tam, kde na starom webe stál formulár dopytu.
+
+**Vyskakovací dialóg.** Zapnutý app embed Formfulu drží tlačidlo „Otvoriť
+formulár dopytu". Bez neho sa skript Formfulu na stránku nedostane a tlačidlo
 neurobí nič.
 
 Nastavené to už máte: prílohy do 10 MB, captcha, e-mail na
