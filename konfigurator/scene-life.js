@@ -552,8 +552,14 @@
       const pauza=panel.querySelector('[data-scene-pause]');
       if(pauza)pauza.textContent=state.paused?'Spustiť':'Pozastaviť';
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého
-         nákresu nepatria. Namiesto ticha to panel povie. */
-      const flat=Boolean(context&&context.renderer&&context.renderer!=='webgl-depth');
+         nákresu nepatria. Namiesto ticha to panel povie.
+
+         Menuje sa, ktorý vykresľovač vybavenie kreslí, nie ktorý ho nekreslí.
+         Keď pribudol `webgl2-pbr`, podmienka „všetko okrem `webgl-depth`" ho
+         zaradila medzi ploché nákresy a panel pod vykresleným autom tvrdil,
+         že sa vybavenie nezobrazí. */
+      const KRESLIA_VYBAVENIE=['webgl-depth','webgl2-pbr'];
+      const flat=Boolean(context&&context.renderer&&!KRESLIA_VYBAVENIE.includes(context.renderer));
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres, vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
         (state.mode==='car'?(()=>{

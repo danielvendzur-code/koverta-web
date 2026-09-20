@@ -30,6 +30,7 @@ jobs:
         run: |
           node konfigurator/test/koverta-render-regression.js
           node tools/seo-audit.js
+          node tools/verzie-suborov.js
           python3 tools/generuj-rozmery.py
           git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
 
