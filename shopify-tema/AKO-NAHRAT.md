@@ -46,13 +46,15 @@ znova ručne.
 
 `STRANKY-NA-ZALOZENIE.txt` má 83 riadkov. Pre každú treba v
 **Online Store → Pages** založiť stránku s presne tým handle, ktorý je
-v prvom stĺpci. Bez zhody handle si stránka svoju šablónu nenájde a zobrazí
-sa prázdna.
+v prvom stĺpci. Na handle záleží — podľa neho si stránka nájde svoj obsah.
 
-Pri zakladaní stránky sa v pravom stĺpci vyberá **Theme template** — musí to
-byť šablóna s rovnakým menom (`nove-kontakt` → template `nove-kontakt`).
+**Theme template netreba nastavovať.** Nechaj `Default page`. Shopify aj tak
+v tom zozname ponúka len šablóny publikovanej témy, takže kým je naša téma
+draft, `nove-…` tam ani nie sú. `templates/page.liquid` si obsah nájde sám
+podľa handle stránky. Šablóny `page.<handle>` v téme ostávajú pre prípad, že
+by sa niektorej stránke priradili ručne — vykreslia to isté.
 
-Obsah stránky nechaj prázdny. Celý obsah je v šablóne.
+Obsah stránky nechaj prázdny. Celý obsah je v téme.
 
 ### 4 · Formulár
 

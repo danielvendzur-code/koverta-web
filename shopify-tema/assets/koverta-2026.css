@@ -10,7 +10,7 @@
   font-weight: 400 800;
   font-stretch: 85% 120%;
   font-display: swap;
-  src: url(pismo/archivo-latin.woff2) format('woff2');
+  src: url(pismo-archivo-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
@@ -19,7 +19,7 @@
   font-weight: 400 800;
   font-stretch: 85% 120%;
   font-display: swap;
-  src: url(pismo/archivo-latin-ext.woff2) format('woff2');
+  src: url(pismo-archivo-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -6317,7 +6317,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: url("koverta-mark-zvisla.svg") center / auto 135% no-repeat;
+    background: url(koverta-mark-zvisla.svg) center / auto 135% no-repeat;
     opacity: 0.13;
     pointer-events: none;
   }
@@ -13383,14 +13383,39 @@ body:not(.k-home) .k .kh-hero__chip {
 
 /* Značka za častými otázkami stála na mieste. Predtým tam bola fotografia
    pripnutá k oknu, takže pri posúvaní stránky ostávala stáť a panel cez ňu
-   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť rovnakým
-   spôsobom. Zmenšená je preto, že pri 135 % výšky jej spodok aj vršok
-   ostávali za hranou panelu. */
+   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť.
+
+   Prvý pokus to robil cez `background-attachment: fixed` a bola to chyba:
+   pri `fixed` sa podklad neumiestňuje voči prvku, ale voči oknu. `center`
+   teda značku položil do stredu okna — a tmavý panel stojí vľavo, v necelej
+   tretine šírky. Značka tak celý čas ležala vedľa panelu a nebolo ju vidno
+   vôbec; zmizla aj tá, čo tam predtým stála.
+
+   Panel je teraz podkladu znova vlastným rámom, takže značka je tam, kde má
+   byť. Pohyb robí posun podľa polohy sekcie v okne. Prehliadač, ktorý ho
+   nepozná, ukáže značku stojacu na mieste — to je horší, nie pokazený stav.
+   `inset` je zámerne väčší než panel, aby posun neodhalil hranu, a `overflow`
+   panelu vršok aj spodok značky oreže. */
 @media (min-width: 1000px) {
   .k .kh-faq__intro::after {
-    background: url("koverta-mark-zvisla.svg") center / auto 108% no-repeat;
-    background-attachment: fixed;
+    inset: -12% 0;
+    background: url(koverta-mark-zvisla.svg) center / auto 100% no-repeat;
+    background-attachment: scroll;
   }
+  @supports (animation-timeline: view()) {
+    .k .kh-faq__intro::after {
+      animation: kv-faq-znacka linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes kv-faq-znacka {
+  from { transform: translateY(-9%); }
+  to { transform: translateY(9%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-faq__intro::after { animation: none; transform: none; }
 }
 
 /* ==========================================================================

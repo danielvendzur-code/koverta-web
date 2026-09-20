@@ -13383,14 +13383,39 @@ body:not(.k-home) .k .kh-hero__chip {
 
 /* Značka za častými otázkami stála na mieste. Predtým tam bola fotografia
    pripnutá k oknu, takže pri posúvaní stránky ostávala stáť a panel cez ňu
-   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť rovnakým
-   spôsobom. Zmenšená je preto, že pri 135 % výšky jej spodok aj vršok
-   ostávali za hranou panelu. */
+   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť.
+
+   Prvý pokus to robil cez `background-attachment: fixed` a bola to chyba:
+   pri `fixed` sa podklad neumiestňuje voči prvku, ale voči oknu. `center`
+   teda značku položil do stredu okna — a tmavý panel stojí vľavo, v necelej
+   tretine šírky. Značka tak celý čas ležala vedľa panelu a nebolo ju vidno
+   vôbec; zmizla aj tá, čo tam predtým stála.
+
+   Panel je teraz podkladu znova vlastným rámom, takže značka je tam, kde má
+   byť. Pohyb robí posun podľa polohy sekcie v okne. Prehliadač, ktorý ho
+   nepozná, ukáže značku stojacu na mieste — to je horší, nie pokazený stav.
+   `inset` je zámerne väčší než panel, aby posun neodhalil hranu, a `overflow`
+   panelu vršok aj spodok značky oreže. */
 @media (min-width: 1000px) {
   .k .kh-faq__intro::after {
-    background: url("koverta-mark-zvisla.svg") center / auto 108% no-repeat;
-    background-attachment: fixed;
+    inset: -12% 0;
+    background: url("koverta-mark-zvisla.svg") center / auto 100% no-repeat;
+    background-attachment: scroll;
   }
+  @supports (animation-timeline: view()) {
+    .k .kh-faq__intro::after {
+      animation: kv-faq-znacka linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes kv-faq-znacka {
+  from { transform: translateY(-9%); }
+  to { transform: translateY(9%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-faq__intro::after { animation: none; transform: none; }
 }
 
 /* ==========================================================================

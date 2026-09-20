@@ -124,6 +124,18 @@ function naSubor(url) {
   return "{{ '" + meno + "' | file_url }}";
 }
 
+/* Súbor, ktorý leží v koreni webu a nie je ani stránka, ani `assets`:
+   `site.webmanifest`. Na Shopify taká adresa neexistuje — obchod má koreň
+   svoj — takže sa na ňu odkáže plnou adresou tam, kde ten súbor naozaj je. */
+function naKoren(url) {
+  if (!url.startsWith('/') || url.startsWith('//')) return null;
+  const bez = url.split('?')[0].split('#')[0].slice(1);
+  if (!bez || bez.includes('/')) return null;
+  if (!/\.(webmanifest|txt|xml|ico)$/i.test(bez)) return null;
+  if (!fs.existsSync(path.join(KOREN, bez))) return null;
+  return PAGES_ZAKLAD + '/' + bez;
+}
+
 function naKonfigurator(url) {
   const bez = url.split('?')[0].split('#')[0];
   const m = bez.match(/(?:^|\/)konfigurator\/([^/]+\.(?:js|css|svg))$/) ||
@@ -163,7 +175,7 @@ function prepis(html, mapa, zaklad) {
     const nove = kusy.map((kus) => {
       const t = kus.trim();
       const [cesta, ...zvysok] = t.split(/\s+/);
-      const nova = naSubor(cesta) || naKonfigurator(cesta) || naStranku(cesta, mapa, zaklad);
+      const nova = naSubor(cesta) || naKonfigurator(cesta) || naStranku(cesta, mapa, zaklad) || naKoren(cesta);
       if (!nova) return kus;
       zmenene = true;
       return (kusy.length > 1 ? ' ' : '') + [nova, ...zvysok].join(' ');
@@ -195,6 +207,55 @@ function prvky(text) {
 /* Značky, ktoré si na Shopify robí stránka sama alebo ich dodá obchod. */
 function shopifyRobiSam(prvok) {
   return /<title|<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|application\/ld\+json|<link rel="preload"|<meta charset|<meta name="viewport"/i.test(prvok);
+}
+
+/* Adresy vnútri CSS.
+ *
+ * Štýl si písmo aj kresby pýta sám, cez `url(...)`, a tie adresy sú písané
+ * voči priečinku, v ktorom súbor leží: `url(pismo/archivo-latin.woff2)`,
+ * `url("koverta-mark-zvisla.svg")`, v konfigurátore `url(../assets/pismo/…)`.
+ * V téme sú ale všetky súbory v jednej plochej zložke, takže podpriečinok
+ * `pismo/` tam neexistuje a prehliadač dostane 404: Archivo sa nenačíta
+ * a písmo spadne na náhradný Arial, otočená značka za Častými otázkami
+ * zmizne. Značkovanie sa prepisuje, obsah CSS sa doteraz neprepisoval.
+ *
+ * Meno sa splošti rovnako ako pri značkovaní a odkaz ostane relatívny —
+ * súbor leží vedľa štýlu v tej istej zložke témy, takže Liquid netreba
+ * a `.css` sa nemusí premenúvať na `.css.liquid`. */
+const CSS_URL = /url\(\s*(['"]?)([^'")]+)\1\s*\)/g;
+
+function menoVTeme(naDisku) {
+  const rel = path.relative(KOREN, naDisku).replace(/\\/g, '/');
+  if (rel.startsWith('assets/')) return rel.slice('assets/'.length).replace(/\//g, '-');
+  if (rel.startsWith('konfigurator/')) return 'kfg-' + rel.slice('konfigurator/'.length).replace(/\//g, '-');
+  return rel.replace(/\//g, '-');
+}
+
+function prepisCss(text, zdroj) {
+  return text.replace(CSS_URL, (cele, uvodzovka, adresa) => {
+    if (/^(?:https?:|data:|\/\/|#|\{\{|\{%)/i.test(adresa) || !adresa.trim()) return cele;
+    const bez = adresa.split('?')[0].split('#')[0];
+    if (!bez) return cele;
+    const naDisku = bez.startsWith('/')
+      ? path.join(KOREN, bez)
+      : path.resolve(path.dirname(zdroj), bez);
+    if (!naDisku.startsWith(KOREN) || !fs.existsSync(naDisku)) {
+      chyby.push('CSS ' + path.relative(KOREN, zdroj) + ' pýta ' + adresa + ', ten súbor nie je');
+      return cele;
+    }
+    const meno = menoVTeme(naDisku);
+    if (DO_TEMY.has(path.extname(naDisku).toLowerCase())) {
+      doTemy.set(meno, naDisku);
+      return 'url(' + meno + ')';
+    }
+    /* Fotografia v CSS. Do témy sa nezmestí a `file_url` je Liquid, ktorý
+       obyčajné `.css` nevie — preto plná adresa, tá platí vždy. */
+    doObchodu.set(meno, path.relative(KOREN, naDisku));
+    if (FOTKY === 'pages') return 'url(' + PAGES_ZAKLAD + '/' + path.relative(KOREN, naDisku).replace(/\\/g, '/') + ')';
+    chyby.push('CSS ' + path.relative(KOREN, zdroj) + ' pýta fotografiu ' + adresa +
+      '; pri KV_FOTKY=obchod sa na ňu v CSS nedá odkázať');
+    return cele;
+  });
 }
 
 /* ---------------------------------------------------------------- beh */
@@ -323,15 +384,62 @@ ${v.spolocnyChvost.join('\n')}
     '{%- assign kv_dopyt = kv_dopyt | default: "#ponuka" -%}\n' + v.paticka +
     '\n{% schema %}\n{"name":"Koverta pätička"}\n{% endschema %}\n');
 
+  /* Telo každej stránky ide do `snippets/`, nie rovno do šablóny.
+   *
+   * Shopify ponúka v Online Store → Pages pod „Theme template" len šablóny
+   * **publikovanej** témy. Kým je naša téma draft, jej `page.nove-…` sa
+   * v tom zozname neobjavia a stránky ostanú na `Default page` — a `Default
+   * page` je `templates/page.liquid`, ktorý téma vôbec nemala. Výsledkom je
+   * prázdna stránka, nech sa zakladá akokoľvek pozorne.
+   *
+   * `templates/page.liquid` preto telo nájde sám, podľa handle stránky.
+   * Starý `include` berie meno z premennej (`render` ho musí mať napísané),
+   * takže osemdesiattri stránok nepotrebuje ani jedno ručné priradenie
+   * šablóny. Šablóny `page.<handle>.liquid` ostávajú pre prípad, že sa
+   * niektorej stránke priradia ručne — vtedy vykreslia ten istý útržok. */
   for (const s of v.sablony) {
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
     const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
+    const telo = hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
+      (navyse ? '\n' + navyse + '\n' : '\n');
+    fs.writeFileSync(path.join(CIEL, 'snippets', s.a.handle + '.liquid'), telo);
     fs.writeFileSync(path.join(CIEL, 'templates', 'page.' + s.a.handle + '.liquid'),
-      hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
-      (navyse ? '\n' + navyse + '\n' : '\n'));
+      "{% include '" + s.a.handle + "' %}\n");
   }
 
-  for (const [meno, zdroj] of doTemy) fs.copyFileSync(zdroj, path.join(CIEL, 'assets', meno));
+  /* Úvod. Bez `templates/index.liquid` téma nemá domovskú stránku vôbec. */
+  const uvod = v.sablony.find((s) => s.a.druh === 'index');
+  fs.writeFileSync(path.join(CIEL, 'templates', 'index.liquid'),
+    uvod ? "{% include '" + uvod.a.handle + "' %}\n" : '\n');
+
+  /* Predvolená šablóna stránky. Handle sa overuje proti zoznamu, aby
+     `include` nehľadal útržok, ktorý neexistuje. */
+  const handle = v.sablony.map((s) => s.a.handle);
+  fs.writeFileSync(path.join(CIEL, 'templates', 'page.liquid'),
+    '{%- assign kv_nase = "' + handle.join(',') + '" | split: "," -%}\n' +
+    '{%- if kv_nase contains page.handle -%}\n' +
+    '  {% include page.handle %}\n' +
+    '{%- else -%}\n' +
+    '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
+    '{{ page.content }}</div></main>\n' +
+    '{%- endif -%}\n');
+
+  /* CSS sa prepisuje, nie kopíruje — a prepis do zoznamu pridáva ďalšie
+     súbory (písmo, kresby), takže sa chodí dokola, kým nepribúdajú. */
+  const hotove = new Set();
+  for (let kolo = 0; kolo < 8; kolo++) {
+    const zvysok = [...doTemy].filter(([meno]) => !hotove.has(meno));
+    if (!zvysok.length) break;
+    for (const [meno, zdroj] of zvysok) {
+      hotove.add(meno);
+      if (path.extname(meno).toLowerCase() === '.css') {
+        fs.writeFileSync(path.join(CIEL, 'assets', meno),
+          prepisCss(fs.readFileSync(zdroj, 'utf8'), zdroj));
+      } else {
+        fs.copyFileSync(zdroj, path.join(CIEL, 'assets', meno));
+      }
+    }
+  }
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
