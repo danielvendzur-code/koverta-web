@@ -2,7 +2,17 @@
    No price, product dimension or louver state is mutated by this module. */
 (() => {
   'use strict';
-  const base = new URL('./scene-assets/', document.currentScript.src);
+  /* Kde ležia modely vybavenia.
+
+     Na statickom webe sú v priečinku vedľa tohto súboru, takže sa adresa
+     odvodí od neho. Na Shopify to tak nejde: priečinok tém je plochý,
+     podadresár v ňom neexistuje, a `.bin.gz` sa medzi assety témy ani nahrať
+     nedá — musí ísť do Súborov obchodu, čo je celkom iná adresa na CDN.
+     Stránka ju preto vie oznámiť premennou `window.KV_SCENE_ASSETS` a tá má
+     prednosť. Keď ju nenastaví nikto, platí pôvodné správanie. */
+  const base = window.KV_SCENE_ASSETS
+    ? new URL(window.KV_SCENE_ASSETS, location.href)
+    : new URL('./scene-assets/', document.currentScript.src);
   const assets = new Map();
   const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
   /* Bounds are the packed mesh's own extents in millimetres. They drive the
