@@ -356,6 +356,30 @@ function zapis(v) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Značky pre vyhľadávače.
+
+     Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
+     lenže content_for_header medzi ne titulok ani popis nedáva, tie patria
+     šablóne. Kým ich tu nebolo, nemala žiadna stránka témy titulok vôbec.
+
+     Berú sa z políčok „Search engine listing" pri stránke, teda z toho, čo je
+     v štvrtom a piatom stĺpci STRANKY-NA-ZALOZENIE.txt. Vlastné sem
+     nepíšeme: stáli by v hlavičke dvakrát a Google by druhý ignoroval.
+     Adresu canonical dáva Shopify a je to jeho adresa, nie naša. -->
+<title>{{ page_title }}</title>
+{%- if page_description %}
+<meta name="description" content="{{ page_description | escape }}">
+{%- endif %}
+<link rel="canonical" href="{{ canonical_url }}">
+<meta property="og:site_name" content="{{ shop.name }}">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ page_title | escape }}">
+<meta property="og:url" content="{{ canonical_url }}">
+{%- if page_description %}
+<meta property="og:description" content="{{ page_description | escape }}">
+{%- endif %}
+<meta name="twitter:card" content="summary_large_image">
 {{ content_for_header }}
 ${v.spolocnaHlava.join('\n')}
 </head>

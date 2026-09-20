@@ -137,6 +137,34 @@ for (const stranka of html(KOREN)) {
     return znacka.replace(/\bwidth="\d+"/, 'width="' + r.w + '"').replace(/\bheight="\d+"/, 'height="' + r.h + '"');
   });
 
+  /* 2a · srcset musí byť tá istá fotografia ako src
+     Pri výmene fotografie sa ľahko prepíše `src` a `srcset` sa nechá tak.
+     Značka potom sľubuje jednu fotografiu a prehliadač načíta druhú — a na
+     väčšine obrazoviek vyhrá práve `srcset`, takže je vidieť tú starú.
+     Porovnáva sa základ mena bez šírkovej prípony `-w640` a bez koncovky. */
+  text.replace(/<img\b[^>]*>/g, (znacka) => {
+    const src = znacka.match(/\bsrc="([^"]+)"/);
+    const sada = znacka.match(/\bsrcset="([^"]*)"/);
+    if (!src || !sada) return znacka;
+    /* Meno bez koncovky. Šírková prípona sa neodstrihuje: fotografie
+       v galérii sa volajú `img_4355-w1000.jpg` a ich zmenšeniny
+       `img_4355-w1000-w640.webp`, takže odstrihnutie by z nich urobilo dve
+       rôzne fotografie. Zmenšenina je preto meno zdroja plus jedna šírková
+       prípona — alebo to isté meno v inej koncovke. */
+    const bezKoncovky = (u) => path.basename(u.split('?')[0]).replace(/\.[a-z0-9]+$/i, '');
+    const chcene = bezKoncovky(src[1]);
+    for (const kus of sada[1].split(',')) {
+      const adresa = kus.trim().split(/\s+/)[0];
+      if (!adresa) continue;
+      const m = bezKoncovky(adresa);
+      if (m !== chcene && m.replace(/-w\d+$/i, '') !== chcene) {
+        zapis({ co: 'srcset ' + path.basename(adresa), uvadza: 'inú fotografiu než src', ma: chcene });
+        break;
+      }
+    }
+    return znacka;
+  });
+
   /* 2 · šírkové popisy v srcset a imagesrcset */
   text = text.replace(/\b(imagesrcset|srcset)="([^"]*)"/g, (cele, meno, hodnota) => {
     const nove = popisy(stranka, hodnota);
