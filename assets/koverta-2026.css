@@ -1304,7 +1304,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 @media (max-width: 699px) {  .kv-bar__in { min-height: 64px; }
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    2026-08-29 — ART-DIRECTION REFINEMENT
    Kompozícia vychádza z odsúhlasených návrhov, ale všetky produkčné
    obrázky zostávajú reálnymi fotografiami Koverta/SOLTEC a logo je
@@ -13489,4 +13489,65 @@ body:not(.k-home) .k .kh-hero__chip {
       animation-range: cover 0% cover 100%;
     }
   }
+}
+
+/* ==========================================================================
+   VRSTVA 129 · Cielené opravy podľa obsahovej kontroly
+   ========================================================================== */
+
+/* V úvode FAQ sa má pri rolovaní držať text, nie pohybovať značka za ním.
+   `overflow: hidden` na rodičovi vytváral vlastný scrollovací kontajner a
+   tým blokoval sticky potomka. Po odstránení dekorácie môže panel orez
+   bezpečne pustiť a sticky opäť počíta voči stránke. */
+.k .kh-faq__intro::after { content: none !important; animation: none !important; }
+@media (min-width: 1000px) {
+  .k .kh-faq__intro { overflow: visible; view-timeline-name: none; }
+  .k .kh-faq__intro-in {
+    position: sticky;
+    top: clamp(96px, 13vh, 150px);
+  }
+}
+@media (max-width: 999px) {
+  .k .kh-faq__intro-in { position: static; }
+}
+
+/* Biele hodnotenie pod faktami v úvodnej obrazovke sa neopakuje. */
+.k .kh-hero__rating { display: none !important; }
+
+/* Fotografia v bloku Kompletný servis je na každej stránke tá istá. Pôvodný
+   obrázok ďalej drží rozmery prvku, ale vizuálne ho nahrádza spoločný záber. */
+.k .kh-cta__foto {
+  background: #171d20 url("koverta-hero-sibenik-poster.jpg") center / cover no-repeat;
+}
+.k .kh-cta__foto img { opacity: 0; }
+
+/* Galériová fotografia ani jej dlaždica sa po prejdení myšou nesmie pohnúť.
+   Platí to aj pre prvú fotografiu na stránke prístreškov pre autá. */
+@media (hover: hover) {
+  .k .kh-cat__item:not(:has(.kh-cat__card)),
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media,
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img,
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__media,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__media img,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__body {
+    transform: none !important;
+    flex-grow: initial !important;
+    flex-basis: auto !important;
+  }
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img {
+    transition: none !important;
+  }
+}
+
+/* Na telefóne ostáva FAQ v jednom stĺpci, bez sticky správania a bez
+   vodorovného pretečenia. */
+@media (max-width: 619px) {
+  .k .kh-faq__grid,
+  .k .kh-faq__intro,
+  .k .kh-faq__list { min-width: 0; width: 100%; }
+  .k .kh-faq__intro { border-radius: var(--k-r) var(--k-r) 0 0; }
+  .k .kh-faq__list { border-radius: 0 0 var(--k-r) var(--k-r); }
+  .k .kh-cta__foto { min-height: 220px; }
 }
