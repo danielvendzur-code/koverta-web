@@ -96,6 +96,28 @@
     znackaSoltec: "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png",
     modely: '/pages/nove-pouzite-modely'
   };
+  /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
+     fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
+     prevod inak nevidí; bez tejto tabuľky by na Shopify ukazovali na
+     /pages/assets/… a /carport-soltec/, teda nikam. */
+  window.KV_CESTY = {
+    "./pristresky-pre-auta/": "/pages/nove-pristresky-pre-auta",
+    "./assets/koverta-pristresok-vahovce-takac-upscaled.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-pristresok-vahovce-takac-upscaled.jpg",
+    "./carport-soltec/": "/pages/nove-carport-soltec",
+    "./assets/soltec-carport-sl240-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg",
+    "./zahradne-pristresky/": "/pages/nove-zahradne-pristresky",
+    "./assets/foto/20250522_144729-w600.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/foto/20250522_144729-w600.jpg",
+    "./bioklimaticke-pergoly/": "/pages/nove-bioklimaticke-pergoly",
+    "./assets/soltec-bio-hero-2026.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-bio-hero-2026.jpg",
+    "./pevne-prestresenia/": "/pages/nove-pevne-prestresenia",
+    "./assets/soltec-canopy-hero.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-hero.jpg",
+    "./tienenie/": "/pages/nove-tienenie",
+    "./assets/soltec-canopy-panels-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-panels-real.jpg",
+    "./outdoor-kuchyne/": "/pages/nove-outdoor-kuchyne",
+    "./assets/soltec-kuchyna-terasa.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-kuchyna-terasa.jpg",
+    "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
+    "./assets/soltec-mark.png": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png"
+  };
   window.KV_SCENE_ASSETS = "https://danielvendzur-code.github.io/koverta-web/konfigurator/scene-assets/";
 </script>
 {% section 'kv-hlavicka' %}
