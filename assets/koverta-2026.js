@@ -2856,13 +2856,18 @@
     /* Úvodné video má 7,6 MB. Na počítači sa stiahne na pozadí a nikto si to
        nevšimne, na telefóne je to celý dátový balík za jednu návštevu — a to
        pri zábere, ktorý sa na úzkej obrazovke aj tak oreže na stred. Telefón
-       preto dostane úvodnú fotografiu, ktorá je pod videom a vyzerá rovnako.
-       Hranica je 900 px, teda pod ňou je telefón aj otočený tablet. */
-    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
+       preto dostáva vlastný zostrih: 854 × 480, dvadsaťpäť sekúnd, 1,5 MB,
+       teda pätina. Hranica je 900 px, pod ňou je telefón aj otočený tablet.
+       Kým zostrih nebol, ostávala na telefóne úvodná fotografia — a tak to
+       ostáva aj pre značku, ktorá svoj zostrih nemá. */
+    const uzky = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
 
     vsetky.forEach((v) => {
       if (v.dataset.kReady === 'true') return;
       v.dataset.kReady = 'true';
+
+      const mobil = v.getAttribute('data-k-video-mobil');
+      if (uzky && !mobil) return;
 
       let pustene = false;
       const pusti = () => {
@@ -2871,7 +2876,10 @@
           /* MP4 stojí prvé — je menšie a vie ho každý bežný prehliadač.
              WebM je poistka pre zostavenia bez H.264 (napríklad Chromium
              na Linuxe), kde by inak úvod ostal na fotografii. */
-          [['data-k-video', 'video/mp4'], ['data-k-video-webm', 'video/webm']].forEach((par) => {
+          const zdroje = uzky
+            ? [['data-k-video-mobil', 'video/mp4']]
+            : [['data-k-video', 'video/mp4'], ['data-k-video-webm', 'video/webm']];
+          zdroje.forEach((par) => {
             const url = v.getAttribute(par[0]);
             if (!url) return;
             const z = document.createElement('source');
