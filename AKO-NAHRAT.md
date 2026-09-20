@@ -56,6 +56,13 @@ by sa niektorej stránke priradili ručne — vykreslia to isté.
 
 Obsah stránky nechaj prázdny. Celý obsah je v téme.
 
+**Vyplň ale Search engine listing.** Pod editorom stránky je odkaz „Edit
+website SEO"; `Page title` a `Meta description` sú v zozname štvrtý a piaty
+stĺpec. Shopify si značky pre vyhľadávače skladá z tých políčok a po založení
+stránky sú prázdne — bez nich by Google videl iný titulok a žiadny popis, než
+aký web má. Vlastný `<title>` a `<meta name="description">` do témy nedávame,
+lebo by v hlavičke stáli dvakrát a druhý by Google ignoroval.
+
 ### 4 · Formulár
 
 Dopyty vybavuje **Formful**, formulár `form_LaKRq0tyt4`. Naše tlačidlo
