@@ -306,6 +306,12 @@ function preved() {
        zvlášť. Preto je v zozname aj jedno, aj druhé. */
     const titulok = (html.match(/<title>([^<]*)<\/title>/) || [, ''])[1]
       .replace(/\s*[·|]\s*Koverta\s*$/, '').trim();
+    /* Celý `<title>` aj popis idú do zoznamu tiež. Shopify si značky pre
+       vyhľadávače skladá sám, ale z políčok „Search engine listing" pri
+       stránke — a tie sú po založení prázdne. Bez týchto dvoch stĺpcov by
+       sa titulok aj popis, ktoré web má, na obchode stratili. */
+    const celyTitulok = (html.match(/<title>([^<]*)<\/title>/) || [, ''])[1].trim();
+    const popis = (html.match(/<meta name="description" content="([^"]*)"/) || [, ''])[1].trim();
     const medzi = prepis(html.slice(html.indexOf('</main>') + 7, html.indexOf('<footer class="k kf"')), mapa, zaklad);
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
@@ -316,7 +322,7 @@ function preved() {
 
     if (hlavicka) hlavicky.add(hlavicka);
     if (paticka) paticky.add(paticka);
-    return { a, kde, hlavny, medzi, dopyt, titulok, hlavaPrvky, chvostPrvky };
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky };
   });
 
   if (hlavicky.size !== 1) chyby.push('hlavička má ' + hlavicky.size + ' verzií');
@@ -459,10 +465,18 @@ ${v.spolocnyChvost.join('\n')}
 
   if (navodText) fs.writeFileSync(navod, navodText);
   fs.writeFileSync(path.join(CIEL, 'STRANKY-NA-ZALOZENIE.txt'),
-    'Stránky, ktoré treba založiť v Online Store → Pages.\n' +
-    'Stĺpce: handle (musí sedieť presne, inak si stránka šablónu nenájde),\n' +
-    'názov stránky, adresa.\n\n' +
-    v.sablony.map((s) => s.a.handle + '\t' + s.titulok + '\t' + s.a.url).sort().join('\n') + '\n');
+    'Stránky, ktoré treba založiť v Online Store → Pages.\n\n' +
+    'Stĺpce oddeľuje tabulátor:\n' +
+    '  1 handle   musí sedieť presne, podľa neho si stránka nájde obsah\n' +
+    '  2 názov    Title stránky\n' +
+    '  3 adresa\n' +
+    '  4 SEO title        do Search engine listing → Page title\n' +
+    '  5 SEO description  do Search engine listing → Meta description\n\n' +
+    'Stĺpce 4 a 5 sú dôležité: Shopify si značky pre vyhľadávače skladá sám,\n' +
+    'ale z tých políčok — a tie sú po založení stránky prázdne. Bez nich by\n' +
+    'Google videl iný titulok a žiadny popis, než aký web má.\n\n' +
+    v.sablony.map((s) => [s.a.handle, s.titulok, s.a.url, s.celyTitulok, s.popis].join('\t'))
+      .sort().join('\n') + '\n');
 }
 
 if (require.main === module) {
