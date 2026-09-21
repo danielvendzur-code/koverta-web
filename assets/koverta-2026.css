@@ -13555,3 +13555,102 @@ body:not(.k-home) .k .kh-hero__chip {
   .k .kh-faq__list { border-radius: 0 0 var(--k-r) var(--k-r); }
   .k .kh-cta__foto { min-height: 220px; }
 }
+
+/* ==========================================================================
+   VRSTVA 130 · Vlastný dopytový popup
+   Formulár je náš, nie Shopify Forms ani Formful. Na stránke zostáva čistá
+   výzva a rovnaký formulár sa otvorí v prístupnom modale bez duplikovania polí.
+   ========================================================================== */
+
+body.ma-kh-modal { overflow: hidden; }
+.kh-form__pasca {
+  position: fixed !important; left: -10000px !important; top: auto !important;
+  width: 1px !important; height: 1px !important; overflow: hidden !important;
+}
+.kh-cta__otvarac {
+  display: flex; flex-direction: column; align-items: flex-start;
+  justify-content: center; min-height: 410px;
+  padding: clamp(28px, 4.5vw, 64px);
+  border-radius: var(--k-r); background: var(--k-white);
+}
+.kh-cta__otvarac .k-h2 { max-width: 13ch; margin: 12px 0 16px; }
+.kh-cta__otvarac .k-copy { max-width: 53ch; margin: 0 0 28px; }
+
+.kh-modal[hidden] { display: none !important; }
+.kh-modal {
+  position: fixed; inset: 0; z-index: 2147483000;
+  display: grid; place-items: center; padding: 22px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 200ms var(--k-ease), visibility 0s linear 200ms;
+}
+.kh-modal.is-open { opacity: 1; visibility: visible; transition-delay: 0s; }
+.kh-modal__pozadie {
+  position: absolute; inset: 0; background: rgba(9, 13, 15, .76);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.kh-modal__okno {
+  position: relative; width: min(940px, 100%); max-height: min(920px, calc(100svh - 44px));
+  overflow: auto; overscroll-behavior: contain;
+  border: 1px solid rgba(255,255,255,.18); border-radius: 26px;
+  background: var(--k-white); box-shadow: 0 32px 90px rgba(0,0,0,.36);
+  transform: translateY(18px) scale(.985);
+  transition: transform 260ms var(--k-ease-out);
+}
+.kh-modal.is-open .kh-modal__okno { transform: none; }
+.kh-modal__zavriet {
+  position: sticky; float: right; top: 18px; z-index: 4;
+  display: grid; place-items: center; width: 44px; height: 44px;
+  margin: 18px 18px -62px 0; padding: 0;
+  border: 1px solid rgba(18,23,26,.14); border-radius: 50%;
+  background: rgba(255,255,255,.94); color: var(--k-ink); cursor: pointer;
+  box-shadow: 0 8px 22px rgba(18,23,26,.1);
+}
+.kh-modal__zavriet:hover { background: var(--k-amber); border-color: var(--k-amber); }
+.kh-modal__zavriet svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.kh-modal__znacka {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 22px 82px 20px 34px; background: var(--k-ink); color: #fff;
+}
+.kh-modal__znacka > span { font-family: var(--k-head); font-weight: 800; letter-spacing: .09em; }
+.kh-modal__znacka > span span { color: var(--k-amber); }
+.kh-modal__znacka small { color: rgba(255,255,255,.68); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.kh-modal__telo .kh-cta__card {
+  display: block !important; width: 100%; margin: 0; padding: clamp(28px, 4vw, 48px);
+  border: 0; border-radius: 0; box-shadow: none; background: var(--k-white);
+  opacity: 1 !important; transform: none !important; visibility: visible !important;
+}
+.kh-modal .kh-cta__head { padding-right: 56px; }
+.kh-modal .kh-cta__head .k-h2 { max-width: 18ch; }
+.kh-modal .kh-form { margin-top: 28px; gap: 18px; }
+.kh-modal .kh-form__grid { gap: 14px; }
+.kh-modal .kh-field input,
+.kh-modal .kh-field textarea,
+.kh-modal .kh-select__btn { background: #f7f6f2; border-color: rgba(18,23,26,.16); }
+.kh-modal .kh-field input:focus,
+.kh-modal .kh-field textarea:focus,
+.kh-modal .kh-select__btn:focus-visible { background: #fff; border-color: var(--k-amber); box-shadow: 0 0 0 3px rgba(255,204,0,.18); }
+.kh-modal .kh-form__submit { margin-top: 2px; }
+.kh-modal .kh-form__submit .k-btn { min-width: min(100%, 230px); justify-content: center; }
+.kh-modal .kh-dakujem { padding: clamp(12px, 2vw, 22px) 0; }
+
+@media (max-width: 619px) {
+  .kh-cta__otvarac { min-height: 330px; }
+  .kh-modal { place-items: end stretch; padding: 0; }
+  .kh-modal__okno {
+    width: 100%; max-height: 94svh; border-radius: 22px 22px 0 0;
+    border-left: 0; border-right: 0; border-bottom: 0;
+    transform: translateY(32px);
+  }
+  .kh-modal__znacka { padding: 18px 68px 17px 20px; }
+  .kh-modal__znacka small { display: none; }
+  .kh-modal__zavriet { top: 11px; width: 42px; height: 42px; margin: 11px 12px -53px 0; }
+  .kh-modal__telo .kh-cta__card { padding: 24px 18px max(28px, env(safe-area-inset-bottom)); }
+  .kh-modal .kh-cta__head { padding-right: 0; gap: 10px; }
+  .kh-modal .kh-cta__head .k-h2 { font-size: clamp(27px, 8vw, 36px); }
+  .kh-modal .kh-form { margin-top: 22px; gap: 15px; }
+  .kh-modal .kh-form__submit .k-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kh-modal, .kh-modal__okno { transition: none !important; }
+}

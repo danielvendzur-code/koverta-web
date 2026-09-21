@@ -20,22 +20,6 @@
       }
     },
     "content_for_index": [],
-    "blocks": {
-      "2376911714703784909": {
-        "type": "shopify://apps/formful/blocks/app-embed/be9de36b-78a1-4ce9-8de3-f1044fb2ee2e",
-        "disabled": false,
-        "settings": {
-          "form_id": "form_LaKRq0tyt4",
-          "icon_size": 0,
-          "title": "",
-          "background_color": "rgba(0, 0, 0, 0)",
-          "text_color": "#000000",
-          "button_padding": 0,
-          "border_radius": 0,
-          "horizontal_position": 5,
-          "vertical_position": 95
-        }
-      }
-    }
+    "blocks": {}
   }
 }
