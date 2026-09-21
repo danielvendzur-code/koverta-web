@@ -65,26 +65,13 @@ lebo by v hlavičke stáli dvakrát a druhý by Google ignoroval.
 
 ### 4 · Formulár
 
-Dopyty vybavuje **Formful**, formulár `form_LaKRq0tyt4`. Naše tlačidlo
-„Otvoriť formulár dopytu" volá `Formful.openDialog('form_LaKRq0tyt4')`.
+Dopyty vybavuje vlastný Koverta popup a serverový projekt `koverta-formular`.
+Formful ani Shopify Forms sa nepoužívajú. Dopyt aj prílohy idú cez Resend na
+`obchod@koverta.sk`; zákazník dostane krátke automatické potvrdenie.
 
-Dopyt sa dá mať dvoma spôsobmi a téma zvláda oba.
-
-**Formulár priamo v stránke.** V editore témy (Customize) prepni hore na
-**Pages**, otvor ktorúkoľvek stránku a do sekcie **Koverta stránka** pridaj
-**App block** Formfulu (alebo Forms). Umiestňuje sa **raz**: všetky stránky
-stoja na tej istej šablóne `page.json`, takže sa formulár objaví na každej,
-presne tam, kde na starom webe stál formulár dopytu.
-
-**Vyskakovací dialóg.** Zapnutý app embed Formfulu drží tlačidlo „Otvoriť
-formulár dopytu". Bez neho sa skript Formfulu na stránku nedostane a tlačidlo
-neurobí nič.
-
-Nastavené to už máte: prílohy do 10 MB, captcha, e-mail na
-`obchod@koverta.sk` s predmetom „Nový dopyt".
-
-**Na vedomie:** Formful maže odoslané dopyty aj s prílohami po 180 dňoch.
-Fotografie od zákazníkov treba priebežne sťahovať, inak zmiznú.
+Vo Verceli musia byť nastavené `RESEND_API_KEY`, `RESEND_FROM`, `DOPYT_TO`
+a `POSLAT_POTVRDENIE`. Resend API kľúč nikdy nevkladaj do Liquid, JavaScriptu
+ani Shopify nastavení.
 
 ### 5 · Náhľad a až potom publikovanie
 
