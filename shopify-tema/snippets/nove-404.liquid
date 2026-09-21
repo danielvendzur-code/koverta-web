@@ -1,0 +1,97 @@
+{%- assign kv_dopyt = '#ponuka' -%}
+<main id="obsah" class="k">
+  <section class="k-band kh-cta" aria-labelledby="ch404">
+    <div class="k-wrap">
+      <header class="k-head"><div class="k-head__title">
+        <p class="k-eyebrow">Chyba 404</p>
+        <h1 id="ch404" class="k-h2">Táto stránka tu nie je</h1>
+      </div></header>
+      <p class="k-copy kh-404__uvod">Adresa, na ktorú ste prišli, na novom webe neexistuje. Web sme prerobili, takže staré odkazy z vyhľadávača alebo zo záložiek už nemusia sedieť. Čo hľadáte, nájdete tu:</p>
+      <div class="kh-404__rad">
+        <a class="kh-404__dlazdica" href="/pages/nove-pristresky-pre-auta"><strong>Prístrešky pre autá</strong><span>Oceľová konštrukcia z vlastnej výroby, katalógové rozmery s cenami</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-zahradne-pristresky"><strong>Prístrešky nad terasu</strong><span>Zastrešenie terasy, sedenia alebo vstupu</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-carport-soltec"><strong>Hliníkové carporty Soltec</strong><span>Rady F a SL, voda odteká vnútri stĺpov</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-bioklimaticke-pergoly"><strong>Bioklimatické pergoly</strong><span>Otočné lamely, tieň aj dážď na jedno tlačidlo</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-tienenie"><strong>Tienenie</strong><span>ZIP rolety, posuvné panely, sklo a brisoleje</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-outdoor-kuchyne"><strong>Vonkajšie kuchyne</strong><span>Moduly Chef a Station do zastrešenej terasy</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-konfigurator"><strong>3D konfigurátor</strong><span>Poskladajte si zostavu a pozrite si orientačnú cenu</span></a>
+        <a class="kh-404__dlazdica" href="/pages/nove-realizacie"><strong>Realizácie</strong><span>Fotografie z montáží v 110 obciach</span></a>
+      </div>
+      <p class="k-copy kh-404__tip" data-k-404-tip hidden></p>
+      <p class="k-copy kh-404__spodok">Neviete si rady? Zavolajte na <a href="tel:+421948482266">+421 948 482 266</a> alebo napíšte na <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a>. Prípadne si otvorte <a href="/pages/nove-uvod">úvodnú stránku</a>.</p>
+    </div>
+  </section>
+</main>
+<meta name="robots" content="noindex, follow">
+<!-- KOVERTA-SEO -->
+<link rel="preconnect" href="https://koverta.sk" crossorigin>
+<link rel="dns-prefetch" href="https://koverta.sk">
+<meta name="theme-color" content="#12171a">
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
+<!-- /KOVERTA-SEO -->
+<script>document.documentElement.classList.add('k-js')</script>
+<style>
+  /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
+  body { margin: 0; background: #fff; }
+  .k, .kv-header {
+    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+  }
+  .k h1, .k h2, .k h3, .k .k-display, .k .k-h2, .k .k-h3, .k .k-h4,
+  .k .kh-fact strong, .k .kh-rev__big b, .k .kh-cta__row strong,
+  .k .kh-usp__item strong, .k .kh-soltec__lines strong, .k .kh-faq__item summary,
+  .kv-header .kv-mega__card strong, .k .kh-fact--score b, .k .kh-cta__score b, .k .kh-proc__n {
+    font-variation-settings: "wdth" 106;
+  }
+</style>
+<style>
+  .kh-404__uvod { max-width: 78ch; }
+  .kh-404__spodok { margin-top: 22px; }
+  .kh-404__tip { margin-top: 20px; font-weight: 500; }
+  .kh-404__dlazdica.je-tip { border-color: var(--k-amber-deep); box-shadow: 0 0 0 1px var(--k-amber-deep); }
+  .kh-404__rad { display:grid; gap:12px; margin-top:26px;
+    grid-template-columns:repeat(auto-fill,minmax(258px,1fr)); }
+  .kh-404__dlazdica { display:block; padding:16px 18px; border:1px solid var(--k-hair);
+    border-radius:var(--k-r-sm); background:var(--k-white); text-decoration:none; color:inherit;
+    transition:border-color .2s var(--k-ease), transform .2s var(--k-ease); }
+  .kh-404__dlazdica:hover { border-color:var(--k-ink); transform:translateY(-2px); }
+  .kh-404__dlazdica strong { display:block; font-family:var(--k-head); font-size:16px; color:var(--k-ink); }
+  .kh-404__dlazdica span { display:block; margin-top:4px; font-size:13.5px; line-height:1.55; color:var(--k-muted); }
+</style>
+<script>
+/* Starý web mal celkom inú štruktúru adries. Keď sa v tej starej adrese dá
+   rozoznať, čo návštevník hľadal, ponúkneme mu rovno správnu stránku —
+   ale nepresmerujeme ho, lebo odhad sa môže mýliť a nič horšie než skok
+   na nesprávnu stránku tu nie je. */
+(function () {
+  var mapa = [
+    [/pergol/, '/bioklimaticke-pergoly/', 'Bioklimatické pergoly'],
+    [/carport|soltec-?carport/, '/carport-soltec/', 'Hliníkové carporty Soltec'],
+    [/kuchyn|kitchen/, '/outdoor-kuchyne/', 'Vonkajšie kuchyne'],
+    [/tien|zip|rolet|brisolej|screen|shutter/, '/tienenie/', 'Tienenie'],
+    [/prestres|zastres|canopy|glassport/, '/pevne-prestresenia/', 'Pevné prestrešenia'],
+    [/teras|zahrad|garden/, '/zahradne-prestresky-placeholder/', 'Prístrešky nad terasu'],
+    [/auto|auta|car(?!port)|pristres|prístres/, '/pristresky-pre-auta/', 'Prístrešky pre autá'],
+    [/realizac|galeri|gallery|reference/, '/realizacie/', 'Realizácie'],
+    [/kontakt|contact/, '/kontakt/', 'Kontakt'],
+    [/konfigur|configur|3d/, '/konfigurator/', '3D konfigurátor'],
+    [/podmienk|terms/, '/obchodne-podmienky/', 'Obchodné podmienky'],
+    [/sukrom|súkrom|privacy|gdpr/, '/ochrana-sukromia/', 'Ochrana súkromia'],
+    [/reklamac|complaint/, '/reklamacie/', 'Reklamácie']
+  ];
+  var cesta = decodeURIComponent(location.pathname + location.search).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (var i = 0; i < mapa.length; i++) {
+    if (!mapa[i][0].test(cesta)) continue;
+    var ciel = mapa[i][1];
+    if (ciel.indexOf('placeholder') > -1) ciel = '/zahradne-pristresky/';
+    var box = document.querySelector('[data-k-404-tip]');
+    if (!box) return;
+    box.innerHTML = 'Podľa adresy ste hľadali skôr toto: <a href="' + ciel + '">' + mapa[i][2] + '</a>.';
+    box.hidden = false;
+    var dl = document.querySelector('.kh-404__dlazdica[href="' + ciel + '"]');
+    if (dl) dl.classList.add('je-tip');
+    return;
+  }
+})();
+</script>

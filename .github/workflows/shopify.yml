@@ -1,0 +1,68 @@
+name: Shopify téma
+
+# Vetva `shopify` nesie tému v koreni, lebo Shopify ju z GitHubu vie vziať
+# len odtiaľ — podpriečinok nepozná. Vyrába sa tu, nie ručne, aby sa nemohla
+# rozísť so statickým webom: čo sa zmení v `master`, je o minútu v téme.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shopify-tema
+  cancel-in-progress: true
+
+jobs:
+  tema:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vyrobiť tému
+        run: |
+          set -euo pipefail
+          # Nastavenia témy píše aj Shopify: editor si do `settings_data.json`
+          # ukladá zapnuté bloky aplikácií, medzi nimi embed Formfulu. Žijú
+          # len na vetve `shopify`, takže sa odtiaľ musia priniesť, inak by
+          # ich prevod prepísal a tlačidlo na dopyt by prestalo fungovať.
+          if git fetch origin shopify --depth=1 2>/dev/null &&
+             git cat-file -e FETCH_HEAD:config/settings_data.json 2>/dev/null; then
+            mkdir -p shopify-tema/config
+            git show FETCH_HEAD:config/settings_data.json > shopify-tema/config/settings_data.json
+          fi
+          node tools/spolocne-casti.js --kontrola
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
+
+      - name: Preniesť ju do vetvy shopify
+        run: |
+          set -euo pipefail
+          git config user.name "koverta-bot"
+          git config user.email "noreply@koverta.sk"
+          # Strom sa skladá mimo pracovného adresára, takže sa `master`
+          # nedotkne ani pri chybe.
+          export GIT_INDEX_FILE="$(mktemp -u)"
+          git --work-tree=shopify-tema add -A
+          strom="$(git write-tree)"
+          sprava="Téma z $(git rev-parse --short HEAD)"
+          if git rev-parse --verify --quiet origin/shopify >/dev/null; then
+            rodic="$(git rev-parse origin/shopify)"
+            if [ "$(git rev-parse "$rodic^{tree}")" = "$strom" ]; then
+              echo "Téma sa nezmenila."
+              exit 0
+            fi
+            odovzdanie="$(git commit-tree "$strom" -p "$rodic" -m "$sprava")"
+          else
+            odovzdanie="$(git commit-tree "$strom" -m "$sprava")"
+          fi
+          git push origin "$odovzdanie:refs/heads/shopify"
+          echo "Vetva shopify je na $odovzdanie"

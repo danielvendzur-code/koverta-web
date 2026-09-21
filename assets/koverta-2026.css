@@ -1304,7 +1304,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 @media (max-width: 699px) {  .kv-bar__in { min-height: 64px; }
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    2026-08-29 — ART-DIRECTION REFINEMENT
    Kompozícia vychádza z odsúhlasených návrhov, ale všetky produkčné
    obrázky zostávajú reálnymi fotografiami Koverta/SOLTEC a logo je
@@ -13367,4 +13367,187 @@ body:not(.k-home) .k .kh-hero__chip {
 }
 @media (max-width: 619px) {
   body:not(.k-home) .k .kh-hero__chip { font-size: 11px; }
+}
+
+/* ==========================================================================
+   VRSTVA 125 · Karty realizácií stoja, značka za otázkami sa hýbe
+   ==========================================================================
+   Dlaždica s fotografiou sa pri prejdení myšou posunula. Pri mriežke, kde
+   je dlaždíc dvadsať, to znamená, že sa obraz hýbe pod kurzorom vždy, keď
+   ním človek prejde cez stránku. Zvýraznenie ostáva, pohyb nie. */
+.k .kh-cat__item:hover .kh-cat__media img,
+.k .kh-cat__item:hover .kh-cat__card,
+.k .kh-cat__card:hover,
+.k .kh-work__item:hover .kh-work__media img,
+.k .kh-work__item:hover .kh-work__cap span { transform: none; }
+
+/* Značka za častými otázkami stála na mieste. Predtým tam bola fotografia
+   pripnutá k oknu, takže pri posúvaní stránky ostávala stáť a panel cez ňu
+   plával — to je ten pohyb, ktorý zmizol. Značka ho dostáva späť.
+
+   Prvý pokus to robil cez `background-attachment: fixed` a bola to chyba:
+   pri `fixed` sa podklad neumiestňuje voči prvku, ale voči oknu. `center`
+   teda značku položil do stredu okna — a tmavý panel stojí vľavo, v necelej
+   tretine šírky. Značka tak celý čas ležala vedľa panelu a nebolo ju vidno
+   vôbec; zmizla aj tá, čo tam predtým stála.
+
+   Panel je teraz podkladu znova vlastným rámom, takže značka je tam, kde má
+   byť. Pohyb robí posun podľa polohy sekcie v okne. Prehliadač, ktorý ho
+   nepozná, ukáže značku stojacu na mieste — to je horší, nie pokazený stav.
+   `inset` je zámerne väčší než panel, aby posun neodhalil hranu, a `overflow`
+   panelu vršok aj spodok značky oreže. */
+@media (min-width: 1000px) {
+  .k .kh-faq__intro::after {
+    inset: -12% 0;
+    background: url("koverta-mark-zvisla.svg") center / auto 100% no-repeat;
+    background-attachment: scroll;
+  }
+  @supports (animation-timeline: view()) {
+    .k .kh-faq__intro::after {
+      animation: kv-faq-znacka linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes kv-faq-znacka {
+  from { transform: translateY(-9%); }
+  to { transform: translateY(9%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k .kh-faq__intro::after { animation: none; transform: none; }
+}
+
+/* ==========================================================================
+   VRSTVA 126 · Popisky v kartách malými písmenami
+   ==========================================================================
+   Tá istá vec ako v páse faktov v hlavičke: drobný popis nad hodnotou sa
+   sádzal verzálkami s rozpálením. V dvanástich bodoch sa to číta horšie než
+   malé písmená a vedľa hodnôt písaných normálne to pôsobí ako dva zápisy
+   v jednej karte. */
+.k .kh-mat__pojem,
+.k .kh-vcene__co,
+.k .kh-duo__popis,
+.k .kh-fakty__co {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ==========================================================================
+   VRSTVA 127 · Úvodná obrazovka na telefóne sadne do okna
+   ==========================================================================
+   Obsah hlavičky stál na spodnej hrane a pod hodnotením ostával pás, ktorý
+   nič nenesie. Na podstránkach bolo horšie: hlavička potrebovala 677 px,
+   okno má po odpočítaní lišty 603, takže pás faktov končil pod ohybom
+   a bolo ho vidieť len napoly.
+
+   Obsah preto klesá nižšie (menší spodný odstup) a na podstránkach sa horný
+   odstup skracuje zo 78 na 56 px, aby sa celá hlavička vošla do okna. Na
+   stolnom počítači sa nemení nič. */
+@media (max-width: 619px) {
+  .k .kh-hero__box { padding-bottom: 10px; }
+  body:not(.k-home) .k .kh-hero__box { padding-top: 46px; padding-bottom: 12px; }
+  body:not(.k-home) .k .kh-hero__trust { margin-top: 12px; }
+  .k .kh-hero__rating { margin-top: 10px; }
+}
+
+/* ==========================================================================
+   VRSTVA 128 · Dlaždice z montáží sa pod kurzorom nehýbu a značka za
+   otázkami sa hýbe naozaj
+   ==========================================================================
+   Dlaždicám realizácií sa pri prejdení myšou podčiarkol popis cez celú šírku
+   a zmenil pomer plôch v páse, takže sa hýbali aj susedné dlaždice. Pri
+   mriežke s dvadsiatimi dlaždicami to znamená, že sa obraz hýbe pod kurzorom
+   vždy, keď ním človek prejde cez stránku. Zvýraznenie ostáva na klávesnici,
+   kde bez neho nie je vidieť, kde človek stojí; myš už nič nepresúva.
+
+   Jantárová linka pod popisom ostáva v dĺžke, akú má dlaždica po príchode. */
+@media (hover: hover) {
+  .k .kh-cat__item:hover .kh-cat__body::after { width: 3.2rem; }
+  .k .kh-cat__item:hover,
+  .k .kh-cat__item:hover .kh-cat__body,
+  .k .kh-cat__item:hover .kh-cat__media { flex-grow: initial; flex-basis: auto; }
+}
+.k .kh-cat__item:focus-within .kh-cat__body::after { width: 100%; }
+
+/* Značka za Častými otázkami stála. `animation-timeline: view()` sa viaže na
+   to, ako prvok prechádza oknom — lenže tento prvok je podklad s `inset`
+   väčším než panel a rodič má `overflow: hidden`, takže mu prehliadač
+   priradil časovú os, ktorá sa nikdy nepohla. Os sa preto berie od panelu
+   (`view-timeline` na ňom, `animation-timeline` na podklade); panel oknom
+   naozaj prechádza, takže sa značka posúva spolu s ním. Kto `view()` nepozná,
+   uvidí značku stáť — to je horší, nie pokazený stav. */
+@media (min-width: 1000px) {
+  @supports (animation-timeline: view()) {
+    .k .kh-faq__intro {
+      view-timeline-name: --kv-faq;
+      view-timeline-axis: block;
+    }
+    .k .kh-faq__intro::after {
+      animation: kv-faq-znacka linear both;
+      animation-timeline: --kv-faq;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* ==========================================================================
+   VRSTVA 129 · Cielené opravy podľa obsahovej kontroly
+   ========================================================================== */
+
+/* V úvode FAQ sa má pri rolovaní držať text, nie pohybovať značka za ním.
+   `overflow: hidden` na rodičovi vytváral vlastný scrollovací kontajner a
+   tým blokoval sticky potomka. Po odstránení dekorácie môže panel orez
+   bezpečne pustiť a sticky opäť počíta voči stránke. */
+.k .kh-faq__intro::after { content: none !important; animation: none !important; }
+@media (min-width: 1000px) {
+  .k .kh-faq__intro { overflow: visible; view-timeline-name: none; }
+  .k .kh-faq__intro-in {
+    position: sticky;
+    top: clamp(96px, 13vh, 150px);
+  }
+}
+@media (max-width: 999px) {
+  .k .kh-faq__intro-in { position: static; }
+}
+
+/* Biele hodnotenie pod faktami v úvodnej obrazovke sa neopakuje. */
+.k .kh-hero__rating { display: none !important; }
+
+/* Fotografia v bloku Kompletný servis je na každej stránke tá istá. Pôvodný
+   obrázok ďalej drží rozmery prvku, ale vizuálne ho nahrádza spoločný záber. */
+.k .kh-cta__foto {
+  background: #171d20 url("koverta-hero-sibenik-poster.jpg") center / cover no-repeat;
+}
+.k .kh-cta__foto img { opacity: 0; }
+
+/* Galériová fotografia ani jej dlaždica sa po prejdení myšou nesmie pohnúť.
+   Platí to aj pre prvú fotografiu na stránke prístreškov pre autá. */
+@media (hover: hover) {
+  .k .kh-cat__item:not(:has(.kh-cat__card)),
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media,
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img,
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__media,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__media img,
+  .k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__body {
+    transform: none !important;
+    flex-grow: initial !important;
+    flex-basis: auto !important;
+  }
+  .k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img {
+    transition: none !important;
+  }
+}
+
+/* Na telefóne ostáva FAQ v jednom stĺpci, bez sticky správania a bez
+   vodorovného pretečenia. */
+@media (max-width: 619px) {
+  .k .kh-faq__grid,
+  .k .kh-faq__intro,
+  .k .kh-faq__list { min-width: 0; width: 100%; }
+  .k .kh-faq__intro { border-radius: var(--k-r) var(--k-r) 0 0; }
+  .k .kh-faq__list { border-radius: 0 0 var(--k-r) var(--k-r); }
+  .k .kh-cta__foto { min-height: 220px; }
 }

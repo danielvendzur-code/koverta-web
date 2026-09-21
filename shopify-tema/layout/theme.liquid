@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Značky pre vyhľadávače.
+
+     Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
+     lenže content_for_header medzi ne titulok ani popis nedáva, tie patria
+     šablóne. Kým ich tu nebolo, nemala žiadna stránka témy titulok vôbec.
+
+     Berú sa z políčok „Search engine listing" pri stránke, teda z toho, čo je
+     v štvrtom a piatom stĺpci STRANKY-NA-ZALOZENIE.txt. Vlastné sem
+     nepíšeme: stáli by v hlavičke dvakrát a Google by druhý ignoroval.
+     Adresu canonical dáva Shopify a je to jeho adresa, nie naša. -->
+<title>{{ page_title }}</title>
+{%- if page_description %}
+<meta name="description" content="{{ page_description | escape }}">
+{%- endif %}
+<link rel="canonical" href="{{ canonical_url }}">
+<meta property="og:site_name" content="{{ shop.name }}">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ page_title | escape }}">
+<meta property="og:url" content="{{ canonical_url }}">
+{%- if page_description %}
+<meta property="og:description" content="{{ page_description | escape }}">
+{%- endif %}
+<meta name="twitter:card" content="summary_large_image">
+{{ content_for_header }}
+<!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
+     kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
+<script>
+(function (w) {
+  // Queue Clarity calls before GTM can run its consent tag. The loaded
+  // Clarity client consumes this queue; no analytics call is discarded.
+  if (typeof w.clarity !== 'function') {
+    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
+  }
+  w.dataLayer = w.dataLayer || [];
+  function gtag() { w.dataLayer.push(arguments); }
+  w.kvGtag = gtag;
+  w.KV_SUHLAS_KLUC = 'koverta-suhlas';
+  var v = null;
+  try { v = JSON.parse(w.localStorage.getItem(w.KV_SUHLAS_KLUC) || 'null'); } catch (e) {}
+  if (v && v.verzia !== 1) v = null;
+  w.kvSuhlas = v;
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+  if (v) {
+    gtag('consent', 'update', {
+      ad_storage: v.marketing ? 'granted' : 'denied',
+      ad_user_data: v.marketing ? 'granted' : 'denied',
+      ad_personalization: v.marketing ? 'granted' : 'denied',
+      analytics_storage: v.analytika ? 'granted' : 'denied',
+      functionality_storage: v.preferencie ? 'granted' : 'denied',
+      personalization_storage: v.preferencie ? 'granted' : 'denied',
+      security_storage: 'granted'
+    });
+  }
+  gtag('set', 'ads_data_redaction', !(v && v.marketing));
+  gtag('set', 'url_passthrough', true);
+})(window);
+</script>
+<!-- Google Tag Manager -->
+<script>
+(function (w, d, s, l, i) {
+  w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+  j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+  f.parentNode.insertBefore(j, f);
+})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
+</script>
+<!-- Koniec Google Tag Manager -->
+<link rel="icon" href="{{ 'favicon.svg' | asset_url }}" type="image/svg+xml">
+<link rel="icon" href="https://danielvendzur-code.github.io/koverta-web/assets/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="https://danielvendzur-code.github.io/koverta-web/assets/apple-touch-icon.png" sizes="180x180">
+<link rel="manifest" href="https://danielvendzur-code.github.io/koverta-web/site.webmanifest">
+<link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
+</head>
+<body class="{% if template.name == 'index' %}k-home{% endif %}">
+<script>
+  /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
+     v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka
+     o 3D modeloch je v /pages/. */
+  window.KV_ADRESY = {
+    znackaKoverta: {{ 'koverta-mark.svg' | asset_url | json }},
+    znackaSoltec: "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png",
+    modely: '/pages/nove-pouzite-modely'
+  };
+  /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
+     fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
+     prevod inak nevidí; bez tejto tabuľky by na Shopify ukazovali na
+     /pages/assets/… a /carport-soltec/, teda nikam. */
+  window.KV_CESTY = {
+    "./pristresky-pre-auta/": "/pages/nove-pristresky-pre-auta",
+    "./assets/koverta-pristresok-vahovce-takac-upscaled.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-pristresok-vahovce-takac-upscaled.jpg",
+    "./carport-soltec/": "/pages/nove-carport-soltec",
+    "./assets/soltec-carport-sl240-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg",
+    "./zahradne-pristresky/": "/pages/nove-zahradne-pristresky",
+    "./assets/foto/20250522_144729-w600.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/foto/20250522_144729-w600.jpg",
+    "./bioklimaticke-pergoly/": "/pages/nove-bioklimaticke-pergoly",
+    "./assets/soltec-bio-hero-2026.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-bio-hero-2026.jpg",
+    "./pevne-prestresenia/": "/pages/nove-pevne-prestresenia",
+    "./assets/soltec-canopy-hero.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-hero.jpg",
+    "./tienenie/": "/pages/nove-tienenie",
+    "./assets/soltec-canopy-panels-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-panels-real.jpg",
+    "./outdoor-kuchyne/": "/pages/nove-outdoor-kuchyne",
+    "./assets/soltec-kuchyna-terasa.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-kuchyna-terasa.jpg",
+    "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
+    "./assets/soltec-mark.png": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png"
+  };
+  window.KV_SCENE_ASSETS = "https://danielvendzur-code.github.io/koverta-web/konfigurator/scene-assets/";
+</script>
+{% section 'kv-hlavicka' %}
+{{ content_for_layout }}
+{% section 'kv-paticka' %}
+<script src="{{ 'koverta-2026.js' | asset_url }}" defer></script>
+</body>
+</html>
