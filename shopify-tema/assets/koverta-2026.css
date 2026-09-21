@@ -13495,11 +13495,18 @@ body:not(.k-home) .k .kh-hero__chip {
    VRSTVA 129 · Cielené opravy podľa obsahovej kontroly
    ========================================================================== */
 
-/* V úvode FAQ sa má pri rolovaní držať text, nie pohybovať značka za ním.
-   `overflow: hidden` na rodičovi vytváral vlastný scrollovací kontajner a
-   tým blokoval sticky potomka. Po odstránení dekorácie môže panel orez
-   bezpečne pustiť a sticky opäť počíta voči stránke. */
-.k .kh-faq__intro::after { content: none !important; animation: none !important; }
+/* V úvode FAQ sa má pri rolovaní držať text, značka za ním však zostáva
+   nehybnou súčasťou panelu. `overflow: hidden` na rodičovi vytváral vlastný
+   scrollovací kontajner a blokoval sticky potomka, preto logo orežeme jeho
+   vlastným rámom namiesto rodičovského overflow. */
+.k .kh-faq__intro::after {
+  content: "" !important;
+  inset: 0;
+  border-radius: inherit;
+  background: url(koverta-mark-zvisla.svg) center / auto 100% no-repeat;
+  animation: none !important;
+  transform: none !important;
+}
 @media (min-width: 1000px) {
   .k .kh-faq__intro { overflow: visible; view-timeline-name: none; }
   .k .kh-faq__intro-in {
