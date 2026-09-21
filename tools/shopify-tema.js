@@ -32,12 +32,9 @@
  *
  * Formulár
  * --------
- * Dopyt vybavuje aplikácia Formful (formulár `form_LaKRq0tyt4`). Na pláne
- * Starter nemá adresu, na ktorú by sa dal poslať vlastný formulár, ale má
- * volanie `Formful.openDialog(...)`. Naše tlačidlo teda ostáva naše a otvorí
- * jej dialóg — aj s prílohami, captchou a e-mailom na obchod@koverta.sk.
- * Blok aplikácie treba raz umiestniť v editore témy; bez neho sa skript
- * Formfulu na stránku nedostane a dialóg sa neotvorí.
+ * Vlastný Koverta popup posiela dopyt na serverový Resend endpoint. API kľúč
+ * zostáva iba vo Verceli; v Liquid ani v JavaScripte nie je žiadne tajomstvo.
+ * Formful ani Shopify Forms sa nepoužívajú.
  */
 'use strict';
 const fs = require('node:fs');
@@ -69,9 +66,6 @@ const PREDPONA = process.env.KV_PREDPONA !== undefined ? process.env.KV_PREDPONA
 const FOTKY = process.env.KV_FOTKY || 'pages';
 const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
   'https://danielvendzur-code.github.io/koverta-web';
-
-/* Formulár v aplikácii Formful. */
-const FORMFUL = 'form_LaKRq0tyt4';
 
 /* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
  * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
@@ -307,16 +301,10 @@ function preved() {
     paticka = paticka.replace(/(<a class="k-btn k-btn--primary" href=")[^"]*#ponuka(")/, '$1{{ kv_dopyt }}$2');
     let hlavny = prepis(vyrez(html, '<main', '</main>', kde), mapa, zaklad);
 
-    /* Náš formulár nemá na pláne Starter kam posielať, takže na jeho mieste
-       stojí miesto pre blok aplikácie — `{{ kv_formular }}`. Sekcia stránky
-       doň vloží bloky, ktoré má na sebe umiestnené (Formful alebo Forms), a
-       formulár tak stojí priamo v stránke, nie len vo vyskakovacom okne.
-       Kým tam blok nie je, ostáva tlačidlo, ktoré otvorí dialóg Formfulu —
-       aby stránka nebola bez cesty k dopytu ani prvý deň. */
-    hlavny = hlavny.replace(/<form id="dopyt"[\s\S]*?<\/form>/,
-      '{{ kv_formular }}' +
-      '<p class="kh-form__vyzva"><button type="button" class="k-btn k-btn--primary" ' +
-      'onclick="Formful.openDialog(\'' + FORMFUL + '\')">Otvoriť formulár dopytu</button></p>');
+    /* Vlastný Koverta formulár ostáva priamo v obsahu. JavaScript z neho
+       vytvorí prístupný modal a odošle ho cez náš serverový Resend endpoint.
+       Nie je závislý od Formfulu ani od Shopify Forms, takže žiadny app embed
+       nepridáva cudzí launcher alebo štýly do stránky. */
 
     /* Medzi koncom hlavného obsahu a pätičkou stoja skripty, ktoré patria
        len tejto stránke — konfigurátor tam má sedem súborov. Bez tohto úseku
@@ -515,35 +503,22 @@ ${v.spolocnyChvost.join('\n')}
       path.join(CIEL, 'snippets', s.a.handle + '-cast-' + (i + 1) + '.liquid'), obsah));
   }
 
-  /* Sekcia stránky. Existuje kvôli jednej veci: bloky aplikácií sa dajú
-   * umiestniť len do sekcie, nie do obyčajnej šablóny. Vďaka nej si majiteľ
-   * v editore témy raz pridá blok Formfulu (alebo Forms) a formulár stojí
-   * priamo v stránke — nie len vo vyskakovacom okne, a na všetkých stránkach
-   * naraz, lebo ho nesie šablóna, nie jednotlivá stránka.
-   *
-   * Telo stránky sa berie podľa handle. Bloky sa vykreslia do `kv_formular`,
-   * teda presne tam, kde na statickom webe stojí formulár dopytu; keď nie je
-   * umiestnený žiadny, ostane tam prázdno a pod ním tlačidlo na dialóg. */
+  /* Telo stránky sa berie podľa handle. Formulár je súčasťou nášho obsahu;
+   * sekcia preto nepotrebuje ani nepovoľuje app blok cudzieho formulára. */
   const handleVsetky = v.sablony.map((x) => x.a.handle);
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
-    '{%- capture kv_formular -%}\n' +
-    '{%- for block in section.blocks -%}\n' +
-    '  <div class="kh-form__blok" {{ block.shopify_attributes }}>{% render block %}</div>\n' +
-    '{%- endfor -%}\n' +
-    '{%- endcapture -%}\n' +
     '{%- assign kv_nase = "' + handleVsetky.join(',') + '" | split: "," -%}\n' +
     '{%- if kv_nase contains page.handle -%}\n' +
     '  {% include page.handle %}\n' +
     '{%- else -%}\n' +
     '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
-    '{{ page.content }}{{ kv_formular }}</div></main>\n' +
+    '{{ page.content }}</div></main>\n' +
     '{%- endif -%}\n' +
     '\n{% schema %}\n' +
-    JSON.stringify({ name: 'Koverta stránka', blocks: [{ type: '@app' }], settings: [] }, null, 2) +
+    JSON.stringify({ name: 'Koverta stránka', settings: [] }, null, 2) +
     '\n{% endschema %}\n');
 
-  /* Šablóna stránky je JSON, aby tú sekciu niesla a blok aplikácie sa dal
-     v editore umiestniť. Liquid šablóna sekcie ani bloky nepozná. */
+  /* Šablóna stránky je JSON, aby niesla spoločnú sekciu obsahu. */
   fs.writeFileSync(path.join(CIEL, 'templates', 'page.json'),
     JSON.stringify({
       sections: { hlavna: { type: 'kv-stranka', blocks: {}, block_order: [], settings: {} } },
@@ -578,28 +553,19 @@ ${v.spolocnyChvost.join('\n')}
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
       theme_version: '1.0.0', theme_author: 'Koverta', theme_documentation_url: 'https://koverta.sk',
       theme_support_url: 'https://koverta.sk/kontakt/' }], null, 2) + '\n');
-  /* `settings_data.json` píše aj Shopify. Editor témy si doň ukladá, ktoré
-     bloky aplikácií sú zapnuté — medzi nimi embed Formfulu s naším formulárom
-     `form_LaKRq0tyt4`. Prevod ho preto nesmie prepísať: prepisom by tlačidlo
-     na dopyt prestalo otvárať dialóg. Zakladá sa len vtedy, keď ešte nie je. */
+  /* `settings_data.json` píše aj Shopify. Vlastný formulár nepotrebuje app
+     embed; starý Formful blok zámerne odstránime, aby sa jeho launcher už
+     nikdy nevrátil cez obsah alebo pätičku. */
   const nastavenia = path.join(CIEL, 'config', 'settings_data.json');
   if (!fs.existsSync(nastavenia)) fs.writeFileSync(nastavenia, '{"current":{}}\n');
-  /* App embed musí zostať zapnutý, lebo poskytuje Formful.openDialog(). Jeho
-     vlastný launcher však duplikuje naše CTA a na mobile prekrýva pätičku.
-     Aplikáciu necháme načítať, ale launcher spravíme nulový a priehľadný. */
   try {
     const povodne = fs.readFileSync(nastavenia, 'utf8');
     const zaciatokJson = povodne.indexOf('{');
     const hlavickaJson = zaciatokJson > 0 ? povodne.slice(0, zaciatokJson) : '';
     const data = JSON.parse(povodne.slice(zaciatokJson));
     const bloky = data.current && data.current.blocks;
-    for (const blok of Object.values(bloky || {})) {
-      if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
-      blok.settings = blok.settings || {};
-      blok.settings.title = '';
-      blok.settings.icon_size = 0;
-      blok.settings.button_padding = 0;
-      blok.settings.background_color = 'rgba(0, 0, 0, 0)';
+    for (const [id, blok] of Object.entries(bloky || {})) {
+      if (/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) delete bloky[id];
     }
     fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
   } catch (e) {

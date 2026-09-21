@@ -20,10 +20,8 @@
  *   include      `{% include 'x' %}` musí mať útržok v `snippets/`
  *   šablóny      téma musí mať úvod aj `page.json`, inak nemá domovskú
  *                stránku a stránky na `Default page` sú prázdne
- *   sekcia       `kv-stranka` musí púšťať bloky aplikácií (@app), inak sa
- *                formulár nedá vložiť priamo do stránky
- *   nastavenia   `settings_data.json` nesmie prísť o embed Formfulu, bez
- *                neho tlačidlo dopytu neotvorí nič
+ *   formulár     téma musí niesť vlastný Koverta formulár a nesmie načítavať
+ *                starý Formful embed ani jeho launcher
  */
 'use strict';
 const fs = require('node:fs');
@@ -31,7 +29,6 @@ const path = require('node:path');
 
 const KOREN = path.resolve(__dirname, '..');
 const TEMA = path.join(KOREN, 'shopify-tema');
-const FORMULAR = 'form_LaKRq0tyt4';
 const MAX_SNIPPET_BAJTOV = 180 * 1024;
 
 const nalezy = [];
@@ -124,41 +121,35 @@ for (const [mena, preco] of [
   }
 }
 
-/* Sekcia stránky je jediné miesto, kam sa dá umiestniť blok aplikácie —
-   teda jediná cesta, ako dostať formulár priamo do stránky, nie len do
-   vyskakovacieho okna. Bez `@app` v jej schéme editor bloky neponúkne. */
+/* Vlastný formulár nesmie dostať popri sebe druhý app formulár. */
 const sekcia = path.join(TEMA, 'sections', 'kv-stranka.liquid');
 if (!fs.existsSync(sekcia)) {
-  nalezy.push('shopify-tema/sections/kv-stranka.liquid chýba — do stránky sa nedá vložiť formulár');
-} else if (!/"type"\s*:\s*"@app"/.test(fs.readFileSync(sekcia, 'utf8'))) {
-  nalez(sekcia, 'schéma nepúšťa bloky aplikácií (@app), formulár sa do stránky nedá vložiť');
+  nalezy.push('shopify-tema/sections/kv-stranka.liquid chýba');
+} else if (/"type"\s*:\s*"@app"/.test(fs.readFileSync(sekcia, 'utf8'))) {
+  nalez(sekcia, 'stále povoľuje app blok cudzieho formulára');
 }
 
-/* 5 · embed Formfulu ------------------------------------------------------ */
+/* 5 · vlastný formulár, bez Formfulu ------------------------------------- */
 
 const nastavenia = path.join(TEMA, 'config', 'settings_data.json');
 if (fs.existsSync(nastavenia)) {
   const text = fs.readFileSync(nastavenia, 'utf8');
-  /* Prázdne nastavenia sú v poriadku — obchod si ich ešte nezapísal. Keď už
-     v nich ale formulár raz bol, nesmie sa stratiť. */
-  if (/formful/i.test(text) && !text.includes(FORMULAR)) {
-    nalez(nastavenia, 'embed Formfulu stratil formulár ' + FORMULAR);
-  }
+  if (/formful/i.test(text)) nalez(nastavenia, 'starý Formful embed je stále zapnutý');
   try {
     const data = JSON.parse(text.slice(text.indexOf('{')));
-    for (const blok of Object.values((data.current && data.current.blocks) || {})) {
-      if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
-      if ((blok.settings && blok.settings.title || '').trim()) {
-        nalez(nastavenia, 'Formful launcher zobrazuje text cez obsah stránky');
-      }
-      if (Number(blok.settings && blok.settings.icon_size) !== 0 ||
-          Number(blok.settings && blok.settings.button_padding) !== 0) {
-        nalez(nastavenia, 'Formful launcher ostáva viditeľný ako prázdny štvorec');
-      }
-    }
+    void data;
   } catch (e) {
     nalez(nastavenia, 'nie je platný JSON: ' + e.message);
   }
+}
+
+const formularove = vsetky.filter((p) => /snippets\/nove-.*\.liquid$/.test(p));
+if (!formularove.some((p) => /<form id="dopyt"[\s\S]*data-k-dopyt/.test(fs.readFileSync(p, 'utf8')))) {
+  nalezy.push('shopify-tema/snippets: chýba vlastný Koverta dopytový formulár');
+}
+for (const subor of formularove) {
+  const text = fs.readFileSync(subor, 'utf8');
+  if (/Formful\.openDialog|form_LaKRq0tyt4/.test(text)) nalez(subor, 'stále odkazuje na Formful');
 }
 
 /* ------------------------------------------------------------------------- */
