@@ -17,7 +17,7 @@
       "kv-paticka": {
         "type": "kv-paticka",
         "custom_css": [
-          ".formful__floating-button{display:none !important;}"
+          "~ [id^=\"shopify-block-\"] .formful__floating-button {display: none !important; }"
         ],
         "settings": {}
       }
