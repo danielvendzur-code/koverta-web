@@ -697,7 +697,45 @@
           <p class="k-copy">Natočenie lamiel, boky aj osvetlenie si viete vyskúšať v 3D. Zostavu nám pošlite a doladíme ju pri zameraní.</p>
         </div>
 
-        {{ kv_formular }}<p class="kh-form__vyzva"><button type="button" class="k-btn k-btn--primary" onclick="Formful.openDialog('form_LaKRq0tyt4')">Otvoriť formulár dopytu</button></p>
+        <form id="dopyt" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+          <input type="hidden" name="form_type" value="contact">
+          <input type="hidden" name="utf8" value="✓">
+<label class="kh-field kh-field--interest"><span>Máte záujem o</span><select name="contact[Čo rieši]" required>
+            <option>Prístrešok pre auto Koverta</option>
+            <option>Carport Soltec</option>
+            <option>Záhradný prístrešok Koverta</option>
+            <option>Pevné prestrešenie Soltec</option>
+            <option selected>Bioklimatická pergola Soltec</option>
+            <option>Tienenie Soltec</option>
+            <option>Vonkajšia kuchyňa Soltec</option>
+            <option>Iné, potrebujem poradiť</option>
+          </select></label>
+
+          <div class="kh-form__grid">
+            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
+            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label>
+            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email"></label>
+            <label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2"></label>
+          </div>
+
+          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+
+          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
+               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
+               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
+          <label class="kh-field kh-field--subor">
+            <span>Fotky miesta <small>nepovinné</small></span>
+            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene. Po odoslaní vám ukážeme, kam ich poslať.</small>
+          </label>
+
+          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+
+          <div class="kh-form__submit">
+            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </form>
         <div class="kh-dakujem" data-k-dakujem hidden>
           <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
           <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>

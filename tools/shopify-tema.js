@@ -70,9 +70,6 @@ const FOTKY = process.env.KV_FOTKY || 'pages';
 const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
   'https://danielvendzur-code.github.io/koverta-web';
 
-/* Formulár v aplikácii Formful. */
-const FORMFUL = 'form_LaKRq0tyt4';
-
 /* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
  * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
  * error“. Galéria má stovky položiek, preto veľké telá rozdelíme na menšie
@@ -306,17 +303,6 @@ function preved() {
     const dopyt = (paticka.match(/<a class="k-btn k-btn--primary" href="([^"]*#ponuka)"/) || [, '#ponuka'])[1];
     paticka = paticka.replace(/(<a class="k-btn k-btn--primary" href=")[^"]*#ponuka(")/, '$1{{ kv_dopyt }}$2');
     let hlavny = prepis(vyrez(html, '<main', '</main>', kde), mapa, zaklad);
-
-    /* Náš formulár nemá na pláne Starter kam posielať, takže na jeho mieste
-       stojí miesto pre blok aplikácie — `{{ kv_formular }}`. Sekcia stránky
-       doň vloží bloky, ktoré má na sebe umiestnené (Formful alebo Forms), a
-       formulár tak stojí priamo v stránke, nie len vo vyskakovacom okne.
-       Kým tam blok nie je, ostáva tlačidlo, ktoré otvorí dialóg Formfulu —
-       aby stránka nebola bez cesty k dopytu ani prvý deň. */
-    hlavny = hlavny.replace(/<form id="dopyt"[\s\S]*?<\/form>/,
-      '{{ kv_formular }}' +
-      '<p class="kh-form__vyzva"><button type="button" class="k-btn k-btn--primary" ' +
-      'onclick="Formful.openDialog(\'' + FORMFUL + '\')">Otvoriť formulár dopytu</button></p>');
 
     /* Medzi koncom hlavného obsahu a pätičkou stoja skripty, ktoré patria
        len tejto stránke — konfigurátor tam má sedem súborov. Bez tohto úseku
@@ -584,9 +570,8 @@ ${v.spolocnyChvost.join('\n')}
      na dopyt prestalo otvárať dialóg. Zakladá sa len vtedy, keď ešte nie je. */
   const nastavenia = path.join(CIEL, 'config', 'settings_data.json');
   if (!fs.existsSync(nastavenia)) fs.writeFileSync(nastavenia, '{"current":{}}\n');
-  /* App embed musí zostať zapnutý, lebo poskytuje Formful.openDialog(). Jeho
-     vlastný launcher však duplikuje naše CTA a na mobile prekrýva pätičku.
-     Aplikáciu necháme načítať, ale launcher spravíme nulový a priehľadný. */
+  /* Pôvodný formulár Koverta odosiela serverový Resend endpoint. Starý
+     Formful embed vypneme, aby nevkladal launcher ani reklamný text. */
   try {
     const povodne = fs.readFileSync(nastavenia, 'utf8');
     const zaciatokJson = povodne.indexOf('{');
@@ -595,11 +580,7 @@ ${v.spolocnyChvost.join('\n')}
     const bloky = data.current && data.current.blocks;
     for (const blok of Object.values(bloky || {})) {
       if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
-      blok.settings = blok.settings || {};
-      blok.settings.title = '';
-      blok.settings.icon_size = 0;
-      blok.settings.button_padding = 0;
-      blok.settings.background_color = 'rgba(0, 0, 0, 0)';
+      blok.disabled = true;
     }
     fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
   } catch (e) {

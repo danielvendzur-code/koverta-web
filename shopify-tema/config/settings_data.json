@@ -23,7 +23,7 @@
     "blocks": {
       "2376911714703784909": {
         "type": "shopify://apps/formful/blocks/app-embed/be9de36b-78a1-4ce9-8de3-f1044fb2ee2e",
-        "disabled": false,
+        "disabled": true,
         "settings": {
           "form_id": "form_LaKRq0tyt4",
           "icon_size": 0,

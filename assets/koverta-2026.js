@@ -2418,7 +2418,7 @@ function kvCesta(cesta) {
        koverta.sk alebo posielať hlavičky CORS, inak sa nedá prečítať, či
        odoslanie prešlo, a formulár by opäť len hádal.
        ───────────────────────────────────────────────────────────────────── */
-    const SERVER = '';
+    const SERVER = String(window.KV_DOPYT_ENDPOINT || '').trim();
 
     const formulare = root.querySelectorAll('form[data-k-dopyt]');
     if (!formulare.length) return;
@@ -2556,9 +2556,11 @@ function kvCesta(cesta) {
         const stop = ('AbortController' in window) ? new AbortController() : null;
         const cakac = window.setTimeout(() => { if (stop) stop.abort(); }, 20000);
 
+        const data = new FormData(f);
+        data.set('source_url', window.location.href);
         fetch(SERVER, {
           method: 'POST',
-          body: new FormData(f),
+          body: data,
           signal: stop ? stop.signal : undefined
         }).then((odpoved) => {
           window.clearTimeout(cakac);
@@ -2568,7 +2570,7 @@ function kvCesta(cesta) {
           if (odpoved && odpoved.type !== 'opaque' && !odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           uvolni();
           textySpat();
-          ukaz(subory);
+          ukaz(false);
         }).catch(() => {
           window.clearTimeout(cakac);
           zlyhalo(adresaMailu);
