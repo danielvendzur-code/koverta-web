@@ -23,6 +23,14 @@ test('CORS preflight povolí produkčnú doménu', async () => {
   assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://www.koverta.sk');
 });
 
+test('CORS preflight povolí verejný GitHub Pages náhľad', async () => {
+  const req = { method: 'OPTIONS', headers: { origin: 'https://danielvendzur-code.github.io' } };
+  const res = odpoved();
+  await handler(req, res);
+  assert.equal(res.statusCode, 204);
+  assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://danielvendzur-code.github.io');
+});
+
 test('odmietne cudzí origin', async () => {
   const res = odpoved();
   await handler(poziadavka({}, 'https://example.com'), res);

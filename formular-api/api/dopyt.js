@@ -4,6 +4,7 @@ import { put } from '@vercel/blob';
 const LIMITY = new Map();
 const POVOLENE_ORIGINY = [
   /^https:\/\/(?:www\.)?koverta\.sk$/i,
+  /^https:\/\/danielvendzur-code\.github\.io$/i,
   /^https:\/\/maleprojekty-sk\.myshopify\.com$/i,
   /^https:\/\/[a-z0-9-]+\.shopifypreview\.com$/i,
   /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i
