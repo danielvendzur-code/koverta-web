@@ -2418,7 +2418,49 @@ function kvCesta(cesta) {
        koverta.sk alebo posielať hlavičky CORS, inak sa nedá prečítať, či
        odoslanie prešlo, a formulár by opäť len hádal.
        ───────────────────────────────────────────────────────────────────── */
-    const SERVER = '';
+    const SERVER = window.KV_DOPYT_ENDPOINT || 'https://koverta-formular.vercel.app/api/dopyt';
+
+    const nacitajBase64 = (subor) => new Promise((resolve, reject) => {
+      const citac = new FileReader();
+      citac.onload = () => resolve(String(citac.result || '').split(',')[1] || '');
+      citac.onerror = () => reject(new Error('Súbor sa nepodarilo načítať.'));
+      citac.readAsDataURL(subor);
+    });
+
+    /* Fotky z telefónu mávajú 5–12 MB. Pred odoslaním ich zmenšíme na
+       rozumných 1600 px; návrh z nich zostane čitateľný a požiadavka sa
+       zmestí do limitu serverovej funkcie. PDF ani iné súbory nemeníme. */
+    const zmensiFotku = async (subor) => {
+      if (!/^image\//i.test(subor.type) || subor.size < 650000 || !('createImageBitmap' in window)) return subor;
+      const obrazok = await createImageBitmap(subor);
+      const pomer = Math.min(1, 1600 / Math.max(obrazok.width, obrazok.height));
+      const platno = document.createElement('canvas');
+      platno.width = Math.max(1, Math.round(obrazok.width * pomer));
+      platno.height = Math.max(1, Math.round(obrazok.height * pomer));
+      platno.getContext('2d').drawImage(obrazok, 0, 0, platno.width, platno.height);
+      if (obrazok.close) obrazok.close();
+      const blob = await new Promise((resolve) => platno.toBlob(resolve, 'image/jpeg', .78));
+      if (!blob) return subor;
+      const meno = subor.name.replace(/\.[^.]+$/, '') + '.jpg';
+      return new File([blob], meno, { type: 'image/jpeg', lastModified: subor.lastModified });
+    };
+
+    const pripravPrilohy = async (f) => {
+      const subory = [...f.querySelectorAll('input[type="file"]')]
+        .flatMap((i) => [...(i.files || [])]);
+      if (subory.length > 4) throw new Error('Priložiť môžete najviac 4 súbory.');
+      const vysledok = [];
+      let spolu = 0;
+      for (const povodny of subory) {
+        const subor = await zmensiFotku(povodny);
+        spolu += subor.size;
+        if (subor.size > 2500000 || spolu > 2800000) {
+          throw new Error('Prílohy sú príliš veľké. Vyberte najviac 4 fotky alebo spolu do 2,8 MB.');
+        }
+        vysledok.push({ filename: subor.name, contentType: subor.type || 'application/octet-stream', content: await nacitajBase64(subor) });
+      }
+      return vysledok;
+    };
 
     const formulare = root.querySelectorAll('form[data-k-dopyt]');
     if (!formulare.length) return;
@@ -2427,6 +2469,18 @@ function kvCesta(cesta) {
     formulare.forEach((f) => {
       if (f.dataset.kReady === 'true') return;
       f.dataset.kReady = 'true';
+      if (!f.querySelector('[name="website"]')) {
+        const pasca = document.createElement('label');
+        pasca.className = 'kh-form__pasca';
+        pasca.setAttribute('aria-hidden', 'true');
+        pasca.innerHTML = '<span>Webová stránka</span><input name="website" type="text" tabindex="-1" autocomplete="off">';
+        f.appendChild(pasca);
+      }
+      if (!f.querySelector('[name="startedAt"]')) {
+        const zaciatok = document.createElement('input');
+        zaciatok.type = 'hidden'; zaciatok.name = 'startedAt'; zaciatok.value = String(Date.now());
+        f.appendChild(zaciatok);
+      }
       const dakujem = f.parentElement.querySelector('[data-k-dakujem]');
       if (!dakujem) return;
       const chyba = f.parentElement.querySelector('[data-k-chyba]');
@@ -2530,7 +2584,7 @@ function kvCesta(cesta) {
         if (zalohaPopis) zalohaPopis.textContent = PRVOTNE.popis;
       };
 
-      f.addEventListener('submit', (e) => {
+      f.addEventListener('submit', async (e) => {
         if (bezi) { e.preventDefault(); return; }
         e.preventDefault();
         bezi = true;
@@ -2538,41 +2592,40 @@ function kvCesta(cesta) {
         const b = tlacidlo();
         if (b) { b.disabled = true; b.classList.add('je-odosielane'); }
 
-        const subory = maSubory();
         const adresaMailu = doMailu();
         if (zalohaOdkaz) zalohaOdkaz.setAttribute('href', adresaMailu);
-
-        /* Bez servera netreba nikam posielať nič. Klik na tlačidlo je gesto
-           používateľa, takže poštový klient sa otvorí spoľahlivo — a dopyt
-           odchádza z adresy zákazníka, teda nemôže sa stratiť po ceste. */
-        if (!SERVER) {
-          textyPreMail();
-          uvolni();
-          ukaz(subory);
-          try { window.location.href = adresaMailu; } catch (chyba) {}
-          return;
-        }
 
         const stop = ('AbortController' in window) ? new AbortController() : null;
         const cakac = window.setTimeout(() => { if (stop) stop.abort(); }, 20000);
 
-        fetch(SERVER, {
-          method: 'POST',
-          body: new FormData(f),
-          signal: stop ? stop.signal : undefined
-        }).then((odpoved) => {
+        try {
+          const fd = new FormData(f);
+          const hod = (k) => String(fd.get(k) || '').trim();
+          const telo = {
+            typ: hod('contact[Čo rieši]'), meno: hod('contact[name]'),
+            telefon: hod('contact[phone]'), email: hod('contact[email]'),
+            miesto: hod('contact[Miesto realizácie]'), sprava: hod('contact[body]'),
+            suhlas: hod('contact[Súhlas]'), website: hod('website'),
+            startedAt: Number(hod('startedAt')) || 0, stranka: location.href,
+            prilohy: await pripravPrilohy(f)
+          };
+          const odpoved = await fetch(SERVER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(telo),
+            signal: stop ? stop.signal : undefined
+          });
           window.clearTimeout(cakac);
-          /* Stav odpovede sa dá prečítať, len keď je cieľ na tej istej doméne
-             alebo posiela hlavičky CORS. Keď sa prečítať nedá, tvárime sa, že
-             sme nič nepotvrdili — radšej e-mail navyše ako stratený dopyt. */
-          if (odpoved && odpoved.type !== 'opaque' && !odpoved.ok) throw new Error('HTTP ' + odpoved.status);
+          if (!odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           uvolni();
           textySpat();
-          ukaz(subory);
-        }).catch(() => {
+          ukaz(false);
+        } catch (err) {
           window.clearTimeout(cakac);
           zlyhalo(adresaMailu);
-        });
+          const popis = chyba && chyba.querySelector('.kh-dakujem__text');
+          if (popis && err && /Priložiť|Prílohy/.test(err.message || '')) popis.textContent = err.message;
+        }
       });
 
       const spat = chyba && chyba.querySelector('[data-k-spat]');
@@ -2593,6 +2646,77 @@ function kvCesta(cesta) {
         f.scrollIntoView({ behavior: REDUCED.matches ? 'auto' : 'smooth', block: 'start' });
       });
     });
+  }
+
+  /* --- Vlastný popup dopytu ---------------------------------------------
+     Používa presne ten istý formulár, ktorý je súčasťou stránky. Neexistuje
+     teda druhá kópia polí ani cudzí app launcher. Pri vypnutom JavaScripte
+     ostane formulár normálne v kontaktnej sekcii. */
+  function initDopytModal(root) {
+    const form = root.querySelector('form[data-k-dopyt]');
+    const karta = form && form.closest('.kh-cta__card');
+    const sekcia = karta && karta.closest('.kh-cta');
+    if (!form || !karta || !sekcia || document.querySelector('[data-k-dopyt-modal]')) return;
+
+    const povodneMiesto = document.createElement('div');
+    povodneMiesto.className = 'kh-cta__card kh-cta__otvarac k-rise is-in';
+    povodneMiesto.innerHTML = '<p class="k-eyebrow">Cenová ponuka zadarmo</p>' +
+      '<h2 class="k-h2">Povedzte nám, čo potrebujete</h2>' +
+      '<p class="k-copy">Približný rozmer, miesto a pár fotiek stačia. Formulár zaberie približne dve minúty.</p>' +
+      '<button type="button" class="k-btn k-btn--primary" data-k-modal-open>Otvoriť formulár dopytu' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+    karta.parentNode.insertBefore(povodneMiesto, karta);
+
+    const modal = document.createElement('div');
+    modal.className = 'kh-modal';
+    modal.hidden = true;
+    modal.setAttribute('data-k-dopyt-modal', '');
+    modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
+      '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
+      '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť formulár">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button>' +
+      '<div class="kh-modal__znacka"><span>KOVER<span>TA</span></span><small>Nezáväzná cenová ponuka</small></div>' +
+      '<div class="kh-modal__telo"></div></section>';
+    modal.querySelector('.kh-modal__telo').appendChild(karta);
+    document.body.appendChild(modal);
+    const nadpis = karta.querySelector('.kh-cta__head h2');
+    if (nadpis) nadpis.id = 'kModalTitle';
+
+    let navrat = null;
+    const zavri = () => {
+      if (modal.hidden) return;
+      modal.classList.remove('is-open');
+      document.body.classList.remove('ma-kh-modal');
+      window.setTimeout(() => { modal.hidden = true; }, REDUCED.matches ? 0 : 220);
+      if (navrat && navrat.focus) navrat.focus({ preventScroll: true });
+    };
+    const otvor = (spustac) => {
+      navrat = spustac || document.activeElement;
+      modal.hidden = false;
+      requestAnimationFrame(() => modal.classList.add('is-open'));
+      document.body.classList.add('ma-kh-modal');
+      const prve = form.querySelector('input:not([type="hidden"]), button, textarea');
+      window.setTimeout(() => { if (prve) prve.focus({ preventScroll: true }); }, REDUCED.matches ? 0 : 240);
+    };
+
+    modal.querySelectorAll('[data-k-modal-close]').forEach((b) => b.addEventListener('click', zavri));
+    povodneMiesto.querySelector('[data-k-modal-open]').addEventListener('click', (e) => otvor(e.currentTarget));
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('a[href*="#ponuka"], button[data-k-dopyt-open]');
+      if (!a || modal.contains(a)) return;
+      e.preventDefault(); otvor(a);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden) zavri();
+      if (e.key !== 'Tab' || modal.hidden) return;
+      const prvky = [...modal.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),a[href]')]
+        .filter((x) => x.offsetParent !== null);
+      if (!prvky.length) return;
+      const prvy = prvky[0], posledny = prvky[prvky.length - 1];
+      if (e.shiftKey && document.activeElement === prvy) { e.preventDefault(); posledny.focus(); }
+      else if (!e.shiftKey && document.activeElement === posledny) { e.preventDefault(); prvy.focus(); }
+    });
+    if (location.hash === '#ponuka') otvor(null);
   }
 
   /* --- Krátka slučka vnútri obsahu ---------------------------------------
@@ -3548,7 +3672,7 @@ function kvCesta(cesta) {
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initSelect, initSubory, initScrub, initPrelet,
-                 initDopyt, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
+                 initDopyt, initDopytModal, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
 
   const davkuj = (ulohy) => {
     let i = 0;
