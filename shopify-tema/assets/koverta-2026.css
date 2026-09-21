@@ -13518,9 +13518,6 @@ body:not(.k-home) .k .kh-hero__chip {
   .k .kh-faq__intro-in { position: static; }
 }
 
-/* Biele hodnotenie pod faktami v úvodnej obrazovke sa neopakuje. */
-.k .kh-hero__rating { display: none !important; }
-
 /* Fotografia v bloku Kompletný servis je na každej stránke tá istá. Pôvodný
    obrázok ďalej drží rozmery prvku, ale vizuálne ho nahrádza spoločný záber. */
 .k .kh-cta__foto {
