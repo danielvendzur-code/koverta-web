@@ -585,8 +585,8 @@ ${v.spolocnyChvost.join('\n')}
   const nastavenia = path.join(CIEL, 'config', 'settings_data.json');
   if (!fs.existsSync(nastavenia)) fs.writeFileSync(nastavenia, '{"current":{}}\n');
   /* App embed musí zostať zapnutý, lebo poskytuje Formful.openDialog(). Jeho
-     anglický teaser však duplikuje naše CTA a na mobile prekrýva pätičku.
-     Aplikáciu necháme načítať, ale odstránime text launchera. */
+     vlastný launcher však duplikuje naše CTA a na mobile prekrýva pätičku.
+     Aplikáciu necháme načítať, ale launcher spravíme nulový a priehľadný. */
   try {
     const povodne = fs.readFileSync(nastavenia, 'utf8');
     const zaciatokJson = povodne.indexOf('{');
@@ -597,6 +597,9 @@ ${v.spolocnyChvost.join('\n')}
       if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
       blok.settings = blok.settings || {};
       blok.settings.title = '';
+      blok.settings.icon_size = 0;
+      blok.settings.button_padding = 0;
+      blok.settings.background_color = 'rgba(0, 0, 0, 0)';
     }
     fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
   } catch (e) {

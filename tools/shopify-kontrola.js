@@ -151,6 +151,10 @@ if (fs.existsSync(nastavenia)) {
       if ((blok.settings && blok.settings.title || '').trim()) {
         nalez(nastavenia, 'Formful launcher zobrazuje text cez obsah stránky');
       }
+      if (Number(blok.settings && blok.settings.icon_size) !== 0 ||
+          Number(blok.settings && blok.settings.button_padding) !== 0) {
+        nalez(nastavenia, 'Formful launcher ostáva viditeľný ako prázdny štvorec');
+      }
     }
   } catch (e) {
     nalez(nastavenia, 'nie je platný JSON: ' + e.message);
