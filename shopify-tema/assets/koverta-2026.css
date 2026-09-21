@@ -13578,6 +13578,8 @@ body.ma-kh-modal { overflow: hidden; }
 
 .kh-modal[hidden] { display: none !important; }
 .kh-modal {
+  --k-head: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+  --k-body: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
   position: fixed; inset: 0; z-index: 2147483000;
   display: grid; place-items: center; padding: 22px;
   color: var(--k-ink); font-family: var(--k-body);
@@ -13636,6 +13638,24 @@ body.ma-kh-modal { overflow: hidden; }
 .kh-modal .kh-field--interest select:focus {
   border-color: var(--k-amber); outline: 3px solid rgba(255,204,0,.18); background: #fff;
 }
+.kh-modal .kh-select { position: relative; }
+.kh-modal .kh-select__btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; min-height: 52px; padding: 12px 16px;
+  border: 1px solid rgba(18,23,26,.16); border-radius: var(--k-r-sm);
+  background: #f7f6f2; color: var(--k-ink); text-align: left;
+  font: 650 15px/1.2 var(--k-head); cursor: pointer;
+  transition: border-color 200ms var(--k-ease), background-color 200ms var(--k-ease);
+}
+.kh-modal .kh-select__btn:hover { border-color: rgba(18,23,26,.45); background: #fff; }
+.kh-modal .kh-select__list {
+  position: absolute; z-index: 20; inset: calc(100% + 6px) 0 auto;
+  display: grid; gap: 2px; margin: 0; padding: 6px; list-style: none;
+  border: 1px solid var(--k-hair); border-radius: var(--k-r-sm);
+  background: #fff; box-shadow: 0 18px 36px -20px rgba(9,12,14,.4);
+  font-family: var(--k-body);
+}
+.kh-modal .kh-select__list[hidden] { display: none; }
 .kh-modal .kh-field input,
 .kh-modal .kh-field textarea,
 .kh-modal .kh-select__btn { background: #f7f6f2; border-color: rgba(18,23,26,.16); }
