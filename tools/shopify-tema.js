@@ -73,6 +73,12 @@ const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
 /* Formulár v aplikácii Formful. */
 const FORMFUL = 'form_LaKRq0tyt4';
 
+/* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
+ * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
+ * error“. Galéria má stovky položiek, preto veľké telá rozdelíme na menšie
+ * snippety a pôvodné meno ponecháme ako krátky zaraďovač. */
+const MAX_SNIPPET_BAJTOV = 180 * 1024;
+
 const PRESKOC = new Set(['node_modules', '.git', 'coordination', 'qa-artifacts',
   'archiv-expivi', 'shopify-tema', 'tools', 'test', 'interny-odhad-patiek']);
 
@@ -486,7 +492,27 @@ ${v.spolocnyChvost.join('\n')}
     const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
     const telo = hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
       (navyse ? '\n' + navyse + '\n' : '\n');
-    fs.writeFileSync(path.join(CIEL, 'snippets', s.a.handle + '.liquid'), telo);
+    const ciel = path.join(CIEL, 'snippets', s.a.handle + '.liquid');
+    if (Buffer.byteLength(telo) <= MAX_SNIPPET_BAJTOV) {
+      fs.writeFileSync(ciel, telo);
+      continue;
+    }
+
+    const casti = [];
+    let cast = '';
+    for (const riadok of telo.match(/.*(?:\n|$)/g).filter(Boolean)) {
+      if (cast && Buffer.byteLength(cast + riadok) > MAX_SNIPPET_BAJTOV) {
+        casti.push(cast);
+        cast = '';
+      }
+      cast += riadok;
+    }
+    if (cast) casti.push(cast);
+
+    fs.writeFileSync(ciel, casti.map((_, i) =>
+      "{% include '" + s.a.handle + '-cast-' + (i + 1) + "' %}").join('\n') + '\n');
+    casti.forEach((obsah, i) => fs.writeFileSync(
+      path.join(CIEL, 'snippets', s.a.handle + '-cast-' + (i + 1) + '.liquid'), obsah));
   }
 
   /* Sekcia stránky. Existuje kvôli jednej veci: bloky aplikácií sa dajú
@@ -558,6 +584,27 @@ ${v.spolocnyChvost.join('\n')}
      na dopyt prestalo otvárať dialóg. Zakladá sa len vtedy, keď ešte nie je. */
   const nastavenia = path.join(CIEL, 'config', 'settings_data.json');
   if (!fs.existsSync(nastavenia)) fs.writeFileSync(nastavenia, '{"current":{}}\n');
+  /* App embed musí zostať zapnutý, lebo poskytuje Formful.openDialog(). Jeho
+     vlastný launcher však duplikuje naše CTA a na mobile prekrýva pätičku.
+     Aplikáciu necháme načítať, ale launcher spravíme nulový a priehľadný. */
+  try {
+    const povodne = fs.readFileSync(nastavenia, 'utf8');
+    const zaciatokJson = povodne.indexOf('{');
+    const hlavickaJson = zaciatokJson > 0 ? povodne.slice(0, zaciatokJson) : '';
+    const data = JSON.parse(povodne.slice(zaciatokJson));
+    const bloky = data.current && data.current.blocks;
+    for (const blok of Object.values(bloky || {})) {
+      if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
+      blok.settings = blok.settings || {};
+      blok.settings.title = '';
+      blok.settings.icon_size = 0;
+      blok.settings.button_padding = 0;
+      blok.settings.background_color = 'rgba(0, 0, 0, 0)';
+    }
+    fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
+  } catch (e) {
+    chyby.push('config/settings_data.json sa nedá upraviť: ' + e.message);
+  }
   fs.writeFileSync(path.join(CIEL, 'locales', 'sk.default.json'), '{}\n');
 
   fs.writeFileSync(path.join(CIEL, 'SUBORY-DO-OBCHODU.txt'),

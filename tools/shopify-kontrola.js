@@ -32,6 +32,7 @@ const path = require('node:path');
 const KOREN = path.resolve(__dirname, '..');
 const TEMA = path.join(KOREN, 'shopify-tema');
 const FORMULAR = 'form_LaKRq0tyt4';
+const MAX_SNIPPET_BAJTOV = 180 * 1024;
 
 const nalezy = [];
 function nalez(kde, co) { nalezy.push(path.relative(KOREN, kde) + ': ' + co); }
@@ -56,6 +57,15 @@ const vAssets = new Set(fs.existsSync(path.join(TEMA, 'assets'))
   ? fs.readdirSync(path.join(TEMA, 'assets')) : []);
 const vSnippets = new Set((fs.existsSync(path.join(TEMA, 'snippets'))
   ? fs.readdirSync(path.join(TEMA, 'snippets')) : []).map((m) => m.replace(/\.liquid$/, '')));
+
+/* Veľký snippet vie GitHub niesť, ale Shopify ho pri synchronizácii vynechá.
+   Odkazujúca sekcia potom na živej stránke zobrazí Liquid error. */
+for (const subor of vsetky.filter((p) => /snippets\/.*\.liquid$/.test(p))) {
+  const bajty = fs.statSync(subor).size;
+  if (bajty > MAX_SNIPPET_BAJTOV) {
+    nalez(subor, 'má ' + bajty + ' B — treba ho rozdeliť pod ' + MAX_SNIPPET_BAJTOV + ' B');
+  }
+}
 
 /* 1 · asset_url a file_url ------------------------------------------------ */
 
@@ -133,6 +143,21 @@ if (fs.existsSync(nastavenia)) {
      v nich ale formulár raz bol, nesmie sa stratiť. */
   if (/formful/i.test(text) && !text.includes(FORMULAR)) {
     nalez(nastavenia, 'embed Formfulu stratil formulár ' + FORMULAR);
+  }
+  try {
+    const data = JSON.parse(text.slice(text.indexOf('{')));
+    for (const blok of Object.values((data.current && data.current.blocks) || {})) {
+      if (!/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) continue;
+      if ((blok.settings && blok.settings.title || '').trim()) {
+        nalez(nastavenia, 'Formful launcher zobrazuje text cez obsah stránky');
+      }
+      if (Number(blok.settings && blok.settings.icon_size) !== 0 ||
+          Number(blok.settings && blok.settings.button_padding) !== 0) {
+        nalez(nastavenia, 'Formful launcher ostáva viditeľný ako prázdny štvorec');
+      }
+    }
+  } catch (e) {
+    nalez(nastavenia, 'nie je platný JSON: ' + e.message);
   }
 }
 

@@ -26,11 +26,11 @@
         "disabled": false,
         "settings": {
           "form_id": "form_LaKRq0tyt4",
-          "icon_size": 30,
-          "title": "Don't miss out!",
-          "background_color": "#ffffff",
+          "icon_size": 0,
+          "title": "",
+          "background_color": "rgba(0, 0, 0, 0)",
           "text_color": "#000000",
-          "button_padding": 12,
+          "button_padding": 0,
           "border_radius": 0,
           "horizontal_position": 5,
           "vertical_position": 95
