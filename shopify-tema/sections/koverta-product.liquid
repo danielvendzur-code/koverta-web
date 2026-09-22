@@ -245,7 +245,7 @@
 
   <dialog class="kp-lightbox" data-kp-lightbox><button type="button" data-kp-lightbox-close aria-label="Zavrieť">×</button>{%- if product.featured_media -%}<img data-kp-lightbox-image src="{{ product.featured_media.preview_image | image_url: width: 2000 }}" alt="{{ product.featured_media.alt | default: product.title | escape }}">{%- endif -%}</dialog>
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":{{ product.title | json }},"description":{{ product.description | strip_html | json }},"brand":{"@type":"Brand","name":"Koverta"},"url":{{ canonical_url | json }},"offers":{"@type":"Offer","priceCurrency":{{ shop.currency | json }},"price":{{ variant.price | divided_by: 100.0 | json }},"url":{{ canonical_url | json }},"availability":"{% if variant.available %}https://schema.org/PreOrder{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":{{ product.title | json }},"description":{{ product.description | strip_html | json }},"brand":{"@type":"Brand","name":"Koverta"},"url":{{ canonical_url | json }},"offers":{"@type":"Offer","priceCurrency":{{ shop.currency | json }},"price":{{ variant.price | divided_by: 100.0 | json }},"url":{{ canonical_url | json }},"availability":"{% if variant.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>
 </main>
 
 {% schema %}
