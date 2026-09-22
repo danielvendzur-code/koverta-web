@@ -34,6 +34,15 @@
 <meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ kv_titulok | escape }}">
+{%- if kv_popis != blank %}
+<meta name="twitter:description" content="{{ kv_popis | escape }}">
+{%- endif %}
+{%- if request.page_type == 'product' and product %}
+{%- assign kv_variant = product.selected_or_first_available_variant %}
+<meta property="og:price:amount" content="{{ kv_variant.price | divided_by: 100.0 }}">
+<meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
+{%- endif %}
 {%- render 'kv-og', page: page, product: product, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
@@ -96,6 +105,7 @@
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <script>
   /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
      v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka

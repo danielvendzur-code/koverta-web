@@ -4945,8 +4945,10 @@ function kvAdresa(kluc, zaloha) {
                      Predošlé kontrasty -5,5/+3,5 % vytvorili pri zmenšení
                      interferenčné vlny a strecha vyzerala pokrčená. Jemný
                      rozdiel zachová čitateľný smer rebier bez moiré. */
-                  tone = flat ? shade(hex, high ? 0.010 : -0.006)
-                              : shade(hex, zb > za ? -0.014 : 0.004);
+                  /* Vlna musí byť čitateľná ako plech: bok rebra odvrátený od
+                     svetla je tmavší, dno vlny o odtieň tmavšie než hrebeň. */
+                  tone = flat ? shade(hex, high ? 0.03 : -0.08)
+                              : shade(hex, zb > za ? -0.32 : -0.17);
                 }
                 const cavity = upward ? 0 : trapProfile01((a + b) / 2);
                 // Less skylight reaches the recessed upper channel. The paint
@@ -5001,6 +5003,14 @@ function kvAdresa(kluc, zaloha) {
                a nie je čo vidieť, dlhé skryté pásy tam len mýlia triedenie. */
             drawTrapSurface(tx0, lx0, ly0, ly1, trapHiddenZ, vrchHex, true);
             drawTrapSurface(lx1, tx1, ly0, ly1, trapHiddenZ, vrchHex, true);
+            /* Pozdĺž bokov končil vrch plechu 6 mm za hranou lemovania a
+               cez medzeru k zvislému ramenu bolo zhora vidieť priečne
+               profily pod strechou. Zhora smie byť vidieť len plech a
+               lemovanie: medzeru zatvorí rovný pás na úrovni dna vlny,
+               hlboko pod ramenom, takže sa s ním v hĺbke nebije. */
+            const trapDnoZ = () => trapBot + TRAP_SKIN_VIS;
+            drawTrapSurface(tx0, tx1, ty0, ly0, trapDnoZ, vrchHex, true);
+            drawTrapSurface(tx0, tx1, ly1, ty1, trapDnoZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates

@@ -85,6 +85,7 @@
             {%- if article.image -%}<img src="{{ article.image | image_url: width: 1600 }}" width="{{ article.image.width }}" height="{{ article.image.height }}" alt="{{ article.image.alt | default: article.title | escape }}">{%- endif -%}
             {{ article.content }}
           </article>
+          <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":{{ article.title | json }},"datePublished":{{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},"dateModified":{{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},"author":{"@type":"Organization","name":"Koverta"},"publisher":{"@type":"Organization","name":"Koverta","url":{{ shop.url | json }}},"mainEntityOfPage":{{ canonical_url | json }}{% if article.image %},"image":{{ article.image | image_url: width: 1600 | prepend: 'https:' | json }}{% endif %}}</script>
           <p class="ko-dalej"><a class="k-btn k-btn--line" href="/pages/nove-realizacie">Ďalšie realizácie</a> <a class="k-btn k-btn--primary" href="/pages/nove-kontakt#ponuka">Nezáväzná cenová ponuka</a></p>
       {%- endcase -%}
     </div>

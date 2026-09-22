@@ -144,7 +144,7 @@
         </nav>
 
         <h1 class="kp-title" id="kpTitle">{{ product.title }}</h1>
-        <p class="kp-sub">{{ eyebrow }} · {{ area }} m² zastrešenej plochy</p>
+        <p class="kp-sub">{{ eyebrow }}</p>
 
         <div class="kp-cena">
           <strong data-kp-price>{{ cena }}</strong>
@@ -202,8 +202,10 @@
           <button class="k-btn k-btn--primary kp-kosik" type="submit" data-kp-add{% unless variant.available %} disabled{% endunless %}>Pridať do košíka</button>
         {% endform %}
 
-        <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if product.featured_media %} data-k-dopyt-obrazok="{{ product.featured_media.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
-        <a class="kp-3d" href="{{ configurator_url }}">Upraviť rozmer a doplnky v 3D konfigurátore <span aria-hidden="true">→</span></a>
+        <div class="kp-akcie">
+          <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if product.featured_media %} data-k-dopyt-obrazok="{{ product.featured_media.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
+        <a class="k-btn k-btn--line kp-3d" href="{{ configurator_url }}">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
 
         <ul class="kp-usp">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/></svg>Doprava a montáž v cene po celom Slovensku</li>
