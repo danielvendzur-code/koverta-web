@@ -256,6 +256,8 @@ def strankuj():
     <p class="k-copy" style="max-width:62ch">{detail}</p>
     <p class="k-copy" style="max-width:62ch"><strong>Uvedená cena je cena základnej zostavy.</strong> Konečnú sumu ovplyvní zvolený odtieň, pripravenosť podkladu a doplnky; potvrdíme ju v nezáväznej ponuke.</p>
 
+    <p class="k-copy" style="max-width:62ch"><strong>Kompletné riešenie na kľúč.</strong> Koverta je oceľový prístrešok vyrábaný na Slovensku. Súčasťou riešenia je nosná konštrukcia s povrchovou ochranou, strecha, integrované odvodnenie, doprava, odborná montáž a bezplatné zameranie. Rozmer upravíme podľa pozemku, parkovania alebo terasy a pripravíme cenovú ponuku pre realizáciu kdekoľvek na Slovensku.</p>
+
     <div class="kh-hero__actions" style="margin:2rem 0">
       <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
       <!-- Rozmer ide do adresy, nie do data atribútu: formulár je na
@@ -267,6 +269,7 @@ def strankuj():
     <ul class="kv-related">{odkazy}<li><a href="../../">Celý katalóg rozmerov</a></li></ul>
   </div>
 </section>
+<script src="../../../assets/rozmer-produkt.js" defer></script>
 </main>'''
                 cesta = os.path.join(KOREN, rel)
                 os.makedirs(cesta, exist_ok=True)
