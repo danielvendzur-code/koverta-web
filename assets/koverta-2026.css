@@ -13592,7 +13592,7 @@ body.ma-kh-modal { overflow: hidden; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 .kh-modal__okno {
-  position: relative; width: min(940px, 100%); max-height: min(920px, calc(100svh - 44px));
+  position: relative; width: min(720px, 100%); max-height: min(820px, calc(100svh - 64px));
   overflow: auto; overscroll-behavior: contain;
   border: 1px solid rgba(255,255,255,.18); border-radius: 26px;
   background: var(--k-white); box-shadow: 0 32px 90px rgba(0,0,0,.36);
@@ -13612,20 +13612,20 @@ body.ma-kh-modal { overflow: hidden; }
 .kh-modal__zavriet svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .kh-modal__znacka {
   display: flex; align-items: center; justify-content: space-between; gap: 18px;
-  padding: 22px 82px 20px 34px; background: var(--k-ink); color: #fff;
+  padding: 18px 76px 16px 28px; background: var(--k-ink); color: #fff;
 }
 .kh-modal__znacka > span { font-family: var(--k-head); font-weight: 800; letter-spacing: .09em; }
 .kh-modal__znacka > span span { color: var(--k-amber); }
 .kh-modal__znacka small { color: rgba(255,255,255,.68); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
 .kh-modal__telo .kh-cta__card {
-  display: block !important; width: 100%; margin: 0; padding: clamp(28px, 4vw, 48px);
+  display: block !important; width: 100%; margin: 0; padding: clamp(24px, 3vw, 34px);
   border: 0; border-radius: 0; box-shadow: none; background: var(--k-white);
   opacity: 1 !important; transform: none !important; visibility: visible !important;
 }
 .kh-modal .kh-cta__head { padding-right: 56px; }
 .kh-modal .kh-cta__head .k-h2 { max-width: 18ch; }
-.kh-modal .kh-form { margin-top: 28px; gap: 18px; }
-.kh-modal .kh-form__grid { gap: 14px; }
+.kh-modal .kh-form { margin-top: 20px; gap: 14px; }
+.kh-modal .kh-form__grid { gap: 11px 14px; }
 .kh-modal .kh-field--interest { display: grid; gap: 8px; margin-bottom: 18px; }
 .kh-modal .kh-field--interest > span,
 .kh-modal .kh-field > span { font-family: var(--k-head); }
