@@ -134,6 +134,20 @@ if (!fs.existsSync(sekcia)) {
   nalez(sekcia, 'stále povoľuje app blok cudzieho formulára');
 }
 
+
+/* 4c · layout a košík ----------------------------------------------------- */
+const layoutSubor = path.join(TEMA, 'layout', 'theme.liquid');
+if (fs.existsSync(layoutSubor)) {
+  const text = fs.readFileSync(layoutSubor, 'utf8');
+  if (!/request\.page_type\s*==\s*['"]product['"]/.test(text)) nalez(layoutSubor, 'layout nemá dynamický product og:type');
+  if (!/koverta-shopify\.css/.test(text)) nalez(layoutSubor, 'layout nenačítava koverta-shopify.css');
+}
+const headerSubor = path.join(TEMA, 'sections', 'kv-hlavicka.liquid');
+if (fs.existsSync(headerSubor)) {
+  const text = fs.readFileSync(headerSubor, 'utf8');
+  if (!/kv-cart-link/.test(text) || !/routes\.cart_url/.test(text)) nalez(headerSubor, 'hlavička nemá Shopify košík');
+}
+
 /* 5 · vlastný formulár, bez Formfulu ------------------------------------- */
 
 const nastavenia = path.join(TEMA, 'config', 'settings_data.json');
