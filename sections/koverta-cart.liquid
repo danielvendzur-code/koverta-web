@@ -1,0 +1,50 @@
+{{ 'koverta-product.css' | asset_url | stylesheet_tag }}
+<main class="kp-cart k" id="obsah">
+  <div class="kp-wrap">
+    <div class="kp-cart__box">
+      <header class="kp-cart__head">
+        <div><p class="kp-eyebrow">Košík</p><h1 class="kp-h2">Vaša objednávka</h1></div>
+        <a href="/pages/nove-pristresky-pre-auta">Pokračovať vo výbere</a>
+      </header>
+      {%- if cart.item_count == 0 -%}
+        <div style="padding:50px 0">
+          <h2>Košík je prázdny.</h2>
+          <p>Vyberte katalógový rozmer prístrešku a pridajte ho do košíka.</p>
+          <a class="k-btn k-btn--primary" href="/pages/nove-pristresky-pre-auta">Prístrešky Koverta</a>
+        </div>
+      {%- else -%}
+        <form action="{{ routes.cart_url }}" method="post" novalidate>
+          {%- for item in cart.items -%}
+            <article class="kp-cart__item">
+              <a href="{{ item.url }}">
+                {%- if item.image -%}<img src="{{ item.image | image_url: width: 260 }}" width="{{ item.image.width }}" height="{{ item.image.height }}" alt="{{ item.image.alt | default: item.product.title | escape }}">{%- endif -%}
+              </a>
+              <div>
+                <a href="{{ item.url }}"><strong>{{ item.product.title }}</strong></a>
+                {%- unless item.variant.title == 'Default Title' -%}<small style="display:block;margin-top:5px;color:#62696c">{{ item.variant.title }}</small>{%- endunless -%}
+                <a href="{{ routes.cart_change_url }}?line={{ forloop.index }}&quantity=0" style="display:inline-block;margin-top:9px;font-size:12px">Odstrániť</a>
+              </div>
+              <div class="kp-cart__controls">
+                <input class="kp-cart__qty" aria-label="Množstvo" type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric">
+              </div>
+              <strong class="kp-cart__price">{{ item.final_line_price | money }}</strong>
+            </article>
+          {%- endfor -%}
+          <div class="kp-cart__summary">
+            <div class="kp-cart__summary-inner">
+              <div class="kp-cart__total"><span>Medzisúčet</span><strong>{{ cart.total_price | money }}</strong></div>
+              <p style="color:#62696c;font-size:12px;line-height:1.5">Platobné údaje spracúva iba Shopify checkout a aktivovaná platobná brána obchodu.</p>
+              <div class="kp-cart__buttons">
+                <button type="submit" name="update">Aktualizovať</button>
+                <button type="submit" name="checkout">Pokračovať k platbe</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      {%- endif -%}
+    </div>
+  </div>
+</main>
+{% schema %}
+{"name":"Koverta košík","settings":[]}
+{% endschema %}
