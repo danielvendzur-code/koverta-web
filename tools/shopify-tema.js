@@ -485,18 +485,25 @@ function zapis(v) {
      v štvrtom a piatom stĺpci STRANKY-NA-ZALOZENIE.txt. Vlastné sem
      nepíšeme: stáli by v hlavičke dvakrát a Google by druhý ignoroval.
      Adresu canonical dáva Shopify a je to jeho adresa, nie naša. -->
-<title>{{ page_title }}</title>
-{%- if page_description %}
-<meta name="description" content="{{ page_description | escape }}">
+{%- assign kv_titulok = page_title -%}
+{%- assign kv_popis = page_description -%}
+{%- comment -%} Úvod berie titulok a popis z webu, nie zo starých nastavení obchodu. {%- endcomment -%}
+{%- if template.name == 'index' -%}
+{%- assign kv_titulok = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).celyTitulok || '')} -%}
+{%- assign kv_popis = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).popis || '')} -%}
+{%- endif -%}
+<title>{{ kv_titulok }}</title>
+{%- if kv_popis != blank %}
+<meta name="description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <link rel="canonical" href="{{ canonical_url }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
 <meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
-<meta property="og:title" content="{{ page_title | escape }}">
+<meta property="og:title" content="{{ kv_titulok | escape }}">
 <meta property="og:url" content="{{ canonical_url }}">
-{%- if page_description %}
-<meta property="og:description" content="{{ page_description | escape }}">
+{%- if kv_popis != blank %}
+<meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
 {%- render 'kv-og', page: page, product: product, template: template, request: request %}

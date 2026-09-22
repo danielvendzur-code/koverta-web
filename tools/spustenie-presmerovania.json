@@ -1,0 +1,34 @@
+{
+  "poznamka": "Presmerovania pri prepnutí na tému koverta-web. Shopify presmeruje len adresu, ktorá neexistuje, preto sa staré stránky a kolekcie pri spustení stiahnu z Online Store. Produkty sú v tools/shopify-product-redirects.json.",
+  "stranky": {
+    "/pages/pristresky-pre-auta": "/pages/nove-pristresky-pre-auta",
+    "/pages/o-pristreskoch-pre-auta": "/pages/nove-pristresky-pre-auta",
+    "/pages/pre-dom-a-zahradu": "/pages/nove-zahradne-pristresky",
+    "/pages/o-zahradnych-pristreskoch": "/pages/nove-zahradne-pristresky",
+    "/pages/bioklimaticke-pergoly": "/pages/nove-bioklimaticke-pergoly",
+    "/pages/galeria-pristresky-pre-auta": "/pages/nove-realizacie",
+    "/pages/galeria-zahradne-pristresky": "/pages/nove-realizacie",
+    "/pages/galeria-bioklimaticke-pergoly": "/pages/nove-bioklimaticke-pergoly",
+    "/pages/galeria-pristresky-agava": "/pages/nove-carport-soltec",
+    "/pages/pergoly-s-pevnou-strechou-multiport": "/pages/nove-pevne-prestresenia",
+    "/pages/tienenie": "/pages/nove-tienenie",
+    "/pages/vonkajsie-kuchyne": "/pages/nove-outdoor-kuchyne",
+    "/pages/kontakt": "/pages/nove-kontakt",
+    "/pages/vseobecne-obchodne-podmienky": "/pages/nove-obchodne-podmienky",
+    "/pages/zasady-ochrany-osobnych-udajov": "/pages/nove-ochrana-sukromia",
+    "/pages/informacie-o-cookies": "/pages/nove-ochrana-sukromia",
+    "/pages/reklamacny-poriadok": "/pages/nove-reklamacie"
+  },
+  "kolekcie": {
+    "/collections/pristresky-pre-auta": "/pages/nove-pristresky-pre-auta",
+    "/collections/zahradne-pristresky": "/pages/nove-zahradne-pristresky",
+    "/collections/vchodove-pristresky": "/pages/nove-pevne-prestresenia",
+    "/collections/pristresky-pre-auta-agava": "/pages/nove-carport-soltec",
+    "/collections/bioklimaticke-pergoly": "/pages/nove-bioklimaticke-pergoly",
+    "/collections/pergoly-s-otvaracou-strechou": "/pages/nove-bioklimaticke-pergoly",
+    "/collections/pergoly-s-pevnou-strechou-multiport": "/pages/nove-pevne-prestresenia",
+    "/collections/outdoor-kuchyne": "/pages/nove-outdoor-kuchyne",
+    "/collections/tienenie": "/pages/nove-tienenie",
+    "/collections/posuvne-tienenia": "/pages/nove-tienenie"
+  }
+}
