@@ -24,4 +24,7 @@ if(!/data-kp-add/.test(product))throw new Error('produkt nemá Pridať do koší
 if(!/\/pages\/nove-konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
 const cart=fs.readFileSync(path.join(src,'sections/koverta-cart.liquid'),'utf8');
 if(!/name="checkout"/.test(cart)||!/routes\.cart_url/.test(cart))throw new Error('košík nemá natívny Shopify checkout');
+const syncScript=fs.readFileSync(path.join(ROOT,'tools','shopify-products.js'),'utf8');
+if(!/Rozmer 5 × 6 m patrí medzi najpraktickejšie dvojmiestne varianty/.test(syncScript))throw new Error('sync nechráni schválený opis 5 × 6 m');
+if(!/publishablePublish/.test(syncScript)||!/publishableUnpublish/.test(syncScript)||!/online_store/.test(syncScript))throw new Error('sync nerieši skutočné publikovanie do Online Store');
 console.log('Shopify produkty OK: 66 rozmerov; 5 × 6 m = 6 897 €; product form + cart + checkout sú prítomné.');
