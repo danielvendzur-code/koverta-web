@@ -22,6 +22,8 @@
  *                stránku a stránky na `Default page` sú prázdne
  *   formulár     téma musí niesť vlastný Koverta formulár a nesmie načítavať
  *                starý Formful embed ani jeho launcher
+ *   rozmery      odkaz na stránku katalógového rozmeru nesmie viesť do
+ *                obchodu — tie stránky žijú na statickom webe
  */
 'use strict';
 const fs = require('node:fs');
@@ -150,6 +152,35 @@ if (!formularove.some((p) => /<form id="dopyt"[\s\S]*data-k-dopyt/.test(fs.readF
 for (const subor of formularove) {
   const text = fs.readFileSync(subor, 'utf8');
   if (/Formful\.openDialog|form_LaKRq0tyt4/.test(text)) nalez(subor, 'stále odkazuje na Formful');
+}
+
+/* 6 · odkazy na stránky katalógových rozmerov -----------------------------
+   Cenová tabuľka „Vyberte si rozmer" odkazuje na 66 stránok, ktoré generuje
+   `tools/generuj-rozmery.py` a ktoré žijú na statickom webe. V obchode nie sú
+   a zakladať ich tam netreba. Kým odkaz viedol na `/pages/…-rozmer-…`,
+   dostal zákazník 404 priamo v cenníku, teda na tom najhoršom mieste.
+
+   Stráži sa oboje: že taký odkaz v téme nie je a že plná adresa, ktorá ho
+   nahradila, ukazuje na priečinok, ktorý v repozitári naozaj existuje. */
+
+const DO_OBCHODU_ROZMER = /href="\/pages\/[^"]*-rozmer-[^"]*"/g;
+const NA_STATICKY_ROZMER =
+  /href="https?:\/\/[^"]*\/((?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+)\/"/g;
+
+for (const subor of vsetky) {
+  if (!/\.(liquid|json)$/.test(subor)) continue;
+  const text = fs.readFileSync(subor, 'utf8');
+  const doObchodu = [...new Set(text.match(DO_OBCHODU_ROZMER) || [])];
+  if (doObchodu.length) {
+    nalez(subor, doObchodu.length + ' odkaz(ov) na rozmer vedie do obchodu (' +
+      doObchodu[0].slice(6, -1) + ') — taká stránka tam nie je a zákazník dostane 404');
+  }
+  let m;
+  while ((m = NA_STATICKY_ROZMER.exec(text))) {
+    if (!fs.existsSync(path.join(KOREN, m[1], 'index.html'))) {
+      nalez(subor, 'odkaz na rozmer ' + m[1] + ' — taký priečinok v repozitári nie je');
+    }
+  }
 }
 
 /* ------------------------------------------------------------------------- */

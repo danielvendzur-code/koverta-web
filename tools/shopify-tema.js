@@ -94,12 +94,37 @@ function najdiStranky(adresar, zoznam = []) {
   return zoznam;
 }
 
+/* Stránky katalógových rozmerov. Je ich 66 a generuje ich
+   `tools/generuj-rozmery.py` do `pristresky-pre-auta/rozmer/2500x5200/`
+   a `zahradne-pristresky/rozmer/3000x3000/`. */
+const ROZMER = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+$/;
+
 function adresa(subor) {
   const rel = path.relative(KOREN, subor).replace(/\\/g, '/');
-  if (rel === 'index.html') return { druh: 'index', handle: PREDPONA + 'uvod', url: '/pages/' + PREDPONA + 'uvod', cesta: '' };
+  if (rel === 'index.html') {
+    const h = PREDPONA + 'uvod';
+    return { druh: 'index', handle: h, url: '/pages/' + h, odkaz: '/pages/' + h, cesta: '' };
+  }
   const cesta = rel.replace(/\/index\.html$/, '').replace(/\.html$/, '');
   const handle = PREDPONA + cesta.replace(/\//g, '-');
-  return { druh: 'stranka', handle, url: '/pages/' + handle, cesta };
+  const url = '/pages/' + handle;
+  /* Odkaz na stránku rozmeru vedie na statický web, nie do obchodu.
+   *
+   * Na obchode tie stránky nie sú a nebudú: je ich 66, každá je len jeden
+   * katalógový rozmer s cenou, a zakladať ich ručne v Online Store → Pages
+   * nemá zmysel. Kým `koverta.sk` ukazovala na GitHub Pages, odkazy
+   * „Pozrieť rozmer" fungovali; po prechode na Shopify viedli na
+   * `/pages/nove-…-rozmer-3200x5200`, čo je stránka, ktorá neexistuje —
+   * teda 404 v cenovej tabuľke, na najhoršom možnom mieste.
+   *
+   * Obsah pritom existuje a funguje, len inde. Odkaz preto ide plnou adresou
+   * na GitHub Pages. Šablóna aj útržok tej stránky v téme ostávajú: keby si
+   * ich niekto v obchode predsa založil, vykreslia sa, namiesto aby stránka
+   * ostala prázdna. */
+  if (ROZMER.test(cesta)) {
+    return { druh: 'stranka', handle, url, odkaz: PAGES_ZAKLAD + '/' + cesta + '/', rozmer: true, cesta };
+  }
+  return { druh: 'stranka', handle, url, odkaz: url, cesta };
 }
 
 /* ---------------------------------------------------------------- prepisy */
@@ -279,7 +304,7 @@ function preved() {
 
   const zoznam = najdiStranky(KOREN);
   const mapa = new Map();
-  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.url); }
+  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
 
   const hlavicky = new Set();
   const paticky = new Set();
