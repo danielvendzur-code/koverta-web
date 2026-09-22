@@ -1,0 +1,17 @@
+{%- comment -%}
+  Jedna fotografia z webu Koverta (GitHub Pages, tá istá cesta ako na
+  podstránkach). meno: súbor bez prípony, w/h: rozmer originálu,
+  velka: true, ak existuje -w1600.webp, prva: true pri prvej (LCP) fotke.
+{%- endcomment -%}
+{%- liquid
+  assign zaklad = 'https://danielvendzur-code.github.io/koverta-web/assets/'
+  assign cesta = zaklad | append: meno
+  assign zdroj = cesta | append: '-w1000.webp'
+  assign sady = cesta | append: '-w640.webp 640w, ' | append: cesta | append: '-w1000.webp 1000w'
+  if velka
+    assign sady = sady | append: ', ' | append: cesta | append: '-w1600.webp 1600w'
+  else
+    assign sady = sady | append: ', ' | append: cesta | append: '.jpg ' | append: w | append: 'w'
+  endif
+-%}
+<img src="{{ zdroj }}" srcset="{{ sady }}" sizes="{{ sizes | default: '(max-width: 899px) 100vw, 58vw' }}" width="{{ w }}" height="{{ h }}" alt="{{ alt | escape }}" decoding="async"{% if prva %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>

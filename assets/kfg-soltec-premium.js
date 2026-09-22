@@ -3388,14 +3388,21 @@ function kvAdresa(kluc, zaloha) {
           /* A penumbra is dense at the core and thins quickly at the edge.
              An even alpha across every ring gave a linear ramp, which reads as
              a grey rectangle with soft corners rather than a shadow. */
-          if (!lowPowerGraphics) {
-            for (let i = 10; i >= 0; i--) {
-              const t = 1 - i / 10;
-              /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
-                 oblohy, nie z jedného smeru. */
-              shadow(40 + i * (overcast ? 42 : 26),
-                +((0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1)).toFixed(4));
-            }
+          /* Slabšie zariadenia kreslia namiesto jedenástich krúžkov štyri.
+             Kým tieň vynechali celý, prístrešok na nich visel vo vzduchu.
+             Každý z nich nesie krytie troch vynechaných, takže tieň je
+             rovnako tmavý, len s hrubším prechodom. */
+          const ringAlpha = (i) => {
+            const t = 1 - i / 10;
+            /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
+               oblohy, nie z jedného smeru. */
+            return (0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1);
+          };
+          const ringStep = lowPowerGraphics ? 3 : 1;
+          for (let i = 10; i >= 0; i -= ringStep) {
+            let clear = 1;
+            for (let j = i; j > i - ringStep && j >= 0; j--) clear *= 1 - ringAlpha(j);
+            shadow(40 + i * (overcast ? 42 : 26), +(1 - clear).toFixed(4));
           }
 
           /* Sun through open blades. Dropping the gaps between them onto the
@@ -4494,7 +4501,9 @@ function kvAdresa(kluc, zaloha) {
                  spodnou pásnicou, a tie dva milimetre boli zdola vidieť ako
                  tmavá linka po celom obvode. Začína preto na spodku rámu
                  a hore končí tam, kde končilo. */
-              put(outer, outer + LEM_T * dir, ramBot, zTop - ramBot);          // zvislé rameno
+              /* Pol milimetra pod rám: v jednej rovine so spodnou pásnicou sa
+                 hrany bili a nad stĺpmi z nich svietili svetlé prúžky. */
+              put(outer, outer + LEM_T * dir, ramBot - 0.6, zTop - ramBot + 0.6);          // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
@@ -4674,14 +4683,20 @@ function kvAdresa(kluc, zaloha) {
              *
              * Odkvapové čelo sa nezatvára: tam je rám zatiahnutý 159 mm dnu
              * zámerne a v tej kapse visí žľab. */
+            /* Pás sa lemovania nedotýka a spodok má o pár milimetrov vyššie.
+               Kým ležal líce na líci s poldruhamilimetrovým plechom a spodkom
+               v rovine jeho spodnej hrany, prebíjal sa pozinok cez lemovanie
+               ako rad svetlých bodiek a nad stĺpmi z neho svietili prúžky. */
+            const UZ_ODSTUP = 2, UZ_SPODOK = 0;
             const uzaver = (osX, u0, u1, a, b) => {
               if (u1 - u0 <= 0.01) return;
-              if (osX) boxFaces(u0, a, ramBot, u1 - u0, b - a, RAM_H, zinok, [], SHAFT, 0, false, true);
-              else boxFaces(a, u0, ramBot, b - a, u1 - u0, RAM_H, zinok, [], SHAFT, 0, false, true);
+              const z0 = ramBot + UZ_SPODOK, dz = RAM_H - UZ_SPODOK;
+              if (osX) boxFaces(u0, a, z0, u1 - u0, b - a, dz, zinok, [], SHAFT, 0, false, true);
+              else boxFaces(a, u0, z0, b - a, u1 - u0, dz, zinok, [], SHAFT, 0, false, true);
             };
-            uzaver(false, LEM_T, RAM_VSUN, RAM_ZAD, rx1);              // bok pri y = 0
-            uzaver(false, W - RAM_VSUN, W - LEM_T, RAM_ZAD, rx1);      // bok pri y = W
-            uzaver(true, LEM_T, RAM_ZAD, LEM_T, W - LEM_T);            // zadné čelo
+            uzaver(false, LEM_T + UZ_ODSTUP, RAM_VSUN, RAM_ZAD, rx1);              // bok pri y = 0
+            uzaver(false, W - RAM_VSUN, W - LEM_T - UZ_ODSTUP, RAM_ZAD, rx1);      // bok pri y = W
+            uzaver(true, LEM_T + UZ_ODSTUP, RAM_ZAD, LEM_T + UZ_ODSTUP, W - LEM_T - UZ_ODSTUP); // zadné čelo
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -4971,9 +4986,21 @@ function kvAdresa(kluc, zaloha) {
                exactly at the aperture exposed a jagged lower-skin cut, while
                the full hidden sheet won isolated depth samples on the arm. */
             const trapLap = 6;
-            drawTrapSurface(Math.max(tx0, vx0 - trapLap), Math.min(tx1, vx1 + trapLap),
-              Math.max(ty0, vy0 - trapLap), Math.min(ty1, vy1 + trapLap),
-              trapUpperZ, vrchHex, true);
+            const lx0 = Math.max(tx0, vx0 - trapLap), lx1 = Math.min(tx1, vx1 + trapLap);
+            const ly0 = Math.max(ty0, vy0 - trapLap), ly1 = Math.min(ty1, vy1 + trapLap);
+            drawTrapSurface(lx0, lx1, ly0, ly1, trapUpperZ, vrchHex, true);
+            /* Pod ramenom lemovania plech pokračuje až k zvislému ramenu.
+               Kým končil 6 mm za hranou, bolo pri šikmom pohľade zhora do
+               kapsy pod ramenom vidieť zubatý rez vlny na bokoch strechy.
+               Skrytá časť má hrebeň o TRAP_HIDDEN_CLEAR nižšie, takže sa
+               v hĺbke nebije s ramenom a na lemovaní sa neobjavia bodky. */
+            const TRAP_HIDDEN_CLEAR = 12;
+            const trapHiddenZ = (y) =>
+              trapBot + TRAP_SKIN_VIS + (TRAP_H - TRAP_SKIN_VIS - TRAP_HIDDEN_CLEAR) * trapProfile01(y);
+            /* Len na koncoch vĺn: pozdĺž bokov ide rez rovnobežne s rebrom
+               a nie je čo vidieť, dlhé skryté pásy tam len mýlia triedenie. */
+            drawTrapSurface(tx0, lx0, ly0, ly1, trapHiddenZ, vrchHex, true);
+            drawTrapSurface(lx1, tx1, ly0, ly1, trapHiddenZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
@@ -5727,7 +5754,7 @@ function kvAdresa(kluc, zaloha) {
           /* The soft shadow is part of the visible composition. Fitting only
              the steel envelope clipped it in fullscreen and made the shelter
              sit optically too high in its viewport. */
-          if (!lowPowerGraphics) {
+          {
             const shadowGrow = 40 + 10 * (overcast ? 42 : 26);
             const fitShadowSoft = overcast ? 0.16 : 1;
             const fitShadowX = 0.22 * H * (-KEY[0] / KEY[2]) * fitShadowSoft;

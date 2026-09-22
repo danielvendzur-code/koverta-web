@@ -1,1 +1,16 @@
 .kv-cart-link{position:relative;text-decoration:none}.kv-cart-link__count{position:absolute;right:-3px;top:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:#ffcc00;color:#111719;font:800 10px/17px Arial,sans-serif;text-align:center}
+
+/* Na stránkach webu je tento základ vložený priamo v obsahu stránky. Produkt,
+   košík a ostatné šablóny obchodu ho nemajú, takže tam prehliadač nechal
+   predvolených 8 px okolo celej stránky a nadpisy bez šírky písma. */
+body { margin: 0; background: #fff; }
+.k, .kv-header {
+  --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+  --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+}
+.k h1, .k h2, .k h3, .k .k-display, .k .k-h2, .k .k-h3, .k .k-h4,
+.k .kh-fact strong, .k .kh-rev__big b, .k .kh-cta__row strong,
+.k .kh-usp__item strong, .k .kh-soltec__lines strong, .k .kh-faq__item summary,
+.kv-header .kv-mega__card strong, .k .kh-fact--score b, .k .kh-cta__score b, .k .kh-proc__n {
+  font-variation-settings: "wdth" 106;
+}
