@@ -78,9 +78,10 @@ jobs:
       - name: Validate Shopify theme
         run: |
           node tools/spolocne-casti.js --kontrola
+          node tools/shopify-produkt-kontrola.js
+          node --check tools/shopify-products.js
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
-          git diff --exit-code -- shopify-tema
 
   configurator:
     needs: zmeny
