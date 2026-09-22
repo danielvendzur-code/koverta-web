@@ -13719,6 +13719,7 @@ body.ma-kh-modal { overflow: hidden; }
   .kh-modal, .kh-modal__okno { transition: none !important; }
 }
 
+
 /* Rozmerová produktová stránka ---------------------------------------------
    Pôvodný generovaný záznam ostáva funkčný bez JavaScriptu. Skript iba
    preskladá jeho existujúce prvky do tejto plnohodnotnej produktovej plochy. */
@@ -13847,4 +13848,3 @@ body.ma-kh-modal { overflow: hidden; }
   .kr-page .kr-gallery__grid figure:first-child { grid-column: auto; }
   .kr-page .kr-gallery__grid figure { min-height: 290px; }
 }
-
