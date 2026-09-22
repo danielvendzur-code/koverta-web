@@ -24,7 +24,14 @@ if(!/data-kp-add/.test(product))throw new Error('produkt nemá Pridať do koší
 if(!/\/pages\/nove-konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
 const cart=fs.readFileSync(path.join(src,'sections/koverta-cart.liquid'),'utf8');
 if(!/name="checkout"/.test(cart)||!/routes\.cart_url/.test(cart))throw new Error('košík nemá natívny Shopify checkout');
+const imageMapPath=path.join(ROOT,'tools','shopify-product-images.json');
+if(!fs.existsSync(imageMapPath))throw new Error('chýba tools/shopify-product-images.json');
+const imageMap=JSON.parse(fs.readFileSync(imageMapPath,'utf8')).products||{};
+if(Object.keys(imageMap).length!==66)throw new Error('mapa produktových fotiek má mať 66 záznamov, je '+Object.keys(imageMap).length);
+for(const [handle,imgs] of Object.entries(imageMap))if(!Array.isArray(imgs)||!imgs.length||!/^https:\/\//.test(imgs[0].url||''))throw new Error('neplatná mapa fotiek: '+handle);
+if(fs.existsSync(path.join(ROOT,'shopify-zdroj','product-images.json')))throw new Error('product-images.json nesmie byť v shopify-zdroj');
 const syncScript=fs.readFileSync(path.join(ROOT,'tools','shopify-products.js'),'utf8');
 if(!/Rozmer 5 × 6 m patrí medzi najpraktickejšie dvojmiestne varianty/.test(syncScript))throw new Error('sync nechráni schválený opis 5 × 6 m');
 if(!/publishablePublish/.test(syncScript)||!/publishableUnpublish/.test(syncScript)||!/online_store/.test(syncScript))throw new Error('sync nerieši skutočné publikovanie do Online Store');
+if(!/KOVERTA_PUBLIC_ORIGIN/.test(syncScript)||!/https:\/\/koverta\.sk/.test(syncScript))throw new Error('sync nepoužíva absolútnu produkčnú URL pre konfigurátor');
 console.log('Shopify produkty OK: 66 rozmerov; 5 × 6 m = 6 897 €; product form + cart + checkout sú prítomné.');
