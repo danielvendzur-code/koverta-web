@@ -38,6 +38,28 @@ function kvCesta(cesta) {
   return Object.prototype.hasOwnProperty.call(t, cesta) ? t[cesta] : cesta;
 }
 
+/* Meranie pre Tag Manager. Do dataLayer ide len názov udalosti a údaje
+   o stránke — nikdy meno, telefón, e-mail ani text správy. Značky (GA4,
+   Ads) aj súhlas rieši kontajner GTM-5KVNNWW5, tu sa nič nenačítava. */
+function kvMeraj(udalost, data) {
+  var w = window;
+  w.dataLayer = w.dataLayer || [];
+  var zaznam = { event: udalost, page_path: w.location.pathname, page_title: document.title };
+  if (data) for (var k in data) if (Object.prototype.hasOwnProperty.call(data, k)) zaznam[k] = data[k];
+  w.dataLayer.push(zaznam);
+}
+
+/* Klik na telefónne číslo. Jeden delegovaný poslucháč na dokumente, takže
+   pokrýva aj odkazy pridané neskôr; značka na dokumente zabráni druhej
+   registrácii pri opätovnom načítaní sekcie v Shopify. Číslo sa neposiela. */
+if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
+  document.kvTelefonMeranie = true;
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
+    if (a) kvMeraj('telefon_klik');
+  });
+}
+
 (() => {
   /* Skryté východisko odhaľovania platí len vtedy, keď skript naozaj beží.
      Keby sa nenačítal alebo spadol, ostal by celý web prázdny — a to sa už
@@ -2620,6 +2642,9 @@ function kvCesta(cesta) {
           if (!odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           uvolni();
           textySpat();
+          /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
+             ani náhradná e-mailová cesta sa nerátajú. */
+          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené' });
           ukaz(false);
         } catch (err) {
           window.clearTimeout(cakac);
