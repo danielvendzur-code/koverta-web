@@ -35,4 +35,5 @@ const syncScript=fs.readFileSync(path.join(ROOT,'tools','shopify-products.js'),'
 if(!/Rozmer 5 × 6 m patrí medzi najpraktickejšie dvojmiestne varianty/.test(syncScript))throw new Error('sync nechráni schválený opis 5 × 6 m');
 if(!/publishablePublish/.test(syncScript)||!/publishableUnpublish/.test(syncScript)||!/online_store/.test(syncScript))throw new Error('sync nerieši skutočné publikovanie do Online Store');
 if(!/KOVERTA_PUBLIC_ORIGIN/.test(syncScript)||!/https:\/\/koverta\.sk/.test(syncScript))throw new Error('sync nepoužíva absolútnu produkčnú URL pre konfigurátor');
+if(!/collectionByIdentifier/.test(syncScript)||!/pristresky-pre-auta/.test(syncScript)||!/zahradne-pristresky/.test(syncScript))throw new Error('sync nechráni členstvo produktov v Shopify kolekciách');
 console.log('Shopify produkty OK: 66 rozmerov; 5 × 6 m = 6 897 €; product form + cart + checkout sú prítomné.');
