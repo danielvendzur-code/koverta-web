@@ -178,7 +178,7 @@
 
       <ul class="kh-fakty__rad kr-facts" aria-label="Základné informácie">
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ area_m2 }} m²</span><span class="kh-fakty__co">Zastrešená plocha</span><span class="kh-fakty__pod">{{ dimension }}.</span></li>
-        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ typical_use | default: 'Na mieru' }}</span><span class="kh-fakty__co">{% if family == 'zahrada' %}Priestor pre terasu{% else %}Typické využitie{% endif %}</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
+        <li class="kh-fakty__polozka kr-fact--use"><span class="kh-fakty__cislo">{% if family == 'zahrada' %}Terasa{% else %}{{ typical_use | default: 'Na mieru' }}{% endif %}</span><span class="kh-fakty__co">{% if family == 'zahrada' %}Záhradný priestor{% else %}Typické využitie{% endif %}</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">0 €</span><span class="kh-fakty__co">Zameranie a ponuka</span><span class="kh-fakty__pod">Nezáväzne pred výrobou.</span></li>
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">Slovensko</span><span class="kh-fakty__co">Vlastná výroba</span><span class="kh-fakty__pod">Koverta vyrábaná na Slovensku.</span></li>
       </ul>
@@ -222,13 +222,13 @@
       </header>
       <div class="kr-gallery__grid">
         {%- if family == 'zahrada' -%}
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-detail.webp?v=1790093103" alt="Detail konštrukcie záhradného prístrešku Koverta" loading="lazy" decoding="async"></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-sedenie.webp?v=1790093110" alt="Zastrešené záhradné posedenie Koverta" loading="lazy" decoding="async"></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"><figcaption><strong>Zastrešená terasa</strong><span>Bratislava</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-detail.webp?v=1790093103" alt="Detail konštrukcie záhradného prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Čisté oceľové riešenie</strong><span>Detail realizácie</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-sedenie.webp?v=1790093110" alt="Zastrešené záhradné posedenie Koverta" loading="lazy" decoding="async"><figcaption><strong>Záhradné posedenie</strong><span>Reálna realizácia</span></figcaption></figure>
         {%- else -%}
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Dvojitý prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async"></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-lamely.webp?v=1790093082" alt="Drevená lamelová výplň prístrešku Koverta" loading="lazy" decoding="async"></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-dom.webp?v=1790093089" alt="Prístrešok Koverta pre auto pred domom" loading="lazy" decoding="async"></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Dvojitý prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async"><figcaption><strong>Prístrešok pre dve autá</strong><span>Váhovce</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-lamely.webp?v=1790093082" alt="Drevená lamelová výplň prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Lamelová výplň</strong><span>Detail realizácie</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-dom.webp?v=1790093089" alt="Prístrešok Koverta pre auto pred domom" loading="lazy" decoding="async"><figcaption><strong>Koverta pri dome</strong><span>Reálna realizácia</span></figcaption></figure>
         {%- endif -%}
       </div>
     </div>
@@ -324,7 +324,11 @@
         <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu.</span></label>
         <div class="kh-form__submit"><button class="k-btn k-btn--primary" type="submit">Odoslať dopyt</button></div>
       </form><div class="kh-dakujem" data-k-dakujem hidden><h3 class="kh-dakujem__nadpis">Dopyt sme odoslali</h3><p class="kh-dakujem__text">Ďalší postup si dohodneme podľa konkrétnej realizácie.</p></div>
-    </div></div></div>
+    </div><figure class="kp-inquiry-source__visual">
+      {%- if family == 'zahrada' -%}<img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta pri dome" loading="lazy" decoding="async">
+      {%- else -%}<img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async">{%- endif -%}
+      <figcaption><span>Bezplatné zameranie</span><strong>0 €</strong></figcaption>
+    </figure></div></div>
   </section>
 
   <div class="kp-sticky"><div><small>{{ product.title }}</small><strong data-kp-sticky-price>{{ variant.price | money }}</strong></div><a href="{{ configurator_url }}">3D</a><button type="submit" form="{{ form_id }}" {% unless variant.available %}disabled{% endunless %}>Pridať do košíka</button></div>
