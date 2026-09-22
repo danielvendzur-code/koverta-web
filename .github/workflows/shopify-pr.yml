@@ -36,5 +36,7 @@ jobs:
           node --check tools/shopify-products.js
           node tools/shopify-products.js --check
           node tools/shopify-products.js --scope=reference
+          node --check tools/shopify-redirects.js
+          node tools/shopify-redirects.js --check
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
