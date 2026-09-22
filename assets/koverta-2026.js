@@ -2653,78 +2653,110 @@ function kvCesta(cesta) {
      Používa presne ten istý formulár, ktorý je súčasťou stránky. Neexistuje
      teda druhá kópia polí ani cudzí app launcher. Pri vypnutom JavaScripte
      ostane formulár normálne v kontaktnej sekcii. */
+  /* Formulár dopytu je malý, ako pri veľkých značkách: meno, telefón,
+     e-mail a nepovinná správa. Záujem sa nepýta, keď ho stránka pozná,
+     obec patrí do správy a fotky sú len nenápadný odkaz. Markup na stránkach
+     ostáva kvôli fungovaniu bez JavaScriptu, zjednoduší sa až tu. */
+  function zjednodusFormular(form) {
+    if (!form || form.dataset.kJednoduchy === 'true') return;
+    form.dataset.kJednoduchy = 'true';
+    form.classList.add('kh-form--jednoduchy');
+    const zaujem = form.querySelector('select[name="contact[Čo rieši]"]');
+    const zaujemPole = zaujem && zaujem.closest('.kh-field');
+    if (zaujemPole && zaujem.querySelector('option[selected]')) zaujemPole.hidden = true;
+    const miesto = form.querySelector('input[name="contact[Miesto realizácie]"]');
+    if (miesto) miesto.closest('.kh-field').hidden = true;
+    const sprava = form.querySelector('textarea[name="contact[body]"]');
+    if (sprava) {
+      sprava.rows = 3;
+      sprava.placeholder = 'Rozmer, obec alebo čo chcete zastrešiť';
+      const nazov = sprava.closest('.kh-field') && sprava.closest('.kh-field').querySelector(':scope > span');
+      if (nazov) nazov.innerHTML = 'Správa <small>nepovinné</small>';
+    }
+    const subor = form.querySelector('input[type="file"]');
+    const suborPole = subor && subor.closest('.kh-field');
+    if (suborPole) {
+      suborPole.classList.add('kh-field--priloha');
+      const tlac = document.createElement('button');
+      tlac.type = 'button';
+      tlac.className = 'kh-priloha';
+      tlac.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.7 1.7 0 0 1-2.4-2.4L15 7.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Priložiť fotky miesta</span>';
+      tlac.addEventListener('click', () => subor.click());
+      subor.addEventListener('change', () => {
+        const n = subor.files ? subor.files.length : 0;
+        tlac.querySelector('span').textContent = n ? 'Priložené fotky: ' + n : 'Priložiť fotky miesta';
+      });
+      suborPole.parentNode.insertBefore(tlac, suborPole);
+    }
+    const suhlas = form.querySelector('.kh-form__suhlas span');
+    if (suhlas) {
+      const odkazy = [...suhlas.querySelectorAll('a')].map((x) => x.getAttribute('href'));
+      suhlas.innerHTML = 'Súhlasím so <a href="' + (odkazy[1] || '#') + '">spracovaním údajov</a> a <a href="' + (odkazy[0] || '#') + '">podmienkami</a>.';
+    }
+    const tlacidlo = form.querySelector('[type="submit"]');
+    if (tlacidlo && !tlacidlo.dataset.kText) {
+      tlacidlo.dataset.kText = 'true';
+      tlacidlo.firstChild.textContent = 'Odoslať ';
+    }
+  }
+
+  /* --- Dopyt: na stránke aj v okne ------------------------------------
+     Na stránke ostáva formulár priamo v sekcii (malý, dá sa vyplniť hneď).
+     Tlačidlá „cenová ponuka“ otvárajú okno s jeho kópiou, aby človek
+     nemusel scrollovať na koniec stránky. */
   function initDopytModal(root) {
     const form = root.querySelector('form[data-k-dopyt]');
     const karta = form && form.closest('.kh-cta__card');
     const sekcia = karta && karta.closest('.kh-cta');
     if (!form || !karta || !sekcia || document.querySelector('[data-k-dopyt-modal]')) return;
+    zjednodusFormular(form);
 
-    /* Text výzvy na stránke môže sekcia prispôsobiť (produkt hovorí o
-       konkrétnom rozmere), inak ostáva všeobecný. */
-    const d = sekcia.dataset;
-    const povodneMiesto = document.createElement('div');
-    povodneMiesto.className = 'kh-cta__card kh-cta__otvarac k-rise is-in';
-    povodneMiesto.innerHTML = '<p class="k-eyebrow">Nezáväzná cenová ponuka</p>' +
-      '<h2 class="k-h2"></h2><p class="k-copy"></p>' +
-      '<button type="button" class="k-btn k-btn--primary" data-k-modal-open>Otvoriť formulár dopytu' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
-    povodneMiesto.querySelector('h2').textContent = d.kOtvaracNadpis || 'Povedzte nám, čo potrebujete';
-    povodneMiesto.querySelector('.k-copy').textContent = d.kOtvaracText
-      || 'Približný rozmer, miesto a pár fotiek stačia. Formulár zaberie približne dve minúty.';
-    karta.parentNode.insertBefore(povodneMiesto, karta);
-
-    /* Okno nesie skutočné logo z hlavičky, nie jeho prepis písmenami. */
-    const logo = document.querySelector('.kv-logo svg');
     const modal = document.createElement('div');
     modal.className = 'kh-modal';
     modal.hidden = true;
     modal.setAttribute('data-k-dopyt-modal', '');
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
-      '<header class="kh-modal__znacka"><span class="kh-modal__logo">KOVER<span>TA</span></span>' +
-      '<small>Nezáväzná cenová ponuka</small>' +
-      '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť formulár">' +
+      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Nezáväzná cenová ponuka</h2>' +
+      '<p>Ozveme sa do jedného pracovného dňa.</p></div>' +
+      '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
-      '<div class="kh-modal__obsah">' +
-      '<aside class="kh-modal__bok" aria-label="Čo bude ďalej"><p class="kh-modal__bok-nadpis">Čo bude ďalej</p><ol>' +
-      '<li><strong>Ozveme sa do jedného pracovného dňa</strong><span>Telefonicky alebo e-mailom.</span></li>' +
-      '<li><strong>Overíme rozmer a miesto</strong><span>Z fotiek, alebo prídeme pozrieť.</span></li>' +
-      '<li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, stĺpmi aj termínom montáže.</span></li></ol>' +
-      '<a class="kh-modal__tel" href="tel:+421948482266"><small>Radšej zavoláte?</small>+421 948 482 266</a>' +
-      '<p class="kh-modal__google"><b>5,0</b> hodnotenie na Google</p></aside>' +
-      '<div class="kh-modal__telo"><p class="kh-modal__kontext" hidden></p></div></div></section>';
-    if (logo) {
-      const kopia = logo.cloneNode(true);
-      kopia.removeAttribute('id');
-      kopia.setAttribute('aria-hidden', 'true');
-      kopia.removeAttribute('role');
-      const miesto = modal.querySelector('.kh-modal__logo');
-      miesto.textContent = '';
-      miesto.appendChild(kopia);
-      miesto.setAttribute('aria-label', 'Koverta');
-    }
-    modal.querySelector('.kh-modal__telo').appendChild(karta);
+      '<p class="kh-modal__kontext" hidden></p><div class="kh-modal__telo"></div>' +
+      '<p class="kh-modal__tel">Radšej zavoláte? <a href="tel:+421948482266">+421 948 482 266</a></p></section>';
+    const kopia = karta.cloneNode(true);
+    kopia.querySelectorAll('[id]').forEach((x) => { x.id = x.id + '-okno'; });
+    const hlavaKopie = kopia.querySelector('.kh-cta__head');
+    if (hlavaKopie) hlavaKopie.remove();
+    const formOkno = kopia.querySelector('form[data-k-dopyt]');
+    delete formOkno.dataset.kReady;
+    delete formOkno.dataset.kJednoduchy;
+    formOkno.querySelectorAll('.kh-priloha').forEach((x) => x.remove());
+    formOkno.querySelectorAll('[name="startedAt"]').forEach((x) => x.remove());
+    modal.querySelector('.kh-modal__telo').appendChild(kopia);
     document.body.appendChild(modal);
-    const nadpis = karta.querySelector('.kh-cta__head h2');
-    if (nadpis) nadpis.id = 'kModalTitle';
-    const kontext = modal.querySelector('.kh-modal__kontext');
-    const zaujem = form.querySelector('select[name="contact[Čo rieši]"]');
-    const zaujemPole = zaujem && zaujem.closest('.kh-field');
+    zjednodusFormular(formOkno);
+    initDopyt(modal);
 
-    /* Kto prišiel z konkrétneho produktu, nemusí vyberať, o čo má záujem —
-       vieme to. Riadok s kontextom mu ukáže, na čo sa pýta. */
+    const kontext = modal.querySelector('.kh-modal__kontext');
+    const zaujem = formOkno.querySelector('select[name="contact[Čo rieši]"]');
+    const zaujemPole = zaujem && zaujem.closest('.kh-field');
+    const zaujemSkryty = zaujemPole && zaujemPole.hidden;
+    const sprava = formOkno.querySelector('textarea[name="contact[body]"]');
+
+    /* Kto prišiel z produktu, nemusí vyberať záujem ani písať rozmer. */
     const nastavKontext = (spustac) => {
       const k = spustac && spustac.dataset ? spustac.dataset : {};
-      if (kontext) {
-        kontext.textContent = k.kDopytKontext || '';
-        kontext.hidden = !k.kDopytKontext;
-      }
+      kontext.textContent = k.kDopytKontext || '';
+      kontext.hidden = !k.kDopytKontext;
       if (zaujem && k.kDopytZaujem) {
         const moznost = [...zaujem.options].find((o) => o.value === k.kDopytZaujem || o.text === k.kDopytZaujem);
         if (moznost) zaujem.value = moznost.value;
       }
-      if (zaujemPole) zaujemPole.hidden = Boolean(k.kDopytZaujem);
-      modal.classList.toggle('ma-kontext', Boolean(k.kDopytKontext));
+      if (zaujemPole) zaujemPole.hidden = Boolean(k.kDopytZaujem) || zaujemSkryty;
+      if (sprava && k.kDopyt && (!sprava.value.trim() || sprava.value === sprava.dataset.kAuto)) {
+        sprava.value = k.kDopyt;
+        sprava.dataset.kAuto = k.kDopyt;
+      }
     };
 
     let navrat = null;
@@ -2741,24 +2773,22 @@ function kvCesta(cesta) {
       modal.hidden = false;
       requestAnimationFrame(() => modal.classList.add('is-open'));
       document.body.classList.add('ma-kh-modal');
-      const prve = form.querySelector('input:not([type="hidden"]), button, textarea');
-      /* Na telefóne sa fokus nedáva hneď: klávesnica by zakryla polovicu
-         formulára skôr, než ho človek uvidí celý. */
-      const dotyk = window.matchMedia('(hover: none)').matches;
-      if (!dotyk) window.setTimeout(() => { if (prve) prve.focus({ preventScroll: true }); }, REDUCED.matches ? 0 : 240);
+      const prve = formOkno.querySelector('input:not([type="hidden"]):not([type="file"])');
+      if (!window.matchMedia('(hover: none)').matches) {
+        window.setTimeout(() => { if (prve) prve.focus({ preventScroll: true }); }, REDUCED.matches ? 0 : 240);
+      }
     };
 
     modal.querySelectorAll('[data-k-modal-close]').forEach((b) => b.addEventListener('click', zavri));
-    povodneMiesto.querySelector('[data-k-modal-open]').addEventListener('click', (e) => otvor(e.currentTarget));
     document.addEventListener('click', (e) => {
-      const a = e.target.closest && e.target.closest('a[href*="#ponuka"], button[data-k-dopyt-open]');
+      const a = e.target.closest && e.target.closest('a[href*="#ponuka"], button[data-k-dopyt-open], [data-k-modal-open]');
       if (!a || modal.contains(a)) return;
       e.preventDefault(); otvor(a);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.hidden) zavri();
       if (e.key !== 'Tab' || modal.hidden) return;
-      const prvky = [...modal.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),a[href]')]
+      const prvky = [...modal.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="file"]),textarea:not([disabled]),select:not([disabled]),a[href]')]
         .filter((x) => x.offsetParent !== null);
       if (!prvky.length) return;
       const prvy = prvky[0], posledny = prvky[prvky.length - 1];
@@ -3796,7 +3826,8 @@ function kvCesta(cesta) {
 
   document.addEventListener('click', (e) => {
     const odkaz = e.target.closest('a[data-k-dopyt]');
-    if (odkaz) vloz(odkaz.dataset.kDopyt);
+    /* Keď je na stránke okno dopytu, predvyplní sa ono samo. */
+    if (odkaz && !document.querySelector('[data-k-dopyt-modal]')) vloz(odkaz.dataset.kDopyt);
   });
 
   /* Rozmer v adrese vyplní dopyt aj bez kliknutia na odkaz — človek sa sem
