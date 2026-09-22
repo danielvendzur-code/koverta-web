@@ -2718,10 +2718,11 @@ function kvCesta(cesta) {
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
       '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Nezáväzná cenová ponuka</h2>' +
-      '<p>Ozveme sa do jedného pracovného dňa.</p></div>' +
+      '<p>Odpovieme do jedného pracovného dňa, bez záväzku.</p></div>' +
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
       '<p class="kh-modal__kontext" hidden></p><div class="kh-modal__telo"></div>' +
+      '<ul class="kh-modal__istoty"><li>Bez záväzku</li><li>Doprava a montáž v cene</li><li>5,0 na Google</li></ul>' +
       '<p class="kh-modal__tel">Radšej zavoláte? <a href="tel:+421948482266">+421 948 482 266</a></p></section>';
     const kopia = karta.cloneNode(true);
     kopia.querySelectorAll('[id]').forEach((x) => { x.id = x.id + '-okno'; });
@@ -2746,7 +2747,23 @@ function kvCesta(cesta) {
     /* Kto prišiel z produktu, nemusí vyberať záujem ani písať rozmer. */
     const nastavKontext = (spustac) => {
       const k = spustac && spustac.dataset ? spustac.dataset : {};
-      kontext.textContent = k.kDopytKontext || '';
+      /* Produkt ako malá karta: obrázok, názov a pod ním farba s cenou. */
+      kontext.textContent = '';
+      if (k.kDopytKontext) {
+        const casti = k.kDopytKontext.split(' · ');
+        if (k.kDopytObrazok) {
+          const img = document.createElement('img');
+          img.src = k.kDopytObrazok; img.alt = ''; img.width = 64; img.height = 48;
+          kontext.appendChild(img);
+        }
+        const text = document.createElement('span');
+        const nazov = document.createElement('strong');
+        nazov.textContent = casti[0];
+        const detail = document.createElement('small');
+        detail.textContent = casti.slice(1).join(' · ');
+        text.append(nazov, detail);
+        kontext.appendChild(text);
+      }
       kontext.hidden = !k.kDopytKontext;
       if (zaujem && k.kDopytZaujem) {
         const moznost = [...zaujem.options].find((o) => o.value === k.kDopytZaujem || o.text === k.kDopytZaujem);
