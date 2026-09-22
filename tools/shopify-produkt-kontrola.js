@@ -21,6 +21,7 @@ const product=fs.readFileSync(path.join(src,'sections/koverta-product.liquid'),'
 if(!/{%\s*form\s+'product',\s*product/.test(product))throw new Error('produkt nemá Shopify product form');
 if(!/name="id"/.test(product))throw new Error('product form nemá variant id');
 if(!/data-kp-add/.test(product))throw new Error('produkt nemá Pridať do košíka');
+if(!/kr-hero/.test(product)||!/kpVerifiedRealizations/.test(product))throw new Error('produkt stratil schválený kr hero alebo realizačnú galériu');
 if(!/\/pages\/nove-konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
 const cart=fs.readFileSync(path.join(src,'sections/koverta-cart.liquid'),'utf8');
 if(!/name="checkout"/.test(cart)||!/routes\.cart_url/.test(cart))throw new Error('košík nemá natívny Shopify checkout');
