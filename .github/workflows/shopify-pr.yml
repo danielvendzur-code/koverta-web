@@ -7,6 +7,7 @@ on:
       - '**/*.html'
       - 'assets/**'
       - 'shopify-tema/**'
+      - 'shopify-zdroj/**'
       - 'tools/shopify-*.js'
       - 'tools/spolocne-casti.js'
       - '.github/workflows/shopify*.yml'
@@ -31,5 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           node tools/spolocne-casti.js --kontrola
+          node tools/shopify-produkt-kontrola.js
+          node --check tools/shopify-products.js
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
