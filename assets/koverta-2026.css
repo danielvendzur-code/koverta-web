@@ -13718,3 +13718,133 @@ body.ma-kh-modal { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .kh-modal, .kh-modal__okno { transition: none !important; }
 }
+
+
+/* Rozmerová produktová stránka ---------------------------------------------
+   Pôvodný generovaný záznam ostáva funkčný bez JavaScriptu. Skript iba
+   preskladá jeho existujúce prvky do tejto plnohodnotnej produktovej plochy. */
+.kr-page { background: #f4f2ec; }
+.kr-page .kr-main { overflow: clip; }
+.kr-page .kr-hero {
+  padding: clamp(26px, 4vw, 62px) 0 clamp(52px, 7vw, 104px);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255,204,0,.16), transparent 27rem),
+    linear-gradient(180deg, #f8f7f3 0%, #eeece5 100%);
+}
+.kr-page .kr-hero__grid {
+  display: grid; grid-template-columns: minmax(0,.9fr) minmax(420px,1.1fr);
+  gap: clamp(34px, 5vw, 78px); align-items: center;
+}
+.kr-page .kr-hero__copy { min-width: 0; }
+.kr-page .kr-crumbs {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px;
+  color: #6e7477; font: 700 12px/1.4 var(--font-heading-family);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.kr-page .kr-crumbs a { color: inherit; text-decoration: none; }
+.kr-page .kr-kicker {
+  display: inline-flex; align-items: center; gap: 9px; margin: 0 0 14px;
+  color: #4d5356; font: 800 12px/1.2 var(--font-heading-family);
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.kr-page .kr-kicker::before { content: ""; width: 26px; height: 3px; background: #ffcc00; }
+.kr-page .kr-title {
+  max-width: 11ch; margin: 0 0 22px !important;
+  color: #111719; font-size: clamp(42px, 5.2vw, 76px); line-height: .98;
+  letter-spacing: -.055em;
+}
+.kr-page .kr-lead { max-width: 57ch !important; margin: 0; color: #51585b; }
+.kr-page .kr-price {
+  display: flex; align-items: flex-end; gap: 13px; margin: 30px 0 24px;
+  padding: 20px 0; border-top: 1px solid rgba(18,23,26,.14);
+  border-bottom: 1px solid rgba(18,23,26,.14);
+}
+.kr-page .kr-price strong {
+  color: #111719; font: 850 clamp(30px, 4vw, 46px)/1 var(--font-heading-family);
+  letter-spacing: -.04em;
+}
+.kr-page .kr-price span { padding-bottom: 4px; color: #666d70; font-size: 13px; }
+.kr-page .kr-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 !important; }
+.kr-page .kr-hero__media { position: relative; min-width: 0; }
+.kr-page .kr-hero__media figure {
+  position: relative; min-height: clamp(480px, 56vw, 680px); margin: 0 !important;
+  overflow: hidden; border-radius: 3px; background: #d8d5cc;
+  box-shadow: 0 34px 80px -48px rgba(9,13,15,.65);
+}
+.kr-page .kr-hero__media img {
+  position: absolute; inset: 0; width: 100% !important; height: 100% !important;
+  object-fit: cover; border-radius: 0 !important;
+}
+.kr-page .kr-media__label {
+  position: absolute; right: -1px; bottom: -1px; z-index: 2;
+  display: grid; gap: 2px; min-width: 180px; padding: 18px 22px;
+  background: #111719; color: #fff;
+}
+.kr-page .kr-media__label strong { color: #ffcc00; font: 850 18px/1.1 var(--font-heading-family); }
+.kr-page .kr-media__label span { color: rgba(255,255,255,.7); font-size: 12px; }
+.kr-page .kr-facts {
+  position: relative; z-index: 2; margin: clamp(-38px,-3vw,-24px) auto 0 !important;
+  padding: 0 !important; background: #fff; box-shadow: 0 24px 70px -46px rgba(9,13,15,.55);
+}
+.kr-page .kr-facts .kh-fakty__polozka { padding: clamp(24px,3vw,38px); }
+.kr-page .kr-content { padding: clamp(72px,9vw,132px) 0; background: #fff; }
+.kr-page .kr-content__grid {
+  display: grid; grid-template-columns: minmax(0,.85fr) minmax(420px,1.15fr);
+  gap: clamp(42px,7vw,110px); align-items: start;
+}
+.kr-page .kr-content__intro { position: sticky; top: 120px; }
+.kr-page .kr-content__intro .k-h2 { max-width: 12ch; margin: 10px 0 20px; }
+.kr-page .kr-content__copy { display: grid; gap: 16px; }
+.kr-page .kr-content__copy .k-copy { max-width: 68ch !important; margin: 0; font-size: 17px; }
+.kr-page .kr-included {
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 1px; margin-top: 34px; background: rgba(18,23,26,.12);
+  border: 1px solid rgba(18,23,26,.12);
+}
+.kr-page .kr-included__item { min-height: 168px; padding: 26px; background: #f5f3ed; }
+.kr-page .kr-included__n {
+  display: block; margin-bottom: 30px; color: #b38f00;
+  font: 800 12px/1 var(--font-heading-family); letter-spacing: .1em;
+}
+.kr-page .kr-included__item strong { display: block; margin-bottom: 8px; color: #151b1d; }
+.kr-page .kr-included__item p { margin: 0; color: #646b6e; font-size: 14px; line-height: 1.55; }
+.kr-page .kr-gallery { padding: clamp(64px,8vw,116px) 0; background: #151b1d; color: #fff; }
+.kr-page .kr-gallery__head {
+  display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 34px;
+}
+.kr-page .kr-gallery__head h2 { max-width: 13ch; margin: 8px 0 0; color: #fff; }
+.kr-page .kr-gallery__grid {
+  display: grid; grid-template-columns: 1.25fr .75fr .75fr; gap: 12px;
+}
+.kr-page .kr-gallery__grid figure { min-height: 370px; margin: 0; overflow: hidden; background: #283033; }
+.kr-page .kr-gallery__grid img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--k-ease-out); }
+.kr-page .kr-gallery__grid figure:hover img { transform: scale(1.025); }
+.kr-page .kr-related { padding: clamp(54px,7vw,90px) 0; background: #f4f2ec; }
+.kr-page .kr-related .kv-related { margin-top: 22px; }
+@media (max-width: 900px) {
+  .kr-page .kr-hero__grid, .kr-page .kr-content__grid { grid-template-columns: 1fr; }
+  .kr-page .kr-content__intro { position: static; }
+  .kr-page .kr-hero__media { order: -1; }
+  .kr-page .kr-hero__media figure { min-height: min(72svh, 560px); }
+  .kr-page .kr-title { max-width: 13ch; }
+  .kr-page .kr-facts { margin-top: 0 !important; }
+  .kr-page .kr-gallery__grid { grid-template-columns: 1fr 1fr; }
+  .kr-page .kr-gallery__grid figure:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 619px) {
+  .kr-page .kr-hero { padding-top: 0; }
+  .kr-page .kr-hero > .k-wrap { padding-inline: 0; }
+  .kr-page .kr-hero__copy { padding: 28px 18px 0; }
+  .kr-page .kr-hero__media figure { min-height: 380px; border-radius: 0; }
+  .kr-page .kr-title { font-size: clamp(39px,12vw,56px); }
+  .kr-page .kr-hero__actions .k-btn { width: 100%; justify-content: center; }
+  .kr-page .kr-media__label { right: 0; }
+  .kr-page .kr-facts { display: grid; grid-template-columns: 1fr 1fr; }
+  .kr-page .kr-facts .kh-fakty__polozka { padding: 22px 16px; }
+  .kr-page .kr-included { grid-template-columns: 1fr; }
+  .kr-page .kr-included__item { min-height: 0; }
+  .kr-page .kr-gallery__head { display: block; }
+  .kr-page .kr-gallery__grid { grid-template-columns: 1fr; }
+  .kr-page .kr-gallery__grid figure:first-child { grid-column: auto; }
+  .kr-page .kr-gallery__grid figure { min-height: 290px; }
+}
