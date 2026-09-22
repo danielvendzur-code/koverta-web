@@ -1,341 +1,408 @@
 {{ 'koverta-product.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'koverta-product.js' | asset_url }}" defer></script>
+{%- comment -%}
+  Produktová stránka katalógového rozmeru. Všetkých 66 rozmerov má tú istú
+  stránku: mení sa len rozmer, cena, počet áut a údaje z metapolí. Fotografie
+  sú spoločné pre celý rad (reálne montáže Koverta), nie ku každému rozmeru,
+  lebo pre každý rozmer fotka neexistuje.
 
+  Bloky sú tie isté ako na podstránkach webu (kh-vcene, kh-size, kh-faq,
+  kh-cta), aby produkt vyzeral a správal sa ako zvyšok webu.
+{%- endcomment -%}
 {%- liquid
   assign variant = product.selected_or_first_available_variant
+  if product.selected_variant == blank
+    for v in product.variants
+      if v.available and v.title contains '7016'
+        assign variant = v
+        break
+      endif
+    endfor
+  endif
   assign family = product.metafields.koverta.family.value | default: 'auto'
-  assign width_mm = product.metafields.koverta.width_mm.value
-  assign length_mm = product.metafields.koverta.length_mm.value
-  assign area_m2 = product.metafields.koverta.area_m2.value
-  assign dimension = product.metafields.koverta.dimension_label.value
-  assign typical_use = product.metafields.koverta.typical_use.value
-  assign configurator_url = product.metafields.koverta.configurator_url.value
-  assign catalog_url = '/pages/nove-pristresky-pre-auta'
-  assign catalog_label = 'Prístrešky pre autá'
-  assign eyebrow = 'Oceľový prístrešok Koverta'
-  assign inquiry_type = 'Prístrešok pre auto Koverta'
+  assign width_mm = product.metafields.koverta.width_mm.value | default: 0 | plus: 0
+  assign length_mm = product.metafields.koverta.length_mm.value | default: 0 | plus: 0
+  assign dimension = product.metafields.koverta.dimension_label.value | default: product.title
+  assign configurator_url = product.metafields.koverta.configurator_url.value | default: '/pages/nove-konfigurator' | remove: 'https://koverta.sk' | remove: 'https://www.koverta.sk'
+
+  assign desatiny = width_mm | times: length_mm | plus: 50000 | divided_by: 100000 | floor
+  assign plocha_cela = desatiny | divided_by: 10 | floor
+  assign plocha_zvysok = desatiny | modulo: 10
+  assign area = plocha_cela | append: ''
+  if plocha_zvysok > 0
+    assign area = area | append: ',' | append: plocha_zvysok
+  endif
+  assign w_des = width_mm | divided_by: 100 | floor
+  assign w_m = w_des | divided_by: 10 | floor | append: ''
+  assign w_zv = w_des | modulo: 10
+  if w_zv > 0
+    assign w_m = w_m | append: ',' | append: w_zv
+  endif
+  assign l_des = length_mm | divided_by: 100 | floor
+  assign l_m = l_des | divided_by: 10 | floor | append: ''
+  assign l_zv = l_des | modulo: 10
+  if l_zv > 0
+    assign l_m = l_m | append: ',' | append: l_zv
+  endif
+
   if family == 'zahrada'
     assign catalog_url = '/pages/nove-zahradne-pristresky'
     assign catalog_label = 'Záhradné prístrešky'
+    assign parent_label = 'Pre dom a záhradu'
     assign eyebrow = 'Záhradný prístrešok Koverta'
     assign inquiry_type = 'Záhradný prístrešok Koverta'
+    assign use_label = 'terasa, posedenie'
+    assign fotky = 'koverta-zahradny-pristresok-antracit-lamelova-stena|1600|1200|1|Záhradný prístrešok Koverta v antracite s lamelovou stenou pri dome;koverta-zahradny-pristresok-terasa-posuvne-lamely|1200|900|0|Zastrešená terasa Koverta s posuvnými drevenými lamelami;koverta-zahradny-pristresok-hnedy-nad-terasou|1600|1200|1|Hnedý záhradný prístrešok Koverta nad drevenou terasou;koverta-zahradny-pristresok-bratislava-hero|1600|1200|1|Biely záhradný prístrešok Koverta nad posedením, Bratislava;koverta-zahradny-pristresok-varin-dvor|1280|960|0|Záhradný prístrešok Koverta nad dvorom, Varín;koverta-zahradny-pristresok-mokrance-sedenie|1280|960|0|Zastrešené posedenie Koverta pri dome, Mokrance'
+    assign bok_foto = 'koverta-zahradny-pristresok-palarikovo-nad-terasou'
+    assign bok_alt = 'Záhradný prístrešok Koverta nad terasou, Palárikovo'
+  else
+    assign catalog_url = '/pages/nove-pristresky-pre-auta'
+    assign catalog_label = 'Prístrešky pre autá'
+    assign parent_label = 'Pre autá'
+    assign inquiry_type = 'Prístrešok pre auto Koverta'
+    if width_mm >= 5000
+      assign use_label = '2 autá'
+      assign eyebrow = 'Oceľový prístrešok pre 2 autá'
+      assign fotky = 'koverta-pristresok-bocne-lamely-a-zvod|1600|1200|1|Prístrešok Koverta pre dve autá s bočnou lamelovou výplňou a zvodom;koverta-carport-dve-auta-zima|1024|768|0|Prístrešok Koverta pre dve autá pri rodinnom dome v zime;koverta-pristresok-auto-trnava-hero|1600|1200|0|Dvojmiestny prístrešok Koverta s lamelovou stenou, Trnava;koverta-pristresok-garaz|1800|1350|0|Prístrešok Koverta pred garážou s autom pod strechou;koverta-pristresok-led-osvetlenie-vecer|1600|1200|1|Prístrešok Koverta s LED osvetlením večer;koverta-pristresok-kotvenie-do-dlazby|1600|1200|1|Stĺpy prístrešku Koverta kotvené do dlažby'
+    else
+      assign use_label = '1 auto'
+      assign eyebrow = 'Oceľový prístrešok pre 1 auto'
+      assign fotky = 'koverta-pristresok-pre-jedno-auto-lamelova-vypln|1200|900|0|Prístrešok Koverta pre jedno auto s bočnou lamelovou výplňou;koverta-pristresok-auto-golf-lamelova-stena|1600|1200|1|Prístrešok Koverta so svetlou strechou a lamelovou stenou, pod ním auto;koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom|1600|1200|1|Hnedý prístrešok Koverta nad vjazdom pri tehlovom dome;koverta-pristresok-dve-auta-velke-ulany|1280|960|0|Prístrešok Koverta pred garážou, Veľké Úľany;koverta-pristresok-led-osvetlenie-vecer|1600|1200|1|Prístrešok Koverta s LED osvetlením večer;koverta-pristresok-kotvenie-do-dlazby|1600|1200|1|Stĺpy prístrešku Koverta kotvené do dlažby'
+    endif
+    assign bok_foto = 'koverta-pristresok-ram-a-bocna-vypln'
+    assign bok_alt = 'Oceľová konštrukcia prístrešku Koverta s rovnou strechou pri rodinnom dome'
   endif
-  if configurator_url == blank
-    assign configurator_url = '/pages/nove-konfigurator'
-  endif
-  assign form_id = 'kp-product-form-' | append: section.id
+  assign zoznam_fotiek = fotky | split: ';'
+  assign foto_zaklad = 'https://danielvendzur-code.github.io/koverta-web/assets/'
+  assign form_id = 'kp-form-' | append: section.id
+  assign color_name = variant.title
 -%}
+{%- capture cena -%}{% render 'koverta-cena', centy: variant.price %}{%- endcapture -%}
+{%- assign cena = cena | strip -%}
+{%- capture dopyt_text -%}Mám záujem o {{ product.title }} ({{ color_name }}), katalógová cena {{ cena }}. {%- endcapture -%}
 
-<main class="kp-product k kr-page" id="obsah" data-k-root data-kp-product>
-  <section class="kr-hero" aria-labelledby="kpTitle-{{ section.id }}">
-    <div class="k-wrap">
-      <div class="kr-hero__grid">
-        <div class="kr-hero__copy">
-          <div class="kr-hero__intro">
-            <nav class="kr-crumbs" aria-label="Omrvinky">
-              <a href="/">Domov</a><span aria-hidden="true">/</span>
-              <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
-              <span aria-current="page">{{ dimension | default: product.title }}</span>
-            </nav>
+<main class="k kp" id="obsah" data-k-root data-kp-product>
 
-            <p class="k-eyebrow kr-kicker">{{ eyebrow }}</p>
-            <h1 class="kr-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
+  <section class="kp-top" aria-labelledby="kpTitle">
+    <div class="k-wrap kp-top__grid">
 
-            <div class="kr-lead">
-              {%- if family == 'zahrada' -%}
-                Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
-              {%- else -%}
-                Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
-              {%- endif -%}
-            </div>
+      <div class="kp-gal" data-kp-gallery aria-roledescription="galéria" aria-label="Fotografie z montáží Koverta">
+        <div class="kp-gal__stage">
+          <div class="kp-gal__track" data-kp-track tabindex="0">
+            {%- for riadok in zoznam_fotiek -%}
+              {%- assign f = riadok | split: '|' -%}
+              <figure class="kp-gal__slide" data-kp-slide>
+                {%- if f[3] == '1' -%}{%- assign velka = true -%}{%- else -%}{%- assign velka = false -%}{%- endif -%}
+                {% render 'koverta-foto', meno: f[0], w: f[1], h: f[2], velka: velka, alt: f[4], prva: forloop.first %}
+              </figure>
+            {%- endfor -%}
           </div>
-
-          <div class="kr-commerce" aria-label="Objednať produkt">
-            <div class="kr-price">
-              <span class="kr-price__label">Katalógová cena</span>
-              <strong data-kp-price aria-live="polite">{{ variant.price | money }}</strong>
-              <span class="kr-price__benefit">s DPH, dopravou a montážou</span>
-            </div>
-
-            {% form 'product', product, id: form_id, class: 'kp-buy-form kr-buy' %}
-              <input type="hidden" name="quantity" value="1">
-              {%- if product.variants.size > 1 -%}
-                <div class="kp-option kr-option">
-                  <div class="kr-option__head">
-                    <label for="kpVariant-{{ section.id }}">Farba konštrukcie</label>
-                    <strong data-kp-color-name>{{ variant.title }}</strong>
-                  </div>
-                  <div class="kp-swatches" role="radiogroup" aria-label="Farba konštrukcie" data-kp-swatches>
-                    {%- for v in product.variants -%}
-                      {%- liquid
-                        assign swatch = '#34383a'
-                        if v.title contains 'RAL 9010'
-                          assign swatch = '#f1f0e6'
-                        elsif v.title contains 'RAL 9006'
-                          assign swatch = '#a5a9a8'
-                        elsif v.title contains 'RAL 9007'
-                          assign swatch = '#777b79'
-                        elsif v.title contains 'RAL 7005'
-                          assign swatch = '#5d6364'
-                        elsif v.title contains 'RAL 7016'
-                          assign swatch = '#383e42'
-                        elsif v.title contains 'RAL 9005'
-                          assign swatch = '#101112'
-                        elsif v.title contains 'RAL 8017'
-                          assign swatch = '#46322b'
-                        elsif v.title contains 'RAL 8028'
-                          assign swatch = '#5b4434'
-                        elsif v.title contains 'RAL 6003'
-                          assign swatch = '#4b5140'
-                        elsif v.title contains 'RAL 6005'
-                          assign swatch = '#1f3a2c'
-                        elsif v.title contains 'RAL 6020'
-                          assign swatch = '#37433a'
-                        elsif v.title contains 'RAL 3000'
-                          assign swatch = '#a72920'
-                        elsif v.title contains 'RAL 3009'
-                          assign swatch = '#6d2f2a'
-                        elsif v.title contains 'RAL 5010'
-                          assign swatch = '#124b75'
-                        endif
-                      -%}
-                      <button class="kp-swatch{% if v.id == variant.id %} is-active{% endif %}" type="button" role="radio"
-                        aria-checked="{% if v.id == variant.id %}true{% else %}false{% endif %}"
-                        aria-label="{{ v.title | escape }}" title="{{ v.title | escape }}"
-                        data-kp-swatch data-variant-id="{{ v.id }}" style="--kp-swatch:{{ swatch }}" {% unless v.available %}disabled{% endunless %}>
-                        <span aria-hidden="true"></span>
-                      </button>
-                    {%- endfor -%}
-                  </div>
-                  <select id="kpVariant-{{ section.id }}" name="id" data-kp-variant>
-                    {%- for v in product.variants -%}
-                      <option value="{{ v.id }}" data-price="{{ v.price | money | escape }}" data-available="{{ v.available }}" {% if v.id == variant.id %}selected{% endif %}>
-                        {{ v.title }}{% unless v.available %} — momentálne nedostupné{% endunless %}
-                      </option>
-                    {%- endfor -%}
-                  </select>
-                </div>
-              {%- else -%}
-                <input type="hidden" name="id" value="{{ variant.id }}">
-              {%- endif -%}
-
-              <button class="kp-add kr-add k-btn k-btn--primary" type="submit" data-kp-add {% unless variant.available %}disabled{% endunless %}>
-                <span data-kp-add-label>{% if variant.available %}Pridať do košíka{% else %}Momentálne nedostupné{% endif %}</span>
-                <strong data-kp-button-price>{{ variant.price | money }}</strong>
-              </button>
-            {% endform %}
-
-            <div class="kr-hero__actions">
-              <a class="k-btn k-btn--ink kr-configure" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a>
-              <a class="k-link kr-measure" href="#ponuka" data-k-dopyt-open>Bezplatné zameranie <span aria-hidden="true">→</span></a>
-            </div>
-            <p class="kr-price-note">Základná katalógová zostava. Doplnky a príprava podkladu sa riešia podľa konkrétneho miesta.</p>
-          </div>
+          <button type="button" class="kp-gal__sipka kp-gal__sipka--spat" data-kp-prev aria-label="Predchádzajúca fotografia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="kp-gal__sipka kp-gal__sipka--dalej" data-kp-next aria-label="Ďalšia fotografia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <span class="kp-gal__pocet" data-kp-count aria-live="polite">1 / {{ zoznam_fotiek.size }}</span>
+          <span class="kp-gal__stitok">Fotky z našich montáží</span>
         </div>
-
-        <div class="kr-hero__media kp-gallery" data-kp-gallery>
-          <figure class="kp-gallery__main">
-            {%- if product.featured_media -%}
-              <button class="kp-gallery__zoom" type="button" data-kp-lightbox-open aria-label="Zväčšiť fotografiu">
-                <img data-kp-main
-                  src="{{ product.featured_media.preview_image | image_url: width: 1600 }}"
-                  srcset="{{ product.featured_media.preview_image | image_url: width: 800 }} 800w, {{ product.featured_media.preview_image | image_url: width: 1200 }} 1200w, {{ product.featured_media.preview_image | image_url: width: 1800 }} 1800w"
-                  sizes="(max-width: 900px) 100vw, 56vw"
-                  width="{{ product.featured_media.preview_image.width }}"
-                  height="{{ product.featured_media.preview_image.height }}"
-                  alt="{{ product.featured_media.alt | default: product.title | escape }}"
-                  loading="eager" fetchpriority="high" decoding="async">
-              </button>
-            {%- else -%}
-              <div class="kp-gallery__empty"><strong>{{ product.title }}</strong></div>
-            {%- endif -%}
-            {%- if product.media.size > 1 -%}
-              <button type="button" class="kp-gallery__arrow kp-gallery__arrow--prev" data-kp-prev aria-label="Predchádzajúca fotografia">‹</button>
-              <button type="button" class="kp-gallery__arrow kp-gallery__arrow--next" data-kp-next aria-label="Ďalšia fotografia">›</button>
-              <span class="kp-gallery__count" data-kp-count>1 / {{ product.media.size }}</span>
-            {%- endif -%}
-            <div class="kr-media__label">
-              <strong>{{ dimension }}</strong>
-              <span>katalógový rozmer · výroba na mieru</span>
-            </div>
-          </figure>
-
-          {%- if product.media.size > 1 -%}
-            <div class="kp-gallery__thumbs kr-product-thumbs" role="list" aria-label="Fotografie produktu">
-              {%- for media in product.media limit: 6 -%}
-                <button class="kp-gallery__thumb{% if forloop.first %} is-active{% endif %}" type="button" role="listitem"
-                  data-kp-thumb data-index="{{ forloop.index0 }}"
-                  data-full="{{ media.preview_image | image_url: width: 1800 }}"
-                  data-srcset="{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1800 }} 1800w"
-                  data-alt="{{ media.alt | default: product.title | escape }}">
-                  <img src="{{ media.preview_image | image_url: width: 280 }}" width="{{ media.preview_image.width }}" height="{{ media.preview_image.height }}" alt="" loading="lazy" decoding="async">
-                </button>
-              {%- endfor -%}
-            </div>
-          {%- endif -%}
+        <div class="kp-gal__nahlady" role="tablist" aria-label="Vybrať fotografiu">
+          {%- for riadok in zoznam_fotiek -%}
+            {%- assign f = riadok | split: '|' -%}
+            <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Fotografia {{ forloop.index }}">
+              <img src="{{ foto_zaklad }}{{ f[0] }}-w640.webp" width="{{ f[1] }}" height="{{ f[2] }}" alt="" loading="lazy" decoding="async">
+            </button>
+          {%- endfor -%}
         </div>
       </div>
 
-      <ul class="kh-fakty__rad kr-facts" aria-label="Základné informácie">
-        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ area_m2 }} m²</span><span class="kh-fakty__co">Zastrešená plocha</span><span class="kh-fakty__pod">{{ dimension }}.</span></li>
-        <li class="kh-fakty__polozka kr-fact--use"><span class="kh-fakty__cislo">{% if family == 'zahrada' %}Terasa{% else %}{{ typical_use | default: 'Na mieru' }}{% endif %}</span><span class="kh-fakty__co">{% if family == 'zahrada' %}Záhradný priestor{% else %}Typické využitie{% endif %}</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
-        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">0 €</span><span class="kh-fakty__co">Zameranie a ponuka</span><span class="kh-fakty__pod">Nezáväzne pred výrobou.</span></li>
-        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">Slovensko</span><span class="kh-fakty__co">Vlastná výroba</span><span class="kh-fakty__pod">Koverta vyrábaná na Slovensku.</span></li>
+      <div class="kp-buy">
+        <nav class="kh-crumbs kp-crumbs" aria-label="Kde sa nachádzate">
+          <a href="/">Koverta</a><span aria-hidden="true">/</span>
+          <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
+          <span aria-current="page">{{ dimension }}</span>
+        </nav>
+
+        <p class="k-eyebrow kp-eyebrow">{{ eyebrow }}</p>
+        <h1 class="kp-title" id="kpTitle">{{ product.title }}</h1>
+
+        <ul class="kh-hero__trust kp-fakty" aria-label="Základné údaje">
+          <li class="kh-hero__chip"><strong>{{ area }} m²</strong> zastrešená plocha</li>
+          <li class="kh-hero__chip"><strong>{{ use_label }}</strong> {% if family == 'zahrada' %}využitie{% else %}pod strechou{% endif %}</li>
+          <li class="kh-hero__chip"><strong>2,4 m</strong> svetlá výška</li>
+        </ul>
+
+        <div class="kp-cena">
+          <strong data-kp-price>{{ cena }}</strong>
+          <span>s DPH · doprava a montáž v cene</span>
+        </div>
+
+        <div class="kp-akcie">
+          <a class="k-btn k-btn--primary kp-cta" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}">
+            Chcem cenovú ponuku
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="k-btn k-btn--line kp-3d" href="{{ configurator_url }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z M4 7.5l8 4.5 8-4.5 M12 12v9" stroke-linejoin="round"/></svg>
+            Upraviť v 3D
+          </a>
+        </div>
+        <p class="kp-istota">Nezáväzne. Ozveme sa do jedného pracovného dňa s cenou pre vaše miesto.</p>
+
+        {% form 'product', product, id: form_id, class: 'kp-farba' %}
+          <input type="hidden" name="quantity" value="1">
+          <input type="hidden" name="id" value="{{ variant.id }}" data-kp-variant>
+          <div class="kp-farba__hlava">
+            <span>Farba konštrukcie</span>
+            <strong data-kp-color-name>{{ color_name }}</strong>
+          </div>
+          <div class="kp-farba__rad" role="radiogroup" aria-label="Farba konštrukcie">
+            {%- for v in product.variants -%}
+              {%- liquid
+                assign swatch = '#383e42'
+                if v.title contains '9010'
+                  assign swatch = '#f1f0e6'
+                elsif v.title contains '9006'
+                  assign swatch = '#a5a9a8'
+                elsif v.title contains '9007'
+                  assign swatch = '#8b8c88'
+                elsif v.title contains '7005'
+                  assign swatch = '#6b716f'
+                elsif v.title contains '7037'
+                  assign swatch = '#7a7b7a'
+                elsif v.title contains '7011'
+                  assign swatch = '#52595d'
+                elsif v.title contains '7016'
+                  assign swatch = '#383e42'
+                elsif v.title contains '9005'
+                  assign swatch = '#0e0e10'
+                elsif v.title contains '8017'
+                  assign swatch = '#45322e'
+                elsif v.title contains '8028'
+                  assign swatch = '#4e3b31'
+                elsif v.title contains '6003'
+                  assign swatch = '#50533c'
+                elsif v.title contains '6005'
+                  assign swatch = '#0f4336'
+                elsif v.title contains '6020'
+                  assign swatch = '#354733'
+                elsif v.title contains '3000'
+                  assign swatch = '#a72920'
+                elsif v.title contains '3009'
+                  assign swatch = '#642424'
+                elsif v.title contains '5010'
+                  assign swatch = '#0e4c80'
+                endif
+              -%}
+              {%- capture v_cena -%}{% render 'koverta-cena', centy: v.price %}{%- endcapture -%}{%- assign v_cena = v_cena | strip -%}
+              <button class="kp-farba__vzor{% if v.id == variant.id %} is-active{% endif %}" type="button" role="radio"
+                aria-checked="{% if v.id == variant.id %}true{% else %}false{% endif %}" aria-label="{{ v.title | escape }}" title="{{ v.title | escape }}"
+                data-kp-swatch data-variant-id="{{ v.id }}" data-price="{{ v_cena | escape }}" style="--kp-vzor:{{ swatch }};background-color:{{ swatch }}"{% unless v.available %} disabled{% endunless %}></button>
+            {%- endfor -%}
+          </div>
+          <p class="kp-farba__pozn">{{ product.variants.size }} odtieňov RAL bez príplatku. Ďalšie odtiene na vyžiadanie.</p>
+          <button class="kp-objednat" type="submit" data-kp-add{% unless variant.available %} disabled{% endunless %}>Objednať online za {{ cena }}</button>
+        {% endform %}
+
+        <button class="kh-hero__rating kp-google" type="button" data-kp-scroll="#otazky" aria-label="Hodnotenie Koverta na Google: 5,0 z 5">
+          <svg class="k-google" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
+          <strong>5,0</strong>
+          <span class="kh-hero__divider" aria-hidden="true"></span>
+          <span class="kh-hero__rating-meta">
+            <span class="k-stars" role="img" aria-label="5 z 5">{%- for i in (1..5) -%}<svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg>{%- endfor -%}</span>
+            <span>Hodnotenie na Google</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="k-band kh-vcene kp-vcene" aria-labelledby="kpVcene">
+    <div class="k-wrap">
+      <header class="k-head"><div class="k-head__title">
+        <p class="k-eyebrow">Čo je v cene {{ cena }}</p>
+        <h2 id="kpVcene" class="k-h2">Hotový prístrešok postavený u vás, nie stavebnica</h2>
+      </div></header>
+      <ul class="kh-vcene__rad">
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">01</span>
+          <h3 class="kh-vcene__nazov">Návrh pre vaše miesto</h3>
+          <ul class="kh-vcene__body"><li>Rozmer a osadenie stĺpov overíme pred výrobou</li><li>Pri katalógovom rozmere stačia fotky a miery</li><li>Nezáväzne, aj keď si vyberiete inak</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">02</span>
+          <h3 class="kh-vcene__nazov">Projekt prístrešku</h3>
+          <ul class="kh-vcene__body"><li>Zakótované rozmery, prierez a pohľady</li><li>Pôdorys osadenia aj s betónovými pätkami</li><li>Dostanete ho spolu s ponukou</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">03</span>
+          <h3 class="kh-vcene__nazov">Doprava a montáž</h3>
+          <ul class="kh-vcene__body"><li>V cene po celom Slovensku</li><li>Bežný prístrešok postavíme za jeden deň</li><li>Odpad odvezieme, miesto upraceme</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">04</span>
+          <h3 class="kh-vcene__nazov">Ochrana proti korózii</h3>
+          <ul class="kh-vcene__body"><li>Stĺpy aj pätky pozinkované</li><li>Lakované, {{ product.variants.size }} odtieňov v štandarde</li><li>Lemovanie s garanciou povrchu 40 rokov</li></ul>
+        </li>
       </ul>
     </div>
   </section>
 
-  {%- if product.description != blank -%}
-    <section class="kp-story" aria-labelledby="kpStory-{{ section.id }}">
-      <div class="kp-wrap kp-story__grid">
-        <div>
-          <p class="k-eyebrow kp-eyebrow">Prečo Koverta</p>
-          <h2 id="kpStory-{{ section.id }}" class="k-h2 kp-h2">Prístrešok, ktorý nemusíte prispôsobovať kompromisom.</h2>
-        </div>
-        <div class="kp-story__copy">{{ product.description }}</div>
+  <section class="k-band k-bone kp-parametre" aria-labelledby="kpParametre">
+    <div class="k-wrap kp-parametre__grid">
+      <div class="kp-parametre__text">
+        <p class="k-eyebrow">Parametre</p>
+        <h2 id="kpParametre" class="k-h2">{{ product.title }}</h2>
+        {%- if product.description != blank -%}<div class="k-copy kp-popis">{{ product.description }}</div>{%- endif -%}
       </div>
-    </section>
-  {%- endif -%}
-
-  <section class="kp-band kp-band--soft" aria-labelledby="kpIncluded-{{ section.id }}">
-    <div class="kp-wrap">
-      <p class="k-eyebrow kp-eyebrow">Čo kupujete</p>
-      <h2 id="kpIncluded-{{ section.id }}" class="k-h2 kp-h2">{{ dimension }}. Hotový prístrešok, nie stavebnica.</h2>
-      <p class="kp-intro">Neobjednávate iba oceľovú konštrukciu. Dostanete ucelené riešenie od výroby až po montáž, pričom pred výrobou spolu preveríme osadenie aj pripravenosť miesta.</p>
-      <div class="kp-included">
-        <article><span>01</span><h3>Oceľová konštrukcia Koverta</h3><p>Nosný systém vyrábame na Slovensku a dokončíme ho vo zvolenom farebnom vyhotovení.</p></article>
-        <article><span>02</span><h3>Strecha a odvod vody</h3><p>Strešná krytina, žľab a zvod sú navrhnuté ako jeden funkčný systém prístrešku.</p></article>
-        <article><span>03</span><h3>Doprava na miesto</h3><p>Hotové diely prístrešku privezieme na dohodnuté miesto realizácie podľa podmienok aktuálneho cenníka.</p></article>
-        <article><span>04</span><h3>Odborná montáž</h3><p>Montážny tím Koverta prístrešok osadí na pripravený podklad podľa vopred potvrdeného riešenia.</p></article>
-      </div>
+      <dl class="kp-tabulka">
+        <div><dt>Šírka × hĺbka</dt><dd>{{ w_m }} × {{ l_m }} m</dd></div>
+        <div><dt>Zastrešená plocha</dt><dd>{{ area }} m²</dd></div>
+        <div><dt>{% if family == 'zahrada' %}Využitie{% else %}Počet áut{% endif %}</dt><dd>{{ use_label }}</dd></div>
+        <div><dt>Svetlá výška</dt><dd>2,4 m, na teleskopických pätkách +30 cm</dd></div>
+        <div><dt>Konštrukcia</dt><dd>oceľ, žiarovo pozinkovaná a lakovaná</dd></div>
+        <div><dt>Strecha</dt><dd>trapézový plech, žľab a zvod v cene</dd></div>
+        <div><dt>Farba</dt><dd>{{ product.variants.size }} odtieňov RAL bez príplatku</dd></div>
+        <div><dt>Doprava a montáž</dt><dd>v cene po celom Slovensku</dd></div>
+        <div><dt>Nie je v cene</dt><dd>betónový podklad, elektroinštalácia, bočné výplne</dd></div>
+      </dl>
     </div>
   </section>
 
-  <section class="kr-gallery" id="kpVerifiedRealizations" aria-labelledby="kpRealTitle-{{ section.id }}">
+  <section class="k-band kh-work kp-rozmery" aria-labelledby="kpRozmery">
     <div class="k-wrap">
-      <header class="kr-gallery__head">
-        <div>
-          <p class="k-eyebrow">Reálne realizácie</p>
-          <h2 class="k-h2" id="kpRealTitle-{{ section.id }}">Takto vyzerá Koverta pri dome.</h2>
+      <header class="k-head k-head--split">
+        <div class="k-head__title">
+          <p class="k-eyebrow">Iný rozmer</p>
+          <h2 id="kpRozmery" class="k-h2">Všetky katalógové rozmery a ceny</h2>
         </div>
-        <a class="k-btn k-btn--line" href="/pages/nove-realizacie">Pozrieť všetky realizácie</a>
+        <div><p class="k-copy">Cena je vždy s DPH, dopravou aj montážou. Presný rozmer pre vaše miesto vyrobíme aj na mieru.</p></div>
       </header>
-      <div class="kr-gallery__grid">
-        {%- if family == 'zahrada' -%}
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"><figcaption><strong>Zastrešená terasa</strong><span>Bratislava</span></figcaption></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-detail.webp?v=1790093103" alt="Detail konštrukcie záhradného prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Čisté oceľové riešenie</strong><span>Detail realizácie</span></figcaption></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-sedenie.webp?v=1790093110" alt="Zastrešené záhradné posedenie Koverta" loading="lazy" decoding="async"><figcaption><strong>Záhradné posedenie</strong><span>Reálna realizácia</span></figcaption></figure>
-        {%- else -%}
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Dvojitý prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async"><figcaption><strong>Prístrešok pre dve autá</strong><span>Váhovce</span></figcaption></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-lamely.webp?v=1790093082" alt="Drevená lamelová výplň prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Lamelová výplň</strong><span>Detail realizácie</span></figcaption></figure>
-          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-dom.webp?v=1790093089" alt="Prístrešok Koverta pre auto pred domom" loading="lazy" decoding="async"><figcaption><strong>Koverta pri dome</strong><span>Reálna realizácia</span></figcaption></figure>
-        {%- endif -%}
+      {% render 'koverta-rozmery', family: family, product: product %}
+    </div>
+  </section>
+
+  <section class="k-band kh-faq" id="otazky" aria-labelledby="kpFaq">
+    <div class="k-wrap">
+      <div class="kh-faq__grid">
+        <div class="kh-faq__intro">
+          <div class="kh-faq__intro-in">
+            <p class="k-eyebrow">Časté otázky</p>
+            <h2 id="kpFaq" class="k-h2">Pred objednávkou {{ dimension }}</h2>
+            <p class="k-copy">Nenašli ste odpoveď? Zavolajte nám, poradíme aj bez záväzku.</p>
+            <a class="k-btn k-btn--line" href="tel:+421948482266">+421 948 482 266</a>
+          </div>
+        </div>
+        <div class="kh-faq__list" data-k-faq>
+          <details class="kh-faq__item"><summary><span>Čo je a čo nie je v cene?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>V cene je prístrešok, dohodnuté príslušenstvo, doprava, montáž a servis po celom Slovensku, bez príplatku za kilometre. V cene nie je betónový podklad ani elektroinštalácia, oboje naceňujeme samostatne.</p></div></details>
+          {%- unless family == 'zahrada' -%}
+          <details class="kh-faq__item"><summary><span>Zmestia sa pod {{ dimension }} {% if use_label == '1 auto' %}moje auto{% else %}dve autá{% endif %}?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Šírka {{ w_m }} m je v našom katalógu určená pre {{ use_label }}, hĺbka {{ l_m }} m pre bežné osobné autá. Pri SUV, dodávke alebo úzkom vjazde si rozmer overte v 3D konfigurátore, prípadne nám pošlite fotky miesta a rozmer navrhneme.</p></div></details>
+          {%- endunless -%}
+          <details class="kh-faq__item"><summary><span>Aký podklad musím pripraviť?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Kotvíme do monolitických betónových pätiek, betónovej platne alebo betónových pásov. Požiadavky na každý typ vrátane minimálnej hrúbky betónu dostanete v Technických podmienkach spolu s ponukou. Ak podklad ešte nemáte, pätky vieme vykopať a vybetónovať za vás.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Ako rýchlo budem mať prístrešok hotový?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Na dopyt odpovedáme do jedného pracovného dňa. Obchodné podmienky uvádzajú dodaciu lehotu 60 dní, v praxi sa k montáži hlásime zvyčajne okolo štvrtého týždňa. Samotná montáž trvá jeden pracovný deň, pri väčších projektoch dva a viac.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Potrebujem stavebné povolenie?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Závisí od rozmeru, umiestnenia a konkrétneho pozemku, preto si to vždy overte na príslušnom stavebnom úrade. K ponuke dostávate projekt s presnými rozmermi a osadením konštrukcie, teda presne tie podklady, ktoré úrad zvyčajne žiada.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Unesie strecha sneh?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Konštrukcie sú staticky posúdené aj pre vysokohorské oblasti s náročnejším snehovým a veterným zaťažením. Pri mimoriadne veľkom množstve snehu odporúčame strechu odpratať, rovnako ako pri každej inej streche.</p></div></details>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="kp-band kp-band--soft kp-fit-band" aria-labelledby="kpFit-{{ section.id }}">
-    <div class="kp-wrap kp-fit">
-      <div class="kp-fit__copy">
-        <p class="k-eyebrow kp-eyebrow">Rozmer v praxi</p>
-        <h2 id="kpFit-{{ section.id }}" class="k-h2 kp-h2">Je rozmer {{ dimension }} vhodný pre vás?</h2>
-        {%- if family == 'zahrada' -%}
-          <p>Rozmer {{ dimension }} vytvára {{ area_m2 }} m² krytej plochy pre terasu alebo záhradné využitie. Presné osadenie stĺpov a odstupy od domu preveríme pri zameraní.</p>
-        {%- else -%}
-          <p>Pri rozmere {{ dimension }} získate {{ area_m2 }} m² krytej plochy. Ide o praktický katalógový rozmer pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} s priestorom na pohodlné každodenné používanie. Ak máte väčšie vozidlo alebo špecifické miesto pri dome, rozmer si najprv overte v 3D konfigurátore alebo pri bezplatnom zameraní.</p>
-        {%- endif -%}
-        <dl class="kp-metrics">
-          <div><dt>Šírka</dt><dd>{{ width_mm }} mm</dd></div>
-          <div><dt>Hĺbka</dt><dd>{{ length_mm }} mm</dd></div>
-          <div><dt>Plocha</dt><dd>{{ area_m2 }} m²</dd></div>
-          <div><dt>Využitie</dt><dd>{{ typical_use | default: 'na mieru miestu' }}</dd></div>
-        </dl>
+  <section class="k-band kh-cta" id="ponuka" aria-labelledby="kpCta" data-k-otvarac-nadpis="Cenová ponuka na {{ dimension }}" data-k-otvarac-text="Overíme rozmer pre vaše miesto a pošleme cenu vrátane doplnkov. Ozveme sa do jedného pracovného dňa.">
+    <div class="k-wrap">
+      <div class="kh-cta__grid">
+        <div class="kh-cta__card">
+          <div class="kh-cta__head">
+            <p class="k-eyebrow">Nezáväzná cenová ponuka</p>
+            <h2 id="kpCta" class="k-h2">Cenová ponuka na {{ product.title }}</h2>
+            <p class="k-copy">Overíme rozmer pre vaše miesto a pošleme cenu vrátane doplnkov. Ozveme sa do jedného pracovného dňa.</p>
+          </div>
+          <form id="dopyt" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+            <input type="hidden" name="form_type" value="contact">
+            <input type="hidden" name="utf8" value="✓">
+            <label class="kh-field kh-field--interest"><span>Máte záujem o</span><select name="contact[Čo rieši]" required>
+              <option{% if family != 'zahrada' %} selected{% endif %}>Prístrešok pre auto Koverta</option>
+              <option>Carport Soltec</option>
+              <option{% if family == 'zahrada' %} selected{% endif %}>Záhradný prístrešok Koverta</option>
+              <option>Pevné prestrešenie Soltec</option>
+              <option>Bioklimatická pergola Soltec</option>
+              <option>Tienenie Soltec</option>
+              <option>Vonkajšia kuchyňa Soltec</option>
+              <option>Iné, potrebujem poradiť</option>
+            </select></label>
+            <div class="kh-form__grid">
+              <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
+              <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label>
+              <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email"></label>
+              <label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2" placeholder="Obec"></label>
+            </div>
+            <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+            <label class="kh-field kh-field--subor">
+              <span>Fotky miesta <small>nepovinné</small></span>
+              <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
+            </label>
+            <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+            <div class="kh-form__submit">
+              <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
+                <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </form>
+          <div class="kh-dakujem" data-k-dakujem hidden>
+            <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
+            <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>
+            <p class="kh-dakujem__text">Prišiel nám v poriadku. Ozveme sa do jedného pracovného dňa. Takto to bude pokračovať:</p>
+            <ol class="kh-dakujem__kroky">
+              <li><strong>Ozveme sa do jedného pracovného dňa</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
+              <li><strong>Overíme miesto</strong><span>Z fotiek, alebo prídeme, keď treba kotviť do steny či je pozemok v spáde.</span></li>
+              <li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, rozmiestnením stĺpov a termínom montáže.</span></li>
+            </ol>
+            <p class="kh-dakujem__fotky" data-k-fotky hidden>Fotky, ktoré ste vybrali, pošlite prosím e-mailom. Formulár ich k nám neprenesie.
+              <a href="mailto:obchod@koverta.sk?subject=Fotky%20k%20dopytu">Poslať fotky na obchod@koverta.sk</a></p>
+            <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
+            <p class="kh-dakujem__zaloha"><a data-k-mailto href="mailto:obchod@koverta.sk">Poslať ten istý dopyt aj e-mailom</a> <span>Ak by k nám formulár nedoručil, e-mail dôjde vždy.</span></p>
+            <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="kh-dakujem kh-dakujem--chyba" data-k-chyba hidden>
+            <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v6" stroke-linecap="round"/><path d="M12 17.2v.1" stroke-linecap="round"/></svg></p>
+            <h3 class="kh-dakujem__nadpis">Dopyt sa neodoslal</h3>
+            <p class="kh-dakujem__text">Spojenie zlyhalo, takže dopyt k nám nedošiel. Nič ste nestratili, všetko vyplnené vám otvoríme v e-maile jedným klikom:</p>
+            <p class="kh-dakujem__zaloha"><a class="k-btn k-btn--primary" data-k-mailto href="mailto:obchod@koverta.sk">Otvoriť e-mail s dopytom<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a> <span>Odíde na obchod@koverta.sk aj s tým, čo ste vyplnili.</span></p>
+            <p class="kh-dakujem__spoj">Alebo rovno zavolajte: <a href="tel:+421948482266">+421 948 482 266</a></p>
+            <button class="k-link" type="button" data-k-spat>Skúsiť odoslať znova <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+
+        <aside class="kh-cta__aside">
+          <div class="kh-cta__aside-head">
+            <p class="k-eyebrow">Kompletný servis</p>
+            <h3>Od návrhu po montáž</h3>
+            <p>Jeden tím vás prevedie výberom riešenia, overením miesta aj hotovou realizáciou.</p>
+          </div>
+          <a class="kh-cta__row" href="tel:+421948482266">
+            <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></span>
+            <span><small>Zavolajte</small><strong>+421 948 482 266</strong></span>
+          </a>
+          <a class="kh-cta__row" href="mailto:obchod@koverta.sk">
+            <span class="kh-cta__ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span><small>Napíšte</small><strong>obchod@koverta.sk</strong></span>
+          </a>
+          <figure class="kh-cta__foto">
+            {% render 'koverta-foto', meno: bok_foto, w: 1600, h: 1200, velka: false, alt: bok_alt, sizes: '(max-width: 899px) 100vw, 30vw' %}
+          </figure>
+        </aside>
       </div>
-      <figure class="kp-fit__visual">
-        {%- if family == 'zahrada' -%}
-          <img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-sedenie.webp?v=1790093110" alt="Zastrešené záhradné posedenie Koverta" loading="lazy" decoding="async">
-        {%- else -%}
-          <img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-dom.webp?v=1790093089" alt="Prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async">
-        {%- endif -%}
-        <figcaption><span>Rozmer v reálnom prostredí</span><strong>{{ dimension }}</strong></figcaption>
-      </figure>
     </div>
   </section>
 
-  <section class="kp-band kp-config-band">
-    <div class="kp-wrap kp-config-card">
-      <div><p class="k-eyebrow kp-eyebrow">3D konfigurátor</p><h2 class="k-h2 kp-h2">Pozrite si svoj prístrešok ešte pred objednávkou.</h2><p>Rozmer {{ dimension }} otvoríme rovno prednastavený. V 3D si môžete vyskúšať dostupné farby, výplne a doplnky a lepšie si predstaviť, ako bude prístrešok pôsobiť pri vašom dome.</p><a class="kp-config-card__button k-btn k-btn--primary" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a></div>
-      <a class="kp-config-card__visual" href="{{ configurator_url }}" aria-label="Otvoriť {{ dimension }} v 3D konfigurátore">
-        {%- if product.featured_media -%}<img src="{{ product.featured_media.preview_image | image_url: width: 1400 }}" width="{{ product.featured_media.preview_image.width }}" height="{{ product.featured_media.preview_image.height }}" alt="" loading="lazy" decoding="async">{%- endif -%}
-        <span><small>Prednastavený rozmer</small><strong>{{ dimension }}</strong></span>
-      </a>
-    </div>
-  </section>
+  <div class="kp-lista" data-kp-sticky hidden>
+    <div class="kp-lista__info"><small>{{ product.title }}</small><strong data-kp-sticky-price>{{ cena }}</strong></div>
+    <a class="k-btn k-btn--primary" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}">Cenová ponuka</a>
+  </div>
 
-  <section class="kp-band kp-band--soft" aria-labelledby="kpExtras-{{ section.id }}">
-    <div class="kp-wrap"><p class="k-eyebrow kp-eyebrow">Možnosti</p><h2 id="kpExtras-{{ section.id }}" class="k-h2 kp-h2">Prispôsobte si prístrešok svojmu miestu.</h2>
-      <div class="kp-extras">
-        <article><h3>Bočné výplne</h3><p>Pridajte viac súkromia alebo ochrany z bočnej strany. Dostupné riešenie závisí od rozmeru a zostavy.</p></article>
-        <article><h3>Farba konštrukcie</h3><p>Zlaďte prístrešok s fasádou, oknami alebo strechou domu. Dostupné farby vyberiete priamo pri produkte.</p></article>
-        <article><h3>Osvetlenie</h3><p>Doplňte prístrešok o integrované LED osvetlenie. Ide o voliteľný doplnok, ktorý sa naceňuje samostatne.</p></article>
-        <article><h3>Rozmer na mieru</h3><p>Ak vám katalógový rozmer presne nesedí, vieme riešenie prispôsobiť podľa priestoru a výsledku zamerania.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="kp-band" aria-labelledby="kpBase-{{ section.id }}">
-    <div class="kp-wrap kp-base"><div><p class="k-eyebrow kp-eyebrow">Podklad a kotvenie</p><h2 id="kpBase-{{ section.id }}" class="k-h2 kp-h2">Čo musí byť pripravené pred montážou?</h2></div><div><p>Typ podkladu a spôsob kotvenia sa potvrdzuje podľa konkrétneho miesta. Príprava betónových pätiek alebo iného základu nie je automaticky súčasťou základnej katalógovej ceny. Ak ju má zabezpečiť Koverta, rozsah a cenu treba potvrdiť samostatne v ponuke.</p><p>Pri zameraní sa preverí poloha prístrešku, spád pozemku, priestor pre stĺpy a smer odvodu vody.</p></div></div>
-  </section>
-
-  <section class="kp-band kp-band--dark" aria-labelledby="kpProcess-{{ section.id }}">
-    <div class="kp-wrap"><p class="k-eyebrow kp-eyebrow">Objednávka</p><h2 id="kpProcess-{{ section.id }}" class="k-h2 kp-h2">Od výberu rozmeru po montáž.</h2>
-      <ol class="kp-process"><li><span>01</span><strong>Vyberiete rozmer</strong><p>Objednáte hotový katalógový variant alebo si ho najprv upravíte v 3D konfigurátore.</p></li><li><span>02</span><strong>Overíme miesto</strong><p>Pri zameraní preveríme osadenie, priestor pre stĺpy a pripravenosť podkladu.</p></li><li><span>03</span><strong>Potvrdíme riešenie</strong><p>Spolu odsúhlasíme rozmer, farbu, doplnky a všetko, čo má ísť do výroby.</p></li><li><span>04</span><strong>Vyrobíme Koverta</strong><p>Prístrešok vyrobíme na Slovensku podľa potvrdenej špecifikácie.</p></li><li><span>05</span><strong>Privezieme a namontujeme</strong><p>Hotovú zostavu dopravíme na miesto a odborne osadíme na pripravený podklad.</p></li></ol>
-    </div>
-  </section>
-
-  <section class="kp-band" aria-labelledby="kpFaq-{{ section.id }}">
-    <div class="kp-wrap kp-faq"><div><p class="k-eyebrow kp-eyebrow">Časté otázky</p><h2 id="kpFaq-{{ section.id }}" class="k-h2 kp-h2">Pred objednávkou {{ dimension }}</h2></div><div class="kp-faq__items">
-      <details><summary>Je uvedená cena konečná?</summary><p>Je to katalógová cena základnej zostavy. Doplnky, individuálne úpravy a príprava podkladu môžu cenu zmeniť; finálne riešenie sa potvrdí podľa konkrétnej objednávky.</p></details>
-      <details><summary>Je doprava a montáž v cene?</summary><p>Pri katalógových cenách Koverta na tejto stránke sú doprava a odborná montáž zahrnuté. Príprava podkladu sa posudzuje samostatne.</p></details>
-      <details><summary>Dá sa zmeniť rozmer?</summary><p>Áno. Katalógový rozmer je východisko; individuálne rozmery sa riešia podľa zamerania a následnej cenovej ponuky.</p></details>
-      <details><summary>Aký podklad potrebujem?</summary><p>Konkrétny podklad a kotvenie závisia od miesta. Pred výrobou ich treba potvrdiť pri zameraní.</p></details>
-      <details><summary>Môžem si zvoliť farbu?</summary><p>Áno. Farby ponúkané vo výbere vyššie sú vedené ako varianty produktu; ďalšie požiadavky sa môžu riešiť individuálne.</p></details>
-      {%- unless family == 'zahrada' -%}<details><summary>Je {{ dimension }} vhodný pre dve autá?</summary><p>Pri rozmere {{ dimension }} je typické využitie {{ typical_use | default: 'parkovanie osobných vozidiel' }}. Pri veľmi širokých alebo dlhých vozidlách odporúčame konkrétne rozmery preveriť pred objednávkou.</p></details>{%- endunless -%}
-    </div></div>
-  </section>
-
-  {%- liquid
-    assign rel1 = all_products[product.metafields.koverta.related_1_handle.value]
-    assign rel2 = all_products[product.metafields.koverta.related_2_handle.value]
-    assign rel3 = all_products[product.metafields.koverta.related_3_handle.value]
-  -%}
-  {%- if rel1 != blank or rel2 != blank or rel3 != blank -%}
-    <section class="kp-band kp-band--soft" aria-labelledby="kpRelated-{{ section.id }}"><div class="kp-wrap"><p class="k-eyebrow kp-eyebrow">Blízke rozmery</p><h2 id="kpRelated-{{ section.id }}" class="k-h2 kp-h2">Možno vám bude lepšie sedieť.</h2><div class="kp-related">
-      {%- for n in (1..3) -%}{%- case n -%}{%- when 1 -%}{%- assign rp = rel1 -%}{%- when 2 -%}{%- assign rp = rel2 -%}{%- when 3 -%}{%- assign rp = rel3 -%}{%- endcase -%}{%- if rp != blank -%}<a href="{{ rp.url }}">{%- if rp.featured_image -%}<img src="{{ rp.featured_image | image_url: width: 700 }}" width="{{ rp.featured_image.width }}" height="{{ rp.featured_image.height }}" alt="{{ rp.featured_image.alt | default: rp.title | escape }}" loading="lazy">{%- endif -%}<span><strong>{{ rp.title }}</strong><small>od {{ rp.price | money }}</small></span><b aria-hidden="true">→</b></a>{%- endif -%}{%- endfor -%}
-    </div></div></section>
-  {%- endif -%}
-
-  <section class="k-band kh-cta kp-inquiry-source" id="ponuka" aria-labelledby="kpInquiry-{{ section.id }}">
-    <div class="k-wrap"><div class="kh-cta__grid"><div class="kh-cta__card"><div class="kh-cta__head"><p class="k-eyebrow">Cenová ponuka zadarmo</p><h2 id="kpInquiry-{{ section.id }}" class="k-h2">Najprv chcete zameranie?</h2><p class="k-copy">Nie ste si istí rozmerom, podkladom alebo doplnkami? Pošlite nám kontakt. Prejdeme s vami {{ product.title }} a dohodneme ďalší postup bez záväzku.</p></div>
-      <form id="dopyt-product-{{ section.id }}" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" data-k-dopyt>
-        <input type="hidden" name="form_type" value="contact"><input type="hidden" name="utf8" value="✓"><input type="hidden" name="contact[Čo rieši]" value="{{ inquiry_type }}">
-        <div class="kh-form__grid"><label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label><label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label><label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" autocomplete="email" required></label><label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2"></label></div>
-        <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3">Mám záujem o {{ product.title }}.</textarea></label>
-        <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu.</span></label>
-        <div class="kh-form__submit"><button class="k-btn k-btn--primary" type="submit">Odoslať dopyt</button></div>
-      </form><div class="kh-dakujem" data-k-dakujem hidden><h3 class="kh-dakujem__nadpis">Dopyt sme odoslali</h3><p class="kh-dakujem__text">Ďalší postup si dohodneme podľa konkrétnej realizácie.</p></div>
-    </div><figure class="kp-inquiry-source__visual">
-      {%- if family == 'zahrada' -%}<img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta pri dome" loading="lazy" decoding="async">
-      {%- else -%}<img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async">{%- endif -%}
-      <figcaption><span>Bezplatné zameranie</span><strong>0 €</strong></figcaption>
-    </figure></div></div>
-  </section>
-
-  <div class="kp-sticky"><div><small>{{ product.title }}</small><strong data-kp-sticky-price>{{ variant.price | money }}</strong></div><a href="{{ configurator_url }}">3D</a><button type="submit" form="{{ form_id }}" {% unless variant.available %}disabled{% endunless %}>Pridať do košíka</button></div>
-
-  <dialog class="kp-lightbox" data-kp-lightbox><button type="button" data-kp-lightbox-close aria-label="Zavrieť">×</button>{%- if product.featured_media -%}<img data-kp-lightbox-image src="{{ product.featured_media.preview_image | image_url: width: 2000 }}" alt="{{ product.featured_media.alt | default: product.title | escape }}">{%- endif -%}</dialog>
-
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":{{ product.title | json }},"description":{{ product.description | strip_html | json }},"brand":{"@type":"Brand","name":"Koverta"},"url":{{ canonical_url | json }},"offers":{"@type":"Offer","priceCurrency":{{ shop.currency | json }},"price":{{ variant.price | divided_by: 100.0 | json }},"url":{{ canonical_url | json }},"availability":"{% if variant.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>
+  {%- capture ld_obrazky -%}{%- for riadok in zoznam_fotiek -%}{%- assign f = riadok | split: '|' -%}{% unless forloop.first %},{% endunless %}{{ foto_zaklad | append: f[0] | append: '.jpg' | json }}{%- endfor -%}{%- endcapture -%}
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@graph":[
+    {"@type":"Product","name":{{ product.title | json }},"description":{{ product.description | strip_html | strip_newlines | truncate: 480 | json }},"image":[{{ ld_obrazky }}],"sku":{{ product.handle | json }},"brand":{"@type":"Brand","name":"Koverta"},"category":{{ catalog_label | json }},
+     "additionalProperty":[{"@type":"PropertyValue","name":"Šírka","value":{{ width_mm | json }},"unitCode":"MMT"},{"@type":"PropertyValue","name":"Hĺbka","value":{{ length_mm | json }},"unitCode":"MMT"}],
+     "offers":{"@type":"Offer","url":{{ canonical_url | json }},"priceCurrency":{{ cart.currency.iso_code | default: 'EUR' | json }},"price":{{ variant.price | divided_by: 100 | floor | json }},"itemCondition":"https://schema.org/NewCondition","availability":"https://schema.org/InStock","seller":{"@type":"Organization","name":"Koverta"}}},
+    {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Koverta","item":{{ shop.url | append: '/' | json }}},{"@type":"ListItem","position":2,"name":{{ catalog_label | json }},"item":{{ shop.url | append: catalog_url | json }}},{"@type":"ListItem","position":3,"name":{{ dimension | json }},"item":{{ canonical_url | json }}}]}
+  ]}
+  </script>
 </main>
 
 {% schema %}

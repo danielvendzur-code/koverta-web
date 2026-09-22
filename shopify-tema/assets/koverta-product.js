@@ -1,87 +1,119 @@
-(() => {
-  function init(root) {
-    const product = root.matches?.('[data-kp-product]') ? root : root.querySelector?.('[data-kp-product]');
-    if (!product || product.dataset.kpReady === '1') return;
-    product.dataset.kpReady = '1';
-    const main = product.querySelector('[data-kp-main]');
-    const lightbox = product.querySelector('[data-kp-lightbox]');
-    const lightboxImg = product.querySelector('[data-kp-lightbox-image]');
-    const thumbs = [...product.querySelectorAll('[data-kp-thumb]')];
-    const count = product.querySelector('[data-kp-count]');
-    let current = 0;
-    function show(index) {
-      if (!main || !thumbs.length) return;
-      current = (index + thumbs.length) % thumbs.length;
-      const thumb = thumbs[current];
-      main.src = thumb.dataset.full || main.src;
-      if (thumb.dataset.srcset) main.srcset = thumb.dataset.srcset;
-      main.alt = thumb.dataset.alt || main.alt;
-      thumbs.forEach((el, i) => el.classList.toggle('is-active', i === current));
-      if (count) count.textContent = (current + 1) + ' / ' + thumbs.length;
-      if (lightboxImg) { lightboxImg.src = main.src; lightboxImg.alt = main.alt; }
-    }
-    thumbs.forEach((thumb, index) => thumb.addEventListener('click', () => show(index)));
-    product.querySelector('[data-kp-prev]')?.addEventListener('click', () => show(current - 1));
-    product.querySelector('[data-kp-next]')?.addEventListener('click', () => show(current + 1));
-    product.querySelector('[data-kp-lightbox-open]')?.addEventListener('click', () => {
-      if (!lightbox || typeof lightbox.showModal !== 'function') return;
-      if (lightboxImg && main) { lightboxImg.src = main.currentSrc || main.src; lightboxImg.alt = main.alt; }
-      lightbox.showModal();
-    });
-    product.querySelector('[data-kp-lightbox-close]')?.addEventListener('click', () => lightbox?.close());
-    lightbox?.addEventListener('click', (event) => { if (event.target === lightbox) lightbox.close(); });
+/* Koverta · produktová stránka: galéria, farba a lepivý pruh na telefóne.
+   Dopyt aj jeho predvyplnenie rieši koverta-2026.js (data-k-dopyt); tu sa
+   len drží aktuálna farba v texte, ktorý sa do dopytu vloží. */
+(function () {
+  'use strict';
 
-    const select = product.querySelector('[data-kp-variant]');
-    const price = product.querySelector('[data-kp-price]');
-    const stickyPrice = product.querySelector('[data-kp-sticky-price]');
-    const buttonPrice = product.querySelector('[data-kp-button-price]');
-    const add = product.querySelector('[data-kp-add]');
-    const label = product.querySelector('[data-kp-add-label]');
-    const colorName = product.querySelector('[data-kp-color-name]');
-    const swatches = [...product.querySelectorAll('[data-kp-swatch]')];
-    function syncVariant() {
-      if (!select) return;
-      const option = select.options[select.selectedIndex];
-      const formatted = option?.dataset.price || '';
-      const available = option?.dataset.available === 'true';
-      if (price && formatted) price.textContent = formatted;
-      if (stickyPrice && formatted) stickyPrice.textContent = formatted;
-      if (buttonPrice && formatted) buttonPrice.textContent = formatted;
-      if (add) add.disabled = !available;
-      if (label) label.textContent = available ? 'Pridať do košíka' : 'Momentálne nedostupné';
-      if (colorName && option) colorName.textContent = option.textContent.replace(/\s+—\s+momentálne nedostupné$/, '').trim();
-      swatches.forEach((swatch) => {
-        const active = swatch.dataset.variantId === select.value;
-        swatch.classList.toggle('is-active', active);
-        swatch.setAttribute('aria-checked', active ? 'true' : 'false');
-        swatch.tabIndex = active ? 0 : -1;
+  function galeria(root) {
+    const g = root.querySelector('[data-kp-gallery]');
+    if (!g) return;
+    const track = g.querySelector('[data-kp-track]');
+    const slides = [...g.querySelectorAll('[data-kp-slide]')];
+    const thumbs = [...g.querySelectorAll('[data-kp-thumb]')];
+    const count = g.querySelector('[data-kp-count]');
+    if (!track || !slides.length) return;
+    let index = 0;
+
+    const oznac = (i) => {
+      index = i;
+      if (count) count.textContent = (i + 1) + ' / ' + slides.length;
+      thumbs.forEach((t, n) => {
+        t.classList.toggle('is-active', n === i);
+        t.setAttribute('aria-selected', n === i ? 'true' : 'false');
       });
-    }
-    select?.addEventListener('change', syncVariant);
-    swatches.forEach((swatch, index) => {
-      swatch.addEventListener('click', () => {
-        if (!select || swatch.disabled) return;
-        select.value = swatch.dataset.variantId;
-        select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const chod = (i) => {
+      const n = (i + slides.length) % slides.length;
+      track.scrollTo({ left: slides[n].offsetLeft, behavior: 'smooth' });
+      oznac(n);
+    };
+
+    /* Poloha sa číta zo skutočného posunu pásu, takže sedí aj pri potiahnutí
+       prstom, nielen pri kliknutí na šípku. */
+    let cakaj = 0;
+    track.addEventListener('scroll', () => {
+      window.cancelAnimationFrame(cakaj);
+      cakaj = window.requestAnimationFrame(() => {
+        const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+        if (i !== index && i >= 0 && i < slides.length) oznac(i);
       });
-      swatch.addEventListener('keydown', (event) => {
-        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
-        event.preventDefault();
-        const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
-        let next = index;
-        do next = (next + direction + swatches.length) % swatches.length;
-        while (swatches[next]?.disabled && next !== index);
-        swatches[next]?.focus();
-        swatches[next]?.click();
+    }, { passive: true });
+
+    const spat = g.querySelector('[data-kp-prev]');
+    const dalej = g.querySelector('[data-kp-next]');
+    if (spat) spat.addEventListener('click', () => chod(index - 1));
+    if (dalej) dalej.addEventListener('click', () => chod(index + 1));
+    thumbs.forEach((t) => t.addEventListener('click', () => chod(Number(t.dataset.index) || 0)));
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); chod(index - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); chod(index + 1); }
+    });
+  }
+
+  function farba(root) {
+    const form = root.querySelector('.kp-farba');
+    if (!form) return;
+    const input = form.querySelector('[data-kp-variant]');
+    const nazov = form.querySelector('[data-kp-color-name]');
+    const add = form.querySelector('[data-kp-add]');
+    const ceny = root.querySelectorAll('[data-kp-price], [data-kp-sticky-price]');
+    const cta = root.querySelectorAll('[data-kp-cta]');
+
+    form.querySelectorAll('[data-kp-swatch]').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        const stara = nazov ? nazov.textContent.trim() : '';
+        const nova = b.getAttribute('title') || '';
+        form.querySelectorAll('[data-kp-swatch]').forEach((x) => {
+          x.classList.toggle('is-active', x === b);
+          x.setAttribute('aria-checked', x === b ? 'true' : 'false');
+        });
+        if (input) input.value = b.dataset.variantId;
+        if (nazov) nazov.textContent = nova;
+        if (b.dataset.price) {
+          ceny.forEach((c) => { c.textContent = b.dataset.price; });
+          if (add) add.textContent = 'Objednať online za ' + b.dataset.price;
+        }
+        /* Text dopytu nesie farbu, ktorú človek práve vybral. */
+        cta.forEach((a) => {
+          ['kDopyt', 'kDopytKontext'].forEach((k) => {
+            if (a.dataset[k] && stara) a.dataset[k] = a.dataset[k].split(stara).join(nova);
+          });
+        });
+        const url = new URL(window.location.href);
+        url.searchParams.set('variant', b.dataset.variantId);
+        window.history.replaceState({}, '', url);
       });
     });
-    syncVariant();
   }
-  function boot(root = document) {
-    if (root.matches?.('[data-kp-product]')) init(root);
-    root.querySelectorAll?.('[data-kp-product]').forEach(init);
+
+  /* Pruh s cenou a tlačidlom sa na telefóne ukáže, keď hlavné tlačidlo
+     odíde z obrazovky, a zmizne pri formulári, aby ho neprekrýval. */
+  function lista(root) {
+    const pruh = root.querySelector('[data-kp-sticky]');
+    const hlavne = root.querySelector('.kp-akcie');
+    const ponuka = root.querySelector('#ponuka');
+    if (!pruh || !hlavne || !('IntersectionObserver' in window)) return;
+    pruh.hidden = false;
+    let hore = true, pri = false;
+    const prepni = () => pruh.classList.toggle('is-on', !hore && !pri);
+    new IntersectionObserver(([z]) => { hore = z.isIntersecting || z.boundingClientRect.top > 0; prepni(); }).observe(hlavne);
+    if (ponuka) new IntersectionObserver(([z]) => { pri = z.isIntersecting; prepni(); }, { threshold: 0.05 }).observe(ponuka);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => boot(), { once: true });
-  else boot();
-  document.addEventListener('shopify:section:load', (event) => boot(event.target));
+
+  function posun(root) {
+    root.querySelectorAll('[data-kp-scroll]').forEach((b) => b.addEventListener('click', () => {
+      const ciel = document.querySelector(b.dataset.kpScroll);
+      if (ciel) ciel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+  }
+
+  function init() {
+    const root = document.querySelector('[data-kp-product]');
+    if (!root || root.dataset.kpReady === 'true') return;
+    root.dataset.kpReady = 'true';
+    galeria(root); farba(root); lista(root); posun(root);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();

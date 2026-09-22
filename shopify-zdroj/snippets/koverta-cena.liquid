@@ -1,0 +1,16 @@
+{%- comment -%} Cena v centoch → „6 897 €“ (slovenský zápis, bez centov, keď sú nulové). {%- endcomment -%}
+{%- liquid
+  assign eura = centy | divided_by: 100 | floor
+  assign centy_zv = centy | modulo: 100
+  if eura >= 1000
+    assign tisice = eura | divided_by: 1000 | floor
+    assign zvysok = eura | modulo: 1000 | prepend: '00' | slice: -3, 3
+    assign text = tisice | append: ' ' | append: zvysok
+  else
+    assign text = eura | append: ''
+  endif
+  if centy_zv > 0
+    assign c2 = centy_zv | prepend: '0' | slice: -2, 2
+    assign text = text | append: ',' | append: c2
+  endif
+-%}{{ text }} €

@@ -20,9 +20,19 @@ JSON.parse(fs.readFileSync(path.join(src,'templates/cart.json'),'utf8'));
 const product=fs.readFileSync(path.join(src,'sections/koverta-product.liquid'),'utf8');
 if(!/{%\s*form\s+'product',\s*product/.test(product))throw new Error('produkt nemá Shopify product form');
 if(!/name="id"/.test(product))throw new Error('product form nemá variant id');
-if(!/data-kp-add/.test(product))throw new Error('produkt nemá Pridať do košíka');
-if(!/kr-hero/.test(product)||!/kpVerifiedRealizations/.test(product))throw new Error('produkt stratil schválený kr hero alebo realizačnú galériu');
+if(!/data-kp-add/.test(product))throw new Error('produkt nemá objednávku do košíka');
+/* Jedna šablóna pre všetky rozmery: spoločná galéria z montáží, hlavná výzva
+   je nezáväzná ponuka, bloky sú tie isté ako na podstránkach. */
+if(!/data-kp-gallery/.test(product)||!/koverta-foto/.test(product))throw new Error('produkt nemá spoločnú galériu z montáží');
+if(!/Chcem cenovú ponuku/.test(product)||!/data-k-dopyt=/.test(product))throw new Error('produkt nemá hlavnú výzvu na nezáväznú ponuku');
+if(/Bezplatné zameranie/i.test(product))throw new Error('produkt nesmie volať výzvu „Bezplatné zameranie“');
+for(const blok of ['kh-vcene','koverta-rozmery','kh-faq','kh-cta','data-k-dopyt>']){if(!product.includes(blok))throw new Error('produkt stratil blok '+blok)}
+for(const snip of ['koverta-foto','koverta-cena','koverta-rozmery'])if(!fs.existsSync(path.join(src,'snippets',snip+'.liquid')))throw new Error('chýba shopify-zdroj/snippets/'+snip+'.liquid');
+const fotky=[...product.matchAll(/assign fotky = '([^']+)'/g)].map(m=>m[1].split(';').map(x=>x.split('|')[0]));
+if(fotky.length!==3)throw new Error('produkt má mať 3 sady fotiek (1 auto, 2 autá, záhrada)');
+for(const sada of fotky){if(new Set(sada).size!==sada.length)throw new Error('v galérii je tá istá fotka dvakrát');for(const f of sada)for(const sub of ['-w640.webp','-w1000.webp'])if(!fs.existsSync(path.join(ROOT,'assets',f+sub)))throw new Error('chýba assets/'+f+sub)}
 if(!/\/pages\/nove-konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
+require('node:child_process').execFileSync(process.execPath,[path.join(ROOT,'tools','shopify-rozmery.js'),'--check'],{stdio:'inherit'});
 const cart=fs.readFileSync(path.join(src,'sections/koverta-cart.liquid'),'utf8');
 if(!/name="checkout"/.test(cart)||!/routes\.cart_url/.test(cart))throw new Error('košík nemá natívny Shopify checkout');
 const imageMapPath=path.join(ROOT,'tools','shopify-product-images.json');
