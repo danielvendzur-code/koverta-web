@@ -22,8 +22,8 @@
  *                stránku a stránky na `Default page` sú prázdne
  *   formulár     téma musí niesť vlastný Koverta formulár a nesmie načítavať
  *                starý Formful embed ani jeho launcher
- *   rozmery      odkaz na stránku katalógového rozmeru nesmie viesť do
- *                obchodu — tie stránky žijú na statickom webe
+ *   rozmery      každý katalógový rozmer musí viesť na skutočný Shopify
+ *                produkt; nie na starú Page ani na GitHub Pages
  *   stránky      každý nový interný odkaz musí mať cieľový útržok v téme
  *   JSON         každá konfigurácia a šablóna musí byť platný JSON
  *   formuláre    každý dopyt musí mať POST, povinné polia a odoslanie
@@ -157,33 +157,46 @@ for (const subor of formularove) {
   if (/Formful\.openDialog|form_LaKRq0tyt4/.test(text)) nalez(subor, 'stále odkazuje na Formful');
 }
 
-/* 6 · odkazy na stránky katalógových rozmerov -----------------------------
-   Cenová tabuľka „Vyberte si rozmer" odkazuje na 66 stránok, ktoré generuje
-   `tools/generuj-rozmery.py` a ktoré žijú na statickom webe. V obchode nie sú
-   a zakladať ich tam netreba. Kým odkaz viedol na `/pages/…-rozmer-…`,
-   dostal zákazník 404 priamo v cenníku, teda na tom najhoršom mieste.
+/* 6 · katalógové rozmery sú skutočné Shopify produkty ----------------------
+   Cenové tabuľky majú 54 automobilových a 12 záhradných rozmerov. Každý
+   odkaz musí zostať na koverta.sk a smerovať na /products/. GitHub Pages je
+   iba zdroj/náhľad, nie zákaznícka produktová adresa. */
 
-   Stráži sa oboje: že taký odkaz v téme nie je a že plná adresa, ktorá ho
-   nahradila, ukazuje na priečinok, ktorý v repozitári naozaj existuje. */
-
-const DO_OBCHODU_ROZMER = /href="\/pages\/[^"]*-rozmer-[^"]*"/g;
-const NA_STATICKY_ROZMER =
-  /href="https?:\/\/[^"]*\/((?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+)\/"/g;
+const STARA_PAGE_ROZMER = /href="\/pages\/[^"]*-rozmer-[^"]*"/g;
+const GITHUB_ROZMER = /href="https?:\/\/danielvendzur-code\.github\.io\/koverta-web\/(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/[^"]+"/g;
+const PRODUKT_ROZMER = /href="\/products\/(?:pristresok-koverta|zahradny-pristresok-koverta)-(\d+)x(\d+)"/g;
+const produktoveRozmery = new Set();
 
 for (const subor of vsetky) {
   if (!/\.(liquid|json)$/.test(subor)) continue;
   const text = fs.readFileSync(subor, 'utf8');
-  const doObchodu = [...new Set(text.match(DO_OBCHODU_ROZMER) || [])];
-  if (doObchodu.length) {
-    nalez(subor, doObchodu.length + ' odkaz(ov) na rozmer vedie do obchodu (' +
-      doObchodu[0].slice(6, -1) + ') — taká stránka tam nie je a zákazník dostane 404');
-  }
+  const stare = text.match(STARA_PAGE_ROZMER) || [];
+  if (stare.length) nalez(subor, stare.length + ' rozmerových odkazov stále smeruje na /pages/');
+  const github = text.match(GITHUB_ROZMER) || [];
+  if (github.length) nalez(subor, github.length + ' rozmerových odkazov stále smeruje na GitHub Pages');
   let m;
-  while ((m = NA_STATICKY_ROZMER.exec(text))) {
-    if (!fs.existsSync(path.join(KOREN, m[1], 'index.html'))) {
-      nalez(subor, 'odkaz na rozmer ' + m[1] + ' — taký priečinok v repozitári nie je');
-    }
-  }
+  while ((m = PRODUKT_ROZMER.exec(text))) produktoveRozmery.add(m[1] + 'x' + m[2]);
+}
+
+if (produktoveRozmery.size !== 66) {
+  nalezy.push('shopify-tema: očakávaných 66 unikátnych produktových rozmerov, našlo sa ' + produktoveRozmery.size);
+}
+
+for (const rel of ['templates/product.json', 'templates/cart.json',
+  'sections/koverta-product.liquid', 'sections/koverta-cart.liquid']) {
+  if (!fs.existsSync(path.join(TEMA, rel))) nalezy.push('shopify-tema/' + rel + ' chýba');
+}
+const produktSekcia = path.join(TEMA, 'sections', 'koverta-product.liquid');
+if (fs.existsSync(produktSekcia)) {
+  const text = fs.readFileSync(produktSekcia, 'utf8');
+  if (!/{%\s*form\s+'product',\s*product/.test(text)) nalez(produktSekcia, 'chýba natívny Shopify product form');
+  if (!/name="id"/.test(text)) nalez(produktSekcia, 'chýba variant id pre košík');
+  if (!/data-kp-add/.test(text)) nalez(produktSekcia, 'chýba tlačidlo Pridať do košíka');
+}
+const cartSekcia = path.join(TEMA, 'sections', 'koverta-cart.liquid');
+if (fs.existsSync(cartSekcia)) {
+  const text = fs.readFileSync(cartSekcia, 'utf8');
+  if (!/name="checkout"/.test(text)) nalez(cartSekcia, 'chýba prechod do Shopify checkout');
 }
 
 /* 7 · interné odkazy, JSON a každý formulár ------------------------------- */
