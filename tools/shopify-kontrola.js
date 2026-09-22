@@ -200,7 +200,8 @@ for (const subor of vsetky) {
 
 for (const subor of vsetky.filter((p) => p.endsWith('.json'))) {
   const text = fs.readFileSync(subor, 'utf8');
-  try { JSON.parse(text.slice(text.indexOf('{'))); }
+  const cisty = text.replace(/^\/\*[\s\S]*?\*\/\s*/, '');
+  try { JSON.parse(cisty); }
   catch (e) { nalez(subor, 'nie je platný JSON: ' + e.message); }
 }
 
