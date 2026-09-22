@@ -42,6 +42,8 @@ jobs:
           node tools/spolocne-casti.js --kontrola
           node tools/shopify-produkt-kontrola.js
           node --check tools/shopify-products.js
+          node tools/shopify-products.js --check
+          node tools/shopify-products.js --scope=reference
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
 
