@@ -61,13 +61,38 @@ function snippet() {
     + '</div>\n{%- endif -%}\n';
 }
 
+/* Fotky realizácií s presne rovnakým rozmerom (tools/rozmery-fotky.json).
+   Snippet vypíše snímky galérie (druh: 'snimka') alebo náhľady ('nahlad'). */
+const FOTKY_CIEL = path.join(ROOT, 'shopify-zdroj', 'snippets', 'koverta-fotky-rozmeru.liquid');
+function fotkySnippet() {
+  const mapa = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'rozmery-fotky.json'), 'utf8'));
+  const zaklad = 'https://danielvendzur-code.github.io/koverta-web/assets/mapa/';
+  let out = '{%- comment -%} Vygenerované: node tools/shopify-rozmery.js z tools/rozmery-fotky.json. {%- endcomment -%}\n{%- case handle -%}\n';
+  for (const [h, fotky] of Object.entries(mapa)) {
+    if (!/^(pristresok|zahradny)/.test(h)) continue;
+    const m = h.match(/(\d+)x(\d+)$/);
+    const rozmer = metre(+m[1]).replace(' m', '') + ' × ' + metre(+m[2]);
+    out += "{%- when '" + h + "' -%}\n";
+    fotky.forEach(([subor, obec], i) => {
+      if (!fs.existsSync(path.join(ROOT, 'assets', 'mapa', subor + '.jpg'))) throw new Error('chýba assets/mapa/' + subor + '.jpg');
+      const alt = 'Realizácia Koverta ' + rozmer + ', ' + obec;
+      out += "{%- if druh == 'nahlad' -%}<button type=\"button\" class=\"kp-gal__nahlad\" role=\"tab\" aria-selected=\"false\" data-kp-thumb data-index=\"{{ start | plus: " + i + " }}\" aria-label=\"" + alt + "\"><img src=\"" + zaklad + subor + "-mini.jpg\" width=\"320\" height=\"240\" alt=\"\" loading=\"lazy\" decoding=\"async\"></button>"
+        + "{%- else -%}<figure class=\"kp-gal__slide\" data-kp-slide><img src=\"" + zaklad + subor + ".jpg\" width=\"1280\" height=\"960\" alt=\"" + alt + "\" loading=\"lazy\" decoding=\"async\"><figcaption class=\"kp-gal__popis\">Realizácia " + rozmer + " · " + obec + "</figcaption></figure>{%- endif -%}\n";
+    });
+  }
+  return out + '{%- endcase -%}\n';
+}
+const fotkyObsah = fotkySnippet();
 const obsah = snippet();
 if (process.argv.includes('--check')) {
   const teraz = fs.existsSync(CIEL) ? fs.readFileSync(CIEL, 'utf8') : '';
+  const terazF = fs.existsSync(FOTKY_CIEL) ? fs.readFileSync(FOTKY_CIEL, 'utf8') : '';
+  if (terazF !== fotkyObsah) { console.error('koverta-fotky-rozmeru.liquid nie je aktuálny: node tools/shopify-rozmery.js'); process.exit(1); }
   if (teraz !== obsah) { console.error('koverta-rozmery.liquid nie je aktuálny: node tools/shopify-rozmery.js'); process.exit(1); }
   console.log('koverta-rozmery.liquid je aktuálny');
 } else {
   fs.mkdirSync(path.dirname(CIEL), { recursive: true });
   fs.writeFileSync(CIEL, obsah);
+  fs.writeFileSync(FOTKY_CIEL, fotkyObsah);
   console.log('Zapísané ' + path.relative(ROOT, CIEL));
 }

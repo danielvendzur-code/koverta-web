@@ -223,3 +223,34 @@
   .kp .kp-size .kh-size__chip { flex-direction: column; align-items: flex-start; gap: 1px; padding: 7px 10px; white-space: nowrap; }
   .kp .kp-size .kh-size__chip span, .kp .kp-size .kh-size__chip small { white-space: nowrap; }
 }
+
+/* vizualizácia na bielom, fotky realizácií s popisom */
+.kp-gal__slide--vizual { background: #fff; }
+.kp-gal__slide--vizual img { object-fit: contain; }
+.kp-gal__slide { position: relative; }
+.kp-gal__popis { position: absolute; left: 14px; bottom: 14px; padding: 7px 12px; border-radius: 999px; background: rgba(18,23,26,.72); color: #fff; font: 600 12.5px/1 var(--k-head); }
+.kp-gal__nahlad img { background: #fff; }
+.kp-gal.je-jedna .kp-gal__sipka, .kp-gal.je-jedna .kp-gal__pocet, .kp-gal.je-jedna .kp-gal__nahlady { display: none; }
+.kp-gal__stage { background: #fff; }
+
+/* technické údaje s nákresom */
+.kp .kp-tech { background: #fff; padding-block: clamp(48px, 5vw, 96px); }
+.kp-tech__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 88px); align-items: center; }
+.kp-h2 { margin: 0 0 18px; color: var(--k-ink); font: 600 clamp(24px, 2.2vw, 32px)/1.15 var(--k-head); letter-spacing: -.015em; }
+.kp-tech .kp-tabulka { border-top: 1px solid var(--k-hair); }
+.kp-tech .kp-popis { margin-top: 22px; color: var(--k-muted); font: 400 15px/1.65 var(--k-body); }
+.kp-tech .kp-popis p { margin: 0; }
+.kp-nakres { margin: 0; padding: clamp(16px, 2vw, 28px); border-radius: var(--k-r); background: var(--k-bone); }
+.kp-nakres svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+.kp-nakres__strecha { fill: #fff; stroke: var(--k-ink); stroke-width: 2; }
+.kp-nakres__vlna { stroke: rgba(18,23,26,.14); stroke-width: 1; }
+.kp-nakres__stlp { fill: var(--k-ink); }
+.kp-nakres__kota { stroke: var(--k-amber-deep); stroke-width: 1.2; }
+.kp-nakres marker path { fill: var(--k-amber-deep); }
+.kp-nakres__text { fill: var(--k-ink); font: 700 14px var(--k-head); }
+.kp-nakres__stred { fill: var(--k-muted); font: 600 13px var(--k-head); }
+.kp-nakres figcaption { margin-top: 10px; text-align: center; color: var(--k-muted); font: 500 12.5px/1.4 var(--k-body); }
+@media (max-width: 899px) { .kp-tech__grid { grid-template-columns: minmax(0, 1fr); } }
+.kp .kp-rozmery { background: var(--k-bone); padding-block: clamp(48px, 5vw, 96px); }
+.kp .kp-rozmery .kp-h2 { margin-bottom: 6px; }
+.kp .kp-rozmery__sub { margin: 0; max-width: 60ch; }

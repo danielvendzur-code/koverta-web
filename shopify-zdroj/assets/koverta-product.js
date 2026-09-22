@@ -41,6 +41,8 @@
 
     const spat = g.querySelector('[data-kp-prev]');
     const dalej = g.querySelector('[data-kp-next]');
+    oznac(0);
+    if (slides.length < 2) g.classList.add('je-jedna');
     if (spat) spat.addEventListener('click', () => chod(index - 1));
     if (dalej) dalej.addEventListener('click', () => chod(index + 1));
     thumbs.forEach((t) => t.addEventListener('click', () => chod(Number(t.dataset.index) || 0)));

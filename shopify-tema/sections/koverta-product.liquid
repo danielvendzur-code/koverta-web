@@ -89,25 +89,51 @@
       <div class="kp-gal" data-kp-gallery aria-roledescription="galéria" aria-label="Fotografie z montáží Koverta">
         <div class="kp-gal__stage">
           <div class="kp-gal__track" data-kp-track tabindex="0">
-            {%- for riadok in zoznam_fotiek -%}
-              {%- assign f = riadok | split: '|' -%}
-              <figure class="kp-gal__slide" data-kp-slide>
-                {%- if f[3] == '1' -%}{%- assign velka = true -%}{%- else -%}{%- assign velka = false -%}{%- endif -%}
-                {% render 'koverta-foto', meno: f[0], w: f[1], h: f[2], velka: velka, alt: f[4], prva: forloop.first %}
-              </figure>
-            {%- endfor -%}
+            {%- comment -%} Najprv vizualizácia tohto rozmeru z obchodu, potom
+               fotky realizácií s presne rovnakým rozmerom, ak nejaké sú. {%- endcomment -%}
+            {%- if product.media.size > 0 -%}
+              {%- for m in product.media limit: 4 -%}
+                <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
+                  <img src="{{ m.preview_image | image_url: width: 1200 }}"
+                    srcset="{{ m.preview_image | image_url: width: 700 }} 700w, {{ m.preview_image | image_url: width: 1200 }} 1200w, {{ m.preview_image | image_url: width: 1800 }} 1800w"
+                    sizes="(max-width: 899px) 100vw, 58vw" width="{{ m.preview_image.width }}" height="{{ m.preview_image.height }}"
+                    alt="{{ m.alt | default: product.title | escape }}" decoding="async"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+                </figure>
+              {%- endfor -%}
+            {%- else -%}
+              {%- for riadok in zoznam_fotiek limit: 2 -%}
+                {%- assign f = riadok | split: '|' -%}
+                <figure class="kp-gal__slide" data-kp-slide>
+                  {%- if f[3] == '1' -%}{%- assign velka = true -%}{%- else -%}{%- assign velka = false -%}{%- endif -%}
+                  {% render 'koverta-foto', meno: f[0], w: f[1], h: f[2], velka: velka, alt: f[4], prva: forloop.first %}
+                </figure>
+              {%- endfor -%}
+            {%- endif -%}
+            {% render 'koverta-fotky-rozmeru', handle: product.handle, druh: 'snimka' %}
           </div>
           <button type="button" class="kp-gal__sipka kp-gal__sipka--spat" data-kp-prev aria-label="Predchádzajúca fotografia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button type="button" class="kp-gal__sipka kp-gal__sipka--dalej" data-kp-next aria-label="Ďalšia fotografia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <span class="kp-gal__pocet" data-kp-count aria-live="polite">1 / {{ zoznam_fotiek.size }}</span>
-                  </div>
+          <span class="kp-gal__pocet" data-kp-count aria-live="polite"></span>
+        </div>
         <div class="kp-gal__nahlady" role="tablist" aria-label="Vybrať fotografiu">
-          {%- for riadok in zoznam_fotiek -%}
-            {%- assign f = riadok | split: '|' -%}
-            <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Fotografia {{ forloop.index }}">
-              <img src="{{ foto_zaklad }}{{ f[0] }}-w640.webp" width="{{ f[1] }}" height="{{ f[2] }}" alt="" loading="lazy" decoding="async">
-            </button>
-          {%- endfor -%}
+          {%- assign pocet_vizual = 0 -%}
+          {%- if product.media.size > 0 -%}
+            {%- for m in product.media limit: 4 -%}
+              <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Vizualizácia {{ forloop.index }}">
+                <img src="{{ m.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
+              </button>
+              {%- assign pocet_vizual = forloop.length -%}
+            {%- endfor -%}
+          {%- else -%}
+            {%- for riadok in zoznam_fotiek limit: 2 -%}
+              {%- assign f = riadok | split: '|' -%}
+              <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Fotografia {{ forloop.index }}">
+                <img src="{{ foto_zaklad }}{{ f[0] }}-w640.webp" width="{{ f[1] }}" height="{{ f[2] }}" alt="" loading="lazy" decoding="async">
+              </button>
+              {%- assign pocet_vizual = forloop.length -%}
+            {%- endfor -%}
+          {%- endif -%}
+          {% render 'koverta-fotky-rozmeru', handle: product.handle, druh: 'nahlad', start: pocet_vizual %}
         </div>
       </div>
 
@@ -176,7 +202,7 @@
           <button class="k-btn k-btn--primary kp-kosik" type="submit" data-kp-add{% unless variant.available %} disabled{% endunless %}>Pridať do košíka</button>
         {% endform %}
 
-        <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}">Nezáväzná cenová ponuka</a>
+        <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if product.featured_media %} data-k-dopyt-obrazok="{{ product.featured_media.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
         <a class="kp-3d" href="{{ configurator_url }}">Upraviť rozmer a doplnky v 3D konfigurátore <span aria-hidden="true">→</span></a>
 
         <ul class="kp-usp">
@@ -197,18 +223,6 @@
             <p>Nie je v cene: betónový podklad, elektroinštalácia a bočné výplne. Naceníme ich v ponuke.</p>
           </details>
           <details>
-            <summary>Parametre</summary>
-            <dl class="kp-tabulka">
-              <div><dt>Šírka × hĺbka</dt><dd>{{ w_m }} × {{ l_m }} m</dd></div>
-              <div><dt>Plocha</dt><dd>{{ area }} m²</dd></div>
-              <div><dt>{% if family == 'zahrada' %}Využitie{% else %}Počet áut{% endif %}</dt><dd>{{ use_label }}</dd></div>
-              <div><dt>Svetlá výška</dt><dd>2,4 m (teleskopické pätky +30 cm)</dd></div>
-              <div><dt>Konštrukcia</dt><dd>oceľ, žiarový zinok a lak</dd></div>
-              <div><dt>Strecha</dt><dd>pultová, trapézový plech</dd></div>
-              <div><dt>Farby</dt><dd>{{ product.variants.size }} odtieňov RAL bez príplatku</dd></div>
-            </dl>
-          </details>
-          <details>
             <summary>Podklad a montáž</summary>
             <p>Kotvíme do betónových pätiek, platne alebo pásov. Presné požiadavky dostanete s ponukou. Ak podklad ešte nemáte, pätky vieme vykopať a vybetónovať za vás.</p>
           </details>
@@ -221,24 +235,31 @@
     </div>
   </section>
 
-  {%- if product.description != blank -%}
-  <section class="k-band kp-popis-band" aria-label="Popis">
-    <div class="k-wrap kp-popis-band__in">
-      <h2 class="k-h2">O prístrešku {{ dimension }}</h2>
-      <div class="k-copy kp-popis">{{ product.description }}</div>
+  <section class="k-band kp-tech" aria-labelledby="kpTech">
+    <div class="k-wrap kp-tech__grid">
+      {% render 'koverta-nakres', w: width_mm, l: length_mm, w_m: w_m, l_m: l_m, area: area %}
+      <div class="kp-tech__text">
+        <h2 id="kpTech" class="kp-h2">Rozmery a technické údaje</h2>
+        <dl class="kp-tabulka">
+          <div><dt>Šírka × hĺbka</dt><dd>{{ w_m }} × {{ l_m }} m</dd></div>
+          <div><dt>Zastrešená plocha</dt><dd>{{ area }} m²</dd></div>
+          <div><dt>{% if family == 'zahrada' %}Využitie{% else %}Počet áut{% endif %}</dt><dd>{{ use_label }}</dd></div>
+          <div><dt>Svetlá výška</dt><dd>2,4 m, s teleskopickými pätkami až 2,7 m</dd></div>
+          <div><dt>Konštrukcia</dt><dd>oceľ, žiarovo pozinkovaná a lakovaná</dd></div>
+          <div><dt>Strecha</dt><dd>pultová, trapézový plech, hliníkové lemovanie</dd></div>
+          <div><dt>Odvodnenie</dt><dd>žľab a zvod v cene</dd></div>
+          <div><dt>Farby</dt><dd>{{ product.variants.size }} odtieňov RAL bez príplatku</dd></div>
+        </dl>
+        {%- if product.description != blank -%}<div class="kp-popis">{{ product.description | split: '</p>' | first | append: '</p>' }}</div>{%- endif -%}
+      </div>
     </div>
   </section>
-  {%- endif -%}
+
 
   <section class="k-band kh-work kp-rozmery" aria-labelledby="kpRozmery">
     <div class="k-wrap">
-      <header class="k-head k-head--split">
-        <div class="k-head__title">
-          <p class="k-eyebrow">Iný rozmer</p>
-          <h2 id="kpRozmery" class="k-h2">Všetky katalógové rozmery a ceny</h2>
-        </div>
-        <div><p class="k-copy">Cena je vždy s DPH, dopravou aj montážou. Presný rozmer pre vaše miesto vyrobíme aj na mieru.</p></div>
-      </header>
+      <h2 id="kpRozmery" class="kp-h2">Iný rozmer</h2>
+      <p class="kp-sub kp-rozmery__sub">Všetky katalógové rozmery s cenou vrátane DPH, dopravy a montáže. Presný rozmer vyrobíme aj na mieru.</p>
       {% render 'koverta-rozmery', family: family, product: product %}
     </div>
   </section>
