@@ -24,6 +24,9 @@
  *                starý Formful embed ani jeho launcher
  *   rozmery      odkaz na stránku katalógového rozmeru nesmie viesť do
  *                obchodu — tie stránky žijú na statickom webe
+ *   stránky      každý nový interný odkaz musí mať cieľový útržok v téme
+ *   JSON         každá konfigurácia a šablóna musí byť platný JSON
+ *   formuláre    každý dopyt musí mať POST, povinné polia a odoslanie
  */
 'use strict';
 const fs = require('node:fs');
@@ -182,6 +185,41 @@ for (const subor of vsetky) {
     }
   }
 }
+
+/* 7 · interné odkazy, JSON a každý formulár ------------------------------- */
+const NOVE_HANDLES = new Set([...vSnippets].filter((meno) => meno.startsWith('nove-')));
+const INTERNY_ODKAZ = new RegExp('(?:href|action)="/pages/(nove-[^"#?/]+)(?:[#?][^"]*)?"', 'g');
+for (const subor of vsetky) {
+  if (!/\.(liquid|json)$/.test(subor)) continue;
+  const text = fs.readFileSync(subor, 'utf8');
+  let m;
+  while ((m = INTERNY_ODKAZ.exec(text))) {
+    if (!NOVE_HANDLES.has(m[1])) nalez(subor, 'odkaz na /pages/' + m[1] + ' — cieľový útržok v téme nie je');
+  }
+}
+
+for (const subor of vsetky.filter((p) => p.endsWith('.json'))) {
+  const text = fs.readFileSync(subor, 'utf8');
+  try { JSON.parse(text.slice(text.indexOf('{'))); }
+  catch (e) { nalez(subor, 'nie je platný JSON: ' + e.message); }
+}
+
+const DOPYT_FORM = new RegExp('<form\\b[^>]*data-k-dopyt[^>]*>[\\s\\S]*?</form>', 'g');
+const POVINNE_POLIA = ['contact[name]', 'contact[phone]', 'contact[email]', 'contact[Čo rieši]', 'contact[Súhlas]'];
+let pocetDopytov = 0;
+for (const subor of formularove) {
+  const text = fs.readFileSync(subor, 'utf8');
+  const formy = text.match(DOPYT_FORM) || [];
+  pocetDopytov += formy.length;
+  formy.forEach((form) => {
+    if (!/<form\b[^>]*\bmethod="post"/i.test(form)) nalez(subor, 'dopyt nemá method="post"');
+    for (const meno of POVINNE_POLIA) {
+      if (!form.includes('name="' + meno + '"')) nalez(subor, 'dopytu chýba pole ' + meno);
+    }
+    if (!/type="submit"/i.test(form)) nalez(subor, 'dopytu chýba odosielacie tlačidlo');
+  });
+}
+if (!pocetDopytov) nalezy.push('shopify-tema/snippets: nenašiel sa žiadny celý dopytový formulár');
 
 /* ------------------------------------------------------------------------- */
 
