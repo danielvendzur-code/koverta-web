@@ -26,108 +26,115 @@
   assign form_id = 'kp-product-form-' | append: section.id
 -%}
 
-<main class="kp-product k" id="obsah" data-k-root data-kp-product>
-  <div class="kp-wrap">
-    <nav class="kp-breadcrumbs" aria-label="Omrvinky">
-      <a href="/">Domov</a><span aria-hidden="true">/</span>
-      <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
-      <span aria-current="page">{{ dimension | default: product.title }}</span>
-    </nav>
+<main class="kp-product k kr-page" id="obsah" data-k-root data-kp-product>
+  <section class="kr-hero" aria-labelledby="kpTitle-{{ section.id }}">
+    <div class="k-wrap">
+      <div class="kr-hero__grid">
+        <div class="kr-hero__copy">
+          <nav class="kr-crumbs" aria-label="Omrvinky">
+            <a href="/">Domov</a><span aria-hidden="true">/</span>
+            <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
+            <span aria-current="page">{{ dimension | default: product.title }}</span>
+          </nav>
 
-    <section class="kp-hero" aria-labelledby="kpTitle-{{ section.id }}">
-      <div class="kp-gallery" data-kp-gallery>
-        <div class="kp-gallery__main">
-          {%- if product.featured_media -%}
-            <button class="kp-gallery__zoom" type="button" data-kp-lightbox-open aria-label="Zväčšiť fotografiu">
-              <img data-kp-main
-                src="{{ product.featured_media.preview_image | image_url: width: 1600 }}"
-                srcset="{{ product.featured_media.preview_image | image_url: width: 800 }} 800w, {{ product.featured_media.preview_image | image_url: width: 1200 }} 1200w, {{ product.featured_media.preview_image | image_url: width: 1800 }} 1800w"
-                sizes="(max-width: 900px) 100vw, 58vw"
-                width="{{ product.featured_media.preview_image.width }}"
-                height="{{ product.featured_media.preview_image.height }}"
-                alt="{{ product.featured_media.alt | default: product.title | escape }}"
-                loading="eager" fetchpriority="high" decoding="async">
-            </button>
-          {%- else -%}
-            <div class="kp-gallery__empty"><strong>{{ product.title }}</strong><span>Produktová fotografia sa doplní pri synchronizácii katalógu.</span></div>
-          {%- endif -%}
-          {%- if product.media.size > 1 -%}
-            <button type="button" class="kp-gallery__arrow kp-gallery__arrow--prev" data-kp-prev aria-label="Predchádzajúca fotografia">‹</button>
-            <button type="button" class="kp-gallery__arrow kp-gallery__arrow--next" data-kp-next aria-label="Ďalšia fotografia">›</button>
-            <span class="kp-gallery__count" data-kp-count>1 / {{ product.media.size }}</span>
-          {%- endif -%}
-        </div>
-        {%- if product.media.size > 1 -%}
-          <div class="kp-gallery__thumbs" role="list" aria-label="Fotografie produktu">
-            {%- for media in product.media limit: 6 -%}
-              <button class="kp-gallery__thumb{% if forloop.first %} is-active{% endif %}" type="button" role="listitem"
-                data-kp-thumb data-index="{{ forloop.index0 }}"
-                data-full="{{ media.preview_image | image_url: width: 1800 }}"
-                data-srcset="{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1800 }} 1800w"
-                data-alt="{{ media.alt | default: product.title | escape }}">
-                <img src="{{ media.preview_image | image_url: width: 280 }}" width="{{ media.preview_image.width }}" height="{{ media.preview_image.height }}" alt="" loading="lazy" decoding="async">
-              </button>
-            {%- endfor -%}
+          <p class="kr-kicker">{{ eyebrow }}</p>
+          <h1 class="kr-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
+
+          <div class="kr-lead">
+            {%- if family == 'zahrada' -%}
+              Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
+            {%- else -%}
+              Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
+            {%- endif -%}
           </div>
-        {%- endif -%}
-      </div>
 
-      <div class="kp-summary">
-        <p class="kp-eyebrow">{{ eyebrow }}</p>
-        <h1 class="kp-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
-        <div class="kp-lead">
-          {%- if family == 'zahrada' -%}
-            Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
-          {%- else -%}
-            Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
-          {%- endif -%}
+          <div class="kr-price">
+            <strong data-kp-price>{{ variant.price | money }}</strong>
+            <span>s DPH, dopravou a montážou</span>
+          </div>
+
+          {% form 'product', product, id: form_id, class: 'kp-buy-form kr-buy' %}
+            <input type="hidden" name="quantity" value="1">
+            {%- if product.variants.size > 1 -%}
+              <label class="kp-option kr-option">
+                <span>Farba konštrukcie</span>
+                <select name="id" data-kp-variant>
+                  {%- for v in product.variants -%}
+                    <option value="{{ v.id }}" data-price="{{ v.price | money | escape }}" data-available="{{ v.available }}" {% if v.id == variant.id %}selected{% endif %}>
+                      {{ v.title }}{% unless v.available %} — momentálne nedostupné{% endunless %}
+                    </option>
+                  {%- endfor -%}
+                </select>
+              </label>
+            {%- else -%}
+              <input type="hidden" name="id" value="{{ variant.id }}">
+            {%- endif -%}
+
+            <button class="kp-add kr-add" type="submit" data-kp-add {% unless variant.available %}disabled{% endunless %}>
+              <span data-kp-add-label>{% if variant.available %}Pridať do košíka{% else %}Momentálne nedostupné{% endif %}</span>
+              <strong data-kp-button-price>{{ variant.price | money }}</strong>
+            </button>
+          {% endform %}
+
+          <div class="kr-hero__actions">
+            <a class="k-btn k-btn--line kr-configure" href="{{ configurator_url }}">Upraviť {{ dimension }} v 3D</a>
+            <a class="k-btn k-btn--ghost kr-measure" href="#ponuka" data-k-dopyt-open>Bezplatné zameranie</a>
+          </div>
+          <p class="kr-price-note">Základná katalógová zostava. Doplnky a príprava podkladu sa riešia podľa konkrétneho miesta.</p>
         </div>
 
-        <div class="kp-price"><span>od</span><strong data-kp-price>{{ variant.price | money }}</strong><span>s DPH</span></div>
-        <p class="kp-price-note">Katalógová cena základnej zostavy. Doprava a odborná montáž sú podľa aktuálneho cenníka zahrnuté; doplnky a príprava podkladu sa riešia osobitne.</p>
+        <div class="kr-hero__media kp-gallery" data-kp-gallery>
+          <figure class="kp-gallery__main">
+            {%- if product.featured_media -%}
+              <button class="kp-gallery__zoom" type="button" data-kp-lightbox-open aria-label="Zväčšiť fotografiu">
+                <img data-kp-main
+                  src="{{ product.featured_media.preview_image | image_url: width: 1600 }}"
+                  srcset="{{ product.featured_media.preview_image | image_url: width: 800 }} 800w, {{ product.featured_media.preview_image | image_url: width: 1200 }} 1200w, {{ product.featured_media.preview_image | image_url: width: 1800 }} 1800w"
+                  sizes="(max-width: 900px) 100vw, 56vw"
+                  width="{{ product.featured_media.preview_image.width }}"
+                  height="{{ product.featured_media.preview_image.height }}"
+                  alt="{{ product.featured_media.alt | default: product.title | escape }}"
+                  loading="eager" fetchpriority="high" decoding="async">
+              </button>
+            {%- else -%}
+              <div class="kp-gallery__empty"><strong>{{ product.title }}</strong></div>
+            {%- endif -%}
+            {%- if product.media.size > 1 -%}
+              <button type="button" class="kp-gallery__arrow kp-gallery__arrow--prev" data-kp-prev aria-label="Predchádzajúca fotografia">‹</button>
+              <button type="button" class="kp-gallery__arrow kp-gallery__arrow--next" data-kp-next aria-label="Ďalšia fotografia">›</button>
+              <span class="kp-gallery__count" data-kp-count>1 / {{ product.media.size }}</span>
+            {%- endif -%}
+          </figure>
 
-        <dl class="kp-facts">
-          <div><dt>Rozmer</dt><dd>{{ dimension }}</dd></div>
-          <div><dt>Zastrešená plocha</dt><dd>{{ area_m2 }} m²</dd></div>
-          <div><dt>Typické využitie</dt><dd>{{ typical_use | default: 'podľa konkrétneho miesta' }}</dd></div>
-          <div><dt>Výroba</dt><dd>Slovensko</dd></div>
-        </dl>
+          <div class="kr-media__label">
+            <strong>{{ dimension }}</strong>
+            <span>katalógový rozmer · výroba na mieru</span>
+          </div>
 
-        {% form 'product', product, id: form_id, class: 'kp-buy-form' %}
-          <input type="hidden" name="quantity" value="1">
-          {%- if product.variants.size > 1 -%}
-            <label class="kp-option"><span>Farba konštrukcie</span>
-              <select name="id" data-kp-variant>
-                {%- for v in product.variants -%}
-                  <option value="{{ v.id }}" data-price="{{ v.price | money | escape }}" data-available="{{ v.available }}" {% if v.id == variant.id %}selected{% endif %}>
-                    {{ v.title }}{% unless v.available %} — momentálne nedostupné{% endunless %}
-                  </option>
-                {%- endfor -%}
-              </select>
-            </label>
-          {%- else -%}
-            <input type="hidden" name="id" value="{{ variant.id }}">
-            <div class="kp-standard"><span>Základné vyhotovenie</span><strong>{{ variant.title | default: 'Koverta' }}</strong></div>
+          {%- if product.media.size > 1 -%}
+            <div class="kp-gallery__thumbs kr-product-thumbs" role="list" aria-label="Fotografie produktu">
+              {%- for media in product.media limit: 6 -%}
+                <button class="kp-gallery__thumb{% if forloop.first %} is-active{% endif %}" type="button" role="listitem"
+                  data-kp-thumb data-index="{{ forloop.index0 }}"
+                  data-full="{{ media.preview_image | image_url: width: 1800 }}"
+                  data-srcset="{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1800 }} 1800w"
+                  data-alt="{{ media.alt | default: product.title | escape }}">
+                  <img src="{{ media.preview_image | image_url: width: 280 }}" width="{{ media.preview_image.width }}" height="{{ media.preview_image.height }}" alt="" loading="lazy" decoding="async">
+                </button>
+              {%- endfor -%}
+            </div>
           {%- endif -%}
-
-          <button class="kp-add" type="submit" data-kp-add {% unless variant.available %}disabled{% endunless %}>
-            <span data-kp-add-label>{% if variant.available %}Pridať do košíka{% else %}Momentálne nedostupné{% endif %}</span>
-            <strong data-kp-button-price>{{ variant.price | money }}</strong>
-          </button>
-        {% endform %}
-
-        <a class="kp-configure" href="{{ configurator_url }}"><span>Upraviť tento rozmer v 3D konfigurátore</span><span aria-hidden="true">→</span></a>
-        <a class="kp-measure" href="#ponuka" data-k-dopyt-open>Chcem najprv bezplatné zameranie</a>
-
-        <ul class="kp-trust" aria-label="Výhody">
-          <li>Zameranie a cenová ponuka zadarmo</li>
-          <li>Vlastná výroba na Slovensku</li>
-          <li>Doprava a odborná montáž</li>
-          <li>Rozmer vieme prispôsobiť konkrétnemu pozemku</li>
-        </ul>
+        </div>
       </div>
-    </section>
-  </div>
+
+      <ul class="kh-fakty__rad kr-facts" aria-label="Základné informácie">
+        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ area_m2 }} m²</span><span class="kh-fakty__co">Zastrešená plocha</span><span class="kh-fakty__pod">{{ dimension }}.</span></li>
+        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ typical_use | default: 'Na mieru' }}</span><span class="kh-fakty__co">Typické využitie</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
+        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">0 €</span><span class="kh-fakty__co">Zameranie a ponuka</span><span class="kh-fakty__pod">Nezáväzne pred výrobou.</span></li>
+        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">Slovensko</span><span class="kh-fakty__co">Vlastná výroba</span><span class="kh-fakty__pod">Koverta vyrábaná na Slovensku.</span></li>
+      </ul>
+    </div>
+  </section>
 
   {%- if product.description != blank -%}
     <section class="kp-story" aria-labelledby="kpStory-{{ section.id }}">
