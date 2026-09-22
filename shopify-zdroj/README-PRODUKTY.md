@@ -16,7 +16,9 @@ Referenčný produkt:
 6. Až následne použiť `scope=all`.
 
 Skript používa Shopify Admin GraphQL `productSet` na idempotentný upsert podľa handle,
-`metafieldsSet` pre parametre a `productUpdate` na explicitné DRAFT/ACTIVE a SEO.
+`metafieldsSet` pre parametre, `productUpdate` na DRAFT/ACTIVE a SEO a pri `--publish`
+navyše `publishablePublish` do kanála Online Store. Bez `--publish` produkt ostáva DRAFT
+a skript ho z Online Store prípadne odpublikuje.
 
 Platobnú bránu GitHub nenastavuje. Tá zostáva v Shopify Admin → Settings → Payments.
 Téma používa natívny Shopify product form, košík a checkout; platobné údaje cez repozitár nejdú.
