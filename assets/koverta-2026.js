@@ -1187,7 +1187,8 @@ function kvCesta(cesta) {
             return {
               title: it.t,
               note: it.p,
-              href: /^(https?:|mailto:|tel:)/.test(it.u) ? it.u : koren() + it.u,
+              /* V obchode nesie index hotové adresy (/pages/…, /products/…). */
+              href: /^(https?:|mailto:|tel:|\/)/.test(it.u) ? it.u : koren() + it.u,
               img: it.o,
               kind: it.k,
               hay: it.h + ' ' + norm(it.t + ' ' + it.p)

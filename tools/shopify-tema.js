@@ -240,6 +240,22 @@ function prvky(text) {
 }
 
 /* Značky, ktoré si na Shopify robí stránka sama alebo ich dodá obchod. */
+/* Absolútne adresy statického webu (https://koverta.sk/…) v JSON-LD a og:image
+ * prepíše na adresy obchodu: stránky na /pages/…, rozmery na /products/…,
+ * fotografie na GitHub Pages (obchod /assets/ nemá). */
+function naAdresyObchodu(text, mapa) {
+  return text.replace(/https:\/\/koverta\.sk\/([^"'\s<>]*)/g, (cela, zvysok) => {
+    const m = zvysok.match(/^([^?#]*)([?#].*)?$/);
+    const cesta = m[1], chvost = m[2] || '';
+    if (/^assets\//.test(cesta)) return PAGES_ZAKLAD + '/' + cesta + chvost;
+    if (cesta === '' ) return cela;
+    const kluc = cesta.replace(/\/index\.html$/, '').replace(/\/$/, '');
+    if (!mapa.has(kluc)) return cela;
+    const ciel = mapa.get(kluc);
+    return 'https://koverta.sk' + ciel + (chvost.startsWith('?') && ciel.includes('?') ? '&' + chvost.slice(1) : chvost);
+  });
+}
+
 function shopifyRobiSam(prvok) {
   return /<title|<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|application\/ld\+json|<link rel="preload"|<meta charset|<meta name="viewport"/i.test(prvok);
 }
@@ -365,7 +381,14 @@ function preved() {
 
     if (hlavicka) hlavicky.add(hlavicka);
     if (paticka) paticky.add(paticka);
-    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky };
+    /* Štruktúrované dáta a obrázok pre sociálne siete. Prvky hlavy, ktoré
+       skladá Shopify, prevod zahadzuje, no JSON-LD a og:image Shopify za nás
+       nenapíše — bez nich by obchod stratil firmu, otázky aj produkty vo
+       výsledkoch Google. Adresy sa prepíšu na tie z obchodu. */
+    const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)]
+      .map((m) => naAdresyObchodu(m[0], mapa));
+    const og = naAdresyObchodu((html.match(/<meta property="og:image" content="([^"]*)"/) || [, ''])[1], mapa);
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og };
   });
 
   /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
@@ -476,6 +499,7 @@ function zapis(v) {
 <meta property="og:description" content="{{ page_description | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+{%- render 'kv-og', page: page, product: product, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 ${v.spolocnaHlava.join('\n')}
@@ -538,7 +562,7 @@ ${v.spolocnyChvost.join('\n')}
   for (const s of v.sablony) {
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
     const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
-    const telo = hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
+    const telo = hlava + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
       (navyse ? '\n' + navyse + '\n' : '\n');
     const ciel = path.join(CIEL, 'snippets', s.a.handle + '.liquid');
     if (Buffer.byteLength(telo) <= MAX_SNIPPET_BAJTOV) {
@@ -612,6 +636,8 @@ ${v.spolocnyChvost.join('\n')}
   /* Ručne udržiavané Shopify product/cart súbory sa kopírujú až po
      generovaní stránok a assetov, aby ich čistenie generátora nezmazalo. */
   kopirujShopifyZdroj();
+  zapisIndexHladania(v);
+  zapisOgObrazok(v);
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
@@ -655,6 +681,68 @@ ${v.spolocnyChvost.join('\n')}
     'Google videl iný titulok a žiadny popis, než aký web má.\n\n' +
     v.sablony.map((s) => [s.a.handle, s.titulok, s.a.url, s.celyTitulok, s.popis].join('\t'))
       .sort().join('\n') + '\n');
+}
+
+/* og:image podľa stránky. Stránky ho majú zo statického webu, produkt podľa
+ * radu a počtu áut tú istú fotku, ktorou začína jeho galéria. */
+function zapisOgObrazok(v) {
+  const vetvy = v.sablony.filter((x) => x.og).map((x) =>
+    (x.a.druh === 'index' ? "{%- if template.name == 'index' -%}" : "{%- if page.handle == '" + x.a.handle + "' -%}")
+    + "{%- assign kv_og = '" + x.og.replace(/'/g, '') + "' -%}{%- endif -%}");
+  const f = PAGES_ZAKLAD + '/assets/';
+  const text = "{%- assign kv_og = '" + f + "koverta-og.jpg' -%}\n" + vetvy.join('\n') + '\n'
+    + "{%- if request.page_type == 'product' and product.metafields.koverta.family -%}\n"
+    + "  {%- if product.metafields.koverta.family.value == 'zahrada' -%}{%- assign kv_og = '" + f + "koverta-zahradny-pristresok-antracit-lamelova-stena.jpg' -%}\n"
+    + "  {%- elsif product.metafields.koverta.width_mm.value >= 5000 -%}{%- assign kv_og = '" + f + "koverta-pristresok-bocne-lamely-a-zvod.jpg' -%}\n"
+    + "  {%- else -%}{%- assign kv_og = '" + f + "koverta-pristresok-pre-jedno-auto-lamelova-vypln.jpg' -%}{%- endif -%}\n"
+    + "{%- endif -%}\n"
+    + '<meta property="og:image" content="{{ kv_og }}">\n<meta name="twitter:image" content="{{ kv_og }}">\n';
+  fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-og.liquid'), text);
+}
+
+/* Vyhľadávanie v hlavičke číta `hladanie.json` vedľa `koverta-2026.css`.
+ * Na statickom webe má adresy stránok relatívne; v obchode musia byť tie
+ * z obchodu (/pages/nove-…), inak by každý výsledok viedol na CDN. Pribudnú
+ * aj katalógové rozmery ako produkty, aby sa dalo hľadať napríklad „5 x 6“. */
+function zapisIndexHladania(v) {
+  const zdroj = path.join(KOREN, 'assets', 'hladanie.json');
+  if (!fs.existsSync(zdroj)) { chyby.push('chýba assets/hladanie.json'); return; }
+  const mapa = new Map();
+  for (const s of v.zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
+  const index = JSON.parse(fs.readFileSync(zdroj, 'utf8'));
+  const polozky = [];
+  for (const it of index.polozky || []) {
+    const [cesta, kotva] = String(it.u || '').split('#');
+    const kluc = cesta.replace(/^\.\//, '').replace(/\/$/, '').replace(/^\.$/, '');
+    let u = it.u;
+    if (!/^(https?:|mailto:|tel:)/.test(it.u)) {
+      if (kluc === '') u = '/';
+      else if (mapa.has(kluc)) u = mapa.get(kluc);
+      else { chyby.push('hladanie.json: neznáma stránka ' + it.u); continue; }
+      if (kotva) u += '#' + kotva;
+    }
+    const o = it.o && it.o.startsWith('/') ? PAGES_ZAKLAD + it.o : it.o;
+    polozky.push(Object.assign({}, it, { u, o }));
+  }
+  const vm = require('node:vm');
+  const sandbox = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(KOREN, 'konfigurator', 'cfg-pages.js'), 'utf8'), sandbox);
+  const bezDiakritiky = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const m = (mm) => String(mm / 1000).replace('.', ',');
+  for (const [kluc, model, zaklad, druh] of [['koverta', 'K', 'Prístrešok Koverta', 'auto'], ['zahrada', 'Z', 'Záhradný prístrešok Koverta', 'zahrada']]) {
+    const d = JSON.parse(sandbox.window.KV_PAGES[kluc].match(/data-sp-bio-data>([\s\S]*?)<\/script>/)[1]).models[model];
+    d.lengths.forEach((l, li) => d.widths.forEach((w, wi) => {
+      const cena = d.prices[li][wi].toLocaleString('sk-SK').replace(/\s/g, ' ') + ' €';
+      const auta = druh === 'zahrada' ? 'terasa záhrada pergola' : (w >= 5000 ? '2 autá dve auta dvojmiestny' : '1 auto jedno auto');
+      const t = zaklad + ' ' + m(w) + ' × ' + m(l) + ' m';
+      polozky.push({
+        t, p: cena + ' s DPH, dopravou a montážou', k: 'Rozmer',
+        u: '/products/' + (druh === 'zahrada' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + w + 'x' + l,
+        h: bezDiakritiky(t + ' ' + m(w) + 'x' + m(l) + ' ' + m(w) + ' x ' + m(l) + ' ' + w + 'x' + l + ' ' + auta + ' pristresok carport cena')
+      });
+    }));
+  }
+  fs.writeFileSync(path.join(CIEL, 'assets', 'hladanie.json'), JSON.stringify({ v: index.v, polozky }));
 }
 
 if (require.main === module) {

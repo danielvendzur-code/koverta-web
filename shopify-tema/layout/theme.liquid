@@ -27,6 +27,7 @@
 <meta property="og:description" content="{{ page_description | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+{%- render 'kv-og', page: page, product: product, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 <!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
