@@ -76,12 +76,10 @@
         <p class="kp-eyebrow">{{ eyebrow }}</p>
         <h1 class="kp-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
         <div class="kp-lead">
-          {%- if product.description != blank -%}
-            {{ product.description }}
-          {%- elsif family == 'zahrada' -%}
-            Zastrešenie terasy alebo záhradného priestoru v katalógovom rozmere {{ dimension }}. Rozmer pred výrobou preveríme podľa konkrétneho miesta.
+          {%- if family == 'zahrada' -%}
+            Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
           {%- else -%}
-            Oceľový prístrešok Koverta v katalógovom rozmere {{ dimension }}. Typické využitie: {{ typical_use | default: 'parkovanie osobných vozidiel' }}.
+            Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
           {%- endif -%}
         </div>
 
@@ -131,16 +129,28 @@
     </section>
   </div>
 
+  {%- if product.description != blank -%}
+    <section class="kp-story" aria-labelledby="kpStory-{{ section.id }}">
+      <div class="kp-wrap kp-story__grid">
+        <div>
+          <p class="kp-eyebrow">Prečo Koverta</p>
+          <h2 id="kpStory-{{ section.id }}" class="kp-h2">Prístrešok, ktorý nemusíte prispôsobovať kompromisom.</h2>
+        </div>
+        <div class="kp-story__copy">{{ product.description }}</div>
+      </div>
+    </section>
+  {%- endif -%}
+
   <section class="kp-band kp-band--soft" aria-labelledby="kpIncluded-{{ section.id }}">
     <div class="kp-wrap">
       <p class="kp-eyebrow">Čo kupujete</p>
       <h2 id="kpIncluded-{{ section.id }}" class="kp-h2">{{ dimension }}. Hotový prístrešok, nie stavebnica.</h2>
-      <p class="kp-intro">Základná zostava je navrhnutá ako kompletný systém. Konkrétne osadenie a pripravenosť podkladu sa pred výrobou potvrdia podľa miesta realizácie.</p>
+      <p class="kp-intro">Neobjednávate iba oceľovú konštrukciu. Dostanete ucelené riešenie od výroby až po montáž, pričom pred výrobou spolu preveríme osadenie aj pripravenosť miesta.</p>
       <div class="kp-included">
-        <article><span>01</span><h3>Oceľová nosná konštrukcia</h3><p>Nosný systém Koverta vyrábaný na Slovensku s finálnou povrchovou úpravou podľa zvoleného vyhotovenia.</p></article>
-        <article><span>02</span><h3>Strecha a odvodnenie</h3><p>Trapézová strešná krytina, žľab a zvod tvoria funkčný celok prístrešku.</p></article>
-        <article><span>03</span><h3>Doprava</h3><p>Doprava základnej zostavy je zahrnutá podľa aktuálneho katalógového cenníka Koverta.</p></article>
-        <article><span>04</span><h3>Odborná montáž</h3><p>Prístrešok osadí montážny tím na pripravený a pri zameraní odsúhlasený podklad.</p></article>
+        <article><span>01</span><h3>Oceľová konštrukcia Koverta</h3><p>Nosný systém vyrábame na Slovensku a dokončíme ho vo zvolenom farebnom vyhotovení.</p></article>
+        <article><span>02</span><h3>Strecha a odvod vody</h3><p>Strešná krytina, žľab a zvod sú navrhnuté ako jeden funkčný systém prístrešku.</p></article>
+        <article><span>03</span><h3>Doprava na miesto</h3><p>Hotové diely prístrešku privezieme na dohodnuté miesto realizácie podľa podmienok aktuálneho cenníka.</p></article>
+        <article><span>04</span><h3>Odborná montáž</h3><p>Montážny tím Koverta prístrešok osadí na pripravený podklad podľa vopred potvrdeného riešenia.</p></article>
       </div>
     </div>
   </section>
@@ -153,7 +163,7 @@
         {%- if family == 'zahrada' -%}
           <p>Rozmer {{ dimension }} vytvára {{ area_m2 }} m² krytej plochy pre terasu alebo záhradné využitie. Presné osadenie stĺpov a odstupy od domu preveríme pri zameraní.</p>
         {%- else -%}
-          <p>Rozmer {{ dimension }} vytvára {{ area_m2 }} m² zastrešenej plochy. Typické využitie je {{ typical_use | default: 'parkovanie osobných vozidiel' }}. Pri neštandardne širokých alebo dlhých vozidlách odporúčame rozmery preveriť v konfigurátore alebo pri zameraní.</p>
+          <p>Pri rozmere {{ dimension }} získate {{ area_m2 }} m² krytej plochy. Ide o praktický katalógový rozmer pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} s priestorom na pohodlné každodenné používanie. Ak máte väčšie vozidlo alebo špecifické miesto pri dome, rozmer si najprv overte v 3D konfigurátore alebo pri bezplatnom zameraní.</p>
         {%- endif -%}
         <dl class="kp-metrics">
           <div><dt>Šírka</dt><dd>{{ width_mm }} mm</dd></div>
@@ -171,28 +181,18 @@
 
   <section class="kp-band kp-config-band">
     <div class="kp-wrap kp-config-card">
-      <div><p class="kp-eyebrow">3D konfigurátor</p><h2 class="kp-h2">Upravte si prístrešok pred objednávkou.</h2><p>Otvorte tento rozmer priamo v konfigurátore a pozrite si dostupné farby, výplne a doplnky. Zvolený rozmer už bude prednastavený.</p><a class="kp-config-card__button" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a></div>
+      <div><p class="kp-eyebrow">3D konfigurátor</p><h2 class="kp-h2">Pozrite si svoj prístrešok ešte pred objednávkou.</h2><p>Rozmer {{ dimension }} otvoríme rovno prednastavený. V 3D si môžete vyskúšať dostupné farby, výplne a doplnky a lepšie si predstaviť, ako bude prístrešok pôsobiť pri vašom dome.</p><a class="kp-config-card__button" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a></div>
       <div class="kp-config-card__screen" aria-hidden="true"><div class="kp-config-card__chrome"><i></i><i></i><i></i></div><div class="kp-config-card__scene">KOVERTA<br><strong>3D KONFIGURÁTOR</strong></div></div>
     </div>
   </section>
 
-  {%- if product.media.size > 0 -%}
-    <section class="kp-band" aria-labelledby="kpReal-{{ section.id }}">
-      <div class="kp-wrap">
-        <div class="kp-section-head"><div><p class="kp-eyebrow">Reálne realizácie</p><h2 id="kpReal-{{ section.id }}" class="kp-h2">Pozrite si Koverta pri skutočných domoch.</h2></div><a href="/pages/nove-realizacie">Zobraziť všetky realizácie →</a></div>
-        <p class="kp-muted">Fotografie ukazujú rovnaký systém Koverta; rozmery konkrétnych realizácií sa môžu líšiť od zobrazeného variantu.</p>
-        <div class="kp-realizations">{%- for media in product.media limit: 3 -%}<figure><img src="{{ media.preview_image | image_url: width: 1000 }}" width="{{ media.preview_image.width }}" height="{{ media.preview_image.height }}" alt="{{ media.alt | default: 'Realizácia prístrešku Koverta' | escape }}" loading="lazy" decoding="async"></figure>{%- endfor -%}</div>
-      </div>
-    </section>
-  {%- endif -%}
-
   <section class="kp-band kp-band--soft" aria-labelledby="kpExtras-{{ section.id }}">
     <div class="kp-wrap"><p class="kp-eyebrow">Možnosti</p><h2 id="kpExtras-{{ section.id }}" class="kp-h2">Prispôsobte si prístrešok svojmu miestu.</h2>
       <div class="kp-extras">
-        <article><h3>Bočné výplne</h3><p>Dostupné riešenia bočných stien sa vyberajú podľa konkrétnej zostavy a rozmiestnenia stĺpov.</p></article>
-        <article><h3>Farba konštrukcie</h3><p>Vyberte si jednu z farieb, ktoré sú pri produkte vedené ako reálne Shopify varianty.</p></article>
-        <article><h3>Osvetlenie</h3><p>LED osvetlenie je doplnok na nacenenie; nevstupuje automaticky do základnej katalógovej ceny.</p></article>
-        <article><h3>Individuálny rozmer</h3><p>Ak katalógový rozmer nesedí na pozemok, riešenie sa môže upraviť podľa zamerania a následnej ponuky.</p></article>
+        <article><h3>Bočné výplne</h3><p>Pridajte viac súkromia alebo ochrany z bočnej strany. Dostupné riešenie závisí od rozmeru a zostavy.</p></article>
+        <article><h3>Farba konštrukcie</h3><p>Zlaďte prístrešok s fasádou, oknami alebo strechou domu. Dostupné farby vyberiete priamo pri produkte.</p></article>
+        <article><h3>Osvetlenie</h3><p>Doplňte prístrešok o integrované LED osvetlenie. Ide o voliteľný doplnok, ktorý sa naceňuje samostatne.</p></article>
+        <article><h3>Rozmer na mieru</h3><p>Ak vám katalógový rozmer presne nesedí, vieme riešenie prispôsobiť podľa priestoru a výsledku zamerania.</p></article>
       </div>
     </div>
   </section>
@@ -203,7 +203,7 @@
 
   <section class="kp-band kp-band--dark" aria-labelledby="kpProcess-{{ section.id }}">
     <div class="kp-wrap"><p class="kp-eyebrow">Objednávka</p><h2 id="kpProcess-{{ section.id }}" class="kp-h2">Od výberu rozmeru po montáž.</h2>
-      <ol class="kp-process"><li><span>01</span><strong>Vyberiete produkt</strong><p>Objednáte katalógový rozmer alebo ho najprv upravíte v 3D.</p></li><li><span>02</span><strong>Zameranie</strong><p>Pred výrobou sa preverí konkrétne miesto a osadenie.</p></li><li><span>03</span><strong>Potvrdenie riešenia</strong><p>Potvrdia sa doplnky, podklad a konečná špecifikácia.</p></li><li><span>04</span><strong>Výroba</strong><p>Koverta vyrobí potvrdenú oceľovú zostavu.</p></li><li><span>05</span><strong>Doprava a montáž</strong><p>Hotové diely sa dopravia a osadia na pripravenom mieste.</p></li></ol>
+      <ol class="kp-process"><li><span>01</span><strong>Vyberiete rozmer</strong><p>Objednáte hotový katalógový variant alebo si ho najprv upravíte v 3D konfigurátore.</p></li><li><span>02</span><strong>Overíme miesto</strong><p>Pri zameraní preveríme osadenie, priestor pre stĺpy a pripravenosť podkladu.</p></li><li><span>03</span><strong>Potvrdíme riešenie</strong><p>Spolu odsúhlasíme rozmer, farbu, doplnky a všetko, čo má ísť do výroby.</p></li><li><span>04</span><strong>Vyrobíme Koverta</strong><p>Prístrešok vyrobíme na Slovensku podľa potvrdenej špecifikácie.</p></li><li><span>05</span><strong>Privezieme a namontujeme</strong><p>Hotovú zostavu dopravíme na miesto a odborne osadíme na pripravený podklad.</p></li></ol>
     </div>
   </section>
 
@@ -230,7 +230,7 @@
   {%- endif -%}
 
   <section class="k-band kh-cta kp-inquiry-source" id="ponuka" aria-labelledby="kpInquiry-{{ section.id }}">
-    <div class="k-wrap"><div class="kh-cta__grid"><div class="kh-cta__card"><div class="kh-cta__head"><p class="k-eyebrow">Cenová ponuka zadarmo</p><h2 id="kpInquiry-{{ section.id }}" class="k-h2">Najprv chcete zameranie?</h2><p class="k-copy">Pošlite kontakt a informáciu, že riešite {{ product.title }}. Formulár je nezáväzný.</p></div>
+    <div class="k-wrap"><div class="kh-cta__grid"><div class="kh-cta__card"><div class="kh-cta__head"><p class="k-eyebrow">Cenová ponuka zadarmo</p><h2 id="kpInquiry-{{ section.id }}" class="k-h2">Najprv chcete zameranie?</h2><p class="k-copy">Nie ste si istí rozmerom, podkladom alebo doplnkami? Pošlite nám kontakt. Prejdeme s vami {{ product.title }} a dohodneme ďalší postup bez záväzku.</p></div>
       <form id="dopyt-product-{{ section.id }}" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" data-k-dopyt>
         <input type="hidden" name="form_type" value="contact"><input type="hidden" name="utf8" value="✓"><input type="hidden" name="contact[Čo rieši]" value="{{ inquiry_type }}">
         <div class="kh-form__grid"><label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label><label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label><label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" autocomplete="email" required></label><label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2"></label></div>
