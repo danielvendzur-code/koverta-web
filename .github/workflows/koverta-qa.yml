@@ -43,7 +43,7 @@ jobs:
           git fetch --no-tags --depth=200 origin "$ZAKLAD" || git fetch --no-tags origin
           SUBORY=$(git diff --name-only "$ZAKLAD"...HEAD || git diff --name-only HEAD~1 HEAD)
           echo "$SUBORY"
-          if echo "$SUBORY" | grep -qE '^(konfigurator/|coordination/koverta/|\.github/workflows/)'; then
+          if echo "$SUBORY" | grep -qE '^(konfigurator/|coordination/koverta/)'; then
             echo "konfigurator=true" >> "$GITHUB_OUTPUT"
             echo "konfigurátor sa zmenil — hlboké kontroly bežia"
           else
@@ -79,6 +79,8 @@ jobs:
           git diff --exit-code -- shopify-tema
 
   configurator:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -237,6 +239,8 @@ jobs:
           if-no-files-found: ignore
 
   soltec-motion:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
