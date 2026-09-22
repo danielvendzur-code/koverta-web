@@ -22,6 +22,11 @@
  *                stránku a stránky na `Default page` sú prázdne
  *   formulár     téma musí niesť vlastný Koverta formulár a nesmie načítavať
  *                starý Formful embed ani jeho launcher
+ *   rozmery      každý katalógový rozmer musí viesť na skutočný Shopify
+ *                produkt; nie na starú Page ani na GitHub Pages
+ *   stránky      každý nový interný odkaz musí mať cieľový útržok v téme
+ *   JSON         každá konfigurácia a šablóna musí byť platný JSON
+ *   formuláre    každý dopyt musí mať POST, povinné polia a odoslanie
  */
 'use strict';
 const fs = require('node:fs');
@@ -129,6 +134,20 @@ if (!fs.existsSync(sekcia)) {
   nalez(sekcia, 'stále povoľuje app blok cudzieho formulára');
 }
 
+
+/* 4c · layout a košík ----------------------------------------------------- */
+const layoutSubor = path.join(TEMA, 'layout', 'theme.liquid');
+if (fs.existsSync(layoutSubor)) {
+  const text = fs.readFileSync(layoutSubor, 'utf8');
+  if (!/request\.page_type\s*==\s*['"]product['"]/.test(text)) nalez(layoutSubor, 'layout nemá dynamický product og:type');
+  if (!/koverta-shopify\.css/.test(text)) nalez(layoutSubor, 'layout nenačítava koverta-shopify.css');
+}
+const headerSubor = path.join(TEMA, 'sections', 'kv-hlavicka.liquid');
+if (fs.existsSync(headerSubor)) {
+  const text = fs.readFileSync(headerSubor, 'utf8');
+  if (!/kv-cart-link/.test(text) || !/routes\.cart_url/.test(text)) nalez(headerSubor, 'hlavička nemá Shopify košík');
+}
+
 /* 5 · vlastný formulár, bez Formfulu ------------------------------------- */
 
 const nastavenia = path.join(TEMA, 'config', 'settings_data.json');
@@ -151,6 +170,84 @@ for (const subor of formularove) {
   const text = fs.readFileSync(subor, 'utf8');
   if (/Formful\.openDialog|form_LaKRq0tyt4/.test(text)) nalez(subor, 'stále odkazuje na Formful');
 }
+
+/* 6 · katalógové rozmery sú skutočné Shopify produkty ----------------------
+   Cenové tabuľky majú 54 automobilových a 12 záhradných rozmerov. Každý
+   odkaz musí zostať na koverta.sk a smerovať na /products/. GitHub Pages je
+   iba zdroj/náhľad, nie zákaznícka produktová adresa. */
+
+const STARA_PAGE_ROZMER = /href="\/pages\/[^"]*-rozmer-[^"]*"/g;
+const GITHUB_ROZMER = /href="https?:\/\/danielvendzur-code\.github\.io\/koverta-web\/(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/[^"]+"/g;
+const PRODUKT_ROZMER = /href="\/products\/(?:pristresok-koverta|zahradny-pristresok-koverta)-(\d+)x(\d+)"/g;
+const produktoveRozmery = new Set();
+
+for (const subor of vsetky) {
+  if (!/\.(liquid|json)$/.test(subor)) continue;
+  const text = fs.readFileSync(subor, 'utf8');
+  const stare = text.match(STARA_PAGE_ROZMER) || [];
+  if (stare.length) nalez(subor, stare.length + ' rozmerových odkazov stále smeruje na /pages/');
+  const github = text.match(GITHUB_ROZMER) || [];
+  if (github.length) nalez(subor, github.length + ' rozmerových odkazov stále smeruje na GitHub Pages');
+  let m;
+  while ((m = PRODUKT_ROZMER.exec(text))) produktoveRozmery.add(m[1] + 'x' + m[2]);
+}
+
+if (produktoveRozmery.size !== 66) {
+  nalezy.push('shopify-tema: očakávaných 66 unikátnych produktových rozmerov, našlo sa ' + produktoveRozmery.size);
+}
+
+for (const rel of ['templates/product.json', 'templates/cart.json',
+  'sections/koverta-product.liquid', 'sections/koverta-cart.liquid']) {
+  if (!fs.existsSync(path.join(TEMA, rel))) nalezy.push('shopify-tema/' + rel + ' chýba');
+}
+const produktSekcia = path.join(TEMA, 'sections', 'koverta-product.liquid');
+if (fs.existsSync(produktSekcia)) {
+  const text = fs.readFileSync(produktSekcia, 'utf8');
+  if (!/{%\s*form\s+'product',\s*product/.test(text)) nalez(produktSekcia, 'chýba natívny Shopify product form');
+  if (!/name="id"/.test(text)) nalez(produktSekcia, 'chýba variant id pre košík');
+  if (!/data-kp-add/.test(text)) nalez(produktSekcia, 'chýba tlačidlo Pridať do košíka');
+}
+const cartSekcia = path.join(TEMA, 'sections', 'koverta-cart.liquid');
+if (fs.existsSync(cartSekcia)) {
+  const text = fs.readFileSync(cartSekcia, 'utf8');
+  if (!/name="checkout"/.test(text)) nalez(cartSekcia, 'chýba prechod do Shopify checkout');
+}
+
+/* 7 · interné odkazy, JSON a každý formulár ------------------------------- */
+const NOVE_HANDLES = new Set([...vSnippets].filter((meno) => meno.startsWith('nove-')));
+const INTERNY_ODKAZ = new RegExp('(?:href|action)="/pages/(nove-[^"#?/]+)(?:[#?][^"]*)?"', 'g');
+for (const subor of vsetky) {
+  if (!/\.(liquid|json)$/.test(subor)) continue;
+  const text = fs.readFileSync(subor, 'utf8');
+  let m;
+  while ((m = INTERNY_ODKAZ.exec(text))) {
+    if (!NOVE_HANDLES.has(m[1])) nalez(subor, 'odkaz na /pages/' + m[1] + ' — cieľový útržok v téme nie je');
+  }
+}
+
+for (const subor of vsetky.filter((p) => p.endsWith('.json'))) {
+  const text = fs.readFileSync(subor, 'utf8');
+  const cisty = text.replace(/^\/\*[\s\S]*?\*\/\s*/, '');
+  try { JSON.parse(cisty); }
+  catch (e) { nalez(subor, 'nie je platný JSON: ' + e.message); }
+}
+
+const DOPYT_FORM = new RegExp('<form\\b[^>]*data-k-dopyt[^>]*>[\\s\\S]*?</form>', 'g');
+const POVINNE_POLIA = ['contact[name]', 'contact[phone]', 'contact[email]', 'contact[Čo rieši]', 'contact[Súhlas]'];
+let pocetDopytov = 0;
+for (const subor of formularove) {
+  const text = fs.readFileSync(subor, 'utf8');
+  const formy = text.match(DOPYT_FORM) || [];
+  pocetDopytov += formy.length;
+  formy.forEach((form) => {
+    if (!/<form\b[^>]*\bmethod="post"/i.test(form)) nalez(subor, 'dopyt nemá method="post"');
+    for (const meno of POVINNE_POLIA) {
+      if (!form.includes('name="' + meno + '"')) nalez(subor, 'dopytu chýba pole ' + meno);
+    }
+    if (!/type="submit"/i.test(form)) nalez(subor, 'dopytu chýba odosielacie tlačidlo');
+  });
+}
+if (!pocetDopytov) nalezy.push('shopify-tema/snippets: nenašiel sa žiadny celý dopytový formulár');
 
 /* ------------------------------------------------------------------------- */
 

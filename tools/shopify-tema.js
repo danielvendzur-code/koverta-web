@@ -74,7 +74,8 @@ const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
 const MAX_SNIPPET_BAJTOV = 180 * 1024;
 
 const PRESKOC = new Set(['node_modules', '.git', 'coordination', 'qa-artifacts',
-  'archiv-expivi', 'shopify-tema', 'tools', 'test', 'interny-odhad-patiek']);
+  'archiv-expivi', 'shopify-tema', 'shopify-zdroj', 'tools', 'test', 'interny-odhad-patiek']);
+const SHOPIFY_ZDROJ = path.join(KOREN, 'shopify-zdroj');
 
 const DO_TEMY = new Set(['.css', '.js', '.woff2', '.woff', '.svg']);
 
@@ -94,12 +95,46 @@ function najdiStranky(adresar, zoznam = []) {
   return zoznam;
 }
 
+/* Stránky katalógových rozmerov. Je ich 66 a generuje ich
+   `tools/generuj-rozmery.py` do `pristresky-pre-auta/rozmer/2500x5200/`
+   a `zahradne-pristresky/rozmer/3000x3000/`. */
+const ROZMER = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+$/;
+
+function produktovaAdresa(cesta) {
+  const m = cesta.match(/^(pristresky-pre-auta|zahradne-pristresky)\/rozmer\/(\d+)x(\d+)$/);
+  if (!m) return null;
+  const prefix = m[1] === 'zahradne-pristresky'
+    ? 'zahradny-pristresok-koverta-'
+    : 'pristresok-koverta-';
+  return '/products/' + prefix + m[2] + 'x' + m[3];
+}
+
 function adresa(subor) {
   const rel = path.relative(KOREN, subor).replace(/\\/g, '/');
-  if (rel === 'index.html') return { druh: 'index', handle: PREDPONA + 'uvod', url: '/pages/' + PREDPONA + 'uvod', cesta: '' };
+  if (rel === 'index.html') {
+    const h = PREDPONA + 'uvod';
+    return { druh: 'index', handle: h, url: '/pages/' + h, odkaz: '/pages/' + h, cesta: '' };
+  }
   const cesta = rel.replace(/\/index\.html$/, '').replace(/\.html$/, '');
   const handle = PREDPONA + cesta.replace(/\//g, '-');
-  return { druh: 'stranka', handle, url: '/pages/' + handle, cesta };
+  const url = '/pages/' + handle;
+  /* Odkaz na stránku rozmeru vedie na statický web, nie do obchodu.
+   *
+   * Na obchode tie stránky nie sú a nebudú: je ich 66, každá je len jeden
+   * katalógový rozmer s cenou, a zakladať ich ručne v Online Store → Pages
+   * nemá zmysel. Kým `koverta.sk` ukazovala na GitHub Pages, odkazy
+   * „Pozrieť rozmer" fungovali; po prechode na Shopify viedli na
+   * `/pages/nove-…-rozmer-3200x5200`, čo je stránka, ktorá neexistuje —
+   * teda 404 v cenovej tabuľke, na najhoršom možnom mieste.
+   *
+   * Obsah pritom existuje a funguje, len inde. Odkaz preto ide plnou adresou
+   * na GitHub Pages. Šablóna aj útržok tej stránky v téme ostávajú: keby si
+   * ich niekto v obchode predsa založil, vykreslia sa, namiesto aby stránka
+   * ostala prázdna. */
+  if (ROZMER.test(cesta)) {
+    return { druh: 'stranka', handle, url, odkaz: produktovaAdresa(cesta), rozmer: true, cesta };
+  }
+  return { druh: 'stranka', handle, url, odkaz: url, cesta };
 }
 
 /* ---------------------------------------------------------------- prepisy */
@@ -279,7 +314,7 @@ function preved() {
 
   const zoznam = najdiStranky(KOREN);
   const mapa = new Map();
-  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.url); }
+  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
 
   const hlavicky = new Set();
   const paticky = new Set();
@@ -364,6 +399,25 @@ function preved() {
            hlavicka: [...hlavicky][0] || '', paticka: [...paticky][0] || '' };
 }
 
+function kopirujShopifyZdroj() {
+  if (!fs.existsSync(SHOPIFY_ZDROJ)) return;
+  function chod(adresar, rel = '') {
+    for (const p of fs.readdirSync(adresar, { withFileTypes: true })) {
+      const zdroj = path.join(adresar, p.name);
+      const cielRel = path.join(rel, p.name);
+      const ciel = path.join(CIEL, cielRel);
+      if (p.isDirectory()) {
+        fs.mkdirSync(ciel, { recursive: true });
+        chod(zdroj, cielRel);
+      } else {
+        fs.mkdirSync(path.dirname(ciel), { recursive: true });
+        fs.copyFileSync(zdroj, ciel);
+      }
+    }
+  }
+  chod(SHOPIFY_ZDROJ);
+}
+
 /* ---------------------------------------------------------------- zápis */
 
 function zapis(v) {
@@ -415,7 +469,7 @@ function zapis(v) {
 <link rel="canonical" href="{{ canonical_url }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
 <meta property="og:title" content="{{ page_title | escape }}">
 <meta property="og:url" content="{{ canonical_url }}">
 {%- if page_description %}
@@ -423,6 +477,7 @@ function zapis(v) {
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
 {{ content_for_header }}
+{{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 ${v.spolocnaHlava.join('\n')}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
@@ -455,8 +510,13 @@ ${v.spolocnyChvost.join('\n')}
 `;
   fs.writeFileSync(path.join(CIEL, 'layout', 'theme.liquid'), layout);
 
+  const kosik = '<a class="kv-icon-btn kv-cart-link" href="{{ routes.cart_url }}" aria-label="Košík, {{ cart.item_count }} položiek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 10.2h9.9L20 7H6"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>{% if cart.item_count > 0 %}<span class="kv-cart-link__count">{{ cart.item_count }}</span>{% endif %}</a>';
+  const shopifyHlavicka = v.hlavicka.replace(
+    /(<button class="kv-icon-btn" type="button" data-k-search-open[\s\S]*?<\/button>)/,
+    '$1' + kosik
+  );
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-hlavicka.liquid'),
-    v.hlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
+    shopifyHlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-paticka.liquid'),
     '{%- assign kv_dopyt = kv_dopyt | default: "#ponuka" -%}\n' + v.paticka +
     '\n{% schema %}\n{"name":"Koverta pätička"}\n{% endschema %}\n');
@@ -548,6 +608,10 @@ ${v.spolocnyChvost.join('\n')}
       }
     }
   }
+
+  /* Ručne udržiavané Shopify product/cart súbory sa kopírujú až po
+     generovaní stránok a assetov, aby ich čistenie generátora nezmazalo. */
+  kopirujShopifyZdroj();
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',

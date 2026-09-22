@@ -1,0 +1,599 @@
+{
+  "generated_from": "existing Koverta Shopify product handles",
+  "redirects": [
+    {
+      "family": "auto",
+      "width_mm": 2500,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-2-5-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-2-5-x-5-2m",
+      "new_handle": "pristresok-koverta-2500x5200",
+      "new_path": "/products/pristresok-koverta-2500x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 2800,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-2-8-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-2-8-x-5-2m",
+      "new_handle": "pristresok-koverta-2800x5200",
+      "new_path": "/products/pristresok-koverta-2800x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3000,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-3-0-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-3-0-x-5-2m",
+      "new_handle": "pristresok-koverta-3000x5200",
+      "new_path": "/products/pristresok-koverta-3000x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3200,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-3-2-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-3-2-x-5-2m",
+      "new_handle": "pristresok-koverta-3200x5200",
+      "new_path": "/products/pristresok-koverta-3200x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3500,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-3-5-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-3-5-x-5-2m",
+      "new_handle": "pristresok-koverta-3500x5200",
+      "new_path": "/products/pristresok-koverta-3500x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3800,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-3-8-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-3-8-x-5-2m",
+      "new_handle": "pristresok-koverta-3800x5200",
+      "new_path": "/products/pristresok-koverta-3800x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4000,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-4-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-4-x-5-2m",
+      "new_handle": "pristresok-koverta-4000x5200",
+      "new_path": "/products/pristresok-koverta-4000x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4200,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-4-2-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-4-2-x-5-2m",
+      "new_handle": "pristresok-koverta-4200x5200",
+      "new_path": "/products/pristresok-koverta-4200x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4500,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-1-auto-4-5-x-5-2m",
+      "old_path": "/products/pristresok-pre-1-auto-4-5-x-5-2m",
+      "new_handle": "pristresok-koverta-4500x5200",
+      "new_path": "/products/pristresok-koverta-4500x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5000,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-5-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-5-x-5-2m",
+      "new_handle": "pristresok-koverta-5000x5200",
+      "new_path": "/products/pristresok-koverta-5000x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5200,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-5-2-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-5-2-x-5-2m",
+      "new_handle": "pristresok-koverta-5200x5200",
+      "new_path": "/products/pristresok-koverta-5200x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5400,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-5-4-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-5-4-x-5-2m",
+      "new_handle": "pristresok-koverta-5400x5200",
+      "new_path": "/products/pristresok-koverta-5400x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5600,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-5-6-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-5-6-x-5-2m",
+      "new_handle": "pristresok-koverta-5600x5200",
+      "new_path": "/products/pristresok-koverta-5600x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5800,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-5-8-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-5-8-x-5-2m",
+      "new_handle": "pristresok-koverta-5800x5200",
+      "new_path": "/products/pristresok-koverta-5800x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6000,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-6-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-6-x-5-2m",
+      "new_handle": "pristresok-koverta-6000x5200",
+      "new_path": "/products/pristresok-koverta-6000x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6200,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-6-2-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-6-2-x-5-2m",
+      "new_handle": "pristresok-koverta-6200x5200",
+      "new_path": "/products/pristresok-koverta-6200x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6600,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-6-6-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-6-6-x-5-2m",
+      "new_handle": "pristresok-koverta-6600x5200",
+      "new_path": "/products/pristresok-koverta-6600x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 7000,
+      "length_mm": 5200,
+      "old_handle": "pristresok-pre-2-auta-7-x-5-2m",
+      "old_path": "/products/pristresok-pre-2-auta-7-x-5-2m",
+      "new_handle": "pristresok-koverta-7000x5200",
+      "new_path": "/products/pristresok-koverta-7000x5200"
+    },
+    {
+      "family": "auto",
+      "width_mm": 2500,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-2-5-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-2-5-x-5-6m",
+      "new_handle": "pristresok-koverta-2500x5600",
+      "new_path": "/products/pristresok-koverta-2500x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 2800,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-2-8-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-2-8-x-5-6m",
+      "new_handle": "pristresok-koverta-2800x5600",
+      "new_path": "/products/pristresok-koverta-2800x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3000,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-3-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-x-5-6m",
+      "new_handle": "pristresok-koverta-3000x5600",
+      "new_path": "/products/pristresok-koverta-3000x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3200,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-3-2-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-2-x-5-6m",
+      "new_handle": "pristresok-koverta-3200x5600",
+      "new_path": "/products/pristresok-koverta-3200x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3500,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-3-5-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-5-x-5-6m",
+      "new_handle": "pristresok-koverta-3500x5600",
+      "new_path": "/products/pristresok-koverta-3500x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3800,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-3-8-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-8-x-5-6m",
+      "new_handle": "pristresok-koverta-3800x5600",
+      "new_path": "/products/pristresok-koverta-3800x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4000,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-4-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-x-5-6m",
+      "new_handle": "pristresok-koverta-4000x5600",
+      "new_path": "/products/pristresok-koverta-4000x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4200,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-4-2-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-2-x-5-6m",
+      "new_handle": "pristresok-koverta-4200x5600",
+      "new_path": "/products/pristresok-koverta-4200x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4500,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-1-auto-4-5-x-5-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-5-x-5-6m",
+      "new_handle": "pristresok-koverta-4500x5600",
+      "new_path": "/products/pristresok-koverta-4500x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5000,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-5-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-x-5-6m",
+      "new_handle": "pristresok-koverta-5000x5600",
+      "new_path": "/products/pristresok-koverta-5000x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5200,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-5-2-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-2-x-5-6m",
+      "new_handle": "pristresok-koverta-5200x5600",
+      "new_path": "/products/pristresok-koverta-5200x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5400,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-5-4-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-4-x-5-6m",
+      "new_handle": "pristresok-koverta-5400x5600",
+      "new_path": "/products/pristresok-koverta-5400x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5600,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-5-6-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-6-x-5-6m",
+      "new_handle": "pristresok-koverta-5600x5600",
+      "new_path": "/products/pristresok-koverta-5600x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5800,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-5-8-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-8-x-5-6m",
+      "new_handle": "pristresok-koverta-5800x5600",
+      "new_path": "/products/pristresok-koverta-5800x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6000,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-6-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-x-5-6m",
+      "new_handle": "pristresok-koverta-6000x5600",
+      "new_path": "/products/pristresok-koverta-6000x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6200,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-6-2-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-2-x-5-6m",
+      "new_handle": "pristresok-koverta-6200x5600",
+      "new_path": "/products/pristresok-koverta-6200x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6600,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-6-6-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-6-x-5-6m",
+      "new_handle": "pristresok-koverta-6600x5600",
+      "new_path": "/products/pristresok-koverta-6600x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 7000,
+      "length_mm": 5600,
+      "old_handle": "pristresok-pre-2-auta-7-x-5-6m",
+      "old_path": "/products/pristresok-pre-2-auta-7-x-5-6m",
+      "new_handle": "pristresok-koverta-7000x5600",
+      "new_path": "/products/pristresok-koverta-7000x5600"
+    },
+    {
+      "family": "auto",
+      "width_mm": 2500,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-2-5-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-2-5-x-6m",
+      "new_handle": "pristresok-koverta-2500x6000",
+      "new_path": "/products/pristresok-koverta-2500x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 2800,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-2-8-x-5-6m-1",
+      "old_path": "/products/pristresok-pre-1-auto-2-8-x-5-6m-1",
+      "new_handle": "pristresok-koverta-2800x6000",
+      "new_path": "/products/pristresok-koverta-2800x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3000,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-3-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-x-6m",
+      "new_handle": "pristresok-koverta-3000x6000",
+      "new_path": "/products/pristresok-koverta-3000x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3200,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-3-2-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-2-x-6m",
+      "new_handle": "pristresok-koverta-3200x6000",
+      "new_path": "/products/pristresok-koverta-3200x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3500,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-3-5-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-5-x-6m",
+      "new_handle": "pristresok-koverta-3500x6000",
+      "new_path": "/products/pristresok-koverta-3500x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 3800,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-3-8-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-3-8-x-6m",
+      "new_handle": "pristresok-koverta-3800x6000",
+      "new_path": "/products/pristresok-koverta-3800x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4000,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-4-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-x-6m",
+      "new_handle": "pristresok-koverta-4000x6000",
+      "new_path": "/products/pristresok-koverta-4000x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4200,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-4-2-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-2-x-6m",
+      "new_handle": "pristresok-koverta-4200x6000",
+      "new_path": "/products/pristresok-koverta-4200x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 4500,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-1-auto-4-5-x-6m",
+      "old_path": "/products/pristresok-pre-1-auto-4-5-x-6m",
+      "new_handle": "pristresok-koverta-4500x6000",
+      "new_path": "/products/pristresok-koverta-4500x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5000,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-5-x-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-x-6m",
+      "new_handle": "pristresok-koverta-5000x6000",
+      "new_path": "/products/pristresok-koverta-5000x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5200,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-5-2-x-6-0m",
+      "old_path": "/products/pristresok-pre-2-auta-5-2-x-6-0m",
+      "new_handle": "pristresok-koverta-5200x6000",
+      "new_path": "/products/pristresok-koverta-5200x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5400,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-5-4-x-6m",
+      "old_path": "/products/pristresok-pre-2-auta-5-4-x-6m",
+      "new_handle": "pristresok-koverta-5400x6000",
+      "new_path": "/products/pristresok-koverta-5400x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5600,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-5-6-x-6-0m",
+      "old_path": "/products/pristresok-pre-2-auta-5-6-x-6-0m",
+      "new_handle": "pristresok-koverta-5600x6000",
+      "new_path": "/products/pristresok-koverta-5600x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 5800,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-5-8-x-6-0m",
+      "old_path": "/products/pristresok-pre-2-auta-5-8-x-6-0m",
+      "new_handle": "pristresok-koverta-5800x6000",
+      "new_path": "/products/pristresok-koverta-5800x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6000,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-6-x-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-x-6m",
+      "new_handle": "pristresok-koverta-6000x6000",
+      "new_path": "/products/pristresok-koverta-6000x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6200,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-6-2-x-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-2-x-6m",
+      "new_handle": "pristresok-koverta-6200x6000",
+      "new_path": "/products/pristresok-koverta-6200x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 6600,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-6-6-x-6m",
+      "old_path": "/products/pristresok-pre-2-auta-6-6-x-6m",
+      "new_handle": "pristresok-koverta-6600x6000",
+      "new_path": "/products/pristresok-koverta-6600x6000"
+    },
+    {
+      "family": "auto",
+      "width_mm": 7000,
+      "length_mm": 6000,
+      "old_handle": "pristresok-pre-2-auta-7-0-x-6-0m",
+      "old_path": "/products/pristresok-pre-2-auta-7-0-x-6-0m",
+      "new_handle": "pristresok-koverta-7000x6000",
+      "new_path": "/products/pristresok-koverta-7000x6000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 3000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-3-x-3m",
+      "old_path": "/products/zahradny-pristresok-3-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-3000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-3000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 4000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-4-x-3m",
+      "old_path": "/products/zahradny-pristresok-4-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-4000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-4000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 5000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-5-x-3m",
+      "old_path": "/products/zahradny-pristresok-5-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-5000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-5000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 6000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-6-x-3m",
+      "old_path": "/products/zahradny-pristresok-6-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-6000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-6000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 7000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-7-x-3m",
+      "old_path": "/products/zahradny-pristresok-7-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-7000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-7000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 8000,
+      "length_mm": 3000,
+      "old_handle": "zahradny-pristresok-8-x-3m",
+      "old_path": "/products/zahradny-pristresok-8-x-3m",
+      "new_handle": "zahradny-pristresok-koverta-8000x3000",
+      "new_path": "/products/zahradny-pristresok-koverta-8000x3000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 3000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-3-x-4m",
+      "old_path": "/products/zahradny-pristresok-3-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-3000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-3000x4000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 4000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-4-x-4m",
+      "old_path": "/products/zahradny-pristresok-4-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-4000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-4000x4000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 5000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-5-x-4m",
+      "old_path": "/products/zahradny-pristresok-5-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-5000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-5000x4000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 6000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-6-x-4m",
+      "old_path": "/products/zahradny-pristresok-6-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-6000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-6000x4000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 7000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-7-x-4m",
+      "old_path": "/products/zahradny-pristresok-7-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-7000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-7000x4000"
+    },
+    {
+      "family": "zahrada",
+      "width_mm": 8000,
+      "length_mm": 4000,
+      "old_handle": "zahradny-pristresok-8-x-4m",
+      "old_path": "/products/zahradny-pristresok-8-x-4m",
+      "new_handle": "zahradny-pristresok-koverta-8000x4000",
+      "new_path": "/products/zahradny-pristresok-koverta-8000x4000"
+    }
+  ]
+}

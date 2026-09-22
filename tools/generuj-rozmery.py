@@ -24,6 +24,10 @@ def katalog():
         out[kluc] = list(data['models'].values())[0]
     return out
 
+def produktova_url(kluc, w, l):
+    prefix = 'zahradny-pristresok-koverta-' if kluc == 'zahrada' else 'pristresok-koverta-'
+    return f'{ZAKLAD}/products/{prefix}{w}x{l}'
+
 def obrazok(zaklad):
     """Rozmer fotografie z hlavičky súboru JPEG.
 
@@ -167,6 +171,7 @@ def strankuj():
                 uvod, detail, odkazy, plocha = telo(kluc, w, l, cena, vsetky)
                 slug = f'{w}x{l}'
                 rel = f'{t["nadradUrl"]}/rozmer/{slug}/'
+                produkt = produktova_url(kluc, w, l)
                 wtxt, ltxt = f'{w/1000:g}'.replace('.', ','), f'{l/1000:g}'.replace('.', ',')
                 nazov = f'{t["druh"]} {wtxt} × {ltxt} m'
                 popis = (f'{nazov} — cena od {medzery(cena)} € s DPH, dopravou aj montážou. '
@@ -179,11 +184,12 @@ def strankuj():
                 fw, fh = obrazok(t['foto'])
                 seo = f'''<title>{nazov} · od {medzery(cena)} € | Koverta</title>
 <meta name="description" content="{popis}">
-<link rel="canonical" href="{ZAKLAD}/{rel}">
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="{produkt}">
 <meta property="og:type" content="product">
 <meta property="og:title" content="{nazov}">
 <meta property="og:description" content="{popis}">
-<meta property="og:url" content="{ZAKLAD}/{rel}">
+<meta property="og:url" content="{produkt}">
 <meta property="og:image" content="{foto}">
 <meta property="og:image:width" content="{fw}">
 <meta property="og:image:height" content="{fh}">
@@ -201,7 +207,7 @@ def strankuj():
   "depth":{"@type":"QuantitativeValue","value":l,"unitCode":"MMT"},
   "offers":{"@type":"Offer","price":cena,"priceCurrency":"EUR",
             "availability":"https://schema.org/PreOrder",
-            "url":f"{ZAKLAD}/{rel}",
+            "url":produkt,
             "priceSpecification":{"@type":"PriceSpecification","price":cena,
               "priceCurrency":"EUR","valueAddedTaxIncluded":True}}
 }, ensure_ascii=False)}</script>
@@ -256,6 +262,8 @@ def strankuj():
     <p class="k-copy" style="max-width:62ch">{detail}</p>
     <p class="k-copy" style="max-width:62ch"><strong>Uvedená cena je cena základnej zostavy.</strong> Konečnú sumu ovplyvní zvolený odtieň, pripravenosť podkladu a doplnky; potvrdíme ju v nezáväznej ponuke.</p>
 
+    <p class="k-copy" style="max-width:62ch"><strong>Kompletné riešenie na kľúč.</strong> Koverta je oceľový prístrešok vyrábaný na Slovensku. Súčasťou riešenia je nosná konštrukcia s povrchovou ochranou, strecha, integrované odvodnenie, doprava, odborná montáž a bezplatné zameranie. Rozmer upravíme podľa pozemku, parkovania alebo terasy a pripravíme cenovú ponuku pre realizáciu kdekoľvek na Slovensku.</p>
+
     <div class="kh-hero__actions" style="margin:2rem 0">
       <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
       <!-- Rozmer ide do adresy, nie do data atribútu: formulár je na
@@ -267,6 +275,7 @@ def strankuj():
     <ul class="kv-related">{odkazy}<li><a href="../../">Celý katalóg rozmerov</a></li></ul>
   </div>
 </section>
+<script src="../../../assets/rozmer-produkt.js" defer></script>
 </main>'''
                 cesta = os.path.join(KOREN, rel)
                 os.makedirs(cesta, exist_ok=True)
@@ -288,21 +297,12 @@ def strankuj():
         if zmeny:
             io.open(cesta, 'w', encoding='utf-8').write(html)
 
-    # Rozmerové stránky sú normálne produktové varianty, preto patria do mapy
-    # webu. Pred zápisom odstránime staré rozmerové záznamy, aby bol skript
-    # opakovateľný a nevytváral duplicity.
+    # Rozmerové HTML sú po prechode na Shopify iba legacy náhľady. Produkčné
+    # /products/ URL vkladá do sitemap samotný Shopify; staré rozmerové URL
+    # preto z repozitárovej mapy odstránime a znovu ich nepridávame.
     sitemap_cesta = os.path.join(KOREN, 'sitemap.xml')
     sitemap = io.open(sitemap_cesta, encoding='utf-8').read()
     sitemap = re.sub(r'\s*<url><loc>https://koverta\.sk/(?:pristresky-pre-auta|zahradne-pristresky)/rozmer/[^<]+</loc>.*?</url>', '', sitemap)
-    zaznamy = []
-    for kluc, mo in kat.items():
-        t = SABLONY[kluc]
-        for l in mo['lengths']:
-            for w in mo['widths']:
-                zaznamy.append(
-                    f'  <url><loc>{ZAKLAD}/{t["nadradUrl"]}/rozmer/{w}x{l}/</loc>'
-                    '<changefreq>monthly</changefreq><priority>0.7</priority></url>')
-    sitemap = sitemap.replace('</urlset>', '\n'.join(zaznamy) + '\n</urlset>')
     io.open(sitemap_cesta, 'w', encoding='utf-8').write(sitemap)
     return pocet
 

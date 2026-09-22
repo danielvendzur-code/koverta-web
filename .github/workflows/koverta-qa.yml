@@ -43,12 +43,16 @@ jobs:
           git fetch --no-tags --depth=200 origin "$ZAKLAD" || git fetch --no-tags origin
           SUBORY=$(git diff --name-only "$ZAKLAD"...HEAD || git diff --name-only HEAD~1 HEAD)
           echo "$SUBORY"
-          if echo "$SUBORY" | grep -qE '^(konfigurator/|coordination/koverta/|\.github/workflows/)'; then
+          KONFIG_RIADKY=$(git diff -U0 "$ZAKLAD"...HEAD -- konfigurator coordination/koverta 2>/dev/null \
+            | grep -E '^[+-]' \
+            | grep -vE '^(---|\+\+\+)' \
+            | grep -vE 'koverta-2026\.(css|js)\?v=' || true)
+          if echo "$SUBORY" | grep -qE '^coordination/koverta/' || { echo "$SUBORY" | grep -qE '^konfigurator/' && test -n "$KONFIG_RIADKY"; }; then
             echo "konfigurator=true" >> "$GITHUB_OUTPUT"
             echo "konfigurátor sa zmenil — hlboké kontroly bežia"
           else
             echo "konfigurator=false" >> "$GITHUB_OUTPUT"
-            echo "konfigurátor sa nezmenil — hlboké kontroly sa preskočia"
+            echo "len web a verzia štýlu — hlboké 3D kontroly sa preskočia"
           fi
 
   site-content:
@@ -74,11 +78,18 @@ jobs:
       - name: Validate Shopify theme
         run: |
           node tools/spolocne-casti.js --kontrola
+          node tools/shopify-produkt-kontrola.js
+          node --check tools/shopify-products.js
+          node tools/shopify-products.js --check
+          node tools/shopify-products.js --scope=reference
+          node --check tools/shopify-redirects.js
+          node tools/shopify-redirects.js --check
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
-          git diff --exit-code -- shopify-tema
 
   configurator:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -237,6 +248,8 @@ jobs:
           if-no-files-found: ignore
 
   soltec-motion:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
