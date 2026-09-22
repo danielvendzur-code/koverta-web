@@ -506,12 +506,22 @@ function zapis(v) {
 <meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ kv_titulok | escape }}">
+{%- if kv_popis != blank %}
+<meta name="twitter:description" content="{{ kv_popis | escape }}">
+{%- endif %}
+{%- if request.page_type == 'product' and product %}
+{%- assign kv_variant = product.selected_or_first_available_variant %}
+<meta property="og:price:amount" content="{{ kv_variant.price | divided_by: 100.0 }}">
+<meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
+{%- endif %}
 {%- render 'kv-og', page: page, product: product, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 ${v.spolocnaHlava.join('\n')}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <script>
   /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
      v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka
@@ -663,6 +673,20 @@ ${v.spolocnyChvost.join('\n')}
     const bloky = data.current && data.current.blocks;
     for (const [id, blok] of Object.entries(bloky || {})) {
       if (/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) delete bloky[id];
+    }
+    /* Aplikácie, ktoré v živej téme bežia a nová ich potrebuje rovnako:
+       Consentik je lišta súhlasu s cookies — posiela súhlas do Consent Mode
+       a GTM, vlastnú lištu web na Shopify nemá. r-terms je súhlas
+       s obchodnými podmienkami v košíku. Bloky sú totožné so živou témou;
+       ak ich niekto v editore vypne, necháme to tak. */
+    data.current = data.current || {};
+    const embed = data.current.blocks = data.current.blocks || {};
+    const aplikacie = [
+      ['6858403126979251294', 'shopify://apps/consentik-cookie/blocks/omega-cookies-notification/13cba824-a338-452e-9b8e-c83046a79f21'],
+      ['5061257265103808445', 'shopify://apps/r-terms-conditions/blocks/embed-block/471882a9-9b1b-4918-8943-6c66b60c94ea']
+    ];
+    for (const [id, typ] of aplikacie) {
+      if (!Object.values(embed).some((b) => b.type === typ)) embed[id] = { type: typ, disabled: false, settings: {} };
     }
     fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
   } catch (e) {

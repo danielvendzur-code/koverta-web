@@ -87,11 +87,14 @@
 .kp-farba__vzor.is-active { outline-color: var(--k-ink); }
 .kp-farba__vzor:focus-visible { outline-color: var(--k-amber-deep); }
 .kp-farba__vzor[disabled] { opacity: .3; cursor: not-allowed; }
-.kp .kp-kosik, .kp .kp-ponuka { width: 100%; min-height: 54px; justify-content: center; border-radius: 10px; font-size: 16px; }
+.kp .kp-kosik, .kp .kp-ponuka, .kp .kp-3d { width: 100%; min-height: 54px; justify-content: center; border-radius: var(--k-r-pill); font-size: 15px; }
 .kp .kp-kosik { margin-top: 10px; }
 .kp .kp-ponuka { margin-top: 10px; background: #fff; }
-.kp .kp-3d { align-self: flex-start; margin: 16px 0 0; color: var(--k-ink); font: 500 14.5px/1.4 var(--k-body); text-decoration: underline; text-underline-offset: 3px; }
-.kp-3d:hover { color: var(--k-amber-deep); }
+.kp .kp-3d { margin-top: 10px; background: transparent; }
+@media (min-width: 1100px) {
+  .kp-akcie { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kp .kp-akcie .kp-ponuka, .kp .kp-akcie .kp-3d { padding: 0 16px; }
+}
 .kp .kp-usp { display: grid; gap: 10px; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--k-hair); list-style: none; }
 .kp-usp li { display: flex; align-items: center; gap: 12px; color: var(--k-ink); font: 400 14.5px/1.35 var(--k-body); }
 .kp-usp svg { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--k-ink); stroke-width: 1.5; }

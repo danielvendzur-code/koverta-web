@@ -155,7 +155,7 @@
        biely plech s priehľadnosťou, vyzerala zasklená strecha ako doska
        z bieleho plastu. */
     sklo:     { kov: 0.00, drsnost: 0.04, odraz: 1.00, sklo: 1 },
-    panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.86 },
+    panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.68 },
     drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.62 },
     polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
     /* Odmerané: pri 0,66 mala podlaha jas 208 a pozadie 213 — na obraze

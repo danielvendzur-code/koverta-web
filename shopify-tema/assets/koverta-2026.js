@@ -2722,7 +2722,6 @@ function kvCesta(cesta) {
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
       '<p class="kh-modal__kontext" hidden></p><div class="kh-modal__telo"></div>' +
-      '<ul class="kh-modal__istoty"><li>Bez záväzku</li><li>Doprava a montáž v cene</li><li>5,0 na Google</li></ul>' +
       '<p class="kh-modal__tel">Radšej zavoláte? <a href="tel:+421948482266">+421 948 482 266</a></p></section>';
     const kopia = karta.cloneNode(true);
     kopia.querySelectorAll('[id]').forEach((x) => { x.id = x.id + '-okno'; });
