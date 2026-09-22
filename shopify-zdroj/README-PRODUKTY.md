@@ -22,3 +22,5 @@ a skript ho z Online Store prípadne odpublikuje.
 
 Platobnú bránu GitHub nenastavuje. Tá zostáva v Shopify Admin → Settings → Payments.
 Téma používa natívny Shopify product form, košík a checkout; platobné údaje cez repozitár nejdú.
+
+Produkty sa pri synchronizácii zaraďujú do existujúcich manuálnych kolekcií podľa handle: `pristresky-pre-auta` a `zahradne-pristresky`. Skript si ich ID zistí cez API, takže ID nie sú hardcodované.
