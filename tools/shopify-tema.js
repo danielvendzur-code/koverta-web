@@ -74,7 +74,8 @@ const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
 const MAX_SNIPPET_BAJTOV = 180 * 1024;
 
 const PRESKOC = new Set(['node_modules', '.git', 'coordination', 'qa-artifacts',
-  'archiv-expivi', 'shopify-tema', 'tools', 'test', 'interny-odhad-patiek']);
+  'archiv-expivi', 'shopify-tema', 'shopify-zdroj', 'tools', 'test', 'interny-odhad-patiek']);
+const SHOPIFY_ZDROJ = path.join(KOREN, 'shopify-zdroj');
 
 const DO_TEMY = new Set(['.css', '.js', '.woff2', '.woff', '.svg']);
 
@@ -99,6 +100,15 @@ function najdiStranky(adresar, zoznam = []) {
    a `zahradne-pristresky/rozmer/3000x3000/`. */
 const ROZMER = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+$/;
 
+function produktovaAdresa(cesta) {
+  const m = cesta.match(/^(pristresky-pre-auta|zahradne-pristresky)\/rozmer\/(\d+)x(\d+)$/);
+  if (!m) return null;
+  const prefix = m[1] === 'zahradne-pristresky'
+    ? 'zahradny-pristresok-koverta-'
+    : 'pristresok-koverta-';
+  return '/products/' + prefix + m[2] + 'x' + m[3];
+}
+
 function adresa(subor) {
   const rel = path.relative(KOREN, subor).replace(/\\/g, '/');
   if (rel === 'index.html') {
@@ -122,7 +132,7 @@ function adresa(subor) {
    * ich niekto v obchode predsa založil, vykreslia sa, namiesto aby stránka
    * ostala prázdna. */
   if (ROZMER.test(cesta)) {
-    return { druh: 'stranka', handle, url, odkaz: PAGES_ZAKLAD + '/' + cesta + '/', rozmer: true, cesta };
+    return { druh: 'stranka', handle, url, odkaz: produktovaAdresa(cesta), rozmer: true, cesta };
   }
   return { druh: 'stranka', handle, url, odkaz: url, cesta };
 }
@@ -389,6 +399,25 @@ function preved() {
            hlavicka: [...hlavicky][0] || '', paticka: [...paticky][0] || '' };
 }
 
+function kopirujShopifyZdroj() {
+  if (!fs.existsSync(SHOPIFY_ZDROJ)) return;
+  function chod(adresar, rel = '') {
+    for (const p of fs.readdirSync(adresar, { withFileTypes: true })) {
+      const zdroj = path.join(adresar, p.name);
+      const cielRel = path.join(rel, p.name);
+      const ciel = path.join(CIEL, cielRel);
+      if (p.isDirectory()) {
+        fs.mkdirSync(ciel, { recursive: true });
+        chod(zdroj, cielRel);
+      } else {
+        fs.mkdirSync(path.dirname(ciel), { recursive: true });
+        fs.copyFileSync(zdroj, ciel);
+      }
+    }
+  }
+  chod(SHOPIFY_ZDROJ);
+}
+
 /* ---------------------------------------------------------------- zápis */
 
 function zapis(v) {
@@ -440,7 +469,7 @@ function zapis(v) {
 <link rel="canonical" href="{{ canonical_url }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
 <meta property="og:title" content="{{ page_title | escape }}">
 <meta property="og:url" content="{{ canonical_url }}">
 {%- if page_description %}
@@ -448,6 +477,7 @@ function zapis(v) {
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
 {{ content_for_header }}
+{{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 ${v.spolocnaHlava.join('\n')}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
@@ -480,8 +510,13 @@ ${v.spolocnyChvost.join('\n')}
 `;
   fs.writeFileSync(path.join(CIEL, 'layout', 'theme.liquid'), layout);
 
+  const kosik = '<a class="kv-icon-btn kv-cart-link" href="{{ routes.cart_url }}" aria-label="Košík, {{ cart.item_count }} položiek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 10.2h9.9L20 7H6"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>{% if cart.item_count > 0 %}<span class="kv-cart-link__count">{{ cart.item_count }}</span>{% endif %}</a>';
+  const shopifyHlavicka = v.hlavicka.replace(
+    /(<button class="kv-icon-btn" type="button" data-k-search-open[\s\S]*?<\/button>)/,
+    '$1' + kosik
+  );
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-hlavicka.liquid'),
-    v.hlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
+    shopifyHlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-paticka.liquid'),
     '{%- assign kv_dopyt = kv_dopyt | default: "#ponuka" -%}\n' + v.paticka +
     '\n{% schema %}\n{"name":"Koverta pätička"}\n{% endschema %}\n');
@@ -573,6 +608,10 @@ ${v.spolocnyChvost.join('\n')}
       }
     }
   }
+
+  /* Ručne udržiavané Shopify product/cart súbory sa kopírujú až po
+     generovaní stránok a assetov, aby ich čistenie generátora nezmazalo. */
+  kopirujShopifyZdroj();
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
