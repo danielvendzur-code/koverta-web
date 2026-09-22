@@ -46,7 +46,7 @@ jobs:
           KONFIG_RIADKY=$(git diff -U0 "$ZAKLAD"...HEAD -- konfigurator coordination/koverta 2>/dev/null \
             | grep -E '^[+-]' \
             | grep -vE '^(---|\+\+\+)' \
-            | grep -vE 'koverta-2026\\.(css|js)\\?v=' || true)
+            | grep -vE 'koverta-2026\.(css|js)\?v=' || true)
           if echo "$SUBORY" | grep -qE '^coordination/koverta/' || { echo "$SUBORY" | grep -qE '^konfigurator/' && test -n "$KONFIG_RIADKY"; }; then
             echo "konfigurator=true" >> "$GITHUB_OUTPUT"
             echo "konfigurátor sa zmenil — hlboké kontroly bežia"
