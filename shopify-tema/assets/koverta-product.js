@@ -108,11 +108,19 @@
     }));
   }
 
+  /* Na telefóne ostane otvorená len skupina rozmerov s aktuálnym rozmerom. */
+  function rozmery(root) {
+    if (!window.matchMedia('(max-width: 899px)').matches) return;
+    const skupiny = [...root.querySelectorAll('.kp-size__skupina')];
+    if (skupiny.length < 2) return;
+    skupiny.forEach((d) => { if (!d.querySelector('[aria-current="page"]')) d.open = false; });
+  }
+
   function init() {
     const root = document.querySelector('[data-kp-product]');
     if (!root || root.dataset.kpReady === 'true') return;
     root.dataset.kpReady = 'true';
-    galeria(root); farba(root); lista(root); posun(root);
+    galeria(root); farba(root); lista(root); posun(root); rozmery(root);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();

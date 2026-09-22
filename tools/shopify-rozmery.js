@@ -40,9 +40,11 @@ function skupina(fam, model, nazov, sirky) {
       + '<div class="kh-size__dlzky">' + kusy + '</div></div>';
   }).join('\n      ');
   const od = Math.min(...sirky.map((w) => Math.min(...model.lengths.map((_, li) => model.prices[li][model.widths.indexOf(w)]))));
-  return '  <div class="kp-size__skupina">\n'
-    + '    <p class="kh-size__label">' + nazov + ' <span>' + sirky.length * model.lengths.length + ' rozmerov</span> <span class="kh-size__od">od ' + cena(od) + '</span></p>\n'
-    + '    <div class="kh-size__grid kh-size__grid--matica">\n      ' + riadky + '\n    </div>\n  </div>\n';
+  /* Skupina je <details>: na telefóne sa tá, v ktorej aktuálny rozmer nie
+     je, zbalí (koverta-product.js), na počítači sú otvorené obe. */
+  return '  <details class="kp-size__skupina" open>\n'
+    + '    <summary class="kh-size__label">' + nazov + ' <span>' + sirky.length * model.lengths.length + ' rozmerov</span> <span class="kh-size__od">od ' + cena(od) + '</span></summary>\n'
+    + '    <div class="kh-size__grid kh-size__grid--matica">\n      ' + riadky + '\n    </div>\n  </details>\n';
 }
 
 function snippet() {

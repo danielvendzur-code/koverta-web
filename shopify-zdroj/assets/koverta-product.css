@@ -236,3 +236,19 @@ body:not(.k-home) .kp .kp-fakty .kh-hero__chip strong { color: var(--k-ink); fon
 @media (max-width: 899px) {
   .ko .kp-top .k-wrap { padding-inline: var(--k-gut); padding-top: 18px; }
 }
+
+/* skupiny rozmerov ako <details> */
+.kp .kp-size__skupina > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; cursor: pointer; list-style: none; }
+.kp .kp-size__skupina > summary::-webkit-details-marker { display: none; }
+.kp .kp-size__skupina > summary::after {
+  content: ""; width: 9px; height: 9px; margin-left: auto; align-self: center;
+  border-right: 2px solid var(--k-ink); border-bottom: 2px solid var(--k-ink); transform: rotate(45deg) translateY(-3px);
+  transition: transform 180ms var(--k-ease);
+}
+.kp .kp-size__skupina:not([open]) > summary::after { transform: rotate(-45deg); }
+.kp .kp-size__skupina:not([open]) > summary { margin-bottom: 0; }
+@media (min-width: 900px) { .kp .kp-size__skupina > summary { pointer-events: none; } .kp .kp-size__skupina > summary::after { display: none; } }
+@media (max-width: 899px) {
+  .kp .kp-size .kh-size__chip { flex-direction: column; align-items: flex-start; gap: 1px; padding: 7px 10px; white-space: nowrap; }
+  .kp .kp-size .kh-size__chip span, .kp .kp-size .kh-size__chip small { white-space: nowrap; }
+}
