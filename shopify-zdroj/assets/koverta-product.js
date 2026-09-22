@@ -55,7 +55,6 @@
     if (!form) return;
     const input = form.querySelector('[data-kp-variant]');
     const nazov = form.querySelector('[data-kp-color-name]');
-    const add = form.querySelector('[data-kp-add]');
     const ceny = root.querySelectorAll('[data-kp-price], [data-kp-sticky-price]');
     const cta = root.querySelectorAll('[data-kp-cta]');
 
@@ -72,7 +71,6 @@
         if (nazov) nazov.textContent = nova;
         if (b.dataset.price) {
           ceny.forEach((c) => { c.textContent = b.dataset.price; });
-          if (add) add.textContent = 'Objednať online za ' + b.dataset.price;
         }
         /* Text dopytu nesie farbu, ktorú človek práve vybral. */
         cta.forEach((a) => {
@@ -91,7 +89,7 @@
      odíde z obrazovky, a zmizne pri formulári, aby ho neprekrýval. */
   function lista(root) {
     const pruh = root.querySelector('[data-kp-sticky]');
-    const hlavne = root.querySelector('.kp-akcie');
+    const hlavne = root.querySelector('.kp-kosik');
     const ponuka = root.querySelector('#ponuka');
     if (!pruh || !hlavne || !('IntersectionObserver' in window)) return;
     pruh.hidden = false;

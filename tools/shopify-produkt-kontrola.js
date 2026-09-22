@@ -24,9 +24,9 @@ if(!/data-kp-add/.test(product))throw new Error('produkt nemá objednávku do ko
 /* Jedna šablóna pre všetky rozmery: spoločná galéria z montáží, hlavná výzva
    je nezáväzná ponuka, bloky sú tie isté ako na podstránkach. */
 if(!/data-kp-gallery/.test(product)||!/koverta-foto/.test(product))throw new Error('produkt nemá spoločnú galériu z montáží');
-if(!/Chcem cenovú ponuku/.test(product)||!/data-k-dopyt=/.test(product))throw new Error('produkt nemá hlavnú výzvu na nezáväznú ponuku');
+if(!/Nezáväzná cenová ponuka/.test(product)||!/data-k-dopyt=/.test(product))throw new Error('produkt nemá výzvu na nezáväznú ponuku');
 if(/Bezplatné zameranie/i.test(product))throw new Error('produkt nesmie volať výzvu „Bezplatné zameranie“');
-for(const blok of ['kh-vcene','koverta-rozmery','kh-faq','kh-cta','data-k-dopyt>']){if(!product.includes(blok))throw new Error('produkt stratil blok '+blok)}
+for(const blok of ['koverta-rozmery','kh-faq','kh-cta','data-k-dopyt>','Pridať do košíka','kp-detaily']){if(!product.includes(blok))throw new Error('produkt stratil blok '+blok)}
 for(const snip of ['koverta-foto','koverta-cena','koverta-rozmery'])if(!fs.existsSync(path.join(src,'snippets',snip+'.liquid')))throw new Error('chýba shopify-zdroj/snippets/'+snip+'.liquid');
 const fotky=[...product.matchAll(/assign fotky = '([^']+)'/g)].map(m=>m[1].split(';').map(x=>x.split('|')[0]));
 if(fotky.length!==3)throw new Error('produkt má mať 3 sady fotiek (1 auto, 2 autá, záhrada)');
