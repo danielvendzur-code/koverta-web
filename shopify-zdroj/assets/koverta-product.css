@@ -37,3 +37,5 @@
  .kp-product.kr-page .kr-media__label{right:0}
  .kp-product.kr-page .kr-add{width:100%}
 }
+
+.kp-product.kr-page .kr-product-thumbs img{position:static!important;inset:auto!important;width:100%!important;height:100%!important;object-fit:contain!important;background:#fff}
