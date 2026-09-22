@@ -30,6 +30,14 @@ async function onlineStorePublicationId(){
   ONLINE_STORE_PUBLICATION_ID=p.publication.id;
   return ONLINE_STORE_PUBLICATION_ID;
 }
+let COLLECTION_IDS=null;
+async function collectionIds(){
+  if(COLLECTION_IDS)return COLLECTION_IDS;
+  const q=await gql('query K($auto:CollectionIdentifierInput!,$garden:CollectionIdentifierInput!){auto:collectionByIdentifier(identifier:$auto){id handle} garden:collectionByIdentifier(identifier:$garden){id handle}}',{auto:{handle:'pristresky-pre-auta'},garden:{handle:'zahradne-pristresky'}});
+  if(!q.auto?.id||!q.garden?.id)throw Error('Shopify produktové kolekcie sa nenašli.');
+  COLLECTION_IDS={auto:q.auto.id,zahrada:q.garden.id};
+  return COLLECTION_IDS;
+}
 async function syncOnlineStorePublication(productId,wantPublished){
   const publicationId=await onlineStorePublicationId();
   const q=await gql('query V($id:ID!,$publicationId:ID!){product(id:$id){publishedOnPublication(publicationId:$publicationId)}}',{id:productId,publicationId});
@@ -45,7 +53,8 @@ async function syncOnlineStorePublication(productId,wantPublished){
 }
 async function upsert(r){
 const existing=await gql('query E($identifier:ProductIdentifierInput!){product:productByIdentifier(identifier:$identifier){id media(first:1){nodes{id}}}}',{identifier:{handle:r.handle}});
-const input={title:r.title,handle:r.handle,vendor:'Koverta',productType:r.type,descriptionHtml:r.description,productOptions:[{name:'Farba',position:1,values:r.colors.map(name=>({name}))}],variants:r.colors.map(name=>({optionValues:[{optionName:'Farba',name}],price:String(r.price)}))};
+const collections=await collectionIds();
+const input={title:r.title,handle:r.handle,vendor:'Koverta',productType:r.type,descriptionHtml:r.description,collections:[collections[r.fam]],productOptions:[{name:'Farba',position:1,values:r.colors.map(name=>({name}))}],variants:r.colors.map(name=>({optionValues:[{optionName:'Farba',name}],price:String(r.price)}))};
 const images=PRODUCT_IMAGES[r.handle]||[];
 if((!existing.product||!(existing.product.media?.nodes||[]).length)&&images.length){
   input.files=images.map((img,i)=>({originalSource:img.url,alt:img.alt||r.title+' – produktová fotografia '+(i+1),contentType:'IMAGE',duplicateResolutionMode:'APPEND_UUID'}));
