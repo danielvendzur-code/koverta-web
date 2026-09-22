@@ -3758,3 +3758,42 @@ function kvCesta(cesta) {
     }
   });
 })();
+
+/* ==========================================================================
+   Koverta poradca — chat, kalkulácia ceny a spojenie s človekom
+   --------------------------------------------------------------------------
+   Widget žije v repozitári koverta-chatbot-backend a servíruje ho Vercel.
+   Načíta sa až po načítaní stránky, takže nebrzdí prvé vykreslenie ani
+   meranie rýchlosti. Beží v Shadow DOM, štýly webu ho neovplyvnia.
+
+   Vypnutie na konkrétnej stránke: window.KOVERTA_CHAT = false pred týmto
+   skriptom. Iný zdroj (napr. náhľad vetvy): window.KOVERTA_CHAT_SRC.
+   Otvorenie z odkazu na webe: <a href="#poradca"> alebo
+   <button data-koverta-chat="calc">.
+
+   Zoznam stránok nižšie nie je mŕtvy kód: prevodník Shopify témy z neho
+   vyrobí window.KV_CESTY, podľa ktorej chat na Shopify skladá odkazy
+   (/pages/nove-…).
+   ========================================================================== */
+(function () {
+  'use strict';
+  if (window.KOVERTA_CHAT === false) return;
+  if (document.querySelector('script[src*="koverta-chatbot-backend"], script[src$="/chatbot.js"]')) return;
+  // eslint-disable-next-line no-unused-vars
+  const STRANKY_PRE_CHAT = ['./', './pristresky-pre-auta/', './zahradne-pristresky/', './bioklimaticke-pergoly/',
+    './pevne-prestresenia/', './tienenie/', './carport-soltec/', './outdoor-kuchyne/', './realizacie/',
+    './produkty/', './kontakt/', './konfigurator/', './obchodne-podmienky/', './reklamacie/', './ochrana-sukromia/'];
+  const zdroj = window.KOVERTA_CHAT_SRC || 'https://koverta-chatbot-backend.vercel.app/chatbot.js';
+  const nacitaj = () => {
+    const s = document.createElement('script');
+    s.src = zdroj;
+    s.defer = true;
+    document.body.appendChild(s);
+  };
+  const neskor = () => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(nacitaj, { timeout: 2500 });
+    else window.setTimeout(nacitaj, 800);
+  };
+  if (document.readyState === 'complete') neskor();
+  else window.addEventListener('load', neskor, { once: true });
+})();
