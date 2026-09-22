@@ -31,56 +31,106 @@
     <div class="k-wrap">
       <div class="kr-hero__grid">
         <div class="kr-hero__copy">
-          <nav class="kr-crumbs" aria-label="Omrvinky">
-            <a href="/">Domov</a><span aria-hidden="true">/</span>
-            <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
-            <span aria-current="page">{{ dimension | default: product.title }}</span>
-          </nav>
+          <div class="kr-hero__intro">
+            <nav class="kr-crumbs" aria-label="Omrvinky">
+              <a href="/">Domov</a><span aria-hidden="true">/</span>
+              <a href="{{ catalog_url }}">{{ catalog_label }}</a><span aria-hidden="true">/</span>
+              <span aria-current="page">{{ dimension | default: product.title }}</span>
+            </nav>
 
-          <p class="kr-kicker">{{ eyebrow }}</p>
-          <h1 class="kr-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
+            <p class="kr-kicker">{{ eyebrow }}</p>
+            <h1 class="kr-title" id="kpTitle-{{ section.id }}">{{ product.title }}</h1>
 
-          <div class="kr-lead">
-            {%- if family == 'zahrada' -%}
-              Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
-            {%- else -%}
-              Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
-            {%- endif -%}
+            <div class="kr-lead">
+              {%- if family == 'zahrada' -%}
+                Získajte {{ area_m2 }} m² krytého priestoru pre terasu alebo záhradu v čistom oceľovom riešení Koverta. Rozmer aj vyhotovenie vieme prispôsobiť konkrétnemu domu a pozemku.
+              {%- else -%}
+                Priestranný oceľový prístrešok s plochou {{ area_m2 }} m². Rozmer {{ dimension }} je praktické riešenie pre {{ typical_use | default: 'parkovanie osobných vozidiel' }} a vyhotovenie vieme prispôsobiť konkrétnemu domu aj pozemku.
+              {%- endif -%}
+            </div>
           </div>
 
-          <div class="kr-price">
-            <strong data-kp-price>{{ variant.price | money }}</strong>
-            <span>s DPH, dopravou a montážou</span>
+          <div class="kr-commerce" aria-label="Objednať produkt">
+            <div class="kr-price">
+              <span class="kr-price__label">Katalógová cena</span>
+              <strong data-kp-price aria-live="polite">{{ variant.price | money }}</strong>
+              <span class="kr-price__benefit">s DPH, dopravou a montážou</span>
+            </div>
+
+            {% form 'product', product, id: form_id, class: 'kp-buy-form kr-buy' %}
+              <input type="hidden" name="quantity" value="1">
+              {%- if product.variants.size > 1 -%}
+                <div class="kp-option kr-option">
+                  <div class="kr-option__head">
+                    <label for="kpVariant-{{ section.id }}">Farba konštrukcie</label>
+                    <strong data-kp-color-name>{{ variant.title }}</strong>
+                  </div>
+                  <div class="kp-swatches" role="radiogroup" aria-label="Farba konštrukcie" data-kp-swatches>
+                    {%- for v in product.variants -%}
+                      {%- liquid
+                        assign swatch = '#34383a'
+                        if v.title contains 'RAL 9010'
+                          assign swatch = '#f1f0e6'
+                        elsif v.title contains 'RAL 9006'
+                          assign swatch = '#a5a9a8'
+                        elsif v.title contains 'RAL 9007'
+                          assign swatch = '#777b79'
+                        elsif v.title contains 'RAL 7005'
+                          assign swatch = '#5d6364'
+                        elsif v.title contains 'RAL 7016'
+                          assign swatch = '#383e42'
+                        elsif v.title contains 'RAL 9005'
+                          assign swatch = '#101112'
+                        elsif v.title contains 'RAL 8017'
+                          assign swatch = '#46322b'
+                        elsif v.title contains 'RAL 8028'
+                          assign swatch = '#5b4434'
+                        elsif v.title contains 'RAL 6003'
+                          assign swatch = '#4b5140'
+                        elsif v.title contains 'RAL 6005'
+                          assign swatch = '#1f3a2c'
+                        elsif v.title contains 'RAL 6020'
+                          assign swatch = '#37433a'
+                        elsif v.title contains 'RAL 3000'
+                          assign swatch = '#a72920'
+                        elsif v.title contains 'RAL 3009'
+                          assign swatch = '#6d2f2a'
+                        elsif v.title contains 'RAL 5010'
+                          assign swatch = '#124b75'
+                        endif
+                      -%}
+                      <button class="kp-swatch{% if v.id == variant.id %} is-active{% endif %}" type="button" role="radio"
+                        aria-checked="{% if v.id == variant.id %}true{% else %}false{% endif %}"
+                        aria-label="{{ v.title | escape }}" title="{{ v.title | escape }}"
+                        data-kp-swatch data-variant-id="{{ v.id }}" style="--kp-swatch:{{ swatch }}" {% unless v.available %}disabled{% endunless %}>
+                        <span aria-hidden="true"></span>
+                      </button>
+                    {%- endfor -%}
+                  </div>
+                  <select id="kpVariant-{{ section.id }}" name="id" data-kp-variant>
+                    {%- for v in product.variants -%}
+                      <option value="{{ v.id }}" data-price="{{ v.price | money | escape }}" data-available="{{ v.available }}" {% if v.id == variant.id %}selected{% endif %}>
+                        {{ v.title }}{% unless v.available %} — momentálne nedostupné{% endunless %}
+                      </option>
+                    {%- endfor -%}
+                  </select>
+                </div>
+              {%- else -%}
+                <input type="hidden" name="id" value="{{ variant.id }}">
+              {%- endif -%}
+
+              <button class="kp-add kr-add" type="submit" data-kp-add {% unless variant.available %}disabled{% endunless %}>
+                <span data-kp-add-label>{% if variant.available %}Pridať do košíka{% else %}Momentálne nedostupné{% endif %}</span>
+                <strong data-kp-button-price>{{ variant.price | money }}</strong>
+              </button>
+            {% endform %}
+
+            <div class="kr-hero__actions">
+              <a class="k-btn k-btn--ink kr-configure" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a>
+              <a class="k-link kr-measure" href="#ponuka" data-k-dopyt-open>Bezplatné zameranie <span aria-hidden="true">→</span></a>
+            </div>
+            <p class="kr-price-note">Základná katalógová zostava. Doplnky a príprava podkladu sa riešia podľa konkrétneho miesta.</p>
           </div>
-
-          {% form 'product', product, id: form_id, class: 'kp-buy-form kr-buy' %}
-            <input type="hidden" name="quantity" value="1">
-            {%- if product.variants.size > 1 -%}
-              <label class="kp-option kr-option">
-                <span>Farba konštrukcie</span>
-                <select name="id" data-kp-variant>
-                  {%- for v in product.variants -%}
-                    <option value="{{ v.id }}" data-price="{{ v.price | money | escape }}" data-available="{{ v.available }}" {% if v.id == variant.id %}selected{% endif %}>
-                      {{ v.title }}{% unless v.available %} — momentálne nedostupné{% endunless %}
-                    </option>
-                  {%- endfor -%}
-                </select>
-              </label>
-            {%- else -%}
-              <input type="hidden" name="id" value="{{ variant.id }}">
-            {%- endif -%}
-
-            <button class="kp-add kr-add" type="submit" data-kp-add {% unless variant.available %}disabled{% endunless %}>
-              <span data-kp-add-label>{% if variant.available %}Pridať do košíka{% else %}Momentálne nedostupné{% endif %}</span>
-              <strong data-kp-button-price>{{ variant.price | money }}</strong>
-            </button>
-          {% endform %}
-
-          <div class="kr-hero__actions">
-            <a class="k-btn k-btn--line kr-configure" href="{{ configurator_url }}">Upraviť {{ dimension }} v 3D</a>
-            <a class="k-btn k-btn--ghost kr-measure" href="#ponuka" data-k-dopyt-open>Bezplatné zameranie</a>
-          </div>
-          <p class="kr-price-note">Základná katalógová zostava. Doplnky a príprava podkladu sa riešia podľa konkrétneho miesta.</p>
         </div>
 
         <div class="kr-hero__media kp-gallery" data-kp-gallery>
@@ -128,7 +178,7 @@
 
       <ul class="kh-fakty__rad kr-facts" aria-label="Základné informácie">
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ area_m2 }} m²</span><span class="kh-fakty__co">Zastrešená plocha</span><span class="kh-fakty__pod">{{ dimension }}.</span></li>
-        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ typical_use | default: 'Na mieru' }}</span><span class="kh-fakty__co">Typické využitie</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
+        <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">{{ typical_use | default: 'Na mieru' }}</span><span class="kh-fakty__co">{% if family == 'zahrada' %}Priestor pre terasu{% else %}Typické využitie{% endif %}</span><span class="kh-fakty__pod">Rozmer preveríme podľa miesta.</span></li>
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">0 €</span><span class="kh-fakty__co">Zameranie a ponuka</span><span class="kh-fakty__pod">Nezáväzne pred výrobou.</span></li>
         <li class="kh-fakty__polozka"><span class="kh-fakty__cislo">Slovensko</span><span class="kh-fakty__co">Vlastná výroba</span><span class="kh-fakty__pod">Koverta vyrábaná na Slovensku.</span></li>
       </ul>
@@ -203,7 +253,7 @@
       </div>
       <div class="kp-plan" aria-label="Rozmer prístrešku">
         <div class="kp-plan__roof"><span>{{ dimension }}</span>{%- unless family == 'zahrada' -%}<div class="kp-plan__cars" aria-hidden="true"><i></i><i></i></div>{%- endunless -%}</div>
-        <small>Schéma zobrazuje pôdorys rozmeru; vozidlá sú iba orientačné.</small>
+        <small>{% if family == 'zahrada' %}Schéma zobrazuje orientačný pôdorys krytej terasy.{% else %}Schéma zobrazuje pôdorys rozmeru; vozidlá sú iba orientačné.{% endif %}</small>
       </div>
     </div>
   </section>
@@ -211,7 +261,10 @@
   <section class="kp-band kp-config-band">
     <div class="kp-wrap kp-config-card">
       <div><p class="kp-eyebrow">3D konfigurátor</p><h2 class="kp-h2">Pozrite si svoj prístrešok ešte pred objednávkou.</h2><p>Rozmer {{ dimension }} otvoríme rovno prednastavený. V 3D si môžete vyskúšať dostupné farby, výplne a doplnky a lepšie si predstaviť, ako bude prístrešok pôsobiť pri vašom dome.</p><a class="kp-config-card__button" href="{{ configurator_url }}">Otvoriť {{ dimension }} v 3D <span aria-hidden="true">→</span></a></div>
-      <div class="kp-config-card__screen" aria-hidden="true"><div class="kp-config-card__chrome"><i></i><i></i><i></i></div><div class="kp-config-card__scene">KOVERTA<br><strong>3D KONFIGURÁTOR</strong></div></div>
+      <a class="kp-config-card__visual" href="{{ configurator_url }}" aria-label="Otvoriť {{ dimension }} v 3D konfigurátore">
+        {%- if product.featured_media -%}<img src="{{ product.featured_media.preview_image | image_url: width: 1400 }}" width="{{ product.featured_media.preview_image.width }}" height="{{ product.featured_media.preview_image.height }}" alt="" loading="lazy" decoding="async">{%- endif -%}
+        <span><small>Prednastavený rozmer</small><strong>{{ dimension }}</strong></span>
+      </a>
     </div>
   </section>
 

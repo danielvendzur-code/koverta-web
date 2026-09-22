@@ -37,6 +37,8 @@
     const buttonPrice = product.querySelector('[data-kp-button-price]');
     const add = product.querySelector('[data-kp-add]');
     const label = product.querySelector('[data-kp-add-label]');
+    const colorName = product.querySelector('[data-kp-color-name]');
+    const swatches = [...product.querySelectorAll('[data-kp-swatch]')];
     function syncVariant() {
       if (!select) return;
       const option = select.options[select.selectedIndex];
@@ -47,8 +49,32 @@
       if (buttonPrice && formatted) buttonPrice.textContent = formatted;
       if (add) add.disabled = !available;
       if (label) label.textContent = available ? 'Pridať do košíka' : 'Momentálne nedostupné';
+      if (colorName && option) colorName.textContent = option.textContent.replace(/\s+—\s+momentálne nedostupné$/, '').trim();
+      swatches.forEach((swatch) => {
+        const active = swatch.dataset.variantId === select.value;
+        swatch.classList.toggle('is-active', active);
+        swatch.setAttribute('aria-checked', active ? 'true' : 'false');
+        swatch.tabIndex = active ? 0 : -1;
+      });
     }
     select?.addEventListener('change', syncVariant);
+    swatches.forEach((swatch, index) => {
+      swatch.addEventListener('click', () => {
+        if (!select || swatch.disabled) return;
+        select.value = swatch.dataset.variantId;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      swatch.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+        let next = index;
+        do next = (next + direction + swatches.length) % swatches.length;
+        while (swatches[next]?.disabled && next !== index);
+        swatches[next]?.focus();
+        swatches[next]?.click();
+      });
+    });
     syncVariant();
   }
   function boot(root = document) {
