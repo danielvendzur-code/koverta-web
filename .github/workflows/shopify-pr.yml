@@ -1,0 +1,35 @@
+name: Shopify téma — kontrola PR
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '**/*.html'
+      - 'assets/**'
+      - 'shopify-tema/**'
+      - 'tools/shopify-*.js'
+      - 'tools/spolocne-casti.js'
+      - '.github/workflows/shopify*.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shopify-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  kontrola:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vyrobiť a skontrolovať tému
+        run: |
+          set -euo pipefail
+          node tools/spolocne-casti.js --kontrola
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
