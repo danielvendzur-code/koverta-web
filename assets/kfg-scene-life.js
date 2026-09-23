@@ -1031,7 +1031,11 @@ function kvAdresa(kluc, zaloha) {
        snímky líšia osvetlením celého modelu a ten rozdiel sa počíta ako voda.
        Hodnota 'cloud' už nemá tlačidlo, ale renderer jej rozumie a svieti
        ňou rovnako ako dažďom. */
-    return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
+    return {state,prepare,draw,
+      /* Či `draw` niečo nakreslí: auto so svojím dopadovým tieňom, alebo dážď.
+         Vykresľovač podľa toho vie, či musí konštrukciu dekódovať uprostred
+         snímku (kv-render3d, vratné kódovanie hrán) — bez vybavenia netreba. */
+      needsDraw:()=>currentPlan.items.some(i=>loaded.has(i.key))||state.weather==='rain',setFrame(fn){frame=fn;animates=true;run();},
       setWeather(w){state.weather=w;sync();run();if(!raining()&&frame)frame(false);},
       snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
         weather:state.weather,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,step,

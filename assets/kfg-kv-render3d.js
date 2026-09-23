@@ -287,6 +287,32 @@ vec3 ozarenie(vec3 n, vec3 slnko, float zamracene) {
 }
 `;
 
+  /* Vratné kódovanie farby pre vyhladzovanie hrán.
+
+     Štvornásobné MSAA zlučuje vzorky pixela priemerom — a doteraz ho robilo
+     v lineárnom svetle ešte pred filmovou krivkou. Pre tmavý profil na
+     svetlom pozadí je to zlé miesto: pixel, ktorý profil pokrýva zo štvrtiny,
+     vyjde po krivke takmer taký svetlý ako pozadie, zo štyroch úrovní
+     prechodu ostanú na obrazovke dve a hrana stĺpa aj rámu sa láme do
+     schodov. To isté so slnečným odleskom na hrane: jedna presvetlená vzorka
+     prebije tri tmavé a z hrany je svetlá bodka.
+
+     Konštrukcia sa preto zapíše zakódovaná krivkou blízkou tomu, ako farbu
+     vníma oko (x/(1+x), potom gama), zlúčenie prebehne v nej a hneď potom sa
+     farba presne dekóduje späť. Plocha, na ktorej je v pixeli všade to isté,
+     vyjde bit po bite rovnaká — mení sa len to, ako sa zmiešajú hrany. Je to
+     ten istý postup, akým hrany zlučujú herné enginy s HDR. */
+  const KODOVANIE = `
+vec3 zakoduj(vec3 c) {
+  c = max(c, vec3(0.0));
+  return pow(c / (1.0 + c), vec3(1.0 / 2.2));
+}
+vec3 odkoduj(vec3 u) {
+  vec3 y = pow(clamp(u, 0.0, 0.9995), vec3(2.2));
+  return y / (1.0 - y);
+}
+`;
+
   /* Fyzikálne tieňovanie. GGX pre zrkadlovú zložku, Lambert pre rozptýlenú,
      Smithova viditeľnosť a Schlickov Fresnel. Je to ten istý model, ktorý
      používajú Blender, Unreal aj každý poriadny konfigurátor — preto to
@@ -364,7 +390,7 @@ void main() {
 }
 `;
 
-  const FS_HLAVNY = HLAVICKA + OBLOHA + PBR + `
+  const FS_HLAVNY = HLAVICKA + OBLOHA + PBR + KODOVANIE + `
 in vec3 vPoz;
 in vec3 vNorm;
 in vec3 vFarba;
@@ -383,12 +409,14 @@ uniform sampler2D uTienMapa;
 uniform highp sampler2DShadow uTienPorov;
 uniform vec2 uTienKrok;
 uniform int uTienVzoriek;
+uniform float uSnimok;     /* poradie vzorky doostrenia, mení šum tieňa */
 uniform float uOrezavat;
 uniform vec3 uStred;
 uniform float uDosah;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
 uniform float uPodkladDetail;
 uniform float uPodkladSkryt;
+uniform float uKodovat;   /* 1 = nepriehľadná konštrukcia, zapisuje sa zakódovaná */
 
 layout(location = 0) out vec4 oFarba;
 layout(location = 1) out vec4 oNormHlbka;
@@ -441,8 +469,12 @@ float vTieni(vec3 n) {
      pripnutý k obrazovke, kým tieň sa pod ním posúva — pri otáčaní preto
      okraj „pieskoval". Bez otáčania je okraj stály; filtrované čítania
      ho aj z ôsmich vzoriek vyhladia. */
+  /* Posun o uSnimok: každá vzorka doostrenia dostane iné pootočenie.
+     Bez neho mal pixel v každom z dvanástich snímok to isté a šum sa
+     namiesto spriemerovania vpálil do obrazu — na čele lemovania bola
+     jemná šachovnica. */
   float uhol = uTienVzoriek >= 12
-    ? fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) * 6.2831853
+    ? fract(52.9829189 * fract(dot(gl_FragCoord.xy + 5.588238 * uSnimok, vec2(0.06711056, 0.00583715)))) * 6.2831853
     : 0.0;
   float c = cos(uhol), si = sin(uhol);
   mat2 rot = mat2(c, -si, si, c);
@@ -748,7 +780,7 @@ void main() {
     farba = mix(dalka, farba, zanik);
   }
 
-  oFarba = vec4(farba, priehladnost);
+  oFarba = vec4(uKodovat > 0.5 ? zakoduj(farba) : farba, priehladnost);
   oNormHlbka = vec4(n * 0.5 + 0.5, 1.0);
 }
 `;
@@ -870,8 +902,9 @@ void main() {
 }
 `;
 
-  const FS_TON = HLAVICKA + `
+  const FS_TON = HLAVICKA + KODOVANIE + `
 in vec2 vUV;
+uniform float uKodovane;
 uniform sampler2D uScena;
 uniform sampler2D uAO;
 uniform sampler2D uZiara;
@@ -894,6 +927,7 @@ vec3 aces(vec3 x) {
 
 void main() {
   vec3 c = texture(uScena, vUV).rgb;
+  if (uKodovane > 0.5) c = odkoduj(c);
   float ao = mix(1.0, texture(uAO, vUV).r, uSilaAO);
   if (uLadenieTon == 1) { oFarba = vec4(vec3(ao), 1.0); return; }
   if (uLadenieTon == 2) { oFarba = vec4(texture(uZiara, vUV).rgb, 1.0); return; }
@@ -922,12 +956,13 @@ void main() {
 }
 `;
 
-  const FS_POZADIE = HLAVICKA + OBLOHA + `
+  const FS_POZADIE = HLAVICKA + OBLOHA + KODOVANIE + `
 in vec2 vUV;
 uniform mat4 uInvPohladProjekcia;
 uniform vec3 uOko;
 uniform vec3 uSlnko;
 uniform float uZamracene;
+uniform float uKodovat;
 layout(location = 0) out vec4 oFarba;
 layout(location = 1) out vec4 oNormHlbka;
 void main() {
@@ -936,13 +971,15 @@ void main() {
   vec4 blizko = uInvPohladProjekcia * vec4(vUV * 2.0 - 1.0, -1.0, 1.0);
   vec4 daleko = uInvPohladProjekcia * vec4(vUV * 2.0 - 1.0,  1.0, 1.0);
   vec3 dir = normalize(daleko.xyz / daleko.w - blizko.xyz / blizko.w);
-  oFarba = vec4(farbaOblohy(dir, uSlnko, uZamracene), 1.0);
+  vec3 c = farbaOblohy(dir, uSlnko, uZamracene);
+  oFarba = vec4(uKodovat > 0.5 ? zakoduj(c) : c, 1.0);
   oNormHlbka = vec4(0.5, 0.5, 1.0, 0.0);
 }
 `;
 
-  const FS_ZIARA = HLAVICKA + `
+  const FS_ZIARA = HLAVICKA + KODOVANIE + `
 in vec2 vUV;
+uniform float uKodovane;
 uniform sampler2D uZdroj;
 uniform vec2 uKrok;
 uniform float uPrah;
@@ -953,10 +990,27 @@ void main() {
   for (int y = -4; y <= 4; y++) for (int x = -4; x <= 4; x++) {
     float v = exp(-float(x * x + y * y) / 10.0);
     vec3 c = texture(uZdroj, vUV + vec2(float(x), float(y)) * uKrok).rgb;
+    /* Pod prahom 1,0 (zakódovane 0,7297) vzorka k žiare nič nepridá;
+       dekódovať sa oplatí len tie nad ním — ušetrí to väčšinu mocnín. */
+    if (uKodovane > 0.5) c = max(c.r, max(c.g, c.b)) > 0.7297 ? odkoduj(c) : vec3(0.0);
     s += max(c - vec3(uPrah), vec3(0.0)) * v;
     w += v;
   }
   oFarba = vec4(s / w, 1.0);
+}
+`;
+
+  /* Dekódovanie späť do viacvzorkovej pamäte. Konštrukcia je už zlúčená vo
+     vnímanom priestore; autá, dopadový tieň, sklo a dážď sa na ňu potom
+     kreslia a miešajú v lineárnom svetle ako doteraz, takže ich vzhľad sa
+     nemení. Hĺbka ostáva po vzorkách, auto sa za stĺp schová presne. */
+  const FS_DEKODUJ = HLAVICKA + KODOVANIE + `
+in vec2 vUV;
+uniform sampler2D uZdroj;
+layout(location = 0) out vec4 oFarba;
+void main() {
+  vec4 c = texture(uZdroj, vUV);
+  oFarba = vec4(odkoduj(c.rgb), c.a);
 }
 `;
 
@@ -1069,11 +1123,13 @@ void main() {
      Najbližšia preto, aby hrana stĺpa proti pozadiu vzala pohyb stĺpa,
      nie pozadia — inak by za ňou ostal lem. */
   vec3 m1 = vec3(0.0), m2 = vec3(0.0);
+  vec3 mn = vec3(1e9), mx3 = vec3(-1e9);
   float hl = 1.0;
   for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
     vec2 o = vec2(float(x), float(y)) * uTexel;
     vec3 c = doYCoCg(texture(uAktualny, vUV + o).rgb);
     m1 += c; m2 += c * c;
+    mn = min(mn, c); mx3 = max(mx3, c);
     /* Hĺbka stačí v kríži — päť čítaní namiesto deviatich. */
     if (x == 0 || y == 0) hl = min(hl, texture(uHlbka, vUV + o).r);
   }
@@ -1090,13 +1146,18 @@ void main() {
   vec3 hist = doYCoCg(historia(predUV));
 
   /* Orezanie histórie do obalu aktuálneho okolia (variance clipping).
-     1,0 sigma drží obraz stabilný a pritom nenechá zastaranú farbu. */
-  vec3 lo = m1 - sigma * 1.0, hi = m1 + sigma * 1.0;
+     Pri 1,0 sigma bol obal na hrane taký tesný, že história sa zahodila
+     skoro celá a hrana ostala zrnitá ako jediný snímok. 1,25 je bežná
+     hodnota; obal sa navyše nepustí za rozsah okolia (min/max), takže
+     nevznikne svetlý ani tmavý lem. */
+  vec3 lo = max(m1 - sigma * 1.25, mn), hi = min(m1 + sigma * 1.25, mx3);
   vec3 stred = 0.5 * (hi + lo), polo = 0.5 * (hi - lo) + 1e-4;
   vec3 v = hist - stred;
   vec3 a = abs(v / polo);
   float mx = max(a.x, max(a.y, a.z));
   if (mx > 1.0) hist = stred + v / mx;
+  /* Catmull-Rom smie na hrane prestreliť; za rozsah okolia nie. */
+  hist = clamp(hist, mn, mx3);
 
   /* Váha aktuálneho snímku. Desatina drží rebrá strechy pokojné; pri
      rýchlom pohybe sa zvýši, aby obraz neťahal. */
@@ -1197,7 +1258,8 @@ void main() {
         ziara: program(gl, VS_PLOCHA, FS_ZIARA),
         ton: program(gl, VS_PLOCHA, FS_TON),
         kopia: program(gl, VS_PLOCHA, FS_KOPIA),
-        taa: program(gl, VS_PLOCHA, FS_TAA)
+        taa: program(gl, VS_PLOCHA, FS_TAA),
+        dekoduj: program(gl, VS_PLOCHA, FS_DEKODUJ)
       };
     } catch (e) {
       if (global.console && console.warn) console.warn('kv-render3d:', e.message);
@@ -1235,7 +1297,12 @@ void main() {
       kontrast: 1.0,
       /* Doostrovanie: koľko posunutých snímok sa najviac zbiera. Nula alebo
          jedna znamená jeden snímok, teda správanie bez doostrovania. */
-      maxDoostrenia: 12,
+      /* Šestnásť: s Gaussovým filtrom (vzorkaFiltra) je to hrana bez
+         viditeľných stupňov aj na monitore s hustotou 1. */
+      maxDoostrenia: 16,
+      /* Vratné kódovanie konštrukcie pred zlúčením MSAA (KODOVANIE).
+         `false` vráti zlučovanie v lineárnom svetle — na porovnanie. */
+      kodovanie: true,
       /* Časové vyhladzovanie v pohybe. `false` ho vypne (porovnanie, ladenie). */
       taa: true,
       taaPlatna: false,        /* či história zodpovedá tomuto plátnu a scéne */
@@ -1691,10 +1758,30 @@ void main() {
        na rebro. Štyri vzorky MSAA z nej nespravia hladký tón, ale bodky —
        raz sa trafí vrch rebra, raz jeho tmavý bok. Rovnaký problém má
        lemovanie, skrutky aj vzdialené mreže. */
-    function posunutaKamera(k, index, sirka, vyska) {
-      if (!index) return k;
-      const dx = (halton(index + 1, 2) - 0.5) * 2 / sirka;
-      const dy = (halton(index + 1, 3) - 0.5) * 2 / vyska;
+    /* Posun a váha vzorky doostrenia v pokoji — rekonštrukčný filter.
+
+       Doteraz mala každá z dvanástich vzoriek rovnakú váhu a ležala v tom
+       istom pixeli: to je filter v tvare štvorca, ostrý ako pixel sám. Hrana
+       z neho vyjde presne, ale so schodmi, ktoré oko pri tenkom profile na
+       svetlom pozadí číta ako rastrovanie. Offline renderery (Cycles,
+       Arnold, V-Ray) preto skladajú vzorky Gaussovým filtrom širokým
+       jeden a pol pixela: vzorky siahajú kúsok do susedov a čím ďalej od
+       stredu, tým menej vážia. Hrana je potom plynulá ako na fotografii
+       a plocha ostáva ostrá — jej farba sa od suseda nelíši. */
+    const FILTER_POLOMER = 0.85;   /* px, kam siahajú vzorky */
+    const FILTER_SIGMA = 0.42;     /* px, šírka Gaussovho zvona */
+    function vzorkaFiltra(n) {
+      if (!n) return { dx: 0, dy: 0, vaha: 1 };
+      const dx = (halton(n + 1, 2) - 0.5) * 2 * FILTER_POLOMER;
+      const dy = (halton(n + 1, 3) - 0.5) * 2 * FILTER_POLOMER;
+      return { dx, dy, vaha: Math.exp(-(dx * dx + dy * dy) / (2 * FILTER_SIGMA * FILTER_SIGMA)) };
+    }
+
+    /* Kamera posunutá o (dxPx, dyPx) pixelov. */
+    function posunutaKamera(k, dxPx, dyPx, sirka, vyska) {
+      if (!dxPx && !dyPx) return k;
+      const dx = dxPx * 2 / sirka;
+      const dy = dyPx * 2 / vyska;
       const pr = new Float32Array(k.projekcia);
       pr[8] += dx;
       pr[9] += dy;
@@ -1724,7 +1811,7 @@ void main() {
       /* Časové vyhladzovanie beží v pohybe a v prvých snímkoch pokoja. Tie
          majú v zbierke len pár vzoriek — menej, než už nazbierala história
          z pohybu —, takže by sa po pustení obraz na okamih zhoršil. Od
-         šiestej vzorky je zbierka rovnako hladká a presnejšia, ide na
+         ôsmej vzorky je zbierka rovnako hladká a presnejšia, ide na
          plátno ona. */
       /* V pokoji len hneď po pustení otáčania. Keď sa v pokoji zmení scéna
          bez pohybu kamery — pribudne auto, zmení sa farba —, história ju
@@ -1735,13 +1822,21 @@ void main() {
         stav.taaDoostrenie = Boolean(stav.taaZPohybu && stav.taaPlatna);
         stav.taaZPohybu = false;
       }
-      const taa = stav.taa !== false && (pohyb || (n < 6 && stav.taaDoostrenie));
+      const taa = stav.taa !== false && (pohyb || (n < 8 && stav.taaDoostrenie));
       if (!taa && !pohyb && n === 0) stav.taaPlatna = false;
       /* V pohybe je každý snímok posunutý o iný zlomok pixela — z toho
          časové vyhladzovanie skladá vzorky. V pokoji posun určuje poradie
          vzorky doostrovania ako doteraz. */
-      const posun = pohyb && stav.taa !== false ? 1 + (stav.taaIndex++ % 8) : n;
-      const kam = posunutaKamera(stav.kamera, posun, sirka, vyska);
+      let posunX = 0, posunY = 0, vahaVzorky = 1;
+      if (pohyb && stav.taa !== false) {
+        const i = 2 + (stav.taaIndex++ % 8);
+        posunX = halton(i, 2) - 0.5;
+        posunY = halton(i, 3) - 0.5;
+      } else if (!pohyb) {
+        const v = vzorkaFiltra(n);
+        posunX = v.dx; posunY = v.dy; vahaVzorky = v.vaha;
+      }
+      const kam = posunutaKamera(stav.kamera, posunX, posunY, sirka, vyska);
       const t = pripravTien();
       if (!stav.tienPolomer) slnkoMatica();
       const sm = slnkoMatica();
@@ -1779,6 +1874,18 @@ void main() {
       }
 
       /* --- 2 · hlavný priechod ----------------------------------------- */
+      /* `aktivne` povie vykresľovač vybavenia: keď v scéne nie je auto ani
+         dážď, nemá čo kresliť a konštrukcia sa nemusí dekódovať uprostred
+         snímku. Keď to nepovie, počíta sa s tým, že kreslí. */
+      const navyse = Boolean(stav.kresliNavyse) && stav.kresliNavyse.aktivne !== false;
+      const priehladne = s.pocetCelkom > s.pocetNepriehl;
+      /* Len v pokoji. V pohybe skladá hranu časové vyhladzovanie zo
+         snímok posunutých o zlomok pixela; kódované zlúčenie tam zväčšilo
+         rozdiel medzi snímkami na hrane a TAA ho nestihlo zahladiť — hrana
+         stĺpa pri otáčaní zrnila. Pri pustení sa oba spôsoby prelínajú
+         cez históriu TAA, takže nevznikne skok. */
+      const kodovat = stav.kodovanie !== false && !pohyb;
+      let kodovane = kodovat;
       gl.bindFramebuffer(gl.FRAMEBUFFER, c.msaa);
       gl.viewport(0, 0, sirka, vyska);
       gl.clearColor(0, 0, 0, 0);
@@ -1796,6 +1903,7 @@ void main() {
         gl.uniform1f(p.u.uZamracene, stav.zamracene);
         gl.uniform3fv(p.u.uOdrazZeme, stav.odrazZeme());
         gl.uniform1f(p.u.uPozadie, 1);
+        gl.uniform1f(p.u.uKodovat, kodovat ? 1 : 0);
       });
       gl.enable(gl.DEPTH_TEST);
       gl.depthMask(true);
@@ -1810,6 +1918,7 @@ void main() {
       gl.uniform1f(P.u.uZamracene, stav.zamracene);
       gl.uniform3fv(P.u.uOdrazZeme, stav.odrazZeme());
       gl.uniform1f(P.u.uPozadie, 0);
+      gl.uniform1f(P.u.uKodovat, kodovat ? 1 : 0);
       gl.uniform1i(P.u.uLadenie, stav.ladenie | 0);
       gl.uniform2f(P.u.uTienKrok, 2.2 / t.rozmer, 2.2 / t.rozmer);
       gl.uniform1f(P.u.uPosunPoNormale, stav.posunPoNormale);
@@ -1825,6 +1934,7 @@ void main() {
       gl.uniform1f(P.u.uKrokPoradia, 6.0e-6);
 
       gl.uniform1i(P.u.uTienVzoriek, stav.kvalita.tienVzoriek);
+      gl.uniform1f(P.u.uSnimok, n);
       const oz = stav.ozarenieSmery();
       gl.uniform3fv(P.u.uOzarHore, oz.hore);
       gl.uniform3fv(P.u.uOzarBok, oz.bok);
@@ -1864,10 +1974,40 @@ void main() {
       gl.depthMask(true);
       gl.drawArrays(gl.TRIANGLES, 0, s.pocetNepriehl);
 
+      /* Konštrukcia je nakreslená zakódovaná. Ak sa na ňu bude ešte niečo
+         miešať — autá s dopadovým tieňom, sklo, dážď —, zlúči sa a dekóduje
+         späť do lineárneho svetla hneď teraz; to ostatné sa potom mieša
+         presne ako doteraz. Bez nich ostane zakódovaná až do tónovania. */
+      if (kodovane && (navyse || priehladne)) {
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, c.msaa);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, c.rozlisFB);
+        gl.readBuffer(gl.COLOR_ATTACHMENT0);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.blitFramebuffer(0, 0, sirka, vyska, 0, 0, sirka, vyska, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, c.msaa);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+        gl.disable(gl.DEPTH_TEST);
+        gl.depthMask(false);
+        plocha(stav.programy.dekoduj, () => {
+          gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, c.farbaT);
+          gl.uniform1i(stav.programy.dekoduj.u.uZdroj, 0);
+        });
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthMask(true);
+        /* Späť stav hlavného priechodu: jednotka 0 nesie tieňovú mapu. */
+        gl.useProgram(P);
+        gl.uniform1f(P.u.uKodovat, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, t.t);
+        gl.bindVertexArray(s.vao);
+        kodovane = false;
+      }
+
       /* Sem sa vojde to, čo do scény patrí, ale nie je konštrukcia: autá,
          posedenie, dopadový tieň. Kreslí sa do tej istej vyrovnávacej pamäte,
          takže má rovnaké vyhladzovanie aj rovnakú hĺbku ako prístrešok. */
-      if (stav.kresliNavyse) {
+      if (navyse) {
         /* Cudzí vykresľovač píše len farbu, nie normály. Kým kreslí, druhý
            výstup sa musí odpojiť — inak WebGL2 kresbu odmietne s tým, že
            aktívnemu výstupu chýba zodpovedajúci výstup shadera. Jeho pixely
@@ -1884,7 +2024,7 @@ void main() {
         gl.disable(gl.BLEND);
       }
 
-      if (s.pocetCelkom > s.pocetNepriehl) {
+      if (priehladne) {
         gl.enable(gl.BLEND);
         gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.depthMask(false);
@@ -1894,7 +2034,7 @@ void main() {
       }
 
       /* Dážď, odtekajúca voda a všetko priesvitné ide až po skle. */
-      if (stav.kresliNavyse) {
+      if (navyse) {
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.bindVertexArray(null);
         stav.kresliNavyse('priehladne', gl, kam);
@@ -1984,6 +2124,7 @@ void main() {
         gl.uniform1i(p.u.uZdroj, 0);
         gl.uniform2f(p.u.uKrok, 1 / c.zw, 1 / c.zh);
         gl.uniform1f(p.u.uPrah, 1.0);
+        gl.uniform1f(p.u.uKodovane, kodovane ? 1 : 0);
       });
 
       /* --- 7 · tónovanie do zbierky ------------------------------------- */
@@ -1994,12 +2135,15 @@ void main() {
       gl.bindFramebuffer(gl.FRAMEBUFFER, c.zbierFB);
       gl.viewport(0, 0, sirka, vyska);
       if (n > 0) {
-        /* Váha 1/(n+1) na novom snímku a zvyšok na doterajšom priemere dá
-           presne priemer všetkých n+1 snímok. */
+        /* Vážený priemer: nový snímok dostane podiel svojej váhy na súčte
+           všetkých doterajších, zvyšok ostane doterajšiemu priemeru. Pri
+           rovnakých váhach je to presne 1/(n+1), ako bolo. */
+        stav.vahaZbierky = (stav.vahaZbierky || 1) + vahaVzorky;
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE_MINUS_CONSTANT_ALPHA);
-        gl.blendColor(0, 0, 0, 1 / (n + 1));
+        gl.blendColor(0, 0, 0, vahaVzorky / stav.vahaZbierky);
       } else {
+        stav.vahaZbierky = 1;
         gl.disable(gl.BLEND);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -2013,6 +2157,7 @@ void main() {
         gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, c.ziaraT);
         gl.uniform1i(p.u.uZiara, 2);
         gl.uniform1f(p.u.uSilaAO, stav.silaAO);
+        gl.uniform1f(p.u.uKodovane, kodovane ? 1 : 0);
         gl.uniform1f(p.u.uSilaZiary, stav.silaZiary);
         gl.uniform1f(p.u.uVineta, stav.vineta);
         gl.uniform1f(p.u.uExpozicia, stav.expozicia);
