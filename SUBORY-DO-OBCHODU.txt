@@ -877,6 +877,9 @@ patio-bistro.bin.gz	konfigurator/scene-assets/patio-bistro.bin.gz
 patio-sofa.bin.gz	konfigurator/scene-assets/patio-sofa.bin.gz
 patio-sofaset.bin.gz	konfigurator/scene-assets/patio-sofaset.bin.gz
 porsche-911.bin.gz	konfigurator/scene-assets/porsche-911.bin.gz
+produkty-3d-pristresok-koverta-2500x5200.webp	assets/produkty-3d/pristresok-koverta-2500x5200.webp
+produkty-3d-pristresok-koverta-5000x5200.webp	assets/produkty-3d/pristresok-koverta-5000x5200.webp
+produkty-3d-zahradny-pristresok-koverta-3000x3000.webp	assets/produkty-3d/zahradny-pristresok-koverta-3000x3000.webp
 soltec-accessory-g1.jpg	assets/soltec-accessory-g1.jpg
 soltec-accessory-led-w640.webp	assets/soltec-accessory-led-w640.webp
 soltec-accessory-led.jpg	assets/soltec-accessory-led.jpg
