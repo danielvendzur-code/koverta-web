@@ -13984,3 +13984,33 @@ body.ma-kh-modal { overflow: hidden; }
 /* Stránka rozmeru: popisok nad tmavou galériou a čísla položiek čitateľné. */
 .kr-page .kr-gallery .k-eyebrow { color: rgba(255, 255, 255, .72); }
 .kr-page .kr-included__n { color: #8a6d00; }
+
+/* --- Parametre a porovnanie (prístrešky pre autá) ------------------------ */
+.k .kh-porov { padding-block: var(--k-band-tight); }
+.k .kh-porov__param {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px;
+  margin: 0 0 clamp(20px, 2.4vw, 32px); border: 1px solid var(--k-hair); border-radius: var(--k-r);
+  overflow: hidden; background: var(--k-hair);
+}
+.k .kh-porov__param div { display: grid; gap: 4px; padding: 18px 20px; background: var(--k-white, #fff); }
+.k .kh-porov__param dt { font: 650 clamp(22px, 2vw, 30px)/1.1 var(--k-head); letter-spacing: -0.02em; color: var(--k-ink); }
+.k .kh-porov__param dd { margin: 0; font-size: 14px; line-height: 1.4; color: var(--k-grey); }
+.k .kh-porov__tab { border: 1px solid var(--k-hair); border-radius: var(--k-r); overflow: hidden; background: var(--k-white, #fff); }
+.k .kh-porov__hlava, .k .kh-porov__riadok {
+  display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px;
+  padding: 14px 20px; border-top: 1px solid var(--k-hair); font-size: 15px; line-height: 1.45;
+}
+.k .kh-porov__hlava { border-top: 0; background: var(--k-bone); font: 700 12px/1.2 var(--k-body); letter-spacing: .12em; text-transform: uppercase; color: var(--k-grey); }
+.k .kh-porov__hlava span:nth-child(2) { color: var(--k-ink); }
+.k .kh-porov__riadok span:first-child { font-weight: 650; color: var(--k-ink); }
+.k .kh-porov__riadok span:nth-child(2) { color: var(--k-ink); padding-left: 22px; position: relative; }
+.k .kh-porov__riadok span:nth-child(2)::before { content: ""; position: absolute; left: 0; top: .45em; width: 10px; height: 10px; border-radius: 50%; background: var(--k-amber); }
+.k .kh-porov__riadok span:nth-child(3) { color: var(--k-grey); }
+@media (max-width: 899px) {
+  .k .kh-porov__param { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-porov__param div:last-child { grid-column: 1 / -1; }
+  .k .kh-porov__param dt { font-size: 20px; white-space: nowrap; }
+  .k .kh-porov__hlava { display: none; }
+  .k .kh-porov__riadok { grid-template-columns: 1fr; gap: 4px; padding: 14px 16px; }
+  .k .kh-porov__riadok span:nth-child(3)::before { content: "Stavebnica: "; font-weight: 600; }
+}
