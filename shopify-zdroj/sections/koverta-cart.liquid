@@ -27,7 +27,7 @@
                 <a class="kp-cart__nazov" href="{{ item.url }}">{{ item.product.title }}</a>
                 {%- unless item.variant.title == 'Default Title' -%}<p class="kp-cart__variant">Farba: {{ item.variant.title }}</p>{%- endunless -%}
                 {%- for p in item.properties -%}{%- unless p.last == blank or p.first contains '_' -%}<p class="kp-cart__variant">{{ p.first }}: {{ p.last }}</p>{%- endunless -%}{%- endfor -%}
-                <p class="kp-cart__jedna">{{ item.final_price | money }} / ks · doprava a montáž v cene</p>
+                <p class="kp-cart__jedna">{% render 'koverta-cena', centy: item.final_price %} / ks · doprava a montáž v cene</p>
                 <div class="kp-cart__riadok">
                   <div class="kp-cart__pocet" data-kp-pocet>
                     <button type="button" data-kp-minus aria-label="Menej">−</button>
@@ -37,7 +37,7 @@
                   <a class="kp-cart__odstranit" href="{{ item.url_to_remove }}">Odstrániť</a>
                 </div>
               </div>
-              <strong class="kp-cart__cena">{{ item.final_line_price | money }}</strong>
+              <strong class="kp-cart__cena">{% render 'koverta-cena', centy: item.final_line_price %}</strong>
             </article>
           {%- endfor -%}
           <button type="submit" name="update" class="kp-cart__aktualizovat" data-kp-update>Aktualizovať košík</button>
@@ -46,17 +46,17 @@
         <aside class="kp-cart__suhrn" aria-label="Súhrn objednávky">
           <h2>Súhrn</h2>
           <dl>
-            <div><dt>Medzisúčet</dt><dd>{{ cart.items_subtotal_price | money }}</dd></div>
+            <div><dt>Medzisúčet</dt><dd>{% render 'koverta-cena', centy: cart.items_subtotal_price %}</dd></div>
             {%- if cart.cart_level_discount_applications.size > 0 -%}
               {%- for zlava in cart.cart_level_discount_applications -%}
-                <div><dt>{{ zlava.title }}</dt><dd>−{{ zlava.total_allocated_amount | money }}</dd></div>
+                <div><dt>{{ zlava.title }}</dt><dd>−{% render 'koverta-cena', centy: zlava.total_allocated_amount %}</dd></div>
               {%- endfor -%}
             {%- endif -%}
             <div><dt>Doprava a montáž</dt><dd>v cene</dd></div>
-            <div class="kp-cart__spolu"><dt>Spolu s DPH</dt><dd>{{ cart.total_price | money }}</dd></div>
+            <div class="kp-cart__spolu"><dt>Spolu s DPH</dt><dd>{% render 'koverta-cena', centy: cart.total_price %}</dd></div>
           </dl>
           <div class="kp-cart__pokladna">
-            <button type="submit" name="checkout" class="k-btn k-btn--primary kp-cart__checkout">Pokračovať k objednávke</button>
+            <a href="/checkout" name="checkout" class="k-btn k-btn--primary kp-cart__checkout">Pokračovať k objednávke</a>
           </div>
           <ul class="kp-cart__istoty">
             <li>Pred výrobou vám zavoláme a overíme miesto montáže</li>
@@ -70,15 +70,26 @@
           var f = document.querySelector('[data-kp-cart]');
           if (!f) return;
           f.querySelector('[data-kp-update]').hidden = true;
-          var odoslat = function () {
-            var b = f.querySelector('[data-kp-update]');
-            if (f.requestSubmit) f.requestSubmit(b); else b.click();
+          /* Počet sa mení cez /cart/change.js (obyčajné odoslanie formulára
+             môže Shopify zastaviť overením „ste človek“), potom sa košík
+             načíta znova. Bez JavaScriptu ostáva tlačidlo Aktualizovať. */
+          var koren = (window.Shopify && Shopify.routes && Shopify.routes.root) || '/';
+          var zmen = function (riadok, pocet, prvky) {
+            prvky.forEach(function (x) { x.disabled = true; });
+            f.classList.add('je-zmena');
+            fetch(koren + 'cart/change.js', {
+              method: 'POST', credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ line: riadok, quantity: pocet })
+            }).then(function () { window.location.reload(); })
+              .catch(function () { var b = f.querySelector('[data-kp-update]'); b.hidden = false; b.click(); });
           };
-          f.querySelectorAll('[data-kp-pocet]').forEach(function (s) {
+          f.querySelectorAll('[data-kp-pocet]').forEach(function (s, n) {
             var i = s.querySelector('input');
-            s.querySelector('[data-kp-minus]').addEventListener('click', function () { i.value = Math.max(0, (+i.value || 0) - 1); odoslat(); });
-            s.querySelector('[data-kp-plus]').addEventListener('click', function () { i.value = (+i.value || 0) + 1; odoslat(); });
-            i.addEventListener('change', odoslat);
+            var prvky = [].slice.call(s.querySelectorAll('button, input'));
+            s.querySelector('[data-kp-minus]').addEventListener('click', function () { zmen(n + 1, Math.max(0, (+i.value || 0) - 1), prvky); });
+            s.querySelector('[data-kp-plus]').addEventListener('click', function () { zmen(n + 1, (+i.value || 0) + 1, prvky); });
+            i.addEventListener('change', function () { zmen(n + 1, Math.max(0, parseInt(i.value, 10) || 0), prvky); });
           });
         })();
       </script>

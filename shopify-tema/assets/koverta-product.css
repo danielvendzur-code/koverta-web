@@ -404,3 +404,5 @@
   .kp-cart .kp-cart__cena { grid-column: 2; padding-top: 0; }
   .kp-cart__riadok { gap: 14px; margin-top: 8px; }
 }
+.kp-cart__grid.je-zmena .kp-cart__polozky { opacity: .55; pointer-events: none; transition: opacity 150ms; }
+.kp-cart a.kp-cart__checkout { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
