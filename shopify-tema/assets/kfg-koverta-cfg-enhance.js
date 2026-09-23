@@ -647,3 +647,14 @@
      existovať — skúsime to znovu, keď dobehne. */
   window.addEventListener('load', function () { poslednyStav = null; prepocitaj(); });
 })();
+
+/* --- Vybraný produkt v zábere --------------------------------------------
+   Na telefóne je prepínač produktu vodorovne posúvaný pás. Keď niekto príde
+   rovno na pergolu (posledná karta), vybraná karta by bola mimo obrazovky —
+   posunieme pás tak, aby bola vidieť. Stránka sa pritom nehýbe. */
+(function kvVybranyVZabere() {
+  var pas = document.querySelector('.kv-cfg__tabs');
+  var vybrany = pas && pas.querySelector('[aria-current="page"]');
+  if (!pas || !vybrany || pas.scrollWidth <= pas.clientWidth) return;
+  pas.scrollLeft = Math.max(0, vybrany.offsetLeft - pas.offsetLeft - 16);
+})();

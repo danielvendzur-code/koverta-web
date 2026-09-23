@@ -370,7 +370,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 <link rel="stylesheet" href="../assets/koverta-2026.css?v=4b17240aaf">
 <link rel="stylesheet" href="./soltec-premium.css?v=d1f36340d9">
 <!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
-<link rel="stylesheet" href="./koverta-cfg-skin.css?v=7e969b9807">
+<link rel="stylesheet" href="./koverta-cfg-skin.css?v=0b52ba738f">
 <style>
   /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
      text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
@@ -596,6 +596,11 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   </aside>
 </header>
 
+<!-- Prepínač produktu aj výzva na celú obrazovku sú súčasťou <main>: téma
+     Shopify preberá zo stránky len obsah <main> a všetko medzi hlavičkou a ním
+     sa stratilo — obchod potom ukazoval len predvolený prístrešok Koverta
+     bez možnosti prepnúť na Soltec, terasu, záhradu či pergolu. -->
+<main id="kv-root">
 <!-- Prepínač produktu. Predtým stál v hlavičke namiesto navigácie — teraz je
      hlavička rovnaká ako na zvyšku webu a produkt sa vyberá tu, nad nástrojom.
      Odkaz „Katalóg a ceny na koverta.sk" majiteľ odstránil: ceny sú priamo
@@ -670,7 +675,6 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   </div>
 </div>
 
-<main id="kv-root">
   <!-- Nadpis a úvod stránky pre čítačku, ktorá nespúšťa skript: samotný
        konfigurátor sa vykresľuje až skriptom nižšie a bez neho by stránka
        nemala ani nadpis. Keď skript nabehne, tento blok zmizne a nahradí
@@ -826,7 +830,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 </div>
 </main>
 
-<script src="./cfg-pages.js?v=a897681ef6"></script>
+<script src="./cfg-pages.js?v=61d6e5f1fd"></script>
 <script>
 (function () {
   var PAGES = window.KV_PAGES || {};
@@ -895,7 +899,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 
 <!-- Doplnky ku konfigurátoru: zadanie rozmeru číslom, fullscreen bez scrollovania.
      Nadstavba nad runtime, nič v ňom neprepisuje. -->
-<script src="./koverta-cfg-enhance.js?v=1088d8e7d3"></script>
+<script src="./koverta-cfg-enhance.js?v=7eb780f35b"></script>
 
 <!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
      ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
