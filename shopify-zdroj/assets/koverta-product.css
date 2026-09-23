@@ -87,17 +87,13 @@
 .kp-farba__vzor.is-active { outline-color: var(--k-ink); }
 .kp-farba__vzor:focus-visible { outline-color: var(--k-amber-deep); }
 .kp-farba__vzor[disabled] { opacity: .3; cursor: not-allowed; }
-/* Jedno hlavné tlačidlo; ponuka a konfigurátor sú pod ním ako pokojné
-   textové odkazy — tri rovnako veľké tlačidlá pod sebou pôsobili ťažko. */
-.kp .kp-kosik { width: 100%; min-height: 56px; margin-top: 20px; justify-content: center; border-radius: var(--k-r-pill); font-size: 16px; }
-.kp-akcie { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 26px; margin: 12px 0 0; }
-.kp .kp-linka {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 40px;
-  color: var(--k-ink); font: 600 15px/1.2 var(--k-head); text-decoration: underline;
-  text-underline-offset: 4px; text-decoration-color: rgba(18,23,26,.3);
-}
-.kp .kp-linka:hover { text-decoration-color: var(--k-ink); }
-.kp .kp-linka svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+/* Tri rovnako veľké tlačidlá: košík plný, ponuka a konfigurátor
+   ohraničené (prianie majiteľa). */
+.kp .kp-kosik, .kp .kp-ponuka, .kp .kp-3d { width: 100%; min-height: 56px; justify-content: center; border-radius: var(--k-r-pill); font-size: 16px; }
+.kp .kp-kosik { margin-top: 20px; }
+.kp-akcie { display: grid; gap: 10px; margin: 10px 0 0; }
+.kp .kp-ponuka, .kp .kp-3d { background: transparent; }
+.kp .kp-3d svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .kp .kp-usp { display: grid; gap: 10px; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--k-hair); list-style: none; }
 .kp-usp li { display: flex; align-items: center; gap: 12px; color: var(--k-ink); font: 400 14.5px/1.35 var(--k-body); }
 .kp-usp svg { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--k-ink); stroke-width: 1.5; }
