@@ -1790,7 +1790,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
         foto: './assets/soltec-pergola-pri-bazene-antracit.jpg',
-        preco: 'Otočné lamely 0 – 135°: tieň, prevetranie alebo zavretá strecha podľa počasia. Modul do 45 m².' },
+        preco: 'Otočné lamely: tieň, prevetranie alebo zavretá strecha podľa počasia. Jeden modul až 6 m široký alebo 9,3 m dlhý.' },
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
         foto: './assets/soltec-pergola-plna-strecha-pri-dome.webp',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
@@ -3598,9 +3598,21 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
        2,65 MB, ktoré návštevník na telefóne nikdy neuvidí, kým na menu
        neťukne. Držia sa preto rovnako ako v mega menu a `src` dostanú až pri
        otvorení. */
+    /* Posledná časť adresy sa porovnáva celá: na Shopify má Carport Soltec
+       adresu /collections/pristresky-pre-auta-agava a pri porovnaní „obsahuje
+       pristresky-pre-auta“ dostal fotku prístreškov Koverta. Kolekcie na
+       Shopify majú iné mená ako stránky webu, preto aj ich aliasy. */
+    const ALIAS_MENU = {
+      'carport-soltec': ['carport-soltec', 'pristresky-pre-auta-agava'],
+      'pevne-prestresenia': ['pevne-prestresenia', 'pergoly-s-pevnou-strechou-multiport']
+    };
+    const zhodaMenu = (href, part) => {
+      const koniec = String(href || '').split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop();
+      return (ALIAS_MENU[part] || [part]).indexOf(koniec) > -1;
+    };
     const setDrawerPhoto = (hrefPart, filename) => {
       header.querySelectorAll('.kv-drawer__rad a').forEach((a) => {
-        if (!(a.getAttribute('href') || '').includes(hrefPart)) return;
+        if (!zhodaMenu(a.getAttribute('href'), hrefPart)) return;
         const img = a.querySelector('.kv-drawer__foto img');
         if (!img) return;
         img.removeAttribute('src');
@@ -3700,7 +3712,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
     if (domItem) {
       const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
-      const byHref = (part) => lis.find((li) => ((li.querySelector('a') || {}).href || '').includes(part));
+      const byHref = (part) => lis.find((li) => zhodaMenu((li.querySelector('a') || {}).getAttribute ? li.querySelector('a').getAttribute('href') : '', part));
       setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
       setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-pergola-pri-bazene-antracit.jpg');
