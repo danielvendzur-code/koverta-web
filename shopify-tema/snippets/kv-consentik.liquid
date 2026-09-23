@@ -27,7 +27,7 @@
     --kv-muted: rgba(18, 23, 26, 0.68);
     --kv-hair: rgba(18, 23, 26, 0.12);
     --kv-amber: #FFCC00;
-    --kv-cookie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3a13 13 0 1 0 13 13 4 4 0 0 1-4.5-4A4 4 0 0 1 20 7.5 4.5 4.5 0 0 1 16 3z' fill='%23FFCC00' stroke='%2312171a' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='11' cy='13' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='12.5' cy='20.5' r='1.6' fill='%2312171a'/%3E%3Ccircle cx='19' cy='18' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='20.5' cy='24' r='1.2' fill='%2312171a'/%3E%3Ccircle cx='8' cy='18.5' r='1' fill='%2312171a'/%3E%3C/svg%3E");
+    --kv-cookie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3a13 13 0 1 0 13 13 4 4 0 0 1-4.5-4A4 4 0 0 1 20 7.5 4.5 4.5 0 0 1 16 3z' fill='none' stroke='%2312171a' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='11' cy='13' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='12.5' cy='20.5' r='1.6' fill='%2312171a'/%3E%3Ccircle cx='19' cy='18' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='20.5' cy='24' r='1.2' fill='%2312171a'/%3E%3Ccircle cx='8' cy='18.5' r='1' fill='%2312171a'/%3E%3C/svg%3E");
   }
   .otCookiesNotification #cookies-wrapper, .otCookiesNotification #cookies-wrapper *,
   .otCookiesNotification #cookies-popup, .otCookiesNotification #cookies-popup * {
@@ -69,8 +69,8 @@
   .otCookiesNotification #cookies-wrapper .cst-banner-header { display: flex !important; align-items: center !important; gap: 12px !important; justify-content: flex-start !important; }
   .otCookiesNotification #cookies-wrapper #cst-banner-title,
   .otCookiesNotification #cookies-popup #cookies-title p {
-    display: flex !important; align-items: center !important; gap: 12px !important;
-    margin: 0 !important; padding-right: 26px !important;
+    display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px !important;
+    width: 100% !important; margin: 0 !important; padding-right: 26px !important;
     color: var(--kv-ink) !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.2 !important; text-align: left !important;
   }
   .otCookiesNotification #cookies-wrapper #cst-banner-title::before,
@@ -163,20 +163,11 @@
     display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding-top: 18px !important; flex-direction: unset !important;
   }
 
-  /* ---- po voľbe: malé okrúhle tlačidlo s cookie ------------------ */
-  .otCookiesNotification .cst-reopener-wrapper { bottom: 16px !important; left: 16px !important; right: auto !important; top: auto !important; }
-  .otCookiesNotification .cst-reopener-wrapper .cst-reopen-trigger {
-    width: 44px !important; height: 44px !important; min-width: 0 !important; padding: 0 !important;
-    border: 0 !important; border-radius: 50% !important; font-size: 0 !important; color: transparent !important;
-    background: #fff var(--kv-cookie) center / 26px no-repeat !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .18), 0 0 0 1px rgba(18, 23, 26, .08) !important; cursor: pointer;
-  }
-
-  /* Na telefóne je dole lepiaci pruh s telefónom a ponukou (.kh-dock,
-     74 px): tlačidlo cookie ide nad neho, aby ho neprekrylo. */
-  @media (max-width: 759px) {
-    body:has(.kh-dock) .otCookiesNotification .cst-reopener-wrapper { bottom: 88px !important; left: 12px !important; }
-  }
+  /* ---- po voľbe: nič pri kraji ----------------------------------
+     Tlačidlo aplikácie na opätovné otvorenie sa nezobrazuje na žiadnej
+     stránke. Súhlas sa dá zmeniť odkazom „Nastavenia cookies" v pätičke
+     (skript nižšie), ktorý volá to isté tlačidlo aplikácie. */
+  .otCookiesNotification .cst-reopener-wrapper { display: none !important; }
 
   /* Stránka ostáva prístupná, kým je lišta zobrazená. */
   html:has(.otCookiesNotification #cookies-wrapper[style*="block"]) { overflow-y: auto !important; }
@@ -191,3 +182,24 @@
     .otCookiesNotification #cookies-popup #cookies-action { grid-template-columns: 1fr !important; }
   }
 </style>
+<script>
+  /* Odkaz „Nastavenia cookies" v pätičke vedľa Ochrany súkromia. Otvorí
+     lištu súhlasu cez tlačidlo aplikácie, ktoré je pri kraji skryté.
+     Beží len v obchode — na statickom webe Consentik nie je. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var nav = document.querySelector('.kf__bottom nav');
+    if (!nav || nav.querySelector('[data-kv-cookies]')) return;
+    var a = document.createElement('a');
+    a.href = '#';
+    a.setAttribute('data-kv-cookies', '');
+    a.textContent = 'Nastavenia cookies';
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var spust = document.querySelector('.otCookiesNotification .cst-reopen-trigger');
+      if (spust) { spust.click(); return; }
+      var lista = document.getElementById('cookies-wrapper');
+      if (lista) lista.style.display = 'block';
+    });
+    nav.appendChild(a);
+  });
+</script>
