@@ -3186,10 +3186,13 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           const cena = ((chip.querySelector('small') || {}).textContent || '').replace(/^od\s*/, '');
           const kus = chip.closest('.kh-size__kus');
           const cfg = kus && kus.querySelector('.kh-size__cfg');
-          const kluc = (chip.getAttribute('href') || '').match(/(\d{4})x(\d{4})/);
           if (!m) return;
+          /* Rozmer v milimetroch z popisu (2,5 m → 2500), nie z odkazu —
+             na Shopify môže odkaz viesť aj na starý produkt s iným menom. */
+          const mm = (t) => Math.round(parseFloat(t.replace(',', '.')) * 1000);
+          const kluc = mm(m[1]) + 'x' + mm(m[2]);
           rozmery.push({ sirka: sirka.trim(), dlzka: m[2] + ' m', cena, odkaz: chip.getAttribute('href'),
-            cfg: cfg ? cfg.getAttribute('href') : '', kluc: kluc ? kluc[1] + 'x' + kluc[2] : '' });
+            cfg: cfg ? cfg.getAttribute('href') : '', kluc });
         });
       });
       if (rozmery.length < 2) return;
