@@ -14104,3 +14104,20 @@ body.ma-kh-modal { overflow: hidden; }
   .kh-vyber__akcie { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .kh-vyber__foto img, .k .kh-vyber .kh-vyber__volba { transition: none; } }
+
+/* Úvod na telefóne: namiesto videa (720p zdroj orezaný na výšku bol
+   rozmazaný) ostrá fotografia z toho istého záberu s pomalým priblížením. */
+@media (max-width: 900px) {
+  .k-home .kh-hero__bg > img { transform-origin: 38% 55%; animation: kh-hero-zoom 22s ease-in-out infinite alternate; will-change: transform; }
+}
+@keyframes kh-hero-zoom { from { transform: scale(1); } to { transform: scale(1.09); } }
+@media (prefers-reduced-motion: reduce) { .k-home .kh-hero__bg > img { animation: none; } }
+
+/* Spodná lišta na telefóne o kúsok nižšia: menej zakrýva obsah. */
+@media (max-width: 759px) {
+  .kh-dock { grid-template-columns: 44px minmax(0, 1fr); gap: 8px; padding: 7px 10px calc(7px + env(safe-area-inset-bottom)); }
+  .kh-dock .kh-dock__call { width: 44px; height: 44px; min-height: 44px; }
+  .kh-dock .kh-dock__call svg { width: 18px; height: 18px; }
+  .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 44px; height: 44px; padding-block: 0; font-size: 15px; }
+  body:has(.kh-dock) { padding-bottom: 60px; }
+}
