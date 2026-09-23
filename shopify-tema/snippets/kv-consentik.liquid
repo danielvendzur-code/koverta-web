@@ -7,119 +7,187 @@
 <script>
       window['otkConsent']={"ad_user_data":true,"ad_personalization":true,"ad_storage":true,"analytics_storage":true,"functionality_storage":true,"personalization_storage":true,"security_storage":true,"url_passthrough":true,"ads_data_redaction":true};function otValidateDefault(e){const t=e[0]??!1,o=e[1]??!1;if(t&&"consent"==t&&o&&"default"==o){const t=e[2]??{};if(Object.values(t).length){const e=Object.values(t).some((e=>"granted"==e));return!e}return!0}if(t&&"consent"==t&&o&&"update"==o){return Object.keys(e[2]).includes("cst_update")}return!0}function _gtag(){dataLayer.push(arguments)}window.dataLayer=[],window.dataLayer.push=function(...e){e.forEach((e=>{if(otValidateDefault(e)){const t=e[0]??!1,o=e[1]??!1,a=e[2]??[];if(t&&"consent"==t&&o&&"update"==o&&a&&Object.keys(a).includes("cst_update")){const{cst_update:t,...o}=a;e[2]={...o},Array.prototype.push.call(this,e)}else Array.prototype.push.call(this,e)}else console.log("gr d",e)}))},window.OMG_CONSENT_EXTENSION_ENABLED=!1;const otConsentObserver=new MutationObserver((function(e){for(const t of e)if("childList"===t.type){const e=Array.from(t.addedNodes).filter((e=>"SCRIPT"===e.tagName&&1===e.nodeType));for(const t of e){const e=t.getAttribute("src");if(e&&e.includes("consentik-ex"))return window.OMG_CONSENT_EXTENSION_ENABLED=!0,void otConsentObserver.disconnect()}}}));otConsentObserver.observe(document.documentElement,{childList:!0,subtree:!0}),window.dataLayer=window.dataLayer||[],function(e,t){e.otCookiesGCM={},e.otCookiesGCM={url_passthrough:!1,ads_data_redaction:!1,config:{ad_user_data:"denied",ad_personalization:"denied",ad_storage:"denied",analytics_storage:"denied",functionality_storage:"denied",personalization_storage:"denied",security_storage:"denied",wait_for_update:500, }},_gtag("consent","default",e.otCookiesGCM.config),addEventListener("DOMContentLoaded",(function(){const o=e.otkConsent;let a=function(e,t){const o=e+"=",a=decodeURIComponent(t.cookie),n=a.split(";");for(let e=0;e<n.length;e++){let t=n[e];for(;" "===t.charAt(0);)t=t.substring(1);if(0===t.indexOf(o))return t.substring(o.length,t.length)}return""}("cookiesNotification",t),n=!0;if(console.log("window.OMG_CONSENT_EXTENSION_ENABLED",e.OMG_CONSENT_EXTENSION_ENABLED),a&&e.OMG_CONSENT_EXTENSION_ENABLED){a=JSON.parse(a);const t=a[0].categoriesSelected;n=!t.includes("marketing"),e.otCookiesGCM.config={ad_user_data:o.ad_user_data&&t.includes("marketing")?"granted":"denied",ad_personalization:o.ad_personalization&&t.includes("marketing")?"granted":"denied",ad_storage:o.ad_storage&&t.includes("marketing")?"granted":"denied",analytics_storage:o.analytics_storage&&t.includes("analytics")?"granted":"denied",functionality_storage:o.functionality_storage&&t.includes("necessary")?"granted":"denied",personalization_storage:o.personalization_storage&&t.includes("preferences")?"granted":"denied",security_storage:o.security_storage&&t.includes("necessary")?"granted":"denied"},_gtag("consent","update",{...e.otCookiesGCM.config,cst_update:"granted"})}e.otCookiesGCM.ads_data_redaction=e.otkConsent.ads_data_redaction&&n,e.otCookiesGCM.url_passthrough=e.otkConsent.url_passthrough,e.otCookiesGCM.ads_data_redaction&&_gtag("set","ads_data_redaction",e.otCookiesGCM.ads_data_redaction),e.otCookiesGCM.url_passthrough&&_gtag("set","url_passthrough",e.otCookiesGCM.url_passthrough)}))}(window,document);
     </script>
-{%- comment -%} Vzhľad lišty Consentik: okno dole v strede, písmo a tlačidlá
-  ako na webe, Súhlasím ako hlavné tlačidlo. Stránka sa dá aj bez
-  odkliknutia ďalej scrollovať a čítať, ako na veľkých weboch: okno
-  nestmieva pozadie a prípadný prekryv ani zámok scrollu z aplikácie sa
-  vypne. Centruje sa cez left/right + margin:auto, nie cez transform, aby
-  sa nebilo s vlastnou animáciou aplikácie. {%- endcomment -%}
+{%- comment -%} Vzhľad Consentiku v štýle webu: lišta dole v strede s malým
+  piktogramom cookie, panel nastavení ako biela karta s prepínačmi,
+  po voľbe len malé okrúhle tlačidlo na opätovné otvorenie.
+
+  Vlastnosť `display` sa tu NIKDY nenastavuje na lište ani na paneli —
+  aplikácia ich zobrazuje a skrýva cez inline `display` a keď ho CSS
+  prebilo (!important), lišta ostala na obrazovke aj po „Súhlasím"
+  a nad otvoreným panelom nastavení, takže sa zdalo, že nič nefunguje.
+
+  Stránka sa dá aj bez odkliknutia scrollovať a čítať: lišta pozadie
+  nestmieva a keby aplikácia zamkla scroll, kým je lišta zobrazená,
+  zámok sa zruší. {%- endcomment -%}
 <style>
-  .otCookiesNotification, .otCookiesNotification * {
+  .otCookiesNotification #cookies-wrapper,
+  .otCookiesNotification #cookies-popup,
+  .otCookiesNotification .cst-reopener-wrapper {
+    --kv-ink: #12171a;
+    --kv-muted: rgba(18, 23, 26, 0.68);
+    --kv-hair: rgba(18, 23, 26, 0.12);
+    --kv-amber: #FFCC00;
+    --kv-cookie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3a13 13 0 1 0 13 13 4 4 0 0 1-4.5-4A4 4 0 0 1 20 7.5 4.5 4.5 0 0 1 16 3z' fill='%23FFCC00' stroke='%2312171a' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='11' cy='13' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='12.5' cy='20.5' r='1.6' fill='%2312171a'/%3E%3Ccircle cx='19' cy='18' r='1.8' fill='%2312171a'/%3E%3Ccircle cx='20.5' cy='24' r='1.2' fill='%2312171a'/%3E%3Ccircle cx='8' cy='18.5' r='1' fill='%2312171a'/%3E%3C/svg%3E");
+  }
+  .otCookiesNotification #cookies-wrapper, .otCookiesNotification #cookies-wrapper *,
+  .otCookiesNotification #cookies-popup, .otCookiesNotification #cookies-popup * {
     font-family: "Archivo", "Helvetica Neue", Arial, sans-serif !important;
     letter-spacing: 0 !important;
     box-sizing: border-box;
   }
+
+  /* ---- lišta ---------------------------------------------------- */
   .otCookiesNotification #cookies-wrapper {
     position: fixed !important;
     inset: auto 0 16px 0 !important;
     margin: 0 auto !important;
-    width: min(500px, calc(100vw - 32px)) !important;
+    width: min(480px, calc(100vw - 24px)) !important;
     max-width: none !important;
-    height: fit-content !important;
+    height: auto !important;
     max-height: calc(100vh - 32px) !important;
     max-height: calc(100dvh - 32px) !important;
     overflow: auto !important;
     transform: none !important;
     translate: none !important;
     z-index: 2147483000 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 14px !important;
-    padding: 30px 28px 26px !important;
+    padding: 22px 22px 20px !important;
     background: #fff !important;
-    color: #12171a !important;
+    color: var(--kv-ink) !important;
     border: 0 !important;
     border-radius: 20px !important;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(18, 23, 26, 0.06) !important;
     text-align: left !important;
-    font-size: 14.5px !important;
-    line-height: 1.55 !important;
   }
-  /* Stránka ostáva prístupná: žiadny prekryv a žiadny zámok scrollu,
-     kým je okno otvorené. */
-  .otCookiesNotification [class*="overlay" i],
-  .otCookiesNotification [class*="backdrop" i] { display: none !important; }
-  html:has(.otCookiesNotification #cookies-wrapper) { overflow-y: auto !important; }
-  body:has(.otCookiesNotification #cookies-wrapper) {
-    overflow: visible !important;
-    position: static !important;
-    touch-action: auto !important;
+  .otCookiesNotification #cookies-wrapper #ot-cookie-banner { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; margin: 0 !important; }
+  .otCookiesNotification #cookies-wrapper #ot-cookie-banner > * { width: 100% !important; max-width: none !important; margin: 0 !important; }
+  .otCookiesNotification #cookies-wrapper .cst-corner,
+  .otCookiesNotification #cookies-popup .cst-corner-popup { position: absolute !important; top: 14px !important; right: 16px !important; left: auto !important; z-index: 1; }
+  .otCookiesNotification #cookies-wrapper .ot-close-icon,
+  .otCookiesNotification #cookies-popup .cst-close-popup { color: var(--kv-muted) !important; font-size: 16px !important; line-height: 1 !important; }
+  .otCookiesNotification #cookies-wrapper .otCookies-title-banner,
+  .otCookiesNotification #cookies-wrapper .otCookies-title-banner h4 { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; text-align: left !important; }
+  .otCookiesNotification #cookies-wrapper .cst-banner-header { display: flex !important; align-items: center !important; gap: 12px !important; justify-content: flex-start !important; }
+  .otCookiesNotification #cookies-wrapper #cst-banner-title,
+  .otCookiesNotification #cookies-popup #cookies-title p {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    margin: 0 !important; padding-right: 26px !important;
+    color: var(--kv-ink) !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.2 !important; text-align: left !important;
   }
-  .otCookiesNotification #cookies-wrapper > * { width: 100% !important; max-width: none !important; margin: 0 !important; text-align: left !important; }
-  .otCookiesNotification .otCookies-title-banner,
-  .otCookiesNotification [class*="title"] {
-    color: #12171a !important;
-    font-size: 21px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-    padding-right: 28px !important;
+  .otCookiesNotification #cookies-wrapper #cst-banner-title::before,
+  .otCookiesNotification #cookies-popup #cookies-title p::before {
+    content: ""; flex: 0 0 30px; width: 30px; height: 30px; background: var(--kv-cookie) center / contain no-repeat;
   }
-  .otCookiesNotification p,
-  .otCookiesNotification [class*="content"],
-  .otCookiesNotification [class*="message"],
-  .otCookiesNotification [class*="desc"] {
-    color: rgba(18, 23, 26, 0.7) !important;
-    font-size: 14.5px !important;
-    line-height: 1.55 !important;
-    text-align: left !important;
+  .otCookiesNotification #cookies-wrapper #cookies-message p,
+  .otCookiesNotification #cookies-popup #cookies-description-header p,
+  .otCookiesNotification #cookies-popup .cst-category-item-description {
+    margin: 0 !important; color: var(--kv-muted) !important; font-size: 14px !important; line-height: 1.55 !important; text-align: left !important;
   }
-  .otCookiesNotification a {
-    color: #12171a !important;
-    font-size: 13.5px !important;
-    text-decoration: underline !important;
-    text-underline-offset: 3px;
+  .otCookiesNotification #cookies-wrapper .cst-privacy-wrapper { display: flex !important; flex-wrap: wrap !important; justify-content: flex-start !important; gap: 4px 16px !important; margin-top: 6px !important; }
+  .otCookiesNotification #cookies-wrapper a,
+  .otCookiesNotification #cookies-popup a { color: var(--kv-ink) !important; font-size: 13px !important; text-decoration: underline !important; text-underline-offset: 3px; }
+  .otCookiesNotification #cookies-wrapper .ot-group-btn-corner {
+    display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-top: 4px !important; flex-direction: unset !important;
   }
-  .otCookiesNotification [class*="policy"],
-  .otCookiesNotification [class*="link"] { justify-content: flex-start !important; gap: 6px 18px !important; flex-wrap: wrap !important; }
-  .otCookiesNotification .ot-group-btn-corner,
-  .otCookiesNotification [class*="group-btn"] {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    width: 100% !important;
-    margin-top: 6px !important;
+
+  /* ---- tlačidlá (lišta aj panel) --------------------------------- */
+  .otCookiesNotification #cookies-wrapper button.ot-cookie,
+  .otCookiesNotification #cookies-popup #cookies-action button.cookies-btn {
+    width: 100% !important; max-width: none !important; min-width: 0 !important; min-height: 46px !important; margin: 0 !important;
+    padding: 10px 16px !important; border-radius: 999px !important;
+    border: 1.5px solid rgba(18, 23, 26, 0.22) !important; background: #fff !important; color: var(--kv-ink) !important;
+    font-size: 15px !important; font-weight: 600 !important; box-shadow: none !important; cursor: pointer; opacity: 1;
   }
-  .otCookiesNotification button.cookies-btn,
-  .otCookiesNotification [class*="group-btn"] button {
-    width: 100% !important;
-    min-height: 48px !important;
-    margin: 0 !important;
-    padding: 10px 18px !important;
-    border-radius: 999px !important;
-    border: 1.5px solid rgba(18, 23, 26, 0.22) !important;
-    background: #fff !important;
-    color: #12171a !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    box-shadow: none !important;
-    cursor: pointer;
+  .otCookiesNotification #cookies-wrapper #cookies-submit,
+  .otCookiesNotification #cookies-popup #cookies-action button.btn-all {
+    grid-column: 1 / -1 !important; order: -1 !important;
+    background: var(--kv-ink) !important; border-color: var(--kv-ink) !important; color: #fff !important;
   }
-  /* Súhlasím je posledné tlačidlo: hlavné, na celú šírku a navrchu. */
-  .otCookiesNotification [class*="group-btn"] button:last-child,
-  .otCookiesNotification button.cookies-btn[class*="accept" i],
-  .otCookiesNotification button[id*="accept" i] {
-    grid-column: 1 / -1 !important;
-    order: -1 !important;
-    background: #12171a !important;
-    border-color: #12171a !important;
-    color: #fff !important;
+  .otCookiesNotification #cookies-wrapper button:hover,
+  .otCookiesNotification #cookies-popup button:hover { opacity: 0.88 !important; }
+  .otCookiesNotification button:focus-visible,
+  .otCookiesNotification label.omgCookie:focus-visible { outline: 2px solid var(--kv-amber) !important; outline-offset: 2px; }
+  /* Aplikácia píše „Prijmúť"; správne je „Prijať". */
+  .otCookiesNotification #cookies-popup #cookies-action button.btn-select,
+  .otCookiesNotification #cookies-popup #cookies-action button.btn-all { font-size: 0 !important; }
+  .otCookiesNotification #cookies-popup #cookies-action button.btn-select::after { content: "Prijať vybrané"; font-size: 15px; }
+  .otCookiesNotification #cookies-popup #cookies-action button.btn-all::after { content: "Prijať všetko"; font-size: 15px; }
+
+  /* ---- panel nastavení ------------------------------------------- */
+  .otCookiesNotification #cookies-popup {
+    position: fixed !important;
+    inset: 0 !important;
+    margin: auto !important;
+    width: min(560px, calc(100vw - 24px)) !important;
+    min-width: 0 !important; max-width: none !important; min-height: 0 !important;
+    height: fit-content !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    overflow: auto !important;
+    transform: none !important; animation: none !important;
+    z-index: 2147483001 !important;
+    padding: 26px 24px 22px !important;
+    background: #fff !important; color: var(--kv-ink) !important;
+    backdrop-filter: none !important;
+    border: 0 !important; border-radius: 20px !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3), 0 0 0 100vmax rgba(12, 15, 17, 0.45) !important;
   }
-  .otCookiesNotification button:hover { opacity: 0.88 !important; }
-  .otCookiesNotification button:focus-visible { outline: 2px solid #FFCC00 !important; outline-offset: 2px; }
+  .otCookiesNotification #cookies-popup .otCookies-title-banner:empty { display: none !important; }
+  .otCookiesNotification #cookies-popup #cookies-title { margin: 0 0 10px !important; }
+  .otCookiesNotification #cookies-popup #cookies-body { max-height: none !important; overflow: visible !important; }
+  .otCookiesNotification #cookies-popup #cookies-description-header { margin-bottom: 16px !important; }
+  .otCookiesNotification #cookies-popup .cst-category-item {
+    border: 1px solid var(--kv-hair) !important; border-radius: 14px !important; background: #f7f6f3 !important;
+  }
+  .otCookiesNotification #cookies-popup .cst-category-item + .cst-category-item { margin-top: 8px !important; }
+  .otCookiesNotification #cookies-popup .cst-category-item-header { padding: 13px 14px 13px 16px !important; gap: 12px !important; }
+  .otCookiesNotification #cookies-popup .cst-category-name,
+  .otCookiesNotification #cookies-popup .cst-category-text { color: var(--kv-ink) !important; font-size: 15px !important; font-weight: 600 !important; }
+  .otCookiesNotification #cookies-popup .cst-category-arrow,
+  .otCookiesNotification #cookies-popup .cst-category-arrow * { color: var(--kv-muted) !important; fill: currentColor; stroke: currentColor; }
+  .otCookiesNotification #cookies-popup .cst-category-item-content { padding: 0 16px 14px !important; }
+  /* Prepínač ako v telefóne. */
+  .otCookiesNotification #cookies-popup label.omgCookie {
+    width: 44px !important; height: 26px !important; border-radius: 999px !important;
+    background: #cdd1d4 !important; transition: background .15s;
+  }
+  .otCookiesNotification #cookies-popup label.omgCookie::after {
+    top: 3px !important; left: 3px !important; width: 20px !important; height: 20px !important;
+    border-radius: 50% !important; background: #fff !important; box-shadow: 0 1px 3px rgba(0, 0, 0, .25) !important; transition: left .15s, transform .15s !important;
+  }
+  .otCookiesNotification #cookies-popup input.omgCookie-input-switch[checked="true"] + label.omgCookie,
+  .otCookiesNotification #cookies-popup input.omgCookie-input-switch[checked="checked"] + label.omgCookie { background: var(--kv-ink) !important; }
+  .otCookiesNotification #cookies-popup input.omgCookie-input-switch[checked="true"] + label.omgCookie::after,
+  .otCookiesNotification #cookies-popup input.omgCookie-input-switch[checked="checked"] + label.omgCookie::after { left: calc(100% - 3px) !important; transform: translateX(-100%) !important; }
+  .otCookiesNotification #cookies-popup input.omgCookie-input-switch[disabled] + label.omgCookie { opacity: .55; cursor: default; }
+  .otCookiesNotification #cookies-popup #cookies-action {
+    display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding-top: 18px !important; flex-direction: unset !important;
+  }
+
+  /* ---- po voľbe: malé okrúhle tlačidlo s cookie ------------------ */
+  .otCookiesNotification .cst-reopener-wrapper { bottom: 16px !important; left: 16px !important; right: auto !important; top: auto !important; }
+  .otCookiesNotification .cst-reopener-wrapper .cst-reopen-trigger {
+    width: 44px !important; height: 44px !important; min-width: 0 !important; padding: 0 !important;
+    border: 0 !important; border-radius: 50% !important; font-size: 0 !important; color: transparent !important;
+    background: #fff var(--kv-cookie) center / 26px no-repeat !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18), 0 0 0 1px rgba(18, 23, 26, .08) !important; cursor: pointer;
+  }
+
+  /* Na telefóne je dole lepiaci pruh s telefónom a ponukou (.kh-dock,
+     74 px): tlačidlo cookie ide nad neho, aby ho neprekrylo. */
+  @media (max-width: 759px) {
+    body:has(.kh-dock) .otCookiesNotification .cst-reopener-wrapper { bottom: 88px !important; left: 12px !important; }
+  }
+
+  /* Stránka ostáva prístupná, kým je lišta zobrazená. */
+  html:has(.otCookiesNotification #cookies-wrapper[style*="block"]) { overflow-y: auto !important; }
+  body:has(.otCookiesNotification #cookies-wrapper[style*="block"]) { overflow: visible !important; position: static !important; touch-action: auto !important; }
+
   @media (max-width: 480px) {
-    .otCookiesNotification #cookies-wrapper { padding: 22px 18px 18px !important; bottom: 10px !important; gap: 10px !important; }
-    .otCookiesNotification .otCookies-title-banner, .otCookiesNotification [class*="title"] { font-size: 19px !important; }
+    .otCookiesNotification #cookies-wrapper { inset: auto 0 10px 0 !important; padding: 20px 18px 18px !important; }
+    .otCookiesNotification #cookies-wrapper #ot-cookie-banner { gap: 10px !important; }
+    .otCookiesNotification #cookies-wrapper #cst-banner-title,
+    .otCookiesNotification #cookies-popup #cookies-title p { font-size: 18px !important; }
+    .otCookiesNotification #cookies-popup { padding: 24px 18px 18px !important; }
+    .otCookiesNotification #cookies-popup #cookies-action { grid-template-columns: 1fr !important; }
   }
 </style>
