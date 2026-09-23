@@ -2768,7 +2768,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 }
 @media (max-width: 759px) {
   .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr); }
-  body { padding-bottom: 74px; }
+  body:has(.kh-dock) { padding-bottom: 74px; }
 }
 .kh-dock__call {
   display: grid;

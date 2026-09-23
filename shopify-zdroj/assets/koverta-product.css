@@ -151,6 +151,8 @@
 .kp-lista__info small { overflow: hidden; color: var(--k-muted); font: 600 12px/1.3 var(--k-head); white-space: nowrap; text-overflow: ellipsis; }
 .kp-lista__info strong { color: var(--k-ink); font: 750 18px/1.2 var(--k-head); }
 .kp .kp-lista .k-btn { min-height: 48px; padding-inline: 20px; white-space: nowrap; }
+.kp-lista__tel { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border: 1px solid rgba(18, 23, 26, .22); border-radius: 999px; color: var(--k-ink); text-decoration: none; }
+.kp-lista__tel svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 
 /* ------------------------------------------------------------------ tablet */
 @media (max-width: 1099px) {
@@ -312,7 +314,7 @@
 }
 .kp-lb::backdrop { background: rgba(8, 10, 12, .82); }
 .kp-lb__fig { margin: 0; display: grid; }
-.kp-lb__fig img { display: block; width: 100%; max-height: calc(100dvh - 120px); object-fit: contain; background: #0e1214; }
+.kp-lb__fig img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; max-height: calc(100dvh - 120px); object-fit: contain; background: #0e1214; }
 .kp-lb__fig figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 14px 18px 16px; font-size: 15px; }
 .kp-lb__fig figcaption strong { font-weight: 650; }
 .kp-lb__fig figcaption span { color: rgba(255, 255, 255, .78); }

@@ -248,6 +248,22 @@ function vyrez(html, zaciatok, koniec, kde) {
 
 /* Rozpad na samostatné prvky, aby sa dalo povedať, čo majú stránky spoločné
    a čo si nesie každá sama. */
+/* Lepivý pás „Zavolať / Nezáväzná cenová ponuka" na telefóne. Na webe stojí
+ * za pätičkou; prevod z tohto úseku berie len skripty a štýly, takže do témy
+ * sa nedostal a obchod na telefóne nemal po ruke telefón ani ponuku. Ide do
+ * layoutu pre všetky stránky okrem produktu (ten má vlastný pás s cenou
+ * a košíkom) a konfigurátora (tam sú na spodku ovládacie tlačidlá krokov).
+ * Tlačidlo ponuky otvorí okno dopytu, ak je na stránke formulár; inak vedie
+ * na kontakt. */
+function dokObchodu() {
+  const html = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
+  const m = html.match(/<div class="kh-dock"[\s\S]*?<\/div>/);
+  if (!m) { chyby.push('index.html: chýba pás kh-dock'); return ''; }
+  const dok = m[0].replace(/(k-btn--primary" href=")[^"]*(")/, '$1/pages/kontakt#ponuka$2');
+  return "{%- unless template.name == 'product' or page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' -%}\n"
+    + dok + '\n{%- endunless -%}';
+}
+
 function prvky(text) {
   const von = [];
   const vzor = /<!--[\s\S]*?-->|<(script|style)\b[\s\S]*?<\/\1>|<(?:link|meta|base)\b[^>]*>/g;
@@ -589,6 +605,7 @@ ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join
 {% section 'kv-hlavicka' %}
 {{ content_for_layout }}
 {% section 'kv-paticka' %}
+${dokObchodu()}
 ${v.spolocnyChvost.join('\n')}
 </body>
 </html>
