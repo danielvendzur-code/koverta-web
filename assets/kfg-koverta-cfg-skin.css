@@ -1351,3 +1351,10 @@ body { background: var(--k-white); color: var(--k-ink); }
   #SoltecPremium .sp-slider::-webkit-slider-runnable-track,
   #SoltecPremium .sp-slider::-moz-range-track { height: .7rem; }
 }
+
+/* Čitateľnosť (audit 23. 9.): žiadny text v konfigurátore pod 12 px.
+   Popisky krokov, nápoveda k otáčaniu, prepínač pohľadov aj odkaz
+   na 3D modely boli 9,5–11,5 px na všetkých šírkach. */
+.kv-cfg__label, .sp-eyebrow, .sp-scene__summary, .sp-scene__credits, .sp-stage__hint,
+.kv-cfg__label, .sp-eyebrow, .sp-scene__summary, .sp-scene__credits, .sp-stage__hint,
+[data-sp-goto] span, [data-sp-view], .kv-cfg small, .sp-cfg small, .sp-scale span { font-size: 12px !important; }
