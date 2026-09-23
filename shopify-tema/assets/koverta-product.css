@@ -257,3 +257,4 @@
 .kp .kp-rozmery { background: var(--k-bone); padding-block: clamp(48px, 5vw, 96px); }
 .kp .kp-rozmery .kp-h2 { margin-bottom: 6px; }
 .kp .kp-rozmery__sub { margin: 0; max-width: 60ch; }
+.kp-gal__stage, .kp-gal__slide--vizual { background: #f4f3f0; }

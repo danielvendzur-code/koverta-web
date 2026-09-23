@@ -100,41 +100,58 @@ function najdiStranky(adresar, zoznam = []) {
    a `zahradne-pristresky/rozmer/3000x3000/`. */
 const ROZMER = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+$/;
 
-function produktovaAdresa(cesta) {
+/* Kde v obchode žije obsah každej stránky: tools/adresy-obchodu.json.
+   Kategórie idú na staré kolekcie, ktoré majú návštevnosť, ostatné na staré
+   stránky. Handle `nove-…` ostáva menom útržku s obsahom. */
+const ADRESY = JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'adresy-obchodu.json'), 'utf8'));
+function cielObchodu(cesta) {
+  const z = ADRESY.stranky[cesta];
+  if (!z) return null;
+  if (z.url) return z;
+  return Object.assign({}, z, { url: (z.typ === 'kolekcia' ? '/collections/' : '/pages/') + z.handle });
+}
+
+/* Produkty rozmerov. Kým nový produkt nie je v obchode zverejnený, jeho
+   adresa vracia 404 — odkaz vtedy ide na starý produkt s tým istým
+   rozmerom (tools/shopify-product-redirects.json), ktorý žije. Rozhoduje
+   Liquid pri vykreslení podľa toho, čo je v kolekciách naozaj zverejnené
+   (`kv_zive`, počíta ho smerovač stránky), takže po aktivácii produktov sa
+   odkazy prepnú samy, bez zmeny kódu. */
+const STARE_PRODUKTY = new Map(JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'shopify-product-redirects.json'), 'utf8'))
+  .redirects.map((r) => [r.new_handle, r.old_handle]));
+
+function produktovyHandle(cesta) {
   const m = cesta.match(/^(pristresky-pre-auta|zahradne-pristresky)\/rozmer\/(\d+)x(\d+)$/);
   if (!m) return null;
-  const prefix = m[1] === 'zahradne-pristresky'
-    ? 'zahradny-pristresok-koverta-'
-    : 'pristresok-koverta-';
-  return '/products/' + prefix + m[2] + 'x' + m[3];
+  return (m[1] === 'zahradne-pristresky' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + m[2] + 'x' + m[3];
+}
+
+function produktovaAdresa(cesta) {
+  const h = produktovyHandle(cesta);
+  if (!h) return null;
+  const stary = STARE_PRODUKTY.get(h);
+  if (!stary) { chyby.push('rozmer ' + cesta + ' nemá starý produkt v shopify-product-redirects.json'); return '/products/' + h; }
+  return "{% if kv_zive contains '|" + h + "|' %}/products/" + h + "{% else %}/products/" + stary + "{% endif %}";
 }
 
 function adresa(subor) {
   const rel = path.relative(KOREN, subor).replace(/\\/g, '/');
   if (rel === 'index.html') {
     const h = PREDPONA + 'uvod';
-    return { druh: 'index', handle: h, url: '/pages/' + h, odkaz: '/pages/' + h, cesta: '' };
+    return { druh: 'index', handle: h, url: '/', odkaz: '/', cesta: '', ciel: { typ: 'domov', url: '/' } };
   }
   const cesta = rel.replace(/\/index\.html$/, '').replace(/\.html$/, '');
   const handle = PREDPONA + cesta.replace(/\//g, '-');
-  const url = '/pages/' + handle;
-  /* Odkaz na stránku rozmeru vedie na statický web, nie do obchodu.
-   *
-   * Na obchode tie stránky nie sú a nebudú: je ich 66, každá je len jeden
-   * katalógový rozmer s cenou, a zakladať ich ručne v Online Store → Pages
-   * nemá zmysel. Kým `koverta.sk` ukazovala na GitHub Pages, odkazy
-   * „Pozrieť rozmer" fungovali; po prechode na Shopify viedli na
-   * `/pages/nove-…-rozmer-3200x5200`, čo je stránka, ktorá neexistuje —
-   * teda 404 v cenovej tabuľke, na najhoršom možnom mieste.
-   *
-   * Obsah pritom existuje a funguje, len inde. Odkaz preto ide plnou adresou
-   * na GitHub Pages. Šablóna aj útržok tej stránky v téme ostávajú: keby si
-   * ich niekto v obchode predsa založil, vykreslia sa, namiesto aby stránka
-   * ostala prázdna. */
+  /* Stránky rozmerov v obchode nie sú: ich obsah je produkt. */
   if (ROZMER.test(cesta)) {
-    return { druh: 'stranka', handle, url, odkaz: produktovaAdresa(cesta), rozmer: true, cesta };
+    return { druh: 'stranka', handle, url: '/pages/' + handle, odkaz: produktovaAdresa(cesta), rozmer: true, cesta };
   }
-  return { druh: 'stranka', handle, url, odkaz: url, cesta };
+  const ciel = cielObchodu(cesta);
+  if (!ciel) {
+    chyby.push('stránka ' + cesta + ' nemá adresu v tools/adresy-obchodu.json');
+    return { druh: 'stranka', handle, url: '/pages/' + handle, odkaz: '/pages/' + handle, cesta };
+  }
+  return { druh: 'stranka', handle, url: ciel.url, odkaz: ciel.url, cesta, ciel };
 }
 
 /* ---------------------------------------------------------------- prepisy */
@@ -475,6 +492,7 @@ function zapis(v) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% render 'kv-consentik' %}
 <!-- Značky pre vyhľadávače.
 
      Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
@@ -492,6 +510,7 @@ function zapis(v) {
 {%- assign kv_titulok = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).celyTitulok || '')} -%}
 {%- assign kv_popis = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).popis || '')} -%}
 {%- endif -%}
+${seoVetvy(v)}
 <title>{{ kv_titulok }}</title>
 {%- if kv_popis != blank %}
 <meta name="description" content="{{ kv_popis | escape }}">
@@ -515,10 +534,10 @@ function zapis(v) {
 <meta property="og:price:amount" content="{{ kv_variant.price | divided_by: 100.0 }}">
 <meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
 {%- endif %}
-{%- render 'kv-og', page: page, product: product, template: template, request: request %}
+{%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
-${v.spolocnaHlava.join('\n')}
+${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join('\n')}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
@@ -577,6 +596,7 @@ ${v.spolocnyChvost.join('\n')}
    * ani jedno ručné priradenie šablóny — a keďže šablóna je jedna, blok
    * aplikácie sa umiestňuje raz a platí pre všetky. */
   for (const s of v.sablony) {
+    if (s.a.rozmer) continue;
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
     const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
     const telo = hlava + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
@@ -604,20 +624,32 @@ ${v.spolocnyChvost.join('\n')}
       path.join(CIEL, 'snippets', s.a.handle + '-cast-' + (i + 1) + '.liquid'), obsah));
   }
 
-  /* Telo stránky sa berie podľa handle. Formulár je súčasťou nášho obsahu;
-   * sekcia preto nepotrebuje ani nepovoľuje app blok cudzieho formulára. */
-  const handleVsetky = v.sablony.map((x) => x.a.handle);
+  /* Smerovač obsahu. Obsah sa berie podľa handle: stránka `kontakt` aj
+   * `nove-kontakt` dostanú útržok `nove-kontakt`, kolekcia
+   * `pristresky-pre-auta` útržok `nove-pristresky-pre-auta`. Šablónu
+   * v obchode netreba meniť — keď šablóna s príponou (napr. `contact`)
+   * v téme nie je, Shopify vezme predvolenú a tá obsah nájde sama.
+   * Útržky s odkazmi na produkty rozmerov dostanú vopred `kv_zive`: zoznam
+   * produktov, ktoré sú v obchode naozaj zverejnené. */
+  const ZIVE = "{%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}";
+  const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index');
+  const potrebujeZive = (x) => /kv_zive/.test(x.hlavny + x.medzi + x.ld.join(''));
+  const vetva = (handles, x) => "{%- when '" + handles.join("', '") + "' -%}\n" +
+    (potrebujeZive(x) ? '  ' + ZIVE + '\n' : '') + "  {% include '" + x.a.handle + "' %}\n";
+  const strankyVetvy = obsahy.map((x) => vetva([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : []), x));
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
-    '{%- assign kv_nase = "' + handleVsetky.join(',') + '" | split: "," -%}\n' +
-    '{%- if kv_nase contains page.handle -%}\n' +
-    '  {% include page.handle %}\n' +
+    '{%- case page.handle -%}\n' + strankyVetvy.join('') +
     '{%- else -%}\n' +
     '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
     '{{ page.content }}</div></main>\n' +
-    '{%- endif -%}\n' +
+    '{%- endcase -%}\n' +
     '\n{% schema %}\n' +
     JSON.stringify({ name: 'Koverta stránka', settings: [] }, null, 2) +
     '\n{% endschema %}\n');
+  const kolekcieVetvy = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => vetva([x.a.ciel.handle], x));
+  fs.writeFileSync(path.join(CIEL, 'templates', 'collection.liquid'),
+    '{%- case collection.handle -%}\n' + kolekcieVetvy.join('') +
+    "{%- else -%}\n  {% render 'koverta-obchod', druh: 'kolekcia', collection: collection %}\n{%- endcase -%}\n");
 
   /* Šablóna stránky je JSON, aby niesla spoločnú sekciu obsahu. */
   fs.writeFileSync(path.join(CIEL, 'templates', 'page.json'),
@@ -716,10 +748,29 @@ ${v.spolocnyChvost.join('\n')}
 
 /* og:image podľa stránky. Stránky ho majú zo statického webu, produkt podľa
  * radu a počtu áut tú istú fotku, ktorou začína jeho galéria. */
+/* Titulok a popis stránky pre obsah na starých adresách. Zo statického webu,
+ * nie z políčok obchodu: kolekcia `pristresky-pre-auta` má v obchode starý
+ * popis, no zobrazuje nový obsah. */
+function seoVetvy(v) {
+  const lit = (t) => "'" + String(t || '').replace(/'/g, '’') + "'";
+  const priradenie = (x) => '{%- assign kv_titulok = ' + lit(x.celyTitulok) + ' -%}' + (x.popis ? '{%- assign kv_popis = ' + lit(x.popis) + ' -%}' : '');
+  const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index' && x.celyTitulok);
+  const stranky = obsahy.map((x) => "{%- when '" + [x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : []).join("', '") + "' -%}" + priradenie(x)).join('\n');
+  const kolekcie = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => "{%- when '" + x.a.ciel.handle + "' -%}" + priradenie(x)).join('\n');
+  return "{%- if request.page_type == 'page' -%}{%- case page.handle -%}\n" + stranky + "\n{%- endcase -%}\n" +
+    "{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}\n" + kolekcie + "\n{%- endcase -%}{%- endif -%}";
+}
+
 function zapisOgObrazok(v) {
-  const vetvy = v.sablony.filter((x) => x.og).map((x) =>
-    (x.a.druh === 'index' ? "{%- if template.name == 'index' -%}" : "{%- if page.handle == '" + x.a.handle + "' -%}")
-    + "{%- assign kv_og = '" + x.og.replace(/'/g, '') + "' -%}{%- endif -%}");
+  const podmienka = (x) => {
+    if (x.a.druh === 'index') return "template.name == 'index'";
+    const c = ["page.handle == '" + x.a.handle + "'"];
+    if (x.a.ciel && x.a.ciel.typ === 'stranka') c.push("page.handle == '" + x.a.ciel.handle + "'");
+    if (x.a.ciel && x.a.ciel.typ === 'kolekcia') c.push("collection.handle == '" + x.a.ciel.handle + "'");
+    return c.join(' or ');
+  };
+  const vetvy = v.sablony.filter((x) => x.og && !x.a.rozmer).map((x) =>
+    '{%- if ' + podmienka(x) + ' -%}' + "{%- assign kv_og = '" + x.og.replace(/'/g, '') + "' -%}{%- endif -%}");
   const f = PAGES_ZAKLAD + '/assets/';
   const text = "{%- assign kv_og = '" + f + "koverta-og.jpg' -%}\n" + vetvy.join('\n') + '\n'
     + "{%- if request.page_type == 'product' and product.metafields.koverta.family -%}\n"
@@ -735,6 +786,16 @@ function zapisOgObrazok(v) {
  * Na statickom webe má adresy stránok relatívne; v obchode musia byť tie
  * z obchodu (/pages/nove-…), inak by každý výsledok viedol na CDN. Pribudnú
  * aj katalógové rozmery ako produkty, aby sa dalo hľadať napríklad „5 x 6“. */
+/* Vyhľadávanie je statický súbor, Liquid v ňom nebeží. Nový produkt sa
+ * ponúkne, len keď je podľa tools/produkty-zive.json živý; inak starý
+ * produkt s tým istým rozmerom. Súbor obnovuje tools/produkty-zive.js. */
+function hladanieProdukt(h) {
+  const zive = JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'produkty-zive.json'), 'utf8'));
+  if (zive.nove[h]) return h;
+  const stary = STARE_PRODUKTY.get(h);
+  return stary && zive.stare[stary] ? stary : h;
+}
+
 function zapisIndexHladania(v) {
   const zdroj = path.join(KOREN, 'assets', 'hladanie.json');
   if (!fs.existsSync(zdroj)) { chyby.push('chýba assets/hladanie.json'); return; }
@@ -768,7 +829,7 @@ function zapisIndexHladania(v) {
       const t = zaklad + ' ' + m(w) + ' × ' + m(l) + ' m';
       polozky.push({
         t, p: cena + ' s DPH, dopravou a montážou', k: 'Rozmer',
-        u: '/products/' + (druh === 'zahrada' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + w + 'x' + l,
+        u: '/products/' + hladanieProdukt((druh === 'zahrada' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + w + 'x' + l),
         h: bezDiakritiky(t + ' ' + m(w) + 'x' + m(l) + ' ' + m(w) + ' x ' + m(l) + ' ' + w + 'x' + l + ' ' + auta + ' pristresok carport cena')
       });
     }));

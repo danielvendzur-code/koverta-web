@@ -23,7 +23,7 @@
   assign width_mm = product.metafields.koverta.width_mm.value | default: 0 | plus: 0
   assign length_mm = product.metafields.koverta.length_mm.value | default: 0 | plus: 0
   assign dimension = product.metafields.koverta.dimension_label.value | default: product.title
-  assign configurator_url = product.metafields.koverta.configurator_url.value | default: '/pages/nove-konfigurator' | remove: 'https://koverta.sk' | remove: 'https://www.koverta.sk'
+  assign configurator_url = product.metafields.koverta.configurator_url.value | default: '/pages/konfigurator' | remove: 'https://koverta.sk' | remove: 'https://www.koverta.sk' | replace: '/pages/nove-konfigurator', '/pages/konfigurator'
 
   assign desatiny = width_mm | times: length_mm | plus: 50000 | divided_by: 100000 | floor
   assign plocha_cela = desatiny | divided_by: 10 | floor
@@ -46,7 +46,7 @@
   endif
 
   if family == 'zahrada'
-    assign catalog_url = '/pages/nove-zahradne-pristresky'
+    assign catalog_url = '/collections/zahradne-pristresky'
     assign catalog_label = 'Záhradné prístrešky'
     assign parent_label = 'Pre dom a záhradu'
     assign eyebrow = 'Záhradný prístrešok Koverta'
@@ -56,7 +56,7 @@
     assign bok_foto = 'koverta-zahradny-pristresok-palarikovo-nad-terasou'
     assign bok_alt = 'Záhradný prístrešok Koverta nad terasou, Palárikovo'
   else
-    assign catalog_url = '/pages/nove-pristresky-pre-auta'
+    assign catalog_url = '/collections/pristresky-pre-auta'
     assign catalog_label = 'Prístrešky pre autá'
     assign parent_label = 'Pre autá'
     assign inquiry_type = 'Prístrešok pre auto Koverta'
@@ -83,6 +83,12 @@
 
 <main class="k kp" id="obsah" data-k-root data-kp-product>
 
+  {%- comment -%} Hlavný obrázok je čistý render celého prístrešku z konfigurátora
+     (alt končí „vizualizácia“). Staré obrázky produktu sa v galérii neukazujú;
+     po ňom idú len fotky realizácií s presne rovnakým rozmerom. {%- endcomment -%}
+  {%- assign kp_render = nil -%}
+  {%- for m in product.media -%}{%- if m.alt contains 'vizualizácia' -%}{%- assign kp_render = m -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- assign kp_hlavny = kp_render | default: product.featured_media -%}
   <section class="kp-top" aria-labelledby="kpTitle">
     <div class="k-wrap kp-top__grid">
 
@@ -91,7 +97,15 @@
           <div class="kp-gal__track" data-kp-track tabindex="0">
             {%- comment -%} Najprv vizualizácia tohto rozmeru z obchodu, potom
                fotky realizácií s presne rovnakým rozmerom, ak nejaké sú. {%- endcomment -%}
-            {%- if product.media.size > 0 -%}
+            {%- if kp_render -%}
+              {%- assign m = kp_render -%}
+                <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
+                  <img src="{{ m.preview_image | image_url: width: 1200 }}"
+                    srcset="{{ m.preview_image | image_url: width: 700 }} 700w, {{ m.preview_image | image_url: width: 1200 }} 1200w, {{ m.preview_image | image_url: width: 1600 }} 1600w"
+                    sizes="(max-width: 899px) 100vw, 58vw" width="{{ m.preview_image.width }}" height="{{ m.preview_image.height }}"
+                    alt="{{ m.alt | escape }}" decoding="async" fetchpriority="high">
+                </figure>
+            {%- elsif product.media.size > 0 -%}
               {%- for m in product.media limit: 4 -%}
                 <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
                   <img src="{{ m.preview_image | image_url: width: 1200 }}"
@@ -117,7 +131,12 @@
         </div>
         <div class="kp-gal__nahlady" role="tablist" aria-label="Vybrať fotografiu">
           {%- assign pocet_vizual = 0 -%}
-          {%- if product.media.size > 0 -%}
+          {%- if kp_render -%}
+              <button type="button" class="kp-gal__nahlad is-active" role="tab" aria-selected="true" data-kp-thumb data-index="0" aria-label="Vizualizácia">
+                <img src="{{ kp_render.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
+              </button>
+              {%- assign pocet_vizual = 1 -%}
+          {%- elsif product.media.size > 0 -%}
             {%- for m in product.media limit: 4 -%}
               <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Vizualizácia {{ forloop.index }}">
                 <img src="{{ m.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
@@ -203,7 +222,7 @@
         {% endform %}
 
         <div class="kp-akcie">
-          <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if product.featured_media %} data-k-dopyt-obrazok="{{ product.featured_media.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
+          <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if kp_hlavny %} data-k-dopyt-obrazok="{{ kp_hlavny.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
         <a class="k-btn k-btn--line kp-3d" href="{{ configurator_url }}">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         </div>
 
@@ -300,7 +319,7 @@
             <h2 id="kpCta" class="k-h2">Cenová ponuka na {{ product.title }}</h2>
             <p class="k-copy">Overíme rozmer pre vaše miesto a pošleme cenu vrátane doplnkov. Ozveme sa do jedného pracovného dňa.</p>
           </div>
-          <form id="dopyt" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+          <form id="dopyt" class="kh-form" method="post" action="/pages/kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
             <input type="hidden" name="form_type" value="contact">
             <input type="hidden" name="utf8" value="✓">
             <label class="kh-field kh-field--interest"><span>Máte záujem o</span><select name="contact[Čo rieši]" required>
@@ -324,7 +343,7 @@
               <span>Fotky miesta <small>nepovinné</small></span>
               <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
             </label>
-            <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+            <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/vseobecne-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/zasady-ochrany-osobnych-udajov">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
             <div class="kh-form__submit">
               <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
                 <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -382,12 +401,12 @@
     <button class="k-btn k-btn--primary" type="submit" form="{{ form_id }}"{% unless variant.available %} disabled{% endunless %}>Do košíka</button>
   </div>
 
-  {%- capture ld_obrazky -%}{%- for riadok in zoznam_fotiek -%}{%- assign f = riadok | split: '|' -%}{% unless forloop.first %},{% endunless %}{{ foto_zaklad | append: f[0] | append: '.jpg' | json }}{%- endfor -%}{%- endcapture -%}
+  {%- capture ld_obrazky -%}{%- if kp_hlavny -%}{{ kp_hlavny.preview_image | image_url: width: 1600 | prepend: 'https:' | json }},{%- endif -%}{%- for riadok in zoznam_fotiek -%}{%- assign f = riadok | split: '|' -%}{% unless forloop.first %},{% endunless %}{{ foto_zaklad | append: f[0] | append: '.jpg' | json }}{%- endfor -%}{%- endcapture -%}
   <script type="application/ld+json">
   {"@context":"https://schema.org","@graph":[
     {"@type":"Product","name":{{ product.title | json }},"description":{{ product.description | strip_html | strip_newlines | truncate: 480 | json }},"image":[{{ ld_obrazky }}],"sku":{{ product.handle | json }},"brand":{"@type":"Brand","name":"Koverta"},"category":{{ catalog_label | json }},
      "additionalProperty":[{"@type":"PropertyValue","name":"Šírka","value":{{ width_mm | json }},"unitCode":"MMT"},{"@type":"PropertyValue","name":"Hĺbka","value":{{ length_mm | json }},"unitCode":"MMT"}],
-     "offers":{"@type":"Offer","url":{{ canonical_url | json }},"priceCurrency":{{ cart.currency.iso_code | default: 'EUR' | json }},"price":{{ variant.price | divided_by: 100 | floor | json }},"itemCondition":"https://schema.org/NewCondition","availability":"https://schema.org/InStock","seller":{"@type":"Organization","name":"Koverta"}}},
+     "offers":{"@type":"Offer","url":{{ canonical_url | json }},"priceCurrency":{{ cart.currency.iso_code | default: 'EUR' | json }},"price":{{ variant.price | divided_by: 100 | floor | json }},"priceValidUntil":"{{ 'now' | date: '%Y' | plus: 1 }}-12-31","itemCondition":"https://schema.org/NewCondition","availability":"https://schema.org/InStock","seller":{"@type":"Organization","name":"Koverta"}}},
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Koverta","item":{{ shop.url | append: '/' | json }}},{"@type":"ListItem","position":2,"name":{{ catalog_label | json }},"item":{{ shop.url | append: catalog_url | json }}},{"@type":"ListItem","position":3,"name":{{ dimension | json }},"item":{{ canonical_url | json }}}]}
   ]}
   </script>

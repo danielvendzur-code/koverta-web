@@ -31,7 +31,7 @@ for(const snip of ['koverta-foto','koverta-cena','koverta-rozmery'])if(!fs.exist
 const fotky=[...product.matchAll(/assign fotky = '([^']+)'/g)].map(m=>m[1].split(';').map(x=>x.split('|')[0]));
 if(fotky.length!==3)throw new Error('produkt má mať 3 sady fotiek (1 auto, 2 autá, záhrada)');
 for(const sada of fotky){if(new Set(sada).size!==sada.length)throw new Error('v galérii je tá istá fotka dvakrát');for(const f of sada)for(const sub of ['-w640.webp','-w1000.webp'])if(!fs.existsSync(path.join(ROOT,'assets',f+sub)))throw new Error('chýba assets/'+f+sub)}
-if(!/\/pages\/nove-konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
+if(!/\/pages\/konfigurator/.test(product))throw new Error('produkt nemá fallback konfigurátora');
 require('node:child_process').execFileSync(process.execPath,[path.join(ROOT,'tools','shopify-rozmery.js'),'--check'],{stdio:'inherit'});
 const cart=fs.readFileSync(path.join(src,'sections/koverta-cart.liquid'),'utf8');
 if(!/name="checkout"/.test(cart)||!/routes\.cart_url/.test(cart))throw new Error('košík nemá natívny Shopify checkout');

@@ -11,6 +11,8 @@ Zdrojom pravdy je cenník v konfigurátore (konfigurator/cfg-pages.js), nie
 ručne prepísané čísla. Keď sa cena zmení tam, stačí spustiť tento skript.
 """
 import io, json, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import adresy
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZAKLAD = 'https://koverta.sk'
@@ -171,7 +173,13 @@ def strankuj():
                 uvod, detail, odkazy, plocha = telo(kluc, w, l, cena, vsetky)
                 slug = f'{w}x{l}'
                 rel = f'{t["nadradUrl"]}/rozmer/{slug}/'
-                produkt = produktova_url(kluc, w, l)
+                # Canonical smie ukazovať len na produkt, ktorý naozaj žije
+                # (tools/produkty-zive.json). Kým nežije ani starý, stránka
+                # je svojou vlastnou kanonickou adresou a ostáva v indexe.
+                zivy, _ = adresy.produkt(rel.strip('/'))
+                produkt = zivy or f'{adresy.PAGES}/{rel}'
+                robots = 'noindex,follow' if zivy else 'index,follow'
+                cta_produkt = (f'<a class="k-btn k-btn--primary" href="{zivy}">Kúpiť v e-shope</a>\n      ') if zivy else ''
                 wtxt, ltxt = f'{w/1000:g}'.replace('.', ','), f'{l/1000:g}'.replace('.', ',')
                 nazov = f'{t["druh"]} {wtxt} × {ltxt} m'
                 popis = (f'{nazov} — cena od {medzery(cena)} € s DPH, dopravou aj montážou. '
@@ -180,11 +188,11 @@ def strankuj():
                 # výrobku. Blok sa pri generovaní nahrádza celý, takže sa
                 # fotografia musí doplniť späť — bez nej má zdieľaný odkaz
                 # na ktorýkoľvek z rozmerov náhľad bez obrázka.
-                foto = f'{ZAKLAD}/assets/{t["foto"]}.jpg'
+                foto = f'{adresy.PAGES}/assets/{t["foto"]}.jpg'
                 fw, fh = obrazok(t['foto'])
                 seo = f'''<title>{nazov} · od {medzery(cena)} € | Koverta</title>
 <meta name="description" content="{popis}">
-<meta name="robots" content="noindex,follow">
+<meta name="robots" content="{robots}">
 <link rel="canonical" href="{produkt}">
 <meta property="og:type" content="product">
 <meta property="og:title" content="{nazov}">
@@ -213,8 +221,8 @@ def strankuj():
 }, ensure_ascii=False)}</script>
 <script type="application/ld+json">{json.dumps({
   "@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
-   {"@type":"ListItem","position":1,"name":"Domov","item":ZAKLAD+"/"},
-   {"@type":"ListItem","position":2,"name":t['nadrad'],"item":f"{ZAKLAD}/{t['nadradUrl']}/"},
+   {"@type":"ListItem","position":1,"name":"Domov","item":adresy.DOMENA+"/"},
+   {"@type":"ListItem","position":2,"name":t['nadrad'],"item":adresy.DOMENA+adresy.url_obchodu(t['nadradUrl'])},
    {"@type":"ListItem","position":3,"name":nazov}]
 }, ensure_ascii=False)}</script>'''
                 h = hlava.replace('<!--TITLE-->', '').replace('<!--DESC-->', '').replace('<!--SEO-->', seo)
@@ -265,7 +273,7 @@ def strankuj():
     <p class="k-copy" style="max-width:62ch"><strong>Kompletné riešenie na kľúč.</strong> Koverta je oceľový prístrešok vyrábaný na Slovensku. Súčasťou riešenia je nosná konštrukcia s povrchovou ochranou, strecha, integrované odvodnenie, doprava, odborná montáž a bezplatné zameranie. Rozmer upravíme podľa pozemku, parkovania alebo terasy a pripravíme cenovú ponuku pre realizáciu kdekoľvek na Slovensku.</p>
 
     <div class="kh-hero__actions" style="margin:2rem 0">
-      <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
+      {cta_produkt}<a class="k-btn k-btn--{'line' if zivy else 'primary'}" href="{cfg}">Konfigurovať</a>
       <!-- Rozmer ide do adresy, nie do data atribútu: formulár je na
            katalógovej stránke, takže kontext musí prežiť preklik. -->
       <a class="k-btn k-btn--line" href="../../?w={w}&amp;l={l}#ponuka">Nezáväzná cenová ponuka</a>

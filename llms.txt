@@ -56,19 +56,19 @@ Montujeme po celom Slovensku; doprava a montáž sú v cene bez ohľadu na vzdia
 
 Bánov, Banská Bystrica, Bašovce, Bernolákovo, Biely Kostol, Bohdanovce, Bošany, Bratislava, Bratislava – Devín, Bratislava – Jarovce, Bratislava – Rusovce, Bratislava – Záhorská Bystrica, Brezany, Cecejovce, Čechynce, Chorvátsky Grob, Cífer, Diviacka Nová Ves, Dolné Obdokovce, Dolné Orešany, Dunajská Streda, Hliník nad Hronom, Hlohovec, Horné Orešany, Horné Saliby, Horné Srnie, Hronská Breznica, Hrubá Borša, Hurbanovo, Hviezdoslavov, Hvozdnica, Ivanka pri Dunaji, Jánovce, Jasenie, Kalinčiakovo, Kanianka, Klasov, Klokočov, Kočovce, Kolíňany, Krasňany, Kvetoslavov, Levice, Limbach, Liptovský Mikuláš, Ľubietová, Ľubochňa, Lučenec, Malinovo, Malý Lapáš, Marianka, Martin, Martinček, Melčice-Lieskové, Miloslavov, Mojš, Mokrance, Nitra, Nová Baňa, Nováky, Nové Mesto nad Váhom, Palárikovo, Pezinok, Piešťany, Plavecký Štvrtok, Podhájska, Podolie, Podrečany, Podvysoká, Pohranice, Potvorice, Rajec, Reca, Revúca, Rovinka, Rybník, Šaľa, Šebedražie, Selce, Senec, Skalica, Slovenský Grob, Stará Turá, Štefanovičová, Štiavnik, Stupava, Svätoplukovo, Svederník, Tornaľa, Trebišov, Trenčín, Trnava, Tvrdošín, Urmince, Váhovce, Varín, Veľká Lúka, Veľké Úľany, Veľké Zálužie, Veľký Lapáš, Veľký Slavkov, Vinica, Vinodol, Voderady, Vranov nad Topľou, Vrútky, Žilina, Žilinská Lehota, Žirany, Zvolen.
 
-Mapa s rozpisom je na stránke [Realizácie](https://koverta.sk/realizacie/#mapa).
+Mapa s rozpisom je na stránke [Realizácie](https://koverta.sk/pages/galeria-pristresky-pre-auta#mapa).
 
 ## Stránky
 
 - [Úvod](https://koverta.sk/): prehľad riešení, ceny, realizácie, recenzie.
-- [Prístrešky pre autá](https://koverta.sk/pristresky-pre-auta/): katalógové rozmery a ceny, skladba konštrukcie, podklad a kotvenie.
-- [Záhradné prístrešky](https://koverta.sk/zahradne-pristresky/): zastrešenie terasy, vstupu a posedenia.
-- [Bioklimatické pergoly](https://koverta.sk/bioklimaticke-pergoly/): šesť modelov podľa rozpätia a zaťaženia, porovnanie radov 170/240, farby a doplnky.
-- [Pevné prestrešenia](https://koverta.sk/pevne-prestresenia/): rady F a G, ISO panel a sklo.
-- [Tienenie](https://koverta.sk/tienenie/): ZIP K130, posuvné H50, pevné FW25/FI30, sklo G1/G2 a otočné brisoleje E300 podľa použitia.
-- [Carport Soltec](https://koverta.sk/carport-soltec/): hliníkové carporty a uzamykateľný box.
-- [Vonkajšie kuchyne](https://koverta.sk/outdoor-kuchyne/): moduly Chef a Station, výbava, príprava rozvodov.
-- [Realizácie](https://koverta.sk/realizacie/): fotografie z montáží.
-- [Kontakt](https://koverta.sk/kontakt/): formulár, oddelenia, postup.
-- [3D konfigurátor](https://koverta.sk/konfigurator/): vyskladanie zostavy a orientačná cena.
-- [Obchodné podmienky](https://koverta.sk/obchodne-podmienky/), [Ochrana súkromia](https://koverta.sk/ochrana-sukromia/), [Reklamácie](https://koverta.sk/reklamacie/).
+- [Prístrešky pre autá](https://koverta.sk/collections/pristresky-pre-auta): katalógové rozmery a ceny, skladba konštrukcie, podklad a kotvenie.
+- [Záhradné prístrešky](https://koverta.sk/collections/zahradne-pristresky): zastrešenie terasy, vstupu a posedenia.
+- [Bioklimatické pergoly](https://koverta.sk/collections/bioklimaticke-pergoly): šesť modelov podľa rozpätia a zaťaženia, porovnanie radov 170/240, farby a doplnky.
+- [Pevné prestrešenia](https://koverta.sk/collections/pergoly-s-pevnou-strechou-multiport): rady F a G, ISO panel a sklo.
+- [Tienenie](https://koverta.sk/collections/tienenie): ZIP K130, posuvné H50, pevné FW25/FI30, sklo G1/G2 a otočné brisoleje E300 podľa použitia.
+- [Carport Soltec](https://koverta.sk/collections/pristresky-pre-auta-agava): hliníkové carporty a uzamykateľný box.
+- [Vonkajšie kuchyne](https://koverta.sk/collections/outdoor-kuchyne): moduly Chef a Station, výbava, príprava rozvodov.
+- [Realizácie](https://koverta.sk/pages/galeria-pristresky-pre-auta): fotografie z montáží.
+- [Kontakt](https://koverta.sk/pages/kontakt): formulár, oddelenia, postup.
+- [3D konfigurátor](https://koverta.sk/pages/konfigurator): vyskladanie zostavy a orientačná cena.
+- [Obchodné podmienky](https://koverta.sk/pages/vseobecne-obchodne-podmienky), [Ochrana súkromia](https://koverta.sk/pages/zasady-ochrany-osobnych-udajov), [Reklamácie](https://koverta.sk/pages/reklamacny-poriadok).

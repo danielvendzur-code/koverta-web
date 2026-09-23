@@ -3149,18 +3149,17 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           /* MP4 stojí prvé — je menšie a vie ho každý bežný prehliadač.
              WebM je poistka pre zostavenia bez H.264 (napríklad Chromium
              na Linuxe), kde by inak úvod ostal na fotografii. */
+          /* Vyberá sa práve jeden súbor. Dva <source> za sebou viedli
+             v niektorých prehliadačoch k stiahnutiu MP4 aj WebM naraz —
+             15,6 MB na jedno načítanie úvodu. Rozhodne canPlayType a
+             prehrávač dostane jednu adresu. */
           const zdroje = uzky
             ? [['data-k-video-mobil', 'video/mp4']]
-            : [['data-k-video', 'video/mp4'], ['data-k-video-webm', 'video/webm']];
-          zdroje.forEach((par) => {
-            const url = v.getAttribute(par[0]);
-            if (!url) return;
-            const z = document.createElement('source');
-            z.src = url;
-            z.type = par[1];
-            v.appendChild(z);
-          });
-          v.load();
+            : [['data-k-video', 'video/mp4; codecs="avc1.4d401f"'], ['data-k-video-webm', 'video/webm']];
+          const vybrany = zdroje.find((par) => v.getAttribute(par[0]) && v.canPlayType(par[1]) !== '');
+          if (!vybrany) { vzdaj(); return; }
+          v.preload = 'auto';
+          v.src = v.getAttribute(vybrany[0]);
         }
         /* Safari na iPhone spustí video len vtedy, keď je stíšené a značka
            to hovorí ešte pred prvým prehraním. V úspornom režime batérie

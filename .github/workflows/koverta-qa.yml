@@ -71,10 +71,14 @@ jobs:
         run: |
           node konfigurator/test/koverta-render-regression.js
           node tools/seo-audit.js
+          python3 tools/adresy.py --check
+          python3 tools/cta-kontrola.py
+          node tools/produkty-zive.js --check
           node tools/verzie-suborov.js
           node tools/rozmery-obrazkov.js
           python3 tools/generuj-rozmery.py
-          git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
+          python3 tools/adresy.py
+          git diff --exit-code -- sitemap.xml llms.txt pristresky-pre-auta zahradne-pristresky
       - name: Validate Shopify theme
         run: |
           node tools/spolocne-casti.js --kontrola

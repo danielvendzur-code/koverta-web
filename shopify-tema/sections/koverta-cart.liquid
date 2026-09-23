@@ -4,13 +4,13 @@
     <div class="kp-cart__box">
       <header class="kp-cart__head">
         <div><p class="kp-eyebrow">Košík</p><h1 class="kp-h2">Vaša objednávka</h1></div>
-        <a href="/pages/nove-pristresky-pre-auta">Pokračovať vo výbere</a>
+        <a href="/collections/pristresky-pre-auta">Pokračovať vo výbere</a>
       </header>
       {%- if cart.item_count == 0 -%}
         <div style="padding:50px 0">
           <h2>Košík je prázdny.</h2>
           <p>Vyberte katalógový rozmer prístrešku a pridajte ho do košíka.</p>
-          <a class="k-btn k-btn--primary" href="/pages/nove-pristresky-pre-auta">Prístrešky Koverta</a>
+          <a class="k-btn k-btn--primary" href="/collections/pristresky-pre-auta">Prístrešky Koverta</a>
         </div>
       {%- else -%}
         <form action="{{ routes.cart_url }}" method="post" novalidate>
