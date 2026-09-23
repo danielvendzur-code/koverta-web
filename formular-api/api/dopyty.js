@@ -16,6 +16,20 @@ function autorizovany(req) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+/* Zlé heslo: najviac 10 pokusov za 15 minút z jednej adresy. */
+const POKUSY = new Map();
+function zablokovany(req) {
+  const ip = String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const teraz = Date.now(), z = POKUSY.get(ip);
+  return Boolean(z && teraz - z.od < 15 * 60 * 1000 && z.pocet >= 10);
+}
+function zlyPokus(req) {
+  const ip = String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const teraz = Date.now();
+  const z = POKUSY.get(ip) && teraz - POKUSY.get(ip).od < 15 * 60 * 1000 ? POKUSY.get(ip) : { od: teraz, pocet: 0 };
+  z.pocet += 1; POKUSY.set(ip, z);
+}
+
 function vyziadajPrihlasenie(res) {
   res.setHeader('WWW-Authenticate', 'Basic realm="Koverta dopyty", charset="UTF-8"');
   return res.status(401).send('Prihlásenie je potrebné.');
@@ -36,13 +50,21 @@ async function nacitajDopyty() {
 
 function csv(dopyty) {
   const hlavicka = ['Prijaté','Meno','Telefón','E-mail','Miesto','Typ','Správa','Stav e-mailu','Stránka'];
-  const bunka = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+  /* Bunka začínajúca =, +, - alebo @ by sa v Exceli spustila ako vzorec. */
+  const bunka = (v) => `"${String(v || '').replace(/^[=+\-@\t\r]/, "'$&").replace(/"/g, '""')}"`;
   return '\ufeff' + [hlavicka, ...dopyty.map((d) => [d.prijateAt,d.meno,d.telefon,d.email,d.miesto,d.typ,d.sprava,d.stavEmailu,d.stranka])]
     .map((r) => r.map(bunka).join(';')).join('\r\n');
 }
 
 export default async function handler(req, res) {
-  if (!autorizovany(req)) return vyziadajPrihlasenie(res);
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");
+  if (zablokovany(req)) return res.status(429).send('Príliš veľa pokusov. Skúste o 15 minút.');
+  if (!autorizovany(req)) {
+    if (req.headers.authorization) zlyPokus(req);
+    return vyziadajPrihlasenie(res);
+  }
   if (!process.env.BLOB_READ_WRITE_TOKEN) return res.status(503).send('Archív nie je nastavený.');
   const dopyty = await nacitajDopyty();
   if (String(req.query?.format || '') === 'csv') {

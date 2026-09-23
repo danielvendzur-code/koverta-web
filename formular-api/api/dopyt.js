@@ -6,12 +6,15 @@ const POVOLENE_ORIGINY = [
   /^https:\/\/(?:www\.)?koverta\.sk$/i,
   /^https:\/\/danielvendzur-code\.github\.io$/i,
   /^https:\/\/maleprojekty-sk\.myshopify\.com$/i,
-  /^https:\/\/[a-z0-9-]+\.shopifypreview\.com$/i,
-  /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i
+  /^https:\/\/[a-z0-9-]+\.shopifypreview\.com$/i
 ];
+/* Lokálny vývoj len mimo produkcie — na produkcii by localhost otváral
+   formulár každej stránke spustenej na počítači útočníka. */
+const LOKALNY = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i;
 
 function povolenyOrigin(origin = '') {
-  return POVOLENE_ORIGINY.some((vzor) => vzor.test(origin));
+  if (POVOLENE_ORIGINY.some((vzor) => vzor.test(origin))) return true;
+  return process.env.VERCEL_ENV !== 'production' && LOKALNY.test(origin);
 }
 
 function cors(req, res) {
@@ -26,6 +29,11 @@ function text(hodnota, maximum = 3000) {
   return String(hodnota || '').trim().slice(0, maximum);
 }
 
+/* Jeden riadok: do predmetu e-mailu sa nesmie dostať zalomenie. */
+function jedenRiadok(hodnota, maximum) {
+  return text(hodnota, maximum).replace(/[\r\n\t]+/g, ' ');
+}
+
 function html(hodnota) {
   return text(hodnota, 10000).replace(/[&<>"']/g, (znak) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
@@ -36,6 +44,22 @@ function platnyEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
 }
 
+/* Prílohy idú priamo do schránky obchodu — len fotky a PDF, nikdy
+   spustiteľné súbory ani dokumenty s makrami. Typ sa určí z prvých bajtov
+   obsahu, nie z názvu ani z toho, čo tvrdí prehliadač; prípona názvu sa
+   podľa neho opraví, aby sa .exe nedalo vydávať za fotku. */
+const PRIPONY = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'application/pdf': 'pdf' };
+
+function typPodlaObsahu(b) {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png';
+  if (b.slice(0, 4).toString('latin1') === 'RIFF' && b.slice(8, 12).toString('latin1') === 'WEBP') return 'image/webp';
+  if (b.slice(0, 5).toString('latin1') === '%PDF-') return 'application/pdf';
+  if (b.slice(4, 8).toString('latin1') === 'ftyp'
+    && /^(heic|heix|heim|heis|hevc|mif1|msf1)$/.test(b.slice(8, 12).toString('latin1'))) return 'image/heic';
+  return null;
+}
+
 function prilohy(vstup) {
   if (!Array.isArray(vstup)) return [];
   if (vstup.length > 4) throw new Error('TOO_MANY_FILES');
@@ -43,22 +67,34 @@ function prilohy(vstup) {
   return vstup.map((polozka, index) => {
     const filename = text(polozka && polozka.filename, 120).replace(/[\r\n/\\]/g, '_') || `priloha-${index + 1}`;
     const content = String(polozka && polozka.content || '');
-    const contentType = text(polozka && polozka.contentType, 100) || 'application/octet-stream';
     if (!/^[A-Za-z0-9+/]*={0,2}$/.test(content)) throw new Error('INVALID_FILE');
     spolu += Math.ceil(content.length * .75);
     if (spolu > 3000000) throw new Error('FILES_TOO_LARGE');
-    return { filename, content, content_type: contentType };
+    const typ = typPodlaObsahu(Buffer.from(content.slice(0, 32), 'base64'));
+    if (!typ) throw new Error('FILE_TYPE_NOT_ALLOWED');
+    const pripona = PRIPONY[typ];
+    const zaklad = filename.replace(/\.[^.]*$/, '') || `priloha-${index + 1}`;
+    const spravne = new RegExp(`\\.(${pripona}${pripona === 'jpg' ? '|jpeg' : pripona === 'heic' ? '|heif' : ''})$`, 'i').test(filename);
+    return { filename: spravne ? filename : `${zaklad}.${pripona}`, content, content_type: typ };
   });
 }
 
-function prekrocilLimit(req) {
-  const ip = text(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'nezname', 100).split(',')[0];
+/* Limity v pamäti jednej inštancie: nie sú nepriestrelné, ale zastavia
+   opakované odosielanie z jedného miesta. IP berie z hlavičky, ktorú
+   nastavuje Vercel (klient ju nevie podvrhnúť). */
+function prekrocilLimit(kluc, maximum, okno = 10 * 60 * 1000) {
   const teraz = Date.now();
-  const zaznam = LIMITY.get(ip) || { od: teraz, pocet: 0 };
-  if (teraz - zaznam.od > 10 * 60 * 1000) { zaznam.od = teraz; zaznam.pocet = 0; }
+  if (LIMITY.size > 5000) for (const [k, z] of LIMITY) if (teraz - z.od > okno) LIMITY.delete(k);
+  const zaznam = LIMITY.get(kluc) || { od: teraz, pocet: 0 };
+  if (teraz - zaznam.od > okno) { zaznam.od = teraz; zaznam.pocet = 0; }
   zaznam.pocet += 1;
-  LIMITY.set(ip, zaznam);
-  return zaznam.pocet > 6;
+  LIMITY.set(kluc, zaznam);
+  return zaznam.pocet > maximum;
+}
+
+function ipKlienta(req) {
+  return text(req.headers['x-real-ip'] || req.headers['x-vercel-forwarded-for']
+    || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'nezname', 100).split(',')[0].trim();
 }
 
 async function odosliResend(apiKey, sprava, idempotencyKey) {
@@ -102,7 +138,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, code: 'METHOD_NOT_ALLOWED' });
   const origin = String(req.headers.origin || '');
   if (!povolenyOrigin(origin)) return res.status(403).json({ ok: false, code: 'ORIGIN_NOT_ALLOWED' });
-  if (prekrocilLimit(req)) return res.status(429).json({ ok: false, code: 'RATE_LIMIT' });
+  if (prekrocilLimit('ip:' + ipKlienta(req), 6)) return res.status(429).json({ ok: false, code: 'RATE_LIMIT' });
 
   let telo;
   try { telo = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {}); }
@@ -116,8 +152,8 @@ export default async function handler(req, res) {
   }
 
   const data = {
-    typ: text(telo.typ, 120), meno: text(telo.meno, 160), telefon: text(telo.telefon, 80),
-    email: text(telo.email, 254), miesto: text(telo.miesto, 200), sprava: text(telo.sprava, 5000),
+    typ: jedenRiadok(telo.typ, 120), meno: jedenRiadok(telo.meno, 160), telefon: jedenRiadok(telo.telefon, 80),
+    email: jedenRiadok(telo.email, 254), miesto: jedenRiadok(telo.miesto, 200), sprava: text(telo.sprava, 5000),
     suhlas: text(telo.suhlas, 300), stranka: text(telo.stranka, 800)
   };
   if (!data.meno || !data.telefon || !platnyEmail(data.email) || !data.suhlas) {
@@ -126,7 +162,9 @@ export default async function handler(req, res) {
 
   let attachments;
   try { attachments = prilohy(telo.prilohy); }
-  catch (chyba) { return res.status(413).json({ ok: false, code: chyba.message }); }
+  catch (chyba) {
+    return res.status(chyba.message === 'FILE_TYPE_NOT_ALLOWED' ? 415 : 413).json({ ok: false, code: chyba.message });
+  }
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return res.status(503).json({ ok: false, code: 'EMAIL_NOT_CONFIGURED' });
@@ -144,8 +182,15 @@ export default async function handler(req, res) {
       from, to: [to], reply_to: data.email, subject: predmet, html: obsah, attachments
     }, `dopyt-${id}`);
 
-    if (String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false') {
-      const potvrdenie = `<!doctype html><html lang="sk"><body style="margin:0;background:#f6f5f2;font-family:Arial,sans-serif;color:#12171a"><div style="max-width:620px;margin:auto;padding:32px 20px"><div style="background:#12171a;color:white;padding:18px 24px;font-weight:700;letter-spacing:.08em">KOVER<span style="color:#ffcc00">TA</span></div><div style="background:white;padding:30px 24px"><h1 style="font-size:25px;margin:0 0 16px">Dopyt sme prijali</h1><p style="line-height:1.65">Dobrý deň, ${html(data.meno)}, ďakujeme za váš dopyt. Ozveme sa vám telefonicky alebo e-mailom spravidla do jedného pracovného dňa.</p><p style="line-height:1.65">Ak niečo súri, zavolajte na <a href="tel:+421948482266" style="color:#12171a;font-weight:700">+421 948 482 266</a>.</p><p style="margin-top:26px;color:#6b7174">Koverta · obchod@koverta.sk</p></div></div></body></html>`;
+    /* Potvrdenie ide na adresu, ktorú zadal návštevník. Aby sa formulár nedal
+       zneužiť na posielanie správ cudzím ľuďom, dostane jedna adresa najviac
+       dve potvrdenia za deň a meno sa do textu vloží len vtedy, keď vyzerá
+       ako meno (bez odkazov, najviac 60 znakov). */
+    const menoOk = data.meno.length <= 60 && !/https?:|www\.|[<>@]|\.[a-z]{2,}\//i.test(data.meno);
+    const oslovenie = menoOk ? `Dobrý deň, ${html(data.meno)},` : 'Dobrý deň,';
+    if (String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false'
+      && !prekrocilLimit('email:' + data.email.toLowerCase(), 2, 24 * 60 * 60 * 1000)) {
+      const potvrdenie = `<!doctype html><html lang="sk"><body style="margin:0;background:#f6f5f2;font-family:Arial,sans-serif;color:#12171a"><div style="max-width:620px;margin:auto;padding:32px 20px"><div style="background:#12171a;color:white;padding:18px 24px;font-weight:700;letter-spacing:.08em">KOVER<span style="color:#ffcc00">TA</span></div><div style="background:white;padding:30px 24px"><h1 style="font-size:25px;margin:0 0 16px">Dopyt sme prijali</h1><p style="line-height:1.65">${oslovenie} ďakujeme za váš dopyt. Ozveme sa vám telefonicky alebo e-mailom spravidla do jedného pracovného dňa.</p><p style="line-height:1.65">Ak niečo súri, zavolajte na <a href="tel:+421948482266" style="color:#12171a;font-weight:700">+421 948 482 266</a>.</p><p style="margin-top:26px;color:#6b7174">Koverta · obchod@koverta.sk</p></div></div></body></html>`;
       await odosliResend(apiKey, { from, to: [data.email], reply_to: to, subject: 'Koverta – dopyt sme prijali', html: potvrdenie }, `potvrdenie-${id}`).catch(() => null);
     }
     await put(archiv.archivePath, JSON.stringify({ ...archiv, stavEmailu: 'odoslaný' }, null, 2), {
