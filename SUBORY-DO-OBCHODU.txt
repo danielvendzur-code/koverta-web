@@ -1112,10 +1112,6 @@ soltec-pergola-zip-rolety-a-pevne-vyplne-w1000.webp	assets/soltec-pergola-zip-ro
 soltec-pergola-zip-rolety-a-pevne-vyplne-w1600.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w1600.webp
 soltec-pergola-zip-rolety-a-pevne-vyplne-w640.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w640.webp
 soltec-pergola-zip-rolety-a-pevne-vyplne.jpg	assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg
-soltec-pevne-prestresenie-mokrance-w1000.webp	assets/soltec-pevne-prestresenie-mokrance-w1000.webp
-soltec-pevne-prestresenie-mokrance-w1600.webp	assets/soltec-pevne-prestresenie-mokrance-w1600.webp
-soltec-pevne-prestresenie-mokrance-w640.webp	assets/soltec-pevne-prestresenie-mokrance-w640.webp
-soltec-pevne-prestresenie-mokrance.jpg	assets/soltec-pevne-prestresenie-mokrance.jpg
 soltec-roof-glass-w1000.webp	assets/soltec-roof-glass-w1000.webp
 soltec-roof-glass-w640.webp	assets/soltec-roof-glass-w640.webp
 soltec-roof-glass.jpg	assets/soltec-roof-glass.jpg
