@@ -175,11 +175,41 @@
     });
   }
 
+  /* Pridanie do košíka cez /cart/add.js a potom rovno do košíka. Obyčajné
+     odoslanie formulára Shopify pri podozrivom pripojení zastaví overením
+     „Overte, že ste človek“; volanie .js tým neprechádza. Keď volanie zlyhá
+     na sieti, formulár sa odošle klasicky. */
+  function kosik(root) {
+    const form = root.querySelector('form[action*="/cart/add"]');
+    if (!form || !window.fetch) return;
+    const tlacidla = () => [...document.querySelectorAll('[data-kp-add], button[form="' + form.id + '"]')];
+    let bezi = false;
+    form.addEventListener('submit', (e) => {
+      if (e.defaultPrevented || bezi) { e.preventDefault(); return; }
+      e.preventDefault();
+      bezi = true;
+      const btns = tlacidla();
+      const povodne = btns.map((b) => b.textContent);
+      btns.forEach((b) => { b.disabled = true; b.textContent = 'Pridávam…'; });
+      const koniec = (text) => {
+        bezi = false;
+        btns.forEach((b, n) => { b.disabled = false; b.textContent = povodne[n]; });
+        if (text) window.alert(text);
+      };
+      fetch((window.Shopify && Shopify.routes && Shopify.routes.root || '/') + 'cart/add.js', {
+        method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form), credentials: 'same-origin'
+      }).then((r) => r.json().catch(() => ({})).then((d) => {
+        if (r.ok) { window.location.href = (window.Shopify && Shopify.routes && Shopify.routes.root || '/') + 'cart'; return; }
+        koniec(d.description || d.message || 'Tovar sa nepodarilo pridať do košíka. Skúste to znova alebo nám zavolajte na +421 948 482 266.');
+      })).catch(() => { bezi = false; HTMLFormElement.prototype.submit.call(form); });
+    });
+  }
+
   function init() {
     const root = document.querySelector('[data-kp-product]');
     if (!root || root.dataset.kpReady === 'true') return;
     root.dataset.kpReady = 'true';
-    galeria(root); farba(root); lista(root); posun(root); rozmery(root); realizacie(root);
+    galeria(root); farba(root); lista(root); posun(root); rozmery(root); realizacie(root); kosik(root);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();

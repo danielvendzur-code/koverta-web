@@ -62,7 +62,9 @@
   .otCookiesNotification #cookies-wrapper #ot-cookie-banner > * { width: 100% !important; max-width: none !important; margin: 0 !important; }
   /* Bez krížika: rozhoduje sa tlačidlami Súhlasím / Odmietnuť. */
   .otCookiesNotification #cookies-wrapper .cst-corner,
-  .otCookiesNotification #cookies-popup .cst-corner-popup { display: none !important; }
+  .otCookiesNotification #cookies-popup .cst-corner-popup,
+  html body #cookies-wrapper .cst-corner, html body #cookies-popup .cst-corner-popup,
+  html body .cst-corner .ot-close-icon, html body .cst-corner-popup .ot-close-icon { display: none !important; visibility: hidden !important; }
   .otCookiesNotification #cookies-wrapper .otCookies-title-banner,
   .otCookiesNotification #cookies-wrapper .otCookies-title-banner h4 { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; text-align: left !important; }
   .otCookiesNotification #cookies-wrapper .cst-banner-header { display: flex !important; align-items: center !important; gap: 12px !important; justify-content: flex-start !important; }
