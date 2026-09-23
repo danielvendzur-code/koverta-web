@@ -1,6 +1,5 @@
 Súbory do Nastavenia → Súbory. Prvý stĺpec je meno v obchode.
 
-apple-touch-icon.png	assets/apple-touch-icon.png
 bmw-g80-m3.bin.gz	konfigurator/scene-assets/bmw-g80-m3.bin.gz
 foto-01-w1000-w1000.webp	assets/foto/01-w1000-w1000.webp
 foto-01-w1000-w640.webp	assets/foto/01-w1000-w640.webp
@@ -534,7 +533,6 @@ foto-zadar_marasovic_5-w1000.png	assets/foto/zadar_marasovic_5-w1000.png
 foto-zadar_marasovic_8-w1000-w1000.webp	assets/foto/zadar_marasovic_8-w1000-w1000.webp
 foto-zadar_marasovic_8-w1000-w640.webp	assets/foto/zadar_marasovic_8-w1000-w640.webp
 foto-zadar_marasovic_8-w1000.png	assets/foto/zadar_marasovic_8-w1000.png
-icon-192.png	assets/icon-192.png
 koverta-carport-dve-auta-zima-w1000.webp	assets/koverta-carport-dve-auta-zima-w1000.webp
 koverta-carport-dve-auta-zima-w640.webp	assets/koverta-carport-dve-auta-zima-w640.webp
 koverta-carport-dve-auta-zima.jpg	assets/koverta-carport-dve-auta-zima.jpg
@@ -551,6 +549,8 @@ koverta-hero-sibenik-poster-w640.webp	assets/koverta-hero-sibenik-poster-w640.we
 koverta-hero-sibenik-poster.jpg	assets/koverta-hero-sibenik-poster.jpg
 koverta-hero-sibenik.mp4	assets/koverta-hero-sibenik.mp4
 koverta-hero-sibenik.webm	assets/koverta-hero-sibenik.webm
+koverta-ikona-192.png	assets/koverta-ikona-192.png
+koverta-ikona-apple.png	assets/koverta-ikona-apple.png
 koverta-navrh-konfigurator-3d-w1000.webp	assets/koverta-navrh-konfigurator-3d-w1000.webp
 koverta-navrh-konfigurator-3d-w1600.webp	assets/koverta-navrh-konfigurator-3d-w1600.webp
 koverta-navrh-konfigurator-3d-w640.webp	assets/koverta-navrh-konfigurator-3d-w640.webp
