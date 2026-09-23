@@ -299,6 +299,31 @@ function menoVTeme(naDisku) {
   return rel.replace(/\//g, '-');
 }
 
+/* Zmenšenie CSS pre obchod. Zdroj ostáva s komentármi (tie vysvetľujú,
+ * prečo je čo tak), do témy ide bez nich: koverta-2026.css má 562 kB a je
+ * render-blocking na každej stránke. Nechávajú sa reťazce aj url(), mažú sa
+ * len komentáre a nadbytočné medzery — nič, čo by zmenilo význam selektora. */
+function zmensiCss(css) {
+  let von = '', i = 0;
+  while (i < css.length) {
+    const c = css[i];
+    if (c === '/' && css[i + 1] === '*') { const k = css.indexOf('*/', i + 2); i = k === -1 ? css.length : k + 2; continue; }
+    if (c === '"' || c === "'") {
+      let k = i + 1;
+      while (k < css.length && css[k] !== c) { if (css[k] === '\\') k++; k++; }
+      von += css.slice(i, k + 1); i = k + 1; continue;
+    }
+    if (/\s/.test(c)) {
+      while (i < css.length && /\s/.test(css[i])) i++;
+      const pred = von.slice(-1), po = css[i] || '';
+      if (!/[{};,>]/.test(pred) && !/[{};,>]/.test(po) && pred !== '' && po !== '') von += ' ';
+      continue;
+    }
+    von += c; i++;
+  }
+  return von.replace(/;}/g, '}');
+}
+
 function prepisCss(text, zdroj) {
   return text.replace(CSS_URL, (cele, uvodzovka, adresa) => {
     if (/^(?:https?:|data:|\/\/|#|\{\{|\{%)/i.test(adresa) || !adresa.trim()) return cele;
@@ -675,7 +700,7 @@ ${v.spolocnyChvost.join('\n')}
       hotove.add(meno);
       if (path.extname(meno).toLowerCase() === '.css') {
         fs.writeFileSync(path.join(CIEL, 'assets', meno),
-          prepisCss(fs.readFileSync(zdroj, 'utf8'), zdroj));
+          zmensiCss(prepisCss(fs.readFileSync(zdroj, 'utf8'), zdroj)));
       } else {
         fs.copyFileSync(zdroj, path.join(CIEL, 'assets', meno));
       }

@@ -1473,19 +1473,14 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       if (!panel.contains(e.target) && !trigger.contains(e.target)) close();
     });
 
-    /* Index má 383 položiek a 161 kB (40 kB po kompresii). Sťahoval sa až
-       pri prvom otvorení panela, takže prvé napísané slovo hľadalo len
-       v otvorenej stránke a zvyšok webu dobehol o chvíľu neskôr. Teraz sa dotiahne v čase, keď
-       prehliadač aj tak nič nerobí — po načítaní a v nečinnosti, nie počas
-       nej. Keď `requestIdleCallback` nie je (Safari), stačí odklad. */
-    const predstiahni = () => {
-      if (navigator.connection && (navigator.connection.saveData ||
-          /2g/.test(navigator.connection.effectiveType || ''))) return;
-      if (window.requestIdleCallback) window.requestIdleCallback(dotiahni, { timeout: 4000 });
-      else setTimeout(dotiahni, 2500);
-    };
-    if (document.readyState === 'complete') predstiahni();
-    else window.addEventListener('load', predstiahni, { once: true });
+    /* Index má 161 kB. Sťahoval sa na každej stránke po načítaní, aj keď
+       návštevník vyhľadávanie nikdy neotvoril — PageSpeed to rátal do váhy
+       každej stránky. Teraz sa stiahne až pri úmysle: prejdenie myšou nad
+       lupou, dotyk alebo fokus. To je stále skôr než samotné kliknutie,
+       takže prvé napísané slovo už hľadá v celom webe. */
+    ['pointerenter', 'touchstart', 'focus'].forEach((udalost) =>
+      trigger.addEventListener(udalost, dotiahni, { once: true, passive: true }));
+    input.addEventListener('focus', dotiahni, { once: true });
 
     /* Odkaz s `?q=` otvorí vyhľadávanie rovno s hľadaným výrazom. Vďaka tomu
        je `SearchAction` v štruktúrovaných dátach pravdivá — Google aj ktokoľvek
@@ -2135,11 +2130,17 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
        Je to aj statický mobilný/reduced-motion fallback, nielen zdroj pre
        desktopový prelet. Obsah fotografie sa počas pohybu nikdy nevymení. */
     const trioImgs = [...trio.querySelectorAll('.kh-proc__trio-kus img')];
+    /* Fotografie v kroku sú lenivé, takže `currentSrc` je pri spustení ešte
+       prázdny. Záloha `src` bol originál JPG (300–400 kB) — berie sa preto
+       najväčší WebP zo `srcset`, ktorý na kartu recenzie stačí. */
+    const zdrojFotky = (img) => img.currentSrc
+      || (img.getAttribute('srcset') || '').split(',').map((c) => c.trim().split(/\s+/)[0]).filter(Boolean).pop()
+      || img.src;
     const reviewImgs = [...zoznam.querySelectorAll('.kh-rev__card .kh-rev__foto img')].slice(0, trioImgs.length);
     reviewImgs.forEach((img, i) => {
       const source = trioImgs[i];
       if (!source) return;
-      img.src = source.currentSrc || source.src;
+      img.src = zdrojFotky(source);
       img.removeAttribute('srcset');
     });
 
@@ -2159,7 +2160,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       scena.className = 'kh-rev__scena';
       scena.setAttribute('aria-hidden', 'true');
       const kopia = new Image();
-      kopia.src = obr.currentSrc || obr.src;
+      kopia.src = obr.currentSrc || obr.getAttribute('src');
       kopia.alt = '';
       kopia.decoding = 'async';
       scena.appendChild(kopia);
