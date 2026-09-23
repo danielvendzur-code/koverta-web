@@ -14044,3 +14044,7 @@ body.ma-kh-modal { overflow: hidden; }
     mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
   }
 }
+
+/* Úvodné video je len pozadie: nereaguje na myš, takže prehliadač nad ním
+   neukáže vlastné tlačidlá (vyskakovacie okno, zmenšenie, preskočenie). */
+.kh-hero__video { pointer-events: none; }

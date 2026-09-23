@@ -3185,6 +3185,13 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     vsetky.forEach((v) => {
       if (v.dataset.kReady === 'true') return;
       v.dataset.kReady = 'true';
+      /* Video je len pozadie: prehliadač (napr. Opera) nad ním nemá ponúkať
+         vlastné tlačidlá na vyskakovacie okno, zmenšenie ani preskočenie. */
+      v.disablePictureInPicture = true;
+      v.disableRemotePlayback = true;
+      v.setAttribute('disablepictureinpicture', '');
+      v.setAttribute('disableremoteplayback', '');
+      v.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback noplaybackrate');
 
       const mobil = v.getAttribute('data-k-video-mobil');
       if (uzky && !mobil) return;
