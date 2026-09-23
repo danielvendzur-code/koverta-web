@@ -245,7 +245,7 @@ function naStranku(url, mapa, zaklad) {
   return mapa.get(kluc) + chvost;
 }
 
-const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-video-mobil|data-k-menu-src|data-k-lupa|action)="([^"]*)"/g;
+const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-video-mobil|data-k-menu-src|data-k-lupa|data-k-rozmer-foto|action)="([^"]*)"/g;
 
 function prepis(html, mapa, zaklad) {
   return html.replace(ATRIBUTY, (cele, meno, hodnota) => {

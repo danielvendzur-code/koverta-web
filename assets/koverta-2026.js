@@ -3167,6 +3167,100 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     });
   }
 
+  /* --- Výber rozmeru ako v e-shope ----------------------------------------
+     Z tabuľky rozmerov sa poskladá výber: vľavo vizualizácia zvoleného
+     rozmeru, vpravo šírka a dĺžka ako prepínače, cena a dve tlačidlá.
+     Tabuľka ostáva v stránke (odkazy na všetky rozmery pre vyhľadávače
+     aj bez JavaScriptu) a dá sa rozbaliť odkazom „Všetky rozmery a ceny“. */
+  function initVyberRozmeru(root) {
+    root.querySelectorAll('.kh-size--decision[data-k-rozmer-foto]').forEach((blok) => {
+      if (blok.dataset.kVyber === 'true') return;
+      const body = blok.querySelector('.kh-size__body');
+      const grid = blok.querySelector('.kh-size__grid');
+      if (!body || !grid) return;
+      const rozmery = [];
+      grid.querySelectorAll('.kh-size__rad').forEach((rad) => {
+        const sirka = (rad.querySelector('.kh-size__sirka strong') || {}).textContent || '';
+        rad.querySelectorAll('.kh-size__chip').forEach((chip) => {
+          const m = (chip.getAttribute('aria-label') || '').match(/(\d[\d,]*) m × (\d[\d,]*) m/);
+          const cena = ((chip.querySelector('small') || {}).textContent || '').replace(/^od\s*/, '');
+          const kus = chip.closest('.kh-size__kus');
+          const cfg = kus && kus.querySelector('.kh-size__cfg');
+          const kluc = (chip.getAttribute('href') || '').match(/(\d{4})x(\d{4})/);
+          if (!m) return;
+          rozmery.push({ sirka: sirka.trim(), dlzka: m[2] + ' m', cena, odkaz: chip.getAttribute('href'),
+            cfg: cfg ? cfg.getAttribute('href') : '', kluc: kluc ? kluc[1] + 'x' + kluc[2] : '' });
+        });
+      });
+      if (rozmery.length < 2) return;
+      blok.dataset.kVyber = 'true';
+      const sirky = [...new Set(rozmery.map((r) => r.sirka))];
+      const dlzky = [...new Set(rozmery.map((r) => r.dlzka))];
+      const vzorFotky = blok.getAttribute('data-k-rozmer-foto');
+      const nazov = body.querySelector('.kh-size__label');
+      const prvyText = nazov ? nazov.firstChild.textContent.trim() : '';
+      let vyber = rozmery[Math.min(sirky.length - 1, 2) * dlzky.length] || rozmery[0];
+
+      const el = document.createElement('div');
+      el.className = 'kh-vyber';
+      const skupina = (nadpis, hodnoty, typ) => '<fieldset class="kh-vyber__skupina"><legend>' + nadpis + '</legend><div class="kh-vyber__volby">' +
+        hodnoty.map((h) => '<button type="button" class="kh-vyber__volba" data-k-' + typ + '="' + h + '" aria-pressed="false">' + h.replace(/ m$/, '') + '<small> m</small></button>').join('') + '</div></fieldset>';
+      el.innerHTML = '<figure class="kh-vyber__foto"><img alt="" width="1600" height="1200" decoding="async"><figcaption data-k-vyber-rozmer></figcaption></figure>' +
+        '<div class="kh-vyber__panel">' +
+        '<p class="kh-vyber__nadpis">' + prvyText + ' <span>' + rozmery.length + ' rozmerov</span></p>' +
+        skupina('Šírka', sirky, 'sirka') + skupina('Dĺžka', dlzky, 'dlzka') +
+        '<div class="kh-vyber__cena"><strong data-k-vyber-cena></strong><span>s DPH · doprava a montáž v cene</span></div>' +
+        '<div class="kh-vyber__akcie"><a class="k-btn k-btn--primary" data-k-vyber-odkaz href="#">Zobraziť prístrešok <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>' +
+        '<a class="k-btn k-btn--line" data-k-vyber-cfg href="#">Konfigurovať</a></div>' +
+        '<button type="button" class="kh-vyber__vsetky" aria-expanded="false">Všetky rozmery a ceny</button></div>';
+      const img = el.querySelector('img');
+      const najdi = (s, d) => rozmery.find((r) => r.sirka === s && r.dlzka === d);
+      const ukaz = () => {
+        el.querySelectorAll('[data-k-sirka]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kSirka === vyber.sirka)));
+        el.querySelectorAll('[data-k-dlzka]').forEach((b) => {
+          b.setAttribute('aria-pressed', String(b.dataset.kDlzka === vyber.dlzka));
+          b.disabled = !najdi(vyber.sirka, b.dataset.kDlzka);
+        });
+        el.querySelector('[data-k-vyber-cena]').innerHTML = '<small>od</small> ' + vyber.cena;
+        el.querySelector('[data-k-vyber-rozmer]').textContent = vyber.sirka + ' × ' + vyber.dlzka;
+        el.querySelector('[data-k-vyber-odkaz]').setAttribute('href', vyber.odkaz);
+        const cfg = el.querySelector('[data-k-vyber-cfg]');
+        cfg.hidden = !vyber.cfg;
+        if (vyber.cfg) cfg.setAttribute('href', vyber.cfg);
+        if (vzorFotky && vyber.kluc) {
+          const nova = vzorFotky.replace(/\d{4}x\d{4}/, vyber.kluc);
+          if (img.getAttribute('src') !== nova) {
+            img.classList.add('je-zmena');
+            const nacitany = new Image();
+            nacitany.onload = nacitany.onerror = () => { img.src = nova; img.classList.remove('je-zmena'); };
+            nacitany.src = nova;
+          }
+        }
+        img.alt = prvyText + ', ' + vyber.sirka + ' × ' + vyber.dlzka;
+      };
+      el.addEventListener('click', (e) => {
+        const b = e.target.closest('.kh-vyber__volba');
+        if (!b || b.disabled) return;
+        const s = b.dataset.kSirka || vyber.sirka;
+        const d = b.dataset.kDlzka || vyber.dlzka;
+        vyber = najdi(s, d) || rozmery.find((r) => r.sirka === s) || vyber;
+        ukaz();
+      });
+      const vsetky = el.querySelector('.kh-vyber__vsetky');
+      vsetky.addEventListener('click', () => {
+        const otvor = blok.classList.toggle('ukaz-tabulku');
+        vsetky.setAttribute('aria-expanded', String(otvor));
+        vsetky.textContent = otvor ? 'Skryť tabuľku rozmerov' : 'Všetky rozmery a ceny';
+        const viac = grid.querySelector('details.kh-size__viac');
+        if (otvor && viac) viac.open = true;
+      });
+      blok.classList.add('ma-vyber');
+      blok.insertBefore(el, blok.firstChild);
+      img.src = vzorFotky ? vzorFotky.replace(/\d{4}x\d{4}/, vyber.kluc || '') : '';
+      ukaz();
+    });
+  }
+
   function initVideo(root) {
     const vsetky = root.querySelectorAll('video[data-k-video]');
     if (!vsetky.length) return;
@@ -3852,7 +3946,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
      milisekundách, takže žiadny z nich nezmešká svoj termín. */
   const HNED = [initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
-                 initMatTabs, initSelect, initSubory, initScrub, initPrelet,
+                 initMatTabs, initVyberRozmeru, initSelect, initSubory, initScrub, initPrelet,
                  initDopyt, initDopytModal, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
 
   const davkuj = (ulohy) => {
