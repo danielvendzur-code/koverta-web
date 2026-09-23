@@ -1100,9 +1100,6 @@ soltec-pergola-pri-dome-otvorene-lamely.webp	assets/soltec-pergola-pri-dome-otvo
 soltec-pergola-samostatne-stojaca-zahrada-w1000.webp	assets/soltec-pergola-samostatne-stojaca-zahrada-w1000.webp
 soltec-pergola-samostatne-stojaca-zahrada-w640.webp	assets/soltec-pergola-samostatne-stojaca-zahrada-w640.webp
 soltec-pergola-samostatne-stojaca-zahrada.webp	assets/soltec-pergola-samostatne-stojaca-zahrada.webp
-soltec-pergola-screeny-led-terasa-w1000.webp	assets/soltec-pergola-screeny-led-terasa-w1000.webp
-soltec-pergola-screeny-led-terasa-w640.webp	assets/soltec-pergola-screeny-led-terasa-w640.webp
-soltec-pergola-screeny-led-terasa.webp	assets/soltec-pergola-screeny-led-terasa.webp
 soltec-pergola-vybava-vecer-prehlad-w1000.webp	assets/soltec-pergola-vybava-vecer-prehlad-w1000.webp
 soltec-pergola-vybava-vecer-prehlad-w1600.webp	assets/soltec-pergola-vybava-vecer-prehlad-w1600.webp
 soltec-pergola-vybava-vecer-prehlad-w640.webp	assets/soltec-pergola-vybava-vecer-prehlad-w640.webp

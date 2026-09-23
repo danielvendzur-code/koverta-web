@@ -13975,3 +13975,12 @@ body.ma-kh-modal { overflow: hidden; }
 @media (max-width: 480px) { .k .kh-size__grid--matica .kh-size__chip small { font-size: 14px; } }
 /* Odkazy v pätičke: dotyková plocha aspoň 24 px aj na telefóne a tablete. */
 .kf a { display: inline-block; min-height: 24px; padding-block: 3px; }
+/* Kroky po odoslaní dopytu: bočný panel formulára je svetlý (vrstva 140),
+   text krokov ostal biely pre pôvodný tmavý panel. */
+.k .kh-cta .kh-cta__aside .kh-cta__steps li { border-top-color: var(--k-hair); }
+.k .kh-cta .kh-cta__aside .kh-cta__steps strong { color: var(--k-ink); }
+.k .kh-cta .kh-cta__aside .kh-cta__steps small { color: var(--k-muted); }
+.k .kh-cta .kh-cta__aside .kh-cta__steps li > span { color: var(--k-amber-deep, #a07800); }
+/* Stránka rozmeru: popisok nad tmavou galériou a čísla položiek čitateľné. */
+.kr-page .kr-gallery .k-eyebrow { color: rgba(255, 255, 255, .72); }
+.kr-page .kr-included__n { color: #8a6d00; }

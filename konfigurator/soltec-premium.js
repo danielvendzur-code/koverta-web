@@ -5194,10 +5194,71 @@ function kvAdresa(kluc, zaloha) {
                 return [p[0]+dx, wy, z];
               };
               const vertices = ref.vertices.map(mapPoint);
+              /* Z pôvodnej siete ostáva len päta s kolenom (pod 260 mm) a žľab
+                 (od 2 540 mm). Rúra medzi nimi sa kreslí nanovo: sieť sa kvôli
+                 rôznej výške a odsadeniu naťahovala po úsekoch, prierez rúry
+                 sa v šikmine skosil a kolená boli ostré — zvod vyzeral
+                 rozlámaný. Teraz je to jedna okrúhla rúra 80 mm po dráhe
+                 s oblúkmi ako na skutočnom zvode (dve 45° kolená). */
+              const PATA_Z = 260, ZLAB_Z = 2540;
+              let ponechane = 0;
               ref.triangles.forEach(tri => {
+                const zs = tri.map(i => ref.vertices[i][2]);
+                if (!(Math.max(...zs) < PATA_Z || Math.min(...zs) >= ZLAB_Z)) return;
+                ponechane++;
                 const pts=tri.map(i=>vertices[i]);
                 quad(pts,frame,{normal:faceNormal(pts),vertexNormals:tri.map(i=>ref.normals[i]),cull:false,edge:false});
               });
+              const pataHore = Math.max(...vertices.filter((q, i) => ref.vertices[i][2] < PATA_Z).map(q => q[2])) - 2;
+              const zZlab = 2543.5 + H - 2398 + 6;
+              const dx = outletX - pipeX;
+              const ohyb = 110;
+              const bodyDraha = [[pipeX, pataHore]];
+              /* Dráha presne podľa pôvodnej siete „four“: rúra ide po stĺpe
+                 hore takmer pod rám, potom mierne stúpajúcou šikminou tesne
+                 pod nosníkom k výpusti a krátkym zvislým kusom do žľabu —
+                 výšky kolien sú výšky zo siete, prepočítané na výšku H
+                 rovnako ako zvyšok siete. Mení sa len to, že je to
+                 jedna okrúhla rúra s plynulými kolenami. */
+              if (Math.abs(dx) > 24) {
+                const zMap = (z) => z + (H - 2398) * Math.min(1, (z - 200) / 2100);
+                const hore = zMap(2330);
+                const dole = zMap(2010);
+                bodyDraha.push([pipeX, dole], [outletX, hore]);
+              }
+              bodyDraha.push([outletX, zZlab]);
+              /* Zaoblenie rohov: každý vnútorný bod dráhy nahradí kvadratický
+                 oblúk, ktorý sa dotýka oboch susedných úsekov. */
+              const draha = [bodyDraha[0]];
+              for (let i = 1; i < bodyDraha.length - 1; i++) {
+                const [a, b, c] = [bodyDraha[i - 1], bodyDraha[i], bodyDraha[i + 1]];
+                const d1 = Math.hypot(b[0] - a[0], b[1] - a[1]), d2 = Math.hypot(c[0] - b[0], c[1] - b[1]);
+                const r = Math.min(ohyb, d1 * 0.45, d2 * 0.45);
+                const p1 = [b[0] + (a[0] - b[0]) * r / d1, b[1] + (a[1] - b[1]) * r / d1];
+                const p2 = [b[0] + (c[0] - b[0]) * r / d2, b[1] + (c[1] - b[1]) * r / d2];
+                for (let k = 0; k <= 10; k++) {
+                  const t = k / 10, u = 1 - t;
+                  draha.push([u * u * p1[0] + 2 * u * t * b[0] + t * t * p2[0], u * u * p1[1] + 2 * u * t * b[1] + t * t * p2[1]]);
+                }
+              }
+              draha.push(bodyDraha[bodyDraha.length - 1]);
+              const SEG = 20, krzy = [];
+              draha.forEach((q, i) => {
+                const pr = draha[Math.max(0, i - 1)], nx = draha[Math.min(draha.length - 1, i + 1)];
+                const tx = nx[0] - pr[0], tz = nx[1] - pr[1], tl = Math.hypot(tx, tz) || 1;
+                const n = [tz / tl, 0, -tx / tl];         // kolmica v rovine dráhy
+                krzy.push([...Array(SEG)].map((_, k) => {
+                  const a = k * Math.PI * 2 / SEG, c = Math.cos(a), sn = Math.sin(a);
+                  const nor = [n[0] * c, sn, n[2] * c];
+                  return { p: [q[0] + nor[0] * radius, pipeY + nor[1] * radius, q[1] + nor[2] * radius], n: nor };
+                }));
+              });
+              let rurTroj = 0;
+              for (let i = 0; i < krzy.length - 1; i++) for (let k = 0; k < SEG; k++) {
+                const A = krzy[i][k], B = krzy[i][(k + 1) % SEG], C = krzy[i + 1][(k + 1) % SEG], D = krzy[i + 1][k];
+                quad([A.p, B.p, C.p, D.p], frame, { normal: faceNormal([A.p, B.p, C.p, D.p]), vertexNormals: [A.n, B.n, C.n, D.n], cull: false, edge: false });
+                rurTroj += 2;
+              }
               kvAccessoryGeometry.gutter = {enabled:true,source:ref.source,
                 x0:L-146.5,x1:L-21.5,y0:9.4+pipeY-55,y1:W-10,
                 zBottom:2543.5+H-2398,zTop:2611+H-2398,outletX:L-84,
@@ -5256,7 +5317,8 @@ function kvAdresa(kluc, zaloha) {
                    sa vyberie tá nesprávna, jej šikmina sa zdeformuje. */
                 outletOffset:Math.round(odsadenie), sourceOffset: four ? -943 : 0,
                 post:{x0:postX,x1:postFace,y0:inset,y1:inset+section.w},clamps,
-                vertexCount:vertices.length,triangleCount:ref.triangles.length,
+                vertexCount:vertices.length,triangleCount:ponechane+rurTroj,
+                pipePath:draha.map(q=>[Math.round(q[0]),Math.round(q[1])]),
                 pathBounds:{xMin:Math.min(...vertices.map(p=>p[0])),xMax:Math.max(...vertices.map(p=>p[0])),
                   yMin:Math.min(...vertices.map(p=>p[1])),yMax:Math.max(...vertices.map(p=>p[1])),
                   zMin:Math.min(...vertices.map(p=>p[2])),zMax:Math.max(...vertices.map(p=>p[2]))}};

@@ -261,8 +261,13 @@ function validateAccessoryContacts(snap, label) {
   assert(downpipe && downpipe.enabled, `${label}: downpipe contact data missing`);
   assert(downpipe.source === gutter.source && /mesh_Body1_(93|51)_/.test(downpipe.source),
     `${label}: original Expivi drainage variant missing`);
-  assert(downpipe.vertexCount > 1800 && downpipe.triangleCount > 2800,
+  /* Päta s kolenom a žľab ostávajú zo siete Expivi, rúra medzi nimi je
+     okrúhla s plynulými kolenami po tej istej dráhe (predtým sa sieť
+     naťahovala a kolená boli rozlámané). */
+  assert(downpipe.vertexCount > 1800 && downpipe.triangleCount > 2400,
     `${label}: source drainage mesh was replaced by an incomplete placeholder`);
+  assert(Array.isArray(downpipe.pipePath) && downpipe.pipePath.length >= 2,
+    `${label}: downpipe tube path missing`);
   /* Priemer zvodu. Majiteľ najprv vytkol rúru so 93 % šírky stĺpa — na zábere
      vyzerala rovnako široko ako stĺp. Nasledovala oprava, ktorá priemer
      naviazala na stĺp (0,6 × jeho šírka) a strážila ju tu pravidlom „výrazne
