@@ -2453,10 +2453,15 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
     /* Fotky z telefónu mávajú 5–12 MB. Pred odoslaním ich zmenšíme na
        rozumných 1600 px; návrh z nich zostane čitateľný a požiadavka sa
-       zmestí do limitu serverovej funkcie. PDF ani iné súbory nemeníme. */
+       zmestí do limitu serverovej funkcie. Server prijme len JPG, PNG, WebP,
+       HEIC a PDF, preto sa iný obrázok (GIF, AVIF, BMP…) prevedie na JPG
+       vždy. PDF nemeníme. */
     const zmensiFotku = async (subor) => {
-      if (!/^image\//i.test(subor.type) || subor.size < 650000 || !('createImageBitmap' in window)) return subor;
-      const obrazok = await createImageBitmap(subor);
+      if (!/^image\//i.test(subor.type) || !('createImageBitmap' in window)) return subor;
+      const beznyTyp = /^image\/(jpeg|png|webp|hei[cf])$/i.test(subor.type);
+      if (beznyTyp && subor.size < 650000) return subor;
+      let obrazok;
+      try { obrazok = await createImageBitmap(subor); } catch (e) { return subor; }
       const pomer = Math.min(1, 1600 / Math.max(obrazok.width, obrazok.height));
       const platno = document.createElement('canvas');
       platno.width = Math.max(1, Math.round(obrazok.width * pomer));
