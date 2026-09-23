@@ -5019,8 +5019,15 @@ function kvAdresa(kluc, zaloha) {
                lemovanie: medzeru zatvorí rovný pás na úrovni dna vlny,
                hlboko pod ramenom, takže sa s ním v hĺbke nebije. */
             const trapDnoZ = () => trapBot + TRAP_SKIN_VIS;
-            drawTrapSurface(tx0, tx1, ty0, ly0, trapDnoZ, vrchHex, true);
-            drawTrapSurface(tx0, tx1, ly1, ty1, trapDnoZ, vrchHex, true);
+            /* Pás sa nesmie dotknúť vnútornej strany čela. Čelo lemovania je
+               plech hrúbky 1,5 mm a kým pás končil presne na jeho rube,
+               delilo ho od lícnej plochy len tých 1,5 mm — hĺbkový test ich
+               miestami nerozsúdil a na čele boli v rade svetlé bodky. Dva
+               milimetre vôle má aj pozinkovaný profil vedľa; pás je aj tak
+               celý pod ramenom lemovania, takže sa nič neodkryje. */
+            const TRAP_DNO_VOLA = 2;
+            drawTrapSurface(tx0, tx1, ty0 + TRAP_DNO_VOLA, ly0, trapDnoZ, vrchHex, true);
+            drawTrapSurface(tx0, tx1, ly1, ty1 - TRAP_DNO_VOLA, trapDnoZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates

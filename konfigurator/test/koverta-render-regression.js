@@ -18,6 +18,17 @@ assert.equal(hidden.length, 2, 'Koverta sheet must continue under both end flash
 assert.doesNotMatch(source, /drawTrapSurface\(tx0, tx1, ty0, ty1, trapUpperZ, vrchHex, true\)/,
   'Full hidden upper skin causes corrugation dots on top of the flashing');
 
+assert.match(source, /drawTrapSurface\(tx0, tx1, ty0 \+ TRAP_DNO_VOLA, ly0, trapDnoZ, vrchHex, true\)/,
+  'Koverta side strip must keep clearance from the fascia back face (dots on the fascia)');
+assert.match(source, /drawTrapSurface\(tx0, tx1, ly1, ty1 - TRAP_DNO_VOLA, trapDnoZ, vrchHex, true\)/,
+  'Koverta side strip must keep clearance from the fascia back face (dots on the fascia)');
+
+const render3d = fs.readFileSync(path.resolve(__dirname, '..', 'kv-render3d.js'), 'utf8');
+assert.doesNotMatch(render3d, /drsnost > 0\.58/,
+  'Reflection branch threshold must not equal the paint roughness (speckles on the flashing)');
+assert.match(render3d, /taa: program\(gl, VS_PLOCHA, FS_TAA\)/,
+  'Motion frames must be resolved by temporal anti-aliasing');
+
 assert.match(source, /const ringStep = lowPowerGraphics \? 3 : 1;\s*for \(let i = 10; i >= 0; i -= ringStep\)/,
   'Low-power devices must keep a cheaper ground shadow instead of none');
 assert.match(source, /if \(!interacting\) detailTimer = window\.setTimeout\(\(\) => \{\s*motionDetail = false;\s*drawStage\(\);/,
@@ -29,4 +40,4 @@ assert.match(source, /material === 'fascia' \? 0\.035 : HAZE_I/,
 assert.match(source, /true, 'fascia'\)/,
   'Koverta flashing faces must identify their fascia material');
 
-console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, cropped upper roof skin, sharp settle path, low-power shadow guard and fascia haze');
+console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, cropped upper roof skin, sharp settle path, low-power shadow guard, fascia haze, clean fascia and motion TAA');
