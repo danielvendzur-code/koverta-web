@@ -1073,6 +1073,9 @@ soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strec
 soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
 soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
 soltec-pergola-plna-strecha-pri-dome.webp	assets/soltec-pergola-plna-strecha-pri-dome.webp
+soltec-pergola-podhlad-strechy-a-ram-w1000.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w1000.webp
+soltec-pergola-podhlad-strechy-a-ram-w640.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w640.webp
+soltec-pergola-podhlad-strechy-a-ram.jpg	assets/soltec-pergola-podhlad-strechy-a-ram.jpg
 soltec-pergola-presklenie-restauracia-w1000.webp	assets/soltec-pergola-presklenie-restauracia-w1000.webp
 soltec-pergola-presklenie-restauracia-w1600.webp	assets/soltec-pergola-presklenie-restauracia-w1600.webp
 soltec-pergola-presklenie-restauracia-w640.webp	assets/soltec-pergola-presklenie-restauracia-w640.webp

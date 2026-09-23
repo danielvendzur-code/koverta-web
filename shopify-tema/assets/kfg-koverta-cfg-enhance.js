@@ -755,6 +755,12 @@
       var sprava = document.querySelector('textarea[name="contact[body]"]');
       if (sprava && sprava.dataset.kAuto && sprava.value.trim() === sprava.dataset.kAuto.trim()) sprava.value = '';
       if (ponuka) ponuka.click();
+      /* K zostave patrí aj odkaz, ktorým sa dá v konfigurátore otvoriť. */
+      window.setTimeout(function () {
+        farbaDoAdresy();
+        var pole = document.querySelector('textarea[name="contact[body]"]');
+        if (pole && pole.value.indexOf(location.href) === -1) pole.value = pole.value.replace(/\s+$/, '') + '\n\nOdkaz na zostavu: ' + location.href;
+      }, 120);
       if (typeof window.kvMeraj === 'function') window.kvMeraj('konfigurator_poslat');
       return;
     }
@@ -921,4 +927,35 @@
   function start() { window.setTimeout(vyznacHranice, 600); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
+})();
+
+/* --- Výzva posunúť sa ku krokom (telefón) --------------------------------
+   Na telefóne zaberie 3D náhľad celú obrazovku a kroky nastavenia sú pod
+   ním — nie je vidieť, že treba ísť nižšie. Kým sú kroky mimo obrazovky,
+   dole stojí tlačidlo „Nastaviť rozmer a farbu“; ťuknutím sa k nim posunie
+   a keď sa kroky ukážu, samo zmizne. */
+(function kvVyzvaKrokov() {
+  if (!window.matchMedia || !window.matchMedia('(max-width: 899px)').matches) return;
+  var pokusov = 0;
+  (function cakaj() {
+    var panel = document.querySelector('#SoltecPremium .sp-panel');
+    if (!panel) { if (++pokusov < 80) window.setTimeout(cakaj, 125); return; }
+    if (!('IntersectionObserver' in window) || document.querySelector('.kv-vyzva')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'kv-vyzva';
+    b.innerHTML = '<span>Nastaviť rozmer a farbu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>';
+    b.addEventListener('click', function () {
+      panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    });
+    document.body.appendChild(b);
+    var videl = false;
+    new IntersectionObserver(function (z) {
+      var e = z[0];
+      /* Po prvom zobrazení krokov sa výzva už nevráti. */
+      if (e.isIntersecting || e.boundingClientRect.top < 0) videl = true;
+      b.classList.toggle('je-vidno', !videl);
+    }, { rootMargin: '0px 0px -25% 0px' }).observe(panel);
+    window.setTimeout(function () { if (!videl) b.classList.add('je-vidno'); }, 900);
+  })();
 })();
