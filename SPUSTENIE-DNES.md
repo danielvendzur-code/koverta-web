@@ -56,7 +56,11 @@ nesmie meniť — inak reklamy skončia na 404 alebo vzniknú duplicitné produk
 7. `node tools/produkty-zive.js && python3 tools/generuj-rozmery.py &&
    python3 tools/adresy.py` → commit (canonical rozmerov sa prepne na nové
    produkty; robí to aj plánovaný workflow).
-8. Search Console: odoslať `https://koverta.sk/sitemap.xml` (generuje Shopify
+8. **Agentúre dať vedieť, že téma je spustená** — hneď potom otestujú
+   a zapnú meranie (konverzia na udalosť `dopyt_odoslany` s parametrom
+   `dopyt_typ` a klik na telefón `telefon_klik`; názvy sa nesmú meniť,
+   stráži to `tools/cta-kontrola.py`).
+9. Search Console: odoslať `https://koverta.sk/sitemap.xml` (generuje Shopify
    a obsahuje kolekcie, stránky aj aktívne produkty).
 
 Kroky 2, 4 a 5 vie spraviť Claude cez Shopify API na pokyn „spúšťame“.
