@@ -18,7 +18,6 @@ foto-20250521_171650-w1000.jpg	assets/foto/20250521_171650-w1000.jpg
 foto-20250522_144729-w1800-w1000.webp	assets/foto/20250522_144729-w1800-w1000.webp
 foto-20250522_144729-w1800.jpg	assets/foto/20250522_144729-w1800.jpg
 foto-20250522_144729-w600-w1000.webp	assets/foto/20250522_144729-w600-w1000.webp
-foto-20250522_144729-w600.jpg	assets/foto/20250522_144729-w600.jpg
 foto-20250522_144820-w1000-w1000.webp	assets/foto/20250522_144820-w1000-w1000.webp
 foto-20250522_144820-w1000-w640.webp	assets/foto/20250522_144820-w1000-w640.webp
 foto-20250522_144820-w1000.jpg	assets/foto/20250522_144820-w1000.jpg
@@ -624,8 +623,8 @@ koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
-koverta-pristresok-vahovce-takac-upscaled.jpg	assets/koverta-pristresok-vahovce-takac-upscaled.jpg
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
+koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena.jpg	assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg
 koverta-zahradny-pristresok-bratislava-detail-w1000.webp	assets/koverta-zahradny-pristresok-bratislava-detail-w1000.webp
