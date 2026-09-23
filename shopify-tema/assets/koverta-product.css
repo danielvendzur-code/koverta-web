@@ -265,3 +265,19 @@
 .kp-fakty > div:first-child { padding-left: 0; border-left: 0; }
 .kp-fakty dt { margin: 0 0 4px; color: var(--k-ink); font: 700 17px/1.1 var(--k-head); letter-spacing: -0.01em; }
 .kp-fakty dd { margin: 0; color: var(--k-muted); font: 400 13px/1.35 var(--k-body); }
+
+/* Od výberu rozmeru po montáž: päť krokov v riadku, na telefóne pod sebou. */
+.kp-proces { background: var(--k-ink); color: #fff; }
+.kp-proces .k-eyebrow { color: var(--k-amber); }
+.kp-proces .k-h2 { color: #fff; }
+.kp .kp-process { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 32px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255,255,255,.14); }
+.kp-process li { padding: 24px clamp(14px, 1.8vw, 26px) 0 0; }
+.kp-process li + li { padding-left: clamp(14px, 1.8vw, 26px); border-left: 1px solid rgba(255,255,255,.14); }
+.kp-process span { color: var(--k-amber); font: 700 12px/1 var(--k-body); letter-spacing: .08em; }
+.kp-process strong { display: block; margin: 18px 0 8px; color: #fff; font: 700 17px/1.25 var(--k-head); }
+.kp-process p { margin: 0; color: rgba(255,255,255,.7); font: 400 14px/1.55 var(--k-body); }
+@media (max-width: 899px) {
+  .kp .kp-process { grid-template-columns: minmax(0, 1fr); }
+  .kp-process li, .kp-process li + li { padding: 18px 0; border-left: 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+  .kp-process strong { margin-top: 10px; }
+}

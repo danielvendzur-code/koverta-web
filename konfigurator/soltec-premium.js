@@ -1793,6 +1793,9 @@ function kvAdresa(kluc, zaloha) {
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { stopCamera(); view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
+          /* Len pre produktové rendre: oddialenie pod 100 %, aby sa do záberu
+             zmestil celý tieň. Ovládanie na stránke ide od 100 % vyššie. */
+          window.SP_TEST.setZoom = (z) => { manualZoom = z; cachedGeometry = null; renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, zoom: manualZoom, width: widthMM(), length: lengthMM(), height: state.height,

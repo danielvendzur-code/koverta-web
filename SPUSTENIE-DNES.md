@@ -39,7 +39,9 @@ nesmie meniť — inak reklamy skončia na 404 alebo vzniknú duplicitné produk
 
 1. **Preview** témy: úvod, `/collections/pristresky-pre-auta` → rozmer,
    dopyt (skúšobný), konfigurátor, telefón, mobil.
-2. **Produkty** (API): 66 nových → Aktívne + Online Store.
+2. **Produkty** (API): 66 nových → Aktívne a zverejniť v **tých istých
+   predajných kanáloch ako staré**: Online Store, **Google & YouTube**
+   (feed Merchant Center), Facebook & Instagram, Pinterest.
    `node tools/produkty-zive.js` → musí hlásiť 66/66 nových živých.
 3. **Publish** témy koverta-web/shopify (v admine, API to nedovolí).
 4. **Staré produkty** → Koncept, hneď potom 66 presmerovaní 301:

@@ -229,7 +229,7 @@
         <dl class="kp-fakty">
           <div><dt>V cene</dt><dd>Doprava a montáž po celom Slovensku</dd></div>
           <div><dt>1 deň</dt><dd>Zvyčajná dĺžka montáže</dd></div>
-          <div><dt>5,0</dt><dd>Hodnotenie na Google, výroba na Slovensku</dd></div>
+          <div><dt>5,0</dt><dd>Hodnotenie zákazníkov na Google</dd></div>
         </dl>
 
         <div class="kp-detaily">
@@ -256,6 +256,37 @@
     </div>
   </section>
 
+  <section class="k-band kh-vcene kp-vcene" aria-labelledby="kpVcene">
+    <div class="k-wrap">
+      <header class="k-head"><div class="k-head__title">
+        <p class="k-eyebrow">Čo je v cene {{ cena }}</p>
+        <h2 id="kpVcene" class="k-h2">Hotový prístrešok postavený u vás, nie stavebnica</h2>
+      </div></header>
+      <ul class="kh-vcene__rad">
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">01</span>
+          <h3 class="kh-vcene__nazov">Návrh pre vaše miesto</h3>
+          <ul class="kh-vcene__body"><li>Rozmer a osadenie stĺpov overíme pred výrobou</li><li>Pri katalógovom rozmere stačia fotky a miery</li><li>Nezáväzne, aj keď si vyberiete inak</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">02</span>
+          <h3 class="kh-vcene__nazov">Projekt prístrešku</h3>
+          <ul class="kh-vcene__body"><li>Zakótované rozmery, prierez a pohľady</li><li>Pôdorys osadenia aj s betónovými pätkami</li><li>Dostanete ho spolu s ponukou</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">03</span>
+          <h3 class="kh-vcene__nazov">Doprava a montáž</h3>
+          <ul class="kh-vcene__body"><li>V cene po celom Slovensku</li><li>Bežný prístrešok postavíme za jeden deň</li><li>Odpad odvezieme, miesto upraceme</li></ul>
+        </li>
+        <li class="kh-vcene__polozka">
+          <span class="kh-vcene__cislo" aria-hidden="true">04</span>
+          <h3 class="kh-vcene__nazov">Ochrana proti korózii</h3>
+          <ul class="kh-vcene__body"><li>Stĺpy aj pätky pozinkované</li><li>Lakované, {{ product.variants.size }} odtieňov v štandarde</li><li>Lemovanie s garanciou povrchu 40 rokov</li></ul>
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <section class="k-band kp-tech" aria-labelledby="kpTech">
     <div class="k-wrap kp-tech__grid">
       {% render 'koverta-nakres', w: width_mm, l: length_mm, w_m: w_m, l_m: l_m, area: area %}
@@ -271,11 +302,49 @@
           <div><dt>Odvodnenie</dt><dd>žľab a zvod v cene</dd></div>
           <div><dt>Farby</dt><dd>{{ product.variants.size }} odtieňov RAL bez príplatku</dd></div>
         </dl>
-        {%- if product.description != blank -%}<div class="kp-popis">{{ product.description | split: '</p>' | first | append: '</p>' }}</div>{%- endif -%}
       </div>
     </div>
   </section>
 
+
+  <section class="kr-gallery" id="kpVerifiedRealizations" aria-labelledby="kpRealTitle-{{ section.id }}">
+    <div class="k-wrap">
+      <header class="kr-gallery__head">
+        <div>
+          <p class="k-eyebrow">Reálne realizácie</p>
+          <h2 class="k-h2" id="kpRealTitle-{{ section.id }}">Takto vyzerá Koverta pri dome.</h2>
+        </div>
+        <a class="k-btn k-btn--line" href="/pages/galeria-pristresky-pre-auta">Pozrieť mapu realizácií</a>
+      </header>
+      <div class="kr-gallery__grid">
+        {%- if family == 'zahrada' -%}
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-bratislava.webp?v=1790093096" alt="Záhradný prístrešok Koverta nad terasou" loading="lazy" decoding="async"><figcaption><strong>Zastrešená terasa</strong><span>Bratislava</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-detail.webp?v=1790093103" alt="Detail konštrukcie záhradného prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Čisté oceľové riešenie</strong><span>Detail realizácie</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-zahrada-sedenie.webp?v=1790093110" alt="Zastrešené záhradné posedenie Koverta" loading="lazy" decoding="async"><figcaption><strong>Záhradné posedenie</strong><span>Reálna realizácia</span></figcaption></figure>
+        {%- else -%}
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-vahovce.webp?v=1790093072" alt="Dvojitý prístrešok Koverta pri rodinnom dome" loading="lazy" decoding="async"><figcaption><strong>Prístrešok pre dve autá</strong><span>Váhovce</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-lamely.webp?v=1790093082" alt="Drevená lamelová výplň prístrešku Koverta" loading="lazy" decoding="async"><figcaption><strong>Lamelová výplň</strong><span>Detail realizácie</span></figcaption></figure>
+          <figure><img src="https://cdn.shopify.com/s/files/1/0268/6356/6930/files/koverta-realizacia-auto-dom.webp?v=1790093089" alt="Prístrešok Koverta pre auto pred domom" loading="lazy" decoding="async"><figcaption><strong>Koverta pri dome</strong><span>Reálna realizácia</span></figcaption></figure>
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+
+  <section class="k-band kp-proces" aria-labelledby="kpProces">
+    <div class="k-wrap">
+      <header class="k-head"><div class="k-head__title">
+        <p class="k-eyebrow">Objednávka</p>
+        <h2 id="kpProces" class="k-h2">Od výberu rozmeru po montáž</h2>
+      </div></header>
+      <ol class="kp-process">
+        <li><span>01</span><strong>Vyberiete rozmer</strong><p>Katalógový rozmer objednáte hneď, alebo si ho najprv upravíte v 3D konfigurátore.</p></li>
+        <li><span>02</span><strong>Overíme miesto</strong><p>Preveríme osadenie, priestor pre stĺpy a pripravenosť podkladu.</p></li>
+        <li><span>03</span><strong>Potvrdíme riešenie</strong><p>Spolu odsúhlasíme rozmer, farbu a doplnky, ktoré idú do výroby.</p></li>
+        <li><span>04</span><strong>Vyrobíme</strong><p>Prístrešok vyrobíme podľa potvrdenej špecifikácie.</p></li>
+        <li><span>05</span><strong>Privezieme a namontujeme</strong><p>Zostavu dopravíme na miesto a osadíme na pripravený podklad.</p></li>
+      </ol>
+    </div>
+  </section>
 
   <section class="k-band kh-work kp-rozmery" aria-labelledby="kpRozmery">
     <div class="k-wrap">
@@ -285,30 +354,7 @@
     </div>
   </section>
 
-  <section class="k-band kh-faq" id="otazky" aria-labelledby="kpFaq">
-    <div class="k-wrap">
-      <div class="kh-faq__grid">
-        <div class="kh-faq__intro">
-          <div class="kh-faq__intro-in">
-            <p class="k-eyebrow">Časté otázky</p>
-            <h2 id="kpFaq" class="k-h2">Pred objednávkou {{ dimension }}</h2>
-            <p class="k-copy">Nenašli ste odpoveď? Zavolajte nám, poradíme aj bez záväzku.</p>
-            <a class="k-btn k-btn--line" href="tel:+421948482266">+421 948 482 266</a>
-          </div>
-        </div>
-        <div class="kh-faq__list" data-k-faq>
-          <details class="kh-faq__item"><summary><span>Čo je a čo nie je v cene?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>V cene je prístrešok, dohodnuté príslušenstvo, doprava, montáž a servis po celom Slovensku, bez príplatku za kilometre. V cene nie je betónový podklad ani elektroinštalácia, oboje naceňujeme samostatne.</p></div></details>
-          {%- unless family == 'zahrada' -%}
-          <details class="kh-faq__item"><summary><span>Zmestia sa pod {{ dimension }} {% if use_label == '1 auto' %}moje auto{% else %}dve autá{% endif %}?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Šírka {{ w_m }} m je v našom katalógu určená pre {{ use_label }}, hĺbka {{ l_m }} m pre bežné osobné autá. Pri SUV, dodávke alebo úzkom vjazde si rozmer overte v 3D konfigurátore, prípadne nám pošlite fotky miesta a rozmer navrhneme.</p></div></details>
-          {%- endunless -%}
-          <details class="kh-faq__item"><summary><span>Aký podklad musím pripraviť?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Kotvíme do monolitických betónových pätiek, betónovej platne alebo betónových pásov. Požiadavky na každý typ vrátane minimálnej hrúbky betónu dostanete v Technických podmienkach spolu s ponukou. Ak podklad ešte nemáte, pätky vieme vykopať a vybetónovať za vás.</p></div></details>
-          <details class="kh-faq__item"><summary><span>Ako rýchlo budem mať prístrešok hotový?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Na dopyt odpovedáme do jedného pracovného dňa. Obchodné podmienky uvádzajú dodaciu lehotu 60 dní, v praxi sa k montáži hlásime zvyčajne okolo štvrtého týždňa. Samotná montáž trvá jeden pracovný deň, pri väčších projektoch dva a viac.</p></div></details>
-          <details class="kh-faq__item"><summary><span>Potrebujem stavebné povolenie?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Závisí od rozmeru, umiestnenia a konkrétneho pozemku, preto si to vždy overte na príslušnom stavebnom úrade. K ponuke dostávate projekt s presnými rozmermi a osadením konštrukcie, teda presne tie podklady, ktoré úrad zvyčajne žiada.</p></div></details>
-          <details class="kh-faq__item"><summary><span>Unesie strecha sneh?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Konštrukcie sú staticky posúdené aj pre vysokohorské oblasti s náročnejším snehovým a veterným zaťažením. Pri mimoriadne veľkom množstve snehu odporúčame strechu odpratať, rovnako ako pri každej inej streche.</p></div></details>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
   <section class="k-band kh-cta" id="ponuka" aria-labelledby="kpCta" data-k-otvarac-nadpis="Cenová ponuka na {{ dimension }}" data-k-otvarac-text="Overíme rozmer pre vaše miesto a pošleme cenu vrátane doplnkov. Ozveme sa do jedného pracovného dňa.">
     <div class="k-wrap">
@@ -392,6 +438,31 @@
             {% render 'koverta-foto', meno: bok_foto, w: 1600, h: 1200, velka: false, alt: bok_alt, sizes: '(max-width: 899px) 100vw, 30vw' %}
           </figure>
         </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="k-band kh-faq" id="otazky" aria-labelledby="kpFaq">
+    <div class="k-wrap">
+      <div class="kh-faq__grid">
+        <div class="kh-faq__intro">
+          <div class="kh-faq__intro-in">
+            <p class="k-eyebrow">Časté otázky</p>
+            <h2 id="kpFaq" class="k-h2">Pred objednávkou {{ dimension }}</h2>
+            <p class="k-copy">Nenašli ste odpoveď? Zavolajte nám, poradíme aj bez záväzku.</p>
+            <a class="k-btn k-btn--line" href="tel:+421948482266">+421 948 482 266</a>
+          </div>
+        </div>
+        <div class="kh-faq__list" data-k-faq>
+          <details class="kh-faq__item"><summary><span>Čo je a čo nie je v cene?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>V cene je prístrešok, dohodnuté príslušenstvo, doprava, montáž a servis po celom Slovensku, bez príplatku za kilometre. V cene nie je betónový podklad ani elektroinštalácia, oboje naceňujeme samostatne.</p></div></details>
+          {%- unless family == 'zahrada' -%}
+          <details class="kh-faq__item"><summary><span>Zmestia sa pod {{ dimension }} {% if use_label == '1 auto' %}moje auto{% else %}dve autá{% endif %}?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Šírka {{ w_m }} m je v našom katalógu určená pre {{ use_label }}, hĺbka {{ l_m }} m pre bežné osobné autá. Pri SUV, dodávke alebo úzkom vjazde si rozmer overte v 3D konfigurátore, prípadne nám pošlite fotky miesta a rozmer navrhneme.</p></div></details>
+          {%- endunless -%}
+          <details class="kh-faq__item"><summary><span>Aký podklad musím pripraviť?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Kotvíme do monolitických betónových pätiek, betónovej platne alebo betónových pásov. Požiadavky na každý typ vrátane minimálnej hrúbky betónu dostanete v Technických podmienkach spolu s ponukou. Ak podklad ešte nemáte, pätky vieme vykopať a vybetónovať za vás.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Ako rýchlo budem mať prístrešok hotový?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Na dopyt odpovedáme do jedného pracovného dňa. Obchodné podmienky uvádzajú dodaciu lehotu 60 dní, v praxi sa k montáži hlásime zvyčajne okolo štvrtého týždňa. Samotná montáž trvá jeden pracovný deň, pri väčších projektoch dva a viac.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Potrebujem stavebné povolenie?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Závisí od rozmeru, umiestnenia a konkrétneho pozemku, preto si to vždy overte na príslušnom stavebnom úrade. K ponuke dostávate projekt s presnými rozmermi a osadením konštrukcie, teda presne tie podklady, ktoré úrad zvyčajne žiada.</p></div></details>
+          <details class="kh-faq__item"><summary><span>Unesie strecha sneh?</span><span class="kh-faq__sign" aria-hidden="true"></span></summary><div><p>Konštrukcie sú staticky posúdené aj pre vysokohorské oblasti s náročnejším snehovým a veterným zaťažením. Pri mimoriadne veľkom množstve snehu odporúčame strechu odpratať, rovnako ako pri každej inej streche.</p></div></details>
+        </div>
       </div>
     </div>
   </section>
