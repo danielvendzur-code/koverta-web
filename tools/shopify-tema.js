@@ -633,7 +633,12 @@ ${v.spolocnyChvost.join('\n')}
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-hlavicka.liquid'),
     shopifyHlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-paticka.liquid'),
-    '{%- assign kv_dopyt = kv_dopyt | default: "#ponuka" -%}\n' + v.paticka +
+    /* Pätička je sekcia a sekcie v Shopify nevidia premenné stránky, takže
+       kv_dopyt je tu takmer vždy prázdne. Záloha vedie na kontakt s kotvou
+       #ponuka: kde je na stránke formulár, skript otvorí jeho okno na mieste;
+       inde (košík, vyhľadávanie, 404) otvorí formulár na kontakte. Holé
+       „#ponuka“ tam nerobilo nič. */
+    '{%- assign kv_dopyt = kv_dopyt | default: "/pages/kontakt#ponuka" -%}\n' + v.paticka +
     '\n{% schema %}\n{"name":"Koverta pätička"}\n{% endschema %}\n');
 
   /* Telo každej stránky ide do `snippets/`, nie rovno do šablóny.
