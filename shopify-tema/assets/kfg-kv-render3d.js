@@ -157,6 +157,8 @@
     sklo:     { kov: 0.00, drsnost: 0.04, odraz: 1.00, sklo: 1 },
     panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.68 },
     drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.62 },
+    /* Tkanina ZIP rolety: matná, bez lesku, nepriehľadná. */
+    latka:    { kov: 0.00, drsnost: 0.92, odraz: 0.58 },
     polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
     /* Odmerané: pri 0,66 mala podlaha jas 208 a pozadie 213 — na obraze
        splynuli a model vyzeral, akoby stál v prázdne. Podlaha musí byť
