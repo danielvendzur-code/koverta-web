@@ -60,17 +60,16 @@
   }
   .otCookiesNotification #cookies-wrapper #ot-cookie-banner { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; margin: 0 !important; }
   .otCookiesNotification #cookies-wrapper #ot-cookie-banner > * { width: 100% !important; max-width: none !important; margin: 0 !important; }
+  /* Bez krížika: rozhoduje sa tlačidlami Súhlasím / Odmietnuť. */
   .otCookiesNotification #cookies-wrapper .cst-corner,
-  .otCookiesNotification #cookies-popup .cst-corner-popup { position: absolute !important; top: 14px !important; right: 16px !important; left: auto !important; z-index: 1; }
-  .otCookiesNotification #cookies-wrapper .ot-close-icon,
-  .otCookiesNotification #cookies-popup .cst-close-popup { color: var(--kv-muted) !important; font-size: 16px !important; line-height: 1 !important; }
+  .otCookiesNotification #cookies-popup .cst-corner-popup { display: none !important; }
   .otCookiesNotification #cookies-wrapper .otCookies-title-banner,
   .otCookiesNotification #cookies-wrapper .otCookies-title-banner h4 { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; text-align: left !important; }
   .otCookiesNotification #cookies-wrapper .cst-banner-header { display: flex !important; align-items: center !important; gap: 12px !important; justify-content: flex-start !important; }
   .otCookiesNotification #cookies-wrapper #cst-banner-title,
   .otCookiesNotification #cookies-popup #cookies-title p {
     display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px !important;
-    width: 100% !important; margin: 0 !important; padding-right: 26px !important;
+    width: 100% !important; margin: 0 !important; padding-right: 0 !important;
     color: var(--kv-ink) !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.2 !important; text-align: left !important;
   }
   .otCookiesNotification #cookies-wrapper #cst-banner-title::before,
