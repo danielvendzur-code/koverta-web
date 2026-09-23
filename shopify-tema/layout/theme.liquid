@@ -25,6 +25,7 @@
 {%- when 'nove-404' -%}{%- assign kv_titulok = 'Stránka sa nenašla | Koverta' -%}{%- assign kv_popis = 'Táto adresa na webe Koverta neexistuje. Nájdite prístrešky, pergoly, tienenie alebo konfigurátor.' -%}
 {%- when 'nove-bioklimaticke-pergoly' -%}{%- assign kv_titulok = 'Bioklimatické pergoly Soltec s otočnými lamelami | Koverta' -%}{%- assign kv_popis = 'Hliníková pergola Soltec s otočnými lamelami reguluje tieň, vzduch a ochranu pred dažďom. Šesť modelov SL, ZIP rolety, sklo a LED. Montáž po celom Slovensku.' -%}
 {%- when 'nove-carport-soltec' -%}{%- assign kv_titulok = 'Hliníkový prístrešok pre auto Soltec | Koverta' -%}{%- assign kv_popis = 'Celohliníkové prístrešky Soltec pre jedno až tri autá. Rad F s rovným rámom alebo rad SL s vyššou nosnosťou, voda odteká vnútri stĺpov. Montáž v cene.' -%}
+{%- when 'nove-dakujeme', 'dakujeme' -%}{%- assign kv_titulok = 'Ďakujeme | Koverta' -%}{%- assign kv_popis = 'Dopyt sme prijali. Ozveme sa do jedného pracovného dňa.' -%}
 {%- when 'nove-konfigurator', 'konfigurator' -%}{%- assign kv_titulok = '3D konfigurátor | Koverta' -%}{%- assign kv_popis = '3D konfigurátor Koverta: prístrešok pre auto, carport Soltec aj bioklimatická pergola. Nastavte rozmer, strechu a farbu a pošlite nám zostavu.' -%}
 {%- when 'nove-kontakt', 'kontakt' -%}{%- assign kv_titulok = 'Kontakt | prístrešky a pergoly Koverta' -%}{%- assign kv_popis = 'Zameranie aj cenová ponuka sú zadarmo a nezáväzné. Volajte +421 948 482 266, píšte na obchod@koverta.sk alebo pošlite dopyt s fotkami.' -%}
 {%- when 'nove-obchodne-podmienky', 'vseobecne-obchodne-podmienky' -%}{%- assign kv_titulok = 'Obchodné podmienky | Koverta' -%}{%- assign kv_popis = 'Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku, od objednávky po odovzdanie.' -%}
@@ -121,7 +122,8 @@
     "./outdoor-kuchyne/": "/collections/outdoor-kuchyne",
     "./assets/soltec-kuchyna-terasa.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-kuchyna-terasa.jpg",
     "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
-    "./assets/soltec-mark.png": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png"
+    "./assets/soltec-mark.png": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png",
+    "./dakujeme/": "/pages/dakujeme"
   };
   window.KV_SCENE_ASSETS = "https://danielvendzur-code.github.io/koverta-web/konfigurator/scene-assets/";
 </script>

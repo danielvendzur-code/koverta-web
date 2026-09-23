@@ -1,23 +1,80 @@
 {
   "poznamka": "Kde v obchode koverta.sk žije obsah každej stránky statického webu. Zdroj pravdy pre odkazy v téme, canonical, sitemap aj llms.txt. Rozhodnutie majiteľa 22. 9. 2026: nový obsah ide na staré, indexované adresy. Kolekcie majú najviac návštev (90 dní: /collections/pristresky-pre-auta 1642, /collections/bioklimaticke-pergoly 891, /collections/pristresky-pre-auta-agava 411), preto kategórie žijú na nich. Téma obsah priradí podľa handle — šablónu v obchode meniť netreba.",
   "stranky": {
-    "": { "typ": "domov", "url": "/" },
-    "pristresky-pre-auta": { "typ": "kolekcia", "handle": "pristresky-pre-auta" },
-    "zahradne-pristresky": { "typ": "kolekcia", "handle": "zahradne-pristresky" },
-    "bioklimaticke-pergoly": { "typ": "kolekcia", "handle": "bioklimaticke-pergoly" },
-    "carport-soltec": { "typ": "kolekcia", "handle": "pristresky-pre-auta-agava" },
-    "pevne-prestresenia": { "typ": "kolekcia", "handle": "pergoly-s-pevnou-strechou-multiport" },
-    "tienenie": { "typ": "kolekcia", "handle": "tienenie" },
-    "outdoor-kuchyne": { "typ": "kolekcia", "handle": "outdoor-kuchyne" },
-    "kontakt": { "typ": "stranka", "handle": "kontakt" },
-    "obchodne-podmienky": { "typ": "stranka", "handle": "vseobecne-obchodne-podmienky" },
-    "ochrana-sukromia": { "typ": "stranka", "handle": "zasady-ochrany-osobnych-udajov" },
-    "reklamacie": { "typ": "stranka", "handle": "reklamacny-poriadok" },
-    "realizacie": { "typ": "stranka", "handle": "galeria-pristresky-pre-auta" },
-    "konfigurator": { "typ": "stranka", "handle": "konfigurator" },
-    "produkty": { "typ": "stranka", "handle": "produkty" },
-    "pouzite-modely": { "typ": "stranka", "handle": "pouzite-modely", "noindex": true },
-    "404": { "typ": "404", "url": "/404" }
+    "": {
+      "typ": "domov",
+      "url": "/"
+    },
+    "pristresky-pre-auta": {
+      "typ": "kolekcia",
+      "handle": "pristresky-pre-auta"
+    },
+    "zahradne-pristresky": {
+      "typ": "kolekcia",
+      "handle": "zahradne-pristresky"
+    },
+    "bioklimaticke-pergoly": {
+      "typ": "kolekcia",
+      "handle": "bioklimaticke-pergoly"
+    },
+    "carport-soltec": {
+      "typ": "kolekcia",
+      "handle": "pristresky-pre-auta-agava"
+    },
+    "pevne-prestresenia": {
+      "typ": "kolekcia",
+      "handle": "pergoly-s-pevnou-strechou-multiport"
+    },
+    "tienenie": {
+      "typ": "kolekcia",
+      "handle": "tienenie"
+    },
+    "outdoor-kuchyne": {
+      "typ": "kolekcia",
+      "handle": "outdoor-kuchyne"
+    },
+    "kontakt": {
+      "typ": "stranka",
+      "handle": "kontakt"
+    },
+    "obchodne-podmienky": {
+      "typ": "stranka",
+      "handle": "vseobecne-obchodne-podmienky"
+    },
+    "ochrana-sukromia": {
+      "typ": "stranka",
+      "handle": "zasady-ochrany-osobnych-udajov"
+    },
+    "reklamacie": {
+      "typ": "stranka",
+      "handle": "reklamacny-poriadok"
+    },
+    "realizacie": {
+      "typ": "stranka",
+      "handle": "galeria-pristresky-pre-auta"
+    },
+    "konfigurator": {
+      "typ": "stranka",
+      "handle": "konfigurator"
+    },
+    "produkty": {
+      "typ": "stranka",
+      "handle": "produkty"
+    },
+    "pouzite-modely": {
+      "typ": "stranka",
+      "handle": "pouzite-modely",
+      "noindex": true
+    },
+    "404": {
+      "typ": "404",
+      "url": "/404"
+    },
+    "dakujeme": {
+      "typ": "stranka",
+      "handle": "dakujeme",
+      "noindex": true
+    }
   },
   "presmerovania": {
     "poznamka": "Pri spustení: zdrojová stránka sa skryje (Shopify presmeruje len adresu, ktorá neexistuje) a vznikne 301. Kolekcie sa nepresmerovávajú — obsah dostanú priamo.",

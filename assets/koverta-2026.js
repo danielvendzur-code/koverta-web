@@ -2645,8 +2645,23 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           textySpat();
           /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
              ani náhradná e-mailová cesta sa nerátajú. */
-          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené' });
           ukaz(false);
+          /* Ďakovná stránka: konverziu podľa adresy vie merať aj ten, kto
+             nečíta dataLayer. `contact_posted=true` je ten istý znak, aký
+             posiela kontaktný formulár Shopify. Odchádza sa, až keď GTM
+             udalosť spracuje, najneskôr po 1,5 s. */
+          let odisiel = false;
+          const nadakujem = () => {
+            if (odisiel) return;
+            odisiel = true;
+            const cesta = kvCesta('./dakujeme/');
+            const koren = ((document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]') || {}).getAttribute
+              ? document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]').getAttribute('href') : '')
+              .replace(/assets\/koverta-2026\.css.*$/, '') || './';
+            window.location.assign((cesta.charAt(0) === '/' ? cesta : koren + 'dakujeme/') + '?contact_posted=true');
+          };
+          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené', eventCallback: nadakujem, eventTimeout: 1500 });
+          window.setTimeout(nadakujem, 1600);
         } catch (err) {
           window.clearTimeout(cakac);
           zlyhalo(adresaMailu);
