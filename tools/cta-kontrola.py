@@ -24,7 +24,7 @@ POVOLENE = {
     'Poslať rozmery a fotografiu', 'Poslať rozmer terasy',
     'Zobraziť riešenie', 'Pozrieť mapu realizácií', 'Celá galéria realizácií',
     'Navrhnúť zostavu', 'Ďalšie realizácie', 'Všetky realizácie na mape',
-    'Prístrešky Koverta', 'Pridať do košíka', 'Do košíka', 'Odoslať', 'Odoslať dopyt', 'Hľadať',        # vyhľadávanie
+    'Prístrešky Koverta', 'Pridať do košíka', 'Do košíka', 'Odoslať', 'Odoslať dopyt', 'Získať cenovú ponuku', 'Hľadať',        # vyhľadávanie
     'Všetko o',                       # kolekcia: text pokračuje podľa radu
 }
 MAX_POPIS = 160

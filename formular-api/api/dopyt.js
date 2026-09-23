@@ -224,7 +224,9 @@ export default async function handler(req, res) {
     email: jedenRiadok(telo.email, 254), miesto: jedenRiadok(telo.miesto, 200), sprava: text(telo.sprava, 5000),
     suhlas: text(telo.suhlas, 300), stranka: text(telo.stranka, 800)
   };
-  if (!data.meno || !data.telefon || !platnyEmail(data.email) || !data.suhlas) {
+  /* Povinné sú len meno a telefón. E-mail je nepovinný, ak ho však
+     návštevník vyplní, musí byť platný. */
+  if (!data.meno || !data.telefon || (data.email && !platnyEmail(data.email))) {
     zaznamenaj('MISSING_FIELDS', zdroj);
     return res.status(422).json({ ok: false, code: 'MISSING_FIELDS' });
   }
@@ -261,7 +263,7 @@ export default async function handler(req, res) {
     }
     const archiv = await archivujDopyt(data, attachments, id, 'čaká na odoslanie', zdroj);
     const vysledok = await odosliResend(apiKey, {
-      from, to: [to], reply_to: data.email, subject: predmet, html: obsah, attachments
+      from, to: [to], ...(data.email ? { reply_to: data.email } : {}), subject: predmet, html: obsah, attachments
     }, `dopyt-${id}`);
     let odoslane = 1;
 
@@ -271,7 +273,7 @@ export default async function handler(req, res) {
        ako meno (bez odkazov, najviac 60 znakov). */
     const menoOk = data.meno.length <= 60 && !/https?:|www\.|[<>@]|\.[a-z]{2,}\//i.test(data.meno);
     const oslovenie = menoOk ? `Dobrý deň, ${html(data.meno)},` : 'Dobrý deň,';
-    if (String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false'
+    if (data.email && String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false'
       && odoslaneDnes + 1 < STROP_POTVRDENI()
       && !prekrocilLimit('email:' + data.email.toLowerCase(), 2, 24 * 60 * 60 * 1000)) {
       const potvrdenie = `<!doctype html><html lang="sk"><body style="margin:0;background:#f6f5f2;font-family:Arial,sans-serif;color:#12171a"><div style="max-width:620px;margin:auto;padding:32px 20px"><div style="background:#12171a;color:white;padding:18px 24px;font-weight:700;letter-spacing:.08em">KOVER<span style="color:#ffcc00">TA</span></div><div style="background:white;padding:30px 24px"><h1 style="font-size:25px;margin:0 0 16px">Dopyt sme prijali</h1><p style="line-height:1.65">${oslovenie} ďakujeme za váš dopyt. Ozveme sa vám telefonicky alebo e-mailom spravidla do jedného pracovného dňa.</p><p style="line-height:1.65">Ak niečo súri, zavolajte na <a href="tel:+421948482266" style="color:#12171a;font-weight:700">+421 948 482 266</a>.</p><p style="margin-top:26px;color:#6b7174">Koverta · obchod@koverta.sk</p></div></div></body></html>`;

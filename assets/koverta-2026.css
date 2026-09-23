@@ -13869,7 +13869,7 @@ body.ma-kh-modal { overflow: hidden; }
   min-height: 48px; padding: 12px 14px; border: 1px solid rgba(18,23,26,.18); border-radius: 10px;
   background: #fff; color: var(--k-ink); font: 400 16px/1.3 var(--k-body); box-shadow: none;
 }
-.kh-form--jednoduchy .kh-field textarea { min-height: 84px; height: 84px; resize: vertical; }
+.kh-form--jednoduchy .kh-field textarea { min-height: 64px; height: 64px; resize: vertical; }
 .kh-form--jednoduchy .kh-field input:focus,
 .kh-form--jednoduchy .kh-field select:focus,
 .kh-form--jednoduchy .kh-field textarea:focus { outline: none; border-color: var(--k-ink); box-shadow: 0 0 0 3px rgba(18,23,26,.08); }
@@ -13884,6 +13884,8 @@ body.ma-kh-modal { overflow: hidden; }
 .kh-form--jednoduchy .kh-form__suhlas a { color: var(--k-ink); }
 .kh-form--jednoduchy .kh-form__suhlas input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--k-ink); }
 .kh-form--jednoduchy .kh-form__submit { margin: 2px 0 0; }
+.kh-form--jednoduchy .kh-form__suhlas--text { display: block; margin: -4px 0 0; font-size: 12.5px; text-align: center; }
+.kh-form--jednoduchy .kh-form__suhlas--text input { display: none; }
 .kh-form--jednoduchy .kh-form__submit .k-btn { width: 100%; min-height: 54px; justify-content: center; }
 
 /* --- sekcia na stránke ---------------------------------------------- */
@@ -13894,20 +13896,28 @@ body.ma-kh-modal { overflow: hidden; }
   border: 1px solid var(--k-hair); border-radius: var(--k-r); overflow: hidden; background: #fff;
 }
 .k .kh-cta .kh-cta__card { display: block !important; padding: clamp(24px, 3vw, 40px); border: 0; border-radius: 0; box-shadow: none; background: #fff; opacity: 1 !important; transform: none !important; }
-.k .kh-cta .kh-cta__head { gap: 8px; margin-bottom: 20px; }
+.k .kh-cta .kh-cta__head { gap: 8px; margin-bottom: 16px; }
 .k .kh-cta .kh-cta__head .k-eyebrow { display: none; }
 .k .kh-cta .kh-cta__head .k-h2 { max-width: none; margin: 0; font-size: clamp(22px, 1.9vw, 28px); line-height: 1.15; }
 .k .kh-cta .kh-cta__head .k-copy { margin: 0; font-size: 15px; line-height: 1.5; max-width: 52ch; }
-.k .kh-cta .kh-cta__aside { display: flex; flex-direction: column; gap: 0; padding: clamp(24px, 3vw, 40px); border-radius: 0; background: var(--k-bone); color: var(--k-ink); }
-.k .kh-cta .kh-cta__aside-head { gap: 8px; padding: 0 0 18px; border-bottom: 1px solid var(--k-hair); }
+/* Bočný panel je tmavý s hodnotením a fotografiou pergoly (ako pred
+   zmenšením formulára); fotografia dorastie do zvyšku výšky. */
+.k .kh-cta .kh-cta__aside { display: flex; flex-direction: column; gap: 0; padding: clamp(24px, 2.6vw, 36px); border-radius: 0; background: #171d20; color: #fff; }
+.k .kh-cta .kh-cta__aside-head { gap: 8px; padding: 0 0 16px; border-bottom: 1px solid rgba(255,255,255,.16); }
 .k .kh-cta .kh-cta__aside-head .k-eyebrow { display: none; }
-.k .kh-cta .kh-cta__aside-head h3 { color: var(--k-ink) !important; font-size: 20px; }
-.k .kh-cta .kh-cta__aside-head p { color: var(--k-muted); font-size: 14px; }
-.k .kh-cta .kh-cta__row { color: var(--k-ink); border-color: var(--k-hair); padding: 16px 0; }
-.k .kh-cta .kh-cta__row small { color: var(--k-muted); }
-.k .kh-cta .kh-cta__row strong { color: var(--k-ink) !important; font-size: 17px; }
-.k .kh-cta .kh-cta__ico { background: #fff; color: var(--k-ink); border-color: var(--k-hair); }
-.k .kh-cta .kh-cta__score, .k .kh-cta .kh-cta__foto { display: none; }
+.k .kh-cta .kh-cta__aside-head h3 { color: #fff !important; font-size: 22px; }
+.k .kh-cta .kh-cta__aside-head p { color: rgba(255,255,255,.68); font-size: 14px; }
+.k .kh-cta .kh-cta__row { color: #fff; border-color: rgba(255,255,255,.16); padding: 13px 0; }
+.k .kh-cta .kh-cta__row small { color: rgba(255,255,255,.62); }
+.k .kh-cta .kh-cta__row strong { color: #fff !important; font-size: 17px; }
+.k .kh-cta .kh-cta__ico { background: transparent; color: var(--k-amber); border-color: rgba(255,255,255,.16); }
+.k .kh-cta .kh-cta__score { display: flex; gap: 8px; margin: 0; padding: 16px 0; border-top: 0; border-bottom: 1px solid rgba(255,255,255,.16); color: #fff; }
+.k .kh-cta .kh-cta__score b { font-size: 26px; }
+.k .kh-cta .kh-cta__foto { display: none; }
+@media (min-width: 1000px) {
+  .k .kh-cta .kh-cta__foto { display: block; flex: 1 1 0; min-height: 140px; margin: 18px 0 0; overflow: hidden; border-radius: var(--k-r-sm); }
+  .k .kh-cta .kh-cta__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+}
 @media (max-width: 899px) {
   .k .kh-cta .kh-cta__grid { grid-template-columns: minmax(0, 1fr); }
 }
@@ -13977,10 +13987,7 @@ body.ma-kh-modal { overflow: hidden; }
 .kf a { display: inline-block; min-height: 24px; padding-block: 3px; }
 /* Kroky po odoslaní dopytu: bočný panel formulára je svetlý (vrstva 140),
    text krokov ostal biely pre pôvodný tmavý panel. */
-.k .kh-cta .kh-cta__aside .kh-cta__steps li { border-top-color: var(--k-hair); }
-.k .kh-cta .kh-cta__aside .kh-cta__steps strong { color: var(--k-ink); }
-.k .kh-cta .kh-cta__aside .kh-cta__steps small { color: var(--k-muted); }
-.k .kh-cta .kh-cta__aside .kh-cta__steps li > span { color: var(--k-amber-deep, #a07800); }
+
 /* Stránka rozmeru: popisok nad tmavou galériou a čísla položiek čitateľné. */
 .kr-page .kr-gallery .k-eyebrow { color: rgba(255, 255, 255, .72); }
 .kr-page .kr-included__n { color: #8a6d00; }

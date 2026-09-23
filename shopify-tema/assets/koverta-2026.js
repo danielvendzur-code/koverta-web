@@ -1947,6 +1947,9 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       cislo.textContent = spolu.textContent;
       const obr = panel.querySelector('[data-k-kviz-foto] img');
       if (obr) {
+        /* Pôvodný srcset by prebil src a ukazoval by stále tú istú fotku. */
+        obr.removeAttribute('srcset');
+        obr.removeAttribute('sizes');
         obr.src = kvCesta(d.foto);
         obr.alt = d.nazov;
       }
@@ -2723,7 +2726,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (miesto) miesto.closest('.kh-field').hidden = true;
     const sprava = form.querySelector('textarea[name="contact[body]"]');
     if (sprava) {
-      sprava.rows = 3;
+      sprava.rows = 2;
       sprava.placeholder = 'Rozmer, obec alebo čo chcete zastrešiť';
       const nazov = sprava.closest('.kh-field') && sprava.closest('.kh-field').querySelector(':scope > span');
       if (nazov) nazov.innerHTML = 'Správa <small>nepovinné</small>';
@@ -2743,15 +2746,29 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       });
       suborPole.parentNode.insertBefore(tlac, suborPole);
     }
-    const suhlas = form.querySelector('.kh-form__suhlas span');
+    /* Povinné sú len meno a telefón. E-mail je nepovinný a súhlas netreba
+       odklikávať: odoslanie je súhlas, text pod tlačidlom to hovorí. */
+    const email = form.querySelector('input[name="contact[email]"]');
+    if (email) {
+      email.required = false;
+      const nazov = email.closest('.kh-field') && email.closest('.kh-field').querySelector(':scope > span');
+      if (nazov) nazov.innerHTML = 'E-mail <small>nepovinné</small>';
+    }
+    const suhlasPole = form.querySelector('.kh-form__suhlas');
+    const suhlas = suhlasPole && suhlasPole.querySelector('span');
+    const suhlasBox = suhlasPole && suhlasPole.querySelector('input[type="checkbox"]');
+    if (suhlasBox) { suhlasBox.required = false; suhlasBox.defaultChecked = true; suhlasBox.checked = true; suhlasBox.hidden = true; }
     if (suhlas) {
       const odkazy = [...suhlas.querySelectorAll('a')].map((x) => x.getAttribute('href'));
-      suhlas.innerHTML = 'Súhlasím so <a href="' + (odkazy[1] || '#') + '">spracovaním údajov</a> a <a href="' + (odkazy[0] || '#') + '">podmienkami</a>.';
+      suhlas.innerHTML = 'Odoslaním súhlasíte so <a href="' + (odkazy[1] || '#') + '">spracovaním údajov</a> a <a href="' + (odkazy[0] || '#') + '">podmienkami</a>.';
+      suhlasPole.classList.add('kh-form__suhlas--text');
+      const odoslat = form.querySelector('.kh-form__submit');
+      if (odoslat) odoslat.after(suhlasPole);
     }
     const tlacidlo = form.querySelector('[type="submit"]');
     if (tlacidlo && !tlacidlo.dataset.kText) {
       tlacidlo.dataset.kText = 'true';
-      tlacidlo.firstChild.textContent = 'Odoslať ';
+      tlacidlo.firstChild.textContent = 'Získať cenovú ponuku ';
     }
   }
 
@@ -2772,8 +2789,8 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     modal.setAttribute('data-k-dopyt-modal', '');
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
-      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Nezáväzná cenová ponuka</h2>' +
-      '<p>Odpovieme do jedného pracovného dňa, bez záväzku.</p></div>' +
+      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Pošleme vám cenu na mieru</h2>' +
+      '<p>Do jedného pracovného dňa, zadarmo a nezáväzne. Stačí meno a telefón.</p></div>' +
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
       '<p class="kh-modal__kontext" hidden></p><div class="kh-modal__telo"></div>' +

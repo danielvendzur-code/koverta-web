@@ -118,3 +118,18 @@ test('testovací dopyt (vyhradená doména) dostane úspech, ale nič sa neodoš
     assert.equal(res.body.test, true, email);
   }
 });
+
+test('povinné sú len meno a telefón: bez e-mailu a súhlasu prejde ďalej', async () => {
+  const res = odpoved();
+  await handler(poziadavka({ meno: 'Ján', telefon: '+421900000000', startedAt: Date.now() - 5000 }), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.code, 'EMAIL_NOT_CONFIGURED');
+});
+
+test('bez telefónu alebo s neplatným e-mailom vráti 422', async () => {
+  for (const telo of [{ meno: 'Ján' }, { meno: 'Ján', telefon: '0900', email: 'nie-je-email' }]) {
+    const res = odpoved();
+    await handler(poziadavka({ ...telo, startedAt: Date.now() - 5000 }), res);
+    assert.equal(res.statusCode, 422);
+  }
+});

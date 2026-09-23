@@ -1287,6 +1287,9 @@ function kvAdresa(kluc, zaloha) {
                dĺžkou naprieč šírkou prístrešku, takže polia delia frontu.
                Preto P5 drží pevný odstup bez ohľadu na dĺžku strechy a
                nesmie sa „opraviť" na rovnomerné delenie. */
+            /* Prestrešenie terasy nemá parkovacie polia — stredný stĺp
+               stojí v strede dĺžky, nie v odstupe P5 z výkresu carportu. */
+            if (BIO.page === 'canopy') return [0, Math.round(span / 2), span];
             const p5 = model().p5;
             if (p5) return [0, Math.round(Math.min(p5, span / 2)), span];
             const t = model().roof === 'panel' ? 0.34 : 0.5;   // access bay, or mid-span

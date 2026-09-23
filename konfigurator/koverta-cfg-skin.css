@@ -1076,12 +1076,12 @@ body { background: var(--k-white); color: var(--k-ink); }
 .k .kv-cfg__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .k .kv-cfg__tabs a {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 7px;
-  min-height: 64px;
-  padding: 10px 14px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 68px;
+  padding: 10px 14px 10px 12px;
   border: 1px solid var(--k-hair);
   border-radius: 12px;
   background: var(--k-white);
@@ -1089,6 +1089,13 @@ body { background: var(--k-white); color: var(--k-ink); }
   text-decoration: none;
   transition: border-color 180ms var(--k-ease), background-color 180ms var(--k-ease), box-shadow 180ms var(--k-ease);
 }
+.k .kv-cfg__ikona {
+  flex: none; width: 46px; height: 31px;
+  fill: none; stroke: var(--k-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  opacity: .78; transition: opacity 180ms var(--k-ease);
+}
+.k .kv-cfg__tabs a:hover .kv-cfg__ikona, .k .kv-cfg__tabs a[aria-current="page"] .kv-cfg__ikona { opacity: 1; }
+.k .kv-cfg__text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .k .kv-cfg__logo { display: block; width: auto; height: 13px; }
 .k .kv-cfg__logo--soltec { height: 16px; }
 .k .kv-cfg__tabs a strong {
@@ -1119,7 +1126,8 @@ body { background: var(--k-white); color: var(--k-ink); }
     scroll-padding-inline: var(--k-gut);
   }
   .k .kv-cfg__tabs::-webkit-scrollbar { display: none; }
-  .k .kv-cfg__tabs a { flex: 0 0 min(52vw, 200px); min-height: 60px; padding: 9px 12px; scroll-snap-align: start; }
+  .k .kv-cfg__tabs a { flex: 0 0 min(64vw, 236px); min-height: 60px; padding: 9px 12px 9px 10px; gap: 10px; scroll-snap-align: start; }
+  .k .kv-cfg__ikona { width: 40px; height: 27px; }
 }
 
 /* Nástroj sa dole dotýkal pätky. Medzi posledným krokom a tmavým pásom
@@ -1374,11 +1382,9 @@ body { background: var(--k-white); color: var(--k-ink); }
    Nadpis, úvodná veta a pod nimi výber produktu. Pôvodná hlavička nástroja
    („Konfigurátor / Poskladajte si … / Vizualizácia aj cena…") pôsobila ako
    zo starého webu a opakovala to isté — skrýva sa. */
-.k .kv-cfg__head { display: grid; gap: 12px; margin: clamp(6px, 1.4vw, 18px) 0 clamp(14px, 2vw, 24px); }
-.k .kv-cfg__head .k-h2 { margin: 0; font-size: clamp(30px, 3.4vw, 50px); }
-.k .kv-cfg__head .k-lead { margin: 0; }
+
 #kv-root #SoltecPremium .sp-cfg__head { display: none; }
-.k.kv-cfg { padding-block: clamp(22px, 3vw, 44px) clamp(18px, 2vw, 26px); }
+.k.kv-cfg { padding-block: clamp(14px, 1.6vw, 22px); }
 
 /* --- Hranica rozmeru ---------------------------------------------------- */
 #SoltecPremium .kv-hranica {
