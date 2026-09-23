@@ -1390,3 +1390,26 @@ body { background: var(--k-white); color: var(--k-ink); }
 }
 #SoltecPremium .kv-hranica a { color: inherit; font-weight: 650; }
 #SoltecPremium [data-sp-nudge].je-na-hranici { opacity: .4; }
+
+/* --- Ovládanie: kroky s názvom, väčšie dotykové plochy -------------------
+   Kroky boli len čísla 1–6 a čo sa za nimi skrýva, prezradil až popis pod
+   nimi. Názov kroku je teraz pod číslom, takže je vopred jasné, kam ktoré
+   tlačidlo vedie (Umiestnenie, Rozmer, Strecha …). */
+#SoltecPremium .sp-rail button { display: grid; gap: 5px; justify-items: center; }
+#SoltecPremium .sp-rail button span {
+  display: block;
+  position: static; width: auto; height: auto; overflow: hidden; clip: auto;
+  max-width: 100%;
+  font-size: 11.5px !important;
+  line-height: 1.1;
+  color: var(--k-grey, #5c5c5c);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#SoltecPremium .sp-rail button[aria-current="true"] span { color: var(--k-ink, #12171a); }
+#SoltecPremium .sp-rail button i { width: 100%; }
+#SoltecPremium .sp-rail button:focus-visible { outline: none; }
+#SoltecPremium .sp-rail button:focus-visible i { outline: 2px solid var(--k-amber, #ffcc00); outline-offset: 2px; }
+/* Textové odkazy v konfigurátore (Resetovať, napíšte nám, O 3D modeloch)
+   mali na dotyk 14–17 px. Plochu zväčší výplň, riadok sa nerozhodí. */
+#SoltecPremium .kv-linkbtn, #SoltecPremium .sp-howto a { display: inline-block; padding-block: 5px; margin-block: -5px; }

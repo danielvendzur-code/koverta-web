@@ -713,7 +713,7 @@ function kvAdresa(kluc, zaloha) {
           ['4', 'Doplnky', 'Doplnky'],
           ['5', 'Súhrn', 'Súhrn']
         ] : [
-          ['1', 'Umiestnenie', 'Umiestnenie'],
+          ['1', 'Umiestnenie', 'Miesto'],
           ['2', 'Rozmer a model', 'Rozmer'],
           ['3', 'Strecha a farby', 'Strecha'],
           ['4', 'Boky', 'Boky'],
@@ -790,8 +790,10 @@ function kvAdresa(kluc, zaloha) {
             + '<ul>'
             + '<li><b>Otáčanie</b>: ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
             + '<li><b>Priblíženie</b>: koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
-            + '<li><b>Vybavenie a počasie</b>: karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
+            + '<li><b>Vybavenie</b>: karta v ľavom dolnom rohu modelu ukáže pod prístreškom auto alebo posedenie, aby bolo vidieť, koľko miesta ostane.</li>'
             + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu. Doprava a montáž sú v konečnej ponuke vždy zahrnuté.</li>'
+            + '<li><b>Väčší rozmer</b>: keď „+“ narazí na hranicu, konfigurátor prepne na väčší model, ak ho výrobca má; inak rozmer nacenime na mieru.</li>'
+            + '<li><b>Poslať a zdieľať</b>: pod cenou pošlete hotovú zostavu do dopytu alebo skopírujete odkaz, ktorý si zapamätá model, rozmer aj farbu.</li>'
             + '<li><a href="' + kvAdresa('modely', '../pouzite-modely/') + '" target="_blank" rel="noopener">O 3D modeloch</a>: autori a licencie áut a záhradného nábytku v scéne.</li>'
             + '</ul>';
           kolona.appendChild(d);
