@@ -544,7 +544,6 @@ function kvAdresa(kluc, zaloha) {
              zastavenom zábere rušivo. Kreslenie dažďa nižšie ostáva nedotknuté
              a dá sa vrátiť späť vrátením tohto riadku. -->
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
-        <a class="sp-scene__credits sp-scene__more" href="${kvAdresa('modely', '../pouzite-modely/')}" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
     /* Karta visí na spodnej hrane kresby, nie na spodku celej scény: dok má
        nulovú výšku a sedí presne tam, kde plátno končí, takže karta prekryje
@@ -582,24 +581,13 @@ function kvAdresa(kluc, zaloha) {
       const flat=Boolean(context&&context.renderer&&!KRESLIA_VYBAVENIE.includes(context.renderer));
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres, vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
+        /* Popis vybavenia („Posedenie · dvojkreslo…", rozmery auta) majiteľ
+           z plátna odstránil — pod modelom ostáva len to, čo treba vedieť:
+           že je pri aute tesno na otvorenie dverí. */
         (state.mode==='car'?(()=>{
-          const keys=[...new Set(currentPlan.items.map(i=>i.key))];
-          if(!keys.length)return '';
-          const m=v=>(v/1000).toFixed(2).replace('.',',');
-          const line=keys.map(k=>{const b=models[k].bounds,n=currentPlan.items.filter(i=>i.key===k).length;
-            return `${n} × ${models[k].label} · ${m(b[3]-b[0])} × ${m(b[4]-b[1])} m so zrkadlami`;}).join(' · ');
-          /* Koľko naozaj ostane vedľa auta. Pod najužším prístreškom sa malé
-             auto zmestí, ale na otvorenie dverí je to tesné — a to sa má
-             povedať, nie zamlčať tým, že sa auto nenakreslí vôbec. */
           const cl=currentPlan.clearance;
-          if(!cl||cl.beside==null)return line;
-          const cm=Math.round(cl.beside/10);
-          return line+(cl.roomy?` · po bokoch ${cm} cm`
-            :` · po bokoch len ${cm} cm, auto sa zmestí, na otvorenie dverí je to tesné`);})():
-         state.mode==='bistro'?(()=>{const k=currentPlan.items[0]&&currentPlan.items[0].key;
-           return k==='lounge'?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec':
-             k==='sofa'?'Posedenie · dvojkreslo, konferenčný stolík, koberec a kvetináč':
-             `${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`;})():''));
+          if(!cl||cl.beside==null||cl.roomy)return '';
+          return `Po bokoch auta len ${Math.round(cl.beside/10)} cm, na otvorenie dverí je to tesné`;})():''));
       /* Počasie povie, čo naozaj vidno. Bez hĺbkového rendereru sa dážď
          nekreslí vôbec a mlčať o tom by znamenalo tváriť sa, že prší. */
       const weather=state.weather!=='rain'?'':

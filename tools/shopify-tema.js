@@ -238,10 +238,23 @@ function prepis(html, mapa, zaklad) {
 
 /* ---------------------------------------------------------------- časti */
 
+/* Hľadá značku mimo HTML komentárov. Komentár, ktorý spomenul „<main>",
+   raz posunul začiatok obsahu doprostred seba a zvyšok komentára sa na
+   stránke obchodu ukázal ako text. */
+function mimoKomentara(html, co, od = 0) {
+  let i = html.indexOf(co, od);
+  while (i !== -1) {
+    const otv = html.lastIndexOf('<!--', i), zat = html.lastIndexOf('-->', i);
+    if (otv === -1 || zat > otv) return i;
+    i = html.indexOf(co, html.indexOf('-->', i) + 3);
+  }
+  return -1;
+}
+
 function vyrez(html, zaciatok, koniec, kde) {
-  const a = html.indexOf(zaciatok);
+  const a = mimoKomentara(html, zaciatok);
   if (a === -1) { chyby.push(kde + ': nenašiel som ' + zaciatok); return ''; }
-  const b = html.indexOf(koniec, a);
+  const b = mimoKomentara(html, koniec, a);
   if (b === -1) { chyby.push(kde + ': nenašiel som ' + koniec); return ''; }
   return html.slice(a, b + koniec.length);
 }

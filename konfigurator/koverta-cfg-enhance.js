@@ -765,3 +765,147 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();
+
+/* --- Hranica rozmeru a väčší model ---------------------------------------
+   Posuvník končí na najväčšom katalógovom rozmere modelu. Kto potom klikal
+   na „+", nedialo sa nič a nevedel prečo. Teraz:
+   · keď má Soltec väčší model, ktorý daný rozmer zvládne (F170 → F240,
+     SL 170/28 → 170/36 …), prepne sa naň sám a povie to;
+   · keď väčší model nie je, pod posuvníkom sa ukáže, že toto je najväčší
+     katalógový rozmer, s odkazom na nacenenie rozmeru na mieru;
+   · tlačidlo „+" na hranici vyzerá neaktívne. */
+(function kvHranicaRozmeru() {
+  var ROOT = '#SoltecPremium';
+  var NAZOV = { w: 'šírku', l: 'dĺžku', h: 'výšku' };
+  var POLE = { w: 'widths', l: 'lengths' };
+  var MM = function (v) { return Number(v).toLocaleString('sk-SK').replace(/\s/g, ' ') + ' mm'; };
+
+  function data() {
+    var el = document.querySelector(ROOT + ' [data-sp-bio-data]');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
+  }
+  function posuvnik(rozmer) { return document.querySelector(ROOT + ' [data-sp-' + rozmer + ']'); }
+  function naHranici(rozmer) {
+    var r = posuvnik(rozmer);
+    return r && Number(r.value) >= Number(r.max) - 1;
+  }
+  function oznam(rozmer, html, druh) {
+    var r = posuvnik(rozmer);
+    var pole = r && r.closest('.sp-field');
+    if (!pole) return;
+    var p = pole.querySelector('.kv-hranica');
+    if (!p) {
+      p = document.createElement('p');
+      p.className = 'kv-hranica';
+      p.setAttribute('role', 'status');
+      pole.appendChild(p);
+    }
+    p.innerHTML = html;
+    p.hidden = !html;
+    p.dataset.druh = html ? (druh || 'hranica') : '';
+  }
+  function vyznacHranice() {
+    ['w', 'l', 'h'].forEach(function (rozmer) {
+      var plus = document.querySelector(ROOT + ' [data-sp-nudge="' + rozmer + '"][data-sp-nudge-dir="1"]');
+      if (plus) plus.classList.toggle('je-na-hranici', !!naHranici(rozmer) && !vacsiModel(rozmer));
+      var p = document.querySelector(ROOT + ' [data-sp-' + rozmer + ']');
+      var sprava = p && p.closest('.sp-field') && p.closest('.sp-field').querySelector('.kv-hranica');
+      if (!naHranici(rozmer) && sprava && sprava.dataset.druh === 'hranica') oznam(rozmer, '');
+    });
+  }
+
+  /* Ďalší model v poradí tlačidiel, ktorý má v danom rozmere viac než
+     aktuálny. Berú sa len modely s voľnou šírkou/dĺžkou (SL má šírku pevnú). */
+  function vacsiModel(rozmer) {
+    var d = data(), kluc = POLE[rozmer];
+    if (!d || !d.models || !kluc) return null;
+    var tlacidla = [].slice.call(document.querySelectorAll(ROOT + ' [data-sp-model]'));
+    var aktivne = tlacidla.filter(function (b) { return b.getAttribute('aria-pressed') === 'true'; })[0];
+    var sucasny = aktivne && d.models[aktivne.dataset.spModel];
+    if (!sucasny || !Array.isArray(sucasny[kluc])) return null;
+    var max = Math.max.apply(null, sucasny[kluc]);
+    for (var i = tlacidla.indexOf(aktivne) + 1; i < tlacidla.length; i++) {
+      var m = d.models[tlacidla[i].dataset.spModel];
+      if (m && Array.isArray(m[kluc]) && Math.max.apply(null, m[kluc]) > max && !tlacidla[i].disabled) {
+        return { tlacidlo: tlacidla[i], nazov: m.label || tlacidla[i].dataset.spModel, max: Math.max.apply(null, m[kluc]),
+          rady: m[kluc].slice().sort(function (x, y) { return x - y; }), staryMax: max };
+      }
+    }
+    return null;
+  }
+
+  function chceViac(rozmer, ciel) {
+    var r = posuvnik(rozmer);
+    if (!r) return false;
+    var vacsi = vacsiModel(rozmer);
+    if (vacsi) {
+      var hodnota = ciel || Number(r.max) + 1;
+      vacsi.tlacidlo.click();
+      /* Po prepnutí modelu runtime nastaví nové hranice posuvníka; až potom
+         sa dá ísť o krok vyššie. */
+      window.setTimeout(function () {
+        var n = posuvnik(rozmer);
+        if (n) {
+          /* Prvý katalógový rozmer nového modelu nad starou hranicou, alebo
+             najbližší k napísanému číslu. Runtime pri zmene modelu rozmer
+             vracia na predvolený, preto sa nastavuje až po prepnutí. */
+          var chcene = ciel || (vacsi.staryMax + 1);
+          var ciel2 = vacsi.rady.filter(function (v) { return v >= chcene; })[0] || vacsi.max;
+          n.value = String(ciel2);
+          n.dispatchEvent(new Event('input', { bubbles: true }));
+          n.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        oznam(rozmer, 'Na väčšiu ' + NAZOV[rozmer] + ' sme prepli na model <b>' + vacsi.nazov
+          + '</b> (do ' + MM(vacsi.max) + ').', 'model');
+        vyznacHranice();
+      }, 250);
+      return true;
+    }
+    oznam(rozmer, 'Najväčšia ' + NAZOV[rozmer].replace(/u$/, 'a') + ' v katalógu je ' + MM(r.max)
+      + '. Väčší rozmer vám nacenime na mieru — <a href="#sp-dopyt" data-kv-na-mieru>napíšte nám</a>.');
+    return false;
+  }
+
+  document.addEventListener('click', function (e) {
+    var plus = e.target.closest && e.target.closest(ROOT + ' [data-sp-nudge][data-sp-nudge-dir="1"]');
+    if (plus && naHranici(plus.dataset.spNudge)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      chceViac(plus.dataset.spNudge);
+      return;
+    }
+    if (e.target.closest && e.target.closest(ROOT + ' [data-sp-model], ' + ROOT + ' [data-sp-nudge]')) {
+      window.setTimeout(vyznacHranice, 60);
+    }
+  }, true);
+
+  document.addEventListener('keydown', function (e) {
+    var r = e.target;
+    if (!r.matches || !r.matches(ROOT + ' input[type="range"][data-sp-w], ' + ROOT + ' input[type="range"][data-sp-l]')) return;
+    if (!/^(ArrowRight|ArrowUp|PageUp)$/.test(e.key)) return;
+    var rozmer = r.hasAttribute('data-sp-w') ? 'w' : 'l';
+    if (!naHranici(rozmer)) return;
+    e.preventDefault();
+    chceViac(rozmer);
+  }, true);
+
+  /* Číslo napísané do poľa nad posuvníkom väčšie než hranica modelu. */
+  document.addEventListener('change', function (e) {
+    var vstup = e.target;
+    if (!vstup.matches || !vstup.matches(ROOT + ' .sp-field input[type="text"]')) return;
+    var pole = vstup.closest('.sp-field');
+    var r = pole && pole.querySelector('input[type="range"][data-sp-w], input[type="range"][data-sp-l]');
+    if (!r) return;
+    var chce = parseInt(String(vstup.value).replace(/\D/g, ''), 10);
+    if (chce > Number(r.max)) chceViac(r.hasAttribute('data-sp-w') ? 'w' : 'l', chce);
+  }, true);
+
+  document.addEventListener('input', function (e) {
+    if (e.target.matches && e.target.matches(ROOT + ' input[type="range"]')) vyznacHranice();
+  });
+
+  function start() { window.setTimeout(vyznacHranice, 600); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();

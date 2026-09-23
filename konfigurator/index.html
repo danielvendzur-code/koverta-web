@@ -370,7 +370,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 <link rel="stylesheet" href="../assets/koverta-2026.css?v=fc3752594c">
 <link rel="stylesheet" href="./soltec-premium.css?v=d1f36340d9">
 <!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
-<link rel="stylesheet" href="./koverta-cfg-skin.css?v=94b9b6d9a5">
+<link rel="stylesheet" href="./koverta-cfg-skin.css?v=e323f2a050">
 <style>
   /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
      text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
@@ -596,10 +596,8 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   </aside>
 </header>
 
-<!-- Prepínač produktu aj výzva na celú obrazovku sú súčasťou <main>: téma
-     Shopify preberá zo stránky len obsah <main> a všetko medzi hlavičkou a ním
-     sa stratilo — obchod potom ukazoval len predvolený prístrešok Koverta
-     bez možnosti prepnúť na Soltec, terasu, záhradu či pergolu. -->
+<!-- Prepínač produktu aj výzva na celú obrazovku sú vnútri hlavného obsahu:
+     téma Shopify preberá zo stránky len ten, všetko nad ním sa stratilo. -->
 <main id="kv-root">
 <!-- Prepínač produktu. Predtým stál v hlavičke namiesto navigácie — teraz je
      hlavička rovnaká ako na zvyšku webu a produkt sa vyberá tu, nad nástrojom.
@@ -607,62 +605,20 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
      v kalkulácii nástroja a odkaz preč z webu tu nemá čo robiť. -->
 <section class="k kv-cfg" aria-label="Výber produktu">
   <div class="k-wrap kv-cfg__in">
+    <header class="kv-cfg__head">
+      <p class="k-eyebrow">3D konfigurátor</p>
+      <h1 class="k-h2" data-kv-nadpis>Poskladajte si prístrešok alebo pergolu</h1>
+      <p class="k-lead">Nastavte rozmer, strechu aj farbu. Cena sa prepočíta hneď a hotovú zostavu nám pošlete jedným klikom.</p>
+    </header>
     <p class="kv-cfg__label">Čo potrebujete zastrešiť</p>
     <nav class="kv-cfg__tabs" aria-label="Čo potrebujete zastrešiť">
-      <a href="?page=koverta" data-kv-tab="koverta">
-        <!-- Koverta: strecha má spád, preto je čiara šikmá. Pod ňou auto. -->
-        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 8.5 45 12.5" />
-          <path d="M6 9v19.5M42 12.2v16.3" />
-          <path d="M13 27.5c0-3.7 2.7-6.6 6.5-6.6h9c3.8 0 6.5 2.9 6.5 6.6" />
-          <circle cx="18" cy="27.5" r="2.2" /><circle cx="31" cy="27.5" r="2.2" />
-        </svg>
-        <span><strong>Oceľový prístrešok pre auto</strong><small>Koverta, vlastná výroba</small></span>
-      </a>
-      <a href="?page=carport" data-kv-tab="carport">
-        <!-- Soltec: rovná strecha, tenký hliníkový profil kreslený dvoma
-             čiarami. Rozdiel oproti Koverte je práve spád a hrúbka. -->
-        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 9h42M3 12.4h42" />
-          <path d="M6.5 12.4v16.1M41.5 12.4v16.1" />
-          <path d="M13 27.5c0-3.7 2.7-6.6 6.5-6.6h9c3.8 0 6.5 2.9 6.5 6.6" />
-          <circle cx="18" cy="27.5" r="2.2" /><circle cx="31" cy="27.5" r="2.2" />
-        </svg>
-        <span><strong>Hliníkový prístrešok pre auto</strong><small>Soltec Carport</small></span>
-      </a>
-      <a href="?page=canopy" data-kv-tab="canopy">
-        <!-- Pevná strecha visí na fasáde: vľavo stena, vpredu jeden stĺp.
-             Pod ňou stôl a dve stoličky — terasa, nie auto. -->
-        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M5 3v26" />
-          <path d="M5 7.5 9 3.5M5 13 9 9M5 18.5 9 14.5" />
-          <path d="M5 10.5h39M42 10.5v18" />
-          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
-        </svg>
-        <span><strong>Prestrešenie terasy a vstupu</strong><small>Soltec, pevná strecha</small></span>
-      </a>
-      <a href="?page=zahrada" data-kv-tab="zahrada">
-        <!-- Koverta v záhrade stojí sama na štyroch stĺpoch v rohoch: dva
-             vpredu cez celú výšku, dva vzadu kratšie. Spád ako pri aute. -->
-        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M3 8.5 45 12.5" />
-          <path d="M6 9v19.5M42 12.2v16.3" />
-          <path d="M12 10.3v5.5M36 12.6v5.5" />
-          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
-        </svg>
-        <span><strong>Prístrešok nad terasu a záhradu</strong><small>Koverta, oceľový so stĺpmi v rohoch</small></span>
-      </a>
-      <a href="?page=bio" data-kv-tab="bio">
-        <!-- Lamely sa otáčajú, preto sú nakreslené našikmo a s medzerami —
-             to je jediné, čím sa pergola od pevnej strechy líši. -->
-        <svg class="kv-cfg__ico" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M4 8h40" />
-          <path d="M6.5 8v20.5M41.5 8v20.5" />
-          <path d="M10 15 13.5 11M16 15 19.5 11M22 15 25.5 11M28 15 31.5 11M34 15 37.5 11" />
-          <path d="M19 28.5v-4.5h10v4.5M15 28.5v-6M33 28.5v-6" />
-        </svg>
-        <span><strong>Pergola s otočnými lamelami</strong><small>Soltec, bioklimatická</small></span>
-      </a>
+      <!-- Značka výrobcu namiesto kresby: kresby pôsobili amatérsky a značka
+           hneď povie, či ide o oceľovú Kovertu, alebo hliníkový Soltec. -->
+      <a href="?page=koverta" data-kv-tab="koverta"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77"><strong>Oceľový prístrešok pre auto</strong></a>
+      <a href="?page=carport" data-kv-tab="carport"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Hliníkový prístrešok pre auto</strong></a>
+      <a href="?page=canopy" data-kv-tab="canopy"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Prestrešenie terasy a vstupu</strong></a>
+      <a href="?page=zahrada" data-kv-tab="zahrada"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="../assets/koverta-mark.svg" alt="Koverta" width="516" height="77"><strong>Prístrešok nad terasu a záhradu</strong></a>
+      <a href="?page=bio" data-kv-tab="bio"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="../assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Pergola s otočnými lamelami</strong></a>
     </nav>
   </div>
 </section>
@@ -843,6 +799,11 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     if (a.dataset.kvTab === page) a.setAttribute('aria-current', 'page');
   });
   document.title = LABEL[page] + ' | 3D konfigurátor Koverta';
+  /* Nadpis stránky stojí hore ako na zvyšku webu; text si berie z nadpisu
+     vybraného modelu, ktorý nesie konfigurátor (ten sa pod výberom skryje). */
+  var nadpis = document.querySelector('[data-kv-nadpis]');
+  var zModelu = (PAGES[page] || '').match(/<h1 class="sp-h2">([^<]*)<\/h1>/);
+  if (nadpis && zModelu) nadpis.textContent = zModelu[1];
 
   // The section markup expects to sit inside #SoltecPremium, and the page
   // script that follows looks that id up the moment it runs.
@@ -907,12 +868,12 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 </script>
 <script src="./scene-surface.js?v=5b130edc03"></script>
 <script src="./kv-render3d.js?v=7ffe738c99"></script>
-<script src="./scene-life.js?v=3917527955"></script>
+<script src="./scene-life.js?v=a75bb083e4"></script>
 <script charset="utf-8" src="./soltec-premium.js?v=e84c0718ab"></script>
 
 <!-- Doplnky ku konfigurátoru: zadanie rozmeru číslom, fullscreen bez scrollovania.
      Nadstavba nad runtime, nič v ňom neprepisuje. -->
-<script src="./koverta-cfg-enhance.js?v=43a0cf94c3"></script>
+<script src="./koverta-cfg-enhance.js?v=b69dca2f9c"></script>
 
 <!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
      ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
