@@ -44,6 +44,12 @@ def main():
         for m in re.finditer(r'<meta name="description" content="([^"]*)"', t):
             if len(m.group(1)) > MAX_POPIS:
                 chyby.append(f'{f}: meta description má {len(m.group(1))} znakov (max {MAX_POPIS})')
+    # Meranie: agentúra má v GTM nastavené presne tieto názvy udalostí
+    # a parameter. Premenovanie by potichu vypol meranie dopytov v Google Ads.
+    js = io.open(os.path.join(KOREN, 'assets', 'koverta-2026.js'), encoding='utf-8').read()
+    for povinne in ["kvMeraj('dopyt_odoslany', { dopyt_typ:", "kvMeraj('telefon_klik')"]:
+        if povinne not in js:
+            chyby.append('assets/koverta-2026.js: chýba meranie ' + povinne + ' (názvy používa agentúra v GTM, nemeniť)')
     if chyby:
         print('\n'.join(sorted(set(chyby))))
         sys.exit(1)
