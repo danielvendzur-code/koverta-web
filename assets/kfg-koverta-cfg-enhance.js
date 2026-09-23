@@ -631,6 +631,10 @@
     if (vidno === poslednyStav) return;
     poslednyStav = vidno;
     koren.style.setProperty('--sp-sticky-top', vidno ? poslednaVyska + 'px' : '0px');
+    /* Runtime konfigurátora si --sp-sticky-top pri scrollovaní prepisuje
+       sám (hľadá hlavičku starej témy a vychádza mu 0). Lepivé kroky na
+       telefóne preto čítajú vlastnú premennú, do ktorej nezasahuje nič iné. */
+    document.documentElement.style.setProperty('--kv-lista-vrch', vidno ? poslednaVyska + 'px' : '0px');
   };
 
   var caka = false;
@@ -642,6 +646,14 @@
 
   prepocitaj();
   window.addEventListener('scroll', naScroll, { passive: true });
+  /* Lišta sa skrýva a vracia animáciou, ktorá dobehne až po udalosti
+     scroll — hodnota sa potom počítala z polohy uprostred pohybu a lepivé
+     kroky na telefóne ostali schované pod lištou. Prepočíta sa preto aj po
+     zmene triedy lišty a po dobehnutí jej animácie. */
+  lista.addEventListener('transitionend', naScroll);
+  if ('MutationObserver' in window) {
+    new MutationObserver(naScroll).observe(lista, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
   window.addEventListener('resize', function () { poslednyStav = null; prepocitaj(); }, { passive: true });
   /* Konfigurátor sa vykresľuje skriptom, takže pri prvom behu ešte nemusí
      existovať — skúsime to znovu, keď dobehne. */
