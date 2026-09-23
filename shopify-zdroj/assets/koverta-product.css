@@ -293,3 +293,46 @@
 .kp .kr-gallery__grid figcaption strong { color: var(--k-ink); font: 600 15px/1.3 var(--k-head); }
 .kp .kr-gallery__grid figcaption span { color: var(--k-muted); font: 400 13.5px/1.4 var(--k-body); }
 @media (max-width: 999px) { .kp .kr-gallery__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* --- Zväčšená realizácia ------------------------------------------------ */
+.kp .kr-gallery__grid figure { cursor: zoom-in; }
+.kp .kr-gallery__grid figure img { transition: transform 300ms var(--k-ease, ease), filter 300ms var(--k-ease, ease); }
+.kp .kr-gallery__grid figure:hover img { filter: brightness(1.04); }
+.kp .kr-gallery__grid figure:focus-visible { outline: 2px solid var(--k-amber, #ffcc00); outline-offset: 4px; border-radius: 12px; }
+.kp-lb {
+  width: min(1200px, 100vw - 32px);
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #0e1214;
+  color: #fff;
+  overflow: hidden;
+}
+.kp-lb::backdrop { background: rgba(8, 10, 12, .82); }
+.kp-lb__fig { margin: 0; display: grid; }
+.kp-lb__fig img { display: block; width: 100%; max-height: calc(100dvh - 120px); object-fit: contain; background: #0e1214; }
+.kp-lb__fig figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 14px 18px 16px; font-size: 15px; }
+.kp-lb__fig figcaption strong { font-weight: 650; }
+.kp-lb__fig figcaption span { color: rgba(255, 255, 255, .78); }
+.kp-lb__fig figcaption small { margin-left: auto; color: rgba(255, 255, 255, .6); font-size: 13px; }
+.kp-lb__btn, .kp-lb__zavriet {
+  position: absolute;
+  display: grid; place-items: center;
+  width: 46px; height: 46px;
+  border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .92);
+  color: #12171a;
+  cursor: pointer;
+}
+.kp-lb__btn svg, .kp-lb__zavriet svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.kp-lb__btn { top: calc(50% - 50px); }
+.kp-lb__btn--spat { left: 14px; }
+.kp-lb__btn--dalej { right: 14px; }
+.kp-lb__zavriet { top: 14px; right: 14px; }
+.kp-lb__btn:focus-visible, .kp-lb__zavriet:focus-visible { outline: 2px solid var(--k-amber, #ffcc00); outline-offset: 2px; }
+@media (max-width: 599px) {
+  .kp-lb { width: 100vw; max-height: 100dvh; border-radius: 0; }
+  .kp-lb__btn { width: 40px; height: 40px; }
+}

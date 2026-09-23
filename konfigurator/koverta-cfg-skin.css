@@ -1388,3 +1388,38 @@ body { background: var(--k-white); color: var(--k-ink); }
    runtimu mu dávalo 64 px vzduchu navrch, takže výber a nástroj pôsobili
    ako dve samostatné stránky. */
 #kv-root #SoltecPremium .sp-cfg { padding-top: clamp(22px, 2.6vw, 36px); }
+
+/* --- Poslať túto zostavu / Zdieľať (pod cenou v každom kroku) ----------- */
+#SoltecPremium .kv-akcie {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+#SoltecPremium .kv-akcie button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: 600 14px/1.1 var(--k-head, inherit);
+  cursor: pointer;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+#SoltecPremium .kv-akcie svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#SoltecPremium .kv-akcie__poslat {
+  flex: 1 1 auto;
+  border: 1px solid var(--k-ink, #12171a);
+  background: var(--k-ink, #12171a);
+  color: #fff;
+}
+#SoltecPremium .kv-akcie__poslat:hover { background: #2a3033; }
+#SoltecPremium .kv-akcie__zdielat {
+  flex: 0 0 auto;
+  border: 1px solid var(--k-hair, rgba(18, 23, 26, .11));
+  background: #fff;
+  color: var(--k-ink, #12171a);
+}
+#SoltecPremium .kv-akcie__zdielat:hover { border-color: var(--k-ink, #12171a); }
+#SoltecPremium .kv-akcie button:focus-visible { outline: 2px solid var(--k-amber, #ffcc00); outline-offset: 2px; }
