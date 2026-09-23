@@ -1780,25 +1780,25 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
-        foto: './assets/koverta-pristresok-vahovce-takac-upscaled.jpg',
+        foto: './assets/koverta-pristresok-auto-golf-lamelova-stena.jpg',
         preco: 'Oceľová konštrukcia z vlastnej výroby. Pultová strecha z trapézového profilu má lemovanie, odkvap a izoláciu proti prehrievaniu a hluku dažďa; voda odchádza odkvapom a zvodom.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        foto: './assets/soltec-carport-sl240-real.jpg',
+        foto: './assets/soltec-carport-toth-nitra-hero.jpg',
         preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
-        foto: './assets/foto/20250522_144729-w600.jpg',
+        foto: './assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg',
         preco: 'Pevné zastrešenie terasy z vlastnej výroby, rozpon 3 až 8 m. Rozmer sa robí na mieru miesta.' },
       bio: { nazov: 'Bioklimatická pergola', znacka: 'soltec', odkaz: './bioklimaticke-pergoly/',
-        foto: './assets/soltec-bio-hero-2026.jpg',
+        foto: './assets/soltec-pergola-pri-bazene-antracit.jpg',
         preco: 'Otočné lamely 0 – 135°: tieň, prevetranie alebo zavretá strecha podľa počasia. Modul do 45 m².' },
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
-        foto: './assets/soltec-canopy-hero.jpg',
+        foto: './assets/soltec-pergola-plna-strecha-pri-dome.webp',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
-        foto: './assets/soltec-canopy-panels-real.jpg',
+        foto: './assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg',
         preco: 'ZIP rolety, lamelové panely a brisoleje. Objednávajú sa spolu s konštrukciou, jedna dodávka zo Slovinska a jedna montáž.' },
       kuchyna: { nazov: 'Vonkajšia kuchyňa', znacka: 'soltec', odkaz: './outdoor-kuchyne/',
-        foto: './assets/soltec-kuchyna-terasa.jpg',
+        foto: './assets/soltec-outdoor-kuchyna-graz.jpg',
         preco: 'Hliníková konštrukcia s exteriérovým kompozitným obkladom a pracovnou doskou z technického kameňa. Zostava sa skladá z modulov.' }
     };
 
@@ -3560,7 +3560,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (autaItem) {
       const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
       if (lis[0]) {
-        setMenuPhoto(lis[0], 'koverta-pristresok-vahovce-takac-upscaled.jpg');
+        setMenuPhoto(lis[0], 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
         addDesc(lis[0], 'Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby.');
       }
       if (lis[1]) {
@@ -3576,10 +3576,10 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (domItem) {
       const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
       const byHref = (part) => lis.find((li) => ((li.querySelector('a') || {}).href || '').includes(part));
-      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
       setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
-      setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
-      setMenuPhoto(byHref('tienenie'), 'soltec-pergola-zip-rolety-pri-bazene.jpg');
+      setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-pergola-pri-bazene-antracit.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
       addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
       addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
@@ -3621,12 +3621,12 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     }
 
     /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
-    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-vahovce-takac-upscaled.jpg');
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
-    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
+    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
-    setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
-    setDrawerPhoto('tienenie', 'soltec-pergola-zip-rolety-pri-bazene.jpg');
+    setDrawerPhoto('bioklimaticke-pergoly', 'soltec-pergola-pri-bazene-antracit.jpg');
+    setDrawerPhoto('tienenie', 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
 
     const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
