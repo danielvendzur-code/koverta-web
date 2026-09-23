@@ -1306,7 +1306,7 @@ void main() {
       /* Časové vyhladzovanie v pohybe. `false` ho vypne (porovnanie, ladenie). */
       taa: true,
       taaPlatna: false,        /* či história zodpovedá tomuto plátnu a scéne */
-      taaIndex: 0,             /* poradie posunu v pohybe, dookola po ôsmich */
+      taaIndex: 0,             /* poradie posunu v pohybe, dookola po šestnástich */
       taaPredVP: null,         /* kamera minulého snímku bez posunu */
       taaAktualna: 0,          /* ktorá z dvoch histórií je najnovšia */
       taaZPohybu: false,       /* posledný snímok bol snímok pohybu */
@@ -1829,7 +1829,9 @@ void main() {
          vzorky doostrovania ako doteraz. */
       let posunX = 0, posunY = 0, vahaVzorky = 1;
       if (pohyb && stav.taa !== false) {
-        const i = 2 + (stav.taaIndex++ % 8);
+        /* Šestnásť posunov: pri ôsmich ostávali v pixeli miesta, kam
+           žiadna vzorka nepadla, a šikmá hrana v pohybe jemne pulzovala. */
+        const i = 2 + (stav.taaIndex++ % 16);
         posunX = halton(i, 2) - 0.5;
         posunY = halton(i, 3) - 0.5;
       } else if (!pohyb) {

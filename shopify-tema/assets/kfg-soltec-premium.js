@@ -1993,10 +1993,23 @@ function kvAdresa(kluc, zaloha) {
              kreslil 2,25-krát viac pixelov než pri 2 a na slabšom kuse by sa
              otáčanie trhalo. Slabý stroj (≤ 4 GB a ≤ 4 jadrá) kreslí v 1,5:
              s MSAA ostanú hrany čisté, práce je o polovicu menej. */
-          const dpr = Math.max(1, Math.min(
-            Number(navigator.deviceMemory || 8) <= 4 && Number(navigator.hardwareConcurrency || 8) <= 4 ? 1.5 : 2,
-            window.devicePixelRatio || 1));
+          /* Strop 1,5 pre slabý stroj je len odhad z pamäte a počtu jadier.
+             Lacný telefón má pritom často displej s hustotou 3 — plátno
+             v 1,5 potom prehliadač zväčšuje dvojnásobne a každá hrana je
+             rozmazaný schod. Keď taký stroj pri otáčaní ukáže, že v plnej
+             kvalite drží frekvenciu displeja, strop sa zdvihne na 2. Ak by
+             potom nestíhal, vráti sa na 1,5 natrvalo. Zmena sa prejaví až
+             v pokoji, aby sa plátno nemenilo pod rukou. */
           const vPohybe = motionDetail;
+          if (painter3D.hustotaStrop === undefined) {
+            painter3D.hustotaStrop = Number(navigator.deviceMemory || 8) <= 4
+              && Number(navigator.hardwareConcurrency || 8) <= 4 ? 1.5 : 2;
+          }
+          if (!vPohybe && painter3D.hustotaNavrh) {
+            painter3D.hustotaStrop = painter3D.hustotaNavrh;
+            painter3D.hustotaNavrh = 0;
+          }
+          const dpr = Math.max(1, Math.min(painter3D.hustotaStrop, window.devicePixelRatio || 1));
           if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
           /* Vždy v plných pixeloch displeja — aj počas ťahania.
 
@@ -2114,12 +2127,12 @@ function kvAdresa(kluc, zaloha) {
                  profilu stále schodovitá. Každá vzorka je vo vlastnom
                  snímku prehliadača, stránka medzi nimi reaguje a prvý
                  pohyb doostrovanie zruší. Stroj bez grafickej karty
-                 (stovky ms na snímok) ostáva pri troch. */
+                 (stovky ms na snímok) dostane štyri. */
               if (predoslyRamec) {
                 const odstup = teraz - predoslyRamec;
-                if (odstup > 250) strop = Math.min(strop, 3);
-                else if (odstup > 100) strop = Math.min(strop, 6);
-                else if (odstup > 40) strop = Math.min(strop, 10);
+                if (odstup > 250) strop = Math.min(strop, 4);
+                else if (odstup > 100) strop = Math.min(strop, 10);
+                else if (odstup > 40) strop = Math.min(strop, 12);
               }
               predoslyRamec = teraz;
               if (!r.kresli(w, h, vzorka)) return;
@@ -2153,6 +2166,18 @@ function kvAdresa(kluc, zaloha) {
                           : m < 13 ? painter3D.stupen + 1
                           : painter3D.stupen;
               const novy = Math.max(0, Math.min(2, chcem));
+              /* Hustota plátna pre slabý stroj — pozri strop vyššie. Snímok
+                 pod 18 ms v plnej kvalite znamená, že stroj stíha frekvenciu
+                 displeja aj s rezervou na viac pixelov. */
+              const displej = window.devicePixelRatio || 1;
+              if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop < 2 && displej > painter3D.hustotaStrop
+                && painter3D.stupen === 2 && m < 18) {
+                painter3D.hustotaNavrh = 2;
+                painter3D.hustotaZvysena = true;
+              } else if (painter3D.hustotaZvysena && !painter3D.hustotaZamknuta && novy === 0 && m > 30) {
+                painter3D.hustotaNavrh = 1.5;
+                painter3D.hustotaZamknuta = true;
+              }
               if (novy !== painter3D.stupen) { painter3D.stupen = novy; c.length = 0; }
             }
           }
@@ -4708,7 +4733,12 @@ function kvAdresa(kluc, zaloha) {
                Kým ležal líce na líci s poldruhamilimetrovým plechom a spodkom
                v rovine jeho spodnej hrany, prebíjal sa pozinok cez lemovanie
                ako rad svetlých bodiek a nad stĺpmi z neho svietili prúžky. */
-            const UZ_ODSTUP = 2, UZ_SPODOK = 0;
+            /* Päť milimetrov, nie dva. Vrch pásu je vodorovná plocha videná
+               takmer z hrany a na obrazovke s nižšou hustotou (slabý telefón
+               kreslí v 1,5) sa jej hĺbka mýli o pár milimetrov — pri dvoch sa
+               cez čelo lemovania ešte prebíjal rad bodiek. Škára päť
+               milimetrov zvnútra pod lemovaním nie je rozoznateľná. */
+            const UZ_ODSTUP = 5, UZ_SPODOK = 0;
             const uzaver = (osX, u0, u1, a, b) => {
               if (u1 - u0 <= 0.01) return;
               const z0 = ramBot + UZ_SPODOK, dz = RAM_H - UZ_SPODOK;
