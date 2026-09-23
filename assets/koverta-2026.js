@@ -3577,7 +3577,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
       const byHref = (part) => lis.find((li) => ((li.querySelector('a') || {}).href || '').includes(part));
       setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-bratislava-hero.jpg');
-      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pevne-prestresenie-mokrance.jpg');
+      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-bioklimaticka-pergola-limbach.jpg');
       setMenuPhoto(byHref('tienenie'), 'soltec-pergola-zip-rolety-pri-bazene.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
@@ -3624,7 +3624,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-vahovce-takac-upscaled.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-bratislava-hero.jpg');
-    setDrawerPhoto('pevne-prestresenia', 'soltec-pevne-prestresenie-mokrance.jpg');
+    setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-bioklimaticka-pergola-limbach.jpg');
     setDrawerPhoto('tienenie', 'soltec-pergola-zip-rolety-pri-bazene.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
