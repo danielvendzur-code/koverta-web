@@ -57,6 +57,7 @@
     input.type = 'text';
     input.inputMode = 'numeric';
     input.className = 'kv-num__in';
+    input.name = 'rozmer-mm';
     input.setAttribute('aria-label', 'Zadajte rozmer v milimetroch');
 
     var unit = document.createElement('span');

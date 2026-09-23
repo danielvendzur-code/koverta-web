@@ -2729,7 +2729,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       sprava.rows = 2;
       sprava.placeholder = 'Rozmer, obec alebo čo chcete zastrešiť';
       const nazov = sprava.closest('.kh-field') && sprava.closest('.kh-field').querySelector(':scope > span');
-      if (nazov) nazov.innerHTML = 'Správa <small>nepovinné</small>';
+      if (nazov) nazov.textContent = 'Správa';
     }
     const subor = form.querySelector('input[type="file"]');
     const suborPole = subor && subor.closest('.kh-field');
@@ -2752,7 +2752,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (email) {
       email.required = false;
       const nazov = email.closest('.kh-field') && email.closest('.kh-field').querySelector(':scope > span');
-      if (nazov) nazov.innerHTML = 'E-mail <small>nepovinné</small>';
+      if (nazov) nazov.textContent = 'E-mail';
     }
     const suhlasPole = form.querySelector('.kh-form__suhlas');
     const suhlas = suhlasPole && suhlasPole.querySelector('span');
@@ -2790,7 +2790,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
       '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Pošleme vám cenu na mieru</h2>' +
-      '<p>Do jedného pracovného dňa, zadarmo a nezáväzne. Stačí meno a telefón.</p></div>' +
+      '<p>Stačí meno a telefón.</p></div>' +
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
       '<p class="kh-modal__kontext" hidden></p><div class="kh-modal__telo"></div>' +

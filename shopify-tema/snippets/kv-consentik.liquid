@@ -7,10 +7,12 @@
 <script>
       window['otkConsent']={"ad_user_data":true,"ad_personalization":true,"ad_storage":true,"analytics_storage":true,"functionality_storage":true,"personalization_storage":true,"security_storage":true,"url_passthrough":true,"ads_data_redaction":true};function otValidateDefault(e){const t=e[0]??!1,o=e[1]??!1;if(t&&"consent"==t&&o&&"default"==o){const t=e[2]??{};if(Object.values(t).length){const e=Object.values(t).some((e=>"granted"==e));return!e}return!0}if(t&&"consent"==t&&o&&"update"==o){return Object.keys(e[2]).includes("cst_update")}return!0}function _gtag(){dataLayer.push(arguments)}window.dataLayer=[],window.dataLayer.push=function(...e){e.forEach((e=>{if(otValidateDefault(e)){const t=e[0]??!1,o=e[1]??!1,a=e[2]??[];if(t&&"consent"==t&&o&&"update"==o&&a&&Object.keys(a).includes("cst_update")){const{cst_update:t,...o}=a;e[2]={...o},Array.prototype.push.call(this,e)}else Array.prototype.push.call(this,e)}else console.log("gr d",e)}))},window.OMG_CONSENT_EXTENSION_ENABLED=!1;const otConsentObserver=new MutationObserver((function(e){for(const t of e)if("childList"===t.type){const e=Array.from(t.addedNodes).filter((e=>"SCRIPT"===e.tagName&&1===e.nodeType));for(const t of e){const e=t.getAttribute("src");if(e&&e.includes("consentik-ex"))return window.OMG_CONSENT_EXTENSION_ENABLED=!0,void otConsentObserver.disconnect()}}}));otConsentObserver.observe(document.documentElement,{childList:!0,subtree:!0}),window.dataLayer=window.dataLayer||[],function(e,t){e.otCookiesGCM={},e.otCookiesGCM={url_passthrough:!1,ads_data_redaction:!1,config:{ad_user_data:"denied",ad_personalization:"denied",ad_storage:"denied",analytics_storage:"denied",functionality_storage:"denied",personalization_storage:"denied",security_storage:"denied",wait_for_update:500, }},_gtag("consent","default",e.otCookiesGCM.config),addEventListener("DOMContentLoaded",(function(){const o=e.otkConsent;let a=function(e,t){const o=e+"=",a=decodeURIComponent(t.cookie),n=a.split(";");for(let e=0;e<n.length;e++){let t=n[e];for(;" "===t.charAt(0);)t=t.substring(1);if(0===t.indexOf(o))return t.substring(o.length,t.length)}return""}("cookiesNotification",t),n=!0;if(console.log("window.OMG_CONSENT_EXTENSION_ENABLED",e.OMG_CONSENT_EXTENSION_ENABLED),a&&e.OMG_CONSENT_EXTENSION_ENABLED){a=JSON.parse(a);const t=a[0].categoriesSelected;n=!t.includes("marketing"),e.otCookiesGCM.config={ad_user_data:o.ad_user_data&&t.includes("marketing")?"granted":"denied",ad_personalization:o.ad_personalization&&t.includes("marketing")?"granted":"denied",ad_storage:o.ad_storage&&t.includes("marketing")?"granted":"denied",analytics_storage:o.analytics_storage&&t.includes("analytics")?"granted":"denied",functionality_storage:o.functionality_storage&&t.includes("necessary")?"granted":"denied",personalization_storage:o.personalization_storage&&t.includes("preferences")?"granted":"denied",security_storage:o.security_storage&&t.includes("necessary")?"granted":"denied"},_gtag("consent","update",{...e.otCookiesGCM.config,cst_update:"granted"})}e.otCookiesGCM.ads_data_redaction=e.otkConsent.ads_data_redaction&&n,e.otCookiesGCM.url_passthrough=e.otkConsent.url_passthrough,e.otCookiesGCM.ads_data_redaction&&_gtag("set","ads_data_redaction",e.otCookiesGCM.ads_data_redaction),e.otCookiesGCM.url_passthrough&&_gtag("set","url_passthrough",e.otCookiesGCM.url_passthrough)}))}(window,document);
     </script>
-{%- comment -%} Vzhľad lišty Consentik: okno v strede obrazovky so stlmeným
-  pozadím, písmo a tlačidlá ako na webe, Súhlasím ako hlavné tlačidlo.
-  Centruje sa cez inset + margin:auto, nie cez transform, aby sa nebilo
-  s vlastnou animáciou aplikácie. {%- endcomment -%}
+{%- comment -%} Vzhľad lišty Consentik: okno dole v strede, písmo a tlačidlá
+  ako na webe, Súhlasím ako hlavné tlačidlo. Stránka sa dá aj bez
+  odkliknutia ďalej scrollovať a čítať, ako na veľkých weboch: okno
+  nestmieva pozadie a prípadný prekryv ani zámok scrollu z aplikácie sa
+  vypne. Centruje sa cez left/right + margin:auto, nie cez transform, aby
+  sa nebilo s vlastnou animáciou aplikácie. {%- endcomment -%}
 <style>
   .otCookiesNotification, .otCookiesNotification * {
     font-family: "Archivo", "Helvetica Neue", Arial, sans-serif !important;
@@ -19,12 +21,13 @@
   }
   .otCookiesNotification #cookies-wrapper {
     position: fixed !important;
-    inset: 0 !important;
-    margin: auto !important;
+    inset: auto 0 16px 0 !important;
+    margin: 0 auto !important;
     width: min(500px, calc(100vw - 32px)) !important;
     max-width: none !important;
     height: fit-content !important;
     max-height: calc(100vh - 32px) !important;
+    max-height: calc(100dvh - 32px) !important;
     overflow: auto !important;
     transform: none !important;
     translate: none !important;
@@ -38,10 +41,20 @@
     color: #12171a !important;
     border: 0 !important;
     border-radius: 20px !important;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28), 0 0 0 100vmax rgba(12, 15, 17, 0.5) !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(18, 23, 26, 0.06) !important;
     text-align: left !important;
     font-size: 14.5px !important;
     line-height: 1.55 !important;
+  }
+  /* Stránka ostáva prístupná: žiadny prekryv a žiadny zámok scrollu,
+     kým je okno otvorené. */
+  .otCookiesNotification [class*="overlay" i],
+  .otCookiesNotification [class*="backdrop" i] { display: none !important; }
+  html:has(.otCookiesNotification #cookies-wrapper) { overflow-y: auto !important; }
+  body:has(.otCookiesNotification #cookies-wrapper) {
+    overflow: visible !important;
+    position: static !important;
+    touch-action: auto !important;
   }
   .otCookiesNotification #cookies-wrapper > * { width: 100% !important; max-width: none !important; margin: 0 !important; text-align: left !important; }
   .otCookiesNotification .otCookies-title-banner,
@@ -106,7 +119,7 @@
   .otCookiesNotification button:hover { opacity: 0.88 !important; }
   .otCookiesNotification button:focus-visible { outline: 2px solid #FFCC00 !important; outline-offset: 2px; }
   @media (max-width: 480px) {
-    .otCookiesNotification #cookies-wrapper { padding: 24px 20px 20px !important; }
+    .otCookiesNotification #cookies-wrapper { padding: 22px 18px 18px !important; bottom: 10px !important; gap: 10px !important; }
     .otCookiesNotification .otCookies-title-banner, .otCookiesNotification [class*="title"] { font-size: 19px !important; }
   }
 </style>

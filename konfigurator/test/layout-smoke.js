@@ -131,9 +131,8 @@ function assert(condition, message) {
     await form.locator('[name="contact[phone]"]').fill('+421900000000');
     await form.locator('[name="contact[email]"]').fill('qa@example.invalid');
     await form.locator('[name="contact[body]"]').fill('Client-side QA; nothing is delivered.');
-    await form.locator('[type="submit"]').click();
-    assert(!(await page.evaluate(() => (window.__kvDopytSkusobny || []).length)), 'Contact form bypassed consent validation');
-    await form.locator('[type="checkbox"]').check();
+    /* Povinné sú len meno a telefón; súhlas je odoslaním (text pod
+       tlačidlom), žiadne zaškrtávanie. */
     const telo = await page.evaluate(() => new Promise((ok) => {
       const f = document.querySelector('form[data-k-dopyt]');
       /* časová poistka formulára (startedAt) žiada aspoň 1,2 s od otvorenia */
@@ -142,12 +141,12 @@ function assert(condition, message) {
           if (z.length || Date.now() - t > 4000) ok(z[0] || null); else setTimeout(cakaj, 50); })(); }, 1300);
     }));
     assert(odoslane === 0, 'Contact form sent an enquiry to the live server from a test');
-    assert(telo, 'Contact form did not submit after consent');
+    assert(telo, 'Contact form did not submit with name and phone');
     for (const [k, v] of [['meno', 'Koverta audit test'], ['email', 'qa@example.invalid'], ['telefon', '+421900000000']]) {
       assert(telo[k] === v, 'Enquiry lost a field: ' + k);
     }
     await page.waitForURL(/dakujeme\/\?contact_posted=true/, { timeout: 5000 });
-    console.log('FORM_PASS validation, consent, all fields, thank-you page, nothing sent to a server');
+    console.log('FORM_PASS validation, name+phone required, all fields, thank-you page, nothing sent to a server');
 
     await desktop.close();
 
