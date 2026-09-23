@@ -15,7 +15,7 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
 
   // mailto: nesmie stránku odnavigovať, len ho zachytíme
   let mailtoNav = '';
-  await p.route('**/*', (r) => r.continue());
+  await p.route('**/*', (r) => /koverta-formular\.vercel\.app/.test(r.request().url()) ? r.abort() : r.continue());
   p.on('framenavigated', () => {});
   await p.addInitScript(() => {
     window.__mailto = '';

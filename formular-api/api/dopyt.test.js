@@ -47,7 +47,7 @@ test('honeypot skončí potichu úspechom', async () => {
 test('platný dopyt bez serverového kľúča nič nepredstiera', async () => {
   const res = odpoved();
   await handler(poziadavka({
-    meno: 'Test', telefon: '+421900000000', email: 'test@example.com',
+    meno: 'Test', telefon: '+421900000000', email: 'jana.novakova@gmail.com',
     suhlas: 'áno', startedAt: Date.now() - 5000, prilohy: []
   }), res);
   assert.equal(res.statusCode, 503);
@@ -55,7 +55,7 @@ test('platný dopyt bez serverového kľúča nič nepredstiera', async () => {
 });
 
 const zaklad = () => ({
-  meno: 'Test', telefon: '+421900000000', email: 'test@example.com',
+  meno: 'Test', telefon: '+421900000000', email: 'jana.novakova@gmail.com',
   suhlas: 'áno', startedAt: Date.now() - 5000
 });
 
@@ -108,4 +108,13 @@ test('odmietnutie zanechá v logu stopu odosielateľa bez samotnej IP', async ()
   assert.equal(z.prehliadac, 'curl/8.0');
   assert.match(z.ip, /^[0-9a-f]{12}$/);
   assert.ok(!riadky.join('').includes('198.51.100.7'), 'IP sa nesmie logovať v čitateľnej podobe');
+});
+
+test('testovací dopyt (vyhradená doména) dostane úspech, ale nič sa neodošle', async () => {
+  for (const email of ['qa@example.invalid', 'jozef@example.sk', 'a@b.test']) {
+    const res = odpoved();
+    await handler(poziadavka({ ...zaklad(), email }), res);
+    assert.equal(res.statusCode, 200, email);
+    assert.equal(res.body.test, true, email);
+  }
 });

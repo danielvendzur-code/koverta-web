@@ -40,6 +40,19 @@ function html(hodnota) {
   }[znak]));
 }
 
+/* Testovacie dopyty. Domény .invalid, .test, .example, .localhost
+   a example.com/.org/.net sú podľa RFC 2606 / 6761 vyhradené na skúšky —
+   skutočný zákazník z nich nepíše a e-mail na ne sa vráti ako nedoručený
+   (a zhorší povesť odosielateľa). Taký dopyt dostane úspech, aby test prešiel,
+   ale nič sa neodošle ani neuloží. Rovnako automatické kontroly z repozitára
+   („Koverta audit test“, „QA; nothing is delivered“). */
+function testovaciDopyt(data) {
+  const domena = (data.email.split('@')[1] || '').toLowerCase();
+  if (/(^|\.)(invalid|test|example|localhost)$/.test(domena)) return true;
+  if (/^example\.(com|org|net|sk)$/.test(domena)) return true;
+  return /koverta audit test|nothing is delivered|client-side qa/i.test(data.meno + ' ' + data.sprava);
+}
+
 function platnyEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
 }
@@ -214,6 +227,10 @@ export default async function handler(req, res) {
   if (!data.meno || !data.telefon || !platnyEmail(data.email) || !data.suhlas) {
     zaznamenaj('MISSING_FIELDS', zdroj);
     return res.status(422).json({ ok: false, code: 'MISSING_FIELDS' });
+  }
+  if (testovaciDopyt(data)) {
+    zaznamenaj('TEST_ZAHODENY', zdroj, { domenaNavstevnika: data.email.split('@')[1] || '' });
+    return res.status(200).json({ ok: true, test: true });
   }
 
   let attachments;

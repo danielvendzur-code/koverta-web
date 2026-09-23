@@ -2638,7 +2638,16 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
             startedAt: Number(hod('startedAt')) || 0, stranka: location.href,
             prilohy: await pripravPrilohy(f)
           };
-          const odpoved = await fetch(SERVER, {
+          /* Na lokálnom serveri (testy, agenti, vývoj) sa dopyt nikdy
+             neodošle do ostrého servera — každý beh testu inak poslal obchodu
+             skutočný e-mail a vyčerpal denný limit Resendu. Odoslanie sa len
+             zapíše do window.__kvDopytSkusobny a pokračuje sa ako po úspechu.
+             Kto chce lokálne skúšať skutočný server, nastaví
+             window.KV_DOPYT_ENDPOINT. */
+          const skusobne = !window.KV_DOPYT_ENDPOINT
+            && /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])$/.test(location.hostname);
+          if (skusobne) (window.__kvDopytSkusobny = window.__kvDopytSkusobny || []).push(telo);
+          const odpoved = skusobne ? { ok: true, status: 200 } : await fetch(SERVER, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(telo),
