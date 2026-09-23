@@ -14021,3 +14021,26 @@ body.ma-kh-modal { overflow: hidden; }
   .k .kh-porov__riadok { grid-template-columns: 1fr; gap: 4px; padding: 14px 16px; }
   .k .kh-porov__riadok span:nth-child(3)::before { content: "Stavebnica: "; font-weight: 600; }
 }
+
+/* Hero na telefóne: spodok bez orezania.
+   Tmavý prechod bol nakreslený na obsahovom boxe a ten končí 24 px nad
+   spodkom hero — pod hodnotením Google ostal pás holého videa s ostrým
+   okrajom. Na úzkej obrazovke preto prechod nesie hero sám: rozmazaný
+   tmavý pás cez celú šírku až po spodný okraj, ktorý sa smerom hore
+   plynulo stráca. */
+@media (max-width: 719px) {
+  .k .kh-hero__box { background: none; }
+  .kh-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 68%;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(9, 12, 14, 0.86) 0%, rgba(9, 12, 14, 0.72) 38%, rgba(9, 12, 14, 0.34) 72%, rgba(9, 12, 14, 0) 100%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+  }
+}

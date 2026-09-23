@@ -67,6 +67,34 @@ const FOTKY = process.env.KV_FOTKY || 'pages';
 const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
   'https://danielvendzur-code.github.io/koverta-web';
 
+/* GitHub Pages sa stavia z vetvy master. Súbor, ktorý na master ešte nie je
+ * (nová fotka, nové video), by tam vrátil 404. Taký súbor sa preto berie
+ * z jsDelivr z posledného odoslaného commitu, ktorý ho obsahuje — adresa je
+ * nemenná a ide cez CDN. Keď súbor na master pribudne, prevodník sa vráti
+ * k Pages sám. */
+const JSDELIVR_ZAKLAD = 'https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@';
+const naMasteri = (() => {
+  try {
+    return new Set(require('child_process').execFileSync('git', ['ls-tree', '-r', '--name-only', 'origin/master'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\n'));
+  } catch (_) { return null; }
+})();
+const zakladPreSubor = new Map();
+function zakladPages(relCesta) {
+  if (!naMasteri || naMasteri.has(relCesta)) return PAGES_ZAKLAD;
+  if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
+  const cp = require('child_process');
+  let zaklad = PAGES_ZAKLAD;
+  try {
+    const sha = cp.execFileSync('git', ['log', '-1', '--format=%H', 'HEAD', '--', relCesta], { cwd: KOREN, encoding: 'utf8' }).trim();
+    const vzdialene = sha && cp.execFileSync('git', ['branch', '-r', '--contains', sha], { cwd: KOREN, encoding: 'utf8' }).trim();
+    if (sha && vzdialene) zaklad = JSDELIVR_ZAKLAD + sha;
+    else console.warn('Pozor: ' + relCesta + ' nie je na master ani v odoslanom commite — najprv ho commitni a pushni, potom spusti prevodník znova.');
+  } catch (_) {}
+  zakladPreSubor.set(relCesta, zaklad);
+  return zaklad;
+}
+
 /* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
  * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
  * error“. Galéria má stovky položiek, preto veľké telá rozdelíme na menšie
@@ -172,7 +200,7 @@ function naSubor(url) {
     return "{{ '" + meno + "' | asset_url }}";
   }
   doObchodu.set(meno, path.relative(KOREN, naDisku));
-  if (FOTKY === 'pages') return PAGES_ZAKLAD + '/assets/' + vnutri;
+  if (FOTKY === 'pages') return zakladPages('assets/' + vnutri) + '/assets/' + vnutri;
   return "{{ '" + meno + "' | file_url }}";
 }
 
@@ -658,9 +686,15 @@ ${v.spolocnyChvost.join('\n')}
   for (const s of v.sablony) {
     if (s.a.rozmer) continue;
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
-    const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
-    const telo = hlava + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
-      (navyse ? '\n' + navyse + '\n' : '\n');
+    /* Štýly vlastné stránke (konfigurátor má svoje dve CSS) idú PRED jej
+       obsah, skripty za neho. Kým boli štýly až na konci, prehliadač stihol
+       obsah vykresliť bez nich: piktogramy výberu produktu v konfigurátore
+       sa na okamih roztiahli na celú šírku ako čierne tvary. Štýl vložený
+       pred obsah drží jeho vykreslenie, kým sa nenačíta. */
+    const navyseHlava = s.hlavaNavyse.join('\n');
+    const navyseChvost = s.chvostNavyse.join('\n');
+    const telo = hlava + (navyseHlava ? navyseHlava + '\n' : '') + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
+      (navyseChvost ? '\n' + navyseChvost + '\n' : '\n');
     const ciel = path.join(CIEL, 'snippets', s.a.handle + '.liquid');
     if (Buffer.byteLength(telo) <= MAX_SNIPPET_BAJTOV) {
       fs.writeFileSync(ciel, telo);
