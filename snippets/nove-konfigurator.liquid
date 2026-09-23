@@ -311,15 +311,31 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     <!-- Nadpis ostáva pre vyhľadávače a čítačky, na obrazovke nie je:
          konfigurátor má byť vidno hneď bez úvodného textu. -->
     <h1 class="k-visually-hidden" data-kv-nadpis>Poskladajte si prístrešok alebo pergolu</h1>
-    <p class="kv-cfg__label">Čo potrebujete zastrešiť</p>
-    <nav class="kv-cfg__tabs" aria-label="Čo potrebujete zastrešiť">
-      <!-- Piktogram povie, čo sa zastrešuje, značka, kto to vyrába. -->
+    <!-- Výber v dvoch skupinách ako v menu webu. Na telefóne sú hore dve
+         veľké voľby (Pre autá / Pre dom a záhradu) a pod nimi len prístrešky
+         zvolenej skupiny — predtým bol jeden dlhý pás a nebolo vidieť, že sa
+         dá vybrať aj niečo iné. Na počítači stoja obe skupiny vedľa seba. -->
+    <div class="kv-cfg__skupiny" data-kv-skupiny>
+      <div class="kv-cfg__prepinac" role="tablist" aria-label="Čo potrebujete zastrešiť">
+        <button type="button" role="tab" data-kv-skupina="auta">Pre autá</button>
+        <button type="button" role="tab" data-kv-skupina="dom">Pre dom a záhradu</button>
+      </div>
+      <div class="kv-cfg__skupina" data-kv-panel="auta">
+        <p class="kv-cfg__label">Pre autá</p>
+        <nav class="kv-cfg__tabs" aria-label="Prístrešky pre autá">
       <a href="?page=koverta" data-kv-tab="koverta"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 8.5 44 5.5"/><path d="M4 11 44 8"/><path d="M7 10.8V30M41 8.3V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Oceľový prístrešok pre auto</strong></span></a>
       <a href="?page=carport" data-kv-tab="carport"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><rect x="3.5" y="5" width="41" height="4.5" rx=".6"/><path d="M7 9.5V30M41 9.5V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Hliníkový prístrešok pre auto</strong></span></a>
+        </nav>
+      </div>
+      <div class="kv-cfg__skupina" data-kv-panel="dom">
+        <p class="kv-cfg__label">Pre dom a záhradu</p>
+        <nav class="kv-cfg__tabs" aria-label="Pre dom a záhradu">
       <a href="?page=canopy" data-kv-tab="canopy"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 2v28" stroke-width="2.4"/><rect x="4" y="8" width="40" height="3.6" rx=".5"/><path d="M41 11.6V30"/><path d="M11 30v-9.5h7V30"/><path d="M24 22h12M27 22v8M33 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Prestrešenie terasy a vstupu</strong></span></a>
       <a href="?page=zahrada" data-kv-tab="zahrada"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 9.5 44 6.5"/><path d="M4 12 44 9"/><path d="M7 11.8V30M41 9.3V30"/><path d="M17 22h14M20 22v8M28 22v8"/><path d="M13 30v-5h3M35 30v-5h-3"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Prístrešok nad terasu a záhradu</strong></span></a>
       <a href="?page=bio" data-kv-tab="bio"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 10h40"/><path d="M7 10v20M41 10v20"/><path d="M8 9.5 11 5M14 9.5 17 5M20 9.5 23 5M26 9.5 29 5M32 9.5 35 5M38 9.5 41 5"/><path d="M17 22h14M20 22v8M28 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Pergola s otočnými lamelami</strong></span></a>
-    </nav>
+        </nav>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -361,7 +377,8 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
       <div class="kh-cta__card k-rise">
         <div class="kh-cta__head">
           <p class="k-eyebrow">Z konfigurátora rovno k nám</p>
-          <h2 id="ctaTitle" class="k-h2">Vyskladané? Pošleme presnú cenu</h2>
+          <h2 id="ctaTitle" class="k-h2">Pošlite nám svoju zostavu</h2>
+          <p class="kv-cta-odkaz">Odkaz na zostavu pripojíme k dopytu sami. <button type="button" class="kv-cta-odkaz__btn" data-kv-zdielat><span>Skopírovať odkaz</span></button></p>
         </div>
 
         <form id="dopyt" class="kh-form" method="post" action="/pages/konfigurator#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
@@ -495,6 +512,22 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   document.querySelectorAll('[data-kv-tab]').forEach(function (a) {
     if (a.dataset.kvTab === page) a.setAttribute('aria-current', 'page');
   });
+  /* Skupina výberu: aktívna je tá, v ktorej je otvorený prístrešok. */
+  (function () {
+    var koren = document.querySelector('[data-kv-skupiny]');
+    if (!koren) return;
+    var nastav = function (sk) {
+      koren.setAttribute('data-aktivna', sk);
+      koren.querySelectorAll('[data-kv-skupina]').forEach(function (b) {
+        b.setAttribute('aria-selected', String(b.dataset.kvSkupina === sk));
+      });
+    };
+    nastav(/^(koverta|carport)$/.test(page) ? 'auta' : 'dom');
+    koren.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-kv-skupina]');
+      if (b) nastav(b.dataset.kvSkupina);
+    });
+  })();
   document.title = LABEL[page] + ' | 3D konfigurátor Koverta';
   /* Nadpis stránky stojí hore ako na zvyšku webu; text si berie z nadpisu
      vybraného modelu, ktorý nesie konfigurátor (ten sa pod výberom skryje). */
