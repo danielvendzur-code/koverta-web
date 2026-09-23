@@ -464,7 +464,9 @@ body { background: var(--k-white); color: var(--k-ink); }
 @media screen and (max-width: 749px) {
   #SoltecPremium .sp-rail {
     position: sticky;
-    top: 0;
+    /* Pod lištou webu, keď je vidieť; inak úplne hore. */
+    top: var(--kv-lista-vrch, 0px);
+    transition: top .2s ease;
     z-index: 3;
     gap: .4rem;
     margin-inline: calc(-1 * var(--page-padding, 1.5rem));
