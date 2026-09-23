@@ -1,4 +1,304 @@
 {%- assign kv_dopyt = '/pages/kontakt#ponuka' -%}
+<!-- KOVERTA-SEO -->
+<meta name="theme-color" content="#12171a">
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
+<!-- /KOVERTA-SEO -->
+<style>:root, .color-scheme-1 {
+  --color-background: 255,255,255; --gradient-background: #ffffff;
+  --color-foreground: 18,18,18; --color-background-contrast: 191,191,191; --color-shadow: 18,18,18;
+  --color-button: 255,192,7; --color-button-text: 18,18,18;
+  --color-secondary-button: 255,255,255; --color-secondary-button-text: 69,90,100;
+  --color-link: 69,90,100;
+  --color-badge-foreground: 18,18,18; --color-badge-background: 255,255,255; --color-badge-border: 18,18,18;
+}
+.color-scheme-2 {
+  --color-background: 243,243,243; --gradient-background: #f3f3f3;
+  --color-foreground: 18,18,18; --color-background-contrast: 179,179,179; --color-shadow: 18,18,18;
+  --color-button: 255,192,7; --color-button-text: 18,18,18;
+  --color-secondary-button: 243,243,243; --color-secondary-button-text: 69,90,100;
+  --color-link: 69,90,100;
+  --color-badge-foreground: 18,18,18; --color-badge-background: 243,243,243; --color-badge-border: 18,18,18;
+}
+.color-scheme-5 {
+  --color-background: 69,90,100; --gradient-background: #455a64;
+  --color-foreground: 255,255,255; --color-background-contrast: 17,22,25; --color-shadow: 18,18,18;
+  --color-button: 255,255,255; --color-button-text: 255,255,255;
+  --color-secondary-button: 69,90,100; --color-secondary-button-text: 255,255,255;
+  --color-link: 255,255,255;
+}
+body, .color-scheme-1, .color-scheme-2, .color-scheme-5 {
+  color: rgba(var(--color-foreground), 0.75);
+  background-color: rgb(var(--color-background));
+}
+:root {
+  --font-body-family: Archivo, sans-serif; --font-body-style: normal;
+  --font-body-weight: 400; --font-body-weight-bold: 700;
+  --font-heading-family: "Titillium Web", sans-serif; --font-heading-style: normal; --font-heading-weight: 400;
+  --font-body-scale: 1.0; --font-heading-scale: 1.0;
+  --media-padding: px; --media-border-opacity: 0.05; --media-border-width: 1px; --media-radius: 8px;
+  --media-shadow-opacity: 0.0; --media-shadow-horizontal-offset: 0px; --media-shadow-vertical-offset: 4px;
+  --media-shadow-blur-radius: 5px; --media-shadow-visible: 0;
+  --page-width: 100rem; --page-width-margin: 0rem;
+  --card-image-padding: 0.0rem; --card-corner-radius: 0.8rem; --card-text-alignment: center;
+  --card-border-width: 0.0rem; --card-border-opacity: 0.1; --card-shadow-opacity: 0.0; --card-shadow-visible: 0;
+  --card-shadow-horizontal-offset: 0.0rem; --card-shadow-vertical-offset: 0.4rem; --card-shadow-blur-radius: 0.5rem;
+  --badge-corner-radius: 4.0rem;
+  --popup-border-width: 1px; --popup-border-opacity: 0.1; --popup-corner-radius: 8px;
+  --popup-shadow-opacity: 0.05; --popup-shadow-horizontal-offset: 0px; --popup-shadow-vertical-offset: 4px; --popup-shadow-blur-radius: 5px;
+  --drawer-border-width: 1px; --drawer-border-opacity: 0.1; --drawer-shadow-opacity: 0.0;
+  --drawer-shadow-horizontal-offset: 0px; --drawer-shadow-vertical-offset: 4px; --drawer-shadow-blur-radius: 5px;
+  --spacing-sections-desktop: 0px; --spacing-sections-mobile: 0px;
+  --grid-desktop-vertical-spacing: 8px; --grid-desktop-horizontal-spacing: 8px;
+  --grid-mobile-vertical-spacing: 4px; --grid-mobile-horizontal-spacing: 4px;
+  --text-boxes-border-opacity: 0.1; --text-boxes-border-width: 0px; --text-boxes-radius: 8px;
+  --text-boxes-shadow-opacity: 0.0; --text-boxes-shadow-visible: 0;
+  --text-boxes-shadow-horizontal-offset: 0px; --text-boxes-shadow-vertical-offset: 4px; --text-boxes-shadow-blur-radius: 5px;
+  --buttons-radius: 4px; --buttons-radius-outset: 5px; --buttons-border-width: 1px; --buttons-border-opacity: 1.0;
+  --buttons-shadow-opacity: 0.0; --buttons-shadow-visible: 0; --buttons-shadow-horizontal-offset: 0px;
+  --buttons-shadow-vertical-offset: 4px; --buttons-shadow-blur-radius: 5px; --buttons-border-offset: 0.3px;
+  --inputs-radius: 4px; --inputs-border-width: 1px; --inputs-border-opacity: 0.55; --inputs-shadow-opacity: 0.0;
+  --inputs-shadow-horizontal-offset: 0px; --inputs-margin-offset: 0px; --inputs-shadow-vertical-offset: 4px;
+  --inputs-shadow-blur-radius: 5px; --inputs-radius-outset: 5px;
+  --variant-pills-radius: 40px; --variant-pills-border-width: 1px; --variant-pills-border-opacity: 0.55;
+  --variant-pills-shadow-opacity: 0.0; --variant-pills-shadow-horizontal-offset: 0px;
+  --variant-pills-shadow-vertical-offset: 4px; --variant-pills-shadow-blur-radius: 5px;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { box-sizing: border-box; font-size: calc(var(--font-body-scale) * 62.5%); height: 100%; }
+body {
+  display: block; min-height: 100%; margin: 0; font-size: 1.5rem; letter-spacing: 0.06rem;
+  line-height: calc(1 + 0.8 / var(--font-body-scale));
+  font-family: var(--font-body-family); font-style: var(--font-body-style); font-weight: var(--font-body-weight);
+}
+</style>
+<style>
+/* Základ témy z e-shopu. Zo 660 selektorov zodpovedalo v konfigurátore
+   niečomu deväť — zvyšok patril k stránkam, ktoré tu nie sú. Ostali tie
+   deviate, pravidlá pre samotné značky (h1–h6, hr, summary…) a všetko,
+   čo definuje premenné, na ktoré sa odvoláva zvyšok CSS. */
+:root { --alpha-button-background: 1; --alpha-button-border: 1; --alpha-link: 0.85; --alpha-badge-border: 0.1; }
+.product-card-wrapper .card, .contains-card--product { --border-radius: var(--product-card-corner-radius); --border-width: var(--product-card-border-width); --border-opacity: var(--product-card-border-opacity); --shadow-horizontal-offset: var(--product-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--product-card-shadow-vertical-offset); --shadow-blur-radius: var(--product-card-shadow-blur-radius); --shadow-opacity: var(--product-card-shadow-opacity); --shadow-visible: var(--product-card-shadow-visible); --image-padding: var(--product-card-image-padding); --text-alignment: var(--product-card-text-alignment); }
+.collection-card-wrapper .card, .contains-card--collection { --border-radius: var(--collection-card-corner-radius); --border-width: var(--collection-card-border-width); --border-opacity: var(--collection-card-border-opacity); --shadow-horizontal-offset: var(--collection-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--collection-card-shadow-vertical-offset); --shadow-blur-radius: var(--collection-card-shadow-blur-radius); --shadow-opacity: var(--collection-card-shadow-opacity); --shadow-visible: var(--collection-card-shadow-visible); --image-padding: var(--collection-card-image-padding); --text-alignment: var(--collection-card-text-alignment); }
+.article-card-wrapper .card, .contains-card--article { --border-radius: var(--blog-card-corner-radius); --border-width: var(--blog-card-border-width); --border-opacity: var(--blog-card-border-opacity); --shadow-horizontal-offset: var(--blog-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--blog-card-shadow-vertical-offset); --shadow-blur-radius: var(--blog-card-shadow-blur-radius); --shadow-opacity: var(--blog-card-shadow-opacity); --shadow-visible: var(--blog-card-shadow-visible); --image-padding: var(--blog-card-image-padding); --text-alignment: var(--blog-card-text-alignment); }
+.contains-content-container, .content-container { --border-radius: var(--text-boxes-radius); --border-width: var(--text-boxes-border-width); --border-opacity: var(--text-boxes-border-opacity); --shadow-horizontal-offset: var(--text-boxes-shadow-horizontal-offset); --shadow-vertical-offset: var(--text-boxes-shadow-vertical-offset); --shadow-blur-radius: var(--text-boxes-shadow-blur-radius); --shadow-opacity: var(--text-boxes-shadow-opacity); --shadow-visible: var(--text-boxes-shadow-visible); }
+.contains-media, .global-media-settings { --border-radius: var(--media-radius); --border-width: var(--media-border-width); --border-opacity: var(--media-border-opacity); --shadow-horizontal-offset: var(--media-shadow-horizontal-offset); --shadow-vertical-offset: var(--media-shadow-vertical-offset); --shadow-blur-radius: var(--media-shadow-blur-radius); --shadow-opacity: var(--media-shadow-opacity); --shadow-visible: var(--media-shadow-visible); }
+html.no-js .no-js:not(html) { display: block !important; }
+html.no-js .no-js-inline { display: inline-block !important; }
+.page-width { max-width: var(--page-width); margin: 0 auto; padding: 0 1.5rem; }
+body:has(.section-header .drawer-menu) .announcement-bar-section .page-width { max-width: 100%; }
+::selection { background-color: rgba(var(--color-foreground), 0.2); }
+h1, h2, h3, h4, h5, .h0, .h1, .h2, .h3, .h4, .h5 { font-family: var(--font-heading-family); font-style: var(--font-heading-style); font-weight: var(--font-heading-weight); letter-spacing: calc(var(--font-heading-scale) * 0.06rem); color: rgb(var(--color-foreground)); line-height: calc(1 + 0.3 / max(1, var(--font-heading-scale))); word-break: break-word; }
+h1, .h1 { font-size: calc(var(--font-heading-scale) * 3rem); }
+h2, .h2 { font-size: calc(var(--font-heading-scale) * 2rem); }
+h3, .h3 { font-size: calc(var(--font-heading-scale) * 1.7rem); }
+h4, .h4 { font-family: var(--font-heading-family); font-style: var(--font-heading-style); font-size: calc(var(--font-heading-scale) * 1.5rem); }
+h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.2rem); }
+h6, .h6 { color: rgba(var(--color-foreground), 0.75); margin-block-start: 1.67em; margin-block-end: 1.67em; }
+blockquote { font-style: italic; color: rgba(var(--color-foreground), 0.75); border-left: 0.2rem solid rgba(var(--color-foreground), 0.2); padding-left: 1rem; }
+table:not([class]) { table-layout: fixed; border-collapse: collapse; font-size: 1.4rem; border-style: hidden; box-shadow: 0 0 0 0.1rem rgba(var(--color-foreground), 0.2); }
+table:not([class]) td, table:not([class]) th { padding: 1em; border: 0.1rem solid rgba(var(--color-foreground), 0.2); }
+a:empty, ul:empty, dl:empty, div:empty, section:empty, article:empty, p:empty, h1:empty, h2:empty, h3:empty, h4:empty, h5:empty, h6:empty { display: block; }
+a:not([href]) { cursor: not-allowed; }
+hr { border: none; height: 0.1rem; background-color: rgba(var(--color-foreground), 0.2); display: block; margin: 5rem 0; }
+details > * { box-sizing: border-box; }
+:root { --duration-short: 100ms; --duration-default: 200ms; --duration-announcement-bar: 250ms; --duration-medium: 300ms; --duration-long: 500ms; --duration-extra-long: 600ms; --duration-extended: 3s; --ease-out-slow: cubic-bezier(0, 0, 0.3, 1); --animation-slide-in: slideIn var(--duration-extra-long) var(--ease-out-slow) forwards; --animation-fade-in: fadeIn var(--duration-extra-long) var(--ease-out-slow); }
+h3 .icon-arrow, .h3 .icon-arrow { width: calc(var(--font-heading-scale) * 1.5rem); }
+summary { cursor: pointer; list-style: none; position: relative; }
+summary .icon-caret { position: absolute; height: 0.6rem; right: 1.5rem; top: calc(50% - 0.2rem); }
+summary::-webkit-details-marker { display: none; }
+*:focus { outline: 0; box-shadow: none; }
+*:focus-visible { outline: 0.2rem solid rgba(var(--color-foreground), 0.5); outline-offset: 0.3rem; box-shadow: 0 0 0 0.3rem rgb(var(--color-background)), 0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3); }
+.button--secondary, .button--tertiary { --color-button: var(--color-secondary-button); --color-button-text: var(--color-secondary-button-text); }
+.button--tertiary { --alpha-button-background: 0; --alpha-button-border: 0.2; }
+.button, .shopify-challenge__button, .customer button, button.shopify-payment-button__button--unbranded, .shopify-payment-button [role='button'], .cart__dynamic-checkout-buttons [role='button'], .cart__dynamic-checkout-buttons iframe { --shadow-horizontal-offset: var(--buttons-shadow-horizontal-offset); --shadow-vertical-offset: var(--buttons-shadow-vertical-offset); --shadow-blur-radius: var(--buttons-shadow-blur-radius); --shadow-opacity: var(--buttons-shadow-opacity); --shadow-visible: var(--buttons-shadow-visible); --border-offset: var(--buttons-border-offset); --border-opacity: calc(1 - var(--buttons-border-opacity)); border-radius: var(--buttons-radius-outset); position: relative; }
+.button, .shopify-challenge__button, .customer button, button.shopify-payment-button__button--unbranded { min-width: calc(12rem + var(--buttons-border-width) * 2); min-height: calc(4.5rem + var(--buttons-border-width) * 2); }
+.button, .shopify-challenge__button, .customer button { display: inline-flex; justify-content: center; align-items: center; border: 0; padding: 0 3rem; cursor: pointer; font: inherit; font-size: 1.5rem; text-decoration: none; color: rgb(var(--color-button-text)); transition: box-shadow var(--duration-short) ease; -webkit-appearance: none; appearance: none; background-color: rgba(var(--color-button), var(--alpha-button-background)); }
+.button:not([disabled]):hover::after, .shopify-challenge__button:hover::after, .customer button:hover::after, .shopify-payment-button__button--unbranded:hover::after { --border-offset: 1.3px; box-shadow: 0 0 0 calc(var(--buttons-border-width) + var(--border-offset)) rgba(var(--color-button-text), var(--border-opacity)), 0 0 0 calc(var(--buttons-border-width) + 1px) rgba(var(--color-button), var(--alpha-button-background)); }
+.button--secondary:after { --border-opacity: var(--buttons-border-opacity); }
+.button, .button-label, .shopify-challenge__button, .customer button { font-size: 1.5rem; letter-spacing: 0.1rem; line-height: calc(1 + 0.2 / var(--font-body-scale)); }
+details[open] > .share-button__fallback { animation: animateMenuOpen var(--duration-default) ease; }
+input[type='checkbox'] { display: inline-block; width: auto; margin-right: 0.5rem; }
+product-info .loading__spinner:not(.hidden) ~ *, .quantity__rules-cart .loading__spinner:not(.hidden) ~ * { visibility: hidden; }
+.announcement-bar-slider--fade-in-next .announcement-bar__message { --announcement-translate-from: -1.5rem; opacity: 0; animation-name: translateAnnouncementSlideIn; animation-delay: var(--duration-announcement-bar); }
+.announcement-bar-slider--fade-in-previous .announcement-bar__message { --announcement-translate-from: 1.5rem; opacity: 0; animation-name: translateAnnouncementSlideIn; animation-delay: var(--duration-announcement-bar); }
+.announcement-bar-slider--fade-out-next .announcement-bar__message { --announcement-translate-to: 1.5rem; animation-name: translateAnnouncementSlideOut; }
+.announcement-bar-slider--fade-out-previous .announcement-bar__message { --announcement-translate-to: -1.5rem; animation-name: translateAnnouncementSlideOut; }
+
+
+@keyframes translateAnnouncementSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--announcement-translate-from));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+@keyframes translateAnnouncementSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--announcement-translate-to));
+  }
+}
+details[open] > .search-modal { opacity: 1; animation: animateMenuOpen var(--duration-default) ease; }
+details[open] .modal-overlay { display: block; }
+details[open] .modal-overlay::after { position: absolute; content: ''; background-color: rgb(var(--color-foreground), 0.5); top: 100%; left: 0; right: 0; height: 100vh; }
+details:not([open]) > .header__icon--menu .icon-close, details[open] > .header__icon--menu .icon-hamburger { visibility: hidden; opacity: 0; transform: scale(0.8); }
+details[open] > .header__submenu { animation: animateMenuOpen var(--duration-default) ease; animation-fill-mode: forwards; z-index: 1; }
+details[open] > .header__menu-item { text-decoration: underline; }
+details[open]:hover > .header__menu-item { text-decoration-thickness: 0.2rem; }
+details[open] > .header__menu-item .icon-caret { transform: rotate(180deg); }
+header-menu > details, details-disclosure > details { position: relative; }
+
+
+@keyframes animateMenuOpen {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate--zoom-in { --zoom-in-ratio: 1; }
+@media screen and (min-width: 750px){.page-width { padding: 0 5rem; }
+blockquote { padding-left: 1.5rem; }
+hr { margin: 7rem 0; }}
+@media only screen and (min-width: 750px){h1, .h1 { font-size: calc(var(--font-heading-scale) * 4rem); }
+h2, .h2 { font-size: calc(var(--font-heading-scale) * 2.4rem); }
+h3, .h3 { font-size: calc(var(--font-heading-scale) * 1.8rem); }
+h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
+@media screen and (min-width: 990px){body:has(.section-header .header:not(.drawer-menu)) .utility-bar .page-width { padding-left: 5rem; padding-right: 5rem; }
+.header:not(.header--middle-left, .header--middle-center) .header__inline-menu { margin-top: 1.05rem; }}
+@media (prefers-reduced-motion){details[open] > .header__submenu { opacity: 1; transform: translateY(0); }}
+@media (forced-colors: active){.button, .shopify-challenge__button, .customer button { border: transparent solid 1px; }}
+@media (prefers-reduced-motion: no-preference){
+
+  @keyframes animateAmbient {
+    0% {
+      transform: rotate(0deg) translateX(1em) rotate(0deg) scale(1.2);
+    }
+    100% {
+      transform: rotate(360deg) translateX(1em) rotate(-360deg) scale(1.2);
+    }
+  }
+
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(2rem);
+      opacity: 0.01;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0.01;
+    }
+    to {
+      opacity: 1;
+    }
+  }}
+@media (prefers-reduced-motion: no-preference) and (hover: hover){:root { --easter-egg: none; --sparkle: url('./sparkle.gif'); }
+.animate--hover-vertical-lift .button:not([disabled]):hover:after, .animate--hover-vertical-lift .customer button:not([disabled]):hover:after, .animate--hover-vertical-lift .shopify-payment-button__button:not([disabled]):hover:after { --border-offset: 0.3px; box-shadow: 0 0 0 calc(var(--buttons-border-width) + var(--border-offset)) rgba(var(--color-button-text), var(--border-opacity)), 0 0 0 var(--buttons-border-width) rgba(var(--color-button), var(--alpha-button-background)); }
+.animate--hover-vertical-lift .button:not([disabled]).button--secondary:hover:after { --border-offset: 0px; }}
+</style>
+<style>
+/* Sekcia konfigurátora. Toto je zvyšok po staršej vloženej kópii:
+   všetko, čo od vtedy prepísal soltec-premium.css, je preč — ostali len
+   pravidlá, ktoré v ňom nie sú. Z 127 kB je 2 kB. */
+#SoltecPremium{--sp-yellow:#ffc007;--sp-slate:#455a64;--sp-ink:#121212;--sp-muted:rgba(18, 18, 18, .62);--sp-line:rgba(18, 18, 18, .12);--sp-soft:#f3f3f3;--sp-sticky-top:0px;--sp-rhythm:clamp(4.4rem, 5vw, 6.4rem);--sp-rhythm-sm:clamp(2.8rem, 3.2vw, 4rem);color:var(--sp-ink);background:#fff;overflow:clip}
+#SoltecPremium .sp-carpick{display:inline-flex;gap:.2rem;padding:.3rem;border:1px solid var(--sp-line);border-radius:999px}
+#SoltecPremium .sp-carpick button{min-height:3.4rem;padding:0 1.3rem;border:0;border-radius:999px;background:transparent;color:var(--sp-muted);font:inherit;font-size:1.3rem;cursor:pointer;white-space:nowrap;transition:background .16s, color .16s}
+#SoltecPremium .sp-carpick button:hover{color:var(--sp-ink)}
+#SoltecPremium .sp-carpick button[aria-pressed="true"]{background:var(--sp-ink);color:var(--sp-ground)}
+#SoltecPremium .sp-side-opts button{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1.2rem;border:1px solid var(--sp-line);border-radius:var(--media-radius, .8rem);background:#fff;color:var(--sp-ink);cursor:pointer;font-size:1.35rem;text-align:left;transition:border-color .18s ease}
+#SoltecPremium .sp-side-opts button:hover{border-color:var(--sp-slate)}
+#SoltecPremium .sp-side-opts button[aria-pressed="true"]{border-color:var(--sp-ink)}
+#SoltecPremium .sp-side-opts em{white-space:nowrap}
+
+    @keyframes sp-panel-in { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: none; } }
+
+    @keyframes sp-detail-in { from { opacity:0; transform:translateY(-.5rem); } to { opacity:1; transform:none; } }
+
+    @keyframes sp-carport-hero-media-in { from { opacity:.5; scale:1.05; } to { opacity:1; scale:1; } }
+
+    @keyframes sp-carport-hero-copy-in { from { opacity:0; transform:translateY(2.6rem); } to { opacity:1; transform:none; } }
+
+    @keyframes sp-carport-trust-in { from { opacity:0; transform:translateY(1.6rem); } to { opacity:1; transform:none; } }
+#SoltecPremium .sp-stage:hover .sp-stage__hint, #SoltecPremium .sp-stage:focus-within .sp-stage__hint{opacity:1}
+</style>
+<style>
+  /* Only the frame around the configurator. Nothing here reaches inside
+     #SoltecPremium; the palette is the theme's own. */
+  :root {
+    --kv-ink: #121212;
+    --kv-ground: #ffffff;
+    --kv-line: rgba(18, 18, 18, .12);
+    --kv-muted: rgba(18, 18, 18, .62);
+  }
+  body { background: var(--kv-ground); color: var(--kv-ink); }
+
+  .kv-bar {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--kv-ground); border-bottom: 1px solid var(--kv-line);
+  }
+  .kv-bar__in {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2rem; min-height: 5.6rem; padding-block: .9rem; flex-wrap: wrap;
+  }
+  .kv-mark {
+    font-family: "Titillium Web", "Trebuchet MS", sans-serif;
+    font-size: 1.9rem; font-weight: 600; letter-spacing: .02em; color: var(--kv-ink);
+  }
+  .kv-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .kv-tabs a {
+    display: inline-block; padding: .7rem 1.4rem; border-radius: 100px;
+    border: 1px solid var(--kv-line); background: var(--kv-ground);
+    font-size: 1.3rem; color: var(--kv-ink); text-decoration: none;
+    transition: border-color .16s ease, background-color .16s ease;
+  }
+  .kv-tabs a:hover { border-color: rgba(18, 18, 18, .38); }
+  .kv-tabs a[aria-current="page"] { background: var(--kv-ink); border-color: var(--kv-ink); color: #fff; }
+  .kv-tabs a:focus-visible { outline: 2px solid var(--kv-ink); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+<!-- Latest shared configurator skin. Kept external so customer fixes can be
+     deployed without regenerating the large embedded price catalogue. -->
+<!-- Štýl webu: konfigurátor je jeho stránka, nie samostatná appka. -->
+<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
+<!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
+<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
+<style>
+  /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
+     text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
+     má vyzerať rovnako ako na kontakte, tak si premenné prepíše späť na
+     vlastné a prestrk zruší. Konfigurátora samotného sa to netýka. */
+  [data-k-cta-obal] {
+    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: normal;
+  }
+  [data-k-cta-obal] h2,
+  [data-k-cta-obal] h3 { font-family: var(--font-heading-family); }
+</style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Organization", "HomeAndConstructionBusiness"], "@id": "https://koverta.sk/#organizacia", "name": "Koverta", "url": "https://koverta.sk/", "logo": "https://danielvendzur-code.github.io/koverta-web/assets/icon-512.png", "description": "Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby na Slovensku. Zameranie a návrh zadarmo, doprava a montáž v cene.", "email": "obchod@koverta.sk", "telephone": "+421948482266", "areaServed": [{"@type": "Country", "name": "Slovensko"}, {"@type": "AdministrativeArea", "name": "Bratislavský kraj"}, {"@type": "AdministrativeArea", "name": "Trnavský kraj"}, {"@type": "AdministrativeArea", "name": "Nitriansky kraj"}, {"@type": "AdministrativeArea", "name": "Trenčiansky kraj"}, {"@type": "AdministrativeArea", "name": "Žilinský kraj"}, {"@type": "AdministrativeArea", "name": "Banskobystrický kraj"}, {"@type": "AdministrativeArea", "name": "Prešovský kraj"}, {"@type": "AdministrativeArea", "name": "Košický kraj"}], "sameAs": ["https://www.facebook.com/KovertaSK", "https://instagram.com/koverta.sk", "https://pinterest.com/KovertaSK"], "contactPoint": [{"@type": "ContactPoint", "contactType": "sales", "name": "Obchodné oddelenie", "email": "obchod@koverta.sk", "telephone": "+421948482266", "availableLanguage": ["sk", "cs"]}, {"@type": "ContactPoint", "contactType": "technical support", "name": "Projektové oddelenie", "email": "design@koverta.sk", "telephone": "+421911298341", "availableLanguage": ["sk"]}, {"@type": "ContactPoint", "contactType": "billing support", "name": "Účtovné oddelenie", "email": "financie@koverta.sk", "telephone": "+421905482266", "availableLanguage": ["sk"]}], "alternateName": ["Koverta.sk", "Koverta prístrešky"], "slogan": "Prístrešky a pergoly pre váš priestor", "knowsLanguage": ["sk", "cs", "en"], "currenciesAccepted": "EUR", "knowsAbout": ["prístrešky pre autá", "carporty", "záhradné prístrešky", "zastrešenie terasy", "bioklimatické pergoly", "pevné prestrešenia", "ZIP rolety", "lamelové tienenie", "brisoleje", "vonkajšie kuchyne", "oceľové konštrukcie", "hliníkové konštrukcie", "práškové lakovanie RAL", "ohlásenie drobnej stavby"], "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Zameranie na mieste"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Cenová ponuka a návrh"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Výroba prístreškov a pergol"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Doprava a montáž na kľúč"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Betónové pätky ako doplnková služba"}}], "image": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-og.jpg", "legalName": "Venaco s. r. o.", "address": {"@type": "PostalAddress", "streetAddress": "J. C. Hronského 3427/6", "addressLocality": "Nitra", "postalCode": "949 07", "addressCountry": "SK"}, "identifier": [{"@type": "PropertyValue", "name": "IČO", "value": "45648107"}], "priceRange": "€€"}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Koverta", "item": "https://koverta.sk/"}, {"@type": "ListItem", "position": 2, "name": "3D konfigurátor"}]}</script>
 <main id="kv-root">
@@ -14,11 +314,11 @@
     <p class="kv-cfg__label">Čo potrebujete zastrešiť</p>
     <nav class="kv-cfg__tabs" aria-label="Čo potrebujete zastrešiť">
       <!-- Piktogram povie, čo sa zastrešuje, značka, kto to vyrába. -->
-      <a href="?page=koverta" data-kv-tab="koverta"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" aria-hidden="true"><path d="M4 8.5 44 5.5"/><path d="M4 11 44 8"/><path d="M7 10.8V30M41 8.3V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Oceľový prístrešok pre auto</strong></span></a>
-      <a href="?page=carport" data-kv-tab="carport"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" aria-hidden="true"><rect x="3.5" y="5" width="41" height="4.5" rx=".6"/><path d="M7 9.5V30M41 9.5V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Hliníkový prístrešok pre auto</strong></span></a>
-      <a href="?page=canopy" data-kv-tab="canopy"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" aria-hidden="true"><path d="M4 2v28" stroke-width="2.4"/><rect x="4" y="8" width="40" height="3.6" rx=".5"/><path d="M41 11.6V30"/><path d="M11 30v-9.5h7V30"/><path d="M24 22h12M27 22v8M33 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Prestrešenie terasy a vstupu</strong></span></a>
-      <a href="?page=zahrada" data-kv-tab="zahrada"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" aria-hidden="true"><path d="M4 9.5 44 6.5"/><path d="M4 12 44 9"/><path d="M7 11.8V30M41 9.3V30"/><path d="M17 22h14M20 22v8M28 22v8"/><path d="M13 30v-5h3M35 30v-5h-3"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Prístrešok nad terasu a záhradu</strong></span></a>
-      <a href="?page=bio" data-kv-tab="bio"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" aria-hidden="true"><path d="M4 10h40"/><path d="M7 10v20M41 10v20"/><path d="M8 9.5 11 5M14 9.5 17 5M20 9.5 23 5M26 9.5 29 5M32 9.5 35 5M38 9.5 41 5"/><path d="M17 22h14M20 22v8M28 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Pergola s otočnými lamelami</strong></span></a>
+      <a href="?page=koverta" data-kv-tab="koverta"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 8.5 44 5.5"/><path d="M4 11 44 8"/><path d="M7 10.8V30M41 8.3V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Oceľový prístrešok pre auto</strong></span></a>
+      <a href="?page=carport" data-kv-tab="carport"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><rect x="3.5" y="5" width="41" height="4.5" rx=".6"/><path d="M7 9.5V30M41 9.5V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Hliníkový prístrešok pre auto</strong></span></a>
+      <a href="?page=canopy" data-kv-tab="canopy"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 2v28" stroke-width="2.4"/><rect x="4" y="8" width="40" height="3.6" rx=".5"/><path d="M41 11.6V30"/><path d="M11 30v-9.5h7V30"/><path d="M24 22h12M27 22v8M33 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Prestrešenie terasy a vstupu</strong></span></a>
+      <a href="?page=zahrada" data-kv-tab="zahrada"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 9.5 44 6.5"/><path d="M4 12 44 9"/><path d="M7 11.8V30M41 9.3V30"/><path d="M17 22h14M20 22v8M28 22v8"/><path d="M13 30v-5h3M35 30v-5h-3"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Prístrešok nad terasu a záhradu</strong></span></a>
+      <a href="?page=bio" data-kv-tab="bio"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 10h40"/><path d="M7 10v20M41 10v20"/><path d="M8 9.5 11 5M14 9.5 17 5M20 9.5 23 5M26 9.5 29 5M32 9.5 35 5M38 9.5 41 5"/><path d="M17 22h14M20 22v8M28 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png" alt="Soltec" width="971" height="268"><strong>Pergola s otočnými lamelami</strong></span></a>
     </nav>
   </div>
 </section>
@@ -403,303 +703,3 @@
 })();
 </script>
 
-<!-- KOVERTA-SEO -->
-<meta name="theme-color" content="#12171a">
-<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
-<!-- /KOVERTA-SEO -->
-<style>:root, .color-scheme-1 {
-  --color-background: 255,255,255; --gradient-background: #ffffff;
-  --color-foreground: 18,18,18; --color-background-contrast: 191,191,191; --color-shadow: 18,18,18;
-  --color-button: 255,192,7; --color-button-text: 18,18,18;
-  --color-secondary-button: 255,255,255; --color-secondary-button-text: 69,90,100;
-  --color-link: 69,90,100;
-  --color-badge-foreground: 18,18,18; --color-badge-background: 255,255,255; --color-badge-border: 18,18,18;
-}
-.color-scheme-2 {
-  --color-background: 243,243,243; --gradient-background: #f3f3f3;
-  --color-foreground: 18,18,18; --color-background-contrast: 179,179,179; --color-shadow: 18,18,18;
-  --color-button: 255,192,7; --color-button-text: 18,18,18;
-  --color-secondary-button: 243,243,243; --color-secondary-button-text: 69,90,100;
-  --color-link: 69,90,100;
-  --color-badge-foreground: 18,18,18; --color-badge-background: 243,243,243; --color-badge-border: 18,18,18;
-}
-.color-scheme-5 {
-  --color-background: 69,90,100; --gradient-background: #455a64;
-  --color-foreground: 255,255,255; --color-background-contrast: 17,22,25; --color-shadow: 18,18,18;
-  --color-button: 255,255,255; --color-button-text: 255,255,255;
-  --color-secondary-button: 69,90,100; --color-secondary-button-text: 255,255,255;
-  --color-link: 255,255,255;
-}
-body, .color-scheme-1, .color-scheme-2, .color-scheme-5 {
-  color: rgba(var(--color-foreground), 0.75);
-  background-color: rgb(var(--color-background));
-}
-:root {
-  --font-body-family: Archivo, sans-serif; --font-body-style: normal;
-  --font-body-weight: 400; --font-body-weight-bold: 700;
-  --font-heading-family: "Titillium Web", sans-serif; --font-heading-style: normal; --font-heading-weight: 400;
-  --font-body-scale: 1.0; --font-heading-scale: 1.0;
-  --media-padding: px; --media-border-opacity: 0.05; --media-border-width: 1px; --media-radius: 8px;
-  --media-shadow-opacity: 0.0; --media-shadow-horizontal-offset: 0px; --media-shadow-vertical-offset: 4px;
-  --media-shadow-blur-radius: 5px; --media-shadow-visible: 0;
-  --page-width: 100rem; --page-width-margin: 0rem;
-  --card-image-padding: 0.0rem; --card-corner-radius: 0.8rem; --card-text-alignment: center;
-  --card-border-width: 0.0rem; --card-border-opacity: 0.1; --card-shadow-opacity: 0.0; --card-shadow-visible: 0;
-  --card-shadow-horizontal-offset: 0.0rem; --card-shadow-vertical-offset: 0.4rem; --card-shadow-blur-radius: 0.5rem;
-  --badge-corner-radius: 4.0rem;
-  --popup-border-width: 1px; --popup-border-opacity: 0.1; --popup-corner-radius: 8px;
-  --popup-shadow-opacity: 0.05; --popup-shadow-horizontal-offset: 0px; --popup-shadow-vertical-offset: 4px; --popup-shadow-blur-radius: 5px;
-  --drawer-border-width: 1px; --drawer-border-opacity: 0.1; --drawer-shadow-opacity: 0.0;
-  --drawer-shadow-horizontal-offset: 0px; --drawer-shadow-vertical-offset: 4px; --drawer-shadow-blur-radius: 5px;
-  --spacing-sections-desktop: 0px; --spacing-sections-mobile: 0px;
-  --grid-desktop-vertical-spacing: 8px; --grid-desktop-horizontal-spacing: 8px;
-  --grid-mobile-vertical-spacing: 4px; --grid-mobile-horizontal-spacing: 4px;
-  --text-boxes-border-opacity: 0.1; --text-boxes-border-width: 0px; --text-boxes-radius: 8px;
-  --text-boxes-shadow-opacity: 0.0; --text-boxes-shadow-visible: 0;
-  --text-boxes-shadow-horizontal-offset: 0px; --text-boxes-shadow-vertical-offset: 4px; --text-boxes-shadow-blur-radius: 5px;
-  --buttons-radius: 4px; --buttons-radius-outset: 5px; --buttons-border-width: 1px; --buttons-border-opacity: 1.0;
-  --buttons-shadow-opacity: 0.0; --buttons-shadow-visible: 0; --buttons-shadow-horizontal-offset: 0px;
-  --buttons-shadow-vertical-offset: 4px; --buttons-shadow-blur-radius: 5px; --buttons-border-offset: 0.3px;
-  --inputs-radius: 4px; --inputs-border-width: 1px; --inputs-border-opacity: 0.55; --inputs-shadow-opacity: 0.0;
-  --inputs-shadow-horizontal-offset: 0px; --inputs-margin-offset: 0px; --inputs-shadow-vertical-offset: 4px;
-  --inputs-shadow-blur-radius: 5px; --inputs-radius-outset: 5px;
-  --variant-pills-radius: 40px; --variant-pills-border-width: 1px; --variant-pills-border-opacity: 0.55;
-  --variant-pills-shadow-opacity: 0.0; --variant-pills-shadow-horizontal-offset: 0px;
-  --variant-pills-shadow-vertical-offset: 4px; --variant-pills-shadow-blur-radius: 5px;
-}
-*, *::before, *::after { box-sizing: inherit; }
-html { box-sizing: border-box; font-size: calc(var(--font-body-scale) * 62.5%); height: 100%; }
-body {
-  display: block; min-height: 100%; margin: 0; font-size: 1.5rem; letter-spacing: 0.06rem;
-  line-height: calc(1 + 0.8 / var(--font-body-scale));
-  font-family: var(--font-body-family); font-style: var(--font-body-style); font-weight: var(--font-body-weight);
-}
-</style>
-<style>
-/* Základ témy z e-shopu. Zo 660 selektorov zodpovedalo v konfigurátore
-   niečomu deväť — zvyšok patril k stránkam, ktoré tu nie sú. Ostali tie
-   deviate, pravidlá pre samotné značky (h1–h6, hr, summary…) a všetko,
-   čo definuje premenné, na ktoré sa odvoláva zvyšok CSS. */
-:root { --alpha-button-background: 1; --alpha-button-border: 1; --alpha-link: 0.85; --alpha-badge-border: 0.1; }
-.product-card-wrapper .card, .contains-card--product { --border-radius: var(--product-card-corner-radius); --border-width: var(--product-card-border-width); --border-opacity: var(--product-card-border-opacity); --shadow-horizontal-offset: var(--product-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--product-card-shadow-vertical-offset); --shadow-blur-radius: var(--product-card-shadow-blur-radius); --shadow-opacity: var(--product-card-shadow-opacity); --shadow-visible: var(--product-card-shadow-visible); --image-padding: var(--product-card-image-padding); --text-alignment: var(--product-card-text-alignment); }
-.collection-card-wrapper .card, .contains-card--collection { --border-radius: var(--collection-card-corner-radius); --border-width: var(--collection-card-border-width); --border-opacity: var(--collection-card-border-opacity); --shadow-horizontal-offset: var(--collection-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--collection-card-shadow-vertical-offset); --shadow-blur-radius: var(--collection-card-shadow-blur-radius); --shadow-opacity: var(--collection-card-shadow-opacity); --shadow-visible: var(--collection-card-shadow-visible); --image-padding: var(--collection-card-image-padding); --text-alignment: var(--collection-card-text-alignment); }
-.article-card-wrapper .card, .contains-card--article { --border-radius: var(--blog-card-corner-radius); --border-width: var(--blog-card-border-width); --border-opacity: var(--blog-card-border-opacity); --shadow-horizontal-offset: var(--blog-card-shadow-horizontal-offset); --shadow-vertical-offset: var(--blog-card-shadow-vertical-offset); --shadow-blur-radius: var(--blog-card-shadow-blur-radius); --shadow-opacity: var(--blog-card-shadow-opacity); --shadow-visible: var(--blog-card-shadow-visible); --image-padding: var(--blog-card-image-padding); --text-alignment: var(--blog-card-text-alignment); }
-.contains-content-container, .content-container { --border-radius: var(--text-boxes-radius); --border-width: var(--text-boxes-border-width); --border-opacity: var(--text-boxes-border-opacity); --shadow-horizontal-offset: var(--text-boxes-shadow-horizontal-offset); --shadow-vertical-offset: var(--text-boxes-shadow-vertical-offset); --shadow-blur-radius: var(--text-boxes-shadow-blur-radius); --shadow-opacity: var(--text-boxes-shadow-opacity); --shadow-visible: var(--text-boxes-shadow-visible); }
-.contains-media, .global-media-settings { --border-radius: var(--media-radius); --border-width: var(--media-border-width); --border-opacity: var(--media-border-opacity); --shadow-horizontal-offset: var(--media-shadow-horizontal-offset); --shadow-vertical-offset: var(--media-shadow-vertical-offset); --shadow-blur-radius: var(--media-shadow-blur-radius); --shadow-opacity: var(--media-shadow-opacity); --shadow-visible: var(--media-shadow-visible); }
-html.no-js .no-js:not(html) { display: block !important; }
-html.no-js .no-js-inline { display: inline-block !important; }
-.page-width { max-width: var(--page-width); margin: 0 auto; padding: 0 1.5rem; }
-body:has(.section-header .drawer-menu) .announcement-bar-section .page-width { max-width: 100%; }
-::selection { background-color: rgba(var(--color-foreground), 0.2); }
-h1, h2, h3, h4, h5, .h0, .h1, .h2, .h3, .h4, .h5 { font-family: var(--font-heading-family); font-style: var(--font-heading-style); font-weight: var(--font-heading-weight); letter-spacing: calc(var(--font-heading-scale) * 0.06rem); color: rgb(var(--color-foreground)); line-height: calc(1 + 0.3 / max(1, var(--font-heading-scale))); word-break: break-word; }
-h1, .h1 { font-size: calc(var(--font-heading-scale) * 3rem); }
-h2, .h2 { font-size: calc(var(--font-heading-scale) * 2rem); }
-h3, .h3 { font-size: calc(var(--font-heading-scale) * 1.7rem); }
-h4, .h4 { font-family: var(--font-heading-family); font-style: var(--font-heading-style); font-size: calc(var(--font-heading-scale) * 1.5rem); }
-h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.2rem); }
-h6, .h6 { color: rgba(var(--color-foreground), 0.75); margin-block-start: 1.67em; margin-block-end: 1.67em; }
-blockquote { font-style: italic; color: rgba(var(--color-foreground), 0.75); border-left: 0.2rem solid rgba(var(--color-foreground), 0.2); padding-left: 1rem; }
-table:not([class]) { table-layout: fixed; border-collapse: collapse; font-size: 1.4rem; border-style: hidden; box-shadow: 0 0 0 0.1rem rgba(var(--color-foreground), 0.2); }
-table:not([class]) td, table:not([class]) th { padding: 1em; border: 0.1rem solid rgba(var(--color-foreground), 0.2); }
-a:empty, ul:empty, dl:empty, div:empty, section:empty, article:empty, p:empty, h1:empty, h2:empty, h3:empty, h4:empty, h5:empty, h6:empty { display: block; }
-a:not([href]) { cursor: not-allowed; }
-hr { border: none; height: 0.1rem; background-color: rgba(var(--color-foreground), 0.2); display: block; margin: 5rem 0; }
-details > * { box-sizing: border-box; }
-:root { --duration-short: 100ms; --duration-default: 200ms; --duration-announcement-bar: 250ms; --duration-medium: 300ms; --duration-long: 500ms; --duration-extra-long: 600ms; --duration-extended: 3s; --ease-out-slow: cubic-bezier(0, 0, 0.3, 1); --animation-slide-in: slideIn var(--duration-extra-long) var(--ease-out-slow) forwards; --animation-fade-in: fadeIn var(--duration-extra-long) var(--ease-out-slow); }
-h3 .icon-arrow, .h3 .icon-arrow { width: calc(var(--font-heading-scale) * 1.5rem); }
-summary { cursor: pointer; list-style: none; position: relative; }
-summary .icon-caret { position: absolute; height: 0.6rem; right: 1.5rem; top: calc(50% - 0.2rem); }
-summary::-webkit-details-marker { display: none; }
-*:focus { outline: 0; box-shadow: none; }
-*:focus-visible { outline: 0.2rem solid rgba(var(--color-foreground), 0.5); outline-offset: 0.3rem; box-shadow: 0 0 0 0.3rem rgb(var(--color-background)), 0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3); }
-.button--secondary, .button--tertiary { --color-button: var(--color-secondary-button); --color-button-text: var(--color-secondary-button-text); }
-.button--tertiary { --alpha-button-background: 0; --alpha-button-border: 0.2; }
-.button, .shopify-challenge__button, .customer button, button.shopify-payment-button__button--unbranded, .shopify-payment-button [role='button'], .cart__dynamic-checkout-buttons [role='button'], .cart__dynamic-checkout-buttons iframe { --shadow-horizontal-offset: var(--buttons-shadow-horizontal-offset); --shadow-vertical-offset: var(--buttons-shadow-vertical-offset); --shadow-blur-radius: var(--buttons-shadow-blur-radius); --shadow-opacity: var(--buttons-shadow-opacity); --shadow-visible: var(--buttons-shadow-visible); --border-offset: var(--buttons-border-offset); --border-opacity: calc(1 - var(--buttons-border-opacity)); border-radius: var(--buttons-radius-outset); position: relative; }
-.button, .shopify-challenge__button, .customer button, button.shopify-payment-button__button--unbranded { min-width: calc(12rem + var(--buttons-border-width) * 2); min-height: calc(4.5rem + var(--buttons-border-width) * 2); }
-.button, .shopify-challenge__button, .customer button { display: inline-flex; justify-content: center; align-items: center; border: 0; padding: 0 3rem; cursor: pointer; font: inherit; font-size: 1.5rem; text-decoration: none; color: rgb(var(--color-button-text)); transition: box-shadow var(--duration-short) ease; -webkit-appearance: none; appearance: none; background-color: rgba(var(--color-button), var(--alpha-button-background)); }
-.button:not([disabled]):hover::after, .shopify-challenge__button:hover::after, .customer button:hover::after, .shopify-payment-button__button--unbranded:hover::after { --border-offset: 1.3px; box-shadow: 0 0 0 calc(var(--buttons-border-width) + var(--border-offset)) rgba(var(--color-button-text), var(--border-opacity)), 0 0 0 calc(var(--buttons-border-width) + 1px) rgba(var(--color-button), var(--alpha-button-background)); }
-.button--secondary:after { --border-opacity: var(--buttons-border-opacity); }
-.button, .button-label, .shopify-challenge__button, .customer button { font-size: 1.5rem; letter-spacing: 0.1rem; line-height: calc(1 + 0.2 / var(--font-body-scale)); }
-details[open] > .share-button__fallback { animation: animateMenuOpen var(--duration-default) ease; }
-input[type='checkbox'] { display: inline-block; width: auto; margin-right: 0.5rem; }
-product-info .loading__spinner:not(.hidden) ~ *, .quantity__rules-cart .loading__spinner:not(.hidden) ~ * { visibility: hidden; }
-.announcement-bar-slider--fade-in-next .announcement-bar__message { --announcement-translate-from: -1.5rem; opacity: 0; animation-name: translateAnnouncementSlideIn; animation-delay: var(--duration-announcement-bar); }
-.announcement-bar-slider--fade-in-previous .announcement-bar__message { --announcement-translate-from: 1.5rem; opacity: 0; animation-name: translateAnnouncementSlideIn; animation-delay: var(--duration-announcement-bar); }
-.announcement-bar-slider--fade-out-next .announcement-bar__message { --announcement-translate-to: 1.5rem; animation-name: translateAnnouncementSlideOut; }
-.announcement-bar-slider--fade-out-previous .announcement-bar__message { --announcement-translate-to: -1.5rem; animation-name: translateAnnouncementSlideOut; }
-
-
-@keyframes translateAnnouncementSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(var(--announcement-translate-from));
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-
-@keyframes translateAnnouncementSlideOut {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(var(--announcement-translate-to));
-  }
-}
-details[open] > .search-modal { opacity: 1; animation: animateMenuOpen var(--duration-default) ease; }
-details[open] .modal-overlay { display: block; }
-details[open] .modal-overlay::after { position: absolute; content: ''; background-color: rgb(var(--color-foreground), 0.5); top: 100%; left: 0; right: 0; height: 100vh; }
-details:not([open]) > .header__icon--menu .icon-close, details[open] > .header__icon--menu .icon-hamburger { visibility: hidden; opacity: 0; transform: scale(0.8); }
-details[open] > .header__submenu { animation: animateMenuOpen var(--duration-default) ease; animation-fill-mode: forwards; z-index: 1; }
-details[open] > .header__menu-item { text-decoration: underline; }
-details[open]:hover > .header__menu-item { text-decoration-thickness: 0.2rem; }
-details[open] > .header__menu-item .icon-caret { transform: rotate(180deg); }
-header-menu > details, details-disclosure > details { position: relative; }
-
-
-@keyframes animateMenuOpen {
-  0% {
-    opacity: 0;
-    transform: translateY(-1.5rem);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate--zoom-in { --zoom-in-ratio: 1; }
-@media screen and (min-width: 750px){.page-width { padding: 0 5rem; }
-blockquote { padding-left: 1.5rem; }
-hr { margin: 7rem 0; }}
-@media only screen and (min-width: 750px){h1, .h1 { font-size: calc(var(--font-heading-scale) * 4rem); }
-h2, .h2 { font-size: calc(var(--font-heading-scale) * 2.4rem); }
-h3, .h3 { font-size: calc(var(--font-heading-scale) * 1.8rem); }
-h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
-@media screen and (min-width: 990px){body:has(.section-header .header:not(.drawer-menu)) .utility-bar .page-width { padding-left: 5rem; padding-right: 5rem; }
-.header:not(.header--middle-left, .header--middle-center) .header__inline-menu { margin-top: 1.05rem; }}
-@media (prefers-reduced-motion){details[open] > .header__submenu { opacity: 1; transform: translateY(0); }}
-@media (forced-colors: active){.button, .shopify-challenge__button, .customer button { border: transparent solid 1px; }}
-@media (prefers-reduced-motion: no-preference){
-
-  @keyframes animateAmbient {
-    0% {
-      transform: rotate(0deg) translateX(1em) rotate(0deg) scale(1.2);
-    }
-    100% {
-      transform: rotate(360deg) translateX(1em) rotate(-360deg) scale(1.2);
-    }
-  }
-
-
-  @keyframes slideIn {
-    from {
-      transform: translateY(2rem);
-      opacity: 0.01;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0.01;
-    }
-    to {
-      opacity: 1;
-    }
-  }}
-@media (prefers-reduced-motion: no-preference) and (hover: hover){:root { --easter-egg: none; --sparkle: url('./sparkle.gif'); }
-.animate--hover-vertical-lift .button:not([disabled]):hover:after, .animate--hover-vertical-lift .customer button:not([disabled]):hover:after, .animate--hover-vertical-lift .shopify-payment-button__button:not([disabled]):hover:after { --border-offset: 0.3px; box-shadow: 0 0 0 calc(var(--buttons-border-width) + var(--border-offset)) rgba(var(--color-button-text), var(--border-opacity)), 0 0 0 var(--buttons-border-width) rgba(var(--color-button), var(--alpha-button-background)); }
-.animate--hover-vertical-lift .button:not([disabled]).button--secondary:hover:after { --border-offset: 0px; }}
-</style>
-<style>
-/* Sekcia konfigurátora. Toto je zvyšok po staršej vloženej kópii:
-   všetko, čo od vtedy prepísal soltec-premium.css, je preč — ostali len
-   pravidlá, ktoré v ňom nie sú. Z 127 kB je 2 kB. */
-#SoltecPremium{--sp-yellow:#ffc007;--sp-slate:#455a64;--sp-ink:#121212;--sp-muted:rgba(18, 18, 18, .62);--sp-line:rgba(18, 18, 18, .12);--sp-soft:#f3f3f3;--sp-sticky-top:0px;--sp-rhythm:clamp(4.4rem, 5vw, 6.4rem);--sp-rhythm-sm:clamp(2.8rem, 3.2vw, 4rem);color:var(--sp-ink);background:#fff;overflow:clip}
-#SoltecPremium .sp-carpick{display:inline-flex;gap:.2rem;padding:.3rem;border:1px solid var(--sp-line);border-radius:999px}
-#SoltecPremium .sp-carpick button{min-height:3.4rem;padding:0 1.3rem;border:0;border-radius:999px;background:transparent;color:var(--sp-muted);font:inherit;font-size:1.3rem;cursor:pointer;white-space:nowrap;transition:background .16s, color .16s}
-#SoltecPremium .sp-carpick button:hover{color:var(--sp-ink)}
-#SoltecPremium .sp-carpick button[aria-pressed="true"]{background:var(--sp-ink);color:var(--sp-ground)}
-#SoltecPremium .sp-side-opts button{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1.2rem;border:1px solid var(--sp-line);border-radius:var(--media-radius, .8rem);background:#fff;color:var(--sp-ink);cursor:pointer;font-size:1.35rem;text-align:left;transition:border-color .18s ease}
-#SoltecPremium .sp-side-opts button:hover{border-color:var(--sp-slate)}
-#SoltecPremium .sp-side-opts button[aria-pressed="true"]{border-color:var(--sp-ink)}
-#SoltecPremium .sp-side-opts em{white-space:nowrap}
-
-    @keyframes sp-panel-in { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: none; } }
-
-    @keyframes sp-detail-in { from { opacity:0; transform:translateY(-.5rem); } to { opacity:1; transform:none; } }
-
-    @keyframes sp-carport-hero-media-in { from { opacity:.5; scale:1.05; } to { opacity:1; scale:1; } }
-
-    @keyframes sp-carport-hero-copy-in { from { opacity:0; transform:translateY(2.6rem); } to { opacity:1; transform:none; } }
-
-    @keyframes sp-carport-trust-in { from { opacity:0; transform:translateY(1.6rem); } to { opacity:1; transform:none; } }
-#SoltecPremium .sp-stage:hover .sp-stage__hint, #SoltecPremium .sp-stage:focus-within .sp-stage__hint{opacity:1}
-</style>
-<style>
-  /* Only the frame around the configurator. Nothing here reaches inside
-     #SoltecPremium; the palette is the theme's own. */
-  :root {
-    --kv-ink: #121212;
-    --kv-ground: #ffffff;
-    --kv-line: rgba(18, 18, 18, .12);
-    --kv-muted: rgba(18, 18, 18, .62);
-  }
-  body { background: var(--kv-ground); color: var(--kv-ink); }
-
-  .kv-bar {
-    position: sticky; top: 0; z-index: 40;
-    background: var(--kv-ground); border-bottom: 1px solid var(--kv-line);
-  }
-  .kv-bar__in {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 2rem; min-height: 5.6rem; padding-block: .9rem; flex-wrap: wrap;
-  }
-  .kv-mark {
-    font-family: "Titillium Web", "Trebuchet MS", sans-serif;
-    font-size: 1.9rem; font-weight: 600; letter-spacing: .02em; color: var(--kv-ink);
-  }
-  .kv-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
-  .kv-tabs a {
-    display: inline-block; padding: .7rem 1.4rem; border-radius: 100px;
-    border: 1px solid var(--kv-line); background: var(--kv-ground);
-    font-size: 1.3rem; color: var(--kv-ink); text-decoration: none;
-    transition: border-color .16s ease, background-color .16s ease;
-  }
-  .kv-tabs a:hover { border-color: rgba(18, 18, 18, .38); }
-  .kv-tabs a[aria-current="page"] { background: var(--kv-ink); border-color: var(--kv-ink); color: #fff; }
-  .kv-tabs a:focus-visible { outline: 2px solid var(--kv-ink); outline-offset: 2px; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-  }
-</style>
-<!-- Latest shared configurator skin. Kept external so customer fixes can be
-     deployed without regenerating the large embedded price catalogue. -->
-<!-- Štýl webu: konfigurátor je jeho stránka, nie samostatná appka. -->
-<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
-<!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
-<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
-<style>
-  /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
-     text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
-     má vyzerať rovnako ako na kontakte, tak si premenné prepíše späť na
-     vlastné a prestrk zruší. Konfigurátora samotného sa to netýka. */
-  [data-k-cta-obal] {
-    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
-    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: normal;
-  }
-  [data-k-cta-obal] h2,
-  [data-k-cta-obal] h3 { font-family: var(--font-heading-family); }
-</style>

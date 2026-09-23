@@ -3200,7 +3200,11 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
              v niektorých prehliadačoch k stiahnutiu MP4 aj WebM naraz —
              15,6 MB na jedno načítanie úvodu. Rozhodne canPlayType a
              prehrávač dostane jednu adresu. */
-          const zdroje = uzky
+          /* Mobilné video je výrez na výšku — dostane ho len obrazovka na
+             výšku. Telefón otočený na šírku by z neho videl priblížený pás. */
+          const naVysku = uzky && v.getAttribute('data-k-video-mobil')
+            && window.matchMedia('(orientation: portrait)').matches;
+          const zdroje = naVysku
             ? [['data-k-video-mobil', 'video/mp4']]
             : [['data-k-video', 'video/mp4; codecs="avc1.4d401f"'], ['data-k-video-webm', 'video/webm']];
           const vybrany = zdroje.find((par) => v.getAttribute(par[0]) && v.canPlayType(par[1]) !== '');

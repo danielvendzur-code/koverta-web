@@ -83,9 +83,8 @@
 
 <main class="k kp" id="obsah" data-k-root data-kp-product>
 
-  {%- comment -%} Hlavný obrázok je čistý render celého prístrešku z konfigurátora
-     (alt končí „vizualizácia“). Staré obrázky produktu sa v galérii neukazujú;
-     po ňom idú len fotky realizácií s presne rovnakým rozmerom. {%- endcomment -%}
+  {%- comment -%} Galéria: fotografie produktu, potom render z konfigurátora
+     (alt končí „vizualizácia“) a fotky realizácií s presne rovnakým rozmerom. {%- endcomment -%}
   {%- assign kp_render = nil -%}
   {%- for m in product.media -%}{%- if m.alt contains 'vizualizácia' -%}{%- assign kp_render = m -%}{%- break -%}{%- endif -%}{%- endfor -%}
   {%- assign kp_hlavny = kp_render | default: product.featured_media -%}
@@ -97,23 +96,29 @@
           <div class="kp-gal__track" data-kp-track tabindex="0">
             {%- comment -%} Najprv vizualizácia tohto rozmeru z obchodu, potom
                fotky realizácií s presne rovnakým rozmerom, ak nejaké sú. {%- endcomment -%}
-            {%- if kp_render -%}
-              {%- assign m = kp_render -%}
-                <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
-                  <img src="{{ m.preview_image | image_url: width: 1200 }}"
-                    srcset="{{ m.preview_image | image_url: width: 700 }} 700w, {{ m.preview_image | image_url: width: 1200 }} 1200w, {{ m.preview_image | image_url: width: 1600 }} 1600w"
-                    sizes="(max-width: 899px) 100vw, 58vw" width="{{ m.preview_image.width }}" height="{{ m.preview_image.height }}"
-                    alt="{{ m.alt | escape }}" decoding="async" fetchpriority="high">
-                </figure>
-            {%- elsif product.media.size > 0 -%}
-              {%- for m in product.media limit: 4 -%}
-                <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
+            {%- if product.media.size > 0 -%}
+              {%- comment -%} Ako na pôvodnom webe: najprv fotografie produktu
+                 (pohľad spredu), vizualizácia z konfigurátora až za nimi. {%- endcomment -%}
+              {%- assign kp_poradie = 0 -%}
+              {%- for m in product.media -%}
+                {%- if m.media_type != 'image' or m.alt contains 'vizualizácia' -%}{%- continue -%}{%- endif -%}
+                {%- if kp_poradie >= 5 -%}{%- break -%}{%- endif -%}
+                <figure class="kp-gal__slide kp-gal__slide--vizual kp-gal__slide--biela" data-kp-slide>
                   <img src="{{ m.preview_image | image_url: width: 1200 }}"
                     srcset="{{ m.preview_image | image_url: width: 700 }} 700w, {{ m.preview_image | image_url: width: 1200 }} 1200w, {{ m.preview_image | image_url: width: 1800 }} 1800w"
                     sizes="(max-width: 899px) 100vw, 58vw" width="{{ m.preview_image.width }}" height="{{ m.preview_image.height }}"
-                    alt="{{ m.alt | default: product.title | escape }}" decoding="async"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+                    alt="{{ m.alt | default: product.title | escape }}" decoding="async"{% if kp_poradie == 0 %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
                 </figure>
+                {%- assign kp_poradie = kp_poradie | plus: 1 -%}
               {%- endfor -%}
+              {%- if kp_render -%}
+                <figure class="kp-gal__slide kp-gal__slide--vizual" data-kp-slide>
+                  <img src="{{ kp_render.preview_image | image_url: width: 1200 }}"
+                    srcset="{{ kp_render.preview_image | image_url: width: 700 }} 700w, {{ kp_render.preview_image | image_url: width: 1200 }} 1200w, {{ kp_render.preview_image | image_url: width: 1600 }} 1600w"
+                    sizes="(max-width: 899px) 100vw, 58vw" width="{{ kp_render.preview_image.width }}" height="{{ kp_render.preview_image.height }}"
+                    alt="{{ kp_render.alt | escape }}" decoding="async"{% if kp_poradie == 0 %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+                </figure>
+              {%- endif -%}
             {%- else -%}
               {%- for riadok in zoznam_fotiek limit: 2 -%}
                 {%- assign f = riadok | split: '|' -%}
@@ -131,18 +136,21 @@
         </div>
         <div class="kp-gal__nahlady" role="tablist" aria-label="Vybrať fotografiu">
           {%- assign pocet_vizual = 0 -%}
-          {%- if kp_render -%}
-              <button type="button" class="kp-gal__nahlad is-active" role="tab" aria-selected="true" data-kp-thumb data-index="0" aria-label="Vizualizácia">
-                <img src="{{ kp_render.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
-              </button>
-              {%- assign pocet_vizual = 1 -%}
-          {%- elsif product.media.size > 0 -%}
-            {%- for m in product.media limit: 4 -%}
-              <button type="button" class="kp-gal__nahlad{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ forloop.index0 }}" aria-label="Vizualizácia {{ forloop.index }}">
+          {%- if product.media.size > 0 -%}
+            {%- for m in product.media -%}
+              {%- if m.media_type != 'image' or m.alt contains 'vizualizácia' -%}{%- continue -%}{%- endif -%}
+              {%- if pocet_vizual >= 5 -%}{%- break -%}{%- endif -%}
+              <button type="button" class="kp-gal__nahlad{% if pocet_vizual == 0 %} is-active{% endif %}" role="tab" aria-selected="{% if pocet_vizual == 0 %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ pocet_vizual }}" aria-label="Fotografia {{ pocet_vizual | plus: 1 }}">
                 <img src="{{ m.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
               </button>
-              {%- assign pocet_vizual = forloop.length -%}
+              {%- assign pocet_vizual = pocet_vizual | plus: 1 -%}
             {%- endfor -%}
+            {%- if kp_render -%}
+              <button type="button" class="kp-gal__nahlad{% if pocet_vizual == 0 %} is-active{% endif %}" role="tab" aria-selected="{% if pocet_vizual == 0 %}true{% else %}false{% endif %}" data-kp-thumb data-index="{{ pocet_vizual }}" aria-label="Vizualizácia">
+                <img src="{{ kp_render.preview_image | image_url: width: 240 }}" width="240" height="180" alt="" loading="lazy" decoding="async">
+              </button>
+              {%- assign pocet_vizual = pocet_vizual | plus: 1 -%}
+            {%- endif -%}
           {%- else -%}
             {%- for riadok in zoznam_fotiek limit: 2 -%}
               {%- assign f = riadok | split: '|' -%}
