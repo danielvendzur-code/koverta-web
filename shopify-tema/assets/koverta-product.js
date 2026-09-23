@@ -14,6 +14,18 @@
     if (!track || !slides.length) return;
     let index = 0;
 
+    /* Na telefóne a tablete nie sú náhľady ani šípky — bodky ukážu, koľko
+       fotiek je a ktorá sa práve ukazuje (CSS ich zobrazí len tam). */
+    const bodky = [];
+    if (slides.length > 1 && slides.length <= 10) {
+      const rad = document.createElement('div');
+      rad.className = 'kp-gal__bodky';
+      rad.setAttribute('aria-hidden', 'true');
+      slides.forEach(() => { const b = document.createElement('span'); rad.appendChild(b); bodky.push(b); });
+      (count ? count.parentNode : track.parentNode).appendChild(rad);
+      g.classList.add('ma-bodky');
+    }
+
     const oznac = (i) => {
       index = i;
       if (count) count.textContent = (i + 1) + ' / ' + slides.length;
@@ -21,6 +33,7 @@
         t.classList.toggle('is-active', n === i);
         t.setAttribute('aria-selected', n === i ? 'true' : 'false');
       });
+      bodky.forEach((b, n) => b.classList.toggle('is-active', n === i));
     };
     const chod = (i) => {
       const n = (i + slides.length) % slides.length;
