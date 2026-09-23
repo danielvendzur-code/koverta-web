@@ -30,7 +30,11 @@ function kvAdresa(kluc, zaloha) {
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
     sedan: { file:'bmw-g80-m3.bin.gz', bounds:[0,-1013,0,4794,1013,1462],
-      label:'BMW M3', short:'sedan' },
+      label:'BMW M3', short:'sedan',
+      /* Kryty zrkadiel boli v modeli svetlosivý chróm (materiál 3, farba
+         176/182/188) a na aute svietili ako dve biele kocky. Na M3 sú vo
+         farbe karosérie: dostanú lak (materiál 1) a jeho podklad 128. */
+      prefarbi:[[3,176,182,188,1,128,128,128]] },
     sport: { file:'porsche-911.bin.gz', bounds:[0,-1005,0,4519,1005,1285],
       label:'Porsche 911', short:'športové' },
     city: { file:'mini-cooper.bin.gz', bounds:[0,-1001,0,3876,1001,1474],
@@ -53,6 +57,10 @@ function kvAdresa(kluc, zaloha) {
         data=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
       }
       if (!data.byteLength || data.byteLength % 48) throw Error('Neplatný model.');
+      (models[key].prefarbi||[]).forEach(([m,r,g,b,m2,r2,g2,b2])=>{
+        const B=new Uint8Array(data);
+        for(let i=12;i<B.length;i+=16)if(B[i+3]===m&&B[i]===r&&B[i+1]===g&&B[i+2]===b){B[i]=r2;B[i+1]=g2;B[i+2]=b2;B[i+3]=m2;}
+      });
       return data;
     }).catch(e => { assets.delete(key); throw e; }));
     return assets.get(key);

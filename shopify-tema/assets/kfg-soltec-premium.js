@@ -2038,7 +2038,10 @@ function kvAdresa(kluc, zaloha) {
              otáčaní sa na kartu neposiela ani bajt navyše. */
           const kluc = camera.geometryKey;
           if (kluc !== klucSiete) {
-            r.nastavScenu(faces, triedaMaterialu);
+            /* Nálepka s logom (decal) potrebuje textúru, ktorú 3D vykresľovač
+               nemá — kreslil ju ako prázdny biely obdĺžnik a na stĺpe
+               vyzerala ako chyba. Kým textúru nevie, nálepka sa v 3D vynechá. */
+            r.nastavScenu(faces.filter((f) => !f.decal), triedaMaterialu);
             klucSiete = kluc;
           }
 
