@@ -2056,6 +2056,9 @@ function kvAdresa(kluc, zaloha) {
             if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
             else sceneLife.draw(gl, opis, true);
           } : null;
+          /* Prázdna scéna nič nekreslí a vykresľovač si potom ušetrí
+             dekódovanie konštrukcie uprostred snímku. */
+          if (r.kresliNavyse && sceneLife.needsDraw) r.kresliNavyse.aktivne = sceneLife.needsDraw();
           canvas.dataset.renderer = 'webgl2-pbr';
           /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
           canvas.dataset.faceCount = String(faces.length);
@@ -2105,15 +2108,23 @@ function kvAdresa(kluc, zaloha) {
                  sa preto sťahuje podľa toho, čo stroj stíha. Kde je
                  doostrenie lacné, beží celé — tam je práve na to, aby sa
                  vlna plechu nerozpadla na bodky. */
+              /* Stupne sú jemnejšie než kedysi (2 / 3 / plno). Pri
+                 notebooku s integrovanou grafikou, ktorý kreslí snímok za
+                 70 ms, dávali tri vzorky — a z troch vzoriek je hrana
+                 profilu stále schodovitá. Každá vzorka je vo vlastnom
+                 snímku prehliadača, stránka medzi nimi reaguje a prvý
+                 pohyb doostrovanie zruší. Stroj bez grafickej karty
+                 (stovky ms na snímok) ostáva pri troch. */
               if (predoslyRamec) {
                 const odstup = teraz - predoslyRamec;
-                if (odstup > 200) strop = Math.min(strop, 2);
-                else if (odstup > 60) strop = Math.min(strop, 3);
+                if (odstup > 250) strop = Math.min(strop, 3);
+                else if (odstup > 100) strop = Math.min(strop, 6);
+                else if (odstup > 40) strop = Math.min(strop, 10);
               }
               predoslyRamec = teraz;
               if (!r.kresli(w, h, vzorka)) return;
               vzorka++;
-              if (vzorka < strop && performance.now() - zaciatok < 1500) {
+              if (vzorka < strop && performance.now() - zaciatok < 2500) {
                 painter3D.doostr = requestAnimationFrame(krok);
               }
             };
@@ -5022,10 +5033,12 @@ function kvAdresa(kluc, zaloha) {
             /* Pás sa nesmie dotknúť vnútornej strany čela. Čelo lemovania je
                plech hrúbky 1,5 mm a kým pás končil presne na jeho rube,
                delilo ho od lícnej plochy len tých 1,5 mm — hĺbkový test ich
-               miestami nerozsúdil a na čele boli v rade svetlé bodky. Dva
-               milimetre vôle má aj pozinkovaný profil vedľa; pás je aj tak
-               celý pod ramenom lemovania, takže sa nič neodkryje. */
-            const TRAP_DNO_VOLA = 2;
+               miestami nerozsúdil a na čele boli v rade svetlé bodky. Pás je
+               vodorovný a z kamery ho vidno takmer z hrany; pri takej ploche
+               sa hĺbka na obrazovke s hustotou 1 mýli aj o pár milimetrov,
+               preto šesť. Pod ním je v tom mieste horná pásnica obvodového
+               profilu a nad ním rameno lemovania, takže sa nič neodkryje. */
+            const TRAP_DNO_VOLA = 6;
             drawTrapSurface(tx0, tx1, ty0 + TRAP_DNO_VOLA, ly0, trapDnoZ, vrchHex, true);
             drawTrapSurface(tx0, tx1, ly1, ty1 - TRAP_DNO_VOLA, trapDnoZ, vrchHex, true);
 

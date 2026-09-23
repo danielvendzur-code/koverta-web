@@ -28,6 +28,14 @@ assert.doesNotMatch(render3d, /drsnost > 0\.58/,
   'Reflection branch threshold must not equal the paint roughness (speckles on the flashing)');
 assert.match(render3d, /taa: program\(gl, VS_PLOCHA, FS_TAA\)/,
   'Motion frames must be resolved by temporal anti-aliasing');
+assert.match(render3d, /oFarba = vec4\(uKodovat > 0\.5 \? zakoduj\(farba\) : farba, priehladnost\)/,
+  'Construction must be MSAA-resolved in the perceptual (encoded) space, not linear HDR');
+assert.match(render3d, /if \(kodovane && \(navyse \|\| priehladne\)\)/,
+  'Cars, contact shadows and glass must blend in linear light after the construction is decoded');
+assert.match(render3d, /function vzorkaFiltra\(n\)/,
+  'Still refinement must use a weighted reconstruction filter');
+assert.match(render3d, /gl_FragCoord\.xy \+ 5\.588238 \* uSnimok/,
+  'Shadow noise must change per refinement sample so it averages out');
 
 assert.match(source, /const ringStep = lowPowerGraphics \? 3 : 1;\s*for \(let i = 10; i >= 0; i -= ringStep\)/,
   'Low-power devices must keep a cheaper ground shadow instead of none');
@@ -40,4 +48,4 @@ assert.match(source, /material === 'fascia' \? 0\.035 : HAZE_I/,
 assert.match(source, /true, 'fascia'\)/,
   'Koverta flashing faces must identify their fascia material');
 
-console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, cropped upper roof skin, sharp settle path, low-power shadow guard, fascia haze, clean fascia and motion TAA');
+console.log('KOVERTA_RENDER_REGRESSION_PASS whole slats, cropped upper roof skin, sharp settle path, low-power shadow guard, fascia haze, clean fascia, motion TAA, perceptual MSAA resolve and filtered still refinement');
