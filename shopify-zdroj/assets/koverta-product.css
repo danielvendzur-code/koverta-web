@@ -267,17 +267,31 @@
 .kp-fakty dd { margin: 0; color: var(--k-muted); font: 400 13px/1.35 var(--k-body); }
 
 /* Od výberu rozmeru po montáž: päť krokov v riadku, na telefóne pod sebou. */
-.kp-proces { background: var(--k-ink); color: #fff; }
-.kp-proces .k-eyebrow { color: var(--k-amber); }
-.kp-proces .k-h2 { color: #fff; }
-.kp .kp-process { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 32px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(255,255,255,.14); }
+.kp-proces { background: var(--k-bone, #f3f2ee); color: var(--k-ink); }
+.kp-proces .k-eyebrow { color: var(--k-ink); }
+.kp-proces .k-h2 { color: var(--k-ink); }
+.kp .kp-process { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 32px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--k-hair); }
 .kp-process li { padding: 24px clamp(14px, 1.8vw, 26px) 0 0; }
-.kp-process li + li { padding-left: clamp(14px, 1.8vw, 26px); border-left: 1px solid rgba(255,255,255,.14); }
-.kp-process span { color: var(--k-amber); font: 700 12px/1 var(--k-body); letter-spacing: .08em; }
-.kp-process strong { display: block; margin: 18px 0 8px; color: #fff; font: 700 17px/1.25 var(--k-head); }
-.kp-process p { margin: 0; color: rgba(255,255,255,.7); font: 400 14px/1.55 var(--k-body); }
+.kp-process li + li { padding-left: clamp(14px, 1.8vw, 26px); border-left: 1px solid var(--k-hair); }
+.kp-process span { color: var(--k-amber-deep, #b38600); font: 700 12px/1 var(--k-body); letter-spacing: .08em; }
+.kp-process strong { display: block; margin: 18px 0 8px; color: var(--k-ink); font: 700 17px/1.25 var(--k-head); }
+.kp-process p { margin: 0; color: var(--k-muted); font: 400 14px/1.55 var(--k-body); }
 @media (max-width: 899px) {
   .kp .kp-process { grid-template-columns: minmax(0, 1fr); }
-  .kp-process li, .kp-process li + li { padding: 18px 0; border-left: 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+  .kp-process li, .kp-process li + li { padding: 18px 0; border-left: 0; border-bottom: 1px solid var(--k-hair); }
   .kp-process strong { margin-top: 10px; }
+}
+
+/* Realizácie: tri fotografie v riadku, pomer 4 : 3, popis pod fotkou. */
+.kp .kr-gallery { padding-block: clamp(56px, 7vw, 96px); }
+.kp .kr-gallery__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin: 0 0 clamp(20px, 3vw, 32px); }
+.kp .kr-gallery__head .k-h2 { margin: 6px 0 0; }
+.kp .kr-gallery__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 20px); }
+.kp .kr-gallery__grid figure { margin: 0; display: grid; gap: 10px; }
+.kp .kr-gallery__grid img { display: block; width: 100%; aspect-ratio: 4 / 3; height: auto; object-fit: cover; border-radius: 6px; background: var(--k-bone, #eee); }
+.kp .kr-gallery__grid figcaption { display: grid; gap: 2px; }
+.kp .kr-gallery__grid figcaption strong { color: var(--k-ink); font: 600 15px/1.3 var(--k-head); }
+.kp .kr-gallery__grid figcaption span { color: var(--k-muted); font: 400 13.5px/1.4 var(--k-body); }
+@media (max-width: 759px) {
+  .kp .kr-gallery__grid { grid-template-columns: minmax(0, 1fr); }
 }
