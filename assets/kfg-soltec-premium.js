@@ -1988,7 +1988,14 @@ function kvAdresa(kluc, zaloha) {
              a oko rozdiel v rozlíšení počas pohybu nezachytí. Po pustení sa
              scéna prekreslí naplno. Rovnaký princíp mal aj doterajší maliar;
              tu je len navrch adaptívny krok, ktorý sa sám prispôsobí stroju. */
-          const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+          /* Strop hustoty 2. Hrany vyhladzuje štvornásobné MSAA, takže nad
+             dvojnásobkom už oko rozdiel nevidí — telefón s hustotou 3 by však
+             kreslil 2,25-krát viac pixelov než pri 2 a na slabšom kuse by sa
+             otáčanie trhalo. Slabý stroj (≤ 4 GB a ≤ 4 jadrá) kreslí v 1,5:
+             s MSAA ostanú hrany čisté, práce je o polovicu menej. */
+          const dpr = Math.max(1, Math.min(
+            Number(navigator.deviceMemory || 8) <= 4 && Number(navigator.hardwareConcurrency || 8) <= 4 ? 1.5 : 2,
+            window.devicePixelRatio || 1));
           const vPohybe = motionDetail;
           if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
           /* Vždy v plných pixeloch displeja — aj počas ťahania.
