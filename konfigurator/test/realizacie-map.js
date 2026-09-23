@@ -19,7 +19,7 @@ function unique(valuesToCheck, label) {
   return seen;
 }
 
-const markerIds = values(/class="kh-mapa__bod"[^>]*data-k-mapa-bod="([^"]+)"/g);
+const markerIds = values(/class="kh-mapa__bod(?: [^"]*)?"[^>]*data-k-mapa-bod="([^"]+)"/g);
 const listIds = values(/class="kh-mapa__polozka"[^>]*data-k-mapa-bod="([^"]+)"/g);
 const cardIds = values(/data-k-mapa-karta="([^"]+)"/g);
 
