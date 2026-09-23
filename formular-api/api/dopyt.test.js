@@ -93,3 +93,19 @@ test('limit: siedmy dopyt z jednej adresy za 10 minút dostane 429', async () =>
   }
   assert.equal(posledny.statusCode, 429);
 });
+
+test('odmietnutie zanechá v logu stopu odosielateľa bez samotnej IP', async () => {
+  const riadky = [];
+  const povodny = console.log;
+  console.log = (r) => riadky.push(String(r));
+  try {
+    const res = odpoved();
+    await handler({ method: 'POST', body: {}, headers: { origin: 'https://zly.example', 'x-real-ip': '198.51.100.7', 'user-agent': 'curl/8.0' }, socket: {} }, res);
+    assert.equal(res.statusCode, 403);
+  } finally { console.log = povodny; }
+  const z = JSON.parse(riadky.find((r) => r.includes('"udalost":"dopyt"')));
+  assert.equal(z.vysledok, 'ORIGIN_NOT_ALLOWED');
+  assert.equal(z.prehliadac, 'curl/8.0');
+  assert.match(z.ip, /^[0-9a-f]{12}$/);
+  assert.ok(!riadky.join('').includes('198.51.100.7'), 'IP sa nesmie logovať v čitateľnej podobe');
+});
