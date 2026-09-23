@@ -658,3 +658,110 @@
   if (!pas || !vybrany || pas.scrollWidth <= pas.clientWidth) return;
   pas.scrollLeft = Math.max(0, vybrany.offsetLeft - pas.offsetLeft - 16);
 })();
+
+/* --- Poslať túto zostavu a zdieľať ---------------------------------------
+   Pri cene v každom kroku sú dve tlačidlá:
+   · „Poslať túto zostavu" — zostava aj cena sa zapíšu do dopytu pod
+     konfigurátorom a stránka sa k nemu posunie. Robí to to isté tlačidlo
+     „Chcem presnú ponuku", ktoré dovtedy stálo až v poslednom kroku; človek
+     sa však rozhoduje pri cene, nie po šiestom kroku.
+   · „Zdieľať" — odkaz s modelom, rozmerom aj farbou (adresu dopĺňa zápis
+     rozmeru nižšie v stránke); na telefóne ponuka zdieľania systému, inde
+     skopírovanie do schránky. */
+(function kvPoslatAZdielat() {
+  var ROOT = '#SoltecPremium';
+
+  function farbaDoAdresy() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var vybrana = document.querySelector(ROOT + ' [data-sp-frame-color][aria-pressed="true"]');
+    if (!vybrana) return;
+    var index = vybrana.getAttribute('data-sp-frame-color');
+    if (q.get('farba') === index) return;
+    q.set('farba', index);
+    try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
+  }
+
+  function farbaZAdresy() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var index = q.get('farba');
+    if (!/^\d{1,2}$/.test(index || '')) return;
+    var pokusov = 0;
+    (function skus() {
+      var b = document.querySelector(ROOT + ' [data-sp-frame-color="' + index + '"]');
+      if (!b) { if (++pokusov < 80) window.setTimeout(skus, 125); return; }
+      if (b.getAttribute('aria-pressed') !== 'true') b.click();
+    })();
+  }
+
+  function oznam(tlacidlo, text) {
+    var povodny = tlacidlo.getAttribute('data-kv-text') || tlacidlo.textContent;
+    tlacidlo.setAttribute('data-kv-text', povodny);
+    tlacidlo.querySelector('span').textContent = text;
+    window.setTimeout(function () { tlacidlo.querySelector('span').textContent = povodny.trim(); }, 2200);
+  }
+
+  function zdielaj(tlacidlo) {
+    farbaDoAdresy();
+    var url = location.href;
+    var nadpis = (document.querySelector(ROOT + ' .sp-cfg__head h1') || {}).textContent || 'Konfigurátor Koverta';
+    if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+      navigator.share({ title: nadpis.trim(), url: url }).catch(function () {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { oznam(tlacidlo, 'Odkaz skopírovaný'); },
+        function () { window.prompt('Skopírujte odkaz:', url); });
+    } else {
+      window.prompt('Skopírujte odkaz:', url);
+    }
+  }
+
+  var IKONA_POSLAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6"/></svg>';
+  var IKONA_ZDIELAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><circle cx="17.5" cy="18" r="2.5"/><path d="M8.2 10.9l7.1-3.8M8.2 13.1l7.1 3.8"/></svg>';
+
+  function doplnTlacidla() {
+    document.querySelectorAll(ROOT + ' .sp-navrow').forEach(function (rad) {
+      if (rad.nextElementSibling && rad.nextElementSibling.classList.contains('kv-akcie')) return;
+      var box = document.createElement('div');
+      box.className = 'kv-akcie';
+      box.innerHTML = '<button type="button" class="kv-akcie__poslat" data-kv-poslat>' + IKONA_POSLAT + '<span>Poslať túto zostavu</span></button>'
+        + '<button type="button" class="kv-akcie__zdielat" data-kv-zdielat>' + IKONA_ZDIELAT + '<span>Zdieľať</span></button>';
+      rad.insertAdjacentElement('afterend', box);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var poslat = e.target.closest && e.target.closest('[data-kv-poslat]');
+    if (poslat) {
+      var koren = poslat.closest(ROOT) || document;
+      var ponuka = koren.querySelector('[data-sp-cfg-quote]');
+      /* Veta „Mám záujem o rozmer…", ktorú do správy vložil odkaz s rozmerom,
+         je súčasťou zostavy — keď ju nikto neupravil, zostava ju nahradí. */
+      var sprava = document.querySelector('textarea[name="contact[body]"]');
+      if (sprava && sprava.dataset.kAuto && sprava.value.trim() === sprava.dataset.kAuto.trim()) sprava.value = '';
+      if (ponuka) ponuka.click();
+      if (typeof window.kvMeraj === 'function') window.kvMeraj('konfigurator_poslat');
+      return;
+    }
+    var zdielat = e.target.closest && e.target.closest('[data-kv-zdielat]');
+    if (zdielat) {
+      zdielaj(zdielat);
+      if (typeof window.kvMeraj === 'function') window.kvMeraj('konfigurator_zdielat');
+      return;
+    }
+    if (e.target.closest && e.target.closest(ROOT + ' [data-sp-frame-color]')) window.setTimeout(farbaDoAdresy, 50);
+  });
+
+  function start() {
+    doplnTlacidla();
+    farbaZAdresy();
+    var koren = document.getElementById('kv-root');
+    if (koren && 'MutationObserver' in window) {
+      new MutationObserver(doplnTlacidla).observe(koren, { childList: true, subtree: true });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();

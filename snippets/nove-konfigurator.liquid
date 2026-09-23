@@ -295,7 +295,20 @@
 
 <!-- Soltec runtime: single authoritative external build. -->
 
-<script src="{{ 'kfg-koverta-reference-geometry.js' | asset_url }}"></script>
+<!-- Odmeraná sieť odkvapu a zvodu (414 kB) patrí len oceľovým prístreškom
+     Koverta (auto aj záhrada). Soltec, prestrešenie terasy ani pergola ju
+     nepotrebujú, tak ju telefón pri nich ani nesťahuje, ani nespracúva.
+     Značka je v <template>, aby prevod do témy Shopify preložil jej adresu;
+     zapíše sa synchrónne, takže runtime ju má pred sebou ako doteraz. -->
+<template data-kv-geometria><script src="{{ 'kfg-koverta-reference-geometry.js' | asset_url }}"></script></template>
+<script>
+(function () {
+  var p = new URLSearchParams(location.search).get('page');
+  if (p === 'carport' || p === 'canopy' || p === 'bio') return;
+  var t = document.querySelector('template[data-kv-geometria]');
+  if (t) document.write(t.innerHTML);
+})();
+</script>
 <script src="{{ 'kfg-scene-surface.js' | asset_url }}"></script>
 <script src="{{ 'kfg-kv-render3d.js' | asset_url }}"></script>
 <script src="{{ 'kfg-scene-life.js' | asset_url }}"></script>
