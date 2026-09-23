@@ -13955,3 +13955,23 @@ body.ma-kh-modal { overflow: hidden; }
   .kh-modal__tel { margin: 10px 20px 0; padding: 12px 0 max(16px, env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) { .kh-modal__okno { transition: none; } }
+
+/* ==========================================================================
+   VRSTVA 141 · Prístupnosť dotyku a čitateľnosť (audit 23. 9.)
+   ========================================================================== */
+/* Popisok bodu pri okraji mapy: nie na stred, ale od bodu dovnútra mapy —
+   inak „Bratislava – Záhorská Bystrica“ začínala pred ľavým okrajom. */
+.kh-mapa__bod--vlavo .kh-mapa__meno,
+.kh-mapa__bod--vpravo .kh-mapa__meno { position: absolute; top: 100%; margin-top: 5px; }
+.kh-mapa__bod--vlavo .kh-mapa__meno { left: calc(50% - 8px); }
+.kh-mapa__bod--vpravo .kh-mapa__meno { right: calc(50% - 8px); }
+@media (max-width: 619px) {
+  /* Tlačidlo bodu má aspoň 24 × 24 px (WCAG 2.2), bod ostáva opticky malý. */
+  .kh-mapa__bod { min-width: 24px; min-height: 24px; place-content: center; }
+  .kh-mapa__meno { font-size: 12px; }
+}
+/* Cena je najdôležitejšie číslo v cenníku — nikdy pod 14 px. */
+.k .kh-size__chip small { font-size: 14px; }
+@media (max-width: 480px) { .k .kh-size__grid--matica .kh-size__chip small { font-size: 14px; } }
+/* Odkazy v pätičke: dotyková plocha aspoň 24 px aj na telefóne a tablete. */
+.kf a { display: inline-block; min-height: 24px; padding-block: 3px; }
