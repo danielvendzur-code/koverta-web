@@ -82,11 +82,44 @@ function fotkySnippet() {
   }
   return out + '{%- endcase -%}\n';
 }
+/* Realizácie dole na produkte: štyri skutočné montáže s rozmerom čo
+   najbližším k produktu (z mapy realizácií), pri záhradnom prístrešku
+   štyri záhradné realizácie. Každá vedie na stránku realizácií. */
+const REAL_CIEL = path.join(ROOT, 'shopify-zdroj', 'snippets', 'koverta-realizacie.liquid');
+function realizacieSnippet() {
+  const zaklad = 'https://danielvendzur-code.github.io/koverta-web/assets/';
+  const html = fs.readFileSync(path.join(ROOT, 'realizacie', 'index.html'), 'utf8');
+  const karty = [...html.matchAll(/data-k-mapa-karta="([^"]+)"[^>]*>\s*<button[^>]*data-k-lupa="\.\.\/assets\/mapa\/([^"]+)\.jpg" data-k-lupa-popis="([^"]*)"/g)]
+    .map((m) => {
+      const [obec, popis] = m[3].split(' · ');
+      const r = popis.match(/Prístrešok (\d+(?:,\d+)?) × (\d+(?:,\d+)?) m/);
+      return r ? { subor: m[2], obec, popis, w: parseFloat(r[1].replace(',', '.')) * 1000, l: parseFloat(r[2].replace(',', '.')) * 1000 } : null;
+    })
+    .filter((k) => k && fs.existsSync(path.join(ROOT, 'assets', 'mapa', k.subor + '-mini.jpg')) && fs.existsSync(path.join(ROOT, 'assets', 'mapa', k.subor + '.jpg')));
+  const figura = (maly, velky, alt, nadpis, pod, sirky) =>
+    '<figure><img src="' + velky + '" srcset="' + maly + ' ' + sirky[0] + 'w, ' + velky + ' ' + sirky[1] + 'w" sizes="(max-width: 759px) 92vw, 23vw" width="1280" height="960" alt="' + alt + '" loading="lazy" decoding="async">'
+    + '<figcaption><strong>' + nadpis + '</strong><span>' + pod + '</span></figcaption></figure>';
+  let out = '{%- comment -%} Vygenerované: node tools/shopify-rozmery.js z realizacie/index.html. {%- endcomment -%}\n{%- case handle -%}\n';
+  const k = data('koverta').models.K;
+  for (const w of k.widths) for (const l of k.lengths) {
+    const najblizsie = karty.slice().sort((a, b) => (Math.abs(a.w - w) + Math.abs(a.l - l)) - (Math.abs(b.w - w) + Math.abs(b.l - l))).slice(0, 4);
+    out += "{%- when '" + handle('auto', w, l) + "' -%}" + najblizsie.map((x) =>
+      figura(zaklad + 'mapa/' + x.subor + '-mini.jpg', zaklad + 'mapa/' + x.subor + '.jpg', 'Realizácia Koverta – ' + x.obec + ', ' + x.popis, x.obec, x.popis, [420, 1280])).join('') + '\n';
+  }
+  const zahrada = [['maly-lapas-terasa', 'Malý Lapáš', 'Záhradný prístrešok nad terasou'], ['skalica-terasa', 'Skalica', 'Záhradný prístrešok nad terasou'],
+    ['trebisov-lamely', 'Trebišov', 'Záhradný prístrešok s lamelami'], ['varin-dvor', 'Varín', 'Záhradný prístrešok na dvore']];
+  out += '{%- else -%}' + zahrada.map(([f, obec, popis]) => figura(zaklad + 'koverta-zahradny-pristresok-' + f + '-w640.webp',
+    zaklad + 'koverta-zahradny-pristresok-' + f + '-w1000.webp', 'Realizácia Koverta – ' + obec + ', ' + popis, obec, popis, [640, 1000])).join('') + '\n{%- endcase -%}\n';
+  return out;
+}
+const realObsah = realizacieSnippet();
 const fotkyObsah = fotkySnippet();
 const obsah = snippet();
 if (process.argv.includes('--check')) {
   const teraz = fs.existsSync(CIEL) ? fs.readFileSync(CIEL, 'utf8') : '';
   const terazF = fs.existsSync(FOTKY_CIEL) ? fs.readFileSync(FOTKY_CIEL, 'utf8') : '';
+  const terazR = fs.existsSync(REAL_CIEL) ? fs.readFileSync(REAL_CIEL, 'utf8') : '';
+  if (terazR !== realObsah) { console.error('koverta-realizacie.liquid nie je aktuálny: node tools/shopify-rozmery.js'); process.exit(1); }
   if (terazF !== fotkyObsah) { console.error('koverta-fotky-rozmeru.liquid nie je aktuálny: node tools/shopify-rozmery.js'); process.exit(1); }
   if (teraz !== obsah) { console.error('koverta-rozmery.liquid nie je aktuálny: node tools/shopify-rozmery.js'); process.exit(1); }
   console.log('koverta-rozmery.liquid je aktuálny');
@@ -94,5 +127,6 @@ if (process.argv.includes('--check')) {
   fs.mkdirSync(path.dirname(CIEL), { recursive: true });
   fs.writeFileSync(CIEL, obsah);
   fs.writeFileSync(FOTKY_CIEL, fotkyObsah);
+  fs.writeFileSync(REAL_CIEL, realObsah);
   console.log('Zapísané ' + path.relative(ROOT, CIEL));
 }
