@@ -3442,7 +3442,11 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     const menuAsset = (name) => {
       const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
       const href = link ? (link.getAttribute('href') || '') : '';
-      const base = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      /* Na Shopify je štýl na CDN obchodu, kde tieto fotky nie sú —
+         berú sa z GitHub Pages ako ostatné obrázky témy. */
+      const base = /cdn\.shopify\.com|\/cdn\/shop\//.test(href)
+        ? 'https://danielvendzur-code.github.io/koverta-web/assets/'
+        : href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
       /* Náhľad v ponuke je najviac 230 px široký. Sťahovať naň celú
          fotografiu znamená 300 až 400 kB na jeden obrázok a sedem obrázkov
          v jednej ponuke — a na obrazovke z toho vidno dvestotridsať pixelov.
