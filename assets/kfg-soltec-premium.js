@@ -955,7 +955,11 @@ function kvAdresa(kluc, zaloha) {
 
         const state = {
           model: BIO.order[0],
-          placement: 'tip1',
+          /* Prestrešenie terasy a vstupu sa takmer vždy kotví do fasády:
+             vzadu stena, stĺpy len vpredu. Samostatne stojaca konštrukcia so
+             stĺpmi na oboch stranách je typická pre prístrešok pre auto —
+             pri terase pôsobila ako chyba. Ostatné modely začínajú ako doteraz. */
+          placement: BIO.page === 'canopy' && (BIO.placements || []).some((p) => p.id === 'tip2') ? 'tip2' : 'tip1',
           width: 0, length: 0, widthValue: null, lengthValue: null, height: 2500,
           louverT: 0.84,          // 0 shut, 1 as far open as the section allows
           /* Poradie v palete je majiteľovo a začína bielou; predvolený odtieň
@@ -1927,6 +1931,7 @@ function kvAdresa(kluc, zaloha) {
           const M = window.KvRender3D.MATERIALY;
           if (face.bg) return M.dlazba;
           if (face.material === 'zinc') return M.zinok;
+          if (face.material === 'latka') return M.latka || M.lak;
           const text = String(face.sourceFill || '');
           const c = window.KvRender3D.rozlozFarbu(text);
           if (c[3] < 0.96) return M.sklo;
@@ -4101,7 +4106,11 @@ function kvAdresa(kluc, zaloha) {
                      bočnej stene sa v axonometrii premietali ako šikmé linky
                      a pôsobili ako vzor na látke. Ostáva rovná priesvitná
                      plocha, cez ktorú presvitá konštrukcia za ňou. */
-                  pane(gt, 1 - gt, barZ + barH, zTop, back, 'rgba(58,62,66,.78)', { raw: true, seamless: true });
+                  /* Tkanina ZIP (screen) je zvonka takmer nepriehľadná, matná
+                     sivá plocha. Kým mala farbu s priehľadnosťou 0,78, 3D
+                     vykresľovač ju zaradil medzi sklo a roleta vyzerala ako
+                     číre okno — spustená roleta nebola vidieť vôbec. */
+                  pane(gt, 1 - gt, barZ + barH, zTop, back, 'rgb(74,79,84)', { raw: true, seamless: true, material: 'latka' });
                 }
                 memb(gt, 1 - gt, barZ, barZ + barH, back - 14, back + 16, shade(sideHex, -0.42), endsX, SHAFT);
               } else if (leaves) {
@@ -4158,7 +4167,13 @@ function kvAdresa(kluc, zaloha) {
                    spočítať, koľko ich je. Presah držíme tak, aby sa celý balík
                    zmestil do poľa aj pri dvoch krídlach aj pri desiatich. */
                 const fanRoom = Math.max(0, (1 - 2 * gt) - w) / Math.max(1, leaves - 1);
-                const fan = Math.min(fr * 1.8, fanRoom * 0.42);
+                /* Odsunuté krídla dosadnú celou výškou k stĺpu na konci poľa —
+                   tak ako na skutočnom odsuvnom systéme, kde balík stojí za
+                   stĺpom a nie vedľa neho. Vejár s presahom ich odtláčal od
+                   stĺpa a medzi balíkom a stĺpom ostávala svetlá medzera. Každé
+                   krídlo je na svojej koľajnici, takže z uhla ich aj tak vidno
+                   za sebou. */
+                const fan = 0 * Math.min(fr * 1.8, fanRoom * 0.42);
                 /* Odsunuté krídla stoja na sebe. Kreslíme ich od najvzdialenejšieho
                    k najbližšiemu, aby predné krídlo zakrylo tie za sebou — inak
                    bolo vidno hranu panela, ktorý má byť schovaný. Poloha krídla
@@ -4175,7 +4190,12 @@ function kvAdresa(kluc, zaloha) {
                      uneven thickness. The tracks separate as the leaves run. */
                   /* Skutočné kovanie ukladá krídla tesne za seba. 0,85 × hĺbka
                      rámu ich rozťahovala do vejára a hrany trčali. */
-                  const dOff = i * (2 * frD + 4);
+                  /* Koľajnice sú v jednom profile, ktorý sedí v rovine stĺpov:
+                     balík krídiel je preto sústredený okolo tej roviny, nie
+                     odsadený von. Kým každé ďalšie krídlo išlo o celú hrúbku
+                     ďalej, pri šiestich krídlach stál posledný rám ďaleko pred
+                     stĺpom. */
+                  const dOff = (i - (leaves - 1) / 2) * (2 * frD + 2);
                   const p0 = back - frD + dOff, p1 = back + frD + dOff;
                   memb(t0, t0 + fr, zA, zB, p0, p1, shade(sideHex, 0.04), [], SHAFT);
                   /* Zatvorené krídla sa dotýkajú, takže pravá zvislica jedného
