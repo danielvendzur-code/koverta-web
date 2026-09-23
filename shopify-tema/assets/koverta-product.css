@@ -70,7 +70,7 @@
 .kp .kp-crumbs a { color: var(--k-muted); text-decoration: none; }
 .kp .kp-crumbs a:hover { color: var(--k-ink); text-decoration: underline; }
 .kp .kp-title { margin: 0; color: var(--k-ink); font: 600 clamp(28px, 2.4vw, 38px)/1.1 var(--k-head); letter-spacing: -.02em; }
-.kp-sub { margin: 8px 0 0; color: var(--k-muted); font: 400 16px/1.45 var(--k-body); }
+.kp .kp-sub { margin: 8px 0 0; color: var(--k-muted); font: 400 16px/1.45 var(--k-body); }
 .kp-cena { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 18px 0 0; }
 .kp-cena strong { color: var(--k-ink); font: 600 34px/1.1 var(--k-head); letter-spacing: -.02em; }
 .kp-cena span { color: var(--k-muted); font: 400 14px/1.4 var(--k-body); }
@@ -169,7 +169,7 @@
   .kp-buy { padding: 0 var(--k-gut); }
   .kp .kp-crumbs { display: none; }
   .kp .kp-title { font-size: clamp(26px, 7vw, 32px); }
-  .kp-sub { font-size: 15px; margin-top: 6px; }
+  .kp .kp-sub { font-size: 15px; margin-top: 6px; }
   .kp-cena { margin-top: 14px; }
   .kp-cena strong { font-size: 28px; }
   .kp-farba { margin-top: 16px; padding-top: 14px; gap: 10px; }
@@ -239,7 +239,7 @@
 /* technické údaje s nákresom */
 .kp .kp-tech { background: #fff; padding-block: clamp(48px, 5vw, 96px); }
 .kp-tech__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 88px); align-items: center; }
-.kp-h2 { margin: 0 0 18px; color: var(--k-ink); font: 600 clamp(24px, 2.2vw, 32px)/1.15 var(--k-head); letter-spacing: -.015em; }
+.kp .kp-h2 { margin: 0 0 18px; color: var(--k-ink); font: 600 clamp(24px, 2.2vw, 32px)/1.15 var(--k-head); letter-spacing: -.015em; }
 .kp-tech .kp-tabulka { border-top: 1px solid var(--k-hair); }
 .kp-tech .kp-popis { margin-top: 22px; color: var(--k-muted); font: 400 15px/1.65 var(--k-body); }
 .kp-tech .kp-popis p { margin: 0; }
@@ -390,7 +390,7 @@
 .kp-cart .terms-relentless { justify-content: flex-start; align-items: flex-start; gap: 10px; margin: 0; text-align: left; color: var(--k-ink); font: 400 14.5px/1.45 var(--k-body); }
 .kp-cart .terms-relentless .rterms-checkbox { width: 20px; height: 20px; margin: 1px 0 0; transform: none; accent-color: var(--k-ink); }
 .kp-cart .terms-relentless a { color: var(--k-ink); text-decoration: underline; text-underline-offset: 3px; }
-.kp-cart__istoty { display: grid; gap: 8px; margin: 22px 0 0; padding: 16px 0 0; border-top: 1px solid var(--k-hair); list-style: none; }
+.kp-cart .kp-cart__istoty { display: grid; gap: 8px; margin: 22px 0 0; padding: 16px 0 0; border-top: 1px solid var(--k-hair); list-style: none; }
 .kp-cart__istoty li { position: relative; padding-left: 24px; color: var(--k-muted); font: 400 13.5px/1.45 var(--k-body); }
 .kp-cart__istoty li::before { content: ""; position: absolute; left: 2px; top: .36em; width: 10px; height: 5px; border-left: 2px solid var(--k-ink); border-bottom: 2px solid var(--k-ink); transform: rotate(-45deg); }
 .kp-cart__istoty a { color: var(--k-ink); font-weight: 600; text-decoration: none; }

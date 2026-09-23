@@ -2011,15 +2011,24 @@ function kvAdresa(kluc, zaloha) {
              potom nestíhal, vráti sa na 1,5 natrvalo. Zmena sa prejaví až
              v pokoji, aby sa plátno nemenilo pod rukou. */
           const vPohybe = motionDetail;
+          /* Displej s hustotou 3 (iPhone, lepšie Androidy) dostane na silnom
+             stroji plnú hustotu: na malom plátne telefónu je rozdiel medzi
+             2 a 3 vidieť na každej tenkej hrane profilu. Keď by stroj pri
+             otáčaní nestíhal, strop sa natrvalo vráti na 2 (nižšie). */
           if (painter3D.hustotaStrop === undefined) {
-            painter3D.hustotaStrop = Number(navigator.deviceMemory || 8) <= 4
-              && Number(navigator.hardwareConcurrency || 8) <= 4 ? 1.5 : 2;
+            const slaby = Number(navigator.deviceMemory || 8) <= 4
+              && Number(navigator.hardwareConcurrency || 8) <= 4;
+            painter3D.hustotaStrop = slaby ? 1.5 : ((window.devicePixelRatio || 1) >= 2.5 ? 3 : 2);
           }
           if (!vPohybe && painter3D.hustotaNavrh) {
             painter3D.hustotaStrop = painter3D.hustotaNavrh;
             painter3D.hustotaNavrh = 0;
           }
-          const dpr = Math.max(1, Math.min(painter3D.hustotaStrop, window.devicePixelRatio || 1));
+          let dpr = Math.max(1, Math.min(painter3D.hustotaStrop, window.devicePixelRatio || 1));
+          /* Hustota nad 2 len do rozumnej plochy plátna: na celej obrazovke
+             telefónu by plátno v hustote 3 so štvornásobným MSAA zabralo
+             v grafickej pamäti stovky megabajtov a prehliadač by ho zhodil. */
+          if (dpr > 2) dpr = Math.max(2, Math.min(dpr, Math.sqrt(1.3e6 / Math.max(1, cssW * cssH))));
           if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
           /* Vždy v plných pixeloch displeja — aj počas ťahania.
 
@@ -2183,7 +2192,11 @@ function kvAdresa(kluc, zaloha) {
                  pod 18 ms v plnej kvalite znamená, že stroj stíha frekvenciu
                  displeja aj s rezervou na viac pixelov. */
               const displej = window.devicePixelRatio || 1;
-              if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop < 2 && displej > painter3D.hustotaStrop
+              if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop > 2 && m > 22) {
+                /* Plná hustota 3 sa nestíha: späť na 2, natrvalo. */
+                painter3D.hustotaNavrh = 2;
+                painter3D.hustotaZamknuta = true;
+              } else if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop < 2 && displej > painter3D.hustotaStrop
                 && painter3D.stupen === 2 && m < 18) {
                 painter3D.hustotaNavrh = 2;
                 painter3D.hustotaZvysena = true;
