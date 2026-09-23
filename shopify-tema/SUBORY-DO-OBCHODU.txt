@@ -542,7 +542,6 @@ koverta-carport-lamely-stena.jpg	assets/koverta-carport-lamely-stena.jpg
 koverta-carport-pri-garazi-w1000.webp	assets/koverta-carport-pri-garazi-w1000.webp
 koverta-carport-pri-garazi-w640.webp	assets/koverta-carport-pri-garazi-w640.webp
 koverta-carport-pri-garazi.jpg	assets/koverta-carport-pri-garazi.jpg
-koverta-hero-sibenik-mobil-v2.mp4	assets/koverta-hero-sibenik-mobil-v2.mp4
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
 koverta-hero-sibenik-poster-w1600.webp	assets/koverta-hero-sibenik-poster-w1600.webp
 koverta-hero-sibenik-poster-w640.webp	assets/koverta-hero-sibenik-poster-w640.webp
@@ -1074,9 +1073,6 @@ soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strec
 soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
 soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
 soltec-pergola-plna-strecha-pri-dome.webp	assets/soltec-pergola-plna-strecha-pri-dome.webp
-soltec-pergola-podhlad-strechy-a-ram-w1000.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w1000.webp
-soltec-pergola-podhlad-strechy-a-ram-w640.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w640.webp
-soltec-pergola-podhlad-strechy-a-ram.jpg	assets/soltec-pergola-podhlad-strechy-a-ram.jpg
 soltec-pergola-presklenie-restauracia-w1000.webp	assets/soltec-pergola-presklenie-restauracia-w1000.webp
 soltec-pergola-presklenie-restauracia-w1600.webp	assets/soltec-pergola-presklenie-restauracia-w1600.webp
 soltec-pergola-presklenie-restauracia-w640.webp	assets/soltec-pergola-presklenie-restauracia-w640.webp
@@ -1088,10 +1084,6 @@ soltec-pergola-pri-bazene-antracit.jpg	assets/soltec-pergola-pri-bazene-antracit
 soltec-pergola-pri-bazene-zip-roleta-w1000.webp	assets/soltec-pergola-pri-bazene-zip-roleta-w1000.webp
 soltec-pergola-pri-bazene-zip-roleta-w640.webp	assets/soltec-pergola-pri-bazene-zip-roleta-w640.webp
 soltec-pergola-pri-bazene-zip-roleta.webp	assets/soltec-pergola-pri-bazene-zip-roleta.webp
-soltec-pergola-pri-dome-biele-lamely-w1000.webp	assets/soltec-pergola-pri-dome-biele-lamely-w1000.webp
-soltec-pergola-pri-dome-biele-lamely-w1600.webp	assets/soltec-pergola-pri-dome-biele-lamely-w1600.webp
-soltec-pergola-pri-dome-biele-lamely-w640.webp	assets/soltec-pergola-pri-dome-biele-lamely-w640.webp
-soltec-pergola-pri-dome-biele-lamely.webp	assets/soltec-pergola-pri-dome-biele-lamely.webp
 soltec-pergola-pri-dome-otvorene-lamely-w1000.webp	assets/soltec-pergola-pri-dome-otvorene-lamely-w1000.webp
 soltec-pergola-pri-dome-otvorene-lamely-w640.webp	assets/soltec-pergola-pri-dome-otvorene-lamely-w640.webp
 soltec-pergola-pri-dome-otvorene-lamely.webp	assets/soltec-pergola-pri-dome-otvorene-lamely.webp
