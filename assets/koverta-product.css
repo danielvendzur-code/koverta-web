@@ -172,8 +172,7 @@
   .kp-cena { margin-top: 14px; }
   .kp-cena strong { font-size: 26px; }
   .kp-farba { margin-top: 16px; padding-top: 14px; gap: 10px; }
-  .kp-farba__rad { flex-wrap: nowrap; overflow-x: auto; padding: 4px 4px 6px; margin: -4px -4px 0; scrollbar-width: none; }
-  .kp-farba__rad::-webkit-scrollbar { display: none; }
+  .kp-farba__rad { gap: 8px; }
   .kp .kp-farba__vzor { flex: none; }
   .kp .kp-size { grid-template-columns: minmax(0, 1fr); }
   .kp-tabulka > div { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 12px; }
@@ -258,3 +257,11 @@
 .kp .kp-rozmery .kp-h2 { margin-bottom: 6px; }
 .kp .kp-rozmery__sub { margin: 0; max-width: 60ch; }
 .kp-gal__stage, .kp-gal__slide--vizual { background: #f4f3f0; }
+
+/* Fakty pod tlačidlami: bez piktogramov, číslo a krátky popis — tak, ako to
+   majú výrobcovia prémiových produktov. */
+.kp .kp-fakty { display: grid; grid-template-columns: repeat(3, 1fr); margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--k-hair); }
+.kp-fakty > div { padding: 0 14px; border-left: 1px solid var(--k-hair); }
+.kp-fakty > div:first-child { padding-left: 0; border-left: 0; }
+.kp-fakty dt { margin: 0 0 4px; color: var(--k-ink); font: 700 17px/1.1 var(--k-head); letter-spacing: -0.01em; }
+.kp-fakty dd { margin: 0; color: var(--k-muted); font: 400 13px/1.35 var(--k-body); }
