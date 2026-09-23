@@ -376,6 +376,11 @@ uniform vec3 uSlnko;
 uniform vec3 uSvetloSlnka;
 uniform float uZamracene;
 uniform sampler2D uTienMapa;
+/* Tá istá tieňová mapa, ale čítaná porovnávacím vzorkovačom s lineárnym
+   filtrom: každé čítanie vráti podiel osvetlenia zo štyroch susedných
+   texelov, nie tvrdé áno/nie. Okraj tieňa je preto hladký už pri ôsmich
+   vzorkách a pri otáčaní nezrní. */
+uniform highp sampler2DShadow uTienPorov;
 uniform vec2 uTienKrok;
 uniform int uTienVzoriek;
 uniform float uOrezavat;
@@ -429,7 +434,16 @@ float vTieni(vec3 n) {
      drobnosť proti zaokrúhľovaniu v 24-bitovej hĺbke. */
   float posun = 0.00008;
 
-  float uhol = sum(gl_FragCoord.xy) * 6.2831853;
+  /* Pootočenie kotúča podľa pixelu. Prekladaný gradientový šum namiesto
+     náhodného: susedné pixely dostanú rovnomerne rozložené uhly, takže
+     z malého počtu vzoriek nevzniká zrno, ktoré sa pri pohybe mihá. */
+  /* V pohybe (menej ako 12 vzoriek) sa kotúč neotáča vôbec. Šum je
+     pripnutý k obrazovke, kým tieň sa pod ním posúva — pri otáčaní preto
+     okraj „pieskoval". Bez otáčania je okraj stály; filtrované čítania
+     ho aj z ôsmich vzoriek vyhladia. */
+  float uhol = uTienVzoriek >= 12
+    ? fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) * 6.2831853
+    : 0.0;
   float c = cos(uhol), si = sin(uhol);
   mat2 rot = mat2(c, -si, si, c);
 
@@ -438,10 +452,7 @@ float vTieni(vec3 n) {
 
      V pohybe sa nehľadá vôbec — premenlivá mäkkosť okraja je to prvé, čo sa
      pri otáčaní stratí, a stojí päť čítaní z textúry na každý pixel. */
-  if (uTienVzoriek <= 2) {
-    float d0 = texture(uTienMapa, s.xy).r;
-    return (s.z - posun) > d0 ? 0.0 : 1.0;
-  }
+  if (uTienVzoriek <= 2) return texture(uTienPorov, vec3(s.xy, s.z - posun));
   float blokHlbka = 0.0; float blokPocet = 0.0;
   for (int i = 0; i < 5; i++) {
     vec2 o = rot * KOTUC[i * 3] * uTienKrok * 3.2;
@@ -467,8 +478,7 @@ float vTieni(vec3 n) {
   for (int i = 0; i < 16; i++) {
     if (i >= pocet) break;
     vec2 o = rot * KOTUC[i] * krok;
-    float d = texture(uTienMapa, s.xy + o).r;
-    suma += (s.z - posun) > d ? 0.0 : 1.0;
+    suma += texture(uTienPorov, vec3(s.xy + o, s.z - posun));
   }
   return suma / float(pocet);
 }
@@ -1297,8 +1307,8 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
          tieňa. Ten rozhoduje o mäkkosti okraja tieňa, nie o jase plochy,
          a pri otáčaní ho oko nestihne prečítať. Rozlíšenie sa neuberá nikdy. */
       stav.kvalita = {
-        tienVzoriek: pohyb ? (st === 0 ? 4 : st === 1 ? 6 : 8) : (st === 0 ? 10 : 16),
-        ssao: true, ziara: true, podkladDetail: true,
+        tienVzoriek: pohyb ? (st === 0 ? 6 : 8) : (st === 0 ? 12 : 16),
+        ssao: true, ziara: true, podkladDetail: true, stupen: st,
         vzoriek: stav.maxVzoriek
       };
     };
@@ -1442,7 +1452,10 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
          tisíc trojuholníkov cez celú jej plochu. Na slabšom stroji stačí
          polovičná — okraj tieňa je o vlások hrubší a nikto si to pri ťahaní
          posuvníka nevšimne. */
-      const chcem = stav.kvalita && stav.kvalita.tienVzoriek <= 4
+      /* Podľa stupňa stroja, nie podľa pohybu: prepnutie rozmeru znamená
+         prekresliť celú mapu, a to práve v okamihu, keď sa model pohne
+         alebo zastaví — divák to videl ako trhnutie a skok ostrosti tieňa. */
+      const chcem = stav.kvalita && stav.kvalita.stupen === 0
         ? Math.min(1024, TIEN_ROZMER) : TIEN_ROZMER;
       if (stav.tien && stav.tien.rozmer !== chcem) {
         gl.deleteFramebuffer(stav.tien.fb);
@@ -1644,6 +1657,21 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, t.t);
       gl.uniform1i(P.u.uTienMapa, 0);
+      if (!stav.tienVzorkovac) {
+        const v = gl.createSampler();
+        gl.samplerParameteri(v, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+        gl.samplerParameteri(v, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
+        gl.samplerParameteri(v, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.samplerParameteri(v, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.samplerParameteri(v, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.samplerParameteri(v, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        stav.tienVzorkovac = v;
+      }
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, t.t);
+      gl.bindSampler(3, stav.tienVzorkovac);
+      gl.uniform1i(P.u.uTienPorov, 3);
+      gl.activeTexture(gl.TEXTURE0);
 
       gl.bindVertexArray(s.vao);
       gl.disable(gl.BLEND);
@@ -1688,6 +1716,10 @@ void main() { oFarba = vec4(texture(uZdroj, vUV).rgb, 1.0); }
         gl.disable(gl.BLEND);
         gl.depthMask(true);
       }
+
+      /* Porovnávací vzorkovač patrí len konštrukcii; ďalšie prechody
+         s jednotkou 3 nerátajú. */
+      gl.bindSampler(3, null);
 
       /* --- 3 · rozlíšenie MSAA ----------------------------------------- */
       gl.bindFramebuffer(gl.READ_FRAMEBUFFER, c.msaa);
