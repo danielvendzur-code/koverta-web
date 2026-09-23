@@ -1383,3 +1383,8 @@ body { background: var(--k-white); color: var(--k-ink); }
 .kv-cfg__label, .sp-eyebrow, .sp-scene__summary, .sp-scene__credits, .sp-stage__hint,
 .kv-cfg__label, .sp-eyebrow, .sp-scene__summary, .sp-scene__credits, .sp-stage__hint,
 [data-sp-goto] span, [data-sp-view], .kv-cfg small, .sp-cfg small, .sp-scale span { font-size: 12px !important; }
+
+/* Nadpis konfigurátora patrí k výberu produktu nad ním. Neskoršie pravidlo
+   runtimu mu dávalo 64 px vzduchu navrch, takže výber a nástroj pôsobili
+   ako dve samostatné stránky. */
+#kv-root #SoltecPremium .sp-cfg { padding-top: clamp(22px, 2.6vw, 36px); }
