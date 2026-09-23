@@ -222,15 +222,15 @@
         {% endform %}
 
         <div class="kp-akcie">
-          <a class="k-btn k-btn--line kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if kp_hlavny %} data-k-dopyt-obrazok="{{ kp_hlavny.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
-        <a class="k-btn k-btn--line kp-3d" href="{{ configurator_url }}">Konfigurovať <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="kp-linka kp-ponuka" href="#ponuka" data-kp-cta data-k-dopyt="{{ dopyt_text | escape }}" data-k-dopyt-zaujem="{{ inquiry_type }}" data-k-dopyt-kontext="{{ product.title | escape }} · {{ color_name | escape }} · {{ cena }}"{% if kp_hlavny %} data-k-dopyt-obrazok="{{ kp_hlavny.preview_image | image_url: width: 200 }}"{% endif %}>Nezáväzná cenová ponuka</a>
+        <a class="kp-linka kp-3d" href="{{ configurator_url }}">Konfigurovať v 3D <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         </div>
 
-        <dl class="kp-fakty">
-          <div><dt>V cene</dt><dd>Doprava a montáž po celom Slovensku</dd></div>
-          <div><dt>1 deň</dt><dd>Zvyčajná dĺžka montáže</dd></div>
-          <div><dt>5,0</dt><dd>Hodnotenie zákazníkov na Google</dd></div>
-        </dl>
+        <ul class="kp-fakty">
+          <li>Doprava a montáž v cene po celom Slovensku</li>
+          <li>Montáž zvyčajne za jeden deň</li>
+          <li>5,0 hodnotenie zákazníkov na Google</li>
+        </ul>
 
         <div class="kp-detaily">
           <details>
