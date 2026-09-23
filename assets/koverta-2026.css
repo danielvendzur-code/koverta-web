@@ -14121,3 +14121,23 @@ body.ma-kh-modal { overflow: hidden; }
   .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 44px; height: 44px; padding-block: 0; font-size: 15px; }
   body:has(.kh-dock) { padding-bottom: 60px; }
 }
+
+/* ==========================================================================
+   VRSTVA · Plynulé animácie: úvod na telefóne neposkočí, fotky v menu sa prelínajú
+   ========================================================================== */
+/* Úvodný pás na telefóne mal dolné odsadenie podľa toho, či je spodný pás
+   skrytý: kým bol úvod na obrazovke, 24 px, po odchode z neho výška pásu
+   + 20 px. Pri scrollovaní sa tak úvod o 55 px predĺžil a všetko pod ním
+   poskočilo nadol (namerané CLS 0,05–0,08). Spodný pás sa ukazuje až mimo
+   úvodu, takže miesto preň netreba držať — odsadenie je stále rovnaké. */
+@media (max-width: 759px) {
+  .k .kh-hero__inner, .ma-hero-dok-skryty .kh-hero__inner { padding-bottom: 24px !important; }
+}
+
+/* Fotky v menu sa po stiahnutí prelínajú (koverta-2026.js, nacitajMenuFotky). */
+.kv-header .kv-mega__foto, .kv-header .kv-drawer__foto { background: var(--k-bone, #f4f2ee); }
+.kv-header .kv-mega__foto img, .kv-header .kv-drawer__foto img { transition: opacity 320ms var(--k-ease) !important; }
+.kv-header .kv-mega__foto img.je-nacitava, .kv-header .kv-drawer__foto img.je-nacitava { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .kv-header .kv-mega__foto img, .kv-header .kv-drawer__foto img { transition: none !important; }
+}

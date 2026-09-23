@@ -3809,8 +3809,14 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         const src = img.getAttribute('data-k-menu-src');
         const srcset = img.getAttribute('data-k-menu-srcset');
         if (src) {
+          /* Fotka sa po stiahnutí prelnie, nenaskočí naraz. */
+          img.classList.add('je-nacitava');
+          const hotovo = () => img.classList.remove('je-nacitava');
+          img.addEventListener('load', hotovo, { once: true });
+          img.addEventListener('error', hotovo, { once: true });
           img.setAttribute('src', src);
           img.removeAttribute('data-k-menu-src');
+          if (img.complete) hotovo();
         }
         if (srcset) {
           img.setAttribute('srcset', srcset);
