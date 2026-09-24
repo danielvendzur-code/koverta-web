@@ -14165,3 +14165,57 @@ body.ma-kh-modal { overflow: hidden; }
 .kv-lupa__sipka[hidden], .kv-lupa__pocitadlo[hidden] { display: none; }
 /* Nadpis okna ponuky: dva vyrovnané riadky, nie jedno slovo na druhom. */
 .kh-modal__hlava h2 { text-wrap: balance; }
+
+/* Úvod podstránok na telefóne: fotka hore, celá a neprekrytá textom.
+   Omrvinky ostávajú pri hornom okraji (na fotke, ako doteraz) a nadpis,
+   text, tlačidlá a čísla majú rovnaké rozloženie ako predtým — len začínajú
+   až pod fotkou. Pomer 16 : 9 (ako video na úvode) drží tlačidlá na prvej
+   obrazovke. */
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero {
+    display: flex !important; flex-direction: column !important; justify-content: flex-start !important;
+    min-height: 0 !important; height: auto !important; overflow: visible;
+    background: var(--k-ink, #12171a);
+    isolation: isolate;
+  }
+  /* Fotka je pod textom (z-index −1 v rámci úvodu), aby nadpis mohol začať
+     už v jej stmavnutom spodku. */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg {
+    position: relative !important; inset: auto !important; top: auto !important; bottom: auto !important;
+    width: 100%; height: auto !important; aspect-ratio: 16 / 9; flex: none; z-index: -1; overflow: hidden;
+  }
+  body:not(.k-home) .k .kh-hero .kh-hero__bg > img { object-position: 50% 50% !important; animation: none; transform: none; }
+  /* Hore jemné stmavenie, aby boli omrvinky čitateľné aj na svetlej oblohe;
+     dole sa fotka plynulo stratí do tmavého podkladu (krivka so zrýchlením,
+     bez pásu či hrany, na konci presne farba pozadia). */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg .kh-hero__scrim {
+    background: linear-gradient(180deg,
+      rgba(18, 23, 26, .66) 0%, rgba(18, 23, 26, .5) 16%, rgba(18, 23, 26, .24) 30%,
+      rgba(18, 23, 26, 0) 44%, rgba(18, 23, 26, 0) 50%, rgba(18, 23, 26, .08) 58%, rgba(18, 23, 26, .22) 66%,
+      rgba(18, 23, 26, .42) 74%, rgba(18, 23, 26, .66) 83%,
+      rgba(18, 23, 26, .88) 92%, #12171a 100%) !important;
+  }
+  body:not(.k-home) .k .kh-hero__inner {
+    margin-top: -34px; padding-top: 0 !important; padding-bottom: 28px !important;
+  }
+  body:not(.k-home) .k .kh-hero__box { padding-top: 0 !important; }
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs { text-shadow: 0 1px 8px rgba(0, 0, 0, .45); }
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs,
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs a { color: rgba(255, 255, 255, .92); }
+  /* Tieň písma bol na čitateľnosť cez fotku. Na tmavom podklade ho netreba
+     a orezaný po riadkoch robil za nadpisom tmavé obdĺžniky. */
+  body:not(.k-home) .k .kh-hero h1, body:not(.k-home) .k .kh-hero h1 *,
+  body:not(.k-home) .k .kh-hero__inner p { text-shadow: none !important; }
+  body:not(.k-home) .k .kh-hero__cue { display: none; }
+}
+
+/* Úvod webu (video): rovnaký plynulý prechod do tmavej a bez tieňa písma. */
+@media (max-width: 759px) {
+  .k-home .kh-hero__bg .kh-hero__scrim {
+    background: linear-gradient(180deg,
+      rgba(18, 23, 26, 0) 0%, rgba(18, 23, 26, 0) 55%,
+      rgba(18, 23, 26, .16) 66%, rgba(18, 23, 26, .42) 78%,
+      rgba(18, 23, 26, .74) 89%, #12171a 100%) !important;
+  }
+  .k-home .kh-hero h1, .k-home .kh-hero h1 *, .k-home .kh-hero__inner p { text-shadow: none !important; }
+}
