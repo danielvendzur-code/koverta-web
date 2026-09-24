@@ -5052,7 +5052,7 @@ function kvAdresa(kluc, zaloha) {
                strieborná — nie teplá sivá farba steny. Odtieň smie prísť z
                dát stránky, aby sa dal doladiť bez zásahu do rendereru. */
             const kvPanel = kvPanelVolba() && state.kvStrecha === 'panel';
-            const spodHex = kvPanel ? '#e6e4de' : maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
+            const spodHex = kvPanel ? '#d7d5c8' : maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -5192,16 +5192,12 @@ function kvAdresa(kluc, zaloha) {
             /* Sendvičový panel: jadro 3 cm pod vlnou 4 cm, spodok rovný ako
                pri paneli Soltec — zdola teda plochý podhľad, nie vlna. */
             if (kvPanel) {
-              /* Sendvičový panel zdola ako Soltec: hladký svetlý podhľad bez
-                 vĺn, len úzke škáry medzi metrovými panelmi. */
+              /* Sendvičový panel zdola presne ako pri Soltec SL: hladký
+                 podhľad v RAL 9002 (#d7d5c8), jedna plocha bez vĺn a bez
+                 priečnych škár — tak ho kreslí aj rad SL. */
               const zp = trapBot - 30;
               quad([[tx0, ty0, zp], [tx0, ty1, zp], [tx1, ty1, zp], [tx1, ty0, zp]], spodHex,
                    { normal: [0, 0, -1], cull: true, edge: false });
-              const skara = shade(spodHex, -0.2);
-              for (let yj = ty0 + 1000; yj < ty1 - 200; yj += 1000) {
-                quad([[tx0, yj - 3, zp - 0.8], [tx0, yj + 3, zp - 0.8], [tx1, yj + 3, zp - 0.8], [tx1, yj - 3, zp - 0.8]], skara,
-                     { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
-              }
             } else {
               drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
             }
