@@ -14105,13 +14105,28 @@ body.ma-kh-modal { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .kh-vyber__foto img, .k .kh-vyber .kh-vyber__volba { transition: none; } }
 
-/* Úvod na telefóne: namiesto videa (720p zdroj orezaný na výšku bol
-   rozmazaný) ostrá fotografia z toho istého záberu s pomalým priblížením. */
-@media (max-width: 900px) {
-  .k-home .kh-hero__bg > img { transform-origin: 38% 55%; animation: kh-hero-zoom 22s ease-in-out infinite alternate; will-change: transform; }
+/* Úvod na telefóne: video na celú šírku v pomere 16 : 9 nad textom.
+   Za textom na celú výšku ukazoval 720p zdroj len úzky, priblížený
+   a rozmazaný pás — takto je vidieť celú pergolu a obraz je ostrý.
+   Text, tlačidlá a hodnotenie sú pod videom na tmavom podklade. */
+@media (max-width: 759px) {
+  .k-home .kh-hero {
+    display: flex !important; flex-direction: column !important; justify-content: flex-start !important;
+    min-height: 0 !important; height: auto !important; overflow: visible;
+    background: var(--k-ink, #12171a);
+  }
+  .k-home .kh-hero__bg {
+    position: relative !important; inset: auto !important; top: auto !important; bottom: auto !important;
+    width: 100%; height: auto !important; aspect-ratio: 16 / 9; flex: none; z-index: 0; overflow: hidden;
+  }
+  .k-home .kh-hero__bg > img, .k-home .kh-hero__video { object-position: 50% 50% !important; }
+  .k-home .kh-hero__bg > img { animation: none; transform: none; }
+  .k-home .kh-hero__bg .kh-hero__scrim {
+    background: linear-gradient(180deg, rgba(18, 23, 26, 0) 62%, rgba(18, 23, 26, .92) 100%) !important;
+  }
+  .k-home .kh-hero__inner { position: relative !important; padding-top: 20px !important; }
+  .k-home .kh-hero__cue { display: none; }
 }
-@keyframes kh-hero-zoom { from { transform: scale(1); } to { transform: scale(1.09); } }
-@media (prefers-reduced-motion: reduce) { .k-home .kh-hero__bg > img { animation: none; } }
 
 /* Spodná lišta na telefóne o kúsok nižšia: menej zakrýva obsah. */
 @media (max-width: 759px) {
