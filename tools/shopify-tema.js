@@ -615,12 +615,21 @@ ${seoVetvy(v)}
 {%- if kv_popis != blank %}
 <meta name="description" content="{{ kv_popis | escape }}">
 {%- endif %}
-<link rel="canonical" href="{{ canonical_url }}">
+{%- comment -%} Jedna adresa pre jeden obsah vo vyhľadávaní. Staré a nove-* stránky
+   ostávajú funkčné (aj pre reklamy), len povedia Google, ktorá adresa je hlavná.
+   Zoznam je z tools/adresy-obchodu.json (presmerovania). {%- endcomment -%}
+{%- liquid
+  assign kv_canon = canonical_url
+  case request.path
+${canonVetvy()}
+  endcase
+-%}
+<link rel="canonical" href="{{ kv_canon }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
 <meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
 <meta property="og:title" content="{{ kv_titulok | escape }}">
-<meta property="og:url" content="{{ canonical_url }}">
+<meta property="og:url" content="{{ kv_canon }}">
 {%- if kv_popis != blank %}
 <meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
@@ -871,6 +880,18 @@ ${v.spolocnyChvost.join('\n')}
 /* Titulok a popis stránky pre obsah na starých adresách. Zo statického webu,
  * nie z políčok obchodu: kolekcia `pristresky-pre-auta` má v obchode starý
  * popis, no zobrazuje nový obsah. */
+/* Vetvy pre canonical: stará alebo nove-* adresa → hlavná adresa z menu.
+   Presmerovanie na úvod (/) sa vynecháva — nove-uvod je 404. */
+function canonVetvy() {
+  const ciele = {};
+  for (const [z, na] of Object.entries(ADRESY.presmerovania)) {
+    if (!z.startsWith('/') || na === '/') continue;
+    (ciele[na] = ciele[na] || []).push(z);
+  }
+  return Object.entries(ciele).map(([na, zdroje]) =>
+    `  when ${zdroje.map(z => `'${z}'`).join(', ')}\n    assign kv_canon = shop.url | append: '${na}'`).join('\n');
+}
+
 function seoVetvy(v) {
   const lit = (t) => "'" + String(t || '').replace(/'/g, '’') + "'";
   const priradenie = (x) => '{%- assign kv_titulok = ' + lit(x.celyTitulok) + ' -%}' + (x.popis ? '{%- assign kv_popis = ' + lit(x.popis) + ' -%}' : '');
