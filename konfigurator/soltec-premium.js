@@ -1635,6 +1635,13 @@ function kvAdresa(kluc, zaloha) {
           const baseOk = Number.isFinite(zaklad);
           lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : '') + (panelom ? ' · sendvičová strecha' : ''), v: baseOk ? zaklad : null, sum: baseOk ? zaklad : 0 });
           let open = !baseOk;
+          /* Cenník Soltec: „Štyri stĺpy so zvoleným kotvením sú v cene, každý
+             ďalší stĺp sa účtuje podľa cenníka.“ Dlhšie zostavy a vyššia
+             záťaž stoja na šiestich a viac stĺpoch — tie navyše sa pripočítajú. */
+          if (!kvBand() && Number(m.postExtra) > 0) {
+            const navyse = Math.max(0, postCount() - 4);
+            if (navyse > 0) lines.push({ k: `Ďalšie stĺpy (4 sú v cene): ${navyse} ks`, v: navyse * m.postExtra, sum: navyse * m.postExtra });
+          }
           /* Steny išli v Expivi len so šesťstĺpovou konštrukciou, ktorá je
              pri každom užšom rozmere o 600 € drahšia než štvorstĺpová. Tá
              istá suma sa pripočíta, keď si zákazník stenu vyberie. */
@@ -5546,6 +5553,12 @@ function kvAdresa(kluc, zaloha) {
                R160 160/80; depth is always the first secondary-profile number. */
             const sec = model().secBeam || [80, 50];
             const PANEL = 30;                  // every carport and canopy model says "ISO panel 30 mm"
+            /* SL kryje strešný sendvičový panel: jadro 3 cm a navrchu vlna
+               4 cm, spolu 7 cm (podľa majiteľa a fotiek realizácie SL170).
+               Panel leží na priečnych profiloch a vlny bežia kolmo na ne,
+               teda pozdĺž dĺžky. Vrch vĺn končí tesne pod hornou hranou rámu. */
+            const slSendvic = /^SL/i.test(String(state.model)) && model().roofSheet !== 'trapez' && model().glazed !== true;
+            const RIB = slSendvic ? 40 : 0;
             const rw = sec[1];
             const rd = integratedFall
               ? sec[0]
@@ -5566,7 +5579,9 @@ function kvAdresa(kluc, zaloha) {
             const room = Math.max(0, beam - clear - rd - PANEL - reveal);
             const hide = fallShown ? 0 : Math.min(fall, room);
             const drop = (x) => hide * ((x - inX0) / Math.max(1, inX1 - inX0));
-            const secTop = (x) => (fallShown ? zRim(x) : rimLow) - beam + clear + rd;
+            const secTop = (x) => (slSendvic
+              ? (fallShown ? zRim(x) : rimLow) - 4 - RIB - PANEL
+              : (fallShown ? zRim(x) : rimLow) - beam + clear + rd);
             const integratedSpan = Math.max(1, inY1 - inY0);
             const integratedDrop = integratedSpan * (fallPct / 100);
             /* Canonical panel top-plane function. For F, y0 is the high side and
@@ -5704,7 +5719,7 @@ function kvAdresa(kluc, zaloha) {
             /* ISO panel sa kladie po tabuliach a spoje sú vidieť. Trapézový
                plech beží po spáde v jednom kuse od hrebeňa po odkvap, takže
                priečna škára každý meter by naň nepatrila. */
-            const panelCuts = trapez
+            const panelCuts = (trapez || slSendvic)
               ? [[inX0, inX1]]
               : (integratedFall
                 ? beamRuns.slice(0, -1).map((run, i) => [run.b + 2, beamRuns[i + 1].a - 2]).filter((c) => c[1] - c[0] > 8)
@@ -5768,7 +5783,33 @@ function kvAdresa(kluc, zaloha) {
                to hint at those joints, but WebGL renders only faces, so the
                roof became one perfectly clean slab. Give every internal SL
                boundary a narrow physical joint on both skins. */
-            if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
+            if (slSendvic && !green) {
+              /* Vlny sendvičového panela: lichobežník 40 mm vysoký, dolu
+                 70 mm a hore 28 mm široký, rozteč 333 mm (tri vlny na metrový
+                 modul). Bežia od konca po koniec, kolmo na priečne profily. */
+              const pitch = 333, bh = 35, th = 14;
+              const n = Math.max(3, Math.round((inY1 - inY0) / pitch));
+              const krok = (inY1 - inY0) / n;
+              const vrch = roofFinish.topHex, bok = shade(roofFinish.topHex, -0.12), bok2 = shade(roofFinish.topHex, 0.06);
+              const nl = Math.hypot(RIB, bh - th);
+              for (let i = 0; i < n; i++) {
+                const yc = inY0 + krok * (i + 0.5);
+                const ya = yc - bh, yb = yc + bh, yt0 = yc - th, yt1 = yc + th;
+                const zb = (x, y) => panelTopZ(x, y), zt = (x, y) => panelTopZ(x, y) + RIB;
+                quad([[inX0, yt0, zt(inX0, yt0)], [inX1, yt0, zt(inX1, yt0)], [inX1, yt1, zt(inX1, yt1)], [inX0, yt1, zt(inX0, yt1)]],
+                     vrch, { cull: true, bias: -600, edge: false });
+                quad([[inX0, ya, zb(inX0, ya)], [inX1, ya, zb(inX1, ya)], [inX1, yt0, zt(inX1, yt0)], [inX0, yt0, zt(inX0, yt0)]],
+                     bok, { normal: [0, -RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                quad([[inX0, yt1, zt(inX0, yt1)], [inX1, yt1, zt(inX1, yt1)], [inX1, yb, zb(inX1, yb)], [inX0, yb, zb(inX0, yb)]],
+                     bok2, { normal: [0, RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                [[inX0, -1], [inX1, 1]].forEach(([x, d]) => {
+                  const pts = [[x, ya, zb(x, ya)], [x, yt0, zt(x, yt0)], [x, yt1, zt(x, yt1)], [x, yb, zb(x, yb)]];
+                  quad(d < 0 ? pts.reverse() : pts, shade(vrch, -0.18), { normal: [d, 0, 0], cull: true, bias: -600, edge: false });
+                });
+              }
+              canvas.dataset.panelSeamCount = '0';
+              canvas.dataset.panelRibCount = String(n);
+            } else if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
               const boundaries = cuts.slice(0, -1).map((cut) => cut[1]);
               const halfJoint = 3;
               boundaries.forEach((x) => {
