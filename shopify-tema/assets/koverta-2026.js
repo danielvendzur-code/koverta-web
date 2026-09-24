@@ -2843,6 +2843,24 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     document.body.appendChild(modal);
     zjednodusFormular(formOkno);
     initDopyt(modal);
+    /* Rozbaľovací zoznam „Čo riešite?“ je vlastný prvok. Kópia v okne
+       nemá jeho obsluhu (cloneNode ju neprenáša), takže bez tohto sa v okne
+       nedal otvoriť ani zmeniť. */
+    initSelect(modal);
+    const vlastnyVyber = formOkno.querySelector('[data-k-select]');
+    const nastavVyber = (hodnota) => {
+      if (!vlastnyVyber || !hodnota) return;
+      const moznosti = [...vlastnyVyber.querySelectorAll('[data-k-select-option]')];
+      const h = hodnota.toLowerCase();
+      const zhoda = moznosti.find((o) => o.dataset.kSelectOption.toLowerCase() === h)
+        || moznosti.find((o) => h.indexOf(o.dataset.kSelectOption.toLowerCase()) === 0 || o.dataset.kSelectOption.toLowerCase().indexOf(h) === 0);
+      const vstup = vlastnyVyber.querySelector('[data-k-select-input]');
+      const popis = vlastnyVyber.querySelector('[data-k-select-label]');
+      if (zhoda) moznosti.forEach((o) => o.setAttribute('aria-selected', String(o === zhoda)));
+      const text = zhoda ? zhoda.dataset.kSelectOption : hodnota;
+      if (vstup) vstup.value = text;
+      if (popis) popis.textContent = text;
+    };
 
     const kontext = modal.querySelector('.kh-modal__kontext');
     const zaujem = formOkno.querySelector('select[name="contact[Čo rieši]"]');
@@ -2876,6 +2894,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         if (moznost) zaujem.value = moznost.value;
       }
       if (zaujemPole) zaujemPole.hidden = Boolean(k.kDopytZaujem) || zaujemSkryty;
+      if (k.kDopytZaujem) nastavVyber(k.kDopytZaujem);
       if (sprava && k.kDopyt && (!sprava.value.trim() || sprava.value === sprava.dataset.kAuto)) {
         sprava.value = k.kDopyt;
         sprava.dataset.kAuto = k.kDopyt;
