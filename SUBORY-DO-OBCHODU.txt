@@ -534,6 +534,10 @@ foto-zadar_5-w1000.png	assets/foto/zadar_5-w1000.png
 foto-zadar_8-w1000-w1000.webp	assets/foto/zadar_8-w1000-w1000.webp
 foto-zadar_8-w1000-w640.webp	assets/foto/zadar_8-w1000-w640.webp
 foto-zadar_8-w1000.png	assets/foto/zadar_8-w1000.png
+katalogy-soltec-bioklimaticke-pergoly-2026-sk.pdf	assets/katalogy/soltec-bioklimaticke-pergoly-2026-sk.pdf
+katalogy-soltec-pevne-prestresenia-2026-sk.pdf	assets/katalogy/soltec-pevne-prestresenia-2026-sk.pdf
+katalogy-soltec-tienenie-a-doplnky-2026-sk.pdf	assets/katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf
+katalogy-soltec-vonkajsie-kuchyne-2026-sk.pdf	assets/katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf
 koverta-carport-dve-auta-zima-w1000.webp	assets/koverta-carport-dve-auta-zima-w1000.webp
 koverta-carport-dve-auta-zima-w640.webp	assets/koverta-carport-dve-auta-zima-w640.webp
 koverta-carport-dve-auta-zima.jpg	assets/koverta-carport-dve-auta-zima.jpg
