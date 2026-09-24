@@ -542,6 +542,7 @@ koverta-carport-lamely-stena.jpg	assets/koverta-carport-lamely-stena.jpg
 koverta-carport-pri-garazi-w1000.webp	assets/koverta-carport-pri-garazi-w1000.webp
 koverta-carport-pri-garazi-w640.webp	assets/koverta-carport-pri-garazi-w640.webp
 koverta-carport-pri-garazi.jpg	assets/koverta-carport-pri-garazi.jpg
+koverta-hero-sibenik-540p.mp4	assets/koverta-hero-sibenik-540p.mp4
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
 koverta-hero-sibenik-poster-w1600.webp	assets/koverta-hero-sibenik-poster-w1600.webp
 koverta-hero-sibenik-poster-w640.webp	assets/koverta-hero-sibenik-poster-w640.webp
