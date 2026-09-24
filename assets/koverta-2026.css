@@ -14249,3 +14249,15 @@ body.ma-kh-modal { overflow: hidden; }
   body:not(.k-home) .k .kh-hero .k-display { font-size: clamp(30px, 9.8vw, 42px); line-height: 1.06; letter-spacing: -0.025em; }
   body:not(.k-home) .k .kh-hero__lead { font-size: 15px; }
 }
+
+/* Omrvinky nad fotkou úvodu na telefóne — výrazne menšie a ľahšie, aby
+   fotku len označili, nie prekryli. Zmestia sa do jedného riadka aj pri
+   najdlhšej ceste (Pre dom a záhradu / Záhradné prístrešky a pergoly). */
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
+    top: 12px; gap: 2px 6px;
+    font-size: 10.5px; line-height: 16px; font-weight: 500; letter-spacing: .01em;
+  }
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs [aria-current] { font-weight: 600; padding-bottom: 2px; }
+  body:not(.k-home) .k .kh-hero__box > .kh-crumbs [aria-current]::after { height: 1px; }
+}

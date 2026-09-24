@@ -3738,7 +3738,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
       if (lis[0]) {
         setMenuPhoto(lis[0], 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
-        addDesc(lis[0], 'Pre 1 až 3 autá, oceľ a hliník z vlastnej výroby.');
+        addDesc(lis[0], 'Pre 1, 2, 3 a viac áut. Vlastný dizajn a výroba.');
       }
       if (lis[1]) {
         setMenuPhoto(lis[1], 'soltec-carport-toth-nitra-hero.jpg');
