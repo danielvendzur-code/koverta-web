@@ -35,17 +35,29 @@ export function vyziadajPrihlasenie(res) {
   return res.status(401).send('Prihlásenie je potrebné.');
 }
 
+/* `list` vráti najviac 1 000 súborov naraz, zoradených podľa cesty, teda od
+   najstaršieho dňa. Bez stránkovania sa do zoznamu dostali len staré dopyty
+   a dnešné v ňom chýbali. */
 async function nacitajDopyty() {
-  const { blobs } = await list({ prefix: 'dopyty/', limit: 1000 });
-  const jsony = blobs.filter((b) => b.pathname.endsWith('/dopyt.json'))
-    .sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
+  const jsony = [];
+  let cursor;
+  do {
+    const strana = await list({ prefix: 'dopyty/', limit: 1000, ...(cursor ? { cursor } : {}) });
+    jsony.push(...strana.blobs.filter((b) => b.pathname.endsWith('/dopyt.json')));
+    cursor = strana.hasMore ? strana.cursor : undefined;
+  } while (cursor);
+  /* Cesta začína dátumom a časom prijatia, takže zoradenie podľa nej je
+     zoradenie od najnovšieho. */
+  const najnovsie = jsony.sort((a, b) => b.pathname.localeCompare(a.pathname)).slice(0, 500);
   const vysledky = [];
-  for (const blob of jsony.slice(0, 500)) {
-    /* `get` bez volieb v @vercel/blob 2.x vyhodí „missing options" — zoznam
-       sa preto nikdy nenačítal. Archív je súkromný. */
-    const subor = await get(blob.url, { access: 'private' });
-    if (!subor || !subor.stream) continue;
-    vysledky.push(await new Response(subor.stream).json());
+  for (let i = 0; i < najnovsie.length; i += 16) {
+    const davka = await Promise.all(najnovsie.slice(i, i + 16).map(async (blob) => {
+      /* `get` bez volieb v @vercel/blob 2.x vyhodí „missing options". Archív je súkromný. */
+      const subor = await get(blob.url, { access: 'private', useCache: false });
+      if (!subor || !subor.stream) return null;
+      return new Response(subor.stream).json().catch(() => null);
+    }));
+    vysledky.push(...davka.filter(Boolean));
   }
   return vysledky;
 }
