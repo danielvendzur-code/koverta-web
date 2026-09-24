@@ -90,6 +90,14 @@
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@7c5f4f673f494c2841e5c1982b0385c5cab33dfd/assets/koverta-ikona-apple.png" sizes="180x180">
 <link rel="manifest" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@7c5f4f673f494c2841e5c1982b0385c5cab33dfd/site.webmanifest">
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
+{%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
+   ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
+   logá Koverta a Soltec cez celú obrazovku. Odkazy v tele stránky ostávajú,
+   aby poradie štýlov (a teda vzhľad) ostalo presne také isté. {%- endcomment -%}
+{%- if request.page_type == 'page' and page.handle == 'konfigurator' %}
+<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
+{%- endif %}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
