@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import handler from './dopyt.js';
+import handler from '../api/dopyt.js';
 
 /* Testy nikdy nesmú poslať skutočný e-mail. Aj keď je v prostredí ostrý
    kľúč (napr. po `vercel env pull`), tu sa zahodí — handler si ho číta až

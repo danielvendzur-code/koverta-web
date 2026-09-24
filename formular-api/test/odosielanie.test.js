@@ -47,8 +47,8 @@ globalThis.fetch = async (adresa, volby) => {
   return new Response(JSON.stringify(telo), { status, headers: { 'content-type': 'application/json' } });
 };
 
-const { default: handler } = await import('./dopyt.js');
-const { default: suhrn } = await import('./suhrn.js');
+const { default: handler } = await import('../api/dopyt.js');
+const { default: suhrn } = await import('../api/suhrn.js');
 
 const PREHLIADAC = 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36';
 const dnes = () => new Date().toISOString().slice(0, 10);
