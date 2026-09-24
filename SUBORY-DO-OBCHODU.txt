@@ -553,6 +553,10 @@ koverta-hero-sibenik.mp4	assets/koverta-hero-sibenik.mp4
 koverta-hero-sibenik.webm	assets/koverta-hero-sibenik.webm
 koverta-ikona-192.png	assets/koverta-ikona-192.png
 koverta-ikona-apple.png	assets/koverta-ikona-apple.png
+koverta-montaz-konstrukcie-w1000.webp	assets/koverta-montaz-konstrukcie-w1000.webp
+koverta-montaz-konstrukcie-w1600.webp	assets/koverta-montaz-konstrukcie-w1600.webp
+koverta-montaz-konstrukcie-w640.webp	assets/koverta-montaz-konstrukcie-w640.webp
+koverta-montaz-konstrukcie.jpg	assets/koverta-montaz-konstrukcie.jpg
 koverta-navrh-konfigurator-3d-w1000.webp	assets/koverta-navrh-konfigurator-3d-w1000.webp
 koverta-navrh-konfigurator-3d-w1600.webp	assets/koverta-navrh-konfigurator-3d-w1600.webp
 koverta-navrh-konfigurator-3d-w640.webp	assets/koverta-navrh-konfigurator-3d-w640.webp
