@@ -99,10 +99,23 @@ module.exports = async function routingSmoke(browser) {
       await page.locator(kv ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      if (kv) {
+      if (route === 'zahrada') {
         assert(withSide.price.open === true && withSide.price.total === null &&
           withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
           `${route}: quote-only side is missing from price lines`);
+      } else if (kv) {
+        /* Zadná, ľavá a pravá stena prístrešku pre auto majú cenu z Expivi
+           a pripočíta sa k nim konštrukcia so stĺpmi v rohoch. Prednú stenu
+           Expivi nepoznal — tá jediná ide na nacenenie. */
+        assert(withSide.price.total !== null && withSide.price.total > cena(resized) &&
+          withSide.price.lines.some(line => /Konštrukcia pre steny/.test(line.k) && line.v > 0),
+          `${route}: priced wall is missing its Expivi price`);
+        await page.locator('[data-sp-side="right"]').click();
+        await page.locator('[data-sp-side-opt]:not([data-sp-side-opt="open"])').first().click();
+        const withFront = await snapshot();
+        assert(withFront.price.open === true && withFront.price.total === null &&
+          withFront.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
+          `${route}: quote-only front wall is missing from price lines`);
       } else {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
       }

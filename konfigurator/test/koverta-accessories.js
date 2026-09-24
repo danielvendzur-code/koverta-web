@@ -435,8 +435,14 @@ function validateAccessoryContacts(snap, label) {
         await setSize(page, 6200, 6000);
         await selectSide(page, side, 'kvdrevo');
         let snap4 = await snapshot(page);
-        assert(snap4.geometry.postAxes.length === 2,
-          `${device}/${side}: 6200x6000 is not the expected four-post layout`);
+        /* So stenou stojí aj užší prístrešok v rohoch s radom v strede
+           (šesťstĺpová zostava z Expivi); stredný stĺp pri bočnej stene je
+           len na jej strane a pri zadnej/prednej nad 4 m v strede čela. */
+        assert(snap4.geometry.postAxes.length === 3 && snap4.geometry.wallMode === true,
+          `${device}/${side}: 6200x6000 with a wall does not stand on corner posts with a middle row`);
+        const expectedPosts = 5;   // 4 rohy + stredný pri bočnej stene alebo v strede čela (6,2 m > 4 m)
+        assert(snap4.geometry.postCount === expectedPosts,
+          `${device}/${side}: 6200x6000 with one wall should have ${expectedPosts} posts, got ${snap4.geometry.postCount}`);
         const anchor4 = validateWallAnchor(snap4, side, `${device}/6200x6000`);
         await rotateAndValidate(page, device, `6200x6000/${side}`, 12);
 

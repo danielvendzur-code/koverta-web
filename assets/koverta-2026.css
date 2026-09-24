@@ -14219,3 +14219,33 @@ body.ma-kh-modal { overflow: hidden; }
   }
   .k-home .kh-hero h1, .k-home .kh-hero h1 *, .k-home .kh-hero__inner p { text-shadow: none !important; }
 }
+
+/* Fotka a video v úvode na telefóne sa do tmavého podkladu strácajú
+   priehľadnosťou (maskou), nie prekrytím. Pri prekrytí svetlé miesta
+   (biele auto, dlažba) presvitali až po spodný okraj a tam zrazu skončili
+   — bolo vidieť čiaru. Krivka priehľadnosti má na oboch koncoch nulový
+   sklon, takže sa nedá povedať, kde prechod začína ani kde končí. */
+@media (max-width: 759px) {
+  .k .kh-hero .kh-hero__bg {
+    -webkit-mask-image: linear-gradient(180deg,
+      #000 0%, #000 45%, rgba(0, 0, 0, 0.991) 50.5%,
+      rgba(0, 0, 0, 0.942) 56%, rgba(0, 0, 0, 0.837) 61.5%, rgba(0, 0, 0, 0.683) 67%,
+      rgba(0, 0, 0, 0.500) 72.5%, rgba(0, 0, 0, 0.317) 78%, rgba(0, 0, 0, 0.163) 83.5%,
+      rgba(0, 0, 0, 0.058) 89%, rgba(0, 0, 0, 0.009) 94.5%, transparent 100%);
+            mask-image: linear-gradient(180deg,
+      #000 0%, #000 45%, rgba(0, 0, 0, 0.991) 50.5%,
+      rgba(0, 0, 0, 0.942) 56%, rgba(0, 0, 0, 0.837) 61.5%, rgba(0, 0, 0, 0.683) 67%,
+      rgba(0, 0, 0, 0.500) 72.5%, rgba(0, 0, 0, 0.317) 78%, rgba(0, 0, 0, 0.163) 83.5%,
+      rgba(0, 0, 0, 0.058) 89%, rgba(0, 0, 0, 0.009) 94.5%, transparent 100%);
+  }
+  /* Hore ostáva jemné stmavenie pre omrvinky; spodok rieši maska. */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg .kh-hero__scrim {
+    background: linear-gradient(180deg,
+      rgba(18, 23, 26, .66) 0%, rgba(18, 23, 26, .5) 16%, rgba(18, 23, 26, .24) 30%,
+      rgba(18, 23, 26, 0) 44%) !important;
+  }
+  .k-home .kh-hero__bg .kh-hero__scrim { background: none !important; }
+  /* Nadpis a text úvodu podstránok v rovnakej miere ako na úvode webu. */
+  body:not(.k-home) .k .kh-hero .k-display { font-size: clamp(30px, 9.8vw, 42px); line-height: 1.06; letter-spacing: -0.025em; }
+  body:not(.k-home) .k .kh-hero__lead { font-size: 15px; }
+}

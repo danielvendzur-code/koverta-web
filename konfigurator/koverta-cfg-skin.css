@@ -847,14 +847,14 @@ body { background: var(--k-white); color: var(--k-ink); }
    konfigurátor na mobile nejde odscrollovať. „Vedľa nej je vždy čoho sa
    chytiť" na širokom okne platí, na 390 px nie.
 
-   Rozdelené je to podľa smeru: zvislé potiahnutie patrí stránke, vodorovné
-   scéne. Otáčanie okolo zvislej osi je to, čo si zákazník na modeli
-   prezerá, a to ostáva pod prstom; sklon má vlastné tlačidlá pohľadov.
-   Prehliadač gesto vyhodnotí sám a keď si zvislé vezme, pošle nám
-   `pointercancel`, ktorý už obsluhujeme.
+   Potom to bolo rozdelené podľa smeru: zvislé potiahnutie patrilo stránke,
+   vodorovné scéne. Majiteľ to 24. 9. 2026 zmenil: akýkoľvek pohyb prstom po
+   3D má otáčať prístrešok (vodorovne dookola, zvisle sklon), nie posúvať
+   stránku. Stránka sa posúva ťahom mimo scény — po lište pod ňou a po
+   voľbách, ktoré sú pod scénou vždy.
    ========================================================================== */
 #SoltecPremium .sp-stage,
-#SoltecPremium .sp-stage__canvas { touch-action: pan-y; }
+#SoltecPremium .sp-stage__canvas { touch-action: none; }
 /* Lišta pod scénou sú tlačidlá, tam musí dotyk fungovať normálne. */
 #SoltecPremium .sp-stage__bar,
 #SoltecPremium .sp-stage__ref { touch-action: auto; }
@@ -1481,3 +1481,7 @@ body { background: var(--k-white); color: var(--k-ink); }
 @keyframes kv-vyzva-sip { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(3px); } }
 @media (min-width: 900px) { .kv-vyzva { display: none; } }
 @media (prefers-reduced-motion: reduce) { .kv-vyzva { transition: none; } .kv-vyzva svg { animation: none; } }
+
+/* Štvrtá stena Koverty sa zvoliť nedá (jedna strana ostáva na vjazd). */
+.sp-sideopt:disabled { opacity: .42; cursor: not-allowed; }
+.sp-sideopt:disabled .sp-sideopt__check { visibility: hidden; }

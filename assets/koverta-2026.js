@@ -497,6 +497,9 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
       const groups = [...set.querySelectorAll('[data-k-filter-group]')];
       const items = [...grid.querySelectorAll('[data-k-type], [data-k-brand]')];
+      /* Položka smie patriť do viacerých skupín naraz — pergola je aj
+         „Záhrada“, aj „Pergoly“ (data-k-type="zahrada pergoly"). */
+      const znaky = (item, dimension) => (item.getAttribute(`data-k-${dimension}`) || '').split(/\s+/);
       const state = {};
 
       groups.forEach((group) => {
@@ -510,7 +513,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           item.hidden = groups.some((group) => {
             const dimension = group.getAttribute('data-k-filter-group');
             const value = state[dimension] || 'all';
-            return value !== 'all' && item.getAttribute(`data-k-${dimension}`) !== value;
+            return value !== 'all' && !znaky(item, dimension).includes(value);
           });
         });
 
@@ -522,7 +525,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
             button.disabled = !items.some((item) => groups.every((otherGroup) => {
               const otherDimension = otherGroup.getAttribute('data-k-filter-group');
               const value = candidate[otherDimension] || 'all';
-              return value === 'all' || item.getAttribute(`data-k-${otherDimension}`) === value;
+              return value === 'all' || znaky(item, otherDimension).includes(value);
             }));
           });
         });

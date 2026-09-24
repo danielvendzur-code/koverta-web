@@ -1071,8 +1071,38 @@ function kvAdresa(kluc, zaloha) {
           const g = model().kvGeom;
           if (!Array.isArray(g) || !g.length) return null;
           const w = widthMM();
-          for (const b of g) if (w <= b.max) return b;
-          return g[g.length - 1];
+          let band = g[g.length - 1];
+          for (const b of g) if (w <= b.max) { band = b; break; }
+          /* So stenou stojí prístrešok ako šesťstĺpová zostava z Expivi:
+             krajné rady stĺpov v osiach čelných rámov, teda v rohoch,
+             stredný pod prostrednou väznicou a väznice delia rozpätie na
+             rovnaké polia. Štvorstĺpová zostava so stĺpmi pod väznicami
+             steny v Expivi nemala — otázky na ne boli pri nej skryté. */
+          if (band.stlpyNaVaznici && model().kvStenovyPas && kvStenovyRezim()) {
+            return Object.assign({}, band, model().kvStenovyPas,
+              { stlpyNaVaznici: false, vaznicStred: null, stenovy: true });
+          }
+          return band;
+        };
+        /* Steny prístrešku Koverta (pokyn majiteľa, 24. 9. 2026):
+           - so stenou stoja stĺpy v rohoch,
+           - bočná stena má stĺp presne v strede, a to len na tej strane,
+             kde stena je (široké prístrešky ho majú na oboch stranách vždy),
+           - zadná a predná stena má stĺp v strede len pri šírke nad 4 m,
+           - zo všetkých štyroch strán sa prístrešok uzavrieť nedá. */
+        const kvSteny = () => ((model().kvGeom && model().roofKit === 'koverta')
+          ? ['rear', 'front', 'left', 'right'].filter((s) => state.sides[s] && state.sides[s] !== 'open')
+          : []);
+        const kvStenovyRezim = () => kvSteny().length > 0;
+        const kvMaxStien = () => Number(model().maxStien) || 4;
+        const kvStrednyNaBoku = (strana) => {
+          const b = kvBand();
+          return !(b && b.stenovy) || state.sides[strana] !== 'open';
+        };
+        const kvStlpyVCele = () => {
+          const nad = Number(model().stenaStredStlpNad) || 0;
+          if (!nad || !kvStenovyRezim() || widthMM() <= nad) return [];
+          return ['left', 'right'].filter((s) => state.sides[s] !== 'open');
         };
         /* --- osnova prístreška ------------------------------------------
            Celá konštrukcia stojí na jednej osnove a nie na tabuľke rozmerov.
@@ -1225,6 +1255,7 @@ function kvAdresa(kluc, zaloha) {
         const postCount = () => {
           const lay = postLayout(), pl = placement();
           if (pl.noPosts) return 0;
+          if (kvBand()) return kvMiestaStlpov().length;
           const w = pl.walls || [];
           const cant = pl.cantilever;
           let n = 0;
@@ -1300,6 +1331,28 @@ function kvAdresa(kluc, zaloha) {
              every bay comes out under it. */
           const out = [];
           for (let i = 0; i < lay.n; i++) out.push(Math.round((span * i) / (lay.n - 1)));
+          return out;
+        };
+        /* Kde naozaj stojí každý stĺp Koverty. Rad `postXs()` je poloha po
+           hĺbke; na bočnej strane bez steny stredný stĺp chýba a zadná či
+           predná stena nad 4 m pridá stĺp do stredu čela. Kreslenie, počet
+           stĺpov, LED aj test čítajú tento jeden zoznam. */
+        const kvMiestaStlpov = () => {
+          const xs = postXs(), n = xs.length, W = widthMM();
+          const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+          const out = [];
+          xs.forEach((px, xi) => {
+            const rz = kvStlpRez(xi, n);
+            [0, 1].forEach((strana) => {
+              if (xi > 0 && xi < n - 1 && !kvStrednyNaBoku(strana === 0 ? 'rear' : 'front')) return;
+              out.push({ px, py: strana === 0 ? vsun : W - rz.w - vsun, xi, rz, celo: false, strana });
+            });
+          });
+          kvStlpyVCele().forEach((s) => {
+            const xi = s === 'left' ? 0 : n - 1;
+            const rz = Object.assign({}, kvStlpRez(xi, n), { roh: false });
+            out.push({ px: xs[xi], py: Math.round(W / 2 - rz.w / 2), xi, rz, celo: true, strana: s });
+          });
           return out;
         };
         const sideSpan = (side) => (side === 'front' || side === 'rear' ? lengthMM() : widthMM());
@@ -1573,6 +1626,16 @@ function kvAdresa(kluc, zaloha) {
           const baseOk = Number.isFinite(base);
           lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : ''), v: baseOk ? base : null, sum: baseOk ? base : 0 });
           let open = !baseOk;
+          /* Steny išli v Expivi len so šesťstĺpovou konštrukciou, ktorá je
+             pri každom užšom rozmere o 600 € drahšia než štvorstĺpová. Tá
+             istá suma sa pripočíta, keď si zákazník stenu vyberie. */
+          const kvB = kvBand();
+          if (kvB && kvB.stenovy) {
+            const pr = (m.stenyPriplatokBySize || {})[`${widthMM()}x${lengthMM()}`];
+            const prOk = Number.isFinite(pr);
+            lines.push({ k: 'Konštrukcia pre steny: stĺpy v rohoch', v: prOk ? pr : null, sum: prOk ? pr : 0 });
+            if (!prOk) open = true;
+          }
           for (const side of ['front', 'rear', 'left', 'right']) {
             const kind = state.sides[side];
             if (kind === 'open') continue;
@@ -1620,9 +1683,16 @@ function kvAdresa(kluc, zaloha) {
                platí to nižšie, presne ako pri Soltec pásmach. */
             const kvMat = (BIO.sideMat || {})[kind];
             const kvWall = () => {
+              /* Cenu majú len steny, ktoré mal cenník Expivi: ľavá, pravá
+                 a zadná. Prednú stenu Expivi nepoznal — tá ide na nacenenie. */
+              if (Array.isArray(m.wallPriced) && m.wallPriced.indexOf(side) < 0) return null;
               const exactSide = m.wallSideBySize && m.wallSideBySize[`${widthMM()}x${lengthMM()}`];
               if ((side === 'front' || side === 'rear') && exactSide) {
                 return Number.isFinite(exactSide[kvMat]) ? exactSide[kvMat] : null;
+              }
+              const exactBack = m.wallBackBySize && m.wallBackBySize[`${widthMM()}x${lengthMM()}`];
+              if ((side === 'left' || side === 'right') && exactBack) {
+                return Number.isFinite(exactBack[kvMat]) ? exactBack[kvMat] : null;
               }
               const t = (side === 'front' || side === 'rear') ? m.wallSide : m.wallBack;
               if (!t) return null;
@@ -1824,6 +1894,10 @@ function kvAdresa(kluc, zaloha) {
               frameAxes: [kvOsnova().zad, kvOsnova().odk], purlinAxes: kvOsnova().vaz,
               postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
               postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
+              /* Každý stĺp, ktorý sa naozaj kreslí (so stenou sa rozostavenie mení). */
+              postPlacements: kvMiestaStlpov().map((mi) => ({ x: mi.px, y: mi.py, d: mi.rz.d, w: mi.rz.w, row: mi.xi, side: mi.strana, end: mi.celo })),
+              postCount: postCount(),
+              wallMode: kvStenovyRezim(),
               postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
               roof: { ...kvRoofRef() },
               accessoryAnchors: Object.fromEntries(
@@ -3669,10 +3743,10 @@ function kvAdresa(kluc, zaloha) {
                lemovania vykúkal — alebo naopak rám spred neho. */
             const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
             const rez = (xi) => (kvBand() ? kvStlpRez(xi, xs.length) : { d: pdRoh, w: pwRoh });
-            xs.forEach((px, xi) => {
-             const rz = rez(xi), pd = rz.d, pw = rz.w;
-             const ys = [vsun, W - pw - vsun];
-             ys.forEach((py) => {
+            /* Jeden stĺp: pätka, telo, nálepka a hlava. `celo` je stĺp v strede
+               zadnej či prednej steny — sedí pod čelným rámom, nie pod bočným. */
+            const kresliStlp = (px, py, xi, rz, celo) => {
+             const pd = rz.d, pw = rz.w;
               if (walls.indexOf('rear') > -1 && py === 0) return;
               if (walls.indexOf('front') > -1 && py === 1) return;
               if (walls.indexOf('left') > -1 && xi === 0) return;
@@ -3861,13 +3935,25 @@ function kvAdresa(kluc, zaloha) {
                   else plat(px - hp, cy - sir / 2, hp, sir);
                   if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
                   else plat(cx - sir / 2, py - hp, sir, hp);
+                } else if (celo) {
+                  /* Stĺp v strede čela nesie čelný rám, ktorý beží cez šírku —
+                     platne idú po ňom, na obe strany stĺpa. */
+                  plat(cx - sir / 2, py - hp, sir, hp);
+                  plat(cx - sir / 2, py + pw, sir, hp);
                 } else {
                   plat(px - hp, cy - sir / 2, hp, sir);
                   plat(px + pd, cy - sir / 2, hp, sir);
                 }
               }
-             });
-            });
+            };
+            if (kvBand()) {
+              kvMiestaStlpov().forEach((mi) => kresliStlp(mi.px, mi.py, mi.xi, mi.rz, mi.celo));
+            } else {
+              xs.forEach((px, xi) => {
+                const rz = rez(xi);
+                [vsun, W - rz.w - vsun].forEach((py) => kresliStlp(px, py, xi, rz, false));
+              });
+            }
           }
 
           /* Odkvap. Voda z pultovej strechy Koverta steká po spáde k nižšej
@@ -5196,11 +5282,15 @@ function kvAdresa(kluc, zaloha) {
               const ledN = ledXs.length;
               const ledVsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               const ledSections = ledXs.map((_, i) => kvStlpRez(i, ledN));
+              /* Stredný stĺp môže stáť len na jednej strane (tam, kde je
+                 stena); kde nestojí, svetlo sa neprerušuje. */
+              const ledMiesta = kvMiestaStlpov().filter((mi) => !mi.celo);
               ledXs.forEach((px, i) => {
+                const stoji = (strana) => ledMiesta.some((mi) => mi.xi === i && mi.strana === strana);
                 kvAccessoryGeometry.led.blockedPosts.push({
                   axis: 'x', index: i, from: px, to: px + ledSections[i].d,
-                  rearY0: ledVsun, rearY1: ledVsun + ledSections[i].w,
-                  frontY0: W - ledVsun - ledSections[i].w, frontY1: W - ledVsun
+                  rearY0: ledVsun, rearY1: stoji(0) ? ledVsun + ledSections[i].w : ledVsun,
+                  frontY0: stoji(1) ? W - ledVsun - ledSections[i].w : W - ledVsun, frontY1: W - ledVsun
                 });
               });
 
@@ -5213,7 +5303,8 @@ function kvAdresa(kluc, zaloha) {
                 const yBlocks = [];
                 kvAccessoryGeometry.led.blockedPosts.forEach((b) => {
                   if (b.to <= x || b.from >= x + ledW) return;
-                  yBlocks.push([b.rearY0, b.rearY1], [b.frontY0, b.frontY1]);
+                  if (b.rearY1 > b.rearY0) yBlocks.push([b.rearY0, b.rearY1]);
+                  if (b.frontY1 > b.frontY0) yBlocks.push([b.frontY0, b.frontY1]);
                 });
                 subtractIntervals(ledY0, ledY1, yBlocks).forEach((seg) => {
                   ledRun('vaznica' + i, x, seg[0], ledW, seg[1] - seg[0]);
@@ -6425,6 +6516,9 @@ function kvAdresa(kluc, zaloha) {
              Kým to výrobca nepotvrdí, neuberá sa nič; keď potvrdí, je to jedno
              pole v dátach modelu a nie zásah do kódu. */
           const povolene = Array.isArray(model().sideIds) ? model().sideIds : null;
+          /* Koverta: zo všetkých štyroch strán sa uzavrieť nedá — keď už
+             stoja tri steny, štvrtá strana ponúka len „Otvorená“. */
+          const plno = state.sides[side] === 'open' && kvSteny().length >= kvMaxStien();
           SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
             .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
@@ -6441,6 +6535,7 @@ function kvAdresa(kluc, zaloha) {
             b.className = 'sp-sideopt';
             b.dataset.spSideOpt = o.id;
             b.setAttribute('aria-pressed', String(state.sides[side] === o.id));
+            if (o.id !== 'open' && plno) b.disabled = true;
             b.innerHTML = `<span class="sp-sideopt__copy"><strong>${o.label}</strong><em>${o.note}</em></span>`
               + `<i class="sp-sideopt__check" aria-hidden="true"></i>`;
             host.appendChild(b);
@@ -6451,6 +6546,7 @@ function kvAdresa(kluc, zaloha) {
           });
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
+          if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
           if (state.sides[side] === 'zip' && (span > 6500 || state.height > 2800)) {
             note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 2 800 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
           }
@@ -7156,6 +7252,8 @@ function kvAdresa(kluc, zaloha) {
           } else if (t.dataset.spSide) {
             state.activeSide = t.dataset.spSide;
           } else if (t.dataset.spSideOpt) {
+            if (t.dataset.spSideOpt !== 'open' && state.sides[state.activeSide] === 'open'
+                && kvSteny().length >= kvMaxStien()) return;
             state.sides[state.activeSide] = t.dataset.spSideOpt;
             state.sideOpen[state.activeSide] = 0;
           } else if (t.dataset.spFrameColor) {
@@ -7551,6 +7649,10 @@ function kvAdresa(kluc, zaloha) {
           };
           stageEl.addEventListener('pointerup', stop);
           stageEl.addEventListener('pointercancel', stop);
+          /* Ťah prstom po 3D otáča model a stránku neposúva (touch-action:
+             none v CSS). Staršie Safari na iPhone ho nie vždy rešpektuje,
+             preto sa posun stránky počas ťahania zruší aj tu. */
+          canvas.addEventListener('touchmove', (e) => { if (dragging) e.preventDefault(); }, { passive: false });
         }
         cfgRoot.addEventListener('click', (e) => {
           const v = e.target.closest('[data-sp-view]');
@@ -7660,6 +7762,10 @@ function kvAdresa(kluc, zaloha) {
             const v = d.s[k];
             if (v === 'open' || (kluc(v) && SIDE_OPTS.some((o) => o.id === v))) state.sides[k] = v;
           });
+          /* Starší odkaz mohol mať steny zo všetkých štyroch strán. */
+          while (kvSteny().length > kvMaxStien()) {
+            state.sides[['right', 'left', 'front', 'rear'].find((k) => state.sides[k] !== 'open')] = 'open';
+          }
           if (d.c === null || (kluc(d.c) && ma(CARS, d.c))) state.car = d.c;
           if (d.x && typeof d.x === 'object') {
             const strop = {};
