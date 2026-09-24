@@ -1,0 +1,18 @@
+name: Kontrola servera formulára (bez dopytu)
+on:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: ['.github/kontrola-servera/spustit.txt']
+permissions:
+  contents: read
+jobs:
+  kontrola:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ktorá verzia servera beží (GET, nič sa neodosiela)
+        run: |
+          for cesta in api/suhrn api/dopyty api/dopyt; do
+            kod=$(curl -s -o /tmp/telo -w "%{http_code}" --max-time 20 "https://koverta-formular.vercel.app/$cesta")
+            echo "$cesta -> HTTP $kod · $(head -c 160 /tmp/telo | tr '\n' ' ')"
+          done
