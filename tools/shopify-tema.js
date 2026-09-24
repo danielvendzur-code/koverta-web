@@ -200,7 +200,12 @@ function naSubor(url) {
     return "{{ '" + meno + "' | asset_url }}";
   }
   doObchodu.set(meno, path.relative(KOREN, naDisku));
-  if (FOTKY === 'pages') return zakladPages('assets/' + vnutri) + '/assets/' + vnutri;
+  if (FOTKY === 'pages') {
+    const zaklad = zakladPages('assets/' + vnutri);
+    /* ?v=2: prehliadače, ktoré si zapamätali 404 z chvíle pred čistením
+       cache jsDelivr, si súbor stiahnu nanovo. */
+    return zaklad + '/assets/' + vnutri + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '');
+  }
   return "{{ '" + meno + "' | file_url }}";
 }
 
