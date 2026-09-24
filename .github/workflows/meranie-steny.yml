@@ -1,0 +1,15 @@
+name: Meranie stien z Expivi
+on:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: ['.github/meranie-steny/spustit.txt']
+permissions:
+  contents: read
+jobs:
+  meraj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stiahni exporty Expivi a zmeraj lamely stien
+        run: cd .github/meranie-steny && python3 meraj.py
