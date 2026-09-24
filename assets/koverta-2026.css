@@ -14141,3 +14141,12 @@ body.ma-kh-modal { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .kv-header .kv-mega__foto img, .kv-header .kv-drawer__foto img { transition: none !important; }
 }
+
+/* Hviezdička pri povinnom poli formulára (koverta-2026.js, zjednodusFormular). */
+.kh-field .kh-povinne { color: var(--k-amber-deep, #b58900); font-weight: 700; }
+
+/* Lupa: `display: grid` šípok prebíjal atribút `hidden` — pri jedinej fotke
+   boli šípky vidieť, ale nerobili nič. */
+.kv-lupa__sipka[hidden], .kv-lupa__pocitadlo[hidden] { display: none; }
+/* Nadpis okna ponuky: dva vyrovnané riadky, nie jedno slovo na druhom. */
+.kh-modal__hlava h2 { text-wrap: balance; }

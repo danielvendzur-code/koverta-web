@@ -467,11 +467,16 @@ body { background: var(--k-white); color: var(--k-ink); }
     /* Pod lištou webu, keď je vidieť; inak úplne hore. */
     top: var(--kv-lista-vrch, 0px);
     transition: top .2s ease;
-    z-index: 3;
+    /* Nad všetkým, čo pod ňou prejde pri scrollovaní: posuvníky rozmeru
+       majú vrstvu 4, karta vybavenia 7, lupa 8. Pri vrstve 3 cez lištu
+       presvital posuvník (žltá čiara aj bod). Pod celou obrazovkou (80)
+       aj pod hlavičkou webu (80) ostáva. */
+    z-index: 20;
     gap: .4rem;
     margin-inline: calc(-1 * var(--page-padding, 1.5rem));
     padding: .8rem var(--page-padding, 1.5rem);
-    background: rgba(255, 255, 255, 0.96);
+    /* Plná biela: pri 0,96 bolo pod lištou slabo vidieť text aj bod posuvníka. */
+    background: #fff;
     border-bottom: 1px solid var(--k-hair);
   }
   #SoltecPremium .sp-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }

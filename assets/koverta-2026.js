@@ -2754,6 +2754,17 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       const nazov = email.closest('.kh-field') && email.closest('.kh-field').querySelector(':scope > span');
       if (nazov) nazov.textContent = 'E-mail';
     }
+    /* Povinné polia majú hviezdičku. Čítačka povinnosť ohlási z `required`,
+       hviezdička je len pre oko. */
+    form.querySelectorAll('.kh-field input[required], .kh-field textarea[required]').forEach((pole) => {
+      const nazov = pole.closest('.kh-field').querySelector(':scope > span');
+      if (!nazov || nazov.querySelector('.kh-povinne')) return;
+      const hviezda = document.createElement('span');
+      hviezda.className = 'kh-povinne';
+      hviezda.setAttribute('aria-hidden', 'true');
+      hviezda.textContent = ' *';
+      nazov.appendChild(hviezda);
+    });
     const suhlasPole = form.querySelector('.kh-form__suhlas');
     const suhlas = suhlasPole && suhlasPole.querySelector('span');
     const suhlasBox = suhlasPole && suhlasPole.querySelector('input[type="checkbox"]');
@@ -2789,7 +2800,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     modal.setAttribute('data-k-dopyt-modal', '');
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
-      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Pošleme vám cenu na mieru</h2>' +
+      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Zavoláme vám s cenou na mieru</h2>' +
       '<p>Stačí meno a telefón.</p></div>' +
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +
@@ -3002,8 +3013,24 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     };
 
     const viditelnePoradie = (tl) => {
+      /* Fotka z karty na mape: šípky prechádzajú všetky realizácie na mape
+         v poradí zoznamu. Predtým mala lupa v poradí len túto jednu fotku
+         a šípky nerobili nič. */
+      const plocha = tl.classList.contains('kh-mapa__nahlad') && tl.closest('[data-k-mapa]');
+      if (plocha) return [].slice.call(plocha.querySelectorAll('.kh-mapa__nahlad[data-k-lupa]'));
       if (!tl.classList.contains('kh-work__item')) return [tl];
       return galerie.filter((item) => !item.hidden && item.getClientRects().length);
+    };
+
+    /* Pri listovaní v lupe sa na mape vyberie tá istá realizácia, takže po
+       zatvorení ostane otvorená karta, ktorú človek videl naposledy. */
+    const zosynchronizujMapu = (tl) => {
+      const karta = tl.closest('[data-k-mapa-karta]');
+      const plocha = karta && karta.closest('[data-k-mapa]');
+      if (!karta || !plocha || !karta.hidden) return;
+      const spinac = plocha.querySelector('.kh-mapa__polozka[data-k-mapa-bod="' + karta.dataset.kMapaKarta + '"]')
+        || plocha.querySelector('[data-k-mapa-bod="' + karta.dataset.kMapaKarta + '"]');
+      if (spinac) spinac.click();
     };
 
     const ukaz = (index) => {
@@ -3011,6 +3038,10 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       pozicia = (index + poradie.length) % poradie.length;
       const data = udaje(poradie[pozicia]);
       if (!data.zdroj) return;
+      if (odkial && odkial !== poradie[pozicia] && odkial.classList.contains('kh-mapa__nahlad')) {
+        zosynchronizujMapu(poradie[pozicia]);
+        odkial = poradie[pozicia];
+      }
       obrazok.alt = data.alt;
       obrazok.src = data.zdroj;
       popis.textContent = data.titulok;

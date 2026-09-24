@@ -213,6 +213,19 @@ function naKoren(url) {
   if (!bez || bez.includes('/')) return null;
   if (!/\.(webmanifest|txt|xml|ico)$/i.test(bez)) return null;
   if (!fs.existsSync(path.join(KOREN, bez))) return null;
+  /* Súbor, ktorý sa od master líši (napr. manifest s opravenými cestami
+     ikon), by z Pages prišiel v starej podobe. Vtedy ide z jsDelivr
+     z posledného odoslaného commitu, rovnako ako súbor, ktorý na master
+     ešte nie je. */
+  try {
+    const cp = require('child_process');
+    const naMastri = cp.execFileSync('git', ['show', 'origin/master:' + bez], { cwd: KOREN, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    if (naMastri !== fs.readFileSync(path.join(KOREN, bez), 'utf8')) {
+      const sha = cp.execFileSync('git', ['log', '-1', '--format=%H', 'HEAD', '--', bez], { cwd: KOREN, encoding: 'utf8' }).trim();
+      const vzdialene = sha && cp.execFileSync('git', ['branch', '-r', '--contains', sha], { cwd: KOREN, encoding: 'utf8' }).trim();
+      if (sha && vzdialene) return JSDELIVR_ZAKLAD + sha + '/' + bez;
+    }
+  } catch (_) {}
   return PAGES_ZAKLAD + '/' + bez;
 }
 
