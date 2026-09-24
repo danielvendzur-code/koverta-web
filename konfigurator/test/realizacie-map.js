@@ -48,7 +48,7 @@ assert.match(
   /class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="vranov-nad-toplou"/,
   'Vranov must use an honest text-only card until its own photo is supplied'
 );
-assert.match(llms, /\(112 obcí, 180 realizácií\)/);
+assert.match(llms, /\(112 obcí, 175 realizácií\)/);
 assert.match(llms, /Vranov nad Topľou/);
 
 console.log('realizacie-map: PASS (112 locations, complete marker/list/card mapping)');

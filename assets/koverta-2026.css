@@ -14314,9 +14314,10 @@ body.ma-kh-modal { overflow: hidden; }
   body:has(.kh-dock) { padding-bottom: 66px; }
 }
 
-/* Úvod: fotka je v <picture> — na telefóne sa načíta verzia s predĺžením
-   (celá ostrá fotka a pod ňou jej rozmazané pokračovanie do tmavej, pripravené
-   vopred). <picture> sa v rozložení správa, akoby tam nebol. */
+/* Úvod na telefóne: fotka (a video na úvode) je pripravená vopred — orez
+   16 : 10 a pod ním plynulé rozmazané pokračovanie do tmavej (súbory
+   *-mobil.webp / -mobil.mp4). Tu sa len ukáže celá, bez masky a orezu.
+   <picture> sa v rozložení správa, akoby tam nebol. */
 .kh-hero__bg > picture { display: contents; }
 @media (max-width: 759px) {
   .k .kh-hero .kh-hero__bg {
@@ -14326,7 +14327,7 @@ body.ma-kh-modal { overflow: hidden; }
   }
   .k .kh-hero .kh-hero__bg img {
     position: relative !important; inset: auto !important; display: block;
-    width: 100% !important; height: auto !important; object-fit: fill;
+    width: 100% !important; height: auto !important; aspect-ratio: 900 / 724; object-fit: cover;
     -webkit-mask-image: none !important; mask-image: none !important;
   }
   .k-home .kh-hero .kh-hero__video {
@@ -14334,6 +14335,7 @@ body.ma-kh-modal { overflow: hidden; }
     width: 100% !important; height: 100% !important; object-fit: cover;
     -webkit-mask-image: none !important; mask-image: none !important;
   }
+  body:not(.k-home) .k .kh-hero__inner { margin-top: -44px !important; }
 }
 
 /* Prvá obrazovka na telefóne je celá tmavá: úvod siaha až po spodok okna,
@@ -14341,4 +14343,8 @@ body.ma-kh-modal { overflow: hidden; }
    s viditeľným adresným riadkom, takže úvod nikdy nepresahuje obrazovku.) */
 @media (max-width: 759px) {
   body:not(.k-nic) .k .kh-hero.kh-hero { min-height: calc(100svh - var(--kv-hlavicka, 61px)) !important; }
+}
+@media (max-width: 759px) {
+  /* Text úvodu začína hneď pod fotkou; voľné tmavé miesto ostane pod ním. */
+  body:not(.k-nic) .k .kh-hero .kh-hero__box { justify-content: flex-start !important; }
 }
