@@ -1,23 +1,22 @@
-name: Fotky realizácií z Drive (náhľady na výber)
+name: Fotky realizácií na mapu
 on:
   push:
     branches: [claude/practical-dijkstra-d9d0nt]
-    paths: ['.github/drive-fotky/spustit.txt']
+    paths: ['.github/mapa-fotky/fotky.json']
 permissions:
   contents: write
 jobs:
-  nahlady:
+  mapa:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: pip install --quiet pillow
-      - name: Stiahni fotky a sprav náhľady
-        run: python3 .github/drive-fotky/nahlady.py
-      - name: Ulož náhľady do vetvy
+      - run: python3 .github/mapa-fotky/spracuj.py
+      - name: Ulož do vetvy
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/drive-nahlady
-          git commit -m "Náhľady fotiek realizácií z Drive na výber (dočasné)"
+          git add assets/mapa
+          git commit -m "Fotky realizácií na mapu (1280 px, bez EXIF)"
           for i in 1 2 3; do git pull --rebase -q origin claude/practical-dijkstra-d9d0nt && git push -q origin HEAD:claude/practical-dijkstra-d9d0nt && break; sleep 5; done
