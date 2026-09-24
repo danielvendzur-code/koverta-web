@@ -618,6 +618,7 @@ koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
+koverta-technicke-poziadavky-na-podklad.pdf	assets/koverta-technicke-poziadavky-na-podklad.pdf
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
@@ -692,6 +693,8 @@ mapa-cecejovce-mini.jpg	assets/mapa/cecejovce-mini.jpg
 mapa-cecejovce.jpg	assets/mapa/cecejovce.jpg
 mapa-cechynce-mini.jpg	assets/mapa/cechynce-mini.jpg
 mapa-cechynce.jpg	assets/mapa/cechynce.jpg
+mapa-chorvatsky-grob-mini.jpg	assets/mapa/chorvatsky-grob-mini.jpg
+mapa-chorvatsky-grob.jpg	assets/mapa/chorvatsky-grob.jpg
 mapa-cifer-mini.jpg	assets/mapa/cifer-mini.jpg
 mapa-cifer.jpg	assets/mapa/cifer.jpg
 mapa-diviacka-nova-ves-mini.jpg	assets/mapa/diviacka-nova-ves-mini.jpg
@@ -796,8 +799,12 @@ mapa-pohranice-mini.jpg	assets/mapa/pohranice-mini.jpg
 mapa-pohranice.jpg	assets/mapa/pohranice.jpg
 mapa-potvorice-mini.jpg	assets/mapa/potvorice-mini.jpg
 mapa-potvorice.jpg	assets/mapa/potvorice.jpg
+mapa-povazany-mini.jpg	assets/mapa/povazany-mini.jpg
+mapa-povazany.jpg	assets/mapa/povazany.jpg
 mapa-rajec-mini.jpg	assets/mapa/rajec-mini.jpg
 mapa-rajec.jpg	assets/mapa/rajec.jpg
+mapa-rakoluby-mini.jpg	assets/mapa/rakoluby-mini.jpg
+mapa-rakoluby.jpg	assets/mapa/rakoluby.jpg
 mapa-reca-mini.jpg	assets/mapa/reca-mini.jpg
 mapa-reca.jpg	assets/mapa/reca.jpg
 mapa-revuca-mini.jpg	assets/mapa/revuca-mini.jpg

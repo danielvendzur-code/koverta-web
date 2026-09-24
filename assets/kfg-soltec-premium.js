@@ -972,6 +972,7 @@ function kvAdresa(kluc, zaloha) {
           louverColor: BIO.colors[0],
           roofFinish: 0,
           roofSkin: 0,          // krytina strechy G: 0 sklo, 1 zelená
+          kvStrecha: 'trapez',  // Koverta záhradný: trapéz alebo sendvičový panel
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
           sideColor: null,
           activeSide: 'front',
@@ -1085,20 +1086,24 @@ function kvAdresa(kluc, zaloha) {
           return band;
         };
         /* Steny prístrešku Koverta (pokyn majiteľa, 24. 9. 2026):
-           - so stenou stoja stĺpy v rohoch,
-           - bočná stena má stĺp presne v strede, a to len na tej strane,
-             kde stena je (široké prístrešky ho majú na oboch stranách vždy),
-           - zadná a predná stena má stĺp v strede len pri šírke nad 4 m,
-           - zo všetkých štyroch strán sa prístrešok uzavrieť nedá. */
+           - so stenou stoja stĺpy v rohoch a na oboch bokoch po tri
+             (cena v Expivi bola so šiestimi stĺpmi), stredný presne v strede,
+           - zadná stena má stĺp v strede len pri šírke nad 4 m,
+           - stenu možno dať len na zadnú, ľavú a pravú stranu — predná je
+             vjazd (strany zo zoznamu `wallPriced` modelu). */
+        /* Obrys prístrešku na obrazovke (v jednotkách viewBoxu) — dotyk mimo
+           neho na mobile posúva stránku, dotyk na ňom otáča model. */
+        let modelBox = null;
         const kvSteny = () => ((model().kvGeom && model().roofKit === 'koverta')
           ? ['rear', 'front', 'left', 'right'].filter((s) => state.sides[s] && state.sides[s] !== 'open')
           : []);
         const kvStenovyRezim = () => kvSteny().length > 0;
+        const kvPanelVolba = () => model().roofKit === 'koverta' && Boolean(model().kvPanelBySize);
         const kvMaxStien = () => Number(model().maxStien) || 4;
-        const kvStrednyNaBoku = (strana) => {
-          const b = kvBand();
-          return !(b && b.stenovy) || state.sides[strana] !== 'open';
-        };
+        const kvStrednyNaBoku = () => true;
+        const kvStranyStien = () => ((model().kvGeom && model().roofKit === 'koverta' && Array.isArray(model().wallPriced))
+          ? model().wallPriced : null);
+        const kvStenaSmie = (strana) => { const d = kvStranyStien(); return !d || d.indexOf(strana) > -1; };
         const kvStlpyVCele = () => {
           const nad = Number(model().stenaStredStlpNad) || 0;
           if (!nad || !kvStenovyRezim() || widthMM() <= nad) return [];
@@ -1621,11 +1626,22 @@ function kvAdresa(kluc, zaloha) {
             : (m.gridLoads
                 ? m.prices[String(m.gridLoads[state.load])][state.length][state.width]
                 : m.prices[state.length][state.width]);
+          /* Sendvičová strecha záhradného prístrešku Koverta má v Expivi
+             vlastnú cenu celej zostavy; kde ju Expivi nemal, ide na nacenenie. */
+          const panelom = kvPanelVolba() && state.kvStrecha === 'panel';
+          const zaklad = panelom ? (m.kvPanelBySize || {})[`${widthMM()}x${lengthMM()}`] : base;
           /* Bunka, ktorú cenník nepublikuje, sa neúčtuje ako nula — ide do
              súhrnu ako položka na nacenenie. */
-          const baseOk = Number.isFinite(base);
-          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : ''), v: baseOk ? base : null, sum: baseOk ? base : 0 });
+          const baseOk = Number.isFinite(zaklad);
+          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : '') + (panelom ? ' · sendvičová strecha' : ''), v: baseOk ? zaklad : null, sum: baseOk ? zaklad : 0 });
           let open = !baseOk;
+          /* Cenník Soltec: „Štyri stĺpy so zvoleným kotvením sú v cene, každý
+             ďalší stĺp sa účtuje podľa cenníka.“ Dlhšie zostavy a vyššia
+             záťaž stoja na šiestich a viac stĺpoch — tie navyše sa pripočítajú. */
+          if (!kvBand() && Number(m.postExtra) > 0) {
+            const navyse = Math.max(0, postCount() - 4);
+            if (navyse > 0) lines.push({ k: `Ďalšie stĺpy (4 sú v cene): ${navyse} ks`, v: navyse * m.postExtra, sum: navyse * m.postExtra });
+          }
           /* Steny išli v Expivi len so šesťstĺpovou konštrukciou, ktorá je
              pri každom užšom rozmere o 600 € drahšia než štvorstĺpová. Tá
              istá suma sa pripočíta, keď si zákazník stenu vyberie. */
@@ -1633,7 +1649,7 @@ function kvAdresa(kluc, zaloha) {
           if (kvB && kvB.stenovy) {
             const pr = (m.stenyPriplatokBySize || {})[`${widthMM()}x${lengthMM()}`];
             const prOk = Number.isFinite(pr);
-            lines.push({ k: 'Konštrukcia pre steny: stĺpy v rohoch', v: prOk ? pr : null, sum: prOk ? pr : 0 });
+            lines.push({ k: 'Konštrukcia pre steny: 6 stĺpov', v: prOk ? pr : null, sum: prOk ? pr : 0 });
             if (!prOk) open = true;
           }
           for (const side of ['front', 'rear', 'left', 'right']) {
@@ -4179,6 +4195,11 @@ function kvAdresa(kluc, zaloha) {
                    Spodný profil preto začína pri poli lamiel, nie na zemi. */
                 zBase = Math.max(0, KV_SLAT.od);
                 zTop = Math.min(zHead, KV_SLAT.po);
+                /* Horný profil sedí tesne na hornej lamele, rovnako ako spodný
+                   pri spodnej — nie hore pod strechou s medzerou nad lamelami. */
+                const lamelaOd = zBase + gw;
+                const kusov = Math.floor((zTop - gw - lamelaOd + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                if (kusov > 0) zTop = Math.min(zTop, lamelaOd + KV_SLAT.pitch * (Math.min(kusov, 40) - 1) + KV_SLAT.vyska + gw);
                 const frameZ0 = zBase;
                 const frameZ1 = Math.max(frameZ0 + gw, zTop);
                 memb(0, gt, frameZ0, frameZ1, 0, gw, railHex, bayI === 0 ? startEnd : ['+z'], SHAFT);
@@ -5024,7 +5045,8 @@ function kvAdresa(kluc, zaloha) {
             /* Podhľad trapézu je pozinkovaný plech, teda chladná kovová
                strieborná — nie teplá sivá farba steny. Odtieň smie prísť z
                dát stránky, aby sa dal doladiť bez zásahu do rendereru. */
-            const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
+            const kvPanel = kvPanelVolba() && state.kvStrecha === 'panel';
+            const spodHex = kvPanel ? '#e6e4de' : maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -5161,7 +5183,9 @@ function kvAdresa(kluc, zaloha) {
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            /* Sendvičový panel: jadro 3 cm pod vlnou 4 cm, spodok rovný ako
+               pri paneli Soltec — zdola teda plochý podhľad, nie vlna. */
+            drawTrapSurface(tx0, tx1, ty0, ty1, kvPanel ? (() => trapBot - 30) : trapLowerZ, spodHex, false);
             /* Keep the real soffit under the flashing. The upper skin needs
                only a narrow hidden lap beneath the inner edge: cropping it
                exactly at the aperture exposed a jagged lower-skin cut, while
@@ -5529,6 +5553,12 @@ function kvAdresa(kluc, zaloha) {
                R160 160/80; depth is always the first secondary-profile number. */
             const sec = model().secBeam || [80, 50];
             const PANEL = 30;                  // every carport and canopy model says "ISO panel 30 mm"
+            /* SL kryje strešný sendvičový panel: jadro 3 cm a navrchu vlna
+               4 cm, spolu 7 cm (podľa majiteľa a fotiek realizácie SL170).
+               Panel leží na priečnych profiloch a vlny bežia kolmo na ne,
+               teda pozdĺž dĺžky. Vrch vĺn končí tesne pod hornou hranou rámu. */
+            const slSendvic = /^SL/i.test(String(state.model)) && model().roofSheet !== 'trapez' && model().glazed !== true;
+            const RIB = slSendvic ? 40 : 0;
             const rw = sec[1];
             const rd = integratedFall
               ? sec[0]
@@ -5549,7 +5579,9 @@ function kvAdresa(kluc, zaloha) {
             const room = Math.max(0, beam - clear - rd - PANEL - reveal);
             const hide = fallShown ? 0 : Math.min(fall, room);
             const drop = (x) => hide * ((x - inX0) / Math.max(1, inX1 - inX0));
-            const secTop = (x) => (fallShown ? zRim(x) : rimLow) - beam + clear + rd;
+            const secTop = (x) => (slSendvic
+              ? (fallShown ? zRim(x) : rimLow) - 4 - RIB - PANEL
+              : (fallShown ? zRim(x) : rimLow) - beam + clear + rd);
             const integratedSpan = Math.max(1, inY1 - inY0);
             const integratedDrop = integratedSpan * (fallPct / 100);
             /* Canonical panel top-plane function. For F, y0 is the high side and
@@ -5687,7 +5719,7 @@ function kvAdresa(kluc, zaloha) {
             /* ISO panel sa kladie po tabuliach a spoje sú vidieť. Trapézový
                plech beží po spáde v jednom kuse od hrebeňa po odkvap, takže
                priečna škára každý meter by naň nepatrila. */
-            const panelCuts = trapez
+            const panelCuts = (trapez || slSendvic)
               ? [[inX0, inX1]]
               : (integratedFall
                 ? beamRuns.slice(0, -1).map((run, i) => [run.b + 2, beamRuns[i + 1].a - 2]).filter((c) => c[1] - c[0] > 8)
@@ -5751,7 +5783,33 @@ function kvAdresa(kluc, zaloha) {
                to hint at those joints, but WebGL renders only faces, so the
                roof became one perfectly clean slab. Give every internal SL
                boundary a narrow physical joint on both skins. */
-            if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
+            if (slSendvic && !green) {
+              /* Vlny sendvičového panela: lichobežník 40 mm vysoký, dolu
+                 70 mm a hore 28 mm široký, rozteč 333 mm (tri vlny na metrový
+                 modul). Bežia od konca po koniec, kolmo na priečne profily. */
+              const pitch = 333, bh = 35, th = 14;
+              const n = Math.max(3, Math.round((inY1 - inY0) / pitch));
+              const krok = (inY1 - inY0) / n;
+              const vrch = roofFinish.topHex, bok = shade(roofFinish.topHex, -0.12), bok2 = shade(roofFinish.topHex, 0.06);
+              const nl = Math.hypot(RIB, bh - th);
+              for (let i = 0; i < n; i++) {
+                const yc = inY0 + krok * (i + 0.5);
+                const ya = yc - bh, yb = yc + bh, yt0 = yc - th, yt1 = yc + th;
+                const zb = (x, y) => panelTopZ(x, y), zt = (x, y) => panelTopZ(x, y) + RIB;
+                quad([[inX0, yt0, zt(inX0, yt0)], [inX1, yt0, zt(inX1, yt0)], [inX1, yt1, zt(inX1, yt1)], [inX0, yt1, zt(inX0, yt1)]],
+                     vrch, { cull: true, bias: -600, edge: false });
+                quad([[inX0, ya, zb(inX0, ya)], [inX1, ya, zb(inX1, ya)], [inX1, yt0, zt(inX1, yt0)], [inX0, yt0, zt(inX0, yt0)]],
+                     bok, { normal: [0, -RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                quad([[inX0, yt1, zt(inX0, yt1)], [inX1, yt1, zt(inX1, yt1)], [inX1, yb, zb(inX1, yb)], [inX0, yb, zb(inX0, yb)]],
+                     bok2, { normal: [0, RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                [[inX0, -1], [inX1, 1]].forEach(([x, d]) => {
+                  const pts = [[x, ya, zb(x, ya)], [x, yt0, zt(x, yt0)], [x, yt1, zt(x, yt1)], [x, yb, zb(x, yb)]];
+                  quad(d < 0 ? pts.reverse() : pts, shade(vrch, -0.18), { normal: [d, 0, 0], cull: true, bias: -600, edge: false });
+                });
+              }
+              canvas.dataset.panelSeamCount = '0';
+              canvas.dataset.panelRibCount = String(n);
+            } else if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
               const boundaries = cuts.slice(0, -1).map((cut) => cut[1]);
               const halfJoint = 3;
               boundaries.forEach((x) => {
@@ -6035,6 +6093,13 @@ function kvAdresa(kluc, zaloha) {
           const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2 + zoomPan.x*VW;
           const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2 + zoomPan.y*VH;
 
+          {
+            let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+            faces.forEach((f) => { if (f.bg || !Array.isArray(f.p)) return; f.p.forEach((q) => {
+              const x = q.x * scale + ox, y = q.y * scale + oy;
+              if (x < a) a = x; if (x > c) c = x; if (y < b) b = y; if (y > d) d = y; }); });
+            modelBox = Number.isFinite(a) ? { x0: a, y0: b, x1: c, y1: d, VW, VH } : null;
+          }
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
           canvas.setAttribute('aria-label', `${model().label || state.model}, ${widthMM()} krát ${lengthMM()} milimetrov, ${state.frameColor.name}, pohľad ${aboveDepth}`);
@@ -6386,6 +6451,41 @@ function kvAdresa(kluc, zaloha) {
         /* Krytina strechy G. Cenník jej cenu neuvádza, tak voľba mení model
            a text dopytu, nie sumu — a povie to rovno, aby zákazník nečakal,
            že je krytina v cene. */
+        const buildKvStrecha = () => {
+          let wrap = cfgRoot.querySelector('[data-sp-kv-strecha-wrap]');
+          if (!kvPanelVolba()) { if (wrap) wrap.hidden = true; return; }
+          if (!wrap) {
+            const after = cfgRoot.querySelector('[data-sp-frame-colors]');
+            if (!after) return;
+            wrap = document.createElement('div');
+            wrap.className = 'sp-roof-finish';
+            wrap.dataset.spKvStrechaWrap = '';
+            wrap.innerHTML = '<div class="sp-step__label"><b>Strecha</b><span class="sp-step__val" data-sp-kv-strecha-val></span></div>'
+              + '<div class="sp-roofcolors" role="group" aria-label="Strecha" data-sp-kv-strechy></div>'
+              + '<p class="sp-side-note">Sendvičový panel: jadro 3 cm a vlna 4 cm, spolu 7 cm. Zdola rovný podhľad, pod strechou tichšie a menej teplo.</p>';
+            after.after(wrap);
+          }
+          wrap.hidden = false;
+          const moznosti = [
+            { id: 'trapez', label: 'Trapézový plech', about: 'vlna, zdola plech', top: '#9aa3a8', low: '#cfd6dc' },
+            { id: 'panel', label: 'Sendvičový panel', about: '70 mm, zdola rovný', top: '#9aa3a8', low: '#e6e4de' }
+          ];
+          const val = wrap.querySelector('[data-sp-kv-strecha-val]');
+          if (val) val.textContent = (moznosti.find((o) => o.id === state.kvStrecha) || moznosti[0]).label;
+          const host = wrap.querySelector('[data-sp-kv-strechy]');
+          host.textContent = '';
+          moznosti.forEach((o) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'sp-roofchip';
+            b.dataset.spKvStrecha = o.id;
+            b.setAttribute('aria-pressed', String(state.kvStrecha === o.id));
+            b.innerHTML = `<span class="sp-roofchip__sample" aria-hidden="true"><i style="--sp-roof-top:${o.top}"></i><i style="--sp-roof-bottom:${o.low}"></i></span>`
+              + `<span><strong>${o.label}</strong><small>${o.about}</small></span>`;
+            host.appendChild(b);
+          });
+        };
+
         const buildRoofSkins = () => {
           let wrap = cfgRoot.querySelector('[data-sp-roof-skin-wrap]');
           let host = cfgRoot.querySelector('[data-sp-roof-skins]');
@@ -6506,6 +6606,7 @@ function kvAdresa(kluc, zaloha) {
             plan.textContent = `${mm(widthMM())} × ${mm(lengthMM())}`;
           }
           const host = q('[data-sp-side-opts]');
+          if (!kvStenaSmie(state.activeSide)) state.activeSide = kvStranyStien()[0];
           const side = state.activeSide;
           host.textContent = '';
           let lastGroup = '';
@@ -6541,6 +6642,7 @@ function kvAdresa(kluc, zaloha) {
             host.appendChild(b);
           });
           cfgRoot.querySelectorAll('[data-sp-side]').forEach((btn) => {
+            btn.hidden = !kvStenaSmie(btn.dataset.spSide);
             btn.setAttribute('aria-expanded', String(btn.dataset.spSide === side));
             btn.classList.toggle('is-set', state.sides[btn.dataset.spSide] !== 'open');
           });
@@ -7116,6 +7218,7 @@ function kvAdresa(kluc, zaloha) {
           buildNudgers();
           buildRoofFinishes();
           buildRoofSkins();
+          buildKvStrecha();
           buildLoads();
           syncCarPick();
           buildSideOpts();
@@ -7237,6 +7340,7 @@ function kvAdresa(kluc, zaloha) {
           if (!t || !cfgRoot.contains(t)) return;
           if (t.dataset.spModel) {
             state.model = t.dataset.spModel;
+            ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
             refIdx = 0;
             openingSize();
             clampToModel();
@@ -7252,8 +7356,8 @@ function kvAdresa(kluc, zaloha) {
           } else if (t.dataset.spSide) {
             state.activeSide = t.dataset.spSide;
           } else if (t.dataset.spSideOpt) {
-            if (t.dataset.spSideOpt !== 'open' && state.sides[state.activeSide] === 'open'
-                && kvSteny().length >= kvMaxStien()) return;
+            if (t.dataset.spSideOpt !== 'open' && ((state.sides[state.activeSide] === 'open'
+                && kvSteny().length >= kvMaxStien()) || !kvStenaSmie(state.activeSide))) return;
             state.sides[state.activeSide] = t.dataset.spSideOpt;
             state.sideOpen[state.activeSide] = 0;
           } else if (t.dataset.spFrameColor) {
@@ -7263,6 +7367,8 @@ function kvAdresa(kluc, zaloha) {
           } else if (t.dataset.spNudge && t.dataset.spNudgeDir) {
             nudge(t.dataset.spNudge, Number(t.dataset.spNudgeDir));
             return;
+          } else if (t.dataset.spKvStrecha) {
+            state.kvStrecha = t.dataset.spKvStrecha === 'panel' ? 'panel' : 'trapez';
           } else if (t.dataset.spRoofSkin) {
             state.roofSkin = Math.max(0, Math.min(ROOF_SKINS.length - 1, Number(t.dataset.spRoofSkin)));
           } else if (t.dataset.spBoxColor) {
@@ -7292,6 +7398,7 @@ function kvAdresa(kluc, zaloha) {
                    čo nový cenník publikuje. */
                 if (o.model && BIO.models[o.model] && o.model !== state.model) {
                   state.model = o.model;
+                  ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
                   clampIdx();
                 }
               }
@@ -7599,8 +7706,20 @@ function kvAdresa(kluc, zaloha) {
           });
         }
         if (stageEl) {
+          /* Na dotykovej obrazovke otáča model len dotyk na prístrešku;
+             okolo neho sa stránka normálne posúva. */
+          const naModeli = (cx, cy) => {
+            if (!modelBox) return true;
+            const r = canvas.getBoundingClientRect();
+            const s = Math.min(r.width / modelBox.VW, r.height / modelBox.VH);
+            const x = (cx - r.left - (r.width - modelBox.VW * s) / 2) / s;
+            const y = (cy - r.top - (r.height - modelBox.VH * s) / 2) / s;
+            const m = 0.04 * modelBox.VW;
+            return x >= modelBox.x0 - m && x <= modelBox.x1 + m && y >= modelBox.y0 - m && y <= modelBox.y1 + m;
+          };
           stageEl.addEventListener('pointerdown', (e) => {
             if (!canvas.contains(e.target)) return;
+            if (e.pointerType === 'touch' && !dragging && !naModeli(e.clientX, e.clientY)) return;
             stopCamera();
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
@@ -7653,6 +7772,10 @@ function kvAdresa(kluc, zaloha) {
              none v CSS). Staršie Safari na iPhone ho nie vždy rešpektuje,
              preto sa posun stránky počas ťahania zruší aj tu. */
           canvas.addEventListener('touchmove', (e) => { if (dragging) e.preventDefault(); }, { passive: false });
+          canvas.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            if (t && e.touches.length === 1 && naModeli(t.clientX, t.clientY)) e.preventDefault();
+          }, { passive: false });
         }
         cfgRoot.addEventListener('click', (e) => {
           const v = e.target.closest('[data-sp-view]');
@@ -7734,7 +7857,7 @@ function kvAdresa(kluc, zaloha) {
           w: state.widthValue, l: state.lengthValue, h: state.height, ld: state.load,
           lt: Math.round(state.louverT * 100) / 100,
           fc: ralFarby(state.frameColor), lc: ralFarby(state.louverColor), bc: ralFarby(state.boxColor),
-          rf: state.roofFinish, rs: state.roofSkin, s: state.sides, c: state.car, x: state.extras,
+          rf: state.roofFinish, rs: state.roofSkin, ks: state.kvStrecha, s: state.sides, c: state.car, x: state.extras,
           a: state.anchor, b: state.box, ce: state.ceiling, ls: state.ledSet, sn: state.sensors, pk: state.picks
         });
         const obnovZostavu = (d) => {
@@ -7758,11 +7881,14 @@ function kvAdresa(kluc, zaloha) {
           else { const bc = farbaPodlaRal(d.bc); if (bc) state.boxColor = bc; }
           const rf = cislo(d.rf, 0, ROOF_FINISHES.length - 1); if (rf !== null) state.roofFinish = Math.round(rf);
           const rs = cislo(d.rs, 0, ROOF_SKINS.length - 1); if (rs !== null) state.roofSkin = Math.round(rs);
+          if (d.ks === 'panel' || d.ks === 'trapez') state.kvStrecha = d.ks;
           if (d.s && typeof d.s === 'object') ['front', 'rear', 'left', 'right'].forEach((k) => {
             const v = d.s[k];
             if (v === 'open' || (kluc(v) && SIDE_OPTS.some((o) => o.id === v))) state.sides[k] = v;
           });
-          /* Starší odkaz mohol mať steny zo všetkých štyroch strán. */
+          /* Starší odkaz mohol mať steny zo všetkých štyroch strán
+             alebo prednú stenu, ktorú Koverta už neponúka. */
+          ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
           while (kvSteny().length > kvMaxStien()) {
             state.sides[['right', 'left', 'front', 'rear'].find((k) => state.sides[k] !== 'open')] = 'open';
           }
