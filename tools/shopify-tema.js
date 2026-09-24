@@ -633,6 +633,14 @@ ${seoVetvy(v)}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join('\n')}
+{%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
+   ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
+   logá Koverta a Soltec cez celú obrazovku. Odkazy v tele stránky ostávajú,
+   aby poradie štýlov (a teda vzhľad) ostalo presne také isté. {%- endcomment -%}
+{%- if request.page_type == 'page' and page.handle == 'konfigurator' %}
+<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
+{%- endif %}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
