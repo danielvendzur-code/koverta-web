@@ -893,6 +893,52 @@ function kvAdresa(kluc, zaloha) {
          modelu to bola zbytočná práca navyše. */
       gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:particleSeeds.length*6,rainData:null,places:new Map()};
     }
+    /* Maska normál pre nový vykresľovač (kv-render3d).
+
+       Auto sa do spoločnej vyrovnávacej pamäte kreslí len farbou. Mapa normál
+       pod ním preto držala to, čo tam bolo pred ním — stĺp za autom, dlažbu —
+       a zatienenie v kútoch (SSAO) na karosérii počítalo s normálou stĺpa.
+       Jeho obrys potom presvital cez auto, akoby bolo priesvitné. Tento
+       priechod zapíše do mapy normál „bez normály“ všade, kde auto naozaj
+       vidno (rovnaká geometria, hĺbka LEQUAL), a zatienenie ho preskočí
+       rovnako ako oblohu. Farbu ani hĺbku nemení. */
+    function drawNormalMask(gl,camera) {
+      if(!context||typeof WebGL2RenderingContext==='undefined'||!(gl instanceof WebGL2RenderingContext))return false;
+      init(gl);
+      const drawn=currentPlan.items.filter(i=>loaded.has(i.key));
+      if(!drawn.length)return false;
+      if(gpu.mask===undefined) {
+        try {
+          gpu.mask=program(gl,`#version 300 es
+            precision highp float;in vec3 p;uniform float viewportHeight;${projection}uniform vec3 offset;uniform vec2 spin;
+            vec2 turn(vec2 v){return vec2(v.x*spin.x-v.y*spin.y,v.x*spin.y+v.y*spin.x);}
+            void main(){gl_Position=project(vec3(turn(p.xy),p.z)+offset);}`,
+            `#version 300 es
+            precision mediump float;layout(location=1) out vec4 normala;
+            void main(){normala=vec4(0.);}`);
+        } catch(e) { gpu.mask=null; }
+      }
+      const m=gpu.mask;if(!m)return false;
+      const main=gpu.main;
+      for(const name of ['n','c','material']){const loc=A(main,name);if(loc>=0)gl.disableVertexAttribArray(loc);}
+      gl.useProgram(m);uniformCamera(gl,m,camera);
+      gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(false);gl.disable(gl.CULL_FACE);
+      /* Náskok o zlomok hĺbky: iný program môže tú istú polohu vyrátať
+         o posledný bit inak a maska by na karosérii vynechala škvrny. */
+      gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-1,-4);
+      const pa=A(m,'p');gl.enableVertexAttribArray(pa);
+      for(const item of drawn) {
+        const mesh=gpu.meshes.get(item.key);if(!mesh)continue;
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
+        gl.vertexAttribPointer(pa,3,gl.SHORT,false,16,0);
+        gl.uniform3f(U(m,'offset'),item.x,item.y,item.z);
+        gl.uniform2f(U(m,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
+        gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+      }
+      gl.disableVertexAttribArray(pa);
+      gl.disable(gl.POLYGON_OFFSET_FILL);gl.depthMask(true);
+      return true;
+    }
     function draw(gl,camera,weatherOnly=false) {
       if(!context)return;init(gl);
       if(weatherOnly) {
@@ -1027,7 +1073,7 @@ function kvAdresa(kluc, zaloha) {
        snímky líšia osvetlením celého modelu a ten rozdiel sa počíta ako voda.
        Hodnota 'cloud' už nemá tlačidlo, ale renderer jej rozumie a svieti
        ňou rovnako ako dažďom. */
-    return {state,prepare,draw,
+    return {state,prepare,draw,drawNormalMask,
       /* Či `draw` niečo nakreslí: auto so svojím dopadovým tieňom, alebo dážď.
          Vykresľovač podľa toho vie, či musí konštrukciu dekódovať uprostred
          snímku (kv-render3d, vratné kódovanie hrán) — bez vybavenia netreba. */

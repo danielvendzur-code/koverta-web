@@ -2089,6 +2089,7 @@ function kvAdresa(kluc, zaloha) {
               near: kam.near, far: kam.far, mvp: kam.pohladProjekcia, hdr: 1
             };
             if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
+            else if (faza === 'normaly') { if (sceneLife.drawNormalMask) sceneLife.drawNormalMask(gl, opis); }
             else sceneLife.draw(gl, opis, true);
           } : null;
           /* Prázdna scéna nič nekreslí a vykresľovač si potom ušetrí

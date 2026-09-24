@@ -2020,6 +2020,13 @@ void main() {
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.bindVertexArray(null);
         stav.kresliNavyse('nepriehladne', gl, kam);
+        /* Mapa normál pod autom by inak držala stĺp alebo dlažbu za ním
+           a zatienenie by ich obrys nakreslilo na karosériu. Vykresľovač
+           vybavenia tu tie isté plochy zapíše len do druhého výstupu ako
+           „bez normály“ (scene-life.js, drawNormalMask). */
+        gl.drawBuffers([gl.NONE, gl.COLOR_ATTACHMENT1]);
+        stav.kresliNavyse('normaly', gl, kam);
+        gl.depthFunc(gl.LEQUAL);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         gl.useProgram(P);
         gl.bindVertexArray(s.vao);
