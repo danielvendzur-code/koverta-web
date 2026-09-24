@@ -2639,7 +2639,10 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
             miesto: hod('contact[Miesto realizácie]'), sprava: hod('contact[body]'),
             suhlas: hod('contact[Súhlas]'), website: hod('website'),
             startedAt: Number(hod('startedAt')) || 0, stranka: location.href,
-            prilohy: await pripravPrilohy(f)
+            prilohy: await pripravPrilohy(f),
+            /* Prehliadač riadený programom (testy, roboty) — server taký
+               dopyt neposiela e-mailom, aby nevyčerpal denný limit. */
+            automat: navigator.webdriver === true
           };
           /* Na lokálnom serveri (testy, agenti, vývoj) sa dopyt nikdy
              neodošle do ostrého servera — každý beh testu inak poslal obchodu

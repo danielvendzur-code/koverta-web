@@ -25,7 +25,7 @@ function cors(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function text(hodnota, maximum = 3000) {
+export function text(hodnota, maximum = 3000) {
   return String(hodnota || '').trim().slice(0, maximum);
 }
 
@@ -34,7 +34,7 @@ function jedenRiadok(hodnota, maximum) {
   return text(hodnota, maximum).replace(/[\r\n\t]+/g, ' ');
 }
 
-function html(hodnota) {
+export function html(hodnota) {
   return text(hodnota, 10000).replace(/[&<>"']/g, (znak) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
   }[znak]));
@@ -54,6 +54,20 @@ function testovaciDopyt(data) {
      používajú ho testy formulára. */
   if (/^(\+421|0)?900000000$/.test(String(data.telefon || '').replace(/[\s-]/g, ''))) return true;
   return /koverta audit test|nothing is delivered|client-side qa/i.test(data.meno + ' ' + data.sprava);
+}
+
+/* Automatické prehliadače a skripty nesmú minúť denný limit e-mailov —
+   24. 9. ho takéto odosielanie minulo ešte pred 9:00 a dopyty od ľudí potom
+   neodišli. Prehliadač riadený programom (Playwright, Puppeteer, Selenium)
+   hlási navigator.webdriver, web ho posiela ako `automat`; skripty prezradí
+   hlavička User-Agent (alebo to, že žiadnu nemajú). Taký dopyt dostane úspech
+   ako test, ale nič sa neodošle ani neuloží. */
+const AUTOMAT_UA = /HeadlessChrome|Playwright|Puppeteer|PhantomJS|Selenium|WebDriver|Cypress|python-requests|python-urllib|aiohttp|httpx|axios|node-fetch|undici|^node$|curl\/|Wget|Go-http-client|okhttp|libwww|HTTPie|PostmanRuntime|insomnia/i;
+
+function automatickyDopyt(req, telo) {
+  if (telo.automat === true || telo.automat === 'true' || telo.automat === 1) return true;
+  const ua = String(req.headers['user-agent'] || '').trim();
+  return !ua || AUTOMAT_UA.test(ua);
 }
 
 function platnyEmail(email) {
@@ -131,39 +145,48 @@ function zaznamenaj(vysledok, zdroj, navyse = {}) {
   console.log(JSON.stringify({ udalost: 'dopyt', vysledok, ...zdroj, ...navyse }));
 }
 
-/* Denný strop odoslaných e-mailov, spoločný pre všetky inštancie funkcie.
+/* Denné počítadlo odoslaných e-mailov, spoločné pre všetky inštancie funkcie.
    Limity v pamäti platia len v jednej inštancii a Vercel ich pri náraze
-   spustí viac; Resend má pritom jeden denný limit na celý účet. Počítadlo
-   leží v úložisku Blob. Potvrdenia návštevníkom sa vypnú skôr (nie sú
-   nutné), dopyt pre obchod ide do posledného slotu a aj nad stropom sa
-   uloží do archívu, takže sa nestratí. */
+   spustí viac; Resend má pritom jeden denný limit na celý účet (bezplatný
+   plán 100 e-mailov). Počítadlo leží v úložisku Blob. */
 const DENNY_STROP = () => Number(process.env.MAX_EMAILOV_DEN || 90);
-/* Potvrdenia sa vypnú až desať e-mailov pred denným stropom — tých desať
-   ostáva na dopyty pre obchod. Pri 60 ich vypla už dávka cudzích testov
-   a skutočný zákazník potom potvrdenie nedostal. */
+/* Potvrdenia návštevníkom (nie sú nutné) sa vypnú desať e-mailov pred
+   denným stropom. Pri 60 ich vypla už dávka cudzích testov a skutočný
+   zákazník potom potvrdenie nedostal. Dopyt pre obchod sa skúsi poslať vždy,
+   kým ho Resend prijme; keď už neprijme, dopyt ostane uložený a príde ráno
+   v súhrne (api/suhrn.js). */
 const STROP_POTVRDENI = () => Number(process.env.MAX_EMAILOV_S_POTVRDENIM || Math.max(0, DENNY_STROP() - 10));
 /* Jedna adresa dostane najviac päť potvrdení za deň (ochrana pred
    zneužitím formulára na posielanie správ cudzím ľuďom). */
 const POTVRDENI_NA_ADRESU = 5;
+/* Z jedného zariadenia (odtlačok IP) ide e-mailom najviac päť dopytov za
+   deň. Ďalšie sa uložia a prídu ráno v súhrne — jeden stroj tak nemôže
+   minúť denný limit za všetkých. */
+const DOPYTOV_ZO_ZARIADENIA = 5;
+export const STAV_ODOSLANY = 'odoslaný';
+export const STAV_CAKA = 'čaká na odoslanie';
 const cestaPocitadla = () => `limity/${new Date().toISOString().slice(0, 10)}.json`;
 
-async function nacitajPocitadlo() {
+export async function nacitajPocitadlo() {
   try {
     const r = await get(cestaPocitadla(), { access: 'private', useCache: false });
-    if (!r || !r.stream) return { odoslane: 0, etag: null };
+    if (!r || !r.stream) return { odoslane: 0, zariadenia: {}, etag: null };
     const data = await new Response(r.stream).json();
-    return { odoslane: Number(data.odoslane) || 0, etag: r.blob.etag };
+    const zariadenia = data.zariadenia && typeof data.zariadenia === 'object' ? data.zariadenia : {};
+    return { odoslane: Number(data.odoslane) || 0, zariadenia, etag: r.blob.etag };
   } catch (_) {
     return null;   /* počítadlo nie je dostupné: strop sa neuplatní, dopyt áno */
   }
 }
 
-async function zapocitaj(kolko) {
+export async function zapocitaj(kolko, zariadenie) {
   for (let pokus = 0; pokus < 3; pokus += 1) {
     const stav = await nacitajPocitadlo();
     if (!stav) return;
+    const zariadenia = { ...stav.zariadenia };
+    if (zariadenie) zariadenia[zariadenie] = (Number(zariadenia[zariadenie]) || 0) + 1;
     try {
-      await put(cestaPocitadla(), JSON.stringify({ odoslane: stav.odoslane + kolko, zmenene: new Date().toISOString() }), {
+      await put(cestaPocitadla(), JSON.stringify({ odoslane: stav.odoslane + kolko, zariadenia, zmenene: new Date().toISOString() }), {
         access: 'private', contentType: 'application/json', addRandomSuffix: false,
         ...(stav.etag ? { ifMatch: stav.etag } : { allowOverwrite: false })
       });
@@ -172,19 +195,37 @@ async function zapocitaj(kolko) {
   }
 }
 
-async function odosliResend(apiKey, sprava, idempotencyKey) {
-  const odpoved = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Idempotency-Key': idempotencyKey
-    },
-    body: JSON.stringify(sprava)
+/* Chyba 429: priveľa požiadaviek za sekundu (stačí chvíľu počkať) alebo
+   vyčerpaný denný či mesačný limit (tam čakanie nepomôže). */
+export async function odosliResend(apiKey, sprava, idempotencyKey) {
+  for (let pokus = 1; ; pokus += 1) {
+    const odpoved = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey
+      },
+      body: JSON.stringify(sprava)
+    });
+    const data = await odpoved.json().catch(() => ({}));
+    if (odpoved.ok) return data;
+    if (odpoved.status === 429 && pokus === 1 && !/quota/i.test(`${data.name || ''} ${data.message || ''}`)) {
+      await new Promise((hotovo) => setTimeout(hotovo, 1200));
+      continue;
+    }
+    const chyba = new Error(`RESEND_${odpoved.status}:${data.message || 'odoslanie zlyhalo'}`);
+    chyba.status = odpoved.status;
+    throw chyba;
+  }
+}
+
+/* Prepíše stav e-mailu v uloženom dopyte (zoznam dopytov aj ranný súhrn
+   podľa neho vedia, čo ešte neodišlo). */
+export async function zapisStav(zaznam, stavEmailu) {
+  await put(zaznam.archivePath, JSON.stringify({ ...zaznam, stavEmailu }, null, 2), {
+    access: 'private', contentType: 'application/json; charset=utf-8', addRandomSuffix: false, allowOverwrite: true
   });
-  const data = await odpoved.json().catch(() => ({}));
-  if (!odpoved.ok) throw new Error(`RESEND_${odpoved.status}:${data.message || 'odoslanie zlyhalo'}`);
-  return data;
 }
 
 async function archivujDopyt(data, attachments, id, stavEmailu, zdroj) {
@@ -216,9 +257,9 @@ async function archivujDopyt(data, attachments, id, stavEmailu, zdroj) {
    ho spoľahlivo zobrazí aj Outlook. */
 const LOGO_URL = process.env.LOGO_URL
   || 'https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0002d10e0530d0ec3e3da4e0d35306af8a458c5a/assets/koverta-logo-email.png';
-const PISMO = 'Arial,Helvetica,sans-serif';
+export const PISMO = 'Arial,Helvetica,sans-serif';
 
-function emailKostra({ titulok, predhlavicka, telo, pata }) {
+export function emailKostra({ titulok, predhlavicka, telo, pata }) {
   return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${html(titulok)}</title></head>`
     + `<body style="margin:0;padding:0;background:#f4f3f0;-webkit-text-size-adjust:100%">`
     + `<div style="display:none;max-height:0;overflow:hidden;opacity:0">${html(predhlavicka)}</div>`
@@ -231,7 +272,7 @@ function emailKostra({ titulok, predhlavicka, telo, pata }) {
     + `</table></td></tr></table></body></html>`;
 }
 
-function emailTlacidlo(odkaz, text, hlavne) {
+export function emailTlacidlo(odkaz, text, hlavne) {
   const styl = hlavne
     ? 'background:#ffcc00;color:#12171a;border:1px solid #ffcc00'
     : 'background:#ffffff;color:#12171a;border:1px solid #c9c5bb';
@@ -239,12 +280,12 @@ function emailTlacidlo(odkaz, text, hlavne) {
 }
 
 /* Telefón do odkazu tel: — len číslice a plus, nič iné sa do adresy nedostane. */
-function telOdkaz(telefon) {
+export function telOdkaz(telefon) {
   return 'tel:' + String(telefon || '').replace(/[^\d+]/g, '');
 }
 
 /* Stránka, z ktorej dopyt prišiel, je odkaz len vtedy, keď je naša. */
-function odkazStranky(stranka) {
+export function odkazStranky(stranka) {
   const t = text(stranka, 800);
   if (!/^https:\/\/((www\.)?koverta\.sk|danielvendzur-code\.github\.io)\//i.test(t)) return html(t);
   const kratka = t.replace(/^https:\/\/(www\.)?/i, '').replace(/[?#].*$/, '');
@@ -317,6 +358,10 @@ export default async function handler(req, res) {
     zaznamenaj('TEST_ZAHODENY', zdroj, { domenaNavstevnika: data.email.split('@')[1] || '' });
     return res.status(200).json({ ok: true, test: true });
   }
+  if (automatickyDopyt(req, telo)) {
+    zaznamenaj('AUTOMAT_ZAHODENY', zdroj, { domenaNavstevnika: data.email.split('@')[1] || '' });
+    return res.status(200).json({ ok: true, test: true });
+  }
 
   let attachments;
   try { attachments = prilohy(telo.prilohy); }
@@ -336,17 +381,28 @@ export default async function handler(req, res) {
   try {
     const pocitadlo = await nacitajPocitadlo();
     const odoslaneDnes = pocitadlo ? pocitadlo.odoslane : 0;
-    if (odoslaneDnes >= DENNY_STROP()) {
-      /* Nad stropom sa e-mail neposiela, dopyt sa však uloží a je v zozname
-         dopytov. Návštevník dostane úspech — dopyt naozaj máme. */
-      await archivujDopyt(data, attachments, id, 'neodoslaný – denný strop e-mailov', zdroj);
-      zaznamenaj('STROP_EMAILOV', zdroj, { odoslaneDnes });
+    const zoZariadenia = pocitadlo ? Number(pocitadlo.zariadenia[zdroj.ip]) || 0 : 0;
+    if (zoZariadenia >= DOPYTOV_ZO_ZARIADENIA) {
+      /* Dopyt sa uloží a príde ráno v súhrne. Návštevník dostane úspech —
+         dopyt naozaj máme. */
+      await archivujDopyt(data, attachments, id, 'neodoslaný – veľa dopytov z jedného zariadenia', zdroj);
+      zaznamenaj('LIMIT_ZARIADENIA', zdroj, { zoZariadenia, odoslaneDnes });
       return res.status(200).json({ ok: true, id });
     }
-    const archiv = await archivujDopyt(data, attachments, id, 'čaká na odoslanie', zdroj);
-    const vysledok = await odosliResend(apiKey, {
-      from, to: [to], ...(data.email ? { reply_to: data.email } : {}), subject: predmet, html: obsah, attachments
-    }, `dopyt-${id}`);
+    const archiv = await archivujDopyt(data, attachments, id, STAV_CAKA, zdroj);
+    let vysledok;
+    try {
+      vysledok = await odosliResend(apiKey, {
+        from, to: [to], ...(data.email ? { reply_to: data.email } : {}), subject: predmet, html: obsah, attachments
+      }, `dopyt-${id}`);
+    } catch (chyba) {
+      if (chyba.status !== 429) throw chyba;
+      /* Resend dnes už viac e-mailov neprijme. Dopyt ostáva uložený, príde
+         ráno v súhrne a návštevník dostane úspech — dopyt naozaj máme. */
+      await zapisStav(archiv, 'neodoslaný – denný limit e-mailov').catch(() => null);
+      zaznamenaj('LIMIT_RESENDU', zdroj, { odoslaneDnes, chyba: String(chyba.message).slice(0, 200) });
+      return res.status(200).json({ ok: true, id });
+    }
     let odoslane = 1;
 
     /* Potvrdenie ide na adresu, ktorú zadal návštevník. Aby sa formulár nedal
@@ -371,11 +427,9 @@ export default async function handler(req, res) {
         .catch((chyba) => { zaznamenaj('POTVRDENIE_ZLYHALO', zdroj, { chyba: String(chyba.message).slice(0, 200) }); return null; });
       if (potvrdene) odoslane += 1;
     }
-    await zapocitaj(odoslane).catch(() => null);
+    await zapocitaj(odoslane, zdroj.ip).catch(() => null);
     zaznamenaj('ODOSLANE', zdroj, { emailov: odoslane, odoslaneDnes: odoslaneDnes + odoslane, domenaNavstevnika: data.email.split('@')[1] || '' });
-    await put(archiv.archivePath, JSON.stringify({ ...archiv, stavEmailu: 'odoslaný' }, null, 2), {
-      access: 'private', contentType: 'application/json; charset=utf-8', addRandomSuffix: false, allowOverwrite: true
-    }).catch(() => null);
+    await zapisStav(archiv, STAV_ODOSLANY).catch(() => null);
     return res.status(200).json({ ok: true, id: vysledok.id });
   } catch (chyba) {
     console.error('Dopyt sa nepodarilo odoslať:', chyba.message);

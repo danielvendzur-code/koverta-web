@@ -2,8 +2,14 @@
   "functions": {
     "api/dopyt.js": {
       "maxDuration": 15
+    },
+    "api/suhrn.js": {
+      "maxDuration": 30
     }
   },
+  "crons": [
+    { "path": "/api/suhrn", "schedule": "0 5 * * *" }
+  ],
   "headers": [
     {
       "source": "/api/dopyt",

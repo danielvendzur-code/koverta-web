@@ -9,6 +9,9 @@ import handler from './dopyt.js';
 delete process.env.RESEND_API_KEY;
 delete process.env.BLOB_READ_WRITE_TOKEN;
 
+/* Bežný mobilný prehliadač — bez neho by server požiadavku bral ako skript. */
+const PREHLIADAC = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1';
+
 function odpoved() {
   return {
     headers: {}, statusCode: 200, body: null,
@@ -20,7 +23,7 @@ function odpoved() {
 }
 
 function poziadavka(body = {}, origin = 'https://koverta.sk', method = 'POST') {
-  return { method, body, headers: { origin, 'x-forwarded-for': `127.0.0.${Math.floor(Math.random() * 200 + 1)}` }, socket: {} };
+  return { method, body, headers: { origin, 'user-agent': PREHLIADAC, 'x-forwarded-for': `127.0.0.${Math.floor(Math.random() * 200 + 1)}` }, socket: {} };
 }
 
 test('CORS preflight povolí produkčnú doménu', async () => {
