@@ -692,8 +692,6 @@ mapa-cecejovce-mini.jpg	assets/mapa/cecejovce-mini.jpg
 mapa-cecejovce.jpg	assets/mapa/cecejovce.jpg
 mapa-cechynce-mini.jpg	assets/mapa/cechynce-mini.jpg
 mapa-cechynce.jpg	assets/mapa/cechynce.jpg
-mapa-chorvatsky-grob-mini.jpg	assets/mapa/chorvatsky-grob-mini.jpg
-mapa-chorvatsky-grob.jpg	assets/mapa/chorvatsky-grob.jpg
 mapa-cifer-mini.jpg	assets/mapa/cifer-mini.jpg
 mapa-cifer.jpg	assets/mapa/cifer.jpg
 mapa-diviacka-nova-ves-mini.jpg	assets/mapa/diviacka-nova-ves-mini.jpg
