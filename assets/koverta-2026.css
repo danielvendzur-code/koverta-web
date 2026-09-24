@@ -14387,3 +14387,23 @@ body.ma-kh-modal { overflow: hidden; }
   body:not(.k-home) .k .kh-hero .kh-hero__box > .k-display { min-height: 3lh; align-content: end; }
   body:not(.k-home) .k .kh-hero .kh-hero__box > .kh-hero__lead { min-height: 3lh; }
 }
+
+/* Úvodná stránka na telefóne: video je nižšie a jeho spodok plynulo
+   stmavne (bez rozmazania), aby sa nad lištu Safari zmestil nadpis, text,
+   obe tlačidlá aj hodnotenie Google. Pod lištou je tmavý úvod, nie biela. */
+@media (max-width: 759px) {
+  .k-home .kh-hero .kh-hero__bg { position: relative; }
+  .k-home .kh-hero .kh-hero__bg img { aspect-ratio: auto !important; height: clamp(200px, 36svh, 314px) !important; object-fit: cover; object-position: 50% 40%; }
+  .k-home .kh-hero .kh-hero__bg::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 45%; z-index: 2; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(18, 23, 26, 0) 0%, rgba(18, 23, 26, .55) 55%, #12171a 100%);
+  }
+  .k-home .kh-hero__inner { margin-top: -40px !important; position: relative; z-index: 3; }
+  .k-home .kh-hero__box { padding-top: 0 !important; }
+  body.k-home .k .kh-hero.kh-hero { min-height: calc(100lvh - var(--kv-hlavicka, 61px)) !important; }
+}
+/* Nízke telefóny (iPhone SE, mini): video ešte nižšie, aby hodnotenie
+   ostalo nad lištou. */
+@media (max-width: 759px) and (max-height: 640px) {
+  .k-home .kh-hero .kh-hero__bg img { height: clamp(150px, 28svh, 200px) !important; }
+}
