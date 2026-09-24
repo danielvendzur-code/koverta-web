@@ -301,6 +301,7 @@ foto-img_4789-w1000.jpg	assets/foto/img_4789-w1000.jpg
 foto-img_5268-w1000-w1000.webp	assets/foto/img_5268-w1000-w1000.webp
 foto-img_5268-w1000-w640.webp	assets/foto/img_5268-w1000-w640.webp
 foto-img_5268-w1000.jpg	assets/foto/img_5268-w1000.jpg
+foto-img_5269-mobil.webp	assets/foto/img_5269-mobil.webp
 foto-img_5269-w1000-w1000.webp	assets/foto/img_5269-w1000-w1000.webp
 foto-img_5269-w1000-w640.webp	assets/foto/img_5269-w1000-w640.webp
 foto-img_5269-w1000.jpg	assets/foto/img_5269-w1000.jpg
@@ -542,7 +543,8 @@ koverta-carport-lamely-stena.jpg	assets/koverta-carport-lamely-stena.jpg
 koverta-carport-pri-garazi-w1000.webp	assets/koverta-carport-pri-garazi-w1000.webp
 koverta-carport-pri-garazi-w640.webp	assets/koverta-carport-pri-garazi-w640.webp
 koverta-carport-pri-garazi.jpg	assets/koverta-carport-pri-garazi.jpg
-koverta-hero-sibenik-540p.mp4	assets/koverta-hero-sibenik-540p.mp4
+koverta-hero-sibenik-mobil-predlz.mp4	assets/koverta-hero-sibenik-mobil-predlz.mp4
+koverta-hero-sibenik-poster-mobil.webp	assets/koverta-hero-sibenik-poster-mobil.webp
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
 koverta-hero-sibenik-poster-w1600.webp	assets/koverta-hero-sibenik-poster-w1600.webp
 koverta-hero-sibenik-poster-w640.webp	assets/koverta-hero-sibenik-poster-w640.webp
@@ -555,6 +557,7 @@ koverta-navrh-konfigurator-3d-w1000.webp	assets/koverta-navrh-konfigurator-3d-w1
 koverta-navrh-konfigurator-3d-w1600.webp	assets/koverta-navrh-konfigurator-3d-w1600.webp
 koverta-navrh-konfigurator-3d-w640.webp	assets/koverta-navrh-konfigurator-3d-w640.webp
 koverta-navrh-konfigurator-3d.jpg	assets/koverta-navrh-konfigurator-3d.jpg
+koverta-pristresok-auto-golf-lamelova-stena-mobil.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-mobil.webp
 koverta-pristresok-auto-golf-lamelova-stena-w1000.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w1000.webp
 koverta-pristresok-auto-golf-lamelova-stena-w1600.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w1600.webp
 koverta-pristresok-auto-golf-lamelova-stena-w640.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w640.webp
@@ -619,6 +622,7 @@ koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
 koverta-technicke-poziadavky-na-podklad.pdf	assets/koverta-technicke-poziadavky-na-podklad.pdf
+koverta-zahradny-pristresok-antracit-lamelova-stena-mobil.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-mobil.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
@@ -626,6 +630,7 @@ koverta-zahradny-pristresok-antracit-lamelova-stena.jpg	assets/koverta-zahradny-
 koverta-zahradny-pristresok-bratislava-detail-w1000.webp	assets/koverta-zahradny-pristresok-bratislava-detail-w1000.webp
 koverta-zahradny-pristresok-bratislava-detail-w640.webp	assets/koverta-zahradny-pristresok-bratislava-detail-w640.webp
 koverta-zahradny-pristresok-bratislava-detail.jpg	assets/koverta-zahradny-pristresok-bratislava-detail.jpg
+koverta-zahradny-pristresok-bratislava-hero-mobil.webp	assets/koverta-zahradny-pristresok-bratislava-hero-mobil.webp
 koverta-zahradny-pristresok-bratislava-hero-w1000.webp	assets/koverta-zahradny-pristresok-bratislava-hero-w1000.webp
 koverta-zahradny-pristresok-bratislava-hero-w1600.webp	assets/koverta-zahradny-pristresok-bratislava-hero-w1600.webp
 koverta-zahradny-pristresok-bratislava-hero-w640.webp	assets/koverta-zahradny-pristresok-bratislava-hero-w640.webp
@@ -1013,6 +1018,7 @@ soltec-carport-toth-nitra-clean-w1000.webp	assets/soltec-carport-toth-nitra-clea
 soltec-carport-toth-nitra-clean-w1600.webp	assets/soltec-carport-toth-nitra-clean-w1600.webp
 soltec-carport-toth-nitra-clean-w640.webp	assets/soltec-carport-toth-nitra-clean-w640.webp
 soltec-carport-toth-nitra-clean.jpg	assets/soltec-carport-toth-nitra-clean.jpg
+soltec-carport-toth-nitra-hero-mobil.webp	assets/soltec-carport-toth-nitra-hero-mobil.webp
 soltec-carport-toth-nitra-hero-w1000.webp	assets/soltec-carport-toth-nitra-hero-w1000.webp
 soltec-carport-toth-nitra-hero-w1600.webp	assets/soltec-carport-toth-nitra-hero-w1600.webp
 soltec-carport-toth-nitra-hero-w640.webp	assets/soltec-carport-toth-nitra-hero-w640.webp
@@ -1041,6 +1047,7 @@ soltec-kuchyna-station-mini.jpg	assets/soltec-kuchyna-station-mini.jpg
 soltec-kuchyna-terasa.jpg	assets/soltec-kuchyna-terasa.jpg
 soltec-kuchyna-vecer.jpg	assets/soltec-kuchyna-vecer.jpg
 soltec-mark.png	assets/soltec-mark.png
+soltec-outdoor-kuchyna-graz-mobil.webp	assets/soltec-outdoor-kuchyna-graz-mobil.webp
 soltec-outdoor-kuchyna-graz-w1000.webp	assets/soltec-outdoor-kuchyna-graz-w1000.webp
 soltec-outdoor-kuchyna-graz-w640.webp	assets/soltec-outdoor-kuchyna-graz-w640.webp
 soltec-outdoor-kuchyna-graz.jpg	assets/soltec-outdoor-kuchyna-graz.jpg
@@ -1075,6 +1082,7 @@ soltec-pergola-osadenie-strecha-na-konstrukcii.png	assets/soltec-pergola-osadeni
 soltec-pergola-osadenie-v-rohu-dvoch-stien.png	assets/soltec-pergola-osadenie-v-rohu-dvoch-stien.png
 soltec-pergola-osadenie-volne-stojaca-predsadena.png	assets/soltec-pergola-osadenie-volne-stojaca-predsadena.png
 soltec-pergola-osadenie-volne-stojaca.png	assets/soltec-pergola-osadenie-volne-stojaca.png
+soltec-pergola-plna-strecha-pri-dome-mobil.webp	assets/soltec-pergola-plna-strecha-pri-dome-mobil.webp
 soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1000.webp
 soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
 soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
@@ -1086,6 +1094,7 @@ soltec-pergola-presklenie-restauracia-w1000.webp	assets/soltec-pergola-preskleni
 soltec-pergola-presklenie-restauracia-w1600.webp	assets/soltec-pergola-presklenie-restauracia-w1600.webp
 soltec-pergola-presklenie-restauracia-w640.webp	assets/soltec-pergola-presklenie-restauracia-w640.webp
 soltec-pergola-presklenie-restauracia.webp	assets/soltec-pergola-presklenie-restauracia.webp
+soltec-pergola-pri-bazene-antracit-mobil.webp	assets/soltec-pergola-pri-bazene-antracit-mobil.webp
 soltec-pergola-pri-bazene-antracit-w1000.webp	assets/soltec-pergola-pri-bazene-antracit-w1000.webp
 soltec-pergola-pri-bazene-antracit-w1600.webp	assets/soltec-pergola-pri-bazene-antracit-w1600.webp
 soltec-pergola-pri-bazene-antracit-w640.webp	assets/soltec-pergola-pri-bazene-antracit-w640.webp
@@ -1107,6 +1116,7 @@ soltec-pergola-zip-roleta-nad-terasou-w1000.webp	assets/soltec-pergola-zip-rolet
 soltec-pergola-zip-roleta-nad-terasou-w1600.webp	assets/soltec-pergola-zip-roleta-nad-terasou-w1600.webp
 soltec-pergola-zip-roleta-nad-terasou-w640.webp	assets/soltec-pergola-zip-roleta-nad-terasou-w640.webp
 soltec-pergola-zip-roleta-nad-terasou.jpg	assets/soltec-pergola-zip-roleta-nad-terasou.jpg
+soltec-pergola-zip-rolety-a-pevne-vyplne-mobil.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-mobil.webp
 soltec-pergola-zip-rolety-a-pevne-vyplne-w1000.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w1000.webp
 soltec-pergola-zip-rolety-a-pevne-vyplne-w1600.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w1600.webp
 soltec-pergola-zip-rolety-a-pevne-vyplne-w640.webp	assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w640.webp
