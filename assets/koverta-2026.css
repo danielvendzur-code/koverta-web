@@ -14348,3 +14348,9 @@ body.ma-kh-modal { overflow: hidden; }
   /* Text úvodu začína hneď pod fotkou; voľné tmavé miesto ostane pod ním. */
   body:not(.k-nic) .k .kh-hero .kh-hero__box { justify-content: flex-start !important; }
 }
+
+/* Nákres podkladu (3D rez s popismi) sa do karty zmestí celý — orezanie
+   na 4 : 3 by odrezalo popisy po stranách. Klik ho otvorí vo veľkom. */
+.k .kh-mat__media--nakres { background: #f6f5f2; aspect-ratio: 16 / 10; }
+.k .kh-mat__media--nakres a { display: block; width: 100%; height: 100%; cursor: zoom-in; }
+.k .kh-mat__media--nakres img { object-fit: contain; transform: none !important; }
