@@ -685,6 +685,9 @@
   var ROOT = '#SoltecPremium';
 
   function farbaDoAdresy() {
+    /* Celú zostavu (model, výšku, steny, doplnky) zapíše konfigurátor;
+       tu sa len postará, aby bola v adrese hneď, nie až o chvíľu. */
+    if (typeof window.kvZapisZostavu === 'function') { try { window.kvZapisZostavu(); } catch (e) {} }
     var q;
     try { q = new URLSearchParams(location.search); } catch (e) { return; }
     var vybrana = document.querySelector(ROOT + ' [data-sp-frame-color][aria-pressed="true"]');

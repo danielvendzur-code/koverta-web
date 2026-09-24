@@ -7071,6 +7071,7 @@ function kvAdresa(kluc, zaloha) {
             chartMarker.querySelector('[data-sp-mc]').setAttribute('cx', cx);
             chartMarker.querySelector('[data-sp-mc]').setAttribute('cy', cy);
           }
+          planujZapisZostavy();
           drawStage();
         };
 
@@ -7580,6 +7581,7 @@ function kvAdresa(kluc, zaloha) {
           if (!b) return;
           state.car = b.dataset.spCar || null;
           syncCarPick();
+          planujZapisZostavy();
           drawStage();
         });
 
@@ -7607,6 +7609,118 @@ function kvAdresa(kluc, zaloha) {
           if(window.SP_TEST) { window.SP_TEST.scene=()=>sceneLife.snapshot();
             window.SP_TEST.sceneWeather=(w)=>sceneLife.setWeather(w); }
         }
+        /* --- Zostava v adrese ---------------------------------------------
+           Odkaz na zostavu (Zdieľať, Poslať túto zostavu → dopyt) niesol len
+           rozmer a farbu. Model, výška, steny, doplnky aj snímače sa po
+           otvorení stratili a pri Soltecu sa rozmer orezal na predvolený
+           model — odkaz z dopytu tak ukázal niečo iné, než zákazník poslal.
+           Celá zostava sa preto zapisuje do parametra `z` (JSON v base64url)
+           a pri otvorení sa z neho obnoví. Pri obnove sa každá hodnota overí
+           proti tomu, čo táto stránka konfigurátora pozná; neznáma alebo
+           poškodená hodnota sa ticho preskočí a ostane predvolená. */
+        const ZOSTAVA_VERZIA = 1;
+        const kodujZostavu = (data) => btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const dekodujZostavu = (text) => {
+          const b64 = String(text).replace(/-/g, '+').replace(/_/g, '/');
+          return JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
+        };
+        const ralFarby = (c) => (c && c.ral) || null;
+        const farbaPodlaRal = (ral) => (typeof ral === 'string' && BIO.colors.find((c) => c.ral === ral)) || null;
+        const zostavaData = () => ({
+          v: ZOSTAVA_VERZIA, p: BIO.page || '', m: state.model, pl: state.placement,
+          w: state.widthValue, l: state.lengthValue, h: state.height, ld: state.load,
+          lt: Math.round(state.louverT * 100) / 100,
+          fc: ralFarby(state.frameColor), lc: ralFarby(state.louverColor), bc: ralFarby(state.boxColor),
+          rf: state.roofFinish, rs: state.roofSkin, s: state.sides, c: state.car, x: state.extras,
+          a: state.anchor, b: state.box, ce: state.ceiling, ls: state.ledSet, sn: state.sensors, pk: state.picks
+        });
+        const obnovZostavu = (d) => {
+          if (!d || typeof d !== 'object' || d.v !== ZOSTAVA_VERZIA || (d.p && d.p !== (BIO.page || ''))) return false;
+          const cislo = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : null);
+          /* Kľúč sa berie len ako vlastná položka zoznamu (napr. model „240/60“),
+             nikdy nie niečo zdedené ako „constructor“. */
+          const kluc = (v) => (typeof v === 'string' && v.length > 0 && v.length <= 40 ? v : null);
+          const ma = (o, k) => Boolean(o) && Object.prototype.hasOwnProperty.call(o, k);
+          if (kluc(d.m) && ma(BIO.models, d.m)) state.model = d.m;
+          if (kluc(d.pl) && PLACEMENTS.some((pp) => pp.id === d.pl)) state.placement = d.pl;
+          const w = cislo(d.w, 1, 100000), l = cislo(d.l, 1, 100000), h = cislo(d.h, 1, 10000);
+          if (w) state.widthValue = Math.round(w);
+          if (l) state.lengthValue = Math.round(l);
+          if (h) state.height = Math.round(h);
+          const ld = cislo(d.ld, 0, 50); if (ld !== null) state.load = Math.round(ld);
+          const lt = cislo(d.lt, 0, 1); if (lt !== null) state.louverT = lt;
+          const fc = farbaPodlaRal(d.fc); if (fc) state.frameColor = fc;
+          const lc = farbaPodlaRal(d.lc); if (lc) state.louverColor = lc;
+          if (d.bc === null) state.boxColor = null;
+          else { const bc = farbaPodlaRal(d.bc); if (bc) state.boxColor = bc; }
+          const rf = cislo(d.rf, 0, ROOF_FINISHES.length - 1); if (rf !== null) state.roofFinish = Math.round(rf);
+          const rs = cislo(d.rs, 0, ROOF_SKINS.length - 1); if (rs !== null) state.roofSkin = Math.round(rs);
+          if (d.s && typeof d.s === 'object') ['front', 'rear', 'left', 'right'].forEach((k) => {
+            const v = d.s[k];
+            if (v === 'open' || (kluc(v) && SIDE_OPTS.some((o) => o.id === v))) state.sides[k] = v;
+          });
+          if (d.c === null || (kluc(d.c) && ma(CARS, d.c))) state.car = d.c;
+          if (d.x && typeof d.x === 'object') {
+            const strop = {};
+            (BIO.extras || []).forEach((g) => (g.items || []).forEach((it) => { strop[it.id] = it.max || 9; }));
+            (BIO.roofOpt || []).forEach((it) => { strop[it.id] = 40; });
+            state.extras = {};
+            Object.keys(d.x).forEach((id) => {
+              if (!Object.prototype.hasOwnProperty.call(strop, id)) return;
+              const n = cislo(d.x[id], 0, strop[id]);
+              if (n) state.extras[id] = Math.round(n);
+            });
+          }
+          if (['none', 'galv', 'coated', 'inox'].includes(d.a)) state.anchor = d.a;
+          if (d.b && typeof d.b === 'object') {
+            state.box.on = d.b.on === true;
+            const bw = cislo(d.b.w, 0, 50), bd = cislo(d.b.d, 0, 50);
+            if (bw !== null) state.box.w = Math.round(bw);
+            if (bd !== null) state.box.d = Math.round(bd);
+            if (['iso', 'wood', 'l44es', 'l44alu'].includes(d.b.fin)) state.box.fin = d.b.fin;
+          }
+          if (d.ce === 'none' || ceilingOptions().some((o) => o.key === d.ce)) state.ceiling = d.ce;
+          if (d.ls && typeof d.ls === 'object') {
+            state.ledSet.on = d.ls.on === true;
+            if (['warm', 'neutral', 'rgb'].includes(d.ls.type)) state.ledSet.type = d.ls.type;
+            const len = cislo(d.ls.len, 0, 2); if (len !== null) state.ledSet.len = Math.round(len);
+            const qty = cislo(d.ls.qty, 1, 12); if (qty !== null) state.ledSet.qty = Math.round(qty);
+          }
+          if (d.sn && typeof d.sn === 'object') Object.keys(state.sensors).forEach((k) => { state.sensors[k] = d.sn[k] === true; });
+          if (d.pk && typeof d.pk === 'object') PICKS.forEach((g) => {
+            if (g.opts.some((o) => o.id === d.pk[g.id])) state.picks[g.id] = d.pk[g.id];
+          });
+          return true;
+        };
+        let zapisCakac = 0;
+        /* Zápis ide cez replaceState (Späť ostáva na predošlej stránke)
+           a s odstupom, lebo pri ťahaní posuvníka sa vykresľuje desiatky
+           ráz za sekundu a Safari po stovke zápisov za desať sekúnd hlási
+           chybu. Kto adresu práve potrebuje (Zdieľať, Poslať), zavolá
+           window.kvZapisZostavu() a zápis prebehne hneď. */
+        const zapisZostavu = () => {
+          window.clearTimeout(zapisCakac);
+          zapisCakac = 0;
+          let q, z;
+          try { q = new URLSearchParams(location.search); z = kodujZostavu(zostavaData()); } catch (e) { return; }
+          const w = Number.isFinite(state.widthValue) ? String(Math.round(state.widthValue)) : null;
+          const l = Number.isFinite(state.lengthValue) ? String(Math.round(state.lengthValue)) : null;
+          if (q.get('z') === z && (!w || q.get('w') === w) && (!l || q.get('l') === l)) return;
+          q.set('z', z);
+          if (w) q.set('w', w);
+          if (l) q.set('l', l);
+          try { history.replaceState(history.state, '', location.pathname + '?' + q.toString() + location.hash); } catch (e) {}
+        };
+        const planujZapisZostavy = () => {
+          window.clearTimeout(zapisCakac);
+          zapisCakac = window.setTimeout(zapisZostavu, 300);
+        };
+        try { window.kvZapisZostavu = zapisZostavu; } catch (e) {}
+        try {
+          const z = new URLSearchParams(location.search).get('z');
+          if (z) obnovZostavu(dekodujZostavu(z));
+        } catch (e) {}
         buildModels();
         renderAll();
         showStep(1, true);
