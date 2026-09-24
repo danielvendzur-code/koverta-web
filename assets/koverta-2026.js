@@ -2905,6 +2905,44 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       else if (!e.shiftKey && document.activeElement === posledny) { e.preventDefault(); prvy.focus(); }
     });
     if (location.hash === '#ponuka') otvor(null);
+
+    /* Okno s dopytom sa samo otvorí najviac raz za návštevu: po 50 s na
+       stránke alebo na počítači vtedy, keď myš odchádza z okna. Nie
+       v konfigurátore, na kontakte, v košíku, na právnych stránkach, ani
+       keď návštevník práve píše do iného formulára alebo je otvorená lišta
+       cookies, menu či hľadanie — vtedy to skúsi o chvíľu znova. */
+    const KLUC_OKNA = 'kv-okno-dopyt';
+    const bezOkna = /konfigurator|kontakt|dakujeme|podmienky|sukromia|reklamac|\/cart|\/checkout/.test(location.pathname)
+      || document.querySelector('[data-sp-cfg]');
+    let uzBolo = true;
+    try { uzBolo = Boolean(sessionStorage.getItem(KLUC_OKNA)); } catch (_) { uzBolo = true; }
+    if (bezOkna || uzBolo) return;
+    const zacaty = Date.now();
+    const prekaza = () => {
+      if (!modal.hidden || document.hidden || document.body.classList.contains('ma-kh-modal')) return true;
+      const akt = document.activeElement;
+      if (akt && akt !== document.body && akt.closest && akt.closest('form, [role="dialog"], [aria-modal="true"]')) return true;
+      const pise = [...document.querySelectorAll('form input:not([type="hidden"]):not([type="checkbox"]):not([type="file"]), form textarea')]
+        .some((x) => !modal.contains(x) && x.value.trim() && x.value !== x.dataset.kAuto);
+      if (pise) return true;
+      if ([...document.querySelectorAll('.kh-dakujem')].some((x) => !x.hidden && x.offsetParent !== null)) return true;
+      const cookies = document.getElementById('cookies-wrapper');
+      if (cookies && cookies.offsetParent !== null && getComputedStyle(cookies).display !== 'none') return true;
+      return Boolean(document.querySelector('.kv-drawer.is-open, .kv-search.is-open, [data-k-search].is-open'));
+    };
+    const skus = () => {
+      try { if (sessionStorage.getItem(KLUC_OKNA)) return; } catch (_) { return; }
+      if (prekaza()) { window.setTimeout(skus, 15000); return; }
+      try { sessionStorage.setItem(KLUC_OKNA, '1'); } catch (_) { return; }
+      otvor(null);
+    };
+    window.setTimeout(skus, 50000);
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      document.addEventListener('mouseout', (e) => {
+        if (e.relatedTarget || e.clientY > 0 || Date.now() - zacaty < 10000) return;
+        skus();
+      });
+    }
   }
 
   /* --- Krátka slučka vnútri obsahu ---------------------------------------
