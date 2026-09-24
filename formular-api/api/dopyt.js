@@ -198,6 +198,80 @@ async function archivujDopyt(data, attachments, id, stavEmailu, zdroj) {
   return { ...zaznam, archiveUrl: blob.url, archivePath: `${zaklad}/dopyt.json` };
 }
 
+/* --- Vzhľad e-mailov -------------------------------------------------------
+   Oficiálne logo Koverty — to isté SVG ako v hlavičke webu, vykreslené do PNG
+   3× (assets/koverta-logo-email.png). Biela zaoblená plocha je súčasťou
+   obrázka: Gmail v tmavom režime prevráti farby e-mailu, ale obrázky nie, tak
+   logo ostane čitateľné. Adresa ide cez jsDelivr z konkrétneho commitu, je
+   teda nemenná; LOGO_URL ju vie prepísať. Rozloženie je z tabuliek, lebo tak
+   ho spoľahlivo zobrazí aj Outlook. */
+const LOGO_URL = process.env.LOGO_URL
+  || 'https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0002d10e0530d0ec3e3da4e0d35306af8a458c5a/assets/koverta-logo-email.png';
+const PISMO = 'Arial,Helvetica,sans-serif';
+
+function emailKostra({ titulok, predhlavicka, telo, pata }) {
+  return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${html(titulok)}</title></head>`
+    + `<body style="margin:0;padding:0;background:#f4f3f0;-webkit-text-size-adjust:100%">`
+    + `<div style="display:none;max-height:0;overflow:hidden;opacity:0">${html(predhlavicka)}</div>`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f3f0"><tr><td align="center" style="padding:28px 12px">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e2d9;border-radius:14px;overflow:hidden">`
+    + `<tr><td style="height:5px;line-height:5px;font-size:0;background:#ffcc00">&nbsp;</td></tr>`
+    + `<tr><td style="padding:14px 12px 10px;border-bottom:1px solid #eeebe4"><a href="https://koverta.sk/" style="text-decoration:none"><img src="${LOGO_URL}" width="208" height="53" alt="Koverta" style="display:block;border:0;outline:none;width:208px;height:53px"></a></td></tr>`
+    + `<tr><td style="padding:26px 28px 28px;font-family:${PISMO};color:#12171a">${telo}</td></tr>`
+    + `<tr><td style="padding:16px 28px;background:#f8f7f4;border-top:1px solid #eeebe4;font-family:${PISMO};font-size:12px;line-height:1.6;color:#6b7174">${pata}</td></tr>`
+    + `</table></td></tr></table></body></html>`;
+}
+
+function emailTlacidlo(odkaz, text, hlavne) {
+  const styl = hlavne
+    ? 'background:#ffcc00;color:#12171a;border:1px solid #ffcc00'
+    : 'background:#ffffff;color:#12171a;border:1px solid #c9c5bb';
+  return `<a href="${odkaz}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 20px;border-radius:999px;${styl};font-family:${PISMO};font-size:15px;font-weight:700;line-height:1.2;text-decoration:none">${text}</a>`;
+}
+
+/* Telefón do odkazu tel: — len číslice a plus, nič iné sa do adresy nedostane. */
+function telOdkaz(telefon) {
+  return 'tel:' + String(telefon || '').replace(/[^\d+]/g, '');
+}
+
+/* Stránka, z ktorej dopyt prišiel, je odkaz len vtedy, keď je naša. */
+function odkazStranky(stranka) {
+  const t = text(stranka, 800);
+  if (!/^https:\/\/((www\.)?koverta\.sk|danielvendzur-code\.github\.io)\//i.test(t)) return html(t);
+  const kratka = t.replace(/^https:\/\/(www\.)?/i, '').replace(/[?#].*$/, '');
+  return `<a href="${html(t)}" style="color:#12171a">${html(kratka)}</a>`;
+}
+
+function emailDopytu(data, pocetPriloh) {
+  const riadok = (nazov, hodnota) => hodnota
+    ? `<tr><td style="padding:10px 16px 10px 0;border-top:1px solid #eeebe4;vertical-align:top;width:92px;font-family:${PISMO};font-size:13px;color:#6b7174">${nazov}</td>`
+      + `<td style="padding:10px 0;border-top:1px solid #eeebe4;vertical-align:top;font-family:${PISMO};font-size:15px;line-height:1.5;color:#12171a">${hodnota}</td></tr>`
+    : '';
+  const telefon = data.telefon ? `<a href="${telOdkaz(data.telefon)}" style="color:#12171a;font-weight:700;text-decoration:none">${html(data.telefon)}</a>` : '';
+  const email = data.email ? `<a href="mailto:${html(data.email)}" style="color:#12171a">${html(data.email)}</a>` : '';
+  const sprava = data.sprava ? html(data.sprava).replace(/\r?\n/g, '<br>') : '';
+  const telo = `<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a6600">${html(data.typ || 'Dopyt z webu')}</p>`
+    + `<h1 style="margin:0 0 18px;font-family:${PISMO};font-size:24px;line-height:1.25;color:#12171a">Nový dopyt z webu</h1>`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">`
+    + riadok('Meno', `<strong>${html(data.meno)}</strong>`) + riadok('Telefón', telefon) + riadok('E-mail', email)
+    + riadok('Miesto', html(data.miesto)) + riadok('Správa', sprava) + riadok('Stránka', data.stranka ? odkazStranky(data.stranka) : '')
+    + `</table><div style="margin-top:22px">`
+    + (data.telefon ? emailTlacidlo(telOdkaz(data.telefon), 'Zavolať ' + html(data.telefon), true) : '')
+    + (data.email ? emailTlacidlo('mailto:' + html(data.email), 'Odpovedať e-mailom', false) : '')
+    + `</div>`;
+  const pata = `Dopyt z formulára na koverta.sk${pocetPriloh ? ` · Prílohy: ${pocetPriloh} (v prílohe e-mailu)` : ''}`;
+  return emailKostra({ titulok: 'Nový dopyt z webu', predhlavicka: `${data.meno} · ${data.telefon}${data.typ ? ' · ' + data.typ : ''}`, telo, pata });
+}
+
+function emailPotvrdenia(oslovenie) {
+  const telo = `<h1 style="margin:0 0 14px;font-family:${PISMO};font-size:24px;line-height:1.25;color:#12171a">Dopyt sme prijali</h1>`
+    + `<p style="margin:0 0 14px;font-family:${PISMO};font-size:16px;line-height:1.6;color:#12171a">${oslovenie} ďakujeme za váš dopyt. Ozveme sa vám telefonicky alebo e-mailom spravidla do jedného pracovného dňa.</p>`
+    + `<p style="margin:0 0 20px;font-family:${PISMO};font-size:16px;line-height:1.6;color:#12171a">Ak niečo súri, zavolajte nám.</p>`
+    + emailTlacidlo('tel:+421948482266', 'Zavolať +421 948 482 266', true);
+  const pata = `Koverta · <a href="mailto:obchod@koverta.sk" style="color:#6b7174">obchod@koverta.sk</a> · <a href="https://koverta.sk/" style="color:#6b7174">koverta.sk</a><br>Tento e-mail ste dostali, lebo ste na koverta.sk odoslali dopyt.`;
+  return emailKostra({ titulok: 'Dopyt sme prijali', predhlavicka: 'Ďakujeme, ozveme sa spravidla do jedného pracovného dňa.', telo, pata });
+}
+
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -248,8 +322,7 @@ export default async function handler(req, res) {
   const to = process.env.DOPYT_TO || 'obchod@koverta.sk';
   const id = crypto.createHash('sha256').update(`${data.email}|${telo.startedAt}|${data.telefon}`).digest('hex').slice(0, 32);
   const predmet = `Nový dopyt z webu – ${data.typ || 'Koverta'}${data.miesto ? ` – ${data.miesto}` : ''}`;
-  const riadok = (nazov, hodnota) => hodnota ? `<tr><th style="padding:8px 16px 8px 0;text-align:left;vertical-align:top;color:#6b7174">${nazov}</th><td style="padding:8px 0;color:#12171a">${html(hodnota)}</td></tr>` : '';
-  const obsah = `<!doctype html><html lang="sk"><body style="margin:0;background:#f6f5f2;font-family:Arial,sans-serif;color:#12171a"><div style="max-width:680px;margin:auto;padding:32px 20px"><div style="background:#12171a;color:white;padding:18px 24px;font-weight:700;letter-spacing:.08em">KOVER<span style="color:#ffcc00">TA</span></div><div style="background:white;padding:28px 24px"><h1 style="font-size:25px;margin:0 0 20px">Nový dopyt z webu</h1><table style="border-collapse:collapse;width:100%">${riadok('Čo rieši', data.typ)}${riadok('Meno', data.meno)}${riadok('Telefón', data.telefon)}${riadok('E-mail', data.email)}${riadok('Miesto', data.miesto)}${riadok('Správa', data.sprava)}${riadok('Stránka', data.stranka)}</table><p style="margin:24px 0 0;color:#6b7174;font-size:13px">Prílohy: ${attachments.length}</p></div></div></body></html>`;
+  const obsah = emailDopytu(data, attachments.length);
 
   try {
     const pocitadlo = await nacitajPocitadlo();
@@ -276,8 +349,10 @@ export default async function handler(req, res) {
     if (data.email && String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false'
       && odoslaneDnes + 1 < STROP_POTVRDENI()
       && !prekrocilLimit('email:' + data.email.toLowerCase(), 2, 24 * 60 * 60 * 1000)) {
-      const potvrdenie = `<!doctype html><html lang="sk"><body style="margin:0;background:#f6f5f2;font-family:Arial,sans-serif;color:#12171a"><div style="max-width:620px;margin:auto;padding:32px 20px"><div style="background:#12171a;color:white;padding:18px 24px;font-weight:700;letter-spacing:.08em">KOVER<span style="color:#ffcc00">TA</span></div><div style="background:white;padding:30px 24px"><h1 style="font-size:25px;margin:0 0 16px">Dopyt sme prijali</h1><p style="line-height:1.65">${oslovenie} ďakujeme za váš dopyt. Ozveme sa vám telefonicky alebo e-mailom spravidla do jedného pracovného dňa.</p><p style="line-height:1.65">Ak niečo súri, zavolajte na <a href="tel:+421948482266" style="color:#12171a;font-weight:700">+421 948 482 266</a>.</p><p style="margin-top:26px;color:#6b7174">Koverta · obchod@koverta.sk</p></div></div></body></html>`;
-      if (await odosliResend(apiKey, { from, to: [data.email], reply_to: to, subject: 'Koverta – dopyt sme prijali', html: potvrdenie }, `potvrdenie-${id}`).catch(() => null)) odoslane += 1;
+      const potvrdenie = emailPotvrdenia(oslovenie);
+      /* Zákazník vidí ako odosielateľa „Koverta“, nie interné „Koverta web“. */
+      const odKoverty = from.replace(/^Koverta web\b/, 'Koverta');
+      if (await odosliResend(apiKey, { from: odKoverty, to: [data.email], reply_to: to, subject: 'Koverta – dopyt sme prijali', html: potvrdenie }, `potvrdenie-${id}`).catch(() => null)) odoslane += 1;
     }
     await zapocitaj(odoslane).catch(() => null);
     zaznamenaj('ODOSLANE', zdroj, { emailov: odoslane, odoslaneDnes: odoslaneDnes + odoslane, domenaNavstevnika: data.email.split('@')[1] || '' });
