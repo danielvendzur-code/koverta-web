@@ -2800,7 +2800,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     modal.setAttribute('data-k-dopyt-modal', '');
     modal.innerHTML = '<div class="kh-modal__pozadie" data-k-modal-close></div>' +
       '<section class="kh-modal__okno" role="dialog" aria-modal="true" aria-labelledby="kModalTitle">' +
-      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Zavoláme vám s cenou na mieru</h2>' +
+      '<header class="kh-modal__hlava"><div><h2 id="kModalTitle">Získajte ponuku šitú na mieru</h2>' +
       '<p>Stačí meno a telefón.</p></div>' +
       '<button class="kh-modal__zavriet" type="button" data-k-modal-close aria-label="Zavrieť">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg></button></header>' +

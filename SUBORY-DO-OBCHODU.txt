@@ -588,6 +588,9 @@ koverta-pristresok-garaz.jpg	assets/koverta-pristresok-garaz.jpg
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg
+koverta-pristresok-lamelova-vypln-janovce-w1000.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w1000.webp
+koverta-pristresok-lamelova-vypln-janovce-w640.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w640.webp
+koverta-pristresok-lamelova-vypln-janovce.jpg	assets/koverta-pristresok-lamelova-vypln-janovce.jpg
 koverta-pristresok-led-osvetlenie-vecer-w1000.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w1000.webp
 koverta-pristresok-led-osvetlenie-vecer-w1600.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w1600.webp
 koverta-pristresok-led-osvetlenie-vecer-w640.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w640.webp
@@ -600,10 +603,6 @@ koverta-pristresok-pre-auto-cierne-auto-w1000.webp	assets/koverta-pristresok-pre
 koverta-pristresok-pre-auto-cierne-auto-w1600.webp	assets/koverta-pristresok-pre-auto-cierne-auto-w1600.webp
 koverta-pristresok-pre-auto-cierne-auto-w640.webp	assets/koverta-pristresok-pre-auto-cierne-auto-w640.webp
 koverta-pristresok-pre-auto-cierne-auto.jpg	assets/koverta-pristresok-pre-auto-cierne-auto.jpg
-koverta-pristresok-pre-auto-pred-domom-w1000.webp	assets/koverta-pristresok-pre-auto-pred-domom-w1000.webp
-koverta-pristresok-pre-auto-pred-domom-w1600.webp	assets/koverta-pristresok-pre-auto-pred-domom-w1600.webp
-koverta-pristresok-pre-auto-pred-domom-w640.webp	assets/koverta-pristresok-pre-auto-pred-domom-w640.webp
-koverta-pristresok-pre-auto-pred-domom.jpg	assets/koverta-pristresok-pre-auto-pred-domom.jpg
 koverta-pristresok-pre-auto-pri-plote-w1000.webp	assets/koverta-pristresok-pre-auto-pri-plote-w1000.webp
 koverta-pristresok-pre-auto-pri-plote-w1600.webp	assets/koverta-pristresok-pre-auto-pri-plote-w1600.webp
 koverta-pristresok-pre-auto-pri-plote-w640.webp	assets/koverta-pristresok-pre-auto-pri-plote-w640.webp
