@@ -53,12 +53,48 @@
 {%- if kv_popis != blank %}
 <meta name="description" content="{{ kv_popis | escape }}">
 {%- endif %}
-<link rel="canonical" href="{{ canonical_url }}">
+{%- comment -%} Jedna adresa pre jeden obsah vo vyhľadávaní. Staré a nove-* stránky
+   ostávajú funkčné (aj pre reklamy), len povedia Google, ktorá adresa je hlavná.
+   Zoznam je z tools/adresy-obchodu.json (presmerovania). {%- endcomment -%}
+{%- liquid
+  assign kv_canon = canonical_url
+  case request.path
+  when '/pages/pristresky-pre-auta', '/pages/o-pristreskoch-pre-auta', '/pages/nove-pristresky-pre-auta'
+    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta'
+  when '/pages/pre-dom-a-zahradu', '/pages/o-zahradnych-pristreskoch', '/pages/nove-zahradne-pristresky'
+    assign kv_canon = shop.url | append: '/collections/zahradne-pristresky'
+  when '/pages/bioklimaticke-pergoly', '/pages/galeria-bioklimaticke-pergoly', '/pages/nove-bioklimaticke-pergoly'
+    assign kv_canon = shop.url | append: '/collections/bioklimaticke-pergoly'
+  when '/pages/galeria-zahradne-pristresky', '/pages/nove-realizacie'
+    assign kv_canon = shop.url | append: '/pages/galeria-pristresky-pre-auta'
+  when '/pages/galeria-pristresky-agava', '/pages/nove-carport-soltec'
+    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta-agava'
+  when '/pages/pergoly-s-pevnou-strechou-multiport', '/pages/nove-pevne-prestresenia'
+    assign kv_canon = shop.url | append: '/collections/pergoly-s-pevnou-strechou-multiport'
+  when '/pages/tienenie', '/pages/nove-tienenie'
+    assign kv_canon = shop.url | append: '/collections/tienenie'
+  when '/pages/vonkajsie-kuchyne', '/pages/nove-outdoor-kuchyne'
+    assign kv_canon = shop.url | append: '/collections/outdoor-kuchyne'
+  when '/pages/informacie-o-cookies', '/pages/nove-ochrana-sukromia'
+    assign kv_canon = shop.url | append: '/pages/zasady-ochrany-osobnych-udajov'
+  when '/pages/nove-kontakt'
+    assign kv_canon = shop.url | append: '/pages/kontakt'
+  when '/pages/nove-obchodne-podmienky'
+    assign kv_canon = shop.url | append: '/pages/vseobecne-obchodne-podmienky'
+  when '/pages/nove-reklamacie'
+    assign kv_canon = shop.url | append: '/pages/reklamacny-poriadok'
+  when '/pages/nove-konfigurator'
+    assign kv_canon = shop.url | append: '/pages/konfigurator'
+  when '/pages/nove-produkty'
+    assign kv_canon = shop.url | append: '/pages/produkty'
+  endcase
+-%}
+<link rel="canonical" href="{{ kv_canon }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
 <meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
 <meta property="og:title" content="{{ kv_titulok | escape }}">
-<meta property="og:url" content="{{ canonical_url }}">
+<meta property="og:url" content="{{ kv_canon }}">
 {%- if kv_popis != blank %}
 <meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
