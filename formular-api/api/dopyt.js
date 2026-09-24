@@ -138,7 +138,13 @@ function zaznamenaj(vysledok, zdroj, navyse = {}) {
    nutné), dopyt pre obchod ide do posledného slotu a aj nad stropom sa
    uloží do archívu, takže sa nestratí. */
 const DENNY_STROP = () => Number(process.env.MAX_EMAILOV_DEN || 90);
-const STROP_POTVRDENI = () => Number(process.env.MAX_EMAILOV_S_POTVRDENIM || 60);
+/* Potvrdenia sa vypnú až desať e-mailov pred denným stropom — tých desať
+   ostáva na dopyty pre obchod. Pri 60 ich vypla už dávka cudzích testov
+   a skutočný zákazník potom potvrdenie nedostal. */
+const STROP_POTVRDENI = () => Number(process.env.MAX_EMAILOV_S_POTVRDENIM || Math.max(0, DENNY_STROP() - 10));
+/* Jedna adresa dostane najviac päť potvrdení za deň (ochrana pred
+   zneužitím formulára na posielanie správ cudzím ľuďom). */
+const POTVRDENI_NA_ADRESU = 5;
 const cestaPocitadla = () => `limity/${new Date().toISOString().slice(0, 10)}.json`;
 
 async function nacitajPocitadlo() {
@@ -349,13 +355,21 @@ export default async function handler(req, res) {
        ako meno (bez odkazov, najviac 60 znakov). */
     const menoOk = data.meno.length <= 60 && !/https?:|www\.|[<>@]|\.[a-z]{2,}\//i.test(data.meno);
     const oslovenie = menoOk ? `Dobrý deň, ${html(data.meno)},` : 'Dobrý deň,';
-    if (data.email && String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() !== 'false'
-      && odoslaneDnes + 1 < STROP_POTVRDENI()
-      && !prekrocilLimit('email:' + data.email.toLowerCase(), 2, 24 * 60 * 60 * 1000)) {
+    /* Prečo potvrdenie neodišlo, sa zapíše do logu — bez toho sa to nedalo
+       zistiť (v Resende nie je nič, lebo sa ani neposielalo). */
+    const dovodBezPotvrdenia = !data.email ? 'BEZ_EMAILU'
+      : String(process.env.POSLAT_POTVRDENIE || 'true').toLowerCase() === 'false' ? 'VYPNUTE'
+      : odoslaneDnes + 1 >= STROP_POTVRDENI() ? 'DENNY_STROP'
+      : prekrocilLimit('email:' + data.email.toLowerCase(), POTVRDENI_NA_ADRESU, 24 * 60 * 60 * 1000) ? 'LIMIT_ADRESY'
+      : null;
+    if (dovodBezPotvrdenia) zaznamenaj('POTVRDENIE_NEODOSLANE', zdroj, { dovod: dovodBezPotvrdenia, odoslaneDnes });
+    if (!dovodBezPotvrdenia) {
       const potvrdenie = emailPotvrdenia(oslovenie);
       /* Zákazník vidí ako odosielateľa „Koverta“, nie interné „Koverta web“. */
       const odKoverty = from.replace(/^Koverta web\b/, 'Koverta');
-      if (await odosliResend(apiKey, { from: odKoverty, to: [data.email], reply_to: to, subject: 'Koverta – dopyt sme prijali', html: potvrdenie }, `potvrdenie-${id}`).catch(() => null)) odoslane += 1;
+      const potvrdene = await odosliResend(apiKey, { from: odKoverty, to: [data.email], reply_to: to, subject: 'Koverta – dopyt sme prijali', html: potvrdenie }, `potvrdenie-${id}`)
+        .catch((chyba) => { zaznamenaj('POTVRDENIE_ZLYHALO', zdroj, { chyba: String(chyba.message).slice(0, 200) }); return null; });
+      if (potvrdene) odoslane += 1;
     }
     await zapocitaj(odoslane).catch(() => null);
     zaznamenaj('ODOSLANE', zdroj, { emailov: odoslane, odoslaneDnes: odoslaneDnes + odoslane, domenaNavstevnika: data.email.split('@')[1] || '' });
