@@ -66,20 +66,20 @@ for cid, cesta in [('14069', 'teams/811/models/14069/b79e-1d7d-12a6-5dd3.zip'),
             if 14 <= s[0] <= 30 and 80 <= s[1] <= 120 and s[2] >= 400:
                 lamely.append((meno, bb, rozm))
     print('   lamiel (diel 14–30 × 80–120 × ≥400 mm):', len(lamely))
-    # skupina = sieť; v každej sieti roviny a výšky
-    podla_siete = collections.defaultdict(list)
-    for meno, bb, rozm in lamely: podla_siete[meno].append((bb, rozm))
-    for meno, L in sorted(podla_siete.items(), key=lambda x: -len(x[1])):
-        # os výšky = os, kde má lamela ~100 mm a ktorá sa medzi lamelami mení
-        osi = []
-        for a in range(3):
-            stredy = sorted(set(round((bb[a][0] + bb[a][1]) / 2) for bb, _ in L))
-            osi.append(stredy)
-        # os výšky: najviac rôznych hodnôt a rozmer ~100
-        a_v = max(range(3), key=lambda a: len(osi[a]))
-        vysky = sorted(set((round(bb[a_v][0]), round(bb[a_v][1])) for bb, _ in L))
-        dlzky = sorted(set(round(r) for _, r in L for r in [max(r)]))
-        print('   SIEŤ %s: %d lamiel, os výšky %d, úrovní %d, od %s po %s, dĺžky %s, rozmery %s' % (
-            meno, len(L), a_v, len(vysky), vysky[0][0], vysky[-1][1], dlzky[:6],
-            sorted(set(tuple(round(x) for x in r) for _, r in L))[:4]))
-        print('      úrovne:', vysky[:20])
+    # rovina steny = os najtenšieho rozmeru + jej poloha; výška = os s ~100 mm
+    roviny = collections.defaultdict(list)
+    for meno, bb, rozm in lamely:
+        a_t = min(range(3), key=lambda a: rozm[a])
+        a_h = min((a for a in range(3) if a != a_t), key=lambda a: abs(rozm[a] - 100))
+        a_l = [a for a in range(3) if a not in (a_t, a_h)][0]
+        stred_t = (bb[a_t][0] + bb[a_t][1]) / 2
+        roviny[(a_t, a_h, round(stred_t / 25) * 25)].append((bb, rozm, a_l, meno))
+    for (a_t, a_h, pol), L in sorted(roviny.items(), key=lambda x: (-len(x[1]))):
+        urovne = sorted(set((round(bb[a_h][0]), round(bb[a_h][1])) for bb, _, _, _ in L))
+        a_l = L[0][2]
+        dlzky = collections.Counter(round(r[a_l]) for _, r, _, _ in L)
+        od_l = min(bb[a_l][0] for bb, _, _, _ in L); po_l = max(bb[a_l][1] for bb, _, _, _ in L)
+        rozstupy = sorted(set(urovne[i + 1][0] - urovne[i][0] for i in range(len(urovne) - 1)))
+        print('   STENA hrúbka v osi %d pri %s, výška v osi %d: %d lamiel, %d úrovní, výška %s..%s (%s mm), rozstupy %s, dĺžky lamiel %s, beh v osi %d %d..%d, sietí %d' % (
+            a_t, pol, a_h, len(L), len(urovne), urovne[0][0], urovne[-1][1], urovne[-1][1] - urovne[0][0],
+            rozstupy[:5], dict(dlzky.most_common(4)), a_l, round(od_l), round(po_l), len(set(m for _, _, _, m in L))))
