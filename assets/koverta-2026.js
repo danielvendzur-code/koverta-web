@@ -3700,7 +3700,12 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
          v jednej ponuke — a na obrazovke z toho vidno dvestotridsať pixelov.
          Tisícpixelová verzia vo WebP existuje ku každej z nich a na hustom
          displeji je stále ostrá. */
-      return base + name.replace(/\.(jpe?g|png)$/i, '-w1000.webp');
+      const subor = name.replace(/\.(jpe?g|png)$/i, '-w1000.webp');
+      /* Na Shopify téma oznámi presnú adresu každej fotky v menu — fotka,
+         ktorá ešte nie je na GitHub Pages, ide z jsDelivr. */
+      const presne = kvAdresa('menuFoto', null);
+      if (presne && presne[subor]) return presne[subor];
+      return base + subor;
     };
 
     const menuLabel = (item) => {
