@@ -682,7 +682,8 @@ ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join
 <script>
   /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
      v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka
-     o 3D modeloch je v /pages/. */
+     o 3D modeloch je v /pages/ a fotky v menu majú presnú adresu
+     (menuFoto), aby žiadna nevracala 404. */
   window.KV_ADRESY = {
     znackaKoverta: {{ 'koverta-mark.svg' | asset_url | json }},
     znackaSoltec: ${FOTKY === 'pages'
