@@ -2728,12 +2728,17 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     const zaujem = form.querySelector('select[name="contact[Čo rieši]"]');
     const zaujemPole = zaujem && zaujem.closest('.kh-field');
     if (zaujemPole && zaujem.querySelector('option[selected]')) zaujemPole.hidden = true;
+    /* Miesto realizácie a e-mail sú nepovinné doplnkové údaje. */
+    const nepovinne = (pole, text) => {
+      const nazov = pole && pole.closest('.kh-field') && pole.closest('.kh-field').querySelector(':scope > span');
+      if (nazov) nazov.innerHTML = text + ' <small class="kh-nepovinne">nepovinné</small>';
+    };
     const miesto = form.querySelector('input[name="contact[Miesto realizácie]"]');
-    if (miesto) miesto.closest('.kh-field').hidden = true;
+    if (miesto) { miesto.required = false; miesto.placeholder = 'Obec'; nepovinne(miesto, 'Miesto realizácie'); }
     const sprava = form.querySelector('textarea[name="contact[body]"]');
     if (sprava) {
       sprava.rows = 2;
-      sprava.placeholder = 'Rozmer, obec alebo čo chcete zastrešiť';
+      sprava.placeholder = 'Rozmer alebo čo chcete zastrešiť';
       const nazov = sprava.closest('.kh-field') && sprava.closest('.kh-field').querySelector(':scope > span');
       if (nazov) nazov.textContent = 'Správa';
     }
@@ -2757,8 +2762,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     const email = form.querySelector('input[name="contact[email]"]');
     if (email) {
       email.required = false;
-      const nazov = email.closest('.kh-field') && email.closest('.kh-field').querySelector(':scope > span');
-      if (nazov) nazov.textContent = 'E-mail';
+      nepovinne(email, 'E-mail');
     }
     /* Povinné polia majú hviezdičku. Čítačka povinnosť ohlási z `required`,
        hviezdička je len pre oko. */
@@ -3459,10 +3463,18 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     };
     const jeMobil = () => window.matchMedia('(max-width: 759px)').matches;
     if (hero && 'IntersectionObserver' in window) {
+      /* Dve hranice namiesto jednej: pás sa skryje, až keď je úvodu vidieť
+         viac ako 30 %, a vráti sa, až keď ho je menej ako 12 %. Pri jednej
+         hranici pás pri pomalom scrollovaní okolo nej poskakoval dnu a von. */
+      let skryty = false;
       const heroPozor = new IntersectionObserver((zaznamy) => {
         const zaznam = zaznamy[0];
-        nastavHeroDok(jeMobil() && zaznam.isIntersecting && zaznam.intersectionRatio > 0.16);
-      }, { threshold: [0, 0.16, 0.4] });
+        const r = zaznam.isIntersecting ? zaznam.intersectionRatio : 0;
+        if (!jeMobil()) skryty = false;
+        else if (!skryty && r > 0.3) skryty = true;
+        else if (skryty && r < 0.12) skryty = false;
+        nastavHeroDok(skryty);
+      }, { threshold: [0, 0.12, 0.3, 0.5] });
       heroPozor.observe(hero);
       window.addEventListener('resize', () => {
         if (!jeMobil()) nastavHeroDok(false);

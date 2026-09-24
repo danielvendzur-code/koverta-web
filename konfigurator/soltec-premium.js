@@ -5185,7 +5185,20 @@ function kvAdresa(kluc, zaloha) {
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
             /* Sendvičový panel: jadro 3 cm pod vlnou 4 cm, spodok rovný ako
                pri paneli Soltec — zdola teda plochý podhľad, nie vlna. */
-            drawTrapSurface(tx0, tx1, ty0, ty1, kvPanel ? (() => trapBot - 30) : trapLowerZ, spodHex, false);
+            if (kvPanel) {
+              /* Sendvičový panel zdola ako Soltec: hladký svetlý podhľad bez
+                 vĺn, len úzke škáry medzi metrovými panelmi. */
+              const zp = trapBot - 30;
+              quad([[tx0, ty0, zp], [tx0, ty1, zp], [tx1, ty1, zp], [tx1, ty0, zp]], spodHex,
+                   { normal: [0, 0, -1], cull: true, edge: false });
+              const skara = shade(spodHex, -0.2);
+              for (let yj = ty0 + 1000; yj < ty1 - 200; yj += 1000) {
+                quad([[tx0, yj - 3, zp - 0.8], [tx0, yj + 3, zp - 0.8], [tx1, yj + 3, zp - 0.8], [tx1, yj - 3, zp - 0.8]], skara,
+                     { normal: [0, 0, -1], cull: true, raw: true, edge: false, fit: false });
+              }
+            } else {
+              drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            }
             /* Keep the real soffit under the flashing. The upper skin needs
                only a narrow hidden lap beneath the inner edge: cropping it
                exactly at the aperture exposed a jagged lower-skin cut, while

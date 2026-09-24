@@ -12258,9 +12258,9 @@ body:not(.k-home) .k .kh-hero {
 }
 body:not(.k-home) .k .kh-hero__bg,
 body:not(.k-home) .k .kh-hero__video,
-body:not(.k-home) .k .kh-hero__bg > img { width:100%; height:100%; }
+body:not(.k-home) .k .kh-hero__bg img { width:100%; height:100%; }
 body:not(.k-home) .k .kh-hero__video,
-body:not(.k-home) .k .kh-hero__bg > img { display:block; object-fit:cover; }
+body:not(.k-home) .k .kh-hero__bg img { display:block; object-fit:cover; }
 body:not(.k-home) .k .kh-hero__box { max-width:760px; padding-top:76px; padding-bottom:28px; }
 body:not(.k-home) .k .kh-hero__box > .kh-crumbs {
   left:max(var(--k-gut), calc((100vw - var(--k-max)) / 2 + var(--k-gut)));
@@ -13860,7 +13860,7 @@ body.ma-kh-modal { overflow: hidden; }
 .kh-form--jednoduchy { gap: 12px !important; margin-top: 0 !important; }
 .kh-form--jednoduchy .kh-field[hidden] { display: none !important; }
 .kh-form--jednoduchy .kh-form__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.kh-form--jednoduchy .kh-form__grid > .kh-field:nth-child(3) { grid-column: 1 / -1; }
+.kh-form--jednoduchy .kh-form__grid > .kh-field:nth-child(3) { grid-column: auto; }
 .kh-form--jednoduchy .kh-field > span { margin-bottom: 6px; font: 600 13px/1.2 var(--k-head); color: var(--k-ink); letter-spacing: 0; text-transform: none; }
 .kh-form--jednoduchy .kh-field > span small { margin-left: 4px; color: var(--k-muted); font-weight: 500; }
 .kh-form--jednoduchy .kh-field input,
@@ -14119,8 +14119,8 @@ body.ma-kh-modal { overflow: hidden; }
     position: relative !important; inset: auto !important; top: auto !important; bottom: auto !important;
     width: 100%; height: auto !important; aspect-ratio: 16 / 9; flex: none; z-index: 0; overflow: hidden;
   }
-  .k-home .kh-hero__bg > img, .k-home .kh-hero__video { object-position: 50% 50% !important; }
-  .k-home .kh-hero__bg > img { animation: none; transform: none; }
+  .k-home .kh-hero__bg img, .k-home .kh-hero__video { object-position: 50% 50% !important; }
+  .k-home .kh-hero__bg img { animation: none; transform: none; }
   .k-home .kh-hero__bg .kh-hero__scrim {
     background: linear-gradient(180deg, rgba(18, 23, 26, 0) 62%, rgba(18, 23, 26, .92) 100%) !important;
   }
@@ -14184,7 +14184,7 @@ body.ma-kh-modal { overflow: hidden; }
     position: relative !important; inset: auto !important; top: auto !important; bottom: auto !important;
     width: 100%; height: auto !important; aspect-ratio: 16 / 9; flex: none; z-index: -1; overflow: hidden;
   }
-  body:not(.k-home) .k .kh-hero .kh-hero__bg > img { object-position: 50% 50% !important; animation: none; transform: none; }
+  body:not(.k-home) .k .kh-hero .kh-hero__bg img { object-position: 50% 50% !important; animation: none; transform: none; }
   /* Hore jemné stmavenie, aby boli omrvinky čitateľné aj na svetlej oblohe;
      dole sa fotka plynulo stratí do tmavého podkladu (krivka so zrýchlením,
      bez pásu či hrany, na konci presne farba pozadia). */
@@ -14260,4 +14260,85 @@ body.ma-kh-modal { overflow: hidden; }
   }
   body:not(.k-home) .k .kh-hero__box > .kh-crumbs [aria-current] { font-weight: 600; padding-bottom: 2px; }
   body:not(.k-home) .k .kh-hero__box > .kh-crumbs [aria-current]::after { height: 1px; }
+}
+
+/* Zalamovanie textu: na konci odseku ani odrážky nesmie ostať jedno slovo
+   („výrobou“, „miery“). Nadpisy sa delia na vyvážené riadky. */
+.k p, .k li, .k figcaption, .k dd, .k small { text-wrap: pretty; }
+.k h1, .k h2, .k h3, .k h4 { text-wrap: balance; }
+
+/* Veľké obrázky v obsahu (graf výberu modelu, prehľad výbavy) sa musia
+   zmestiť na obrazovku celé, bez scrollovania. */
+.k .kh-vs__foto img,
+.k .kh-prehlad img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(60vh, 560px);
+  margin-inline: auto;
+}
+.k .kh-vs__foto figcaption,
+.k .kh-prehlad figcaption { margin-inline: auto; text-align: center; }
+
+/* Tabuľka modelov na mobile: jeden model = jeden riadok s tromi hodnotami
+   vedľa seba, nie päť riadkov pod sebou. Celá sa tak zmestí na obrazovku. */
+@media (max-width: 720px) {
+  .kh-vs--data tbody tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kh-vs--data tbody th { grid-column: 1 / -1; padding: 10px 12px 2px; font-size: 14.5px; }
+  .kh-vs--data tbody th small { display: inline; margin: 0 0 0 6px; }
+  .kh-vs--data tbody td { display: block; padding: 2px 12px 10px; font-size: 13px; white-space: nowrap; }
+  .kh-vs--data tbody tr td:last-child { padding-bottom: 10px; }
+  .kh-vs--data tbody td::before { display: block; margin-bottom: 1px; font-size: 10px; }
+}
+
+/* Galérie nesmú pri prejdení myšou poskakovať: popis pod fotkou má pod
+   kurzorom tú istú výšku ako v pokoji (predtým z 36 na 170 px a celý rad
+   aj ďalší rad fotiek sa posunul). */
+.k .kh-cat__item:is(:hover, :focus-within) .kh-cat__body { flex-basis: auto; min-height: 0; }
+
+/* Jediný rozmer pre 3 a viac áut: šírka aj dĺžka v jednom čipe. */
+.k .kh-size__grid--jeden { display: flex; flex-wrap: wrap; gap: 8px; }
+.k .kh-size__chip--cely > span { font-weight: 700; white-space: nowrap; }
+
+.k .kh-nepovinne { margin-left: 4px; font-size: .82em; font-weight: 500; color: var(--k-grey-soft, #8a8f93); }
+
+/* Spodný pás na telefóne: vlastná vrstva, aby sa pri scrollovaní a pri
+   schovávaní adresného riadku netriasol, a o maličko väčší. */
+@media (max-width: 759px) {
+  .kh-dock { transform: translate3d(0, 0, 0); backface-visibility: hidden; will-change: transform; contain: layout paint; }
+  .kh-dock.je-hero-skryty { transform: translate3d(0, calc(100% + 12px), 0); }
+  .kh-dock { grid-template-columns: 48px minmax(0, 1fr); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+  .kh-dock .kh-dock__call { width: 48px; height: 48px; min-height: 48px; }
+  .kh-dock .kh-dock__call svg { width: 19px; height: 19px; }
+  .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 48px; height: 48px; font-size: 16px; }
+  body:has(.kh-dock) { padding-bottom: 66px; }
+}
+
+/* Úvod: fotka je v <picture> — na telefóne sa načíta verzia s predĺžením
+   (celá ostrá fotka a pod ňou jej rozmazané pokračovanie do tmavej, pripravené
+   vopred). <picture> sa v rozložení správa, akoby tam nebol. */
+.kh-hero__bg > picture { display: contents; }
+@media (max-width: 759px) {
+  .k .kh-hero .kh-hero__bg {
+    aspect-ratio: auto !important; height: auto !important;
+    -webkit-mask-image: none !important; mask-image: none !important;
+    background: #12171a;
+  }
+  .k .kh-hero .kh-hero__bg img {
+    position: relative !important; inset: auto !important; display: block;
+    width: 100% !important; height: auto !important; object-fit: fill;
+    -webkit-mask-image: none !important; mask-image: none !important;
+  }
+  .k-home .kh-hero .kh-hero__video {
+    position: absolute !important; inset: 0 !important; z-index: 1;
+    width: 100% !important; height: 100% !important; object-fit: cover;
+    -webkit-mask-image: none !important; mask-image: none !important;
+  }
+}
+
+/* Prvá obrazovka na telefóne je celá tmavá: úvod siaha až po spodok okna,
+   svetlá sekcia pod ním sa ukáže až po posunutí. (svh = výška okna
+   s viditeľným adresným riadkom, takže úvod nikdy nepresahuje obrazovku.) */
+@media (max-width: 759px) {
+  body:not(.k-nic) .k .kh-hero.kh-hero { min-height: calc(100svh - var(--kv-hlavicka, 61px)) !important; }
 }

@@ -23,7 +23,7 @@
   assign y1p = y1 | minus: 14
 -%}
 <figure class="kp-nakres">
-  <svg viewBox="0 0 340 330" role="img" aria-label="Pôdorys {{ w_m }} × {{ l_m }} m">
+  <svg viewBox="0 0 340 344" role="img" aria-label="Pôdorys {{ w_m }} × {{ l_m }} m">
     <defs><marker id="kpSipka" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 8 4 0 8z"/></marker></defs>
     <rect class="kp-nakres__strecha" x="{{ x0 }}" y="{{ y0 }}" width="{{ sw }}" height="{{ sl }}" rx="2"/>
     {%- for i in (1..9) -%}{%- assign yy = sl | times: i | divided_by: 10 | plus: y0 -%}<line class="kp-nakres__vlna" x1="{{ x0 }}" y1="{{ yy }}" x2="{{ x1 }}" y2="{{ yy }}"/>{%- endfor -%}
