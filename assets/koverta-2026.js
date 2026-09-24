@@ -3941,7 +3941,9 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           img.classList.add('je-nacitava');
           const hotovo = () => img.classList.remove('je-nacitava');
           img.addEventListener('load', hotovo, { once: true });
-          img.addEventListener('error', hotovo, { once: true });
+          /* Keď sa fotka nenačíta, ostane len sivé pole karty — nie ikona
+             rozbitého obrázka s otáznikom (tak to vyzeralo na iPhone). */
+          img.addEventListener('error', () => { hotovo(); img.style.visibility = 'hidden'; }, { once: true });
           img.setAttribute('src', src);
           img.removeAttribute('data-k-menu-src');
           if (img.complete) hotovo();
