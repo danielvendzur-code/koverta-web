@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
-import { get, list } from '@vercel/blob';
+import { del, get, list } from '@vercel/blob';
+import { testovaciDopyt } from './dopyt.js';
 
 function escapeHtml(v) {
   return String(v || '').replace(/[&<>"']/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[z]));
@@ -38,28 +39,70 @@ export function vyziadajPrihlasenie(res) {
 /* `list` vráti najviac 1 000 súborov naraz, zoradených podľa cesty, teda od
    najstaršieho dňa. Bez stránkovania sa do zoznamu dostali len staré dopyty
    a dnešné v ňom chýbali. */
-async function nacitajDopyty() {
-  const jsony = [];
+export async function vsetkyBloby(prefix) {
+  const bloby = [];
   let cursor;
   do {
-    const strana = await list({ prefix: 'dopyty/', limit: 1000, ...(cursor ? { cursor } : {}) });
-    jsony.push(...strana.blobs.filter((b) => b.pathname.endsWith('/dopyt.json')));
+    const strana = await list({ prefix, limit: 1000, ...(cursor ? { cursor } : {}) });
+    bloby.push(...strana.blobs);
     cursor = strana.hasMore ? strana.cursor : undefined;
   } while (cursor);
-  /* Cesta začína dátumom a časom prijatia, takže zoradenie podľa nej je
-     zoradenie od najnovšieho. */
-  const najnovsie = jsony.sort((a, b) => b.pathname.localeCompare(a.pathname)).slice(0, 500);
+  return bloby;
+}
+
+/* Jeden uložený dopyt. `get` bez volieb v @vercel/blob 2.x vyhodí „missing
+   options". Archív je súkromný. */
+export async function precitajZaznam(blob) {
+  const subor = await get(blob.url, { access: 'private', useCache: false });
+  if (!subor || !subor.stream) return null;
+  const zaznam = await new Response(subor.stream).json().catch(() => null);
+  return zaznam ? { ...zaznam, archivePath: blob.pathname } : null;
+}
+
+/* Zmaže testovacie dopyty (testovaciDopyt v api/dopyt.js: vymyslené číslo
+   +421 900 000 000, testovacie domény). Maže sa len priečinok takého dopytu
+   (dopyt.json a jeho prílohy), nič iné. Vráti počet zmazaných dopytov. */
+export async function zmazTestovacie(zaznamy, bloby) {
+  const priecinky = zaznamy
+    .filter((z) => z && testovaciDopyt(z) && /^dopyty\/\d{4}-\d{2}-\d{2}\/[^/]+\/dopyt\.json$/.test(String(z.archivePath || '')))
+    .map((z) => z.archivePath.slice(0, -'dopyt.json'.length));
+  if (!priecinky.length) return 0;
+  const vPriecinku = new Set(priecinky);
+  const url = bloby.filter((b) => vPriecinku.has(b.pathname.replace(/(\/prilohy)?\/[^/]+$/, '/'))).map((b) => b.url);
+  for (let i = 0; i < url.length; i += 500) await del(url.slice(i, i + 500));
+  console.log(JSON.stringify({ udalost: 'testy', vysledok: 'ZMAZANE', dopytov: priecinky.length, suborov: url.length }));
+  return priecinky.length;
+}
+
+async function precitajVsetky(jsony) {
   const vysledky = [];
-  for (let i = 0; i < najnovsie.length; i += 16) {
-    const davka = await Promise.all(najnovsie.slice(i, i + 16).map(async (blob) => {
-      /* `get` bez volieb v @vercel/blob 2.x vyhodí „missing options". Archív je súkromný. */
-      const subor = await get(blob.url, { access: 'private', useCache: false });
-      if (!subor || !subor.stream) return null;
-      return new Response(subor.stream).json().catch(() => null);
-    }));
+  for (let i = 0; i < jsony.length; i += 16) {
+    const davka = await Promise.all(jsony.slice(i, i + 16).map((b) => precitajZaznam(b).catch(() => null)));
     vysledky.push(...davka.filter(Boolean));
   }
   return vysledky;
+}
+
+/* Všetky dopyty: testovacie sa zmažú, vráti sa najviac 500 skutočných,
+   najnovšie hore (cesta začína dátumom a časom prijatia). */
+export async function nacitajDopyty() {
+  const bloby = await vsetkyBloby('dopyty/');
+  const jsony = bloby.filter((b) => b.pathname.endsWith('/dopyt.json'))
+    .sort((a, b) => b.pathname.localeCompare(a.pathname));
+  const zaznamy = await precitajVsetky(jsony);
+  await zmazTestovacie(zaznamy, bloby).catch((chyba) => console.error('Testy sa nepodarilo zmazať:', chyba.message));
+  return zaznamy.filter((z) => !testovaciDopyt(z)).slice(0, 500);
+}
+
+/* Dopyty, ktoré server vyhodnotil ako automat (neodoslané), za 7 dní. */
+async function nacitajZachytene(teraz = Date.now()) {
+  const jsony = [];
+  for (let d = 0; d < 7; d += 1) {
+    const den = new Date(teraz - d * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    jsony.push(...(await vsetkyBloby(`zachytene/${den}/`)).filter((b) => b.pathname.endsWith('.json')));
+  }
+  jsony.sort((a, b) => b.pathname.localeCompare(a.pathname));
+  return (await precitajVsetky(jsony.slice(0, 200))).filter((z) => !testovaciDopyt(z));
 }
 
 function csv(dopyty) {
@@ -81,14 +124,20 @@ export default async function handler(req, res) {
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) return res.status(503).send('Archív nie je nastavený.');
   const dopyty = await nacitajDopyty();
+  const zachytene = await nacitajZachytene().catch(() => []);
   if (String(req.query?.format || '') === 'csv') {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="koverta-dopyty.csv"');
     return res.status(200).send(csv(dopyty));
   }
   const neodoslane = dopyty.filter((d) => !/^odoslaný/.test(String(d.stavEmailu || ''))).length;
-  const riadky = dopyty.map((d) => `<tr><td>${escapeHtml(new Date(d.prijateAt).toLocaleString('sk-SK', { timeZone: 'Europe/Bratislava' }))}</td><td><strong>${escapeHtml(d.meno)}</strong><br><small>${escapeHtml(d.typ)}</small></td><td><a href="tel:${escapeHtml(d.telefon)}">${escapeHtml(d.telefon)}</a><br><a href="mailto:${escapeHtml(d.email)}">${escapeHtml(d.email)}</a></td><td>${escapeHtml(d.miesto)}</td><td class="sprava">${escapeHtml(d.sprava)}</td><td>${escapeHtml(d.stavEmailu)}<br><small>${(d.prilohy || []).length} príloh</small>${d.zdroj ? `<br><small title="${escapeHtml(d.zdroj.prehliadac)}">IP ${escapeHtml(d.zdroj.ip)} · ${escapeHtml(d.zdroj.origin)}</small>` : ''}</td></tr>`).join('');
+  const dnesKey = new Date().toLocaleDateString('sk-SK', { timeZone: 'Europe/Bratislava' });
+  const jeDnes = (d) => new Date(d.prijateAt).toLocaleDateString('sk-SK', { timeZone: 'Europe/Bratislava' }) === dnesKey;
+  const dnesPocet = dopyty.filter(jeDnes).length;
+  const riadokDopytu = (d) => `<tr><td>${escapeHtml(new Date(d.prijateAt).toLocaleString('sk-SK', { timeZone: 'Europe/Bratislava' }))}</td><td><strong>${escapeHtml(d.meno)}</strong><br><small>${escapeHtml(d.typ)}</small></td><td><a href="tel:${escapeHtml(d.telefon)}">${escapeHtml(d.telefon)}</a><br><a href="mailto:${escapeHtml(d.email)}">${escapeHtml(d.email)}</a></td><td>${escapeHtml(d.miesto)}</td><td class="sprava">${escapeHtml(d.sprava)}</td><td>${escapeHtml(d.stavEmailu)}<br><small>${(d.prilohy || []).length} príloh</small>${d.zdroj ? `<br><small title="${escapeHtml(d.zdroj.prehliadac)}">IP ${escapeHtml(d.zdroj.ip)} · ${escapeHtml(d.zdroj.origin)}</small>` : ''}</td></tr>`;
+  const riadky = dopyty.map(riadokDopytu).join('');
+  const riadkyZachytene = zachytene.map(riadokDopytu).join('');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'private, no-store');
-  return res.status(200).send(`<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Koverta dopyty</title><style>body{margin:0;background:#f6f5f2;color:#12171a;font:15px Arial,sans-serif}header{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 4vw;background:#12171a;color:#fff}header b{letter-spacing:.08em}header b.znacka{display:flex;align-items:center;gap:12px}header b.znacka img{display:block;height:40px;width:auto}header b span{color:#fff;font-size:13px;letter-spacing:.08em;text-transform:uppercase}header nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}header a.druhe{background:#fff}header a{padding:10px 16px;border-radius:999px;background:#fc0;color:#12171a;text-decoration:none;font-weight:700}main{padding:28px 4vw}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:14px;text-align:left;vertical-align:top;border-bottom:1px solid #ddd}th{font-size:12px;text-transform:uppercase;color:#6b7174}.sprava{max-width:420px;white-space:pre-wrap}a{color:#12171a}@media(max-width:800px){table,tbody,tr,td{display:block}thead{display:none}tr{padding:14px;border-bottom:1px solid #ccc}td{padding:6px 0;border:0}.sprava{max-width:none}}</style></head><body><header><b class="znacka"><img src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0002d10e0530d0ec3e3da4e0d35306af8a458c5a/assets/koverta-logo-email.png" width="156" height="40" alt="Koverta"><span>Dopyty</span></b><nav><a href="/api/suhrn" class="druhe">Poslať neodoslané e-mailom</a><a href="?format=csv">Stiahnuť CSV</a></nav></header><main><p>Uložených dopytov: <strong>${dopyty.length}</strong>${neodoslane ? ` · Neodišli e-mailom: <strong>${neodoslane}</strong> (prídu ráno v súhrne alebo hneď tlačidlom hore)` : ''}</p><table><thead><tr><th>Prijaté</th><th>Zákazník</th><th>Kontakt</th><th>Miesto</th><th>Správa</th><th>Stav</th></tr></thead><tbody>${riadky || '<tr><td>Zatiaľ tu nie je žiadny dopyt.</td></tr>'}</tbody></table></main></body></html>`);
+  return res.status(200).send(`<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Koverta dopyty</title><style>body{margin:0;background:#f6f5f2;color:#12171a;font:15px Arial,sans-serif}header{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 4vw;background:#12171a;color:#fff}header b{letter-spacing:.08em}header b.znacka{display:flex;align-items:center;gap:12px}header b.znacka img{display:block;height:40px;width:auto}header b span{color:#fff;font-size:13px;letter-spacing:.08em;text-transform:uppercase}header nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}header a.druhe{background:#fff}header a{padding:10px 16px;border-radius:999px;background:#fc0;color:#12171a;text-decoration:none;font-weight:700}main{padding:28px 4vw}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:14px;text-align:left;vertical-align:top;border-bottom:1px solid #ddd}th{font-size:12px;text-transform:uppercase;color:#6b7174}.sprava{max-width:420px;white-space:pre-wrap}a{color:#12171a}@media(max-width:800px){table,tbody,tr,td{display:block}thead{display:none}tr{padding:14px;border-bottom:1px solid #ccc}td{padding:6px 0;border:0}.sprava{max-width:none}}</style></head><body><header><b class="znacka"><img src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0002d10e0530d0ec3e3da4e0d35306af8a458c5a/assets/koverta-logo-email.png" width="156" height="40" alt="Koverta"><span>Dopyty</span></b><nav><a href="/api/suhrn" class="druhe">Poslať neodoslané e-mailom</a><a href="?format=csv">Stiahnuť CSV</a></nav></header><main><p>Uložených dopytov: <strong>${dopyty.length}</strong> · Dnes: <strong>${dnesPocet}</strong>${neodoslane ? ` · Neodišli e-mailom: <strong>${neodoslane}</strong> (prídu ráno v súhrne alebo hneď tlačidlom hore)` : ''}</p><table><thead><tr><th>Prijaté</th><th>Zákazník</th><th>Kontakt</th><th>Miesto</th><th>Správa</th><th>Stav</th></tr></thead><tbody>${riadky || '<tr><td>Zatiaľ tu nie je žiadny dopyt.</td></tr>'}</tbody></table>${zachytene.length ? `<h2 style="margin:36px 0 6px;font-size:18px">Zachytené ako automat (${zachytene.length})</h2><p style="margin:0 0 14px;color:#6b7174">Server ich vyhodnotil ako automatický prehliadač alebo skript, preto neodišli e-mailom. Ak je medzi nimi skutočný zákazník, ozvite sa mu.</p><table><thead><tr><th>Prijaté</th><th>Zákazník</th><th>Kontakt</th><th>Miesto</th><th>Správa</th><th>Stav</th></tr></thead><tbody>${riadkyZachytene}</tbody></table>` : ''}</main></body></html>`);
 }

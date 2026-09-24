@@ -46,14 +46,14 @@ export function html(hodnota) {
    (a zhorší povesť odosielateľa). Taký dopyt dostane úspech, aby test prešiel,
    ale nič sa neodošle ani neuloží. Rovnako automatické kontroly z repozitára
    („Koverta audit test“, „QA; nothing is delivered“). */
-function testovaciDopyt(data) {
-  const domena = (data.email.split('@')[1] || '').toLowerCase();
+export function testovaciDopyt(data) {
+  const domena = (String(data.email || '').split('@')[1] || '').toLowerCase();
   if (/(^|\.)(invalid|test|example|localhost)$/.test(domena)) return true;
   if (/^example\.(com|org|net|sk)$/.test(domena)) return true;
   /* Vymyslené číslo 0900 000 000 / +421 900 000 000 nemá skutočný zákazník —
      používajú ho testy formulára. */
   if (/^(\+421|0)?900000000$/.test(String(data.telefon || '').replace(/[\s-]/g, ''))) return true;
-  return /koverta audit test|nothing is delivered|client-side qa/i.test(data.meno + ' ' + data.sprava);
+  return /koverta audit test|nothing is delivered|client-side qa/i.test(String(data.meno || '') + ' ' + String(data.sprava || ''));
 }
 
 /* Automatické prehliadače a skripty nesmú minúť denný limit e-mailov —
@@ -248,6 +248,19 @@ async function archivujDopyt(data, attachments, id, stavEmailu, zdroj) {
   return { ...zaznam, archiveUrl: blob.url, archivePath: `${zaklad}/dopyt.json` };
 }
 
+/* Dopyt označený ako automat sa neodošle, ale ani nestratí: uloží sa bokom
+   (bez príloh) do `zachytene/`. Keby sa medzi ne dostal skutočný človek
+   (zvláštny prehliadač), majiteľ ho uvidí v zozname dopytov. */
+async function zachytAutomat(data, zdroj) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+  const datum = new Date().toISOString();
+  const id = crypto.randomBytes(8).toString('hex');
+  await put(`zachytene/${datum.slice(0, 10)}/${datum.replace(/[:.]/g, '-')}-${id}.json`,
+    JSON.stringify({ id, prijateAt: datum, stavEmailu: 'zachytený ako automat – neodoslaný', ...data, zdroj }, null, 2), {
+      access: 'private', contentType: 'application/json; charset=utf-8', addRandomSuffix: false, allowOverwrite: true
+    });
+}
+
 /* --- Vzhľad e-mailov -------------------------------------------------------
    Oficiálne logo Koverty — to isté SVG ako v hlavičke webu, vykreslené do PNG
    3× (assets/koverta-logo-email.png). Biela zaoblená plocha je súčasťou
@@ -360,6 +373,7 @@ export default async function handler(req, res) {
   }
   if (automatickyDopyt(req, telo)) {
     zaznamenaj('AUTOMAT_ZAHODENY', zdroj, { domenaNavstevnika: data.email.split('@')[1] || '' });
+    await zachytAutomat(data, zdroj).catch(() => null);
     return res.status(200).json({ ok: true, test: true });
   }
 

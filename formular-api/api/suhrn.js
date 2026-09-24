@@ -2,9 +2,9 @@ import crypto from 'node:crypto';
 import { get, list } from '@vercel/blob';
 import {
   odosliResend, zapisStav, zapocitaj, emailKostra, emailTlacidlo, telOdkaz, odkazStranky, html, PISMO,
-  STAV_ODOSLANY, STAV_CAKA
+  STAV_ODOSLANY, STAV_CAKA, testovaciDopyt
 } from './dopyt.js';
-import { autorizovany, zablokovany, zlyPokus, vyziadajPrihlasenie } from './dopyty.js';
+import { autorizovany, zablokovany, zlyPokus, vyziadajPrihlasenie, zmazTestovacie } from './dopyty.js';
 
 /* Ranný súhrn dopytov, ktoré neodišli e-mailom: vyčerpaný denný limit
    Resendu, priveľa dopytov z jedného zariadenia alebo výpadok. Spúšťa ho
@@ -32,15 +32,19 @@ export async function neodoslaneDopyty(teraz = Date.now()) {
   const dopyty = [];
   for (let d = 0; d <= DNI_SPAT; d += 1) {
     const den = new Date(teraz - d * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const testy = [], bloby = [];
     let cursor;
     do {
       const strana = await list({ prefix: `dopyty/${den}/`, limit: 1000, ...(cursor ? { cursor } : {}) });
+      bloby.push(...strana.blobs);
       for (const blob of strana.blobs) {
         if (!blob.pathname.endsWith('/dopyt.json')) continue;
         const subor = await get(blob.url, { access: 'private', useCache: false });
         if (!subor || !subor.stream) continue;
         const zaznam = await new Response(subor.stream).json().catch(() => null);
         if (!zaznam) continue;
+        /* Testovací dopyt do súhrnu nepatrí — zmaže sa. */
+        if (testovaciDopyt(zaznam)) { testy.push({ ...zaznam, archivePath: blob.pathname }); continue; }
         const stav = String(zaznam.stavEmailu || '');
         if (stav === STAV_ODOSLANY || stav.startsWith(STAV_V_SUHRNE)) continue;
         /* Dopyt, ktorý práve odchádza, necháme tak. */
@@ -49,6 +53,7 @@ export async function neodoslaneDopyty(teraz = Date.now()) {
       }
       cursor = strana.hasMore ? strana.cursor : undefined;
     } while (cursor);
+    await zmazTestovacie(testy, bloby).catch((chyba) => console.error('Testy sa nepodarilo zmazať:', chyba.message));
   }
   return dopyty.sort((a, b) => String(a.prijateAt).localeCompare(String(b.prijateAt)));
 }
