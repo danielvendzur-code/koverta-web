@@ -323,22 +323,10 @@ async function revealControl(page, selector) {
     const constructionLine = wallSnap.price.lines.find(line => /Konštrukcia pre steny/.test(line.k));
     assert(constructionLine && constructionLine.v === 600,
       'Wall selection did not add the Expivi 6-post construction difference (600 €)');
-    assert(wallSnap.geometry.wallMode === true && wallSnap.geometry.postCount === 5,
-      'One side wall must stand on corner posts plus one middle post on that side (5 posts)');
-    // Predná stena v Expivi nebola — ide na nacenenie a cena ostáva „od“.
-    await page.locator('[data-sp-side="right"]').click();
-    await page.locator('[data-sp-side-opt="kvdrevo"]').click();
-    await waitRender(page);
-    const frontSnap = await page.evaluate(() => window.SP_TEST.snapshot());
-    const frontLine = frontSnap.price.lines.find(line => /Predná: Lamely, drevo/.test(line.k));
-    assert(frontLine && frontLine.v === null, 'Front wall (not priced in Expivi) must be quote-only');
-    let linesText = await page.locator('[data-sp-lines]').innerText();
-    assert(linesText.includes('Lamely, drevo') && linesText.includes('na nacenenie'),
-      'Quote-only front wall is not shown as „na nacenenie“');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Unknown-price front wall did not mark total as open/starting price');
-    await page.locator('[data-sp-side-opt="open"]').click();
-    await waitRender(page);
+    assert(wallSnap.geometry.wallMode === true && wallSnap.geometry.postCount === 6,
+      'One side wall must stand on six posts, three on each side, as priced in Expivi');
+    // Prednú stranu (vjazd) Koverta stenou uzavrieť neponúka.
+    assert(await page.locator('[data-sp-side="right"]').isHidden(), 'Front (entrance) wall must not be offered');
     await page.locator('[data-sp-side="rear"]').click();
 
     // A dimension change keeps a compatible selected side and recomputes the base band.

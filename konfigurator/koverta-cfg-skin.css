@@ -850,11 +850,12 @@ body { background: var(--k-white); color: var(--k-ink); }
    Potom to bolo rozdelené podľa smeru: zvislé potiahnutie patrilo stránke,
    vodorovné scéne. Majiteľ to 24. 9. 2026 zmenil: akýkoľvek pohyb prstom po
    3D má otáčať prístrešok (vodorovne dookola, zvisle sklon), nie posúvať
-   stránku. Stránka sa posúva ťahom mimo scény — po lište pod ňou a po
-   voľbách, ktoré sú pod scénou vždy.
+   stránku. Otáča však len dotyk priamo na prístrešku; okolo neho (široké
+   pole na telefóne) sa stránka posúva — zvislý posun tu povoľuje pan-y
+   a skript ho zruší, keď sa dotyk začne na modeli.
    ========================================================================== */
 #SoltecPremium .sp-stage,
-#SoltecPremium .sp-stage__canvas { touch-action: none; }
+#SoltecPremium .sp-stage__canvas { touch-action: pan-y; }
 /* Lišta pod scénou sú tlačidlá, tam musí dotyk fungovať normálne. */
 #SoltecPremium .sp-stage__bar,
 #SoltecPremium .sp-stage__ref { touch-action: auto; }

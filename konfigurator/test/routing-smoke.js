@@ -100,22 +100,21 @@ module.exports = async function routingSmoke(browser) {
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
       if (route === 'zahrada') {
-        assert(withSide.price.open === true && withSide.price.total === null &&
-          withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
-          `${route}: quote-only side is missing from price lines`);
+        /* Záhradný prístrešok má steny zo zadnej a bočných strán ocenené
+           podľa Expivi, vjazd spredu sa stenou neuzatvára. */
+        assert(withSide.price.total !== null && withSide.price.total > cena(resized),
+          `${route}: priced wall is missing its Expivi price`);
+        assert(await page.locator('[data-sp-side="right"]').isHidden(),
+          `${route}: front wall must not be offered`);
       } else if (kv) {
         /* Zadná, ľavá a pravá stena prístrešku pre auto majú cenu z Expivi
-           a pripočíta sa k nim konštrukcia so stĺpmi v rohoch. Prednú stenu
-           Expivi nepoznal — tá jediná ide na nacenenie. */
+           a pripočíta sa k nim konštrukcia so šiestimi stĺpmi. Prednú stranu
+           (vjazd) Koverta stenou neuzatvára. */
         assert(withSide.price.total !== null && withSide.price.total > cena(resized) &&
           withSide.price.lines.some(line => /Konštrukcia pre steny/.test(line.k) && line.v > 0),
           `${route}: priced wall is missing its Expivi price`);
-        await page.locator('[data-sp-side="right"]').click();
-        await page.locator('[data-sp-side-opt]:not([data-sp-side-opt="open"])').first().click();
-        const withFront = await snapshot();
-        assert(withFront.price.open === true && withFront.price.total === null &&
-          withFront.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
-          `${route}: quote-only front wall is missing from price lines`);
+        assert(await page.locator('[data-sp-side="right"]').isHidden(),
+          `${route}: front (entrance) wall must not be offered`);
       } else {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
       }

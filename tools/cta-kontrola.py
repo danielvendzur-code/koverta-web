@@ -15,6 +15,7 @@ KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOPYT = 'Nezáväzná cenová ponuka'
 KONFIGURATOR = 'Otvoriť konfigurátor'
 POVOLENE = {
+    'Technické požiadavky na podklad (PDF)',
     DOPYT, KONFIGURATOR,
     'Konfigurovať',                    # produkt: konfigurátor s týmto rozmerom
     'Kúpiť v e-shope',                 # rozmer: živý produkt v obchode

@@ -431,7 +431,10 @@ function validateAccessoryContacts(snap, label) {
       /* Each physical side is tested independently. The wall is selected on a
          four-post size, resized while still selected to both measured six-post
          sizes, and rotated. This catches stale world-space anchors. */
-      for (const side of SIDES) {
+      /* Prednú stranu (vjazd) Koverta stenou uzavrieť neponúka. */
+      assert(await page.locator('[data-sp-side="right"]').isHidden(),
+        `${device}: front (entrance) wall must not be offered`);
+      for (const side of SIDES.filter(s => s !== 'right')) {
         await setSize(page, 6200, 6000);
         await selectSide(page, side, 'kvdrevo');
         let snap4 = await snapshot(page);
@@ -440,7 +443,9 @@ function validateAccessoryContacts(snap, label) {
            len na jej strane a pri zadnej/prednej nad 4 m v strede čela. */
         assert(snap4.geometry.postAxes.length === 3 && snap4.geometry.wallMode === true,
           `${device}/${side}: 6200x6000 with a wall does not stand on corner posts with a middle row`);
-        const expectedPosts = 5;   // 4 rohy + stredný pri bočnej stene alebo v strede čela (6,2 m > 4 m)
+        /* So stenou stoja na oboch bokoch po tri stĺpy (cena z Expivi bola
+           so šiestimi); zadná stena nad 4 m pridá stĺp do stredu čela. */
+        const expectedPosts = side === 'left' ? 7 : 6;
         assert(snap4.geometry.postCount === expectedPosts,
           `${device}/${side}: 6200x6000 with one wall should have ${expectedPosts} posts, got ${snap4.geometry.postCount}`);
         const anchor4 = validateWallAnchor(snap4, side, `${device}/6200x6000`);
