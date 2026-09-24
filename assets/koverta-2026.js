@@ -3302,12 +3302,14 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     const siet = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (siet && (siet.saveData === true || /(^|-)[23]g$/.test(siet.effectiveType || ''))) return;
     /* Úvodné video má 7,6 MB. Na počítači sa stiahne na pozadí a nikto si to
-       nevšimne, na telefóne je to celý dátový balík za jednu návštevu — a to
-       pri zábere, ktorý sa na úzkej obrazovke aj tak oreže na stred. Telefón
-       preto dostáva vlastný zostrih: 854 × 480, dvadsaťpäť sekúnd, 1,5 MB,
-       teda pätina. Hranica je 900 px, pod ňou je telefón aj otočený tablet.
-       Kým zostrih nebol, ostávala na telefóne úvodná fotografia — a tak to
-       ostáva aj pre značku, ktorá svoj zostrih nemá. */
+       nevšimne, na telefóne je to celý dátový balík za jednu návštevu. Telefón
+       preto dostáva vlastný zostrih: 960 × 540, dvadsaťpäť sekúnd, 3,2 MB.
+       Na telefóne je úvodné video na celú šírku v pomere 16 : 9 nad textom
+       (koverta-2026.css, „Úvod na telefóne“), takže je vidieť celý záber
+       a netreba ho orezávať na výšku ani zväčšovať — výrez na výšku z 720p
+       zdroja bol rozmazaný. Hranica je 900 px, pod ňou je telefón aj otočený
+       tablet. Značka bez vlastného zostrihu na úzkej obrazovke ostáva na
+       fotografii. */
     const uzky = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
 
     vsetky.forEach((v) => {
@@ -3335,11 +3337,12 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
              v niektorých prehliadačoch k stiahnutiu MP4 aj WebM naraz —
              15,6 MB na jedno načítanie úvodu. Rozhodne canPlayType a
              prehrávač dostane jednu adresu. */
-          /* Mobilné video je výrez na výšku — dostane ho len obrazovka na
-             výšku. Telefón otočený na šírku by z neho videl priblížený pás. */
-          const naVysku = uzky && v.getAttribute('data-k-video-mobil')
-            && window.matchMedia('(orientation: portrait)').matches;
-          const zdroje = naVysku
+          /* Mobilný zostrih patrí telefónu (do 759 px), kde je video na celú
+             šírku nad textom. Tablet má úvod cez celú výšku a dostane
+             pôvodné video s vyšším rozlíšením. */
+          const naMobil = v.getAttribute('data-k-video-mobil')
+            && window.matchMedia && window.matchMedia('(max-width: 759px)').matches;
+          const zdroje = naMobil
             ? [['data-k-video-mobil', 'video/mp4']]
             : [['data-k-video', 'video/mp4; codecs="avc1.4d401f"'], ['data-k-video-webm', 'video/webm']];
           const vybrany = zdroje.find((par) => v.getAttribute(par[0]) && v.canPlayType(par[1]) !== '');
