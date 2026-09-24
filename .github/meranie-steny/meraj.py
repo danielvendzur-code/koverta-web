@@ -34,7 +34,13 @@ for cid, cesta in [('14069', 'teams/811/models/14069/b79e-1d7d-12a6-5dd3.zip'),
                    ('13412', 'teams/811/models/13412/abae-0b4b-fdbb-fae8.zip'),
                    ('13670', 'teams/811/models/13670/a7e7-4724-5125-6109.zip')]:
     url = 'https://data.expivi.net/' + cesta
-    data = urllib.request.urlopen(url, timeout=120).read()
+    req = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36',
+        'Referer': 'https://koverta.sk/apps/configurator?catalogue=' + cid, 'Origin': 'https://koverta.sk'})
+    try:
+        data = urllib.request.urlopen(req, timeout=120).read()
+    except Exception as e:
+        print('==', cid, 'NEDÁ SA STIAHNUŤ:', e); continue
     open(cid + '.zip', 'wb').write(data)
     z = zipfile.ZipFile(cid + '.zip')
     mena = [i.filename for i in z.infolist()]
