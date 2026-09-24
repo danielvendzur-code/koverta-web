@@ -3608,20 +3608,26 @@ function kvAdresa(kluc, zaloha) {
             const wallTop = H + beam + Math.round(H * 0.30);
             /* One wall, one function, so the corner placement gets the same
                wall twice instead of two that drifted apart. */
-            const houseWall = (axis, v, nrm, u0, u1) => {
+            const houseWall = (axis, v, nrm, u0, u1, sklo) => {
               const P = (u, z, off) => (axis === 'x'
                 ? [u, v + (off || 0) * nrm[1], z]
                 : [v + (off || 0) * nrm[0], u, z]);
               const band = (zA, zB, hex, off, extra) => quad(
                 [P(u0, zA, off), P(u1, zA, off), P(u1, zB, off), P(u0, zB, off)],
                 hex, Object.assign({ normal: nrm, cull: true, edge: false, fit: false }, extra || {}));
+              /* Priehľadná stena (typ bez stĺpov): pergolu je cez ňu vidieť,
+                 no je jasné, že stojí medzi stenami. */
+              if (sklo) { band(0, wallTop, 'rgba(206,220,228,.30)', 0, { raw: true, cull: false }); return; }
               band(0, wallTop, wallHex);
               // the shadow the roof throws on the wall it is fixed to
               band(H - 40, H + beam, 'rgba(24,26,28,.13)', 1.0, { raw: true, bias: 200 });
             };
+            const sklene = placement().glassWalls || [];
 
-            if (walls.indexOf('rear') > -1) houseWall('x', 0, [0, 1, 0], -over, L + over);
-            if (walls.indexOf('left') > -1) houseWall('y', 0, [1, 0, 0], -over, W + over);
+            if (walls.indexOf('rear') > -1) houseWall('x', 0, [0, 1, 0], -over, L + over, sklene.indexOf('rear') > -1);
+            if (walls.indexOf('left') > -1) houseWall('y', 0, [1, 0, 0], -over, W + over, sklene.indexOf('left') > -1);
+            if (walls.indexOf('right') > -1) houseWall('y', L, [-1, 0, 0], -over, W + over, sklene.indexOf('right') > -1);
+            if (walls.indexOf('front') > -1) houseWall('x', W, [0, -1, 0], -over, L + over, sklene.indexOf('front') > -1);
             layer = 0;
           }
 

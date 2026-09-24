@@ -2468,7 +2468,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       if (beznyTyp && subor.size < 650000) return subor;
       let obrazok;
       try { obrazok = await createImageBitmap(subor); } catch (e) { return subor; }
-      const pomer = Math.min(1, 1600 / Math.max(obrazok.width, obrazok.height));
+      const pomer = Math.min(1, 1400 / Math.max(obrazok.width, obrazok.height));
       const platno = document.createElement('canvas');
       platno.width = Math.max(1, Math.round(obrazok.width * pomer));
       platno.height = Math.max(1, Math.round(obrazok.height * pomer));
@@ -2483,14 +2483,15 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     const pripravPrilohy = async (f) => {
       const subory = [...f.querySelectorAll('input[type="file"]')]
         .flatMap((i) => [...(i.files || [])]);
-      if (subory.length > 4) throw new Error('Priložiť môžete najviac 4 súbory.');
+      /* Server prijme najviac 4 prílohy; ďalšie vynecháme, dopyt odíde. */
+      subory.splice(4);
       const vysledok = [];
       let spolu = 0;
       for (const povodny of subory) {
         const subor = await zmensiFotku(povodny);
         spolu += subor.size;
         if (subor.size > 2500000 || spolu > 2800000) {
-          throw new Error('Prílohy sú príliš veľké. Vyberte najviac 4 fotky alebo spolu do 2,8 MB.');
+          throw new Error('Fotky boli príliš veľké na odoslanie cez formulár.');
         }
         vysledok.push({ filename: subor.name, contentType: subor.type || 'application/octet-stream', content: await nacitajBase64(subor) });
       }
@@ -2636,13 +2637,18 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         try {
           const fd = new FormData(f);
           const hod = (k) => String(fd.get(k) || '').trim();
+          /* Fotky nikdy nezastavia dopyt: keď sa nedajú pripojiť (priveľké,
+             nečitateľný formát), dopyt odíde bez nich a zákazník dostane
+             pokyn poslať ich e-mailom. */
+          let prilohy = [], prilohyChyba = '';
+          try { prilohy = await pripravPrilohy(f); } catch (e) { prilohyChyba = (e && e.message) || 'Fotky sa nepodarilo pripojiť.'; }
           const telo = {
             typ: hod('contact[Čo rieši]'), meno: hod('contact[name]'),
             telefon: hod('contact[phone]'), email: hod('contact[email]'),
             miesto: hod('contact[Miesto realizácie]'), sprava: hod('contact[body]'),
             suhlas: hod('contact[Súhlas]'), website: hod('website'),
             startedAt: Number(hod('startedAt')) || 0, stranka: location.href,
-            prilohy: await pripravPrilohy(f),
+            prilohy,
             /* Prehliadač riadený programom (testy, roboty) — server taký
                dopyt neposiela e-mailom, aby nevyčerpal denný limit. */
             automat: navigator.webdriver === true
@@ -2668,7 +2674,15 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           textySpat();
           /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
              ani náhradná e-mailová cesta sa nerátajú. */
-          ukaz(false);
+          ukaz(Boolean(prilohyChyba));
+          if (prilohyChyba && fotky) {
+            /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
+            const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
+            const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
+            if (veta) veta.textContent = text; else fotky.insertBefore(document.createTextNode(text), fotky.firstChild);
+            kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené' });
+            return;
+          }
           /* Ďakovná stránka: konverziu podľa adresy vie merať aj ten, kto
              nečíta dataLayer. `contact_posted=true` je ten istý znak, aký
              posiela kontaktný formulár Shopify. Odchádza sa, až keď GTM
