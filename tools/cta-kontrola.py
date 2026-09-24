@@ -27,6 +27,7 @@ POVOLENE = {
     'Navrhnúť zostavu', 'Ďalšie realizácie', 'Všetky realizácie na mape',
     'Prístrešky Koverta', 'Pridať do košíka', 'Do košíka', 'Odoslať', 'Odoslať dopyt', 'Získať cenovú ponuku', 'Hľadať',        # vyhľadávanie
     'Všetko o',                       # kolekcia: text pokračuje podľa radu
+    'Pozrieť galériu',                # kuchyne: druhé tlačidlo v úvode, skok na galériu
 }
 MAX_POPIS = 160
 

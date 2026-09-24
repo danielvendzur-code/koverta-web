@@ -14366,3 +14366,24 @@ body.ma-kh-modal { overflow: hidden; }
 .k .kh-pdf__odkaz strong { font: 600 14px/1.25 var(--k-body); }
 .k .kh-pdf__odkaz small { color: var(--k-muted); font: 400 12px/1.3 var(--k-body); }
 @media (max-width: 599px) { .k .kh-pdf__odkaz { width: 100%; } }
+
+/* Bio: konkrétne modely SL sú za jedným riadkom pod grafom, aby vrch
+   stránky nebol preplnený číslami. */
+.k .kh-bio-modely { margin-top: clamp(18px, 2vw, 28px); }
+.k .kh-bio-modely > .kh-vs { margin-top: 4px; }
+
+/* Podstránky na telefóne: tmavý úvod siaha až po spodok celej obrazovky,
+   takže pod priesvitnou lištou Safari (adresa, tlačidlá) je čierna,
+   nie biela ďalšia sekcia. Rozloženie úvodu sa nemení. */
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero.kh-hero { min-height: calc(100lvh - var(--kv-hlavicka, 61px)) !important; }
+}
+/* Podstránky na telefóne: rovnaké rozloženie ako Carport Soltec. Kvality
+   pod tlačidlami sa neukazujú; nadpis má vždy miesto na tri riadky (kratší
+   sadne dolu k popisu) a popis na tri riadky, takže tlačidlá sú na každej
+   podstránke na rovnakom mieste. */
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero__trust { display: none !important; }
+  body:not(.k-home) .k .kh-hero .kh-hero__box > .k-display { min-height: 3lh; align-content: end; }
+  body:not(.k-home) .k .kh-hero .kh-hero__box > .kh-hero__lead { min-height: 3lh; }
+}
