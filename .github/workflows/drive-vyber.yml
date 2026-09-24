@@ -1,0 +1,23 @@
+name: Fotky realizácií z Drive (vybrané do webu)
+on:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: ['.github/drive-fotky/vyber.json']
+permissions:
+  contents: write
+jobs:
+  vyber:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet pillow
+      - name: Spracuj vybrané fotky do assets/foto
+        run: python3 .github/drive-fotky/vyber.py
+      - name: Ulož do vetvy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/foto
+          git commit -m "Fotky realizácií z Drive majiteľa pre galériu (1000 px + WebP)"
+          for i in 1 2 3; do git pull --rebase -q origin claude/practical-dijkstra-d9d0nt && git push -q origin HEAD:claude/practical-dijkstra-d9d0nt && break; sleep 5; done
