@@ -709,6 +709,8 @@ mapa-hlohovec.jpg	assets/mapa/hlohovec.jpg
 mapa-horne-oresany-mini.jpg	assets/mapa/horne-oresany-mini.jpg
 mapa-horne-oresany.jpg	assets/mapa/horne-oresany.jpg
 mapa-horne-saliby-mini.jpg	assets/mapa/horne-saliby-mini.jpg
+mapa-horne-saliby-w1000.webp	assets/mapa/horne-saliby-w1000.webp
+mapa-horne-saliby-w640.webp	assets/mapa/horne-saliby-w640.webp
 mapa-horne-saliby.jpg	assets/mapa/horne-saliby.jpg
 mapa-horne-srnie-mini.jpg	assets/mapa/horne-srnie-mini.jpg
 mapa-horne-srnie.jpg	assets/mapa/horne-srnie.jpg
@@ -733,7 +735,6 @@ mapa-kanianka.jpg	assets/mapa/kanianka.jpg
 mapa-klasov-mini.jpg	assets/mapa/klasov-mini.jpg
 mapa-klasov.jpg	assets/mapa/klasov.jpg
 mapa-klokocov-mini.jpg	assets/mapa/klokocov-mini.jpg
-mapa-klokocov-w1000.webp	assets/mapa/klokocov-w1000.webp
 mapa-klokocov.jpg	assets/mapa/klokocov.jpg
 mapa-kocovce-mini.jpg	assets/mapa/kocovce-mini.jpg
 mapa-kocovce.jpg	assets/mapa/kocovce.jpg
