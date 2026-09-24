@@ -80,6 +80,27 @@ const naMasteri = (() => {
   } catch (_) { return null; }
 })();
 const zakladPreSubor = new Map();
+/* Fotky v menu skladá koverta-2026.js až za behu (setMenuPhoto,
+   setDrawerPhoto) a na Shopify ich bral z GitHub Pages. Fotka, ktorá ešte
+   nie je na master, tam vracala 404 a v menu ostal otáznik (Carport Soltec).
+   Téma preto oznámi presnú adresu každej takej fotky, rovnako ako pri
+   ostatných obrázkoch: master z Pages, inak jsDelivr s commitom. */
+function menuFotky() {
+  const js = fs.readFileSync(path.join(KOREN, 'assets', 'koverta-2026.js'), 'utf8');
+  const mena = new Set();
+  for (const m of js.matchAll(/set(?:Menu|Drawer)Photo\([^,]+,\s*'([^']+)'\)|const photos = \[([^\]]+)\]/g)) {
+    const zoznam = m[1] ? [m[1]] : (m[2].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
+    zoznam.forEach(n => mena.add(n.replace(/\.(jpe?g|png)$/i, '-w1000.webp')));
+  }
+  const vysledok = {};
+  for (const n of mena) {
+    if (!fs.existsSync(path.join(KOREN, 'assets', n))) { chyby.push('menu: chýba assets/' + n); continue; }
+    const zaklad = zakladPages('assets/' + n);
+    vysledok[n] = zaklad + '/assets/' + n + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '');
+  }
+  return vysledok;
+}
+
 function zakladPages(relCesta) {
   if (!naMasteri || naMasteri.has(relCesta)) return PAGES_ZAKLAD;
   if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
@@ -667,7 +688,8 @@ ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join
     znackaSoltec: ${FOTKY === 'pages'
       ? JSON.stringify(PAGES_ZAKLAD + '/assets/soltec-mark.png')
       : "{{ 'soltec-mark.png' | file_url | json }}"},
-    modely: '/pages/${PREDPONA}pouzite-modely'
+    modely: '/pages/${PREDPONA}pouzite-modely',
+    menuFoto: ${JSON.stringify(menuFotky())}
   };
   /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
      fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
