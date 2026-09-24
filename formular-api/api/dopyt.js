@@ -50,6 +50,9 @@ function testovaciDopyt(data) {
   const domena = (data.email.split('@')[1] || '').toLowerCase();
   if (/(^|\.)(invalid|test|example|localhost)$/.test(domena)) return true;
   if (/^example\.(com|org|net|sk)$/.test(domena)) return true;
+  /* Vymyslené číslo 0900 000 000 / +421 900 000 000 nemá skutočný zákazník —
+     používajú ho testy formulára. */
+  if (/^(\+421|0)?900000000$/.test(String(data.telefon || '').replace(/[\s-]/g, ''))) return true;
   return /koverta audit test|nothing is delivered|client-side qa/i.test(data.meno + ' ' + data.sprava);
 }
 

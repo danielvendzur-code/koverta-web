@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import handler from './dopyt.js';
 
+/* Testy nikdy nesmú poslať skutočný e-mail. Aj keď je v prostredí ostrý
+   kľúč (napr. po `vercel env pull`), tu sa zahodí — handler si ho číta až
+   pri požiadavke, takže platí pre všetky testy nižšie. Testovacie údaje
+   (Test, +421 900 000 000) by inak prišli obchodu ako skutočný dopyt. */
+delete process.env.RESEND_API_KEY;
+delete process.env.BLOB_READ_WRITE_TOKEN;
+
 function odpoved() {
   return {
     headers: {}, statusCode: 200, body: null,
@@ -47,7 +54,7 @@ test('honeypot skončí potichu úspechom', async () => {
 test('platný dopyt bez serverového kľúča nič nepredstiera', async () => {
   const res = odpoved();
   await handler(poziadavka({
-    meno: 'Test', telefon: '+421900000000', email: 'jana.novakova@gmail.com',
+    meno: 'Test', telefon: '+421900000001', email: 'jana.novakova@gmail.com',
     suhlas: 'áno', startedAt: Date.now() - 5000, prilohy: []
   }), res);
   assert.equal(res.statusCode, 503);
@@ -55,7 +62,7 @@ test('platný dopyt bez serverového kľúča nič nepredstiera', async () => {
 });
 
 const zaklad = () => ({
-  meno: 'Test', telefon: '+421900000000', email: 'jana.novakova@gmail.com',
+  meno: 'Test', telefon: '+421900000001', email: 'jana.novakova@gmail.com',
   suhlas: 'áno', startedAt: Date.now() - 5000
 });
 
@@ -121,7 +128,7 @@ test('testovací dopyt (vyhradená doména) dostane úspech, ale nič sa neodoš
 
 test('povinné sú len meno a telefón: bez e-mailu a súhlasu prejde ďalej', async () => {
   const res = odpoved();
-  await handler(poziadavka({ meno: 'Ján', telefon: '+421900000000', startedAt: Date.now() - 5000 }), res);
+  await handler(poziadavka({ meno: 'Ján', telefon: '+421900000001', startedAt: Date.now() - 5000 }), res);
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.code, 'EMAIL_NOT_CONFIGURED');
 });
@@ -132,4 +139,11 @@ test('bez telefónu alebo s neplatným e-mailom vráti 422', async () => {
     await handler(poziadavka({ ...telo, startedAt: Date.now() - 5000 }), res);
     assert.equal(res.statusCode, 422);
   }
+});
+
+test('vymyslené číslo 0900 000 000 sa berie ako test a nič sa neodošle', async () => {
+  const res = odpoved();
+  await handler(poziadavka({ meno: 'Test', telefon: '+421 900 000 000', startedAt: Date.now() - 5000 }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.test, true);
 });
