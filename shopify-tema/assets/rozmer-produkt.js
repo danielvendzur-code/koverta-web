@@ -123,7 +123,7 @@
       ['koverta-zahradny-pristresok-bratislava-detail.jpg', 'Detail konštrukcie záhradného prístrešku'],
       ['foto/20250522_144729-w1200.jpg', 'Zastrešené záhradné posedenie Koverta']
     ] : [
-      ['koverta-pristresok-vahovce-takac-upscaled-w1600.webp', 'Dvojitý prístrešok Koverta pri rodinnom dome'],
+      ['koverta-pristresok-vahovce-upscaled-w1600.webp', 'Dvojitý prístrešok Koverta pri rodinnom dome'],
       ['koverta-pristresok-drevene-lamely-bocna-vypln-w1000.webp', 'Drevená lamelová výplň prístrešku Koverta'],
       ['koverta-pristresok-pre-auto-pred-domom-w1000.webp', 'Prístrešok Koverta pre auto pred domom']
     ];

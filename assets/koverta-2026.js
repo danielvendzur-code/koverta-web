@@ -1786,7 +1786,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         foto: './assets/koverta-pristresok-auto-golf-lamelova-stena.jpg',
         preco: 'Oceľová konštrukcia z vlastnej výroby. Pultová strecha z trapézového profilu má lemovanie, odkvap a izoláciu proti prehrievaniu a hluku dažďa; voda odchádza odkvapom a zvodom.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
-        foto: './assets/soltec-carport-toth-nitra-hero.jpg',
+        foto: './assets/soltec-carport-nitra-hero.jpg',
         preco: 'Štyri celohliníkové modely F170, F240, SL170 a SL240. Rad F má vodorovný rám a širšiu kompatibilitu doplnkov; cenovo dostupnejší rad SL má viditeľný spád a užší výber kompatibilnej výbavy.' },
       zahradne: { nazov: 'Záhradný prístrešok', znacka: 'koverta', odkaz: './zahradne-pristresky/',
         foto: './assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg',
@@ -3753,7 +3753,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         addDesc(lis[0], 'Pre 1, 2, 3 a viac áut. Vlastný dizajn a výroba.');
       }
       if (lis[1]) {
-        setMenuPhoto(lis[1], 'soltec-carport-toth-nitra-hero.jpg');
+        setMenuPhoto(lis[1], 'soltec-carport-nitra-hero.jpg');
         addDesc(lis[1], 'Prémiový hliníkový systém s čistou architektúrou.');
       }
       /* Ponechať pôvodný kompaktný rad malých navigačných kariet. Veľká
@@ -3811,7 +3811,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
     /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
     setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
-    setDrawerPhoto('carport-soltec', 'soltec-carport-toth-nitra-hero.jpg');
+    setDrawerPhoto('carport-soltec', 'soltec-carport-nitra-hero.jpg');
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-pergola-pri-bazene-antracit.jpg');
