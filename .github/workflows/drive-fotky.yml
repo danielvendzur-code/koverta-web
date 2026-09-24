@@ -1,0 +1,23 @@
+name: Fotky realizácií z Drive (náhľady na výber)
+on:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: ['.github/drive-fotky/spustit.txt']
+permissions:
+  contents: write
+jobs:
+  nahlady:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet pillow
+      - name: Stiahni fotky a sprav náhľady
+        run: python3 .github/drive-fotky/nahlady.py
+      - name: Ulož náhľady do vetvy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/drive-nahlady
+          git commit -m "Náhľady fotiek realizácií z Drive na výber (dočasné)"
+          for i in 1 2 3; do git pull --rebase -q origin claude/practical-dijkstra-d9d0nt && git push -q origin HEAD:claude/practical-dijkstra-d9d0nt && break; sleep 5; done
