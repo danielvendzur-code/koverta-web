@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"shopify\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . 2>/dev/null && exit 0 || exit 1",
   "functions": {
     "api/dopyt.js": {
       "maxDuration": 15
@@ -8,14 +9,23 @@
     }
   },
   "crons": [
-    { "path": "/api/suhrn", "schedule": "0 5 * * *" }
+    {
+      "path": "/api/suhrn",
+      "schedule": "0 5 * * *"
+    }
   ],
   "headers": [
     {
       "source": "/api/dopyt",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "no-referrer" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
       ]
     }
   ]
