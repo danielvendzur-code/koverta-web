@@ -1064,10 +1064,6 @@ soltec-pergola-biela-dreveny-podhlad-w1000.webp	assets/soltec-pergola-biela-drev
 soltec-pergola-biela-dreveny-podhlad-w1600.webp	assets/soltec-pergola-biela-dreveny-podhlad-w1600.webp
 soltec-pergola-biela-dreveny-podhlad-w640.webp	assets/soltec-pergola-biela-dreveny-podhlad-w640.webp
 soltec-pergola-biela-dreveny-podhlad.jpg	assets/soltec-pergola-biela-dreveny-podhlad.jpg
-soltec-pergola-biela-kamenna-terasa-w1000.webp	assets/soltec-pergola-biela-kamenna-terasa-w1000.webp
-soltec-pergola-biela-kamenna-terasa-w1600.webp	assets/soltec-pergola-biela-kamenna-terasa-w1600.webp
-soltec-pergola-biela-kamenna-terasa-w640.webp	assets/soltec-pergola-biela-kamenna-terasa-w640.webp
-soltec-pergola-biela-kamenna-terasa.webp	assets/soltec-pergola-biela-kamenna-terasa.webp
 soltec-pergola-detail-lamiel-a-zip-roliet-w1000.webp	assets/soltec-pergola-detail-lamiel-a-zip-roliet-w1000.webp
 soltec-pergola-detail-lamiel-a-zip-roliet-w1600.webp	assets/soltec-pergola-detail-lamiel-a-zip-roliet-w1600.webp
 soltec-pergola-detail-lamiel-a-zip-roliet-w640.webp	assets/soltec-pergola-detail-lamiel-a-zip-roliet-w640.webp
@@ -1093,9 +1089,6 @@ soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strec
 soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
 soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
 soltec-pergola-plna-strecha-pri-dome.webp	assets/soltec-pergola-plna-strecha-pri-dome.webp
-soltec-pergola-podhlad-strechy-a-ram-w1000.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w1000.webp
-soltec-pergola-podhlad-strechy-a-ram-w640.webp	assets/soltec-pergola-podhlad-strechy-a-ram-w640.webp
-soltec-pergola-podhlad-strechy-a-ram.jpg	assets/soltec-pergola-podhlad-strechy-a-ram.jpg
 soltec-pergola-presklenie-restauracia-w1000.webp	assets/soltec-pergola-presklenie-restauracia-w1000.webp
 soltec-pergola-presklenie-restauracia-w1600.webp	assets/soltec-pergola-presklenie-restauracia-w1600.webp
 soltec-pergola-presklenie-restauracia-w640.webp	assets/soltec-pergola-presklenie-restauracia-w640.webp
