@@ -79,7 +79,39 @@ const naMasteri = (() => {
       { cwd: KOREN, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\n'));
   } catch (_) { return null; }
 })();
+/* Všetky súbory idú z jsDelivr s commitom, nielen tie, ktoré na master
+ * ešte nie sú. Adresa s commitom sa nikdy nezmení, takže ju prehliadač smie
+ * držať v pamäti natrvalo — GitHub Pages dovolí len 10 minút a Lighthouse
+ * rátal pri opakovanej návšteve 8,7 MB zbytočného sťahovania. Posledný commit
+ * každého súboru sa zistí jedným prechodom histórie. */
+const posledneCommity = (() => {
+  const cp = require('child_process');
+  try {
+    const vzdialene = new Set(cp.execFileSync('git', ['rev-list', '--remotes'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }).split('\n').filter(Boolean));
+    const mapa = new Map();
+    let sha = '';
+    for (const riadok of cp.execFileSync('git', ['log', '--format=@%H', '--name-only', 'HEAD'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 }).split('\n')) {
+      if (riadok.startsWith('@')) { sha = riadok.slice(1); continue; }
+      if (riadok && !mapa.has(riadok)) mapa.set(riadok, sha);
+    }
+    return { mapa, vzdialene };
+  } catch (_) { return null; }
+})();
 const zakladPreSubor = new Map();
+function zakladPages(relCesta) {
+  if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
+  let zaklad = PAGES_ZAKLAD;
+  const sha = posledneCommity && posledneCommity.mapa.get(relCesta);
+  if (sha && posledneCommity.vzdialene.has(sha)) zaklad = JSDELIVR_ZAKLAD + sha;
+  else if (naMasteri && !naMasteri.has(relCesta)) {
+    console.warn('Pozor: ' + relCesta + ' nie je na master ani v odoslanom commite — najprv ho commitni a pushni, potom spusti prevodník znova.');
+  }
+  zakladPreSubor.set(relCesta, zaklad);
+  return zaklad;
+}
+
 /* Fotky v menu skladá koverta-2026.js až za behu (setMenuPhoto,
    setDrawerPhoto) a na Shopify ich bral z GitHub Pages. Fotka, ktorá ešte
    nie je na master, tam vracala 404 a v menu ostal otáznik (Carport Soltec).
@@ -101,20 +133,6 @@ function menuFotky() {
   return vysledok;
 }
 
-function zakladPages(relCesta) {
-  if (!naMasteri || naMasteri.has(relCesta)) return PAGES_ZAKLAD;
-  if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
-  const cp = require('child_process');
-  let zaklad = PAGES_ZAKLAD;
-  try {
-    const sha = cp.execFileSync('git', ['log', '-1', '--format=%H', 'HEAD', '--', relCesta], { cwd: KOREN, encoding: 'utf8' }).trim();
-    const vzdialene = sha && cp.execFileSync('git', ['branch', '-r', '--contains', sha], { cwd: KOREN, encoding: 'utf8' }).trim();
-    if (sha && vzdialene) zaklad = JSDELIVR_ZAKLAD + sha;
-    else console.warn('Pozor: ' + relCesta + ' nie je na master ani v odoslanom commite — najprv ho commitni a pushni, potom spusti prevodník znova.');
-  } catch (_) {}
-  zakladPreSubor.set(relCesta, zaklad);
-  return zaklad;
-}
 
 /* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
  * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
@@ -440,7 +458,11 @@ function prepisCss(text, zdroj) {
     /* Fotografia v CSS. Do témy sa nezmestí a `file_url` je Liquid, ktorý
        obyčajné `.css` nevie — preto plná adresa, tá platí vždy. */
     doObchodu.set(meno, path.relative(KOREN, naDisku));
-    if (FOTKY === 'pages') return 'url(' + PAGES_ZAKLAD + '/' + path.relative(KOREN, naDisku).replace(/\\/g, '/') + ')';
+    if (FOTKY === 'pages') {
+      const rel = path.relative(KOREN, naDisku).replace(/\\/g, '/');
+      const zaklad = zakladPages(rel);
+      return 'url(' + zaklad + '/' + rel + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '') + ')';
+    }
     chyby.push('CSS ' + path.relative(KOREN, zdroj) + ' pýta fotografiu ' + adresa +
       '; pri KV_FOTKY=obchod sa na ňu v CSS nedá odkázať');
     return cele;

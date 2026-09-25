@@ -13521,7 +13521,7 @@ body:not(.k-home) .k .kh-hero__chip {
 /* Fotografia v bloku Kompletný servis je na každej stránke tá istá. Pôvodný
    obrázok ďalej drží rozmery prvku, ale vizuálne ho nahrádza spoločný záber. */
 .k .kh-cta__foto {
-  background: #171d20 url("koverta-hero-sibenik-poster.jpg") center / cover no-repeat;
+  background: #171d20 url("koverta-hero-sibenik-poster-w1000.webp") center / cover no-repeat;
 }
 .k .kh-cta__foto img { opacity: 0; }
 
