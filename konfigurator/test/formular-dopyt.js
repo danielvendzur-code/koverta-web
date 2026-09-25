@@ -59,9 +59,10 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
     };
   });
 
-  ok(stav.dakujemVidno, 'panel po odoslaní sa neukázal');
+  /* Poďakovanie je len jedno, na ďakovnej stránke: panel vo formulári sa
+     pred odchodom neukazuje (predtým blikli dve poďakovania za sebou). */
+  ok(!stav.dakujemVidno, 'pred ďakovnou stránkou sa ukázalo aj druhé poďakovanie');
   ok(!stav.chybaVidno, 'ukázal sa chybový panel');
-  ok(stav.formularSkryty, 'formulár ostal viditeľný');
   /* Formulár posiela dopyt na server (na localhoste sa len zapíše do
      window.__kvDopytSkusobny); e-mail ostáva ako záložná cesta v paneli. */
   ok(stav.nadpis === 'Dopyt je u nás', 'nadpis: ' + stav.nadpis);

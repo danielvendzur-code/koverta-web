@@ -2670,12 +2670,12 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           });
           window.clearTimeout(cakac);
           if (!odpoved.ok) throw new Error('HTTP ' + odpoved.status);
-          uvolni();
-          textySpat();
           /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
              ani náhradná e-mailová cesta sa nerátajú. */
-          ukaz(Boolean(prilohyChyba));
           if (prilohyChyba && fotky) {
+            uvolni();
+            textySpat();
+            ukaz(true);
             /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
             const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
             const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
@@ -2697,6 +2697,11 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
               .replace(/assets\/koverta-2026\.css.*$/, '') || './';
             window.location.assign((cesta.charAt(0) === '/' ? cesta : koren + 'dakujeme/') + '?contact_posted=true');
           };
+          /* Poďakovanie je len jedno — na ďakovnej stránke. Panel vo formulári
+             sa pred odchodom neukazuje (predtým blikli dve poďakovania za
+             sebou); tlačidlo ostane „odosiela sa“, kým stránka neodíde. Keď
+             sa návštevník vráti späť, uvidí panel, že dopyt prišiel. */
+          window.addEventListener('pageshow', (ev) => { if (ev.persisted) { uvolni(); textySpat(); ukaz(false); } }, { once: true });
           kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené', eventCallback: nadakujem, eventTimeout: 1500 });
           window.setTimeout(nadakujem, 1600);
         } catch (err) {
