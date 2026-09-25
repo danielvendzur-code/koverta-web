@@ -398,21 +398,31 @@ export default async function handler(req, res) {
     const zoZariadenia = pocitadlo ? Number(pocitadlo.zariadenia[zdroj.ip]) || 0 : 0;
     if (zoZariadenia >= DOPYTOV_ZO_ZARIADENIA) {
       /* Dopyt sa uloží a príde ráno v súhrne. Návštevník dostane úspech —
-         dopyt naozaj máme. */
-      await archivujDopyt(data, attachments, id, 'neodoslaný – veľa dopytov z jedného zariadenia', zdroj);
-      zaznamenaj('LIMIT_ZARIADENIA', zdroj, { zoZariadenia, odoslaneDnes });
-      return res.status(200).json({ ok: true, id });
+         dopyt naozaj máme. Keď sa uložiť nedá (archív nedostupný), ide
+         radšej hneď e-mailom, aby sa nestratil. */
+      const ulozene = await archivujDopyt(data, attachments, id, 'neodoslaný – veľa dopytov z jedného zariadenia', zdroj)
+        .catch((chyba) => { zaznamenaj('ARCHIV_ZLYHAL', zdroj, { chyba: String(chyba.message).slice(0, 200) }); return null; });
+      if (ulozene) {
+        zaznamenaj('LIMIT_ZARIADENIA', zdroj, { zoZariadenia, odoslaneDnes });
+        return res.status(200).json({ ok: true, id });
+      }
     }
-    const archiv = await archivujDopyt(data, attachments, id, STAV_CAKA, zdroj);
+    /* Archív (Vercel Blob) je poistka, nie podmienka: keď je nedostupný alebo
+       má vyčerpaný limit, dopyt aj tak odíde e-mailom. Predtým chyba
+       archívu zastavila celý dopyt a e-mail sa vôbec neposlal. */
+    const archiv = await archivujDopyt(data, attachments, id, STAV_CAKA, zdroj)
+      .catch((chyba) => { zaznamenaj('ARCHIV_ZLYHAL', zdroj, { chyba: String(chyba.message).slice(0, 200) }); return null; });
     let vysledok;
     try {
       vysledok = await odosliResend(apiKey, {
         from, to: [to], ...(data.email ? { reply_to: data.email } : {}), subject: predmet, html: obsah, attachments
       }, `dopyt-${id}`);
     } catch (chyba) {
-      if (chyba.status !== 429) throw chyba;
+      if (chyba.status !== 429 || !archiv) throw chyba;
       /* Resend dnes už viac e-mailov neprijme. Dopyt ostáva uložený, príde
-         ráno v súhrne a návštevník dostane úspech — dopyt naozaj máme. */
+         ráno v súhrne a návštevník dostane úspech — dopyt naozaj máme.
+         (Bez archívu sa úspech nehlási: formulár ponúkne poslať dopyt
+         e-mailom priamo z pošty návštevníka.) */
       await zapisStav(archiv, 'neodoslaný – denný limit e-mailov').catch(() => null);
       zaznamenaj('LIMIT_RESENDU', zdroj, { odoslaneDnes, chyba: String(chyba.message).slice(0, 200) });
       return res.status(200).json({ ok: true, id });
@@ -443,7 +453,7 @@ export default async function handler(req, res) {
     }
     await zapocitaj(odoslane, zdroj.ip).catch(() => null);
     zaznamenaj('ODOSLANE', zdroj, { emailov: odoslane, odoslaneDnes: odoslaneDnes + odoslane, domenaNavstevnika: data.email.split('@')[1] || '' });
-    await zapisStav(archiv, STAV_ODOSLANY).catch(() => null);
+    if (archiv) await zapisStav(archiv, STAV_ODOSLANY).catch(() => null);
     return res.status(200).json({ ok: true, id: vysledok.id });
   } catch (chyba) {
     console.error('Dopyt sa nepodarilo odoslať:', chyba.message);

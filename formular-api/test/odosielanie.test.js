@@ -7,16 +7,21 @@ import crypto from 'node:crypto';
 const ULOZISKO = new Map();
 const ZMAZANE = [];
 let etag = 0;
+/* Vercel Blob s vyčerpaným limitom: každá operácia zlyhá. */
+let blobNedostupny = false;
+const blobZlyha = () => { if (blobNedostupny) throw new Error('Vercel Blob: store limits exceeded'); };
 const cesta = (adresa) => (String(adresa).startsWith('https://') ? new URL(adresa).pathname.slice(1) : String(adresa));
 
 mock.module('@vercel/blob', {
   namedExports: {
     async get(adresa) {
+      blobZlyha();
       const zaznam = ULOZISKO.get(cesta(adresa));
       if (!zaznam) return null;
       return { stream: new Response(zaznam.telo).body, blob: { etag: zaznam.etag, pathname: cesta(adresa) } };
     },
     async put(kam, obsah, volby = {}) {
+      blobZlyha();
       const stary = ULOZISKO.get(kam);
       if (volby.ifMatch && (!stary || stary.etag !== volby.ifMatch)) throw new Error('PRECONDITION_FAILED');
       if (volby.allowOverwrite === false && stary) throw new Error('ALREADY_EXISTS');
@@ -27,6 +32,7 @@ mock.module('@vercel/blob', {
       for (const a of [].concat(adresy)) { ZMAZANE.push(cesta(a)); ULOZISKO.delete(cesta(a)); }
     },
     async list({ prefix }) {
+      blobZlyha();
       const blobs = [...ULOZISKO.entries()].filter(([k]) => k.startsWith(prefix))
         .map(([k, z]) => ({ pathname: k, url: 'https://ulozisko.test/' + k, uploadedAt: z.uploadedAt }));
       return { blobs, hasMore: false };
@@ -101,6 +107,7 @@ function nastavPocitadlo(obsah) {
 }
 
 beforeEach(() => {
+  blobNedostupny = false;
   ULOZISKO.clear();
   ZMAZANE.length = 0;
   POSLANE.length = 0;
@@ -342,4 +349,25 @@ test('dopyt zachytený ako automat sa neodošle, ale uloží bokom a zobrazí v 
   } finally {
     delete process.env.LEADS_ADMIN_PASSWORD;
   }
+});
+
+test('archív (Blob) má vyčerpaný limit: dopyt aj tak odíde e-mailom obchodu', async () => {
+  blobNedostupny = true;
+  const { req } = dopyt();
+  const res = odpoved();
+  await handler(req, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.ok, true);
+  assert.deepEqual(POSLANE[0].to, ['obchod@koverta.sk']);
+  assert.match(POSLANE[0].html, new RegExp(req.body.telefon));
+});
+
+test('archív nedostupný a Resend vyčerpaný: návštevník nedostane falošný úspech', async () => {
+  blobNedostupny = true;
+  odpovedResendu = () => ({ status: 429, telo: { name: 'daily_quota_exceeded', message: 'quota' } });
+  const { req } = dopyt();
+  const res = odpoved();
+  await handler(req, res);
+  assert.notEqual(res.statusCode, 200);
+  assert.equal(res.body.ok, false);
 });
