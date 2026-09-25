@@ -373,18 +373,26 @@ function prvky(text) {
 /* Značky, ktoré si na Shopify robí stránka sama alebo ich dodá obchod. */
 /* Absolútne adresy statického webu (https://koverta.sk/…) v JSON-LD a og:image
  * prepíše na adresy obchodu: stránky na /pages/…, rozmery na /products/…,
- * fotografie na GitHub Pages (obchod /assets/ nemá). */
+ * fotografie na GitHub Pages alebo jsDelivr (obchod /assets/ nemá). */
 function naAdresyObchodu(text, mapa) {
   return text.replace(/https:\/\/koverta\.sk\/([^"'\s<>]*)/g, (cela, zvysok) => {
     const m = zvysok.match(/^([^?#]*)([?#].*)?$/);
     const cesta = m[1], chvost = m[2] || '';
-    if (/^assets\//.test(cesta)) return PAGES_ZAKLAD + '/' + cesta + chvost;
+    if (/^assets\//.test(cesta)) return zakladPages(cesta) + '/' + cesta + chvost;
     if (cesta === '' ) return cela;
     const kluc = cesta.replace(/\/index\.html$/, '').replace(/\/$/, '');
     if (!mapa.has(kluc)) return cela;
     const ciel = mapa.get(kluc);
     return 'https://koverta.sk' + ciel + (chvost.startsWith('?') && ciel.includes('?') ? '&' + chvost.slice(1) : chvost);
   });
+}
+
+/* Náhľadový obrázok (og:image a image v JSON-LD) sa mení na mieste, no
+ * GitHub Pages ho má z master v starej podobe. Adresa preto ide cez
+ * jsDelivr z commitu, v ktorom sa súbor naposledy zmenil. */
+function ogNaCdn(text) {
+  const stara = PAGES_ZAKLAD + '/assets/koverta-og.jpg';
+  return text.split(stara).join(zakladPages('assets/koverta-og.jpg') + '/assets/koverta-og.jpg');
 }
 
 function shopifyRobiSam(prvok) {
@@ -773,8 +781,8 @@ ${v.spolocnyChvost.join('\n')}
        pred obsah drží jeho vykreslenie, kým sa nenačíta. */
     const navyseHlava = s.hlavaNavyse.join('\n');
     const navyseChvost = s.chvostNavyse.join('\n');
-    const telo = hlava + (navyseHlava ? navyseHlava + '\n' : '') + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
-      (navyseChvost ? '\n' + navyseChvost + '\n' : '\n');
+    const telo = ogNaCdn(hlava + (navyseHlava ? navyseHlava + '\n' : '') + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
+      (navyseChvost ? '\n' + navyseChvost + '\n' : '\n'));
     const ciel = path.join(CIEL, 'snippets', s.a.handle + '.liquid');
     if (Buffer.byteLength(telo) <= MAX_SNIPPET_BAJTOV) {
       fs.writeFileSync(ciel, telo);
@@ -970,9 +978,9 @@ function zapisOgObrazok(v) {
     return c.join(' or ');
   };
   const vetvy = v.sablony.filter((x) => x.og && !x.a.rozmer).map((x) =>
-    '{%- if ' + podmienka(x) + ' -%}' + "{%- assign kv_og = '" + x.og.replace(/'/g, '') + "' -%}{%- endif -%}");
+    '{%- if ' + podmienka(x) + ' -%}' + "{%- assign kv_og = '" + ogNaCdn(x.og.replace(/'/g, '')) + "' -%}{%- endif -%}");
   const f = PAGES_ZAKLAD + '/assets/';
-  const text = "{%- assign kv_og = '" + f + "koverta-og.jpg' -%}\n" + vetvy.join('\n') + '\n'
+  const text = "{%- assign kv_og = '" + zakladPages('assets/koverta-og.jpg') + "/assets/koverta-og.jpg' -%}\n" + vetvy.join('\n') + '\n'
     + "{%- if request.page_type == 'product' and product.metafields.koverta.family -%}\n"
     + "  {%- if product.metafields.koverta.family.value == 'zahrada' -%}{%- assign kv_og = '" + f + "koverta-zahradny-pristresok-antracit-lamelova-stena.jpg' -%}\n"
     + "  {%- elsif product.metafields.koverta.width_mm.value >= 5000 -%}{%- assign kv_og = '" + f + "koverta-pristresok-bocne-lamely-a-zvod.jpg' -%}\n"
@@ -1034,7 +1042,7 @@ function zapisIndexHladania(v) {
       });
     }));
   }
-  fs.writeFileSync(path.join(CIEL, 'assets', 'hladanie.json'), JSON.stringify({ v: index.v, polozky }));
+  fs.writeFileSync(path.join(CIEL, 'assets', 'hladanie.json'), ogNaCdn(JSON.stringify({ v: index.v, polozky })));
 }
 
 if (require.main === module) {
