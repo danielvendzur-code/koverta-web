@@ -14407,3 +14407,19 @@ body.ma-kh-modal { overflow: hidden; }
 @media (max-width: 759px) and (max-height: 640px) {
   .k-home .kh-hero .kh-hero__bg img { height: clamp(150px, 28svh, 200px) !important; }
 }
+
+/* Úvod na telefóne: čiara nad každým údajom (0 €, 24 h, 1 deň, 8 m), nie
+   len nad druhým radom — prvé dva vyzerali, akoby do bloku nepatrili. */
+@media (max-width: 759px) {
+  .k-home .kh-fakty__polozka { border-top: 1px solid var(--k-hair) !important; }
+}
+/* Úvodná stránka na telefóne: nadpis, text, tlačidlá a hodnotenie Google idú
+   ako jeden celok dolu, aby hodnotenie sedelo tesne nad lištou Safari. Medzery
+   medzi nimi sa nemenia — voľné miesto pribudne len medzi videom a nadpisom.
+   Spodok obsahu = spodok viditeľného okna (svh); tmavý úvod pod lištou ostáva. */
+@media (max-width: 759px) {
+  body.k-home .k .kh-hero.kh-hero { padding-bottom: calc(100lvh - 100svh) !important; }
+  .k-home .kh-hero .kh-hero__inner { display: flex !important; flex-direction: column !important; justify-content: flex-end !important; }
+  .k-home .kh-hero .kh-hero__inner > .kh-hero__box { flex: 0 0 auto !important; align-self: stretch !important; max-width: none !important; }
+  .k-home .kh-hero .kh-hero__inner { padding-bottom: 14px !important; }
+}
