@@ -1,9 +1,9 @@
 {%- case page.handle -%}
 {%- when 'nove-404' -%}
   {% include 'nove-404' %}
-{%- when 'nove-bioklimaticke-pergoly' -%}
+{%- when 'nove-bioklimaticke-pergoly', 'bioklimaticke-pergoly', 'galeria-bioklimaticke-pergoly' -%}
   {% include 'nove-bioklimaticke-pergoly' %}
-{%- when 'nove-carport-soltec' -%}
+{%- when 'nove-carport-soltec', 'galeria-pristresky-agava' -%}
   {% include 'nove-carport-soltec' %}
 {%- when 'nove-dakujeme', 'dakujeme' -%}
   {% include 'nove-dakujeme' %}
@@ -13,26 +13,26 @@
   {% include 'nove-kontakt' %}
 {%- when 'nove-obchodne-podmienky', 'vseobecne-obchodne-podmienky' -%}
   {% include 'nove-obchodne-podmienky' %}
-{%- when 'nove-ochrana-sukromia', 'zasady-ochrany-osobnych-udajov' -%}
+{%- when 'nove-ochrana-sukromia', 'zasady-ochrany-osobnych-udajov', 'informacie-o-cookies' -%}
   {% include 'nove-ochrana-sukromia' %}
-{%- when 'nove-outdoor-kuchyne' -%}
+{%- when 'nove-outdoor-kuchyne', 'vonkajsie-kuchyne' -%}
   {% include 'nove-outdoor-kuchyne' %}
-{%- when 'nove-pevne-prestresenia' -%}
+{%- when 'nove-pevne-prestresenia', 'pergoly-s-pevnou-strechou-multiport' -%}
   {% include 'nove-pevne-prestresenia' %}
 {%- when 'nove-pouzite-modely', 'pouzite-modely' -%}
   {% include 'nove-pouzite-modely' %}
-{%- when 'nove-pristresky-pre-auta' -%}
+{%- when 'nove-pristresky-pre-auta', 'pristresky-pre-auta', 'o-pristreskoch-pre-auta' -%}
   {%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}
   {% include 'nove-pristresky-pre-auta' %}
 {%- when 'nove-produkty', 'produkty' -%}
   {% include 'nove-produkty' %}
-{%- when 'nove-realizacie', 'galeria-pristresky-pre-auta' -%}
+{%- when 'nove-realizacie', 'galeria-pristresky-pre-auta', 'galeria-zahradne-pristresky' -%}
   {% include 'nove-realizacie' %}
 {%- when 'nove-reklamacie', 'reklamacny-poriadok' -%}
   {% include 'nove-reklamacie' %}
-{%- when 'nove-tienenie' -%}
+{%- when 'nove-tienenie', 'tienenie' -%}
   {% include 'nove-tienenie' %}
-{%- when 'nove-zahradne-pristresky' -%}
+{%- when 'nove-zahradne-pristresky', 'pre-dom-a-zahradu', 'o-zahradnych-pristreskoch' -%}
   {%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}
   {% include 'nove-zahradne-pristresky' %}
 {%- else -%}

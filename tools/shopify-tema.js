@@ -788,7 +788,7 @@ ${v.spolocnyChvost.join('\n')}
   const potrebujeZive = (x) => /kv_zive/.test(x.hlavny + x.medzi + x.ld.join(''));
   const vetva = (handles, x) => "{%- when '" + handles.join("', '") + "' -%}\n" +
     (potrebujeZive(x) ? '  ' + ZIVE + '\n' : '') + "  {% include '" + x.a.handle + "' %}\n";
-  const strankyVetvy = obsahy.map((x) => vetva([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : []), x));
+  const strankyVetvy = obsahy.map((x) => vetva([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)), x));
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
     '{%- case page.handle -%}\n' + strankyVetvy.join('') +
     '{%- else -%}\n' +
@@ -915,11 +915,25 @@ function canonVetvy() {
     `  when ${zdroje.map(z => `'${z}'`).join(', ')}\n    assign kv_canon = shop.url | append: '${na}'`).join('\n');
 }
 
+/* Staré stránky obchodu (/pages/pre-dom-a-zahradu, /pages/tienenie …) ešte
+   existujú a vedú na ne Google aj reklamy, no zobrazovali len prázdnu
+   šablónu s nadpisom. Dostanú rovnaký obsah ako hlavná adresa, na ktorú
+   ukazujú v tools/adresy-obchodu.json (canonical ukazuje tiež tam).
+   Adresy sa nemenia. */
+function stareStranky(x) {
+  if (!x.a.ciel) return [];
+  const ciel = x.a.ciel.typ === 'kolekcia' ? '/collections/' + x.a.ciel.handle : '/pages/' + x.a.ciel.handle;
+  return Object.entries(ADRESY.presmerovania)
+    .filter(([z, na]) => z.startsWith('/pages/') && !z.startsWith('/pages/' + PREDPONA) && na === ciel)
+    .map(([z]) => z.slice('/pages/'.length))
+    .filter((h) => x.a.ciel.typ === 'kolekcia' || h !== x.a.ciel.handle);
+}
+
 function seoVetvy(v) {
   const lit = (t) => "'" + String(t || '').replace(/'/g, '’') + "'";
   const priradenie = (x) => '{%- assign kv_titulok = ' + lit(x.celyTitulok) + ' -%}' + (x.popis ? '{%- assign kv_popis = ' + lit(x.popis) + ' -%}' : '');
   const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index' && x.celyTitulok);
-  const stranky = obsahy.map((x) => "{%- when '" + [x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : []).join("', '") + "' -%}" + priradenie(x)).join('\n');
+  const stranky = obsahy.map((x) => "{%- when '" + [x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)).join("', '") + "' -%}" + priradenie(x)).join('\n');
   const kolekcie = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => "{%- when '" + x.a.ciel.handle + "' -%}" + priradenie(x)).join('\n');
   return "{%- if request.page_type == 'page' -%}{%- case page.handle -%}\n" + stranky + "\n{%- endcase -%}\n" +
     "{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}\n" + kolekcie + "\n{%- endcase -%}{%- endif -%}";
