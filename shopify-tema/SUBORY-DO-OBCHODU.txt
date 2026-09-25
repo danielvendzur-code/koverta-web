@@ -551,6 +551,7 @@ koverta-hero-sibenik-mobil.mp4	assets/koverta-hero-sibenik-mobil.mp4
 koverta-hero-sibenik-poster-mobil.webp	assets/koverta-hero-sibenik-poster-mobil.webp
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
 koverta-hero-sibenik-poster-w1600.webp	assets/koverta-hero-sibenik-poster-w1600.webp
+koverta-hero-sibenik-poster-w1920.webp	assets/koverta-hero-sibenik-poster-w1920.webp
 koverta-hero-sibenik-poster-w640.webp	assets/koverta-hero-sibenik-poster-w640.webp
 koverta-hero-sibenik-poster.jpg	assets/koverta-hero-sibenik-poster.jpg
 koverta-hero-sibenik.mp4	assets/koverta-hero-sibenik.mp4
