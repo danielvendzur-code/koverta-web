@@ -2701,6 +2701,9 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           window.setTimeout(nadakujem, 1600);
         } catch (err) {
           window.clearTimeout(cakac);
+          /* Aj neúspech sa zmeria (bez osobných údajov), aby sa výpadok
+             servera dal v GA4 spočítať — predtým bol vidieť len úspech. */
+          try { kvMeraj('dopyt_zlyhal', { dopyt_typ: String(new FormData(f).get('contact[Čo rieši]') || 'neuvedené'), dopyt_chyba: String((err && err.message) || 'neznáma').slice(0, 60) }); } catch (_) {}
           zlyhalo(adresaMailu);
           const popis = chyba && chyba.querySelector('.kh-dakujem__text');
           if (popis && err && /Priložiť|Prílohy/.test(err.message || '')) popis.textContent = err.message;
