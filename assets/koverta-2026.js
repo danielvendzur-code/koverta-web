@@ -3150,7 +3150,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       };
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) koniec();
       else window.setTimeout(koniec, 210);
-      if (odkial && document.contains(odkial)) odkial.focus();
+      if (odkial && document.contains(odkial)) (odkial.querySelector('[role="button"]') || odkial).focus();
       odkial = null;
     };
 
@@ -3216,10 +3216,14 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
 
     spinace.forEach((tl) => {
       if (tl.classList.contains('kh-work__item')) {
-        tl.tabIndex = 0;
-        tl.setAttribute('role', 'button');
+        /* Tlačidlom je fotografia, nie <figure>: rola button na figure nie
+           je povolená (aria-allowed-role) a čítačka by prišla o popis. Klik
+           aj klávesy ďalej chytá celá karta — udalosti z fotky k nej doputujú. */
         const img = tl.querySelector('img');
-        tl.setAttribute('aria-label', `Zväčšiť fotografiu: ${(img && img.alt) || 'realizácia'}`);
+        const ovladac = img || tl;
+        ovladac.tabIndex = 0;
+        ovladac.setAttribute('role', 'button');
+        ovladac.setAttribute('aria-label', `Zväčšiť fotografiu: ${(img && img.alt) || 'realizácia'}`);
       }
       const otvor = () => {
         if (!udaje(tl).zdroj) return;

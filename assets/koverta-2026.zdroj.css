@@ -1007,8 +1007,15 @@
 
 .kh-work__item { position: relative; }
 .kh-work__item[hidden] { display: none; }
-.kh-work__item[role="button"] { cursor: zoom-in; }
-.kh-work__item[role="button"]:focus-visible { outline: 3px solid var(--k-amber); outline-offset: 4px; }
+.kh-work__item:has([role="button"]), .kh-work__item [role="button"] { cursor: zoom-in; }
+/* Tlačidlom je fotografia v karte (rola na <figure> nie je povolená), rámik
+   fokusu však patrí celej karte — tak ako predtým. Bez :has() ostane rámik
+   aspoň na fotografii. */
+.kh-work__item [role="button"]:focus-visible { outline: 3px solid var(--k-amber); outline-offset: 4px; }
+@supports selector(:has(*)) {
+  .kh-work__item [role="button"]:focus-visible { outline: none; }
+  .kh-work__item:has([role="button"]:focus-visible) { outline: 3px solid var(--k-amber); outline-offset: 4px; }
+}
 .kh-work__cap { z-index: 2; align-items: flex-end; justify-content: space-between; gap: 14px;
   color: #fff;
 }
@@ -1066,7 +1073,9 @@
 .kf__bottom {
   display: flex; align-items: center; justify-content: space-between; gap: 22px;
   padding-block: 22px 28px; border-top: 1px solid var(--k-hair-invert);
-  color: rgba(255,255,255,.43); font-size: 11.5px;
+  /* .48, nie .43: pri 13 px na tmavej pätičke to dáva kontrast 4,9 : 1
+     (WCAG AA chce 4,5). Rozdiel oko takmer nepostrehne. */
+  color: rgba(255,255,255,.48); font-size: 11.5px;
 }
 .kf__bottom nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px 22px; }
 .kf__bottom a:hover { color: #fff; }
