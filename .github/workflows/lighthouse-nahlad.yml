@@ -2,7 +2,8 @@
 #
 # Meria https://danielvendzur-code.github.io/koverta-web/ (náhľad vetvy,
 # nie koverta.sk) rovnakým spôsobom ako PageSpeed: simulované mobilné
-# a desktopové obmedzenie, 3 behy každého, výsledok je medián. Výstup je
+# a desktopové obmedzenie, 5 behov na mobile a 3 na desktope, výsledok
+# je medián. Výstup je
 # v logu a ako artefakt (JSON zo všetkých behov). Nič nenasadzuje.
 name: Lighthouse náhľadu
 
@@ -34,18 +35,20 @@ jobs:
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
           mkdir -p vysledky
-          for i in 1 2 3; do
+          for i in 1 2 3 4 5; do
             npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" \
               --output=json --output-path="vysledky/mobil-$i.json" || true
-            npx lighthouse "$ADRESA" --preset=desktop --quiet --chrome-flags="--headless=new --no-sandbox" \
-              --output=json --output-path="vysledky/desktop-$i.json" || true
+            if [ "$i" -le 3 ]; then
+              npx lighthouse "$ADRESA" --preset=desktop --quiet --chrome-flags="--headless=new --no-sandbox" \
+                --output=json --output-path="vysledky/desktop-$i.json" || true
+            fi
           done
           node -e '
             const fs = require("fs");
             const kat = ["performance", "accessibility", "best-practices", "seo"];
             const met = ["first-contentful-paint", "largest-contentful-paint", "total-blocking-time", "cumulative-layout-shift", "speed-index"];
             for (const druh of ["mobil", "desktop"]) {
-              const behy = [1, 2, 3].map((i) => `vysledky/${druh}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
+              const behy = [1, 2, 3, 4, 5].map((i) => `vysledky/${druh}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
               const riadky = behy.map((r) => ({
                 ...Object.fromEntries(kat.map((k) => [k, Math.round(r.categories[k].score * 100)])),
                 ...Object.fromEntries(met.map((m) => [m, r.audits[m].numericValue])),
@@ -53,6 +56,18 @@ jobs:
                 verzia: (r.audits["network-requests"].details.items.find((x) => /koverta-2026\.css/.test(x.url)) || {}).url || ""
               }));
               riadky.forEach((x, i) => console.log(`LH ${druh} #${i + 1} ` + JSON.stringify(x)));
+              /* Diagnostika: čo tvorí LCP a kto blokuje hlavné vlákno. */
+              behy.forEach((r, i) => {
+                const a = r.audits, d = (id) => (a[id] && a[id].details && a[id].details.items) || [];
+                const lcp = d("largest-contentful-paint-element");
+                const uzol = lcp[0] && lcp[0].items && lcp[0].items[0] && lcp[0].items[0].node;
+                const fazy = lcp[1] && lcp[1].items ? lcp[1].items.map((f) => f.phase + " " + Math.round(f.timing)).join(", ") : "";
+                console.log(`DIAG ${druh} #${i + 1} LCP ${uzol ? uzol.selector + " " + JSON.stringify(uzol.boundingRect) : "?"} | ${fazy}`);
+                console.log(`DIAG ${druh} #${i + 1} CPU ` + d("bootup-time").slice(0, 8).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 70) + " " + Math.round(x.total) + "/" + Math.round(x.scripting)).join(" ; "));
+                console.log(`DIAG ${druh} #${i + 1} 3P ` + d("third-party-summary").slice(0, 8).map((x) => (x.entity && (x.entity.text || x.entity)) + " main " + Math.round(x.mainThreadTime) + " block " + Math.round(x.blockingTime) + " kB " + Math.round(x.transferSize / 1024)).join(" ; "));
+                console.log(`DIAG ${druh} #${i + 1} LONG ` + d("long-tasks").slice(0, 8).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 60) + " @" + Math.round(x.startTime) + " " + Math.round(x.duration)).join(" ; "));
+                console.log(`DIAG ${druh} #${i + 1} BENCH ${r.environment && r.environment.benchmarkIndex} TTFB ${Math.round(a["server-response-time"] ? a["server-response-time"].numericValue : 0)}`);
+              });
               const med = (k) => { const v = riadky.map((x) => x[k]).sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
               console.log(`LH ${druh} MEDIAN ` + JSON.stringify(Object.fromEntries(kat.concat(met).map((k) => [k, med(k)]))));
             }
