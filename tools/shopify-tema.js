@@ -523,6 +523,11 @@ function preved() {
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
     const hlavaPrvky = prvky(hlava).filter((p) => !shopifyRobiSam(p)).map((p) => prepis(p, mapa, zaklad));
+    /* Preload úvodnej fotografie. Ostatné značky, ktoré Shopify skladá sám,
+       sa zahadzujú, no tento Shopify nenapíše — bez neho sa fotografia (LCP)
+       začne sťahovať až keď na ňu parser narazí v tele, za všetkými skriptmi
+       obchodu a aplikácií. Prepíše sa na tú istú adresu ako <picture>. */
+    const preloadFotky = prvky(hlava).filter((p) => /^<link rel="preload" as="image"/.test(p)).map((p) => prepis(p, mapa, zaklad));
     const chvostPrvky = prvky(chvost).map((p) => prepis(p, mapa, zaklad));
     for (const p of new Set(hlavaPrvky)) hlavaPocty.set(p, (hlavaPocty.get(p) || 0) + 1);
     for (const p of new Set(chvostPrvky)) chvostPocty.set(p, (chvostPocty.get(p) || 0) + 1);
@@ -536,7 +541,7 @@ function preved() {
     const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)]
       .map((m) => naAdresyObchodu(m[0], mapa));
     const og = naAdresyObchodu((html.match(/<meta property="og:image" content="([^"]*)"/) || [, ''])[1], mapa);
-    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og };
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky };
   });
 
   /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
@@ -624,6 +629,7 @@ function zapis(v) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {% render 'kv-consentik' %}
+{%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
 <!-- Značky pre vyhľadávače.
 
      Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
@@ -849,6 +855,7 @@ ${v.spolocnyChvost.join('\n')}
   kopirujShopifyZdroj();
   zapisIndexHladania(v);
   zapisOgObrazok(v);
+  zapisPreload(v);
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
@@ -949,14 +956,41 @@ function seoVetvy(v) {
     "{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}\n" + kolekcie + "\n{%- endcase -%}{%- endif -%}";
 }
 
+/* Liquid podmienka „toto je stránka x" — úvod, stránka alebo kolekcia. */
+function podmienka(x) {
+  if (x.a.druh === 'index') return "template.name == 'index'";
+  const c = ["page.handle == '" + x.a.handle + "'"];
+  if (x.a.ciel && x.a.ciel.typ === 'stranka') c.push("page.handle == '" + x.a.ciel.handle + "'");
+  if (x.a.ciel && x.a.ciel.typ === 'kolekcia') c.push("collection.handle == '" + x.a.ciel.handle + "'");
+  return c.join(' or ');
+}
+
+/* Skoré načítanie toho, na čom stojí prvá obrazovka.
+ *
+ * Na mobile PageSpeed meral LCP 8,5 s: úvodná fotografia je na jsDelivr
+ * a prehliadač o nej vedel až z tela stránky, keď už mal za sebou
+ * content_for_header so skriptmi obchodu a aplikácií. Tu dostane:
+ *   - preconnect na server s fotografiami, aby spojenie bolo pripravené,
+ *   - preload fotografie tej stránky (mobil a desktop zvlášť podľa media),
+ *   - preload písma Archivo. Adresa je bez `?v=`, lebo presne takú si
+ *     vypýta štýl cez url(pismo-…) — s inou adresou by sa písmo stiahlo
+ *     dvakrát. */
+function zapisPreload(v) {
+  const povod = new Set();
+  const vetvy = v.sablony.filter((x) => x.preloadFotky && x.preloadFotky.length && !x.a.rozmer).map((x) => {
+    x.preloadFotky.forEach((p) => {
+      for (const m of p.matchAll(/(https:\/\/[^/"\s]+)\//g)) povod.add(m[1]);
+    });
+    return '{%- if ' + podmienka(x) + ' %}\n' + x.preloadFotky.join('\n') + '\n{%- endif %}';
+  });
+  const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
+  const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
+    + pismo('pismo-archivo-latin.woff2') + '\n' + pismo('pismo-archivo-latin-ext.woff2') + '\n'
+    + vetvy.join('\n') + '\n';
+  fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-preload.liquid'), text);
+}
+
 function zapisOgObrazok(v) {
-  const podmienka = (x) => {
-    if (x.a.druh === 'index') return "template.name == 'index'";
-    const c = ["page.handle == '" + x.a.handle + "'"];
-    if (x.a.ciel && x.a.ciel.typ === 'stranka') c.push("page.handle == '" + x.a.ciel.handle + "'");
-    if (x.a.ciel && x.a.ciel.typ === 'kolekcia') c.push("collection.handle == '" + x.a.ciel.handle + "'");
-    return c.join(' or ');
-  };
   const vetvy = v.sablony.filter((x) => x.og && !x.a.rozmer).map((x) =>
     '{%- if ' + podmienka(x) + ' -%}' + "{%- assign kv_og = '" + ogNaCdn(x.og.replace(/'/g, '')) + "' -%}{%- endif -%}");
   const f = PAGES_ZAKLAD + '/assets/';
