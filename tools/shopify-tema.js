@@ -118,7 +118,8 @@ function zakladPages(relCesta) {
    Téma preto oznámi presnú adresu každej takej fotky, rovnako ako pri
    ostatných obrázkoch: master z Pages, inak jsDelivr s commitom. */
 function menuFotky() {
-  const js = fs.readFileSync(path.join(KOREN, 'assets', 'koverta-2026.js'), 'utf8');
+  /* Zo zdroja: koverta-2026.js je zmenšený (tools/zmensi-js.js). */
+  const js = fs.readFileSync(path.join(KOREN, 'assets', 'koverta-2026.zdroj.js'), 'utf8');
   const mena = new Set();
   for (const m of js.matchAll(/set(?:Menu|Drawer)Photo\([^,]+,\s*'([^']+)'\)|const photos = \[([^\]]+)\]/g)) {
     const zoznam = m[1] ? [m[1]] : (m[2].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
@@ -548,7 +549,7 @@ function preved() {
      literály `'./assets/…'` a `'./stranka/'`; preložia sa tým istým
      spôsobom ako adresy v značkovaní. */
   const cestySkriptu = {};
-  const skript = path.join(KOREN, 'assets', 'koverta-2026.js');
+  const skript = path.join(KOREN, 'assets', 'koverta-2026.zdroj.js');
   if (fs.existsSync(skript)) {
     const text = fs.readFileSync(skript, 'utf8');
     for (const m of text.matchAll(/'(\.\/[^']+)'/g)) {
