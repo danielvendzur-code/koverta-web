@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Lighthouse 3× mobil, 3× desktop
+      - name: Lighthouse 5× mobil, 3× desktop
         env:
           ADRESA: ${{ inputs.adresa || 'https://danielvendzur-code.github.io/koverta-web/' }}
         run: |
@@ -53,7 +53,7 @@ jobs:
                 ...Object.fromEntries(kat.map((k) => [k, Math.round(r.categories[k].score * 100)])),
                 ...Object.fromEntries(met.map((m) => [m, r.audits[m].numericValue])),
                 lcpPrvok: (r.audits["largest-contentful-paint-element"].details?.items?.[0]?.items?.[0]?.node?.selector) || "",
-                verzia: (r.audits["network-requests"].details.items.find((x) => /koverta-2026\.css/.test(x.url)) || {}).url || ""
+                verzia: r.audits["network-requests"].details.items.filter((x) => /koverta-2026\.(css|js)/.test(x.url)).map((x) => x.url.split("/").pop()).join(" ")
               }));
               riadky.forEach((x, i) => console.log(`LH ${druh} #${i + 1} ` + JSON.stringify(x)));
               /* Diagnostika: čo tvorí LCP a kto blokuje hlavné vlákno. */

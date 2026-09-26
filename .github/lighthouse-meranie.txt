@@ -1,2 +1,2 @@
 # Zmena tohto súboru spustí Lighthouse náhľadu (.github/workflows/lighthouse-nahlad.yml).
-meranie po nasadení 710f61c8
+meranie po nasadení 0ce1b5ae
