@@ -1,0 +1,86 @@
+# Lighthouse pokusy — porovnanie variantov úvodnej stránky
+#
+# Neoptimalizuje sa naslepo: vetva sa na runneri servíruje lokálne
+# (gzip, rovnako ako Pages), pri každom variante sa v kópii upraví len
+# jedna vec a každý sa zmeria 5× na mobile. GTM a Google Ads sa načítavajú
+# naozaj (runner má internet), takže čísla zodpovedajú náhľadu.
+#
+# Variant „x-…" je len meranie vplyvu cudzieho kódu — nikdy sa nenasadzuje.
+# Nič sa tu nenasadzuje ani nemení v repozitári.
+name: Lighthouse pokusy
+
+on:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: [.github/workflows/lighthouse-pokusy.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  pokusy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Varianty
+        run: |
+          set -e
+          rm -rf .git qa-artifacts
+          mkdir -p /tmp/v
+          variant() { rm -rf "/tmp/v/$1"; mkdir -p "/tmp/v/$1"; cp -r . "/tmp/v/$1/koverta-web"; }
+          variant v0
+          variant v1
+          sed -i '/rel="preload" href="\.\/assets\/pismo\//d' /tmp/v/v1/koverta-web/index.html
+          variant v2
+          sed -i '/rel="preload" href="\.\/assets\/pismo\/archivo-latin-ext/d' /tmp/v/v2/koverta-web/index.html
+          variant v3
+          pip install -q pillow
+          python3 -c "
+          from PIL import Image
+          p='/tmp/v/v3/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp'
+          im=Image.open(p); im.resize((640, round(im.size[1]*640/im.size[0])), Image.LANCZOS).save(p, 'WEBP', quality=80, method=6)
+          "
+          ls -la /tmp/v/v0/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp /tmp/v/v3/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp
+          variant x-gtm
+          python3 - <<'PY'
+          p='/tmp/v/x-gtm/koverta-web/index.html'
+          t=open(p,encoding='utf8').read()
+          old="  f.parentNode.insertBefore(j, f);\n})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');"
+          assert t.count(old)==1
+          t=t.replace(old,"  w.addEventListener('load', function () { setTimeout(function () { f.parentNode.insertBefore(j, f); }, 3000); });\n})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');")
+          open(p,'w',encoding='utf8').write(t)
+          PY
+          for v in v1 v2 x-gtm; do diff /tmp/v/v0/koverta-web/index.html /tmp/v/$v/koverta-web/index.html | head -8 || true; done
+      - name: Server a Lighthouse
+        run: |
+          npm install --no-save lighthouse@12 >/dev/null 2>&1
+          cat > /tmp/srv.js <<'JS'
+          const http=require('http'),fs=require('fs'),path=require('path'),zlib=require('zlib');
+          const [ROOT,PORT]=[process.argv[2],+process.argv[3]];
+          const T={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm','.webmanifest':'application/manifest+json'};
+          http.createServer((q,s)=>{let p=path.join(ROOT,decodeURIComponent(q.url.split('?')[0]));try{if(fs.statSync(p).isDirectory())p=path.join(p,'index.html');}catch(e){}
+            fs.readFile(p,(e,b)=>{if(e){s.writeHead(404);return s.end();}const ct=T[path.extname(p)]||'application/octet-stream',h={'content-type':ct,'cache-control':'max-age=600'};
+              if(/text|javascript|json|svg|manifest/.test(ct)&&/gzip/.test(q.headers['accept-encoding']||'')){h['content-encoding']='gzip';b=zlib.gzipSync(b);}s.writeHead(200,h);s.end(b);});
+          }).listen(PORT);
+          JS
+          port=8100
+          for v in v0 v1 v2 v3 x-gtm; do
+            port=$((port+1)); node /tmp/srv.js "/tmp/v/$v" $port & sleep 1
+            for i in 1 2 3 4 5; do
+              npx lighthouse "http://127.0.0.1:$port/koverta-web/" --quiet --chrome-flags="--headless=new --no-sandbox" \
+                --output=json --output-path="/tmp/v/$v-$i.json" || true
+            done
+          done
+          node -e '
+            const fs = require("fs");
+            for (const v of ["v0", "v1", "v2", "v3", "x-gtm"]) {
+              const r = [1, 2, 3, 4, 5].map((i) => `/tmp/v/${v}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
+              const x = r.map((j) => ({ p: Math.round(j.categories.performance.score * 100), fcp: Math.round(j.audits["first-contentful-paint"].numericValue), lcp: Math.round(j.audits["largest-contentful-paint"].numericValue), tbt: Math.round(j.audits["total-blocking-time"].numericValue), si: Math.round(j.audits["speed-index"].numericValue) }));
+              const med = (k) => x.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(x.length / 2)];
+              console.log(`POKUS ${v} behy ` + x.map((y) => `${y.p}/${y.lcp}/${y.tbt}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
+            }
+          '
