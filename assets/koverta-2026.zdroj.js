@@ -3494,13 +3494,18 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
          Dovtedy je na jeho mieste tá istá fotografia (plagát), takže úvod
          vyzerá rovnako. Keby sa 1–2 MB videa sťahovali hneď, delili by sa
          o linku s fotkou, písmom a štýlmi a telefón by prvú obrazovku
-         vykreslil neskôr — PageSpeed to na mobile počítal ako LCP 8,5 s. */
+         vykreslil neskôr — PageSpeed to na mobile počítal ako LCP 8,5 s.
+
+         Päť sekúnd, nie jeden a pol: prvý snímok videa prehliadač berie
+         ako nový „najväčší obsah" (LCP) a pri spustení krátko po načítaní
+         posunul LCP z 3 s na 5,5–6 s — v dvoch z piatich meraní na mobile
+         (Lighthouse, 5 behov na runneri; s oneskorením 5 s ani raz). */
       let smie = false;
       let vidno = false;
       const skusPustit = () => { if (smie && vidno) pusti(); };
       const povol = () => {
         const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
-        window.setTimeout(() => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 }), 1500);
+        window.setTimeout(() => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 }), 5000);
       };
       if (document.readyState === 'complete') povol();
       else window.addEventListener('load', povol, { once: true });
