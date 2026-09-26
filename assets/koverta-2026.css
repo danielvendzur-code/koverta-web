@@ -3978,8 +3978,9 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   .kh-cat__media { min-height: 170px; }
 
   /* Popis a odkazy sú zbalené do nulovej výšky, nie skryté priehľadnosťou —
-     tak sa dá výška plynulo animovať a obsah ostáva v strome pre čítačku. */
-  .kh-cat__item:hover .kh-cat__more,
+     tak sa dá výška plynulo animovať a obsah ostáva v strome pre čítačku.
+     (Visiaci zoznam selektorov bez pravidla prehliadač zahodil a Shopify
+     kvôli nemu CSS nezmenšil — odstránený.) */
 }
 
 /* Pod 1000 px nie je kam ustupovať ani čím hýbať — všetko je vidieť hneď. */
@@ -12025,7 +12026,6 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
   .kv-header .kv-nav__item[data-k-mega-item] > .kv-nav__link::before {
     content:""; position:absolute; left:0; right:0; top:100%; height:24px;
   }
-  .kv-header .kv-mega--real,
 }
 
 /* The underline grows only in X. Its 3px height and rounded ends never

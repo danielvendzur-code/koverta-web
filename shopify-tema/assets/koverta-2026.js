@@ -3486,15 +3486,27 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
       v.addEventListener('error', vzdaj);
 
-      if (!('IntersectionObserver' in window)) { pusti(); return; }
-      /* Úvodné video je na prvej obrazovke, takže na pozorovateľa čakať nemá
-         načo: kým sa zavolá, prejde ešte jeden snímok a divák medzitým vidí
-         fotografiu. Ak je značka vidieť už pri načítaní, spustí sa hneď;
-         pozorovateľ potom slúži len na zastavenie, keď sa odscrolluje preč. */
-      if (v.getBoundingClientRect().top < window.innerHeight) pusti();
+      /* Video sa začne sťahovať až po načítaní stránky a chvíli pokoja.
+         Dovtedy je na jeho mieste tá istá fotografia (plagát), takže úvod
+         vyzerá rovnako. Keby sa 1–2 MB videa sťahovali hneď, delili by sa
+         o linku s fotkou, písmom a štýlmi a telefón by prvú obrazovku
+         vykreslil neskôr — PageSpeed to na mobile počítal ako LCP 8,5 s. */
+      let smie = false;
+      let vidno = false;
+      const skusPustit = () => { if (smie && vidno) pusti(); };
+      const povol = () => {
+        const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
+        window.setTimeout(() => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 }), 1500);
+      };
+      if (document.readyState === 'complete') povol();
+      else window.addEventListener('load', povol, { once: true });
+
+      if (!('IntersectionObserver' in window)) { vidno = true; return; }
+      if (v.getBoundingClientRect().top < window.innerHeight) vidno = true;
       const sled = new IntersectionObserver((zaznamy) => {
         zaznamy.forEach((z) => {
-          if (z.isIntersecting) pusti();
+          vidno = z.isIntersecting;
+          if (z.isIntersecting) skusPustit();
           else if (pustene) v.pause();
         });
       }, { rootMargin: '120px' });
