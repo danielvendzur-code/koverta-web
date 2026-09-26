@@ -1,0 +1,63 @@
+# Lighthouse nad verejným náhľadom na GitHub Pages
+#
+# Meria https://danielvendzur-code.github.io/koverta-web/ (náhľad vetvy,
+# nie koverta.sk) rovnakým spôsobom ako PageSpeed: simulované mobilné
+# a desktopové obmedzenie, 3 behy každého, výsledok je medián. Výstup je
+# v logu a ako artefakt (JSON zo všetkých behov). Nič nenasadzuje.
+name: Lighthouse náhľadu
+
+on:
+  workflow_dispatch:
+    inputs:
+      adresa:
+        description: Adresa, ktorá sa má zmerať
+        required: true
+        default: https://danielvendzur-code.github.io/koverta-web/
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: [.github/workflows/lighthouse-nahlad.yml, .github/lighthouse-meranie.txt]
+
+permissions:
+  contents: read
+
+jobs:
+  meraj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lighthouse 3× mobil, 3× desktop
+        env:
+          ADRESA: ${{ inputs.adresa || 'https://danielvendzur-code.github.io/koverta-web/' }}
+        run: |
+          npm install --no-save lighthouse@12 >/dev/null 2>&1
+          mkdir -p vysledky
+          for i in 1 2 3; do
+            npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" \
+              --output=json --output-path="vysledky/mobil-$i.json" || true
+            npx lighthouse "$ADRESA" --preset=desktop --quiet --chrome-flags="--headless=new --no-sandbox" \
+              --output=json --output-path="vysledky/desktop-$i.json" || true
+          done
+          node -e '
+            const fs = require("fs");
+            const kat = ["performance", "accessibility", "best-practices", "seo"];
+            const met = ["first-contentful-paint", "largest-contentful-paint", "total-blocking-time", "cumulative-layout-shift", "speed-index"];
+            for (const druh of ["mobil", "desktop"]) {
+              const behy = [1, 2, 3].map((i) => `vysledky/${druh}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
+              const riadky = behy.map((r) => ({
+                ...Object.fromEntries(kat.map((k) => [k, Math.round(r.categories[k].score * 100)])),
+                ...Object.fromEntries(met.map((m) => [m, r.audits[m].numericValue])),
+                lcpPrvok: (r.audits["largest-contentful-paint-element"].details?.items?.[0]?.items?.[0]?.node?.selector) || "",
+                verzia: (r.audits["network-requests"].details.items.find((x) => /koverta-2026\.css/.test(x.url)) || {}).url || ""
+              }));
+              riadky.forEach((x, i) => console.log(`LH ${druh} #${i + 1} ` + JSON.stringify(x)));
+              const med = (k) => { const v = riadky.map((x) => x[k]).sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
+              console.log(`LH ${druh} MEDIAN ` + JSON.stringify(Object.fromEntries(kat.concat(met).map((k) => [k, med(k)]))));
+            }
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-nahlad
+          path: vysledky/
