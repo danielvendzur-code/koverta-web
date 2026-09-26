@@ -33,28 +33,30 @@ jobs:
           mkdir -p /tmp/v
           variant() { rm -rf "/tmp/v/$1"; mkdir -p "/tmp/v/$1"; cp -r . "/tmp/v/$1/koverta-web"; }
           variant v0
-          variant v1
-          sed -i '/rel="preload" href="\.\/assets\/pismo\//d' /tmp/v/v1/koverta-web/index.html
-          variant v2
-          sed -i '/rel="preload" href="\.\/assets\/pismo\/archivo-latin-ext/d' /tmp/v/v2/koverta-web/index.html
-          variant v3
-          pip install -q pillow
-          python3 -c "
-          from PIL import Image
-          p='/tmp/v/v3/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp'
-          im=Image.open(p); im.resize((640, round(im.size[1]*640/im.size[0])), Image.LANCZOS).save(p, 'WEBP', quality=80, method=6)
-          "
-          ls -la /tmp/v/v0/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp /tmp/v/v3/koverta-web/assets/koverta-hero-sibenik-poster-mobil.webp
-          variant x-gtm
+          variant nv
+          sed -i 's| data-k-video-mobil="[^"]*"||' /tmp/v/nv/koverta-web/index.html
+          grep -c 'data-k-video-mobil' /tmp/v/nv/koverta-web/index.html || true
+          variant v5s
           python3 - <<'PY'
-          p='/tmp/v/x-gtm/koverta-web/index.html'
+          p='/tmp/v/v5s/koverta-web/assets/koverta-2026.js'
           t=open(p,encoding='utf8').read()
-          old="  f.parentNode.insertBefore(j, f);\n})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');"
-          assert t.count(old)==1
-          t=t.replace(old,"  w.addEventListener('load', function () { setTimeout(function () { f.parentNode.insertBefore(j, f); }, 3000); });\n})(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');")
+          old="{timeout:2e3}),1500)"
+          assert t.count(old)==1, t.count(old)
+          open(p,'w',encoding='utf8').write(t.replace(old,"{timeout:2e3}),5000)"))
+          PY
+          variant gtm-nizsie
+          python3 - <<'PY'
+          import re
+          p='/tmp/v/gtm-nizsie/koverta-web/index.html'
+          t=open(p,encoding='utf8').read()
+          m=re.search(r'<!-- Google Tag Manager -->.*?<!-- Koniec Google Tag Manager -->\n', t, re.S)
+          assert m
+          t=t.replace(m.group(0),'',1)
+          i=t.index('</head>')
+          t=t[:i]+m.group(0)+t[i:]
           open(p,'w',encoding='utf8').write(t)
           PY
-          for v in v1 v2 x-gtm; do diff /tmp/v/v0/koverta-web/index.html /tmp/v/$v/koverta-web/index.html | head -8 || true; done
+          for v in nv gtm-nizsie; do diff /tmp/v/v0/koverta-web/index.html /tmp/v/$v/koverta-web/index.html | head -6 || true; done
       - name: Server a Lighthouse
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
@@ -68,7 +70,7 @@ jobs:
           }).listen(PORT);
           JS
           port=8100
-          for v in v0 v1 v2 v3 x-gtm; do
+          for v in v0 nv v5s gtm-nizsie; do
             port=$((port+1)); node /tmp/srv.js "/tmp/v/$v" $port & sleep 1
             for i in 1 2 3 4 5; do
               npx lighthouse "http://127.0.0.1:$port/koverta-web/" --quiet --chrome-flags="--headless=new --no-sandbox" \
@@ -77,7 +79,7 @@ jobs:
           done
           node -e '
             const fs = require("fs");
-            for (const v of ["v0", "v1", "v2", "v3", "x-gtm"]) {
+            for (const v of ["v0", "nv", "v5s", "gtm-nizsie"]) {
               const r = [1, 2, 3, 4, 5].map((i) => `/tmp/v/${v}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
               const x = r.map((j) => ({ p: Math.round(j.categories.performance.score * 100), fcp: Math.round(j.audits["first-contentful-paint"].numericValue), lcp: Math.round(j.audits["largest-contentful-paint"].numericValue), tbt: Math.round(j.audits["total-blocking-time"].numericValue), si: Math.round(j.audits["speed-index"].numericValue) }));
               const med = (k) => x.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(x.length / 2)];
