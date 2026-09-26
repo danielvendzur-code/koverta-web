@@ -43,12 +43,16 @@ jobs:
           git fetch --no-tags --depth=200 origin "$ZAKLAD" || git fetch --no-tags origin
           SUBORY=$(git diff --name-only "$ZAKLAD"...HEAD || git diff --name-only HEAD~1 HEAD)
           echo "$SUBORY"
-          if echo "$SUBORY" | grep -qE '^(konfigurator/|coordination/koverta/|\.github/workflows/)'; then
+          KONFIG_RIADKY=$(git diff -U0 "$ZAKLAD"...HEAD -- konfigurator coordination/koverta 2>/dev/null \
+            | grep -E '^[+-]' \
+            | grep -vE '^(---|\+\+\+)' \
+            | grep -vE 'koverta-2026\.(css|js)\?v=' || true)
+          if echo "$SUBORY" | grep -qE '^coordination/koverta/' || { echo "$SUBORY" | grep -qE '^konfigurator/' && test -n "$KONFIG_RIADKY"; }; then
             echo "konfigurator=true" >> "$GITHUB_OUTPUT"
             echo "konfigurátor sa zmenil — hlboké kontroly bežia"
           else
             echo "konfigurator=false" >> "$GITHUB_OUTPUT"
-            echo "konfigurátor sa nezmenil — hlboké kontroly sa preskočia"
+            echo "len web a verzia štýlu — hlboké 3D kontroly sa preskočia"
           fi
 
   site-content:
@@ -67,18 +71,32 @@ jobs:
         run: |
           node konfigurator/test/koverta-render-regression.js
           node tools/seo-audit.js
+          python3 tools/adresy.py --check
+          python3 tools/cta-kontrola.py
+          node tools/produkty-zive.js --check
+          node tools/zmensi-css.js --kontrola
+          npm install --no-save terser@5.51.2 >/dev/null
+          node tools/zmensi-js.js --kontrola
           node tools/verzie-suborov.js
           node tools/rozmery-obrazkov.js
           python3 tools/generuj-rozmery.py
-          git diff --exit-code -- sitemap.xml pristresky-pre-auta zahradne-pristresky
+          python3 tools/adresy.py
+          git diff --exit-code -- sitemap.xml llms.txt pristresky-pre-auta zahradne-pristresky
       - name: Validate Shopify theme
         run: |
           node tools/spolocne-casti.js --kontrola
+          node tools/shopify-produkt-kontrola.js
+          node --check tools/shopify-products.js
+          node tools/shopify-products.js --check
+          node tools/shopify-products.js --scope=reference
+          node --check tools/shopify-redirects.js
+          node tools/shopify-redirects.js --check
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
-          git diff --exit-code -- shopify-tema
 
   configurator:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -237,6 +255,8 @@ jobs:
           if-no-files-found: ignore
 
   soltec-motion:
+    needs: zmeny
+    if: needs.zmeny.outputs.konfigurator == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

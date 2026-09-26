@@ -57,6 +57,7 @@
     input.type = 'text';
     input.inputMode = 'numeric';
     input.className = 'kv-num__in';
+    input.name = 'rozmer-mm';
     input.setAttribute('aria-label', 'Zadajte rozmer v milimetroch');
 
     var unit = document.createElement('span');
@@ -631,6 +632,10 @@
     if (vidno === poslednyStav) return;
     poslednyStav = vidno;
     koren.style.setProperty('--sp-sticky-top', vidno ? poslednaVyska + 'px' : '0px');
+    /* Runtime konfigurátora si --sp-sticky-top pri scrollovaní prepisuje
+       sám (hľadá hlavičku starej témy a vychádza mu 0). Lepivé kroky na
+       telefóne preto čítajú vlastnú premennú, do ktorej nezasahuje nič iné. */
+    document.documentElement.style.setProperty('--kv-lista-vrch', vidno ? poslednaVyska + 'px' : '0px');
   };
 
   var caka = false;
@@ -642,8 +647,318 @@
 
   prepocitaj();
   window.addEventListener('scroll', naScroll, { passive: true });
+  /* Lišta sa skrýva a vracia animáciou, ktorá dobehne až po udalosti
+     scroll — hodnota sa potom počítala z polohy uprostred pohybu a lepivé
+     kroky na telefóne ostali schované pod lištou. Prepočíta sa preto aj po
+     zmene triedy lišty a po dobehnutí jej animácie. */
+  lista.addEventListener('transitionend', naScroll);
+  if ('MutationObserver' in window) {
+    new MutationObserver(naScroll).observe(lista, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
   window.addEventListener('resize', function () { poslednyStav = null; prepocitaj(); }, { passive: true });
   /* Konfigurátor sa vykresľuje skriptom, takže pri prvom behu ešte nemusí
      existovať — skúsime to znovu, keď dobehne. */
   window.addEventListener('load', function () { poslednyStav = null; prepocitaj(); });
+})();
+
+/* --- Vybraný produkt v zábere --------------------------------------------
+   Na telefóne je prepínač produktu vodorovne posúvaný pás. Keď niekto príde
+   rovno na pergolu (posledná karta), vybraná karta by bola mimo obrazovky —
+   posunieme pás tak, aby bola vidieť. Stránka sa pritom nehýbe. */
+(function kvVybranyVZabere() {
+  var pas = document.querySelector('.kv-cfg__tabs');
+  var vybrany = pas && pas.querySelector('[aria-current="page"]');
+  if (!pas || !vybrany || pas.scrollWidth <= pas.clientWidth) return;
+  pas.scrollLeft = Math.max(0, vybrany.offsetLeft - pas.offsetLeft - 16);
+})();
+
+/* --- Poslať túto zostavu a zdieľať ---------------------------------------
+   Pri cene v každom kroku sú dve tlačidlá:
+   · „Poslať túto zostavu" — zostava aj cena sa zapíšu do dopytu pod
+     konfigurátorom a stránka sa k nemu posunie. Robí to to isté tlačidlo
+     „Chcem presnú ponuku", ktoré dovtedy stálo až v poslednom kroku; človek
+     sa však rozhoduje pri cene, nie po šiestom kroku.
+   · „Zdieľať" — odkaz s modelom, rozmerom aj farbou (adresu dopĺňa zápis
+     rozmeru nižšie v stránke); na telefóne ponuka zdieľania systému, inde
+     skopírovanie do schránky. */
+(function kvPoslatAZdielat() {
+  var ROOT = '#SoltecPremium';
+
+  function farbaDoAdresy() {
+    /* Celú zostavu (model, výšku, steny, doplnky) zapíše konfigurátor;
+       tu sa len postará, aby bola v adrese hneď, nie až o chvíľu. */
+    if (typeof window.kvZapisZostavu === 'function') { try { window.kvZapisZostavu(); } catch (e) {} }
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var vybrana = document.querySelector(ROOT + ' [data-sp-frame-color][aria-pressed="true"]');
+    if (!vybrana) return;
+    var index = vybrana.getAttribute('data-sp-frame-color');
+    if (q.get('farba') === index) return;
+    q.set('farba', index);
+    try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
+  }
+
+  function farbaZAdresy() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var index = q.get('farba');
+    if (!/^\d{1,2}$/.test(index || '')) return;
+    var pokusov = 0;
+    (function skus() {
+      var b = document.querySelector(ROOT + ' [data-sp-frame-color="' + index + '"]');
+      if (!b) { if (++pokusov < 80) window.setTimeout(skus, 125); return; }
+      if (b.getAttribute('aria-pressed') !== 'true') b.click();
+    })();
+  }
+
+  function oznam(tlacidlo, text) {
+    var povodny = tlacidlo.getAttribute('data-kv-text') || tlacidlo.textContent;
+    tlacidlo.setAttribute('data-kv-text', povodny);
+    tlacidlo.querySelector('span').textContent = text;
+    window.setTimeout(function () { tlacidlo.querySelector('span').textContent = povodny.trim(); }, 2200);
+  }
+
+  function zdielaj(tlacidlo) {
+    farbaDoAdresy();
+    var url = location.href;
+    var nadpis = (document.querySelector(ROOT + ' .sp-cfg__head h1') || {}).textContent || 'Konfigurátor Koverta';
+    if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+      navigator.share({ title: nadpis.trim(), url: url }).catch(function () {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { oznam(tlacidlo, 'Odkaz skopírovaný'); },
+        function () { window.prompt('Skopírujte odkaz:', url); });
+    } else {
+      window.prompt('Skopírujte odkaz:', url);
+    }
+  }
+
+  var IKONA_POSLAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6"/></svg>';
+  var IKONA_ZDIELAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><circle cx="17.5" cy="18" r="2.5"/><path d="M8.2 10.9l7.1-3.8M8.2 13.1l7.1 3.8"/></svg>';
+
+  function doplnTlacidla() {
+    document.querySelectorAll(ROOT + ' .sp-navrow').forEach(function (rad) {
+      if (rad.nextElementSibling && rad.nextElementSibling.classList.contains('kv-akcie')) return;
+      var box = document.createElement('div');
+      box.className = 'kv-akcie';
+      box.innerHTML = '<button type="button" class="kv-akcie__poslat" data-kv-poslat>' + IKONA_POSLAT + '<span>Poslať túto zostavu</span></button>'
+        + '<button type="button" class="kv-akcie__zdielat" data-kv-zdielat>' + IKONA_ZDIELAT + '<span>Zdieľať</span></button>';
+      rad.insertAdjacentElement('afterend', box);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var poslat = e.target.closest && e.target.closest('[data-kv-poslat]');
+    if (poslat) {
+      var koren = poslat.closest(ROOT) || document;
+      var ponuka = koren.querySelector('[data-sp-cfg-quote]');
+      /* Veta „Mám záujem o rozmer…", ktorú do správy vložil odkaz s rozmerom,
+         je súčasťou zostavy — keď ju nikto neupravil, zostava ju nahradí. */
+      var sprava = document.querySelector('textarea[name="contact[body]"]');
+      if (sprava && sprava.dataset.kAuto && sprava.value.trim() === sprava.dataset.kAuto.trim()) sprava.value = '';
+      if (ponuka) ponuka.click();
+      /* K zostave patrí aj odkaz, ktorým sa dá v konfigurátore otvoriť. */
+      window.setTimeout(function () {
+        farbaDoAdresy();
+        var pole = document.querySelector('textarea[name="contact[body]"]');
+        if (pole && pole.value.indexOf(location.href) === -1) pole.value = pole.value.replace(/\s+$/, '') + '\n\nOdkaz na zostavu: ' + location.href;
+      }, 120);
+      if (typeof window.kvMeraj === 'function') window.kvMeraj('konfigurator_poslat');
+      return;
+    }
+    var zdielat = e.target.closest && e.target.closest('[data-kv-zdielat]');
+    if (zdielat) {
+      zdielaj(zdielat);
+      if (typeof window.kvMeraj === 'function') window.kvMeraj('konfigurator_zdielat');
+      return;
+    }
+    if (e.target.closest && e.target.closest(ROOT + ' [data-sp-frame-color]')) window.setTimeout(farbaDoAdresy, 50);
+  });
+
+  function start() {
+    doplnTlacidla();
+    farbaZAdresy();
+    var koren = document.getElementById('kv-root');
+    if (koren && 'MutationObserver' in window) {
+      new MutationObserver(doplnTlacidla).observe(koren, { childList: true, subtree: true });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+
+/* --- Hranica rozmeru a väčší model ---------------------------------------
+   Posuvník končí na najväčšom katalógovom rozmere modelu. Kto potom klikal
+   na „+", nedialo sa nič a nevedel prečo. Teraz:
+   · keď má Soltec väčší model, ktorý daný rozmer zvládne (F170 → F240,
+     SL 170/28 → 170/36 …), prepne sa naň sám a povie to;
+   · keď väčší model nie je, pod posuvníkom sa ukáže, že toto je najväčší
+     katalógový rozmer, s odkazom na nacenenie rozmeru na mieru;
+   · tlačidlo „+" na hranici vyzerá neaktívne. */
+(function kvHranicaRozmeru() {
+  var ROOT = '#SoltecPremium';
+  var NAZOV = { w: 'šírku', l: 'dĺžku', h: 'výšku' };
+  var POLE = { w: 'widths', l: 'lengths' };
+  var MM = function (v) { return Number(v).toLocaleString('sk-SK').replace(/\s/g, ' ') + ' mm'; };
+
+  function data() {
+    var el = document.querySelector(ROOT + ' [data-sp-bio-data]');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
+  }
+  function posuvnik(rozmer) { return document.querySelector(ROOT + ' [data-sp-' + rozmer + ']'); }
+  function naHranici(rozmer) {
+    var r = posuvnik(rozmer);
+    return r && Number(r.value) >= Number(r.max) - 1;
+  }
+  function oznam(rozmer, html, druh) {
+    var r = posuvnik(rozmer);
+    var pole = r && r.closest('.sp-field');
+    if (!pole) return;
+    var p = pole.querySelector('.kv-hranica');
+    if (!p) {
+      p = document.createElement('p');
+      p.className = 'kv-hranica';
+      p.setAttribute('role', 'status');
+      pole.appendChild(p);
+    }
+    p.innerHTML = html;
+    p.hidden = !html;
+    p.dataset.druh = html ? (druh || 'hranica') : '';
+  }
+  function vyznacHranice() {
+    ['w', 'l', 'h'].forEach(function (rozmer) {
+      var plus = document.querySelector(ROOT + ' [data-sp-nudge="' + rozmer + '"][data-sp-nudge-dir="1"]');
+      if (plus) plus.classList.toggle('je-na-hranici', !!naHranici(rozmer) && !vacsiModel(rozmer));
+      var p = document.querySelector(ROOT + ' [data-sp-' + rozmer + ']');
+      var sprava = p && p.closest('.sp-field') && p.closest('.sp-field').querySelector('.kv-hranica');
+      if (!naHranici(rozmer) && sprava && sprava.dataset.druh === 'hranica') oznam(rozmer, '');
+    });
+  }
+
+  /* Ďalší model v poradí tlačidiel, ktorý má v danom rozmere viac než
+     aktuálny. Berú sa len modely s voľnou šírkou/dĺžkou (SL má šírku pevnú). */
+  function vacsiModel(rozmer) {
+    var d = data(), kluc = POLE[rozmer];
+    if (!d || !d.models || !kluc) return null;
+    var tlacidla = [].slice.call(document.querySelectorAll(ROOT + ' [data-sp-model]'));
+    var aktivne = tlacidla.filter(function (b) { return b.getAttribute('aria-pressed') === 'true'; })[0];
+    var sucasny = aktivne && d.models[aktivne.dataset.spModel];
+    if (!sucasny || !Array.isArray(sucasny[kluc])) return null;
+    var max = Math.max.apply(null, sucasny[kluc]);
+    for (var i = tlacidla.indexOf(aktivne) + 1; i < tlacidla.length; i++) {
+      var m = d.models[tlacidla[i].dataset.spModel];
+      if (m && Array.isArray(m[kluc]) && Math.max.apply(null, m[kluc]) > max && !tlacidla[i].disabled) {
+        return { tlacidlo: tlacidla[i], nazov: m.label || tlacidla[i].dataset.spModel, max: Math.max.apply(null, m[kluc]),
+          rady: m[kluc].slice().sort(function (x, y) { return x - y; }), staryMax: max };
+      }
+    }
+    return null;
+  }
+
+  function chceViac(rozmer, ciel) {
+    var r = posuvnik(rozmer);
+    if (!r) return false;
+    var vacsi = vacsiModel(rozmer);
+    if (vacsi) {
+      var hodnota = ciel || Number(r.max) + 1;
+      vacsi.tlacidlo.click();
+      /* Po prepnutí modelu runtime nastaví nové hranice posuvníka; až potom
+         sa dá ísť o krok vyššie. */
+      window.setTimeout(function () {
+        var n = posuvnik(rozmer);
+        if (n) {
+          /* Prvý katalógový rozmer nového modelu nad starou hranicou, alebo
+             najbližší k napísanému číslu. Runtime pri zmene modelu rozmer
+             vracia na predvolený, preto sa nastavuje až po prepnutí. */
+          var chcene = ciel || (vacsi.staryMax + 1);
+          var ciel2 = vacsi.rady.filter(function (v) { return v >= chcene; })[0] || vacsi.max;
+          n.value = String(ciel2);
+          n.dispatchEvent(new Event('input', { bubbles: true }));
+          n.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        oznam(rozmer, 'Na väčšiu ' + NAZOV[rozmer] + ' sme prepli na model <b>' + vacsi.nazov
+          + '</b> (do ' + MM(vacsi.max) + ').', 'model');
+        vyznacHranice();
+      }, 250);
+      return true;
+    }
+    oznam(rozmer, 'Najväčšia ' + NAZOV[rozmer].replace(/u$/, 'a') + ' v katalógu je ' + MM(r.max)
+      + '. Väčší rozmer vám nacenime na mieru — <a href="#sp-dopyt" data-kv-na-mieru>napíšte nám</a>.');
+    return false;
+  }
+
+  document.addEventListener('click', function (e) {
+    var plus = e.target.closest && e.target.closest(ROOT + ' [data-sp-nudge][data-sp-nudge-dir="1"]');
+    if (plus && naHranici(plus.dataset.spNudge)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      chceViac(plus.dataset.spNudge);
+      return;
+    }
+    if (e.target.closest && e.target.closest(ROOT + ' [data-sp-model], ' + ROOT + ' [data-sp-nudge]')) {
+      window.setTimeout(vyznacHranice, 60);
+    }
+  }, true);
+
+  document.addEventListener('keydown', function (e) {
+    var r = e.target;
+    if (!r.matches || !r.matches(ROOT + ' input[type="range"][data-sp-w], ' + ROOT + ' input[type="range"][data-sp-l]')) return;
+    if (!/^(ArrowRight|ArrowUp|PageUp)$/.test(e.key)) return;
+    var rozmer = r.hasAttribute('data-sp-w') ? 'w' : 'l';
+    if (!naHranici(rozmer)) return;
+    e.preventDefault();
+    chceViac(rozmer);
+  }, true);
+
+  /* Číslo napísané do poľa nad posuvníkom väčšie než hranica modelu. */
+  document.addEventListener('change', function (e) {
+    var vstup = e.target;
+    if (!vstup.matches || !vstup.matches(ROOT + ' .sp-field input[type="text"]')) return;
+    var pole = vstup.closest('.sp-field');
+    var r = pole && pole.querySelector('input[type="range"][data-sp-w], input[type="range"][data-sp-l]');
+    if (!r) return;
+    var chce = parseInt(String(vstup.value).replace(/\D/g, ''), 10);
+    if (chce > Number(r.max)) chceViac(r.hasAttribute('data-sp-w') ? 'w' : 'l', chce);
+  }, true);
+
+  document.addEventListener('input', function (e) {
+    if (e.target.matches && e.target.matches(ROOT + ' input[type="range"]')) vyznacHranice();
+  });
+
+  function start() { window.setTimeout(vyznacHranice, 600); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
+})();
+
+/* --- Výzva posunúť sa ku krokom (telefón) --------------------------------
+   Na telefóne zaberie 3D náhľad celú obrazovku a kroky nastavenia sú pod
+   ním — nie je vidieť, že treba ísť nižšie. Kým sú kroky mimo obrazovky,
+   dole stojí tlačidlo „Nastaviť rozmer a farbu“; ťuknutím sa k nim posunie
+   a keď sa kroky ukážu, samo zmizne. */
+(function kvVyzvaKrokov() {
+  if (!window.matchMedia || !window.matchMedia('(max-width: 899px)').matches) return;
+  var pokusov = 0;
+  (function cakaj() {
+    var panel = document.querySelector('#SoltecPremium .sp-panel');
+    if (!panel) { if (++pokusov < 80) window.setTimeout(cakaj, 125); return; }
+    if (!('IntersectionObserver' in window) || document.querySelector('.kv-vyzva')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'kv-vyzva';
+    b.innerHTML = '<span>Nastaviť rozmer a farbu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>';
+    b.addEventListener('click', function () {
+      panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    });
+    document.body.appendChild(b);
+    var videl = false;
+    new IntersectionObserver(function (z) {
+      var e = z[0];
+      /* Po prvom zobrazení krokov sa výzva už nevráti. */
+      if (e.isIntersecting || e.boundingClientRect.top < 0) videl = true;
+      b.classList.toggle('je-vidno', !videl);
+    }, { rootMargin: '0px 0px -25% 0px' }).observe(panel);
+    window.setTimeout(function () { if (!videl) b.classList.add('je-vidno'); }, 900);
+  })();
 })();

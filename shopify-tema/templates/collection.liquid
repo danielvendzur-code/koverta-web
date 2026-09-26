@@ -1,0 +1,20 @@
+{%- case collection.handle -%}
+{%- when 'bioklimaticke-pergoly' -%}
+  {% include 'nove-bioklimaticke-pergoly' %}
+{%- when 'pristresky-pre-auta-agava' -%}
+  {% include 'nove-carport-soltec' %}
+{%- when 'outdoor-kuchyne' -%}
+  {% include 'nove-outdoor-kuchyne' %}
+{%- when 'pergoly-s-pevnou-strechou-multiport' -%}
+  {% include 'nove-pevne-prestresenia' %}
+{%- when 'pristresky-pre-auta' -%}
+  {%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}
+  {% include 'nove-pristresky-pre-auta' %}
+{%- when 'tienenie' -%}
+  {% include 'nove-tienenie' %}
+{%- when 'zahradne-pristresky' -%}
+  {%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}
+  {% include 'nove-zahradne-pristresky' %}
+{%- else -%}
+  {% render 'koverta-obchod', druh: 'kolekcia', collection: collection %}
+{%- endcase -%}

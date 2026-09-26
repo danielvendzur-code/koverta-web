@@ -32,20 +32,20 @@ Where no active technical dimension was available, geometry is explicitly treate
 Primary realization root:
 
 - `MARKETING → realizácie → Koverta Auto Pristresky`
-- Drive folder id: `1SxXlJMzd3Ni6xh-hP13_hdUkmOVKiPO4`
+- Drive folder id: `[ID odstránené]`
 
 Specific realization evidence used:
 
 1. **Slovenský Grob Graus 4,5 × 6 m**
-   - folder id: `1i32mVb4Jlgp8I-XU3aOCapbmRgzM8C5h`
+   - folder id: `[ID odstránené]`
    - `IMG_0070.JPG`
-   - file id: `1_JvSQWq4wcIBjHB4MCWEZg2g1q3yNtUX`
+   - file id: `[ID odstránené]`
    - used for visible drainage/downpipe relationship and appearance only.
 
 2. **Kolíňany Kmeť 5,8 × 6 × 4 stena RAL 7016**
-   - folder id: `1zfMcJIKrKLzbqbTDEmR8xr4lVUTL8yaj`
+   - folder id: `[ID odstránené]`
    - `IMG_8739.jpeg`
-   - file id: `1AnCCYQvrq9TxyEr_numYw5Cn0lmUonM4`
+   - file id: `[ID odstránené]`
    - used for underside/roof construction and wall realization appearance.
 
 ### Google Drive — lighting references
@@ -53,20 +53,20 @@ Specific realization evidence used:
 Drive folder:
 
 - `Osvetlenie`
-- folder id: `10S8rJ_Vs_1FpJarnGyu3vafSbJ2VFZP0`
+- folder id: `[ID odstránené]`
 
 Files:
 
 - `IMG_3676 copy.jpeg`
-  - id: `1w1t5Sw5Yi1rkJkVd3GbbCN3vWCI5HzOD`
+  - id: `[ID odstránené]`
   - shows a KOVER​TA realization with line lighting following the visible frame perimeter.
 
 - `IMG_3675 copy.jpeg`
-  - id: `1w1FWxsiBe2Oi2exe3F5idZLQ3UFX7vx4`
+  - id: `[ID odstránené]`
   - second view of the same illuminated realization.
 
 - `IMG_1569.jpeg`
-  - id: `10ZmiliwPjt_HqwsbxkGSgZf2iWTynT3Y`
+  - id: `[ID odstránené]`
   - close-up showing a linear light/profile physically seated at a steel member and electrical installation detail.
 
 These photos support the existence and visible attachment of line lighting. They do **not** establish a universal mandatory LED layout, profile size or wiring route for every KOVER​TA order.

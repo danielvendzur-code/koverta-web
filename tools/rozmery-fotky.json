@@ -1,0 +1,20 @@
+{
+  "poznamka": "Fotky z realizácií, ktorých rozmer presne sedí na katalógový rozmer (podľa priečinkov na Drive: Obec Meno Š x D x stĺpy). Súbory sú v assets/mapa/. Na produkte idú až za vizualizáciou, najviac dve.",
+  "pristresok-koverta-3200x5600": [["voderady", "Voderady"]],
+  "pristresok-koverta-3200x6000": [["nove-mesto-nad-vahom", "Nové Mesto nad Váhom"], ["kocovce", "Kočovce"]],
+  "pristresok-koverta-3800x5200": [["sala", "Šaľa"]],
+  "pristresok-koverta-4000x5600": [["urmince", "Urmince"], ["selce", "Selce"]],
+  "pristresok-koverta-4200x5200": [["ivanka-pri-dunaji", "Ivanka pri Dunaji"]],
+  "pristresok-koverta-4200x6000": [["vahovce", "Váhovce"]],
+  "pristresok-koverta-5000x5200": [["kvetoslavov", "Kvetoslavov"], ["levice", "Levice"]],
+  "pristresok-koverta-5200x5200": [["stara-tura", "Stará Turá"]],
+  "pristresok-koverta-5600x5200": [["dunajska-streda", "Dunajská Streda"]],
+  "pristresok-koverta-5600x5600": [["kalinciakovo", "Kalinčiakovo"]],
+  "pristresok-koverta-5800x6000": [["kolinany", "Kolíňany"], ["svatoplukovo", "Svätoplukovo"]],
+  "pristresok-koverta-6000x5600": [["jasenie", "Jasenie"], ["hlinik-nad-hronom", "Hliník nad Hronom"]],
+  "pristresok-koverta-6000x6000": [["diviacka-nova-ves", "Diviacka Nová Ves"]],
+  "pristresok-koverta-6200x5200": [["rybnik", "Rybník"], ["zirany", "Žirany"]],
+  "pristresok-koverta-6200x5600": [["potvorice", "Potvorice"]],
+  "pristresok-koverta-6200x6000": [["banov", "Bánov"], ["podvysoka", "Podvysoká"]],
+  "pristresok-koverta-6600x5600": [["hlohovec", "Hlohovec"]]
+}

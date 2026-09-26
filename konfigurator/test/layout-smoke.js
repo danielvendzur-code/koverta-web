@@ -118,35 +118,35 @@ function assert(condition, message) {
     assert(home.brandMoreVisible, 'Brand explanatory text is hidden behind hover');
     assert(home.kovertaCfg && home.kovertaCfg.width > 180 && home.kovertaCfg.height > 120, 'Koverta configurator card is missing or collapsed');
 
-    /* Dopyt sa už nikam neposiela: statický hosting POST neprijme, tak
-       formulár otvorí poštu s hotovým dopytom. Test drží, že sa pritom nič
-       neodošle na sieť a že v e-maile je naozaj všetko vyplnené. */
+    /* Test nesmie poslať skutočný dopyt. Každý beh inak odoslal obchodu
+       e-mail a potvrdenie na qa@example.invalid a vyčerpal denný limit
+       Resendu. Ostrý server sa preto na sieti zablokuje (a stránka na
+       localhoste aj tak neodosiela — len zapíše window.__kvDopytSkusobny). */
     let odoslane = 0;
-    await desktop.route(/koverta\.sk\/(contact|cart|search)/, async route => { odoslane++; await route.abort(); });
+    await desktop.route(/koverta-formular\.vercel\.app|koverta\.sk\/(contact|cart|search)/, async route => { odoslane++; await route.abort(); });
     const form = page.locator('form[data-k-dopyt]').first();
     await form.locator('[type="submit"]').click();
-    assert(!(await page.locator('[data-k-dakujem]').isVisible()), 'Empty contact form bypassed validation');
+    assert(!(await page.evaluate(() => (window.__kvDopytSkusobny || []).length)), 'Empty contact form bypassed validation');
     await form.locator('[name="contact[name]"]').fill('Koverta audit test');
     await form.locator('[name="contact[phone]"]').fill('+421900000000');
     await form.locator('[name="contact[email]"]').fill('qa@example.invalid');
     await form.locator('[name="contact[body]"]').fill('Client-side QA; nothing is delivered.');
-    await form.locator('[type="submit"]').click();
-    assert(!(await page.locator('[data-k-dakujem]').isVisible()), 'Contact form bypassed consent validation');
-    await form.locator('[type="checkbox"]').check();
-    await form.locator('[type="submit"]').click();
-    await page.locator('[data-k-dakujem]').waitFor({state:'visible'});
-    assert(odoslane === 0, 'Contact form still posts an enquiry to a server that will not exist');
-    const panel = await page.evaluate(() => {
-      const d = document.querySelector('[data-k-dakujem]');
-      const a = d.querySelector('[data-k-mailto]');
-      return { nadpis: d.querySelector('.kh-dakujem__nadpis').textContent.trim(), odkaz: a ? a.getAttribute('href') : '' };
-    });
-    assert(panel.nadpis === 'Dopyt máte pripravený v e-maile', 'Thank-you panel claims something that did not happen: ' + panel.nadpis);
-    const telo = decodeURIComponent(panel.odkaz);
-    for (const kus of ['obchod@koverta.sk', 'Koverta audit test', 'qa@example.invalid']) {
-      assert(telo.includes(kus), 'Prepared e-mail lost a field: ' + kus);
+    /* Povinné sú len meno a telefón; súhlas je odoslaním (text pod
+       tlačidlom), žiadne zaškrtávanie. */
+    const telo = await page.evaluate(() => new Promise((ok) => {
+      const f = document.querySelector('form[data-k-dopyt]');
+      /* časová poistka formulára (startedAt) žiada aspoň 1,2 s od otvorenia */
+      setTimeout(() => { f.querySelector('[type="submit"]').click();
+        const t = Date.now(); (function cakaj() { const z = window.__kvDopytSkusobny || [];
+          if (z.length || Date.now() - t > 4000) ok(z[0] || null); else setTimeout(cakaj, 50); })(); }, 1300);
+    }));
+    assert(odoslane === 0, 'Contact form sent an enquiry to the live server from a test');
+    assert(telo, 'Contact form did not submit with name and phone');
+    for (const [k, v] of [['meno', 'Koverta audit test'], ['email', 'qa@example.invalid'], ['telefon', '+421900000000']]) {
+      assert(telo[k] === v, 'Enquiry lost a field: ' + k);
     }
-    console.log('FORM_PASS validation, consent, prepared e-mail, nothing sent to a server');
+    await page.waitForURL(/dakujeme\/\?contact_posted=true/, { timeout: 5000 });
+    console.log('FORM_PASS validation, name+phone required, all fields, thank-you page, nothing sent to a server');
 
     await desktop.close();
 

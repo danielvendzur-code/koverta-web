@@ -30,7 +30,11 @@ function kvAdresa(kluc, zaloha) {
      test/scene-assets.js reads the meshes and fails if these drift. */
   const models = {
     sedan: { file:'bmw-g80-m3.bin.gz', bounds:[0,-1013,0,4794,1013,1462],
-      label:'BMW M3', short:'sedan' },
+      label:'BMW M3', short:'sedan',
+      /* Kryty zrkadiel boli v modeli svetlosivý chróm (materiál 3, farba
+         176/182/188) a na aute svietili ako dve biele kocky. Na M3 sú vo
+         farbe karosérie: dostanú lak (materiál 1) a jeho podklad 128. */
+      prefarbi:[[3,176,182,188,1,128,128,128]] },
     sport: { file:'porsche-911.bin.gz', bounds:[0,-1005,0,4519,1005,1285],
       label:'Porsche 911', short:'športové' },
     city: { file:'mini-cooper.bin.gz', bounds:[0,-1001,0,3876,1001,1474],
@@ -53,6 +57,10 @@ function kvAdresa(kluc, zaloha) {
         data=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
       }
       if (!data.byteLength || data.byteLength % 48) throw Error('Neplatný model.');
+      (models[key].prefarbi||[]).forEach(([m,r,g,b,m2,r2,g2,b2])=>{
+        const B=new Uint8Array(data);
+        for(let i=12;i<B.length;i+=16)if(B[i+3]===m&&B[i]===r&&B[i+1]===g&&B[i+2]===b){B[i]=r2;B[i+1]=g2;B[i+2]=b2;B[i+3]=m2;}
+      });
       return data;
     }).catch(e => { assets.delete(key); throw e; }));
     return assets.get(key);
@@ -536,15 +544,14 @@ function kvAdresa(kluc, zaloha) {
         <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
           <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
         <div class="sp-scene__row sp-scene__more" data-scene-countrow>
-        <select data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
+        <select name="auto-model" data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
-        <select class="sp-scene__paint" aria-label="Lak auta">${Object.entries(PAINTS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
+        <select name="auto-lak" class="sp-scene__paint" aria-label="Lak auta">${Object.entries(PAINTS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
         <!-- Dážď je z konfigurátora odstránený na žiadosť vlastníka: voľba
              počasia rozptyľovala od výrobku a kvapky na plátne pôsobili na
              zastavenom zábere rušivo. Kreslenie dažďa nižšie ostáva nedotknuté
              a dá sa vrátiť späť vrátením tohto riadku. -->
         <p class="sp-scene__status sp-scene__more" role="status" aria-live="polite"></p>
-        <a class="sp-scene__credits sp-scene__more" href="${kvAdresa('modely', '../pouzite-modely/')}" target="_blank" rel="noopener">O 3D modeloch</a>
       </div>`;
     /* Karta visí na spodnej hrane kresby, nie na spodku celej scény: dok má
        nulovú výšku a sedí presne tam, kde plátno končí, takže karta prekryje
@@ -582,24 +589,13 @@ function kvAdresa(kluc, zaloha) {
       const flat=Boolean(context&&context.renderer&&!KRESLIA_VYBAVENIE.includes(context.renderer));
       const equipment=failure || (flat&&state.mode!=='none'?'Tento prehliadač kreslí zjednodušený nákres, vybavenie sa v ňom nezobrazí.':
         loading.size?'Načítavam 3D vybavenie…':currentPlan.reason||
+        /* Popis vybavenia („Posedenie · dvojkreslo…", rozmery auta) majiteľ
+           z plátna odstránil — pod modelom ostáva len to, čo treba vedieť:
+           že je pri aute tesno na otvorenie dverí. */
         (state.mode==='car'?(()=>{
-          const keys=[...new Set(currentPlan.items.map(i=>i.key))];
-          if(!keys.length)return '';
-          const m=v=>(v/1000).toFixed(2).replace('.',',');
-          const line=keys.map(k=>{const b=models[k].bounds,n=currentPlan.items.filter(i=>i.key===k).length;
-            return `${n} × ${models[k].label} · ${m(b[3]-b[0])} × ${m(b[4]-b[1])} m so zrkadlami`;}).join(' · ');
-          /* Koľko naozaj ostane vedľa auta. Pod najužším prístreškom sa malé
-             auto zmestí, ale na otvorenie dverí je to tesné — a to sa má
-             povedať, nie zamlčať tým, že sa auto nenakreslí vôbec. */
           const cl=currentPlan.clearance;
-          if(!cl||cl.beside==null)return line;
-          const cm=Math.round(cl.beside/10);
-          return line+(cl.roomy?` · po bokoch ${cm} cm`
-            :` · po bokoch len ${cm} cm, auto sa zmestí, na otvorenie dverí je to tesné`);})():
-         state.mode==='bistro'?(()=>{const k=currentPlan.items[0]&&currentPlan.items[0].key;
-           return k==='lounge'?'Lounge zostava · trojmiestna pohovka, dve kreslá, stolík a koberec':
-             k==='sofa'?'Posedenie · dvojkreslo, konferenčný stolík, koberec a kvetináč':
-             `${currentPlan.items.length} × stolík a dve stoličky · drevo / kov`;})():''));
+          if(!cl||cl.beside==null||cl.roomy)return '';
+          return `Po bokoch auta len ${Math.round(cl.beside/10)} cm, na otvorenie dverí je to tesné`;})():''));
       /* Počasie povie, čo naozaj vidno. Bez hĺbkového rendereru sa dážď
          nekreslí vôbec a mlčať o tom by znamenalo tváriť sa, že prší. */
       const weather=state.weather!=='rain'?'':
@@ -897,6 +893,52 @@ function kvAdresa(kluc, zaloha) {
          modelu to bola zbytočná práca navyše. */
       gpu={gl,main,rain,rainBuffer,contact,contactBuffer,flow:flowProg,flowBuffer:gl.createBuffer(),flowVertices:0,flowKey:'',meshes:new Map(),rainVertices:particleSeeds.length*6,rainData:null,places:new Map()};
     }
+    /* Maska normál pre nový vykresľovač (kv-render3d).
+
+       Auto sa do spoločnej vyrovnávacej pamäte kreslí len farbou. Mapa normál
+       pod ním preto držala to, čo tam bolo pred ním — stĺp za autom, dlažbu —
+       a zatienenie v kútoch (SSAO) na karosérii počítalo s normálou stĺpa.
+       Jeho obrys potom presvital cez auto, akoby bolo priesvitné. Tento
+       priechod zapíše do mapy normál „bez normály“ všade, kde auto naozaj
+       vidno (rovnaká geometria, hĺbka LEQUAL), a zatienenie ho preskočí
+       rovnako ako oblohu. Farbu ani hĺbku nemení. */
+    function drawNormalMask(gl,camera) {
+      if(!context||typeof WebGL2RenderingContext==='undefined'||!(gl instanceof WebGL2RenderingContext))return false;
+      init(gl);
+      const drawn=currentPlan.items.filter(i=>loaded.has(i.key));
+      if(!drawn.length)return false;
+      if(gpu.mask===undefined) {
+        try {
+          gpu.mask=program(gl,`#version 300 es
+            precision highp float;in vec3 p;uniform float viewportHeight;${projection}uniform vec3 offset;uniform vec2 spin;
+            vec2 turn(vec2 v){return vec2(v.x*spin.x-v.y*spin.y,v.x*spin.y+v.y*spin.x);}
+            void main(){gl_Position=project(vec3(turn(p.xy),p.z)+offset);}`,
+            `#version 300 es
+            precision mediump float;layout(location=1) out vec4 normala;
+            void main(){normala=vec4(0.);}`);
+        } catch(e) { gpu.mask=null; }
+      }
+      const m=gpu.mask;if(!m)return false;
+      const main=gpu.main;
+      for(const name of ['n','c','material']){const loc=A(main,name);if(loc>=0)gl.disableVertexAttribArray(loc);}
+      gl.useProgram(m);uniformCamera(gl,m,camera);
+      gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(false);gl.disable(gl.CULL_FACE);
+      /* Náskok o zlomok hĺbky: iný program môže tú istú polohu vyrátať
+         o posledný bit inak a maska by na karosérii vynechala škvrny. */
+      gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-1,-4);
+      const pa=A(m,'p');gl.enableVertexAttribArray(pa);
+      for(const item of drawn) {
+        const mesh=gpu.meshes.get(item.key);if(!mesh)continue;
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
+        gl.vertexAttribPointer(pa,3,gl.SHORT,false,16,0);
+        gl.uniform3f(U(m,'offset'),item.x,item.y,item.z);
+        gl.uniform2f(U(m,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
+        gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+      }
+      gl.disableVertexAttribArray(pa);
+      gl.disable(gl.POLYGON_OFFSET_FILL);gl.depthMask(true);
+      return true;
+    }
     function draw(gl,camera,weatherOnly=false) {
       if(!context)return;init(gl);
       if(weatherOnly) {
@@ -1031,7 +1073,11 @@ function kvAdresa(kluc, zaloha) {
        snímky líšia osvetlením celého modelu a ten rozdiel sa počíta ako voda.
        Hodnota 'cloud' už nemá tlačidlo, ale renderer jej rozumie a svieti
        ňou rovnako ako dažďom. */
-    return {state,prepare,draw,setFrame(fn){frame=fn;animates=true;run();},
+    return {state,prepare,draw,drawNormalMask,
+      /* Či `draw` niečo nakreslí: auto so svojím dopadovým tieňom, alebo dážď.
+         Vykresľovač podľa toho vie, či musí konštrukciu dekódovať uprostred
+         snímku (kv-render3d, vratné kódovanie hrán) — bez vybavenia netreba. */
+      needsDraw:()=>currentPlan.items.some(i=>loaded.has(i.key))||state.weather==='rain',setFrame(fn){frame=fn;animates=true;run();},
       setWeather(w){state.weather=w;sync();run();if(!raining()&&frame)frame(false);},
       snapshot:()=>({mode:state.mode,count:currentPlan.items.length,capacity:currentPlan.capacity,clearance:currentPlan.clearance||null,
         weather:state.weather,collisionTriangles:roofSurface?roofSurface.triangles:0,paused:state.paused,flow:state.flow,animating:Boolean(raf),animates,fast,stalled,step,

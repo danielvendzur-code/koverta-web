@@ -67,6 +67,74 @@ const FOTKY = process.env.KV_FOTKY || 'pages';
 const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
   'https://danielvendzur-code.github.io/koverta-web';
 
+/* GitHub Pages sa stavia z vetvy master. Súbor, ktorý na master ešte nie je
+ * (nová fotka, nové video), by tam vrátil 404. Taký súbor sa preto berie
+ * z jsDelivr z posledného odoslaného commitu, ktorý ho obsahuje — adresa je
+ * nemenná a ide cez CDN. Keď súbor na master pribudne, prevodník sa vráti
+ * k Pages sám. */
+const JSDELIVR_ZAKLAD = 'https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@';
+const naMasteri = (() => {
+  try {
+    return new Set(require('child_process').execFileSync('git', ['ls-tree', '-r', '--name-only', 'origin/master'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\n'));
+  } catch (_) { return null; }
+})();
+/* Všetky súbory idú z jsDelivr s commitom, nielen tie, ktoré na master
+ * ešte nie sú. Adresa s commitom sa nikdy nezmení, takže ju prehliadač smie
+ * držať v pamäti natrvalo — GitHub Pages dovolí len 10 minút a Lighthouse
+ * rátal pri opakovanej návšteve 8,7 MB zbytočného sťahovania. Posledný commit
+ * každého súboru sa zistí jedným prechodom histórie. */
+const posledneCommity = (() => {
+  const cp = require('child_process');
+  try {
+    const vzdialene = new Set(cp.execFileSync('git', ['rev-list', '--remotes'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }).split('\n').filter(Boolean));
+    const mapa = new Map();
+    let sha = '';
+    for (const riadok of cp.execFileSync('git', ['log', '--format=@%H', '--name-only', 'HEAD'],
+      { cwd: KOREN, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 }).split('\n')) {
+      if (riadok.startsWith('@')) { sha = riadok.slice(1); continue; }
+      if (riadok && !mapa.has(riadok)) mapa.set(riadok, sha);
+    }
+    return { mapa, vzdialene };
+  } catch (_) { return null; }
+})();
+const zakladPreSubor = new Map();
+function zakladPages(relCesta) {
+  if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
+  let zaklad = PAGES_ZAKLAD;
+  const sha = posledneCommity && posledneCommity.mapa.get(relCesta);
+  if (sha && posledneCommity.vzdialene.has(sha)) zaklad = JSDELIVR_ZAKLAD + sha;
+  else if (naMasteri && !naMasteri.has(relCesta)) {
+    console.warn('Pozor: ' + relCesta + ' nie je na master ani v odoslanom commite — najprv ho commitni a pushni, potom spusti prevodník znova.');
+  }
+  zakladPreSubor.set(relCesta, zaklad);
+  return zaklad;
+}
+
+/* Fotky v menu skladá koverta-2026.js až za behu (setMenuPhoto,
+   setDrawerPhoto) a na Shopify ich bral z GitHub Pages. Fotka, ktorá ešte
+   nie je na master, tam vracala 404 a v menu ostal otáznik (Carport Soltec).
+   Téma preto oznámi presnú adresu každej takej fotky, rovnako ako pri
+   ostatných obrázkoch: master z Pages, inak jsDelivr s commitom. */
+function menuFotky() {
+  /* Zo zdroja: koverta-2026.js je zmenšený (tools/zmensi-js.js). */
+  const js = fs.readFileSync(path.join(KOREN, 'assets', 'koverta-2026.zdroj.js'), 'utf8');
+  const mena = new Set();
+  for (const m of js.matchAll(/set(?:Menu|Drawer)Photo\([^,]+,\s*'([^']+)'\)|const photos = \[([^\]]+)\]/g)) {
+    const zoznam = m[1] ? [m[1]] : (m[2].match(/'([^']+)'/g) || []).map(x => x.slice(1, -1));
+    zoznam.forEach(n => mena.add(n.replace(/\.(jpe?g|png)$/i, '-w1000.webp')));
+  }
+  const vysledok = {};
+  for (const n of mena) {
+    if (!fs.existsSync(path.join(KOREN, 'assets', n))) { chyby.push('menu: chýba assets/' + n); continue; }
+    const zaklad = zakladPages('assets/' + n);
+    vysledok[n] = zaklad + '/assets/' + n + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '');
+  }
+  return vysledok;
+}
+
+
 /* Shopify nemusí pri synchronizácii prijať priveľký Liquid súbor. Sekcia sa
  * potom nahrá, no jej snippet chýba a obchod vypíše návštevníkovi „Liquid
  * error“. Galéria má stovky položiek, preto veľké telá rozdelíme na menšie
@@ -74,7 +142,8 @@ const PAGES_ZAKLAD = process.env.KV_PAGES_ZAKLAD ||
 const MAX_SNIPPET_BAJTOV = 180 * 1024;
 
 const PRESKOC = new Set(['node_modules', '.git', 'coordination', 'qa-artifacts',
-  'archiv-expivi', 'shopify-tema', 'tools', 'test', 'interny-odhad-patiek']);
+  'archiv-expivi', 'shopify-tema', 'shopify-zdroj', 'tools', 'test', 'interny-odhad-patiek']);
+const SHOPIFY_ZDROJ = path.join(KOREN, 'shopify-zdroj');
 
 const DO_TEMY = new Set(['.css', '.js', '.woff2', '.woff', '.svg']);
 
@@ -94,12 +163,63 @@ function najdiStranky(adresar, zoznam = []) {
   return zoznam;
 }
 
+/* Stránky katalógových rozmerov. Je ich 66 a generuje ich
+   `tools/generuj-rozmery.py` do `pristresky-pre-auta/rozmer/2500x5200/`
+   a `zahradne-pristresky/rozmer/3000x3000/`. */
+const ROZMER = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\/\d+x\d+$/;
+
+/* Kde v obchode žije obsah každej stránky: tools/adresy-obchodu.json.
+   Kategórie idú na staré kolekcie, ktoré majú návštevnosť, ostatné na staré
+   stránky. Handle `nove-…` ostáva menom útržku s obsahom. */
+const ADRESY = JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'adresy-obchodu.json'), 'utf8'));
+function cielObchodu(cesta) {
+  const z = ADRESY.stranky[cesta];
+  if (!z) return null;
+  if (z.url) return z;
+  return Object.assign({}, z, { url: (z.typ === 'kolekcia' ? '/collections/' : '/pages/') + z.handle });
+}
+
+/* Produkty rozmerov. Kým nový produkt nie je v obchode zverejnený, jeho
+   adresa vracia 404 — odkaz vtedy ide na starý produkt s tým istým
+   rozmerom (tools/shopify-product-redirects.json), ktorý žije. Rozhoduje
+   Liquid pri vykreslení podľa toho, čo je v kolekciách naozaj zverejnené
+   (`kv_zive`, počíta ho smerovač stránky), takže po aktivácii produktov sa
+   odkazy prepnú samy, bez zmeny kódu. */
+const STARE_PRODUKTY = new Map(JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'shopify-product-redirects.json'), 'utf8'))
+  .redirects.map((r) => [r.new_handle, r.old_handle]));
+
+function produktovyHandle(cesta) {
+  const m = cesta.match(/^(pristresky-pre-auta|zahradne-pristresky)\/rozmer\/(\d+)x(\d+)$/);
+  if (!m) return null;
+  return (m[1] === 'zahradne-pristresky' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + m[2] + 'x' + m[3];
+}
+
+function produktovaAdresa(cesta) {
+  const h = produktovyHandle(cesta);
+  if (!h) return null;
+  const stary = STARE_PRODUKTY.get(h);
+  if (!stary) { chyby.push('rozmer ' + cesta + ' nemá starý produkt v shopify-product-redirects.json'); return '/products/' + h; }
+  return "{% if kv_zive contains '|" + h + "|' %}/products/" + h + "{% else %}/products/" + stary + "{% endif %}";
+}
+
 function adresa(subor) {
   const rel = path.relative(KOREN, subor).replace(/\\/g, '/');
-  if (rel === 'index.html') return { druh: 'index', handle: PREDPONA + 'uvod', url: '/pages/' + PREDPONA + 'uvod', cesta: '' };
+  if (rel === 'index.html') {
+    const h = PREDPONA + 'uvod';
+    return { druh: 'index', handle: h, url: '/', odkaz: '/', cesta: '', ciel: { typ: 'domov', url: '/' } };
+  }
   const cesta = rel.replace(/\/index\.html$/, '').replace(/\.html$/, '');
   const handle = PREDPONA + cesta.replace(/\//g, '-');
-  return { druh: 'stranka', handle, url: '/pages/' + handle, cesta };
+  /* Stránky rozmerov v obchode nie sú: ich obsah je produkt. */
+  if (ROZMER.test(cesta)) {
+    return { druh: 'stranka', handle, url: '/pages/' + handle, odkaz: produktovaAdresa(cesta), rozmer: true, cesta };
+  }
+  const ciel = cielObchodu(cesta);
+  if (!ciel) {
+    chyby.push('stránka ' + cesta + ' nemá adresu v tools/adresy-obchodu.json');
+    return { druh: 'stranka', handle, url: '/pages/' + handle, odkaz: '/pages/' + handle, cesta };
+  }
+  return { druh: 'stranka', handle, url: ciel.url, odkaz: ciel.url, cesta, ciel };
 }
 
 /* ---------------------------------------------------------------- prepisy */
@@ -120,7 +240,12 @@ function naSubor(url) {
     return "{{ '" + meno + "' | asset_url }}";
   }
   doObchodu.set(meno, path.relative(KOREN, naDisku));
-  if (FOTKY === 'pages') return PAGES_ZAKLAD + '/assets/' + vnutri;
+  if (FOTKY === 'pages') {
+    const zaklad = zakladPages('assets/' + vnutri);
+    /* ?v=2: prehliadače, ktoré si zapamätali 404 z chvíle pred čistením
+       cache jsDelivr, si súbor stiahnu nanovo. */
+    return zaklad + '/assets/' + vnutri + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '');
+  }
   return "{{ '" + meno + "' | file_url }}";
 }
 
@@ -133,6 +258,19 @@ function naKoren(url) {
   if (!bez || bez.includes('/')) return null;
   if (!/\.(webmanifest|txt|xml|ico)$/i.test(bez)) return null;
   if (!fs.existsSync(path.join(KOREN, bez))) return null;
+  /* Súbor, ktorý sa od master líši (napr. manifest s opravenými cestami
+     ikon), by z Pages prišiel v starej podobe. Vtedy ide z jsDelivr
+     z posledného odoslaného commitu, rovnako ako súbor, ktorý na master
+     ešte nie je. */
+  try {
+    const cp = require('child_process');
+    const naMastri = cp.execFileSync('git', ['show', 'origin/master:' + bez], { cwd: KOREN, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    if (naMastri !== fs.readFileSync(path.join(KOREN, bez), 'utf8')) {
+      const sha = cp.execFileSync('git', ['log', '-1', '--format=%H', 'HEAD', '--', bez], { cwd: KOREN, encoding: 'utf8' }).trim();
+      const vzdialene = sha && cp.execFileSync('git', ['branch', '-r', '--contains', sha], { cwd: KOREN, encoding: 'utf8' }).trim();
+      if (sha && vzdialene) return JSDELIVR_ZAKLAD + sha + '/' + bez;
+    }
+  } catch (_) {}
   return PAGES_ZAKLAD + '/' + bez;
 }
 
@@ -165,7 +303,7 @@ function naStranku(url, mapa, zaklad) {
   return mapa.get(kluc) + chvost;
 }
 
-const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-video-mobil|data-k-menu-src|data-k-lupa|action)="([^"]*)"/g;
+const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|data-k-video-webm|data-k-video-mobil|data-k-menu-src|data-k-lupa|data-k-rozmer-foto|action)="([^"]*)"/g;
 
 function prepis(html, mapa, zaklad) {
   return html.replace(ATRIBUTY, (cele, meno, hodnota) => {
@@ -186,16 +324,45 @@ function prepis(html, mapa, zaklad) {
 
 /* ---------------------------------------------------------------- časti */
 
+/* Hľadá značku mimo HTML komentárov. Komentár, ktorý spomenul „<main>",
+   raz posunul začiatok obsahu doprostred seba a zvyšok komentára sa na
+   stránke obchodu ukázal ako text. */
+function mimoKomentara(html, co, od = 0) {
+  let i = html.indexOf(co, od);
+  while (i !== -1) {
+    const otv = html.lastIndexOf('<!--', i), zat = html.lastIndexOf('-->', i);
+    if (otv === -1 || zat > otv) return i;
+    i = html.indexOf(co, html.indexOf('-->', i) + 3);
+  }
+  return -1;
+}
+
 function vyrez(html, zaciatok, koniec, kde) {
-  const a = html.indexOf(zaciatok);
+  const a = mimoKomentara(html, zaciatok);
   if (a === -1) { chyby.push(kde + ': nenašiel som ' + zaciatok); return ''; }
-  const b = html.indexOf(koniec, a);
+  const b = mimoKomentara(html, koniec, a);
   if (b === -1) { chyby.push(kde + ': nenašiel som ' + koniec); return ''; }
   return html.slice(a, b + koniec.length);
 }
 
 /* Rozpad na samostatné prvky, aby sa dalo povedať, čo majú stránky spoločné
    a čo si nesie každá sama. */
+/* Lepivý pás „Zavolať / Nezáväzná cenová ponuka" na telefóne. Na webe stojí
+ * za pätičkou; prevod z tohto úseku berie len skripty a štýly, takže do témy
+ * sa nedostal a obchod na telefóne nemal po ruke telefón ani ponuku. Ide do
+ * layoutu pre všetky stránky okrem produktu (ten má vlastný pás s cenou
+ * a košíkom) a konfigurátora (tam sú na spodku ovládacie tlačidlá krokov).
+ * Tlačidlo ponuky otvorí okno dopytu, ak je na stránke formulár; inak vedie
+ * na kontakt. */
+function dokObchodu() {
+  const html = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
+  const m = html.match(/<div class="kh-dock"[\s\S]*?<\/div>/);
+  if (!m) { chyby.push('index.html: chýba pás kh-dock'); return ''; }
+  const dok = m[0].replace(/(k-btn--primary" href=")[^"]*(")/, '$1/pages/kontakt#ponuka$2');
+  return "{%- unless template.name == 'product' or page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' -%}\n"
+    + dok + '\n{%- endunless -%}';
+}
+
 function prvky(text) {
   const von = [];
   const vzor = /<!--[\s\S]*?-->|<(script|style)\b[\s\S]*?<\/\1>|<(?:link|meta|base)\b[^>]*>/g;
@@ -205,6 +372,30 @@ function prvky(text) {
 }
 
 /* Značky, ktoré si na Shopify robí stránka sama alebo ich dodá obchod. */
+/* Absolútne adresy statického webu (https://koverta.sk/…) v JSON-LD a og:image
+ * prepíše na adresy obchodu: stránky na /pages/…, rozmery na /products/…,
+ * fotografie na GitHub Pages alebo jsDelivr (obchod /assets/ nemá). */
+function naAdresyObchodu(text, mapa) {
+  return text.replace(/https:\/\/koverta\.sk\/([^"'\s<>]*)/g, (cela, zvysok) => {
+    const m = zvysok.match(/^([^?#]*)([?#].*)?$/);
+    const cesta = m[1], chvost = m[2] || '';
+    if (/^assets\//.test(cesta)) return zakladPages(cesta) + '/' + cesta + chvost;
+    if (cesta === '' ) return cela;
+    const kluc = cesta.replace(/\/index\.html$/, '').replace(/\/$/, '');
+    if (!mapa.has(kluc)) return cela;
+    const ciel = mapa.get(kluc);
+    return 'https://koverta.sk' + ciel + (chvost.startsWith('?') && ciel.includes('?') ? '&' + chvost.slice(1) : chvost);
+  });
+}
+
+/* Náhľadový obrázok (og:image a image v JSON-LD) sa mení na mieste, no
+ * GitHub Pages ho má z master v starej podobe. Adresa preto ide cez
+ * jsDelivr z commitu, v ktorom sa súbor naposledy zmenil. */
+function ogNaCdn(text) {
+  const stara = PAGES_ZAKLAD + '/assets/koverta-og.jpg';
+  return text.split(stara).join(zakladPages('assets/koverta-og.jpg') + '/assets/koverta-og.jpg');
+}
+
 function shopifyRobiSam(prvok) {
   return /<title|<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|application\/ld\+json|<link rel="preload"|<meta charset|<meta name="viewport"/i.test(prvok);
 }
@@ -231,6 +422,11 @@ function menoVTeme(naDisku) {
   return rel.replace(/\//g, '-');
 }
 
+/* Zmenšenie CSS pre obchod. Zdroj ostáva s komentármi (tie vysvetľujú,
+ * prečo je čo tak), do témy ide bez nich. Tá istá funkcia robí aj
+ * assets/koverta-2026.css pre web — pozri tools/zmensi-css.js. */
+const { zmensiCss } = require('./zmensi-css.js');
+
 function prepisCss(text, zdroj) {
   return text.replace(CSS_URL, (cele, uvodzovka, adresa) => {
     if (/^(?:https?:|data:|\/\/|#|\{\{|\{%)/i.test(adresa) || !adresa.trim()) return cele;
@@ -251,7 +447,11 @@ function prepisCss(text, zdroj) {
     /* Fotografia v CSS. Do témy sa nezmestí a `file_url` je Liquid, ktorý
        obyčajné `.css` nevie — preto plná adresa, tá platí vždy. */
     doObchodu.set(meno, path.relative(KOREN, naDisku));
-    if (FOTKY === 'pages') return 'url(' + PAGES_ZAKLAD + '/' + path.relative(KOREN, naDisku).replace(/\\/g, '/') + ')';
+    if (FOTKY === 'pages') {
+      const rel = path.relative(KOREN, naDisku).replace(/\\/g, '/');
+      const zaklad = zakladPages(rel);
+      return 'url(' + zaklad + '/' + rel + (zaklad.startsWith(JSDELIVR_ZAKLAD) ? '?v=2' : '') + ')';
+    }
     chyby.push('CSS ' + path.relative(KOREN, zdroj) + ' pýta fotografiu ' + adresa +
       '; pri KV_FOTKY=obchod sa na ňu v CSS nedá odkázať');
     return cele;
@@ -279,7 +479,7 @@ function preved() {
 
   const zoznam = najdiStranky(KOREN);
   const mapa = new Map();
-  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.url); }
+  for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
 
   const hlavicky = new Set();
   const paticky = new Set();
@@ -324,20 +524,32 @@ function preved() {
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
     const hlavaPrvky = prvky(hlava).filter((p) => !shopifyRobiSam(p)).map((p) => prepis(p, mapa, zaklad));
+    /* Preload úvodnej fotografie. Ostatné značky, ktoré Shopify skladá sám,
+       sa zahadzujú, no tento Shopify nenapíše — bez neho sa fotografia (LCP)
+       začne sťahovať až keď na ňu parser narazí v tele, za všetkými skriptmi
+       obchodu a aplikácií. Prepíše sa na tú istú adresu ako <picture>. */
+    const preloadFotky = prvky(hlava).filter((p) => /^<link rel="preload" as="image"/.test(p)).map((p) => prepis(p, mapa, zaklad));
     const chvostPrvky = prvky(chvost).map((p) => prepis(p, mapa, zaklad));
     for (const p of new Set(hlavaPrvky)) hlavaPocty.set(p, (hlavaPocty.get(p) || 0) + 1);
     for (const p of new Set(chvostPrvky)) chvostPocty.set(p, (chvostPocty.get(p) || 0) + 1);
 
     if (hlavicka) hlavicky.add(hlavicka);
     if (paticka) paticky.add(paticka);
-    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky };
+    /* Štruktúrované dáta a obrázok pre sociálne siete. Prvky hlavy, ktoré
+       skladá Shopify, prevod zahadzuje, no JSON-LD a og:image Shopify za nás
+       nenapíše — bez nich by obchod stratil firmu, otázky aj produkty vo
+       výsledkoch Google. Adresy sa prepíšu na tie z obchodu. */
+    const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)]
+      .map((m) => naAdresyObchodu(m[0], mapa));
+    const og = naAdresyObchodu((html.match(/<meta property="og:image" content="([^"]*)"/) || [, ''])[1], mapa);
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky };
   });
 
   /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
      literály `'./assets/…'` a `'./stranka/'`; preložia sa tým istým
      spôsobom ako adresy v značkovaní. */
   const cestySkriptu = {};
-  const skript = path.join(KOREN, 'assets', 'koverta-2026.js');
+  const skript = path.join(KOREN, 'assets', 'koverta-2026.zdroj.js');
   if (fs.existsSync(skript)) {
     const text = fs.readFileSync(skript, 'utf8');
     for (const m of text.matchAll(/'(\.\/[^']+)'/g)) {
@@ -362,6 +574,25 @@ function preved() {
 
   return { zoznam, sablony, spolocnaHlava, spolocnyChvost, cestySkriptu,
            hlavicka: [...hlavicky][0] || '', paticka: [...paticky][0] || '' };
+}
+
+function kopirujShopifyZdroj() {
+  if (!fs.existsSync(SHOPIFY_ZDROJ)) return;
+  function chod(adresar, rel = '') {
+    for (const p of fs.readdirSync(adresar, { withFileTypes: true })) {
+      const zdroj = path.join(adresar, p.name);
+      const cielRel = path.join(rel, p.name);
+      const ciel = path.join(CIEL, cielRel);
+      if (p.isDirectory()) {
+        fs.mkdirSync(ciel, { recursive: true });
+        chod(zdroj, cielRel);
+      } else {
+        fs.mkdirSync(path.dirname(ciel), { recursive: true });
+        fs.copyFileSync(zdroj, ciel);
+      }
+    }
+  }
+  chod(SHOPIFY_ZDROJ);
 }
 
 /* ---------------------------------------------------------------- zápis */
@@ -398,6 +629,8 @@ function zapis(v) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% render 'kv-consentik' %}
+{%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
 <!-- Značky pre vyhľadávače.
 
      Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
@@ -408,34 +641,73 @@ function zapis(v) {
      v štvrtom a piatom stĺpci STRANKY-NA-ZALOZENIE.txt. Vlastné sem
      nepíšeme: stáli by v hlavičke dvakrát a Google by druhý ignoroval.
      Adresu canonical dáva Shopify a je to jeho adresa, nie naša. -->
-<title>{{ page_title }}</title>
-{%- if page_description %}
-<meta name="description" content="{{ page_description | escape }}">
+{%- assign kv_titulok = page_title -%}
+{%- assign kv_popis = page_description -%}
+{%- comment -%} Úvod berie titulok a popis z webu, nie zo starých nastavení obchodu. {%- endcomment -%}
+{%- if template.name == 'index' -%}
+{%- assign kv_titulok = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).celyTitulok || '')} -%}
+{%- assign kv_popis = ${JSON.stringify((v.sablony.find((x) => x.a.druh === 'index') || {}).popis || '')} -%}
+{%- endif -%}
+${seoVetvy(v)}
+<title>{{ kv_titulok }}</title>
+{%- if kv_popis != blank %}
+<meta name="description" content="{{ kv_popis | escape }}">
 {%- endif %}
-<link rel="canonical" href="{{ canonical_url }}">
+{%- comment -%} Jedna adresa pre jeden obsah vo vyhľadávaní. Staré a nove-* stránky
+   ostávajú funkčné (aj pre reklamy), len povedia Google, ktorá adresa je hlavná.
+   Zoznam je z tools/adresy-obchodu.json (presmerovania). {%- endcomment -%}
+{%- liquid
+  assign kv_canon = canonical_url
+  case request.path
+${canonVetvy()}
+  endcase
+-%}
+<link rel="canonical" href="{{ kv_canon }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
-<meta property="og:type" content="website">
-<meta property="og:title" content="{{ page_title | escape }}">
-<meta property="og:url" content="{{ canonical_url }}">
-{%- if page_description %}
-<meta property="og:description" content="{{ page_description | escape }}">
+<meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
+<meta property="og:title" content="{{ kv_titulok | escape }}">
+<meta property="og:url" content="{{ kv_canon }}">
+{%- if kv_popis != blank %}
+<meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ kv_titulok | escape }}">
+{%- if kv_popis != blank %}
+<meta name="twitter:description" content="{{ kv_popis | escape }}">
+{%- endif %}
+{%- if request.page_type == 'product' and product %}
+{%- assign kv_variant = product.selected_or_first_available_variant %}
+<meta property="og:price:amount" content="{{ kv_variant.price | divided_by: 100.0 }}">
+<meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
+{%- endif %}
+{%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
-${v.spolocnaHlava.join('\n')}
+{{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
+${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join('\n')}
+{%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
+   ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
+   logá Koverta a Soltec cez celú obrazovku. Odkazy v tele stránky ostávajú,
+   aby poradie štýlov (a teda vzhľad) ostalo presne také isté. {%- endcomment -%}
+{%- if request.page_type == 'page' and page.handle == 'konfigurator' %}
+<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
+{%- endif %}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <script>
   /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
      v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka
-     o 3D modeloch je v /pages/. */
+     o 3D modeloch je v /pages/ a fotky v menu majú presnú adresu
+     (menuFoto), aby žiadna nevracala 404. */
   window.KV_ADRESY = {
     znackaKoverta: {{ 'koverta-mark.svg' | asset_url | json }},
     znackaSoltec: ${FOTKY === 'pages'
       ? JSON.stringify(PAGES_ZAKLAD + '/assets/soltec-mark.png')
       : "{{ 'soltec-mark.png' | file_url | json }}"},
-    modely: '/pages/${PREDPONA}pouzite-modely'
+    modely: '/pages/${PREDPONA}pouzite-modely',
+    menuFoto: ${JSON.stringify(menuFotky())}
   };
   /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
      fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
@@ -449,16 +721,27 @@ ${v.spolocnaHlava.join('\n')}
 {% section 'kv-hlavicka' %}
 {{ content_for_layout }}
 {% section 'kv-paticka' %}
+${dokObchodu()}
 ${v.spolocnyChvost.join('\n')}
 </body>
 </html>
 `;
   fs.writeFileSync(path.join(CIEL, 'layout', 'theme.liquid'), layout);
 
+  const kosik = '<a class="kv-icon-btn kv-cart-link" href="{{ routes.cart_url }}" aria-label="Košík, {{ cart.item_count }} položiek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 10.2h9.9L20 7H6"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>{% if cart.item_count > 0 %}<span class="kv-cart-link__count">{{ cart.item_count }}</span>{% endif %}</a>';
+  const shopifyHlavicka = v.hlavicka.replace(
+    /(<button class="kv-icon-btn" type="button" data-k-search-open[\s\S]*?<\/button>)/,
+    '$1' + kosik
+  );
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-hlavicka.liquid'),
-    v.hlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
+    shopifyHlavicka + '\n{% schema %}\n{"name":"Koverta hlavička"}\n{% endschema %}\n');
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-paticka.liquid'),
-    '{%- assign kv_dopyt = kv_dopyt | default: "#ponuka" -%}\n' + v.paticka +
+    /* Pätička je sekcia a sekcie v Shopify nevidia premenné stránky, takže
+       kv_dopyt je tu takmer vždy prázdne. Záloha vedie na kontakt s kotvou
+       #ponuka: kde je na stránke formulár, skript otvorí jeho okno na mieste;
+       inde (košík, vyhľadávanie, 404) otvorí formulár na kontakte. Holé
+       „#ponuka“ tam nerobilo nič. */
+    '{%- assign kv_dopyt = kv_dopyt | default: "/pages/kontakt#ponuka" -%}\n' + v.paticka +
     '\n{% schema %}\n{"name":"Koverta pätička"}\n{% endschema %}\n');
 
   /* Telo každej stránky ide do `snippets/`, nie rovno do šablóny.
@@ -476,10 +759,17 @@ ${v.spolocnyChvost.join('\n')}
    * ani jedno ručné priradenie šablóny — a keďže šablóna je jedna, blok
    * aplikácie sa umiestňuje raz a platí pre všetky. */
   for (const s of v.sablony) {
+    if (s.a.rozmer) continue;
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
-    const navyse = [...s.hlavaNavyse, ...s.chvostNavyse].join('\n');
-    const telo = hlava + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
-      (navyse ? '\n' + navyse + '\n' : '\n');
+    /* Štýly vlastné stránke (konfigurátor má svoje dve CSS) idú PRED jej
+       obsah, skripty za neho. Kým boli štýly až na konci, prehliadač stihol
+       obsah vykresliť bez nich: piktogramy výberu produktu v konfigurátore
+       sa na okamih roztiahli na celú šírku ako čierne tvary. Štýl vložený
+       pred obsah drží jeho vykreslenie, kým sa nenačíta. */
+    const navyseHlava = s.hlavaNavyse.join('\n');
+    const navyseChvost = s.chvostNavyse.join('\n');
+    const telo = ogNaCdn(hlava + (navyseHlava ? navyseHlava + '\n' : '') + (s.ld.length ? s.ld.join('\n') + '\n' : '') + s.hlavny + (s.medzi.trim() ? '\n' + s.medzi.trim() + '\n' : '') +
+      (navyseChvost ? '\n' + navyseChvost + '\n' : '\n'));
     const ciel = path.join(CIEL, 'snippets', s.a.handle + '.liquid');
     if (Buffer.byteLength(telo) <= MAX_SNIPPET_BAJTOV) {
       fs.writeFileSync(ciel, telo);
@@ -503,20 +793,32 @@ ${v.spolocnyChvost.join('\n')}
       path.join(CIEL, 'snippets', s.a.handle + '-cast-' + (i + 1) + '.liquid'), obsah));
   }
 
-  /* Telo stránky sa berie podľa handle. Formulár je súčasťou nášho obsahu;
-   * sekcia preto nepotrebuje ani nepovoľuje app blok cudzieho formulára. */
-  const handleVsetky = v.sablony.map((x) => x.a.handle);
+  /* Smerovač obsahu. Obsah sa berie podľa handle: stránka `kontakt` aj
+   * `nove-kontakt` dostanú útržok `nove-kontakt`, kolekcia
+   * `pristresky-pre-auta` útržok `nove-pristresky-pre-auta`. Šablónu
+   * v obchode netreba meniť — keď šablóna s príponou (napr. `contact`)
+   * v téme nie je, Shopify vezme predvolenú a tá obsah nájde sama.
+   * Útržky s odkazmi na produkty rozmerov dostanú vopred `kv_zive`: zoznam
+   * produktov, ktoré sú v obchode naozaj zverejnené. */
+  const ZIVE = "{%- capture kv_zive -%}|{%- paginate collections['pristresky-pre-auta'].products by 250 -%}{%- for p in collections['pristresky-pre-auta'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- paginate collections['zahradne-pristresky'].products by 250 -%}{%- for p in collections['zahradne-pristresky'].products -%}{{ p.handle }}|{%- endfor -%}{%- endpaginate -%}{%- endcapture -%}";
+  const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index');
+  const potrebujeZive = (x) => /kv_zive/.test(x.hlavny + x.medzi + x.ld.join(''));
+  const vetva = (handles, x) => "{%- when '" + handles.join("', '") + "' -%}\n" +
+    (potrebujeZive(x) ? '  ' + ZIVE + '\n' : '') + "  {% include '" + x.a.handle + "' %}\n";
+  const strankyVetvy = obsahy.map((x) => vetva([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)), x));
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
-    '{%- assign kv_nase = "' + handleVsetky.join(',') + '" | split: "," -%}\n' +
-    '{%- if kv_nase contains page.handle -%}\n' +
-    '  {% include page.handle %}\n' +
+    '{%- case page.handle -%}\n' + strankyVetvy.join('') +
     '{%- else -%}\n' +
     '  <main class="k"><div class="k-wrap"><h1 class="k-h2">{{ page.title }}</h1>' +
     '{{ page.content }}</div></main>\n' +
-    '{%- endif -%}\n' +
+    '{%- endcase -%}\n' +
     '\n{% schema %}\n' +
     JSON.stringify({ name: 'Koverta stránka', settings: [] }, null, 2) +
     '\n{% endschema %}\n');
+  const kolekcieVetvy = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => vetva([x.a.ciel.handle], x));
+  fs.writeFileSync(path.join(CIEL, 'templates', 'collection.liquid'),
+    '{%- case collection.handle -%}\n' + kolekcieVetvy.join('') +
+    "{%- else -%}\n  {% render 'koverta-obchod', druh: 'kolekcia', collection: collection %}\n{%- endcase -%}\n");
 
   /* Šablóna stránky je JSON, aby niesla spoločnú sekciu obsahu. */
   fs.writeFileSync(path.join(CIEL, 'templates', 'page.json'),
@@ -542,12 +844,19 @@ ${v.spolocnyChvost.join('\n')}
       hotove.add(meno);
       if (path.extname(meno).toLowerCase() === '.css') {
         fs.writeFileSync(path.join(CIEL, 'assets', meno),
-          prepisCss(fs.readFileSync(zdroj, 'utf8'), zdroj));
+          zmensiCss(prepisCss(fs.readFileSync(zdroj, 'utf8'), zdroj)));
       } else {
         fs.copyFileSync(zdroj, path.join(CIEL, 'assets', meno));
       }
     }
   }
+
+  /* Ručne udržiavané Shopify product/cart súbory sa kopírujú až po
+     generovaní stránok a assetov, aby ich čistenie generátora nezmazalo. */
+  kopirujShopifyZdroj();
+  zapisIndexHladania(v);
+  zapisOgObrazok(v);
+  zapisPreload(v);
 
   fs.writeFileSync(path.join(CIEL, 'config', 'settings_schema.json'),
     JSON.stringify([{ name: 'theme_info', theme_name: 'Koverta 2026',
@@ -566,6 +875,20 @@ ${v.spolocnyChvost.join('\n')}
     const bloky = data.current && data.current.blocks;
     for (const [id, blok] of Object.entries(bloky || {})) {
       if (/shopify:\/\/apps\/formful\/blocks\/app-embed/i.test(blok.type || '')) delete bloky[id];
+    }
+    /* Aplikácie, ktoré v živej téme bežia a nová ich potrebuje rovnako:
+       Consentik je lišta súhlasu s cookies — posiela súhlas do Consent Mode
+       a GTM, vlastnú lištu web na Shopify nemá. r-terms je súhlas
+       s obchodnými podmienkami v košíku. Bloky sú totožné so živou témou;
+       ak ich niekto v editore vypne, necháme to tak. */
+    data.current = data.current || {};
+    const embed = data.current.blocks = data.current.blocks || {};
+    const aplikacie = [
+      ['6858403126979251294', 'shopify://apps/consentik-cookie/blocks/omega-cookies-notification/13cba824-a338-452e-9b8e-c83046a79f21'],
+      ['5061257265103808445', 'shopify://apps/r-terms-conditions/blocks/embed-block/471882a9-9b1b-4918-8943-6c66b60c94ea']
+    ];
+    for (const [id, typ] of aplikacie) {
+      if (!Object.values(embed).some((b) => b.type === typ)) embed[id] = { type: typ, disabled: false, settings: {} };
     }
     fs.writeFileSync(nastavenia, hlavickaJson + JSON.stringify(data, null, 2) + '\n');
   } catch (e) {
@@ -591,6 +914,150 @@ ${v.spolocnyChvost.join('\n')}
     'Google videl iný titulok a žiadny popis, než aký web má.\n\n' +
     v.sablony.map((s) => [s.a.handle, s.titulok, s.a.url, s.celyTitulok, s.popis].join('\t'))
       .sort().join('\n') + '\n');
+}
+
+/* og:image podľa stránky. Stránky ho majú zo statického webu, produkt podľa
+ * radu a počtu áut tú istú fotku, ktorou začína jeho galéria. */
+/* Titulok a popis stránky pre obsah na starých adresách. Zo statického webu,
+ * nie z políčok obchodu: kolekcia `pristresky-pre-auta` má v obchode starý
+ * popis, no zobrazuje nový obsah. */
+/* Vetvy pre canonical: stará alebo nove-* adresa → hlavná adresa z menu.
+   Presmerovanie na úvod (/) sa vynecháva — nove-uvod je 404. */
+function canonVetvy() {
+  const ciele = {};
+  for (const [z, na] of Object.entries(ADRESY.presmerovania)) {
+    if (!z.startsWith('/') || na === '/') continue;
+    (ciele[na] = ciele[na] || []).push(z);
+  }
+  return Object.entries(ciele).map(([na, zdroje]) =>
+    `  when ${zdroje.map(z => `'${z}'`).join(', ')}\n    assign kv_canon = shop.url | append: '${na}'`).join('\n');
+}
+
+/* Staré stránky obchodu (/pages/pre-dom-a-zahradu, /pages/tienenie …) ešte
+   existujú a vedú na ne Google aj reklamy, no zobrazovali len prázdnu
+   šablónu s nadpisom. Dostanú rovnaký obsah ako hlavná adresa, na ktorú
+   ukazujú v tools/adresy-obchodu.json (canonical ukazuje tiež tam).
+   Adresy sa nemenia. */
+function stareStranky(x) {
+  if (!x.a.ciel) return [];
+  const ciel = x.a.ciel.typ === 'kolekcia' ? '/collections/' + x.a.ciel.handle : '/pages/' + x.a.ciel.handle;
+  return Object.entries(ADRESY.presmerovania)
+    .filter(([z, na]) => z.startsWith('/pages/') && !z.startsWith('/pages/' + PREDPONA) && na === ciel)
+    .map(([z]) => z.slice('/pages/'.length))
+    .filter((h) => x.a.ciel.typ === 'kolekcia' || h !== x.a.ciel.handle);
+}
+
+function seoVetvy(v) {
+  const lit = (t) => "'" + String(t || '').replace(/'/g, '’') + "'";
+  const priradenie = (x) => '{%- assign kv_titulok = ' + lit(x.celyTitulok) + ' -%}' + (x.popis ? '{%- assign kv_popis = ' + lit(x.popis) + ' -%}' : '');
+  const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index' && x.celyTitulok);
+  const stranky = obsahy.map((x) => "{%- when '" + [x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)).join("', '") + "' -%}" + priradenie(x)).join('\n');
+  const kolekcie = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => "{%- when '" + x.a.ciel.handle + "' -%}" + priradenie(x)).join('\n');
+  return "{%- if request.page_type == 'page' -%}{%- case page.handle -%}\n" + stranky + "\n{%- endcase -%}\n" +
+    "{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}\n" + kolekcie + "\n{%- endcase -%}{%- endif -%}";
+}
+
+/* Liquid podmienka „toto je stránka x" — úvod, stránka alebo kolekcia. */
+function podmienka(x) {
+  if (x.a.druh === 'index') return "template.name == 'index'";
+  const c = ["page.handle == '" + x.a.handle + "'"];
+  if (x.a.ciel && x.a.ciel.typ === 'stranka') c.push("page.handle == '" + x.a.ciel.handle + "'");
+  if (x.a.ciel && x.a.ciel.typ === 'kolekcia') c.push("collection.handle == '" + x.a.ciel.handle + "'");
+  return c.join(' or ');
+}
+
+/* Skoré načítanie toho, na čom stojí prvá obrazovka.
+ *
+ * Na mobile PageSpeed meral LCP 8,5 s: úvodná fotografia je na jsDelivr
+ * a prehliadač o nej vedel až z tela stránky, keď už mal za sebou
+ * content_for_header so skriptmi obchodu a aplikácií. Tu dostane:
+ *   - preconnect na server s fotografiami, aby spojenie bolo pripravené,
+ *   - preload fotografie tej stránky (mobil a desktop zvlášť podľa media),
+ *   - preload písma Archivo. Adresa je bez `?v=`, lebo presne takú si
+ *     vypýta štýl cez url(pismo-…) — s inou adresou by sa písmo stiahlo
+ *     dvakrát. */
+function zapisPreload(v) {
+  const povod = new Set();
+  const vetvy = v.sablony.filter((x) => x.preloadFotky && x.preloadFotky.length && !x.a.rozmer).map((x) => {
+    x.preloadFotky.forEach((p) => {
+      for (const m of p.matchAll(/(https:\/\/[^/"\s]+)\//g)) povod.add(m[1]);
+    });
+    return '{%- if ' + podmienka(x) + ' %}\n' + x.preloadFotky.join('\n') + '\n{%- endif %}';
+  });
+  const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
+  const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
+    + pismo('pismo-archivo-latin.woff2') + '\n' + pismo('pismo-archivo-latin-ext.woff2') + '\n'
+    + vetvy.join('\n') + '\n';
+  fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-preload.liquid'), text);
+}
+
+function zapisOgObrazok(v) {
+  const vetvy = v.sablony.filter((x) => x.og && !x.a.rozmer).map((x) =>
+    '{%- if ' + podmienka(x) + ' -%}' + "{%- assign kv_og = '" + ogNaCdn(x.og.replace(/'/g, '')) + "' -%}{%- endif -%}");
+  const f = PAGES_ZAKLAD + '/assets/';
+  const text = "{%- assign kv_og = '" + zakladPages('assets/koverta-og.jpg') + "/assets/koverta-og.jpg' -%}\n" + vetvy.join('\n') + '\n'
+    + "{%- if request.page_type == 'product' and product.metafields.koverta.family -%}\n"
+    + "  {%- if product.metafields.koverta.family.value == 'zahrada' -%}{%- assign kv_og = '" + f + "koverta-zahradny-pristresok-antracit-lamelova-stena.jpg' -%}\n"
+    + "  {%- elsif product.metafields.koverta.width_mm.value >= 5000 -%}{%- assign kv_og = '" + f + "koverta-pristresok-bocne-lamely-a-zvod.jpg' -%}\n"
+    + "  {%- else -%}{%- assign kv_og = '" + f + "koverta-pristresok-pre-jedno-auto-lamelova-vypln.jpg' -%}{%- endif -%}\n"
+    + "{%- endif -%}\n"
+    + '<meta property="og:image" content="{{ kv_og }}">\n<meta name="twitter:image" content="{{ kv_og }}">\n';
+  fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-og.liquid'), text);
+}
+
+/* Vyhľadávanie v hlavičke číta `hladanie.json` vedľa `koverta-2026.css`.
+ * Na statickom webe má adresy stránok relatívne; v obchode musia byť tie
+ * z obchodu (/pages/nove-…), inak by každý výsledok viedol na CDN. Pribudnú
+ * aj katalógové rozmery ako produkty, aby sa dalo hľadať napríklad „5 x 6“. */
+/* Vyhľadávanie je statický súbor, Liquid v ňom nebeží. Nový produkt sa
+ * ponúkne, len keď je podľa tools/produkty-zive.json živý; inak starý
+ * produkt s tým istým rozmerom. Súbor obnovuje tools/produkty-zive.js. */
+function hladanieProdukt(h) {
+  const zive = JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'produkty-zive.json'), 'utf8'));
+  if (zive.nove[h]) return h;
+  const stary = STARE_PRODUKTY.get(h);
+  return stary && zive.stare[stary] ? stary : h;
+}
+
+function zapisIndexHladania(v) {
+  const zdroj = path.join(KOREN, 'assets', 'hladanie.json');
+  if (!fs.existsSync(zdroj)) { chyby.push('chýba assets/hladanie.json'); return; }
+  const mapa = new Map();
+  for (const s of v.zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
+  const index = JSON.parse(fs.readFileSync(zdroj, 'utf8'));
+  const polozky = [];
+  for (const it of index.polozky || []) {
+    const [cesta, kotva] = String(it.u || '').split('#');
+    const kluc = cesta.replace(/^\.\//, '').replace(/\/$/, '').replace(/^\.$/, '');
+    let u = it.u;
+    if (!/^(https?:|mailto:|tel:)/.test(it.u)) {
+      if (kluc === '') u = '/';
+      else if (mapa.has(kluc)) u = mapa.get(kluc);
+      else { chyby.push('hladanie.json: neznáma stránka ' + it.u); continue; }
+      if (kotva) u += '#' + kotva;
+    }
+    const o = it.o && it.o.startsWith('/') ? PAGES_ZAKLAD + it.o : it.o;
+    polozky.push(Object.assign({}, it, { u, o }));
+  }
+  const vm = require('node:vm');
+  const sandbox = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(KOREN, 'konfigurator', 'cfg-pages.js'), 'utf8'), sandbox);
+  const bezDiakritiky = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const m = (mm) => String(mm / 1000).replace('.', ',');
+  for (const [kluc, model, zaklad, druh] of [['koverta', 'K', 'Prístrešok Koverta', 'auto'], ['zahrada', 'Z', 'Záhradný prístrešok Koverta', 'zahrada']]) {
+    const d = JSON.parse(sandbox.window.KV_PAGES[kluc].match(/data-sp-bio-data>([\s\S]*?)<\/script>/)[1]).models[model];
+    d.lengths.forEach((l, li) => d.widths.forEach((w, wi) => {
+      const cena = d.prices[li][wi].toLocaleString('sk-SK').replace(/\s/g, ' ') + ' €';
+      const auta = druh === 'zahrada' ? 'terasa záhrada pergola' : (w >= 5000 ? '2 autá dve auta dvojmiestny' : '1 auto jedno auto');
+      const t = zaklad + ' ' + m(w) + ' × ' + m(l) + ' m';
+      polozky.push({
+        t, p: cena + ' s DPH, dopravou a montážou', k: 'Rozmer',
+        u: '/products/' + hladanieProdukt((druh === 'zahrada' ? 'zahradny-pristresok-koverta-' : 'pristresok-koverta-') + w + 'x' + l),
+        h: bezDiakritiky(t + ' ' + m(w) + 'x' + m(l) + ' ' + m(w) + ' x ' + m(l) + ' ' + w + 'x' + l + ' ' + auta + ' pristresok carport cena')
+      });
+    }));
+  }
+  fs.writeFileSync(path.join(CIEL, 'assets', 'hladanie.json'), ogNaCdn(JSON.stringify({ v: index.v, polozky })));
 }
 
 if (require.main === module) {

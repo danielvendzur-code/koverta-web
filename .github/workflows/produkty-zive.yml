@@ -1,0 +1,31 @@
+# Obnoví tools/produkty-zive.json podľa toho, čo na koverta.sk naozaj
+# odpovedá 200, a prepíše podľa toho canonical rozmerových stránok.
+# Po aktivácii produktov v obchode sa tak canonical prepne sám.
+name: Živé produkty
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  obnov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/produkty-zive.js
+      - run: python3 tools/generuj-rozmery.py && python3 tools/adresy.py
+      - name: Uložiť zmenu
+        run: |
+          if git diff --quiet -- tools/produkty-zive.json; then echo "Bez zmeny."; exit 0; fi
+          git config user.name "koverta-bot"
+          git config user.email "koverta-bot@users.noreply.github.com"
+          git add tools/produkty-zive.json pristresky-pre-auta zahradne-pristresky sitemap.xml llms.txt
+          git commit -m "Živé produkty: obnovený zoznam a canonical rozmerov"
+          git push

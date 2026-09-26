@@ -40,6 +40,12 @@ jobs:
             git show FETCH_HEAD:config/settings_data.json > shopify-tema/config/settings_data.json
           fi
           node tools/spolocne-casti.js --kontrola
+          node tools/shopify-produkt-kontrola.js
+          node --check tools/shopify-products.js
+          node tools/shopify-products.js --check
+          node tools/shopify-products.js --scope=reference
+          node --check tools/shopify-redirects.js
+          node tools/shopify-redirects.js --check
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
 
