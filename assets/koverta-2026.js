@@ -3930,7 +3930,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           const photo = document.createElement('span');
           photo.className = 'kv-drawer__foto';
           const img = document.createElement('img');
-          img.src = menuAsset(photos[i] || photos[0]);
+          img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
           img.loading = 'lazy';
           img.decoding = 'async';
           img.alt = i === 0 ? 'Realizácia prístrešku Koverta' : 'Detail realizácie prístrešku Koverta';
