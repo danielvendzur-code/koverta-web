@@ -74,6 +74,7 @@ jobs:
           python3 tools/adresy.py --check
           python3 tools/cta-kontrola.py
           node tools/produkty-zive.js --check
+          node tools/zmensi-css.js --kontrola
           node tools/verzie-suborov.js
           node tools/rozmery-obrazkov.js
           python3 tools/generuj-rozmery.py
