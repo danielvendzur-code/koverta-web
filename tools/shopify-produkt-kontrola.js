@@ -42,7 +42,9 @@ if(Object.keys(imageMap).length!==66)throw new Error('mapa produktových fotiek 
 for(const [handle,imgs] of Object.entries(imageMap))if(!Array.isArray(imgs)||!imgs.length||!/^https:\/\//.test(imgs[0].url||''))throw new Error('neplatná mapa fotiek: '+handle);
 if(fs.existsSync(path.join(ROOT,'shopify-zdroj','product-images.json')))throw new Error('product-images.json nesmie byť v shopify-zdroj');
 const syncScript=fs.readFileSync(path.join(ROOT,'tools','shopify-products.js'),'utf8');
-if(!/Rozmer 5 × 6 m patrí medzi najpraktickejšie dvojmiestne varianty/.test(syncScript))throw new Error('sync nechráni schválený opis 5 × 6 m');
+/* Opis produktov je od 23. 9. (adf0f1ea, „vecné popisy bez fráz“) vecný a spoločný pre všetkých 66 rozmerov;
+   pôvodná marketingová veta o 5 × 6 m z neho zámerne vypadla. Stráži sa teraz schválený vecný opis. */
+if(!/Doprava a montáž sú v cene\./.test(syncScript)||!/14 odtieňov RAL bez príplatku/.test(syncScript)||!/svetlá výška 2,4 m/.test(syncScript))throw new Error('sync nechráni schválený opis produktov (doprava a montáž v cene, 14 odtieňov RAL, svetlá výška)');
 if(!/publishablePublish/.test(syncScript)||!/publishableUnpublish/.test(syncScript)||!/online_store/.test(syncScript))throw new Error('sync nerieši skutočné publikovanie do Online Store');
 if(!/KOVERTA_PUBLIC_ORIGIN/.test(syncScript)||!/https:\/\/koverta\.sk/.test(syncScript))throw new Error('sync nepoužíva absolútnu produkčnú URL pre konfigurátor');
 if(!/collectionByIdentifier/.test(syncScript)||!/pristresky-pre-auta/.test(syncScript)||!/zahradne-pristresky/.test(syncScript))throw new Error('sync nechráni členstvo produktov v Shopify kolekciách');
