@@ -33,23 +33,30 @@ const purge = (t) => {
   return t.replace(/\/lokalne\/koverta-2026\.css|\/cdn\/shop\/t\/\d+\/assets\/koverta-2026\.css\?v=\d+/, '/lokalne/koverta-2026-uvod.css');
 };
 
-// Len meranie: GTM sa pripojí až po udalosti load. Nenasadzuje sa.
+// GTM po udalosti load.
 const gtmLoad = (t) => {
   const old = 'f.parentNode.insertBefore(j, f);';
   if (!t.includes(old)) throw new Error('gtm: snippet');
   return t.replace(old, "w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });");
 };
 
+// GTM pri prvom dotyku/scrolle/klávese, inak 3 s po load. Udalosti
+// (súhlas, dopyt, telefón) čakajú v dataLayer a GTM ich spracuje po načítaní.
+const gtmNeskor = (t) => {
+  const old = 'f.parentNode.insertBefore(j, f);';
+  if (!t.includes(old)) throw new Error('gtm: snippet');
+  return t.replace(old, "var hotovo = false, ev = ['pointerdown', 'keydown', 'touchstart', 'scroll'], spusti = function () { if (hotovo) return; hotovo = true; ev.forEach(function (e) { w.removeEventListener(e, spusti, true); }); f.parentNode.insertBefore(j, f); }; ev.forEach(function (e) { w.addEventListener(e, spusti, { capture: true, passive: true }); }); if (d.readyState === 'complete') setTimeout(spusti, 3000); else w.addEventListener('load', function () { setTimeout(spusti, 3000); });");
+};
+
 const varianty = {
   v0,
   pismo: pismo(v0),
   'pismo-cv': cv(pismo(v0)),
-  'x-gtm-load': gtmLoad(pismo(v0))
+  'pismo-gtmload': gtmLoad(pismo(v0)),
+  'pismo-gtmneskor': gtmNeskor(pismo(v0)),
+  'pismo-cv-gtmneskor': gtmNeskor(cv(pismo(v0)))
 };
-if (pouziteCss) {
-  varianty['pismo-purge'] = purge(pismo(v0));
-  varianty['pismo-cv-purge'] = purge(cv(pismo(v0)));
-}
+if (pouziteCss) varianty['pismo-cv-gtmneskor-purge'] = purge(gtmNeskor(cv(pismo(v0))));
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length, 'lokalne:', (t.match(/\/lokalne\/[^"\s,]+/g) || []).length);
