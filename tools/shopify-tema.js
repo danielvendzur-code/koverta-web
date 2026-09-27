@@ -986,7 +986,7 @@ function zapisPreload(v) {
   });
   const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
   const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
-    + pismo('pismo-archivo-latin.woff2') + '\n' + pismo('pismo-archivo-latin-ext.woff2') + '\n'
+    + pismo('pismo-archivo-latin-v2.woff2') + '\n' + pismo('pismo-archivo-latin-ext-v2.woff2') + '\n'
     + vetvy.join('\n') + '\n';
   fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-preload.liquid'), text);
 }
