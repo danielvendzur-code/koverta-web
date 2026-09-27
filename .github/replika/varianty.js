@@ -32,7 +32,14 @@ const fotka = (t) => {
   return t;
 };
 
-const varianty = { v0, pismo: pismo(v0), fotka: fotka(v0), 'pismo-fotka': fotka(pismo(v0)) };
+// Bez preloadu písma (písmo si štýl vypýta sám, ako pred nasadením kv-preload).
+const bezPreloadu = (t) => {
+  const n = t.replace(/<link rel="preload" href="[^"]*pismo-archivo-latin[^"]*" as="font"[^>]*>\n?/g, '');
+  if (n === t) throw new Error('bezPreloadu: nič');
+  return n;
+};
+
+const varianty = { v0, 'v0-bezpre': bezPreloadu(v0), pismo: pismo(v0), 'pismo-bezpre': bezPreloadu(pismo(v0)) };
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length, 'lokalne:', (t.match(/\/lokalne\/[^"\s,]+/g) || []).length);
