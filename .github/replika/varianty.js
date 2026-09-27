@@ -2,18 +2,12 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const [zdroj, ciel] = process.argv.slice(2);
+const [zdroj, ciel, pouziteCss] = process.argv.slice(2);
 fs.mkdirSync(ciel, { recursive: true });
 
 // Adresy obchodu sa robia relatívnymi, aby šli cez repliku (rovnaký pôvod
 // ako dokument — tak ako v obchode).
 const v0 = fs.readFileSync(zdroj, 'utf8').replace(/(["'(])(?:https?:)?\/\/koverta\.sk\//g, '$1/');
-
-const zmen = (t, co, na, meno) => {
-  const n = t.split(co).length - 1;
-  if (!n) throw new Error(meno + ': nenašiel som ' + co);
-  return t.split(co).join(na);
-};
 
 // Písmo -v2 a štýl z vetvy (ten si písmo pýta s novým menom).
 const pismo = (t) => {
@@ -24,22 +18,38 @@ const pismo = (t) => {
   return t;
 };
 
-// Úvodná fotografia z pôvodu obchodu namiesto jsDelivr (bez nového spojenia).
-const fotka = (t) => {
-  const pred = t.length;
-  t = t.replace(/https:\/\/cdn\.jsdelivr\.net\/gh\/danielvendzur-code\/koverta-web@[0-9a-f]{40}\/assets\/(koverta-hero-sibenik-poster[^"?\s,]*)\?v=2/g, '/lokalne/$1');
-  if (t.length === pred) throw new Error('fotka: nič');
-  return t;
+// Sekcie pod prvou obrazovkou sa nevykresľujú ani neprepočítavajú, kým
+// k nim návštevník nezoskroluje. Bez sekcie s dialógom značiek (kh-pick)
+// a s formulárom (kh-cta), úvod ostáva.
+const cv = (t) => {
+  const css = '<style>main.k>section.k-band:not(.kh-pick):not(.kh-cta){content-visibility:auto;contain-intrinsic-size:auto 900px}footer.kf{content-visibility:auto;contain-intrinsic-size:auto 700px}</style>';
+  if (!t.includes('</head>')) throw new Error('cv: head');
+  return t.replace('</head>', css + '</head>');
 };
 
-// Bez preloadu písma (písmo si štýl vypýta sám, ako pred nasadením kv-preload).
-const bezPreloadu = (t) => {
-  const n = t.replace(/<link rel="preload" href="[^"]*pismo-archivo-latin[^"]*" as="font"[^>]*>\n?/g, '');
-  if (n === t) throw new Error('bezPreloadu: nič');
-  return n;
+// Strop: úvod dostane len štýly, ktoré na ňom pri načítaní niečo zasiahnu.
+const purge = (t) => {
+  if (!pouziteCss || !fs.existsSync(pouziteCss)) throw new Error('purge: chýba zoznam');
+  return t.replace(/\/lokalne\/koverta-2026\.css|\/cdn\/shop\/t\/\d+\/assets\/koverta-2026\.css\?v=\d+/, '/lokalne/koverta-2026-uvod.css');
 };
 
-const varianty = { v0, 'v0-bezpre': bezPreloadu(v0), pismo: pismo(v0), 'pismo-bezpre': bezPreloadu(pismo(v0)) };
+// Len meranie: GTM sa pripojí až po udalosti load. Nenasadzuje sa.
+const gtmLoad = (t) => {
+  const old = 'f.parentNode.insertBefore(j, f);';
+  if (!t.includes(old)) throw new Error('gtm: snippet');
+  return t.replace(old, "w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });");
+};
+
+const varianty = {
+  v0,
+  pismo: pismo(v0),
+  'pismo-cv': cv(pismo(v0)),
+  'x-gtm-load': gtmLoad(pismo(v0))
+};
+if (pouziteCss) {
+  varianty['pismo-purge'] = purge(pismo(v0));
+  varianty['pismo-cv-purge'] = purge(cv(pismo(v0)));
+}
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length, 'lokalne:', (t.match(/\/lokalne\/[^"\s,]+/g) || []).length);

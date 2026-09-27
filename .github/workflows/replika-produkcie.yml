@@ -30,8 +30,15 @@ jobs:
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
           curl -sSL -A 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' https://koverta.sk/ -o /tmp/produkcia.html
-          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v
-          ls -la /tmp/v
+          # Strop pre menší štýl: zoznam použitých pravidiel z repliky úvodu.
+          mkdir -p /tmp/lok /tmp/v0
+          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v0
+          npm install --no-save playwright@1.55.0 >/dev/null 2>&1 && npx playwright install chromium >/dev/null 2>&1
+          LOKALNE_DIR=/tmp/lok node .github/replika/server.js /tmp/v0/pismo.html 8999 & sleep 1
+          node .github/replika/pouzite-css.js http://127.0.0.1:8999/ /tmp/lok/koverta-2026-uvod.css
+          export LOKALNE_DIR=/tmp/lok
+          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v /tmp/lok/koverta-2026-uvod.css
+          ls -la /tmp/v /tmp/lok
           port=9000
           for v in $(ls /tmp/v | sed 's/\.html$//'); do
             port=$((port+1))

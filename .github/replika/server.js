@@ -21,7 +21,7 @@ http.createServer((q, s) => {
   }
   if (u.pathname.startsWith('/lokalne/')) {
     const meno = path.basename(u.pathname);
-    const kde = [path.join(KOREN, 'shopify-tema', 'assets', meno), path.join(KOREN, 'assets', meno)].find(fs.existsSync);
+    const kde = [process.env.LOKALNE_DIR && path.join(process.env.LOKALNE_DIR, meno), path.join(KOREN, 'shopify-tema', 'assets', meno), path.join(KOREN, 'assets', meno)].filter(Boolean).find(fs.existsSync);
     if (!kde) { s.writeHead(404); return s.end(); }
     let b = fs.readFileSync(kde);
     const t = TYPY[path.extname(meno)] || 'application/octet-stream';
