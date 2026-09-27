@@ -713,7 +713,7 @@ function kvAdresa(kluc, zaloha) {
           ['4', 'Doplnky', 'Doplnky'],
           ['5', 'Súhrn', 'Súhrn']
         ] : [
-          ['1', 'Umiestnenie', 'Umiestnenie'],
+          ['1', 'Umiestnenie', 'Miesto'],
           ['2', 'Rozmer a model', 'Rozmer'],
           ['3', 'Strecha a farby', 'Strecha'],
           ['4', 'Boky', 'Boky'],
@@ -790,8 +790,10 @@ function kvAdresa(kluc, zaloha) {
             + '<ul>'
             + '<li><b>Otáčanie</b>: ťahajte myšou alebo prstom po modeli; šípky robia to isté, kláves Home vráti pohľad na začiatok.</li>'
             + '<li><b>Priblíženie</b>: koliesko myši, dva prsty, klávesy + a −, alebo tlačidlo Priblížiť na modeli.</li>'
-            + '<li><b>Vybavenie a počasie</b>: karta v ľavom dolnom rohu modelu: auto alebo posedenie pod prístreškom, slnko, oblačno alebo dážď.</li>'
+            + '<li><b>Vybavenie</b>: karta v ľavom dolnom rohu modelu ukáže pod prístreškom auto alebo posedenie, aby bolo vidieť, koľko miesta ostane.</li>'
             + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu. Doprava a montáž sú v konečnej ponuke vždy zahrnuté.</li>'
+            + '<li><b>Väčší rozmer</b>: keď „+“ narazí na hranicu, konfigurátor prepne na väčší model, ak ho výrobca má; inak rozmer nacenime na mieru.</li>'
+            + '<li><b>Poslať a zdieľať</b>: pod cenou pošlete hotovú zostavu do dopytu alebo skopírujete odkaz, ktorý si zapamätá model, rozmer aj farbu.</li>'
             + '<li><a href="' + kvAdresa('modely', '../pouzite-modely/') + '" target="_blank" rel="noopener">O 3D modeloch</a>: autori a licencie áut a záhradného nábytku v scéne.</li>'
             + '</ul>';
           kolona.appendChild(d);
@@ -955,7 +957,11 @@ function kvAdresa(kluc, zaloha) {
 
         const state = {
           model: BIO.order[0],
-          placement: 'tip1',
+          /* Prestrešenie terasy a vstupu sa takmer vždy kotví do fasády:
+             vzadu stena, stĺpy len vpredu. Samostatne stojaca konštrukcia so
+             stĺpmi na oboch stranách je typická pre prístrešok pre auto —
+             pri terase pôsobila ako chyba. Ostatné modely začínajú ako doteraz. */
+          placement: BIO.page === 'canopy' && (BIO.placements || []).some((p) => p.id === 'tip2') ? 'tip2' : 'tip1',
           width: 0, length: 0, widthValue: null, lengthValue: null, height: 2500,
           louverT: 0.84,          // 0 shut, 1 as far open as the section allows
           /* Poradie v palete je majiteľovo a začína bielou; predvolený odtieň
@@ -966,6 +972,7 @@ function kvAdresa(kluc, zaloha) {
           louverColor: BIO.colors[0],
           roofFinish: 0,
           roofSkin: 0,          // krytina strechy G: 0 sklo, 1 zelená
+          kvStrecha: 'trapez',  // Koverta záhradný: trapéz alebo sendvičový panel
           sides: { front: 'open', rear: 'open', left: 'open', right: 'open' },
           sideColor: null,
           activeSide: 'front',
@@ -1065,8 +1072,42 @@ function kvAdresa(kluc, zaloha) {
           const g = model().kvGeom;
           if (!Array.isArray(g) || !g.length) return null;
           const w = widthMM();
-          for (const b of g) if (w <= b.max) return b;
-          return g[g.length - 1];
+          let band = g[g.length - 1];
+          for (const b of g) if (w <= b.max) { band = b; break; }
+          /* So stenou stojí prístrešok ako šesťstĺpová zostava z Expivi:
+             krajné rady stĺpov v osiach čelných rámov, teda v rohoch,
+             stredný pod prostrednou väznicou a väznice delia rozpätie na
+             rovnaké polia. Štvorstĺpová zostava so stĺpmi pod väznicami
+             steny v Expivi nemala — otázky na ne boli pri nej skryté. */
+          if (band.stlpyNaVaznici && model().kvStenovyPas && kvStenovyRezim()) {
+            return Object.assign({}, band, model().kvStenovyPas,
+              { stlpyNaVaznici: false, vaznicStred: null, stenovy: true });
+          }
+          return band;
+        };
+        /* Steny prístrešku Koverta (pokyn majiteľa, 24. 9. 2026):
+           - so stenou stoja stĺpy v rohoch a na oboch bokoch po tri
+             (cena v Expivi bola so šiestimi stĺpmi), stredný presne v strede,
+           - zadná stena má stĺp v strede len pri šírke nad 4 m,
+           - stenu možno dať len na zadnú, ľavú a pravú stranu — predná je
+             vjazd (strany zo zoznamu `wallPriced` modelu). */
+        /* Obrys prístrešku na obrazovke (v jednotkách viewBoxu) — dotyk mimo
+           neho na mobile posúva stránku, dotyk na ňom otáča model. */
+        let modelBox = null;
+        const kvSteny = () => ((model().kvGeom && model().roofKit === 'koverta')
+          ? ['rear', 'front', 'left', 'right'].filter((s) => state.sides[s] && state.sides[s] !== 'open')
+          : []);
+        const kvStenovyRezim = () => kvSteny().length > 0;
+        const kvPanelVolba = () => model().roofKit === 'koverta' && Boolean(model().kvPanelBySize);
+        const kvMaxStien = () => Number(model().maxStien) || 4;
+        const kvStrednyNaBoku = () => true;
+        const kvStranyStien = () => ((model().kvGeom && model().roofKit === 'koverta' && Array.isArray(model().wallPriced))
+          ? model().wallPriced : null);
+        const kvStenaSmie = (strana) => { const d = kvStranyStien(); return !d || d.indexOf(strana) > -1; };
+        const kvStlpyVCele = () => {
+          const nad = Number(model().stenaStredStlpNad) || 0;
+          if (!nad || !kvStenovyRezim() || widthMM() <= nad) return [];
+          return ['left', 'right'].filter((s) => state.sides[s] !== 'open');
         };
         /* --- osnova prístreška ------------------------------------------
            Celá konštrukcia stojí na jednej osnove a nie na tabuľke rozmerov.
@@ -1219,6 +1260,7 @@ function kvAdresa(kluc, zaloha) {
         const postCount = () => {
           const lay = postLayout(), pl = placement();
           if (pl.noPosts) return 0;
+          if (kvBand()) return kvMiestaStlpov().length;
           const w = pl.walls || [];
           const cant = pl.cantilever;
           let n = 0;
@@ -1281,6 +1323,9 @@ function kvAdresa(kluc, zaloha) {
                dĺžkou naprieč šírkou prístrešku, takže polia delia frontu.
                Preto P5 drží pevný odstup bez ohľadu na dĺžku strechy a
                nesmie sa „opraviť" na rovnomerné delenie. */
+            /* Prestrešenie terasy nemá parkovacie polia — stredný stĺp
+               stojí v strede dĺžky, nie v odstupe P5 z výkresu carportu. */
+            if (BIO.page === 'canopy') return [0, Math.round(span / 2), span];
             const p5 = model().p5;
             if (p5) return [0, Math.round(Math.min(p5, span / 2)), span];
             const t = model().roof === 'panel' ? 0.34 : 0.5;   // access bay, or mid-span
@@ -1291,6 +1336,28 @@ function kvAdresa(kluc, zaloha) {
              every bay comes out under it. */
           const out = [];
           for (let i = 0; i < lay.n; i++) out.push(Math.round((span * i) / (lay.n - 1)));
+          return out;
+        };
+        /* Kde naozaj stojí každý stĺp Koverty. Rad `postXs()` je poloha po
+           hĺbke; na bočnej strane bez steny stredný stĺp chýba a zadná či
+           predná stena nad 4 m pridá stĺp do stredu čela. Kreslenie, počet
+           stĺpov, LED aj test čítajú tento jeden zoznam. */
+        const kvMiestaStlpov = () => {
+          const xs = postXs(), n = xs.length, W = widthMM();
+          const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
+          const out = [];
+          xs.forEach((px, xi) => {
+            const rz = kvStlpRez(xi, n);
+            [0, 1].forEach((strana) => {
+              if (xi > 0 && xi < n - 1 && !kvStrednyNaBoku(strana === 0 ? 'rear' : 'front')) return;
+              out.push({ px, py: strana === 0 ? vsun : W - rz.w - vsun, xi, rz, celo: false, strana });
+            });
+          });
+          kvStlpyVCele().forEach((s) => {
+            const xi = s === 'left' ? 0 : n - 1;
+            const rz = Object.assign({}, kvStlpRez(xi, n), { roh: false });
+            out.push({ px: xs[xi], py: Math.round(W / 2 - rz.w / 2), xi, rz, celo: true, strana: s });
+          });
           return out;
         };
         const sideSpan = (side) => (side === 'front' || side === 'rear' ? lengthMM() : widthMM());
@@ -1559,11 +1626,32 @@ function kvAdresa(kluc, zaloha) {
             : (m.gridLoads
                 ? m.prices[String(m.gridLoads[state.load])][state.length][state.width]
                 : m.prices[state.length][state.width]);
+          /* Sendvičová strecha záhradného prístrešku Koverta má v Expivi
+             vlastnú cenu celej zostavy; kde ju Expivi nemal, ide na nacenenie. */
+          const panelom = kvPanelVolba() && state.kvStrecha === 'panel';
+          const zaklad = panelom ? (m.kvPanelBySize || {})[`${widthMM()}x${lengthMM()}`] : base;
           /* Bunka, ktorú cenník nepublikuje, sa neúčtuje ako nula — ide do
              súhrnu ako položka na nacenenie. */
-          const baseOk = Number.isFinite(base);
-          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : ''), v: baseOk ? base : null, sum: baseOk ? base : 0 });
+          const baseOk = Number.isFinite(zaklad);
+          lines.push({ k: `${m.label} · ${money.format(widthMM())} × ${money.format(lengthMM())} mm` + (hasLoads() ? ` · ${loadKg()} kg/m²` : '') + (panelom ? ' · sendvičová strecha' : ''), v: baseOk ? zaklad : null, sum: baseOk ? zaklad : 0 });
           let open = !baseOk;
+          /* Cenník Soltec: „Štyri stĺpy so zvoleným kotvením sú v cene, každý
+             ďalší stĺp sa účtuje podľa cenníka.“ Dlhšie zostavy a vyššia
+             záťaž stoja na šiestich a viac stĺpoch — tie navyše sa pripočítajú. */
+          if (!kvBand() && Number(m.postExtra) > 0) {
+            const navyse = Math.max(0, postCount() - 4);
+            if (navyse > 0) lines.push({ k: `Ďalšie stĺpy (4 sú v cene): ${navyse} ks`, v: navyse * m.postExtra, sum: navyse * m.postExtra });
+          }
+          /* Steny išli v Expivi len so šesťstĺpovou konštrukciou, ktorá je
+             pri každom užšom rozmere o 600 € drahšia než štvorstĺpová. Tá
+             istá suma sa pripočíta, keď si zákazník stenu vyberie. */
+          const kvB = kvBand();
+          if (kvB && kvB.stenovy) {
+            const pr = (m.stenyPriplatokBySize || {})[`${widthMM()}x${lengthMM()}`];
+            const prOk = Number.isFinite(pr);
+            lines.push({ k: 'Konštrukcia pre steny: 6 stĺpov', v: prOk ? pr : null, sum: prOk ? pr : 0 });
+            if (!prOk) open = true;
+          }
           for (const side of ['front', 'rear', 'left', 'right']) {
             const kind = state.sides[side];
             if (kind === 'open') continue;
@@ -1611,9 +1699,16 @@ function kvAdresa(kluc, zaloha) {
                platí to nižšie, presne ako pri Soltec pásmach. */
             const kvMat = (BIO.sideMat || {})[kind];
             const kvWall = () => {
+              /* Cenu majú len steny, ktoré mal cenník Expivi: ľavá, pravá
+                 a zadná. Prednú stenu Expivi nepoznal — tá ide na nacenenie. */
+              if (Array.isArray(m.wallPriced) && m.wallPriced.indexOf(side) < 0) return null;
               const exactSide = m.wallSideBySize && m.wallSideBySize[`${widthMM()}x${lengthMM()}`];
               if ((side === 'front' || side === 'rear') && exactSide) {
                 return Number.isFinite(exactSide[kvMat]) ? exactSide[kvMat] : null;
+              }
+              const exactBack = m.wallBackBySize && m.wallBackBySize[`${widthMM()}x${lengthMM()}`];
+              if ((side === 'left' || side === 'right') && exactBack) {
+                return Number.isFinite(exactBack[kvMat]) ? exactBack[kvMat] : null;
               }
               const t = (side === 'front' || side === 'rear') ? m.wallSide : m.wallBack;
               if (!t) return null;
@@ -1793,6 +1888,9 @@ function kvAdresa(kluc, zaloha) {
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { stopCamera(); view.az = az; view.el = el; viewTouched = true; };
           window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
+          /* Len pre produktové rendre: oddialenie pod 100 %, aby sa do záberu
+             zmestil celý tieň. Ovládanie na stránke ide od 100 % vyššie. */
+          window.SP_TEST.setZoom = (z) => { manualZoom = z; cachedGeometry = null; renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, zoom: manualZoom, width: widthMM(), length: lengthMM(), height: state.height,
@@ -1812,6 +1910,10 @@ function kvAdresa(kluc, zaloha) {
               frameAxes: [kvOsnova().zad, kvOsnova().odk], purlinAxes: kvOsnova().vaz,
               postAxes: postXs().map((x, i, xs) => x + kvStlpRez(i, xs.length).d / 2),
               postSections: postXs().map((x, i, xs) => kvStlpRez(i, xs.length)),
+              /* Každý stĺp, ktorý sa naozaj kreslí (so stenou sa rozostavenie mení). */
+              postPlacements: kvMiestaStlpov().map((mi) => ({ x: mi.px, y: mi.py, d: mi.rz.d, w: mi.rz.w, row: mi.xi, side: mi.strana, end: mi.celo })),
+              postCount: postCount(),
+              wallMode: kvStenovyRezim(),
               postInset: kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0,
               roof: { ...kvRoofRef() },
               accessoryAnchors: Object.fromEntries(
@@ -1924,6 +2026,7 @@ function kvAdresa(kluc, zaloha) {
           const M = window.KvRender3D.MATERIALY;
           if (face.bg) return M.dlazba;
           if (face.material === 'zinc') return M.zinok;
+          if (face.material === 'latka') return M.latka || M.lak;
           const text = String(face.sourceFill || '');
           const c = window.KvRender3D.rozlozFarbu(text);
           if (c[3] < 0.96) return M.sklo;
@@ -1985,8 +2088,37 @@ function kvAdresa(kluc, zaloha) {
              a oko rozdiel v rozlíšení počas pohybu nezachytí. Po pustení sa
              scéna prekreslí naplno. Rovnaký princíp mal aj doterajší maliar;
              tu je len navrch adaptívny krok, ktorý sa sám prispôsobí stroju. */
-          const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+          /* Strop hustoty 2. Hrany vyhladzuje štvornásobné MSAA, takže nad
+             dvojnásobkom už oko rozdiel nevidí — telefón s hustotou 3 by však
+             kreslil 2,25-krát viac pixelov než pri 2 a na slabšom kuse by sa
+             otáčanie trhalo. Slabý stroj (≤ 4 GB a ≤ 4 jadrá) kreslí v 1,5:
+             s MSAA ostanú hrany čisté, práce je o polovicu menej. */
+          /* Strop 1,5 pre slabý stroj je len odhad z pamäte a počtu jadier.
+             Lacný telefón má pritom často displej s hustotou 3 — plátno
+             v 1,5 potom prehliadač zväčšuje dvojnásobne a každá hrana je
+             rozmazaný schod. Keď taký stroj pri otáčaní ukáže, že v plnej
+             kvalite drží frekvenciu displeja, strop sa zdvihne na 2. Ak by
+             potom nestíhal, vráti sa na 1,5 natrvalo. Zmena sa prejaví až
+             v pokoji, aby sa plátno nemenilo pod rukou. */
           const vPohybe = motionDetail;
+          /* Displej s hustotou 3 (iPhone, lepšie Androidy) dostane na silnom
+             stroji plnú hustotu: na malom plátne telefónu je rozdiel medzi
+             2 a 3 vidieť na každej tenkej hrane profilu. Keď by stroj pri
+             otáčaní nestíhal, strop sa natrvalo vráti na 2 (nižšie). */
+          if (painter3D.hustotaStrop === undefined) {
+            const slaby = Number(navigator.deviceMemory || 8) <= 4
+              && Number(navigator.hardwareConcurrency || 8) <= 4;
+            painter3D.hustotaStrop = slaby ? 1.5 : ((window.devicePixelRatio || 1) >= 2.5 ? 3 : 2);
+          }
+          if (!vPohybe && painter3D.hustotaNavrh) {
+            painter3D.hustotaStrop = painter3D.hustotaNavrh;
+            painter3D.hustotaNavrh = 0;
+          }
+          let dpr = Math.max(1, Math.min(painter3D.hustotaStrop, window.devicePixelRatio || 1));
+          /* Hustota nad 2 len do rozumnej plochy plátna: na celej obrazovke
+             telefónu by plátno v hustote 3 so štvornásobným MSAA zabralo
+             v grafickej pamäti stovky megabajtov a prehliadač by ho zhodil. */
+          if (dpr > 2) dpr = Math.max(2, Math.min(dpr, Math.sqrt(1.3e6 / Math.max(1, cssW * cssH))));
           if (!vPohybe) { painter3D.casy.length = 0; painter3D.poslednyCas = 0; }
           /* Vždy v plných pixeloch displeja — aj počas ťahania.
 
@@ -2008,7 +2140,10 @@ function kvAdresa(kluc, zaloha) {
              otáčaní sa na kartu neposiela ani bajt navyše. */
           const kluc = camera.geometryKey;
           if (kluc !== klucSiete) {
-            r.nastavScenu(faces, triedaMaterialu);
+            /* Nálepka s logom (decal) potrebuje textúru, ktorú 3D vykresľovač
+               nemá — kreslil ju ako prázdny biely obdĺžnik a na stĺpe
+               vyzerala ako chyba. Kým textúru nevie, nálepka sa v 3D vynechá. */
+            r.nastavScenu(faces.filter((f) => !f.decal), triedaMaterialu);
             klucSiete = kluc;
           }
 
@@ -2044,8 +2179,12 @@ function kvAdresa(kluc, zaloha) {
               near: kam.near, far: kam.far, mvp: kam.pohladProjekcia, hdr: 1
             };
             if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
+            else if (faza === 'normaly') { if (sceneLife.drawNormalMask) sceneLife.drawNormalMask(gl, opis); }
             else sceneLife.draw(gl, opis, true);
           } : null;
+          /* Prázdna scéna nič nekreslí a vykresľovač si potom ušetrí
+             dekódovanie konštrukcie uprostred snímku. */
+          if (r.kresliNavyse && sceneLife.needsDraw) r.kresliNavyse.aktivne = sceneLife.needsDraw();
           canvas.dataset.renderer = 'webgl2-pbr';
           /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
           canvas.dataset.faceCount = String(faces.length);
@@ -2095,15 +2234,23 @@ function kvAdresa(kluc, zaloha) {
                  sa preto sťahuje podľa toho, čo stroj stíha. Kde je
                  doostrenie lacné, beží celé — tam je práve na to, aby sa
                  vlna plechu nerozpadla na bodky. */
+              /* Stupne sú jemnejšie než kedysi (2 / 3 / plno). Pri
+                 notebooku s integrovanou grafikou, ktorý kreslí snímok za
+                 70 ms, dávali tri vzorky — a z troch vzoriek je hrana
+                 profilu stále schodovitá. Každá vzorka je vo vlastnom
+                 snímku prehliadača, stránka medzi nimi reaguje a prvý
+                 pohyb doostrovanie zruší. Stroj bez grafickej karty
+                 (stovky ms na snímok) dostane štyri. */
               if (predoslyRamec) {
                 const odstup = teraz - predoslyRamec;
-                if (odstup > 200) strop = Math.min(strop, 2);
-                else if (odstup > 60) strop = Math.min(strop, 3);
+                if (odstup > 250) strop = Math.min(strop, 4);
+                else if (odstup > 100) strop = Math.min(strop, 10);
+                else if (odstup > 40) strop = Math.min(strop, 12);
               }
               predoslyRamec = teraz;
               if (!r.kresli(w, h, vzorka)) return;
               vzorka++;
-              if (vzorka < strop && performance.now() - zaciatok < 1500) {
+              if (vzorka < strop && performance.now() - zaciatok < 2500) {
                 painter3D.doostr = requestAnimationFrame(krok);
               }
             };
@@ -2132,6 +2279,22 @@ function kvAdresa(kluc, zaloha) {
                           : m < 13 ? painter3D.stupen + 1
                           : painter3D.stupen;
               const novy = Math.max(0, Math.min(2, chcem));
+              /* Hustota plátna pre slabý stroj — pozri strop vyššie. Snímok
+                 pod 18 ms v plnej kvalite znamená, že stroj stíha frekvenciu
+                 displeja aj s rezervou na viac pixelov. */
+              const displej = window.devicePixelRatio || 1;
+              if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop > 2 && m > 22) {
+                /* Plná hustota 3 sa nestíha: späť na 2, natrvalo. */
+                painter3D.hustotaNavrh = 2;
+                painter3D.hustotaZamknuta = true;
+              } else if (!painter3D.hustotaZamknuta && painter3D.hustotaStrop < 2 && displej > painter3D.hustotaStrop
+                && painter3D.stupen === 2 && m < 18) {
+                painter3D.hustotaNavrh = 2;
+                painter3D.hustotaZvysena = true;
+              } else if (painter3D.hustotaZvysena && !painter3D.hustotaZamknuta && novy === 0 && m > 30) {
+                painter3D.hustotaNavrh = 1.5;
+                painter3D.hustotaZamknuta = true;
+              }
               if (novy !== painter3D.stupen) { painter3D.stupen = novy; c.length = 0; }
             }
           }
@@ -3388,14 +3551,21 @@ function kvAdresa(kluc, zaloha) {
           /* A penumbra is dense at the core and thins quickly at the edge.
              An even alpha across every ring gave a linear ramp, which reads as
              a grey rectangle with soft corners rather than a shadow. */
-          if (!lowPowerGraphics) {
-            for (let i = 10; i >= 0; i--) {
-              const t = 1 - i / 10;
-              /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
-                 oblohy, nie z jedného smeru. */
-              shadow(40 + i * (overcast ? 42 : 26),
-                +((0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1)).toFixed(4));
-            }
+          /* Slabšie zariadenia kreslia namiesto jedenástich krúžkov štyri.
+             Kým tieň vynechali celý, prístrešok na nich visel vo vzduchu.
+             Každý z nich nesie krytie troch vynechaných, takže tieň je
+             rovnako tmavý, len s hrubším prechodom. */
+          const ringAlpha = (i) => {
+            const t = 1 - i / 10;
+            /* Pod mrakmi je polotieň širší a slabší — svetlo prichádza z celej
+               oblohy, nie z jedného smeru. */
+            return (0.012 + 0.030 * t * t) * (overcast ? 0.52 : 1);
+          };
+          const ringStep = lowPowerGraphics ? 3 : 1;
+          for (let i = 10; i >= 0; i -= ringStep) {
+            let clear = 1;
+            for (let j = i; j > i - ringStep && j >= 0; j--) clear *= 1 - ringAlpha(j);
+            shadow(40 + i * (overcast ? 42 : 26), +(1 - clear).toFixed(4));
           }
 
           /* Sun through open blades. Dropping the gaps between them onto the
@@ -3438,20 +3608,26 @@ function kvAdresa(kluc, zaloha) {
             const wallTop = H + beam + Math.round(H * 0.30);
             /* One wall, one function, so the corner placement gets the same
                wall twice instead of two that drifted apart. */
-            const houseWall = (axis, v, nrm, u0, u1) => {
+            const houseWall = (axis, v, nrm, u0, u1, sklo) => {
               const P = (u, z, off) => (axis === 'x'
                 ? [u, v + (off || 0) * nrm[1], z]
                 : [v + (off || 0) * nrm[0], u, z]);
               const band = (zA, zB, hex, off, extra) => quad(
                 [P(u0, zA, off), P(u1, zA, off), P(u1, zB, off), P(u0, zB, off)],
                 hex, Object.assign({ normal: nrm, cull: true, edge: false, fit: false }, extra || {}));
+              /* Priehľadná stena (typ bez stĺpov): pergolu je cez ňu vidieť,
+                 no je jasné, že stojí medzi stenami. */
+              if (sklo) { band(0, wallTop, 'rgba(206,220,228,.30)', 0, { raw: true, cull: false }); return; }
               band(0, wallTop, wallHex);
               // the shadow the roof throws on the wall it is fixed to
               band(H - 40, H + beam, 'rgba(24,26,28,.13)', 1.0, { raw: true, bias: 200 });
             };
+            const sklene = placement().glassWalls || [];
 
-            if (walls.indexOf('rear') > -1) houseWall('x', 0, [0, 1, 0], -over, L + over);
-            if (walls.indexOf('left') > -1) houseWall('y', 0, [1, 0, 0], -over, W + over);
+            if (walls.indexOf('rear') > -1) houseWall('x', 0, [0, 1, 0], -over, L + over, sklene.indexOf('rear') > -1);
+            if (walls.indexOf('left') > -1) houseWall('y', 0, [1, 0, 0], -over, W + over, sklene.indexOf('left') > -1);
+            if (walls.indexOf('right') > -1) houseWall('y', L, [-1, 0, 0], -over, W + over, sklene.indexOf('right') > -1);
+            if (walls.indexOf('front') > -1) houseWall('x', W, [0, -1, 0], -over, L + over, sklene.indexOf('front') > -1);
             layer = 0;
           }
 
@@ -3589,10 +3765,10 @@ function kvAdresa(kluc, zaloha) {
                lemovania vykúkal — alebo naopak rám spred neho. */
             const vsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
             const rez = (xi) => (kvBand() ? kvStlpRez(xi, xs.length) : { d: pdRoh, w: pwRoh });
-            xs.forEach((px, xi) => {
-             const rz = rez(xi), pd = rz.d, pw = rz.w;
-             const ys = [vsun, W - pw - vsun];
-             ys.forEach((py) => {
+            /* Jeden stĺp: pätka, telo, nálepka a hlava. `celo` je stĺp v strede
+               zadnej či prednej steny — sedí pod čelným rámom, nie pod bočným. */
+            const kresliStlp = (px, py, xi, rz, celo) => {
+             const pd = rz.d, pw = rz.w;
               if (walls.indexOf('rear') > -1 && py === 0) return;
               if (walls.indexOf('front') > -1 && py === 1) return;
               if (walls.indexOf('left') > -1 && xi === 0) return;
@@ -3781,13 +3957,25 @@ function kvAdresa(kluc, zaloha) {
                   else plat(px - hp, cy - sir / 2, hp, sir);
                   if (kBoku) plat(cx - sir / 2, py + pw, sir, hp);
                   else plat(cx - sir / 2, py - hp, sir, hp);
+                } else if (celo) {
+                  /* Stĺp v strede čela nesie čelný rám, ktorý beží cez šírku —
+                     platne idú po ňom, na obe strany stĺpa. */
+                  plat(cx - sir / 2, py - hp, sir, hp);
+                  plat(cx - sir / 2, py + pw, sir, hp);
                 } else {
                   plat(px - hp, cy - sir / 2, hp, sir);
                   plat(px + pd, cy - sir / 2, hp, sir);
                 }
               }
-             });
-            });
+            };
+            if (kvBand()) {
+              kvMiestaStlpov().forEach((mi) => kresliStlp(mi.px, mi.py, mi.xi, mi.rz, mi.celo));
+            } else {
+              xs.forEach((px, xi) => {
+                const rz = rez(xi);
+                [vsun, W - rz.w - vsun].forEach((py) => kresliStlp(px, py, xi, rz, false));
+              });
+            }
           }
 
           /* Odkvap. Voda z pultovej strechy Koverta steká po spáde k nižšej
@@ -4013,6 +4201,11 @@ function kvAdresa(kluc, zaloha) {
                    Spodný profil preto začína pri poli lamiel, nie na zemi. */
                 zBase = Math.max(0, KV_SLAT.od);
                 zTop = Math.min(zHead, KV_SLAT.po);
+                /* Horný profil sedí tesne na hornej lamele, rovnako ako spodný
+                   pri spodnej — nie hore pod strechou s medzerou nad lamelami. */
+                const lamelaOd = zBase + gw;
+                const kusov = Math.floor((zTop - gw - lamelaOd + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                if (kusov > 0) zTop = Math.min(zTop, lamelaOd + KV_SLAT.pitch * (Math.min(kusov, 40) - 1) + KV_SLAT.vyska + gw);
                 const frameZ0 = zBase;
                 const frameZ1 = Math.max(frameZ0 + gw, zTop);
                 memb(0, gt, frameZ0, frameZ1, 0, gw, railHex, bayI === 0 ? startEnd : ['+z'], SHAFT);
@@ -4048,7 +4241,11 @@ function kvAdresa(kluc, zaloha) {
                      bočnej stene sa v axonometrii premietali ako šikmé linky
                      a pôsobili ako vzor na látke. Ostáva rovná priesvitná
                      plocha, cez ktorú presvitá konštrukcia za ňou. */
-                  pane(gt, 1 - gt, barZ + barH, zTop, back, 'rgba(58,62,66,.78)', { raw: true, seamless: true });
+                  /* Tkanina ZIP (screen) je zvonka takmer nepriehľadná, matná
+                     sivá plocha. Kým mala farbu s priehľadnosťou 0,78, 3D
+                     vykresľovač ju zaradil medzi sklo a roleta vyzerala ako
+                     číre okno — spustená roleta nebola vidieť vôbec. */
+                  pane(gt, 1 - gt, barZ + barH, zTop, back, 'rgb(74,79,84)', { raw: true, seamless: true, material: 'latka' });
                 }
                 memb(gt, 1 - gt, barZ, barZ + barH, back - 14, back + 16, shade(sideHex, -0.42), endsX, SHAFT);
               } else if (leaves) {
@@ -4105,7 +4302,13 @@ function kvAdresa(kluc, zaloha) {
                    spočítať, koľko ich je. Presah držíme tak, aby sa celý balík
                    zmestil do poľa aj pri dvoch krídlach aj pri desiatich. */
                 const fanRoom = Math.max(0, (1 - 2 * gt) - w) / Math.max(1, leaves - 1);
-                const fan = Math.min(fr * 1.8, fanRoom * 0.42);
+                /* Odsunuté krídla dosadnú celou výškou k stĺpu na konci poľa —
+                   tak ako na skutočnom odsuvnom systéme, kde balík stojí za
+                   stĺpom a nie vedľa neho. Vejár s presahom ich odtláčal od
+                   stĺpa a medzi balíkom a stĺpom ostávala svetlá medzera. Každé
+                   krídlo je na svojej koľajnici, takže z uhla ich aj tak vidno
+                   za sebou. */
+                const fan = 0 * Math.min(fr * 1.8, fanRoom * 0.42);
                 /* Odsunuté krídla stoja na sebe. Kreslíme ich od najvzdialenejšieho
                    k najbližšiemu, aby predné krídlo zakrylo tie za sebou — inak
                    bolo vidno hranu panela, ktorý má byť schovaný. Poloha krídla
@@ -4122,7 +4325,12 @@ function kvAdresa(kluc, zaloha) {
                      uneven thickness. The tracks separate as the leaves run. */
                   /* Skutočné kovanie ukladá krídla tesne za seba. 0,85 × hĺbka
                      rámu ich rozťahovala do vejára a hrany trčali. */
-                  const dOff = i * (2 * frD + 4);
+                  /* Koľajnice sú v jednom profile, ktorý sedí v rovine stĺpov:
+                     balík krídiel je preto sústredený okolo tej roviny, nie
+                     odsadený von. Kým každé ďalšie krídlo išlo o celú hrúbku
+                     ďalej, pri šiestich krídlach stál posledný rám ďaleko pred
+                     stĺpom. */
+                  const dOff = (i - (leaves - 1) / 2) * (2 * frD + 2);
                   const p0 = back - frD + dOff, p1 = back + frD + dOff;
                   memb(t0, t0 + fr, zA, zB, p0, p1, shade(sideHex, 0.04), [], SHAFT);
                   /* Zatvorené krídla sa dotýkajú, takže pravá zvislica jedného
@@ -4494,7 +4702,9 @@ function kvAdresa(kluc, zaloha) {
                  spodnou pásnicou, a tie dva milimetre boli zdola vidieť ako
                  tmavá linka po celom obvode. Začína preto na spodku rámu
                  a hore končí tam, kde končilo. */
-              put(outer, outer + LEM_T * dir, ramBot, zTop - ramBot);          // zvislé rameno
+              /* Pol milimetra pod rám: v jednej rovine so spodnou pásnicou sa
+                 hrany bili a nad stĺpmi z nich svietili svetlé prúžky. */
+              put(outer, outer + LEM_T * dir, ramBot - 0.6, zTop - ramBot + 0.6);          // zvislé rameno
               /* Native SVG QA showed the failing pixel centre inside this
                  measured fascia surface while antialiasing still blended the
                  adjacent green roof into the pixel. Crisp rasterisation applies
@@ -4674,14 +4884,25 @@ function kvAdresa(kluc, zaloha) {
              *
              * Odkvapové čelo sa nezatvára: tam je rám zatiahnutý 159 mm dnu
              * zámerne a v tej kapse visí žľab. */
+            /* Pás sa lemovania nedotýka a spodok má o pár milimetrov vyššie.
+               Kým ležal líce na líci s poldruhamilimetrovým plechom a spodkom
+               v rovine jeho spodnej hrany, prebíjal sa pozinok cez lemovanie
+               ako rad svetlých bodiek a nad stĺpmi z neho svietili prúžky. */
+            /* Päť milimetrov, nie dva. Vrch pásu je vodorovná plocha videná
+               takmer z hrany a na obrazovke s nižšou hustotou (slabý telefón
+               kreslí v 1,5) sa jej hĺbka mýli o pár milimetrov — pri dvoch sa
+               cez čelo lemovania ešte prebíjal rad bodiek. Škára päť
+               milimetrov zvnútra pod lemovaním nie je rozoznateľná. */
+            const UZ_ODSTUP = 5, UZ_SPODOK = 0;
             const uzaver = (osX, u0, u1, a, b) => {
               if (u1 - u0 <= 0.01) return;
-              if (osX) boxFaces(u0, a, ramBot, u1 - u0, b - a, RAM_H, zinok, [], SHAFT, 0, false, true);
-              else boxFaces(a, u0, ramBot, b - a, u1 - u0, RAM_H, zinok, [], SHAFT, 0, false, true);
+              const z0 = ramBot + UZ_SPODOK, dz = RAM_H - UZ_SPODOK;
+              if (osX) boxFaces(u0, a, z0, u1 - u0, b - a, dz, zinok, [], SHAFT, 0, false, true);
+              else boxFaces(a, u0, z0, b - a, u1 - u0, dz, zinok, [], SHAFT, 0, false, true);
             };
-            uzaver(false, LEM_T, RAM_VSUN, RAM_ZAD, rx1);              // bok pri y = 0
-            uzaver(false, W - RAM_VSUN, W - LEM_T, RAM_ZAD, rx1);      // bok pri y = W
-            uzaver(true, LEM_T, RAM_ZAD, LEM_T, W - LEM_T);            // zadné čelo
+            uzaver(false, LEM_T + UZ_ODSTUP, RAM_VSUN, RAM_ZAD, rx1);              // bok pri y = 0
+            uzaver(false, W - RAM_VSUN, W - LEM_T - UZ_ODSTUP, RAM_ZAD, rx1);      // bok pri y = W
+            uzaver(true, LEM_T + UZ_ODSTUP, RAM_ZAD, LEM_T + UZ_ODSTUP, W - LEM_T - UZ_ODSTUP); // zadné čelo
 
             /* Väznice nekončia na líci bočného rámu — v modeli idú od 30 mm
                po 3 970 mm pri šírke 4 000, teda ležia na ňom a siahajú takmer
@@ -4830,7 +5051,8 @@ function kvAdresa(kluc, zaloha) {
             /* Podhľad trapézu je pozinkovaný plech, teda chladná kovová
                strieborná — nie teplá sivá farba steny. Odtieň smie prísť z
                dát stránky, aby sa dal doladiť bez zásahu do rendereru. */
-            const spodHex = maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
+            const kvPanel = kvPanelVolba() && state.kvStrecha === 'panel';
+            const spodHex = kvPanel ? '#d7d5c8' : maIzolaciu ? '#c7c4bb' : (model().trapezSoffitHex || '#cfd6dc');
             const vrchHex = model().trapezTopHex || frame;
             /* Plech musí dobehnúť až k zvislému ramenu lemovania. Kým medzi
                nimi ostávala medzera, bolo cez bočné lemovanie vidieť rez
@@ -4930,8 +5152,10 @@ function kvAdresa(kluc, zaloha) {
                      Predošlé kontrasty -5,5/+3,5 % vytvorili pri zmenšení
                      interferenčné vlny a strecha vyzerala pokrčená. Jemný
                      rozdiel zachová čitateľný smer rebier bez moiré. */
-                  tone = flat ? shade(hex, high ? 0.010 : -0.006)
-                              : shade(hex, zb > za ? -0.014 : 0.004);
+                  /* Vlna musí byť čitateľná ako plech: bok rebra odvrátený od
+                     svetla je tmavší, dno vlny o odtieň tmavšie než hrebeň. */
+                  tone = flat ? shade(hex, high ? 0.03 : -0.08)
+                              : shade(hex, zb > za ? -0.32 : -0.17);
                 }
                 const cavity = upward ? 0 : trapProfile01((a + b) / 2);
                 // Less skylight reaches the recessed upper channel. The paint
@@ -4965,15 +5189,55 @@ function kvAdresa(kluc, zaloha) {
             /* Všetko mimo tohto otvoru je trvalo pod nepriehľadným lemovaním.
                Negenerovať tieto skryté plochy je fyzická oklúzia, nie camera
                hack, a odstráni to zdroj svetlých/tmavých škrabancov na atike. */
-            drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            /* Sendvičový panel: jadro 3 cm pod vlnou 4 cm, spodok rovný ako
+               pri paneli Soltec — zdola teda plochý podhľad, nie vlna. */
+            if (kvPanel) {
+              /* Sendvičový panel zdola presne ako pri Soltec SL: hladký
+                 podhľad v RAL 9002 (#d7d5c8), jedna plocha bez vĺn a bez
+                 priečnych škár — tak ho kreslí aj rad SL. */
+              const zp = trapBot - 30;
+              quad([[tx0, ty0, zp], [tx0, ty1, zp], [tx1, ty1, zp], [tx1, ty0, zp]], spodHex,
+                   { normal: [0, 0, -1], cull: true, edge: false });
+            } else {
+              drawTrapSurface(tx0, tx1, ty0, ty1, trapLowerZ, spodHex, false);
+            }
             /* Keep the real soffit under the flashing. The upper skin needs
                only a narrow hidden lap beneath the inner edge: cropping it
                exactly at the aperture exposed a jagged lower-skin cut, while
                the full hidden sheet won isolated depth samples on the arm. */
             const trapLap = 6;
-            drawTrapSurface(Math.max(tx0, vx0 - trapLap), Math.min(tx1, vx1 + trapLap),
-              Math.max(ty0, vy0 - trapLap), Math.min(ty1, vy1 + trapLap),
-              trapUpperZ, vrchHex, true);
+            const lx0 = Math.max(tx0, vx0 - trapLap), lx1 = Math.min(tx1, vx1 + trapLap);
+            const ly0 = Math.max(ty0, vy0 - trapLap), ly1 = Math.min(ty1, vy1 + trapLap);
+            drawTrapSurface(lx0, lx1, ly0, ly1, trapUpperZ, vrchHex, true);
+            /* Pod ramenom lemovania plech pokračuje až k zvislému ramenu.
+               Kým končil 6 mm za hranou, bolo pri šikmom pohľade zhora do
+               kapsy pod ramenom vidieť zubatý rez vlny na bokoch strechy.
+               Skrytá časť má hrebeň o TRAP_HIDDEN_CLEAR nižšie, takže sa
+               v hĺbke nebije s ramenom a na lemovaní sa neobjavia bodky. */
+            const TRAP_HIDDEN_CLEAR = 12;
+            const trapHiddenZ = (y) =>
+              trapBot + TRAP_SKIN_VIS + (TRAP_H - TRAP_SKIN_VIS - TRAP_HIDDEN_CLEAR) * trapProfile01(y);
+            /* Len na koncoch vĺn: pozdĺž bokov ide rez rovnobežne s rebrom
+               a nie je čo vidieť, dlhé skryté pásy tam len mýlia triedenie. */
+            drawTrapSurface(tx0, lx0, ly0, ly1, trapHiddenZ, vrchHex, true);
+            drawTrapSurface(lx1, tx1, ly0, ly1, trapHiddenZ, vrchHex, true);
+            /* Pozdĺž bokov končil vrch plechu 6 mm za hranou lemovania a
+               cez medzeru k zvislému ramenu bolo zhora vidieť priečne
+               profily pod strechou. Zhora smie byť vidieť len plech a
+               lemovanie: medzeru zatvorí rovný pás na úrovni dna vlny,
+               hlboko pod ramenom, takže sa s ním v hĺbke nebije. */
+            const trapDnoZ = () => trapBot + TRAP_SKIN_VIS;
+            /* Pás sa nesmie dotknúť vnútornej strany čela. Čelo lemovania je
+               plech hrúbky 1,5 mm a kým pás končil presne na jeho rube,
+               delilo ho od lícnej plochy len tých 1,5 mm — hĺbkový test ich
+               miestami nerozsúdil a na čele boli v rade svetlé bodky. Pás je
+               vodorovný a z kamery ho vidno takmer z hrany; pri takej ploche
+               sa hĺbka na obrazovke s hustotou 1 mýli aj o pár milimetrov,
+               preto šesť. Pod ním je v tom mieste horná pásnica obvodového
+               profilu a nad ním rameno lemovania, takže sa nič neodkryje. */
+            const TRAP_DNO_VOLA = 6;
+            drawTrapSurface(tx0, tx1, ty0 + TRAP_DNO_VOLA, ly0, trapDnoZ, vrchHex, true);
+            drawTrapSurface(tx0, tx1, ly1, ty1 - TRAP_DNO_VOLA, trapDnoZ, vrchHex, true);
 
             /* The continuous inner flashing turns above own these four cut
                planes. Separate sheet end caps would be coplanar duplicates
@@ -5057,11 +5321,15 @@ function kvAdresa(kluc, zaloha) {
               const ledN = ledXs.length;
               const ledVsun = kvMeasured() ? kvMeasured().postInset : Number(model().postInset) || 0;
               const ledSections = ledXs.map((_, i) => kvStlpRez(i, ledN));
+              /* Stredný stĺp môže stáť len na jednej strane (tam, kde je
+                 stena); kde nestojí, svetlo sa neprerušuje. */
+              const ledMiesta = kvMiestaStlpov().filter((mi) => !mi.celo);
               ledXs.forEach((px, i) => {
+                const stoji = (strana) => ledMiesta.some((mi) => mi.xi === i && mi.strana === strana);
                 kvAccessoryGeometry.led.blockedPosts.push({
                   axis: 'x', index: i, from: px, to: px + ledSections[i].d,
-                  rearY0: ledVsun, rearY1: ledVsun + ledSections[i].w,
-                  frontY0: W - ledVsun - ledSections[i].w, frontY1: W - ledVsun
+                  rearY0: ledVsun, rearY1: stoji(0) ? ledVsun + ledSections[i].w : ledVsun,
+                  frontY0: stoji(1) ? W - ledVsun - ledSections[i].w : W - ledVsun, frontY1: W - ledVsun
                 });
               });
 
@@ -5074,7 +5342,8 @@ function kvAdresa(kluc, zaloha) {
                 const yBlocks = [];
                 kvAccessoryGeometry.led.blockedPosts.forEach((b) => {
                   if (b.to <= x || b.from >= x + ledW) return;
-                  yBlocks.push([b.rearY0, b.rearY1], [b.frontY0, b.frontY1]);
+                  if (b.rearY1 > b.rearY0) yBlocks.push([b.rearY0, b.rearY1]);
+                  if (b.frontY1 > b.frontY0) yBlocks.push([b.frontY0, b.frontY1]);
                 });
                 subtractIntervals(ledY0, ledY1, yBlocks).forEach((seg) => {
                   ledRun('vaznica' + i, x, seg[0], ledW, seg[1] - seg[0]);
@@ -5154,10 +5423,71 @@ function kvAdresa(kluc, zaloha) {
                 return [p[0]+dx, wy, z];
               };
               const vertices = ref.vertices.map(mapPoint);
+              /* Z pôvodnej siete ostáva len päta s kolenom (pod 260 mm) a žľab
+                 (od 2 540 mm). Rúra medzi nimi sa kreslí nanovo: sieť sa kvôli
+                 rôznej výške a odsadeniu naťahovala po úsekoch, prierez rúry
+                 sa v šikmine skosil a kolená boli ostré — zvod vyzeral
+                 rozlámaný. Teraz je to jedna okrúhla rúra 80 mm po dráhe
+                 s oblúkmi ako na skutočnom zvode (dve 45° kolená). */
+              const PATA_Z = 260, ZLAB_Z = 2540;
+              let ponechane = 0;
               ref.triangles.forEach(tri => {
+                const zs = tri.map(i => ref.vertices[i][2]);
+                if (!(Math.max(...zs) < PATA_Z || Math.min(...zs) >= ZLAB_Z)) return;
+                ponechane++;
                 const pts=tri.map(i=>vertices[i]);
                 quad(pts,frame,{normal:faceNormal(pts),vertexNormals:tri.map(i=>ref.normals[i]),cull:false,edge:false});
               });
+              const pataHore = Math.max(...vertices.filter((q, i) => ref.vertices[i][2] < PATA_Z).map(q => q[2])) - 2;
+              const zZlab = 2543.5 + H - 2398 + 6;
+              const dx = outletX - pipeX;
+              const ohyb = 110;
+              const bodyDraha = [[pipeX, pataHore]];
+              /* Dráha presne podľa pôvodnej siete „four“: rúra ide po stĺpe
+                 hore takmer pod rám, potom mierne stúpajúcou šikminou tesne
+                 pod nosníkom k výpusti a krátkym zvislým kusom do žľabu —
+                 výšky kolien sú výšky zo siete, prepočítané na výšku H
+                 rovnako ako zvyšok siete. Mení sa len to, že je to
+                 jedna okrúhla rúra s plynulými kolenami. */
+              if (Math.abs(dx) > 24) {
+                const zMap = (z) => z + (H - 2398) * Math.min(1, (z - 200) / 2100);
+                const hore = zMap(2330);
+                const dole = zMap(2010);
+                bodyDraha.push([pipeX, dole], [outletX, hore]);
+              }
+              bodyDraha.push([outletX, zZlab]);
+              /* Zaoblenie rohov: každý vnútorný bod dráhy nahradí kvadratický
+                 oblúk, ktorý sa dotýka oboch susedných úsekov. */
+              const draha = [bodyDraha[0]];
+              for (let i = 1; i < bodyDraha.length - 1; i++) {
+                const [a, b, c] = [bodyDraha[i - 1], bodyDraha[i], bodyDraha[i + 1]];
+                const d1 = Math.hypot(b[0] - a[0], b[1] - a[1]), d2 = Math.hypot(c[0] - b[0], c[1] - b[1]);
+                const r = Math.min(ohyb, d1 * 0.45, d2 * 0.45);
+                const p1 = [b[0] + (a[0] - b[0]) * r / d1, b[1] + (a[1] - b[1]) * r / d1];
+                const p2 = [b[0] + (c[0] - b[0]) * r / d2, b[1] + (c[1] - b[1]) * r / d2];
+                for (let k = 0; k <= 10; k++) {
+                  const t = k / 10, u = 1 - t;
+                  draha.push([u * u * p1[0] + 2 * u * t * b[0] + t * t * p2[0], u * u * p1[1] + 2 * u * t * b[1] + t * t * p2[1]]);
+                }
+              }
+              draha.push(bodyDraha[bodyDraha.length - 1]);
+              const SEG = 20, krzy = [];
+              draha.forEach((q, i) => {
+                const pr = draha[Math.max(0, i - 1)], nx = draha[Math.min(draha.length - 1, i + 1)];
+                const tx = nx[0] - pr[0], tz = nx[1] - pr[1], tl = Math.hypot(tx, tz) || 1;
+                const n = [tz / tl, 0, -tx / tl];         // kolmica v rovine dráhy
+                krzy.push([...Array(SEG)].map((_, k) => {
+                  const a = k * Math.PI * 2 / SEG, c = Math.cos(a), sn = Math.sin(a);
+                  const nor = [n[0] * c, sn, n[2] * c];
+                  return { p: [q[0] + nor[0] * radius, pipeY + nor[1] * radius, q[1] + nor[2] * radius], n: nor };
+                }));
+              });
+              let rurTroj = 0;
+              for (let i = 0; i < krzy.length - 1; i++) for (let k = 0; k < SEG; k++) {
+                const A = krzy[i][k], B = krzy[i][(k + 1) % SEG], C = krzy[i + 1][(k + 1) % SEG], D = krzy[i + 1][k];
+                quad([A.p, B.p, C.p, D.p], frame, { normal: faceNormal([A.p, B.p, C.p, D.p]), vertexNormals: [A.n, B.n, C.n, D.n], cull: false, edge: false });
+                rurTroj += 2;
+              }
               kvAccessoryGeometry.gutter = {enabled:true,source:ref.source,
                 x0:L-146.5,x1:L-21.5,y0:9.4+pipeY-55,y1:W-10,
                 zBottom:2543.5+H-2398,zTop:2611+H-2398,outletX:L-84,
@@ -5216,7 +5546,8 @@ function kvAdresa(kluc, zaloha) {
                    sa vyberie tá nesprávna, jej šikmina sa zdeformuje. */
                 outletOffset:Math.round(odsadenie), sourceOffset: four ? -943 : 0,
                 post:{x0:postX,x1:postFace,y0:inset,y1:inset+section.w},clamps,
-                vertexCount:vertices.length,triangleCount:ref.triangles.length,
+                vertexCount:vertices.length,triangleCount:ponechane+rurTroj,
+                pipePath:draha.map(q=>[Math.round(q[0]),Math.round(q[1])]),
                 pathBounds:{xMin:Math.min(...vertices.map(p=>p[0])),xMax:Math.max(...vertices.map(p=>p[0])),
                   yMin:Math.min(...vertices.map(p=>p[1])),yMax:Math.max(...vertices.map(p=>p[1])),
                   zMin:Math.min(...vertices.map(p=>p[2])),zMax:Math.max(...vertices.map(p=>p[2]))}};
@@ -5237,6 +5568,12 @@ function kvAdresa(kluc, zaloha) {
                R160 160/80; depth is always the first secondary-profile number. */
             const sec = model().secBeam || [80, 50];
             const PANEL = 30;                  // every carport and canopy model says "ISO panel 30 mm"
+            /* SL kryje strešný sendvičový panel: jadro 3 cm a navrchu vlna
+               4 cm, spolu 7 cm (podľa majiteľa a fotiek realizácie SL170).
+               Panel leží na priečnych profiloch a vlny bežia kolmo na ne,
+               teda pozdĺž dĺžky. Vrch vĺn končí tesne pod hornou hranou rámu. */
+            const slSendvic = /^SL/i.test(String(state.model)) && model().roofSheet !== 'trapez' && model().glazed !== true;
+            const RIB = slSendvic ? 40 : 0;
             const rw = sec[1];
             const rd = integratedFall
               ? sec[0]
@@ -5257,7 +5594,9 @@ function kvAdresa(kluc, zaloha) {
             const room = Math.max(0, beam - clear - rd - PANEL - reveal);
             const hide = fallShown ? 0 : Math.min(fall, room);
             const drop = (x) => hide * ((x - inX0) / Math.max(1, inX1 - inX0));
-            const secTop = (x) => (fallShown ? zRim(x) : rimLow) - beam + clear + rd;
+            const secTop = (x) => (slSendvic
+              ? (fallShown ? zRim(x) : rimLow) - 4 - RIB - PANEL
+              : (fallShown ? zRim(x) : rimLow) - beam + clear + rd);
             const integratedSpan = Math.max(1, inY1 - inY0);
             const integratedDrop = integratedSpan * (fallPct / 100);
             /* Canonical panel top-plane function. For F, y0 is the high side and
@@ -5395,7 +5734,7 @@ function kvAdresa(kluc, zaloha) {
             /* ISO panel sa kladie po tabuliach a spoje sú vidieť. Trapézový
                plech beží po spáde v jednom kuse od hrebeňa po odkvap, takže
                priečna škára každý meter by naň nepatrila. */
-            const panelCuts = trapez
+            const panelCuts = (trapez || slSendvic)
               ? [[inX0, inX1]]
               : (integratedFall
                 ? beamRuns.slice(0, -1).map((run, i) => [run.b + 2, beamRuns[i + 1].a - 2]).filter((c) => c[1] - c[0] > 8)
@@ -5459,7 +5798,33 @@ function kvAdresa(kluc, zaloha) {
                to hint at those joints, but WebGL renders only faces, so the
                roof became one perfectly clean slab. Give every internal SL
                boundary a narrow physical joint on both skins. */
-            if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
+            if (slSendvic && !green) {
+              /* Vlny sendvičového panela: lichobežník 40 mm vysoký, dolu
+                 70 mm a hore 28 mm široký, rozteč 333 mm (tri vlny na metrový
+                 modul). Bežia od konca po koniec, kolmo na priečne profily. */
+              const pitch = 333, bh = 35, th = 14;
+              const n = Math.max(3, Math.round((inY1 - inY0) / pitch));
+              const krok = (inY1 - inY0) / n;
+              const vrch = roofFinish.topHex, bok = shade(roofFinish.topHex, -0.12), bok2 = shade(roofFinish.topHex, 0.06);
+              const nl = Math.hypot(RIB, bh - th);
+              for (let i = 0; i < n; i++) {
+                const yc = inY0 + krok * (i + 0.5);
+                const ya = yc - bh, yb = yc + bh, yt0 = yc - th, yt1 = yc + th;
+                const zb = (x, y) => panelTopZ(x, y), zt = (x, y) => panelTopZ(x, y) + RIB;
+                quad([[inX0, yt0, zt(inX0, yt0)], [inX1, yt0, zt(inX1, yt0)], [inX1, yt1, zt(inX1, yt1)], [inX0, yt1, zt(inX0, yt1)]],
+                     vrch, { cull: true, bias: -600, edge: false });
+                quad([[inX0, ya, zb(inX0, ya)], [inX1, ya, zb(inX1, ya)], [inX1, yt0, zt(inX1, yt0)], [inX0, yt0, zt(inX0, yt0)]],
+                     bok, { normal: [0, -RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                quad([[inX0, yt1, zt(inX0, yt1)], [inX1, yt1, zt(inX1, yt1)], [inX1, yb, zb(inX1, yb)], [inX0, yb, zb(inX0, yb)]],
+                     bok2, { normal: [0, RIB / nl, (bh - th) / nl], cull: true, bias: -600, edge: false });
+                [[inX0, -1], [inX1, 1]].forEach(([x, d]) => {
+                  const pts = [[x, ya, zb(x, ya)], [x, yt0, zt(x, yt0)], [x, yt1, zt(x, yt1)], [x, yb, zb(x, yb)]];
+                  quad(d < 0 ? pts.reverse() : pts, shade(vrch, -0.18), { normal: [d, 0, 0], cull: true, bias: -600, edge: false });
+                });
+              }
+              canvas.dataset.panelSeamCount = '0';
+              canvas.dataset.panelRibCount = String(n);
+            } else if (/^SL/i.test(String(state.model)) && !trapez && !glass) {
               const boundaries = cuts.slice(0, -1).map((cut) => cut[1]);
               const halfJoint = 3;
               boundaries.forEach((x) => {
@@ -5727,7 +6092,7 @@ function kvAdresa(kluc, zaloha) {
           /* The soft shadow is part of the visible composition. Fitting only
              the steel envelope clipped it in fullscreen and made the shelter
              sit optically too high in its viewport. */
-          if (!lowPowerGraphics) {
+          {
             const shadowGrow = 40 + 10 * (overcast ? 42 : 26);
             const fitShadowSoft = overcast ? 0.16 : 1;
             const fitShadowX = 0.22 * H * (-KEY[0] / KEY[2]) * fitShadowSoft;
@@ -5743,6 +6108,13 @@ function kvAdresa(kluc, zaloha) {
           const ox = pad - minX * scale + ((VW - pad * 2) - (maxX - minX) * scale) / 2 + zoomPan.x*VW;
           const oy = pad - minY * scale + ((VH - pad * 2) - (maxY - minY) * scale) / 2 + zoomPan.y*VH;
 
+          {
+            let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+            faces.forEach((f) => { if (f.bg || !Array.isArray(f.p)) return; f.p.forEach((q) => {
+              const x = q.x * scale + ox, y = q.y * scale + oy;
+              if (x < a) a = x; if (x > c) c = x; if (y < b) b = y; if (y > d) d = y; }); });
+            modelBox = Number.isFinite(a) ? { x0: a, y0: b, x1: c, y1: d, VW, VH } : null;
+          }
           try { if (window.SP_TEST) window.SP_TEST.project = (x, y, z) => { const q = cam(x, y, z); return { x: q.x * scale + ox, y: q.y * scale + oy }; }; } catch (e) {}
           const aboveDepth = view.el >= 0.9 ? 'zhora' : (view.el < 0 ? 'zdola' : 'zboku');
           canvas.setAttribute('aria-label', `${model().label || state.model}, ${widthMM()} krát ${lengthMM()} milimetrov, ${state.frameColor.name}, pohľad ${aboveDepth}`);
@@ -6094,6 +6466,41 @@ function kvAdresa(kluc, zaloha) {
         /* Krytina strechy G. Cenník jej cenu neuvádza, tak voľba mení model
            a text dopytu, nie sumu — a povie to rovno, aby zákazník nečakal,
            že je krytina v cene. */
+        const buildKvStrecha = () => {
+          let wrap = cfgRoot.querySelector('[data-sp-kv-strecha-wrap]');
+          if (!kvPanelVolba()) { if (wrap) wrap.hidden = true; return; }
+          if (!wrap) {
+            const after = cfgRoot.querySelector('[data-sp-frame-colors]');
+            if (!after) return;
+            wrap = document.createElement('div');
+            wrap.className = 'sp-roof-finish';
+            wrap.dataset.spKvStrechaWrap = '';
+            wrap.innerHTML = '<div class="sp-step__label"><b>Strecha</b><span class="sp-step__val" data-sp-kv-strecha-val></span></div>'
+              + '<div class="sp-roofcolors" role="group" aria-label="Strecha" data-sp-kv-strechy></div>'
+              + '<p class="sp-side-note">Sendvičový panel: jadro 3 cm a vlna 4 cm, spolu 7 cm. Zdola rovný podhľad, pod strechou tichšie a menej teplo.</p>';
+            after.after(wrap);
+          }
+          wrap.hidden = false;
+          const moznosti = [
+            { id: 'trapez', label: 'Trapézový plech', about: 'vlna, zdola plech', top: '#9aa3a8', low: '#cfd6dc' },
+            { id: 'panel', label: 'Sendvičový panel', about: '70 mm, zdola rovný', top: '#9aa3a8', low: '#e6e4de' }
+          ];
+          const val = wrap.querySelector('[data-sp-kv-strecha-val]');
+          if (val) val.textContent = (moznosti.find((o) => o.id === state.kvStrecha) || moznosti[0]).label;
+          const host = wrap.querySelector('[data-sp-kv-strechy]');
+          host.textContent = '';
+          moznosti.forEach((o) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'sp-roofchip';
+            b.dataset.spKvStrecha = o.id;
+            b.setAttribute('aria-pressed', String(state.kvStrecha === o.id));
+            b.innerHTML = `<span class="sp-roofchip__sample" aria-hidden="true"><i style="--sp-roof-top:${o.top}"></i><i style="--sp-roof-bottom:${o.low}"></i></span>`
+              + `<span><strong>${o.label}</strong><small>${o.about}</small></span>`;
+            host.appendChild(b);
+          });
+        };
+
         const buildRoofSkins = () => {
           let wrap = cfgRoot.querySelector('[data-sp-roof-skin-wrap]');
           let host = cfgRoot.querySelector('[data-sp-roof-skins]');
@@ -6214,6 +6621,7 @@ function kvAdresa(kluc, zaloha) {
             plan.textContent = `${mm(widthMM())} × ${mm(lengthMM())}`;
           }
           const host = q('[data-sp-side-opts]');
+          if (!kvStenaSmie(state.activeSide)) state.activeSide = kvStranyStien()[0];
           const side = state.activeSide;
           host.textContent = '';
           let lastGroup = '';
@@ -6224,6 +6632,9 @@ function kvAdresa(kluc, zaloha) {
              Kým to výrobca nepotvrdí, neuberá sa nič; keď potvrdí, je to jedno
              pole v dátach modelu a nie zásah do kódu. */
           const povolene = Array.isArray(model().sideIds) ? model().sideIds : null;
+          /* Koverta: zo všetkých štyroch strán sa uzavrieť nedá — keď už
+             stoja tri steny, štvrtá strana ponúka len „Otvorená“. */
+          const plno = state.sides[side] === 'open' && kvSteny().length >= kvMaxStien();
           SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
             .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
@@ -6240,16 +6651,19 @@ function kvAdresa(kluc, zaloha) {
             b.className = 'sp-sideopt';
             b.dataset.spSideOpt = o.id;
             b.setAttribute('aria-pressed', String(state.sides[side] === o.id));
+            if (o.id !== 'open' && plno) b.disabled = true;
             b.innerHTML = `<span class="sp-sideopt__copy"><strong>${o.label}</strong><em>${o.note}</em></span>`
               + `<i class="sp-sideopt__check" aria-hidden="true"></i>`;
             host.appendChild(b);
           });
           cfgRoot.querySelectorAll('[data-sp-side]').forEach((btn) => {
+            btn.hidden = !kvStenaSmie(btn.dataset.spSide);
             btn.setAttribute('aria-expanded', String(btn.dataset.spSide === side));
             btn.classList.toggle('is-set', state.sides[btn.dataset.spSide] !== 'open');
           });
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
+          if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
           if (state.sides[side] === 'zip' && (span > 6500 || state.height > 2800)) {
             note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 2 800 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
           }
@@ -6367,7 +6781,7 @@ function kvAdresa(kluc, zaloha) {
             if (typeof picked === 'number') count += picked;
             else if (picked === undefined ? on : picked) count++;
             html.push(`<div class="sp-add${off ? ' is-off' : ''}"><div class="sp-add__head"><div class="sp-add__t">${title}<small>${note}</small></div>`
-              + `<label class="sp-switch"><input type="checkbox" data-sp-add-on="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}><span></span></label></div>`
+              + `<label class="sp-switch"><input type="checkbox" name="doplnok-${key}" data-sp-add-on="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}><span></span></label></div>`
               + `<div class="sp-add__body"${on ? '' : ' hidden'}>${on ? body() : ''}</div></div>`);
           };
 
@@ -6819,6 +7233,7 @@ function kvAdresa(kluc, zaloha) {
           buildNudgers();
           buildRoofFinishes();
           buildRoofSkins();
+          buildKvStrecha();
           buildLoads();
           syncCarPick();
           buildSideOpts();
@@ -6870,6 +7285,7 @@ function kvAdresa(kluc, zaloha) {
             chartMarker.querySelector('[data-sp-mc]').setAttribute('cx', cx);
             chartMarker.querySelector('[data-sp-mc]').setAttribute('cy', cy);
           }
+          planujZapisZostavy();
           drawStage();
         };
 
@@ -6939,6 +7355,7 @@ function kvAdresa(kluc, zaloha) {
           if (!t || !cfgRoot.contains(t)) return;
           if (t.dataset.spModel) {
             state.model = t.dataset.spModel;
+            ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
             refIdx = 0;
             openingSize();
             clampToModel();
@@ -6954,6 +7371,8 @@ function kvAdresa(kluc, zaloha) {
           } else if (t.dataset.spSide) {
             state.activeSide = t.dataset.spSide;
           } else if (t.dataset.spSideOpt) {
+            if (t.dataset.spSideOpt !== 'open' && ((state.sides[state.activeSide] === 'open'
+                && kvSteny().length >= kvMaxStien()) || !kvStenaSmie(state.activeSide))) return;
             state.sides[state.activeSide] = t.dataset.spSideOpt;
             state.sideOpen[state.activeSide] = 0;
           } else if (t.dataset.spFrameColor) {
@@ -6963,6 +7382,8 @@ function kvAdresa(kluc, zaloha) {
           } else if (t.dataset.spNudge && t.dataset.spNudgeDir) {
             nudge(t.dataset.spNudge, Number(t.dataset.spNudgeDir));
             return;
+          } else if (t.dataset.spKvStrecha) {
+            state.kvStrecha = t.dataset.spKvStrecha === 'panel' ? 'panel' : 'trapez';
           } else if (t.dataset.spRoofSkin) {
             state.roofSkin = Math.max(0, Math.min(ROOF_SKINS.length - 1, Number(t.dataset.spRoofSkin)));
           } else if (t.dataset.spBoxColor) {
@@ -6992,6 +7413,7 @@ function kvAdresa(kluc, zaloha) {
                    čo nový cenník publikuje. */
                 if (o.model && BIO.models[o.model] && o.model !== state.model) {
                   state.model = o.model;
+                  ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
                   clampIdx();
                 }
               }
@@ -7299,8 +7721,20 @@ function kvAdresa(kluc, zaloha) {
           });
         }
         if (stageEl) {
+          /* Na dotykovej obrazovke otáča model len dotyk na prístrešku;
+             okolo neho sa stránka normálne posúva. */
+          const naModeli = (cx, cy) => {
+            if (!modelBox) return true;
+            const r = canvas.getBoundingClientRect();
+            const s = Math.min(r.width / modelBox.VW, r.height / modelBox.VH);
+            const x = (cx - r.left - (r.width - modelBox.VW * s) / 2) / s;
+            const y = (cy - r.top - (r.height - modelBox.VH * s) / 2) / s;
+            const m = 0.04 * modelBox.VW;
+            return x >= modelBox.x0 - m && x <= modelBox.x1 + m && y >= modelBox.y0 - m && y <= modelBox.y1 + m;
+          };
           stageEl.addEventListener('pointerdown', (e) => {
             if (!canvas.contains(e.target)) return;
+            if (e.pointerType === 'touch' && !dragging && !naModeli(e.clientX, e.clientY)) return;
             stopCamera();
             orbitPointers.set(e.pointerId,[e.clientX,e.clientY]);
             if(orbitPointers.size===2){setZoomMode(true);const p=[...orbitPointers.values()];pinchDistance=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);}
@@ -7349,6 +7783,14 @@ function kvAdresa(kluc, zaloha) {
           };
           stageEl.addEventListener('pointerup', stop);
           stageEl.addEventListener('pointercancel', stop);
+          /* Ťah prstom po 3D otáča model a stránku neposúva (touch-action:
+             none v CSS). Staršie Safari na iPhone ho nie vždy rešpektuje,
+             preto sa posun stránky počas ťahania zruší aj tu. */
+          canvas.addEventListener('touchmove', (e) => { if (dragging) e.preventDefault(); }, { passive: false });
+          canvas.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            if (t && e.touches.length === 1 && naModeli(t.clientX, t.clientY)) e.preventDefault();
+          }, { passive: false });
         }
         cfgRoot.addEventListener('click', (e) => {
           const v = e.target.closest('[data-sp-view]');
@@ -7379,6 +7821,7 @@ function kvAdresa(kluc, zaloha) {
           if (!b) return;
           state.car = b.dataset.spCar || null;
           syncCarPick();
+          planujZapisZostavy();
           drawStage();
         });
 
@@ -7406,6 +7849,125 @@ function kvAdresa(kluc, zaloha) {
           if(window.SP_TEST) { window.SP_TEST.scene=()=>sceneLife.snapshot();
             window.SP_TEST.sceneWeather=(w)=>sceneLife.setWeather(w); }
         }
+        /* --- Zostava v adrese ---------------------------------------------
+           Odkaz na zostavu (Zdieľať, Poslať túto zostavu → dopyt) niesol len
+           rozmer a farbu. Model, výška, steny, doplnky aj snímače sa po
+           otvorení stratili a pri Soltecu sa rozmer orezal na predvolený
+           model — odkaz z dopytu tak ukázal niečo iné, než zákazník poslal.
+           Celá zostava sa preto zapisuje do parametra `z` (JSON v base64url)
+           a pri otvorení sa z neho obnoví. Pri obnove sa každá hodnota overí
+           proti tomu, čo táto stránka konfigurátora pozná; neznáma alebo
+           poškodená hodnota sa ticho preskočí a ostane predvolená. */
+        const ZOSTAVA_VERZIA = 1;
+        const kodujZostavu = (data) => btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const dekodujZostavu = (text) => {
+          const b64 = String(text).replace(/-/g, '+').replace(/_/g, '/');
+          return JSON.parse(decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4)))));
+        };
+        const ralFarby = (c) => (c && c.ral) || null;
+        const farbaPodlaRal = (ral) => (typeof ral === 'string' && BIO.colors.find((c) => c.ral === ral)) || null;
+        const zostavaData = () => ({
+          v: ZOSTAVA_VERZIA, p: BIO.page || '', m: state.model, pl: state.placement,
+          w: state.widthValue, l: state.lengthValue, h: state.height, ld: state.load,
+          lt: Math.round(state.louverT * 100) / 100,
+          fc: ralFarby(state.frameColor), lc: ralFarby(state.louverColor), bc: ralFarby(state.boxColor),
+          rf: state.roofFinish, rs: state.roofSkin, ks: state.kvStrecha, s: state.sides, c: state.car, x: state.extras,
+          a: state.anchor, b: state.box, ce: state.ceiling, ls: state.ledSet, sn: state.sensors, pk: state.picks
+        });
+        const obnovZostavu = (d) => {
+          if (!d || typeof d !== 'object' || d.v !== ZOSTAVA_VERZIA || (d.p && d.p !== (BIO.page || ''))) return false;
+          const cislo = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : null);
+          /* Kľúč sa berie len ako vlastná položka zoznamu (napr. model „240/60“),
+             nikdy nie niečo zdedené ako „constructor“. */
+          const kluc = (v) => (typeof v === 'string' && v.length > 0 && v.length <= 40 ? v : null);
+          const ma = (o, k) => Boolean(o) && Object.prototype.hasOwnProperty.call(o, k);
+          if (kluc(d.m) && ma(BIO.models, d.m)) state.model = d.m;
+          if (kluc(d.pl) && PLACEMENTS.some((pp) => pp.id === d.pl)) state.placement = d.pl;
+          const w = cislo(d.w, 1, 100000), l = cislo(d.l, 1, 100000), h = cislo(d.h, 1, 10000);
+          if (w) state.widthValue = Math.round(w);
+          if (l) state.lengthValue = Math.round(l);
+          if (h) state.height = Math.round(h);
+          const ld = cislo(d.ld, 0, 50); if (ld !== null) state.load = Math.round(ld);
+          const lt = cislo(d.lt, 0, 1); if (lt !== null) state.louverT = lt;
+          const fc = farbaPodlaRal(d.fc); if (fc) state.frameColor = fc;
+          const lc = farbaPodlaRal(d.lc); if (lc) state.louverColor = lc;
+          if (d.bc === null) state.boxColor = null;
+          else { const bc = farbaPodlaRal(d.bc); if (bc) state.boxColor = bc; }
+          const rf = cislo(d.rf, 0, ROOF_FINISHES.length - 1); if (rf !== null) state.roofFinish = Math.round(rf);
+          const rs = cislo(d.rs, 0, ROOF_SKINS.length - 1); if (rs !== null) state.roofSkin = Math.round(rs);
+          if (d.ks === 'panel' || d.ks === 'trapez') state.kvStrecha = d.ks;
+          if (d.s && typeof d.s === 'object') ['front', 'rear', 'left', 'right'].forEach((k) => {
+            const v = d.s[k];
+            if (v === 'open' || (kluc(v) && SIDE_OPTS.some((o) => o.id === v))) state.sides[k] = v;
+          });
+          /* Starší odkaz mohol mať steny zo všetkých štyroch strán
+             alebo prednú stenu, ktorú Koverta už neponúka. */
+          ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });
+          while (kvSteny().length > kvMaxStien()) {
+            state.sides[['right', 'left', 'front', 'rear'].find((k) => state.sides[k] !== 'open')] = 'open';
+          }
+          if (d.c === null || (kluc(d.c) && ma(CARS, d.c))) state.car = d.c;
+          if (d.x && typeof d.x === 'object') {
+            const strop = {};
+            (BIO.extras || []).forEach((g) => (g.items || []).forEach((it) => { strop[it.id] = it.max || 9; }));
+            (BIO.roofOpt || []).forEach((it) => { strop[it.id] = 40; });
+            state.extras = {};
+            Object.keys(d.x).forEach((id) => {
+              if (!Object.prototype.hasOwnProperty.call(strop, id)) return;
+              const n = cislo(d.x[id], 0, strop[id]);
+              if (n) state.extras[id] = Math.round(n);
+            });
+          }
+          if (['none', 'galv', 'coated', 'inox'].includes(d.a)) state.anchor = d.a;
+          if (d.b && typeof d.b === 'object') {
+            state.box.on = d.b.on === true;
+            const bw = cislo(d.b.w, 0, 50), bd = cislo(d.b.d, 0, 50);
+            if (bw !== null) state.box.w = Math.round(bw);
+            if (bd !== null) state.box.d = Math.round(bd);
+            if (['iso', 'wood', 'l44es', 'l44alu'].includes(d.b.fin)) state.box.fin = d.b.fin;
+          }
+          if (d.ce === 'none' || ceilingOptions().some((o) => o.key === d.ce)) state.ceiling = d.ce;
+          if (d.ls && typeof d.ls === 'object') {
+            state.ledSet.on = d.ls.on === true;
+            if (['warm', 'neutral', 'rgb'].includes(d.ls.type)) state.ledSet.type = d.ls.type;
+            const len = cislo(d.ls.len, 0, 2); if (len !== null) state.ledSet.len = Math.round(len);
+            const qty = cislo(d.ls.qty, 1, 12); if (qty !== null) state.ledSet.qty = Math.round(qty);
+          }
+          if (d.sn && typeof d.sn === 'object') Object.keys(state.sensors).forEach((k) => { state.sensors[k] = d.sn[k] === true; });
+          if (d.pk && typeof d.pk === 'object') PICKS.forEach((g) => {
+            if (g.opts.some((o) => o.id === d.pk[g.id])) state.picks[g.id] = d.pk[g.id];
+          });
+          return true;
+        };
+        let zapisCakac = 0;
+        /* Zápis ide cez replaceState (Späť ostáva na predošlej stránke)
+           a s odstupom, lebo pri ťahaní posuvníka sa vykresľuje desiatky
+           ráz za sekundu a Safari po stovke zápisov za desať sekúnd hlási
+           chybu. Kto adresu práve potrebuje (Zdieľať, Poslať), zavolá
+           window.kvZapisZostavu() a zápis prebehne hneď. */
+        const zapisZostavu = () => {
+          window.clearTimeout(zapisCakac);
+          zapisCakac = 0;
+          let q, z;
+          try { q = new URLSearchParams(location.search); z = kodujZostavu(zostavaData()); } catch (e) { return; }
+          const w = Number.isFinite(state.widthValue) ? String(Math.round(state.widthValue)) : null;
+          const l = Number.isFinite(state.lengthValue) ? String(Math.round(state.lengthValue)) : null;
+          if (q.get('z') === z && (!w || q.get('w') === w) && (!l || q.get('l') === l)) return;
+          q.set('z', z);
+          if (w) q.set('w', w);
+          if (l) q.set('l', l);
+          try { history.replaceState(history.state, '', location.pathname + '?' + q.toString() + location.hash); } catch (e) {}
+        };
+        const planujZapisZostavy = () => {
+          window.clearTimeout(zapisCakac);
+          zapisCakac = window.setTimeout(zapisZostavu, 300);
+        };
+        try { window.kvZapisZostavu = zapisZostavu; } catch (e) {}
+        try {
+          const z = new URLSearchParams(location.search).get('z');
+          if (z) obnovZostavu(dekodujZostavu(z));
+        } catch (e) {}
         buildModels();
         renderAll();
         showStep(1, true);

@@ -267,7 +267,7 @@ invisible, included, below the fascia or integrated into the columns.
 ## Anchoring
 
 The technical installation document on Google Drive is
-[koverta-technicke-poziadavky-na-montaz-pristresku.pdf](https://drive.google.com/file/d/1AgDyrU6pJbQsfwRR-OYSZrOEqKqfHa36/view).
+[koverta-technicke-poziadavky-na-podklad.pdf](../assets/koverta-technicke-poziadavky-na-podklad.pdf).
 
 The steel structure is anchored into prepared concrete using mechanical or
 chemical anchors according to the design. Paving itself is not the anchoring

@@ -48,10 +48,4 @@
 <text x="404" y="370" font-family="Arial,Helvetica,sans-serif" font-size="19" fill="#12171a" text-anchor="middle" font-weight="700">súvislá platňa pod celým prístreškom</text>
 <text x="404" y="424" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#5d666c" text-anchor="middle">štrkové lôžko</text>
 
-<g transform="translate(628 60)">
-  <rect x="0" y="0" width="200" height="132" rx="10" fill="#fff" stroke="#ddd8cd" stroke-width="2"/>
-  <text x="14" y="24" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#7a8087" letter-spacing=".04em">PÔDORYS</text>
-  <rect x="24" y="40" width="152" height="60" rx="4" fill="url(#beton)" stroke="#12171a" stroke-width="2.5"/><rect x="32" y="48" width="18" height="18" rx="3" fill="#12171a"/><rect x="150" y="48" width="18" height="18" rx="3" fill="#12171a"/><rect x="32" y="74" width="18" height="18" rx="3" fill="#12171a"/><rect x="150" y="74" width="18" height="18" rx="3" fill="#12171a"/>
-  <text x="100" y="122" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#12171a" text-anchor="middle" font-weight="700">Platňa pod celou plochou</text>
-</g>
 </svg>

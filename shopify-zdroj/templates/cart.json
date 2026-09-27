@@ -1,0 +1,6 @@
+{
+  "sections": {
+    "main": { "type": "koverta-cart", "settings": {} }
+  },
+  "order": ["main"]
+}

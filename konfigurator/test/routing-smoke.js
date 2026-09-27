@@ -99,10 +99,22 @@ module.exports = async function routingSmoke(browser) {
       await page.locator(kv ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
-      if (kv) {
-        assert(withSide.price.open === true && withSide.price.total === null &&
-          withSide.price.lines.some(line => line.v === null && /Lamely/.test(line.k)),
-          `${route}: quote-only side is missing from price lines`);
+      if (route === 'zahrada') {
+        /* Záhradný prístrešok má steny zo zadnej a bočných strán ocenené
+           podľa Expivi, vjazd spredu sa stenou neuzatvára. */
+        assert(withSide.price.total !== null && withSide.price.total > cena(resized),
+          `${route}: priced wall is missing its Expivi price`);
+        assert(await page.locator('[data-sp-side="right"]').isHidden(),
+          `${route}: front wall must not be offered`);
+      } else if (kv) {
+        /* Zadná, ľavá a pravá stena prístrešku pre auto majú cenu z Expivi
+           a pripočíta sa k nim konštrukcia so šiestimi stĺpmi. Prednú stranu
+           (vjazd) Koverta stenou neuzatvára. */
+        assert(withSide.price.total !== null && withSide.price.total > cena(resized) &&
+          withSide.price.lines.some(line => /Konštrukcia pre steny/.test(line.k) && line.v > 0),
+          `${route}: priced wall is missing its Expivi price`);
+        assert(await page.locator('[data-sp-side="right"]').isHidden(),
+          `${route}: front (entrance) wall must not be offered`);
       } else {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
       }

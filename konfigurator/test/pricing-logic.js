@@ -62,6 +62,10 @@ async function revealControl(page, selector) {
         wallSide: model.wallSide,
         wallBack: model.wallBack,
         wallSideBySize: model.wallSideBySize,
+        wallBackBySize: model.wallBackBySize,
+        wallPriced: model.wallPriced,
+        stenyPriplatokBySize: model.stenyPriplatokBySize,
+        maxStien: model.maxStien,
         priceNote: bio.priceNote,
         placements: bio.placements,
         gutter: bio.picks.find(group => group.id === 'odkvap'),
@@ -84,8 +88,31 @@ async function revealControl(page, selector) {
     assert(JSON.stringify(catalogue.lengths) === JSON.stringify(expectedLengths), 'Koverta length catalogue changed');
     assert(JSON.stringify(catalogue.prices) === JSON.stringify(expectedPrices), 'Koverta base-price matrix no longer matches the verified catalogue snapshot');
     assert(catalogue.maxW === 7000 && catalogue.maxL === 6000, 'Configurator catalogue scope is not 7000 × 6000 mm');
-    assert(catalogue.wallSide === null && catalogue.wallBack === null && catalogue.wallSideBySize === null,
-      'Unverified side-wall prices must not remain numeric');
+    /* Ceny stien sú z cenníka pôvodného konfigurátora Expivi
+       (archiv-expivi/cennik-destilovany.json, commit 04b2c0c): ľavá a pravá
+       podľa hĺbky, zadná podľa šírky, každá pre konkrétny rozmer. Prednú
+       stenu Expivi nemal — tá ostáva na nacenenie. Steny v Expivi išli len
+       so šesťstĺpovou konštrukciou, ktorá je pri užších rozmeroch o 600 €
+       drahšia. Pásmové tabuľky bez zdroja sa nepoužívajú. */
+    assert(catalogue.wallSide === null && catalogue.wallBack === null,
+      'Wall prices must come from the exact Expivi per-size tables, not from bands');
+    const allSizes = expectedLengths.flatMap(l => expectedWidths.map(w => `${w}x${l}`));
+    assert(allSizes.every(k => catalogue.wallSideBySize[k] && catalogue.wallBackBySize[k]),
+      'Some catalogue size has no Expivi wall price');
+    for (const [size, table, mat, eur] of [
+      ['2500x5200', 'side', 'drevo', 1056], ['4000x6000', 'side', 'hlinik', 1956],
+      ['4000x6000', 'back', 'hlinik', 1554], ['5400x6000', 'side', 'hlinik', 1950],
+      ['5400x6000', 'back', 'drevo', 1368], ['6600x6000', 'side', 'wpc', 1404],
+      ['7000x5200', 'back', 'wpc', 1818]
+    ]) {
+      const got = (table === 'side' ? catalogue.wallSideBySize : catalogue.wallBackBySize)[size][mat];
+      assert(got === eur, `Expivi wall price ${size}/${table}/${mat} is ${got}, expected ${eur}`);
+    }
+    assert(JSON.stringify(catalogue.wallPriced) === JSON.stringify(['rear', 'front', 'left']),
+      'Only left, right and rear walls have Expivi prices; the front wall must stay quote-only');
+    assert(allSizes.every(k => (Number(k.split('x')[0]) <= 6200) === (catalogue.stenyPriplatokBySize[k] === 600)),
+      'Wall construction surcharge must be exactly the Expivi 6-post difference (600 €) on sizes up to 6.2 m');
+    assert(catalogue.maxStien === 3, 'Koverta must not be enclosable on all four sides');
     /* Doprava aj montáž sú v cene vždy, na každej podstránke to tak stojí.
        Poznámka pri cene v konfigurátore to musí hovoriť rovnako. */
     assert(/vrátane DPH, dopravy aj montáže/.test(catalogue.priceNote) && !/dopravu.*potvrdíme/i.test(catalogue.priceNote),
@@ -284,16 +311,23 @@ async function revealControl(page, selector) {
     await page.waitForTimeout(80);
     assert((await stepCap.textContent()).trim() === stepBefore, 'Back did not return to the previous step');
 
-    // A side wall without a current commercial price must be quote-only.
+    // Ľavá stena má cenu z Expivi a s ňou ide 6-stĺpová konštrukcia (+600 €).
     await revealControl(page, '[data-sp-side="rear"]');
     await page.locator('[data-sp-side="rear"]').click();
     await page.locator('[data-sp-side-opt="kvdrevo"]').click();
     await waitRender(page);
-    let linesText = await page.locator('[data-sp-lines]').innerText();
-    assert(linesText.includes('Lamely, drevo') && linesText.includes('na nacenenie'),
-      'Unverified wooden side wall was not converted to quote-only pricing');
-    assert((await page.locator('[data-sp-total]').textContent()).trim().startsWith('od '),
-      'Unknown-price side wall did not mark total as open/starting price');
+    const wallSnap = await page.evaluate(() => window.SP_TEST.snapshot());
+    const wallLine = wallSnap.price.lines.find(line => /Ľavá: Lamely, drevo/.test(line.k));
+    assert(wallLine && wallLine.v === 1056,
+      'Left wooden wall 2500 × 5200 does not carry the Expivi price 1 056 €: ' + JSON.stringify(wallLine));
+    const constructionLine = wallSnap.price.lines.find(line => /Konštrukcia pre steny/.test(line.k));
+    assert(constructionLine && constructionLine.v === 600,
+      'Wall selection did not add the Expivi 6-post construction difference (600 €)');
+    assert(wallSnap.geometry.wallMode === true && wallSnap.geometry.postCount === 6,
+      'One side wall must stand on six posts, three on each side, as priced in Expivi');
+    // Prednú stranu (vjazd) Koverta stenou uzavrieť neponúka.
+    assert(await page.locator('[data-sp-side="right"]').isHidden(), 'Front (entrance) wall must not be offered');
+    await page.locator('[data-sp-side="rear"]').click();
 
     // A dimension change keeps a compatible selected side and recomputes the base band.
     await page.evaluate(() => {

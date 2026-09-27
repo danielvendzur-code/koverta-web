@@ -70,7 +70,11 @@ for (const file of htmlFiles.sort()) {
 
   if (canonicalTags.length === 1) {
     const canonical = attr(canonicalTags[0][0], 'href') || '';
-    if (!/^https:\/\/koverta\.sk\//.test(canonical)) errors.push(`${rel}: invalid canonical ${canonical}`);
+    const rozmer = /^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\//.test(rel);
+    if (!/^https:\/\/koverta\.sk\/(?:$|collections\/|pages\/|products\/)/.test(canonical)
+        && !(rozmer && canonical.startsWith('https://danielvendzur-code.github.io/koverta-web/'))) {
+      errors.push(`${rel}: canonical must be a store URL (${canonical})`);
+    }
     if (ogUrls.length === 1 && attr(ogUrls[0][0], 'content') !== canonical) {
       errors.push(`${rel}: og:url differs from canonical`);
     }
@@ -79,9 +83,17 @@ for (const file of htmlFiles.sort()) {
     else if (canonical) canonicals.set(canonical, rel);
   }
   if (/href=["'],,\//i.test(source)) errors.push(`${rel}: broken neighbouring dimension URL`);
-  if (/https:\/\/danielvendzur-code\.github\.io\/koverta-web/i.test(head)) {
-    errors.push(`${rel}: old GitHub Pages origin in metadata`);
+  /* Fotografie žijú na GitHub Pages (obchod /assets/ nemá), stránky v obchode.
+     Adresa stránky na GitHub Pages smie byť canonical len pre rozmer, ktorého
+     produkt v obchode ešte nežije (tools/produkty-zive.json). */
+  for (const m of head.matchAll(/https:\/\/danielvendzur-code\.github\.io\/koverta-web\/([^"'\s<>]*)/gi)) {
+    const cesta = m[1];
+    if (cesta.startsWith('assets/')) continue;
+    if (/^(?:pristresky-pre-auta|zahradne-pristresky)\/rozmer\//.test(cesta)) continue;
+    errors.push(`${rel}: GitHub Pages page URL in metadata (${m[0]})`);
   }
+  /* Obrázok na koverta.sk/assets/ na obchode neexistuje (404). */
+  if (/https:\/\/koverta\.sk\/assets\//i.test(source)) errors.push(`${rel}: image URL on koverta.sk/assets (404 on the store)`);
 
   for (const script of source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     try { JSON.parse(script[1]); }
@@ -120,16 +132,29 @@ const robots = fs.readFileSync(path.join(root, 'robots.txt'), 'utf8');
 if (!/^Sitemap:\s*https:\/\/koverta\.sk\/sitemap\.xml\s*$/im.test(robots)) {
   errors.push('robots.txt: missing absolute sitemap declaration');
 }
+/* sitemap.xml a llms.txt nesú adresy obchodu (tools/adresy-obchodu.json).
+   Každá indexovateľná stránka tam musí byť pod svojou adresou v obchode
+   a v mape nesmie byť adresa, ktorá v tej tabuľke nie je. */
+const adresy = JSON.parse(fs.readFileSync(path.join(root, 'tools', 'adresy-obchodu.json'), 'utf8')).stranky;
+const vObchode = (cesta) => {
+  const z = adresy[cesta];
+  if (!z) return null;
+  return z.url || ((z.typ === 'kolekcia' ? '/collections/' : '/pages/') + z.handle);
+};
+const znameAdresy = new Set(Object.keys(adresy).map(vObchode));
 const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
 const sitemapPaths = new Set();
-for (const [, url] of sitemap.matchAll(/<loc>(https:\/\/koverta\.sk\/[^<]*)<\/loc>/g)) {
+for (const [, url] of sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)) {
+  if (!url.startsWith('https://koverta.sk/')) { errors.push(`sitemap.xml: URL outside the store (${url})`); continue; }
   const pathname = new URL(url).pathname;
   sitemapPaths.add(pathname);
-  const target = pathname === '/' ? path.join(root, 'index.html') : path.join(root, pathname, 'index.html');
-  if (!fs.existsSync(target)) errors.push(`sitemap.xml: URL has no page (${url})`);
+  if (!znameAdresy.has(pathname) && !/^\/products\//.test(pathname)) errors.push(`sitemap.xml: unknown store URL (${url})`);
 }
 for (const pathname of indexablePaths) {
-  if (!sitemapPaths.has(pathname)) errors.push(`sitemap.xml: indexable page missing (${pathname})`);
+  if (/\/rozmer\//.test(pathname)) continue;
+  const ciel = vObchode(pathname.replace(/^\/|\/$/g, ''));
+  if (!ciel) { errors.push(`adresy-obchodu.json: page has no store URL (${pathname})`); continue; }
+  if (!sitemapPaths.has(ciel)) errors.push(`sitemap.xml: indexable page missing (${ciel})`);
 }
 
 console.log(`SEO_AUDIT ${canonicals.size} HTML pages with unique canonicals`);

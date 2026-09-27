@@ -1,361 +1,4 @@
-{%- assign kv_dopyt = '/pages/nove-kontakt#ponuka' -%}
-<main id="kv-root">
-  <!-- Nadpis a úvod stránky pre čítačku, ktorá nespúšťa skript: samotný
-       konfigurátor sa vykresľuje až skriptom nižšie a bez neho by stránka
-       nemala ani nadpis. Keď skript nabehne, tento blok zmizne a nahradí
-       ho vlastná hlavička konfigurátora. -->
-  <div class="k-wrap" data-k-cfg-zaloha style="padding-block:clamp(48px,8vw,96px)">
-    <p class="k-eyebrow">Konfigurátor</p>
-    <h1 class="k-h2">3D konfigurátor prístreškov a pergol</h1>
-    <p>Vyberte riešenie a nastavte rozmer, farbu a výbavu. Vizualizácia aj orientačná cena sa menia hneď. Konfigurátor sa načíta v prehliadači so zapnutým JavaScriptom.</p>
-  </div>
-
-<!-- Dopyt ku konfigurátoru. Doteraz tu nebol: tlačidlo „Chcem presnú ponuku"
-     otváralo poštového klienta, čo je pre človeka v prehliadači slepá
-     odbočka. Formulár stojí v stránke aj bez skriptu; keď skript nabehne,
-     presunie sa pod konfigurátor. Vnútri koreňa konfigurátora byť nesmie:
-     zdedil by jeho úzku šírku, tak runtime hľadá formulár aj v stránke.
-
-     Obal nesie `k` aj `data-k-root`. Prvé dáva formuláru štýly zvyšku webu,
-     druhé ho prihlási do inicializácie v koverta-2026.js — tá beží len nad
-     `[data-k-root]` a konfigurátor doteraz taký prvok nemal, takže na tejto
-     stránke nefungoval ani výber v formulári, ani lišta súhlasu. Koreň
-     konfigurátora samotný `k` dostať nesmie: jeho resety by prepísali
-     vlastné štýly konfigurátora. -->
-<div class="k" data-k-root data-k-cta-obal>
-<section class="k-band kh-cta" id="sp-dopyt" aria-labelledby="ctaTitle">
-  <div class="k-wrap">
-    <div class="kh-cta__grid">
-
-      <div class="kh-cta__card k-rise">
-        <div class="kh-cta__head">
-          <p class="k-eyebrow">Z konfigurátora rovno k nám</p>
-          <h2 id="ctaTitle" class="k-h2">Vyskladané? Pošleme presnú cenu</h2>
-          <p class="k-copy">Zostavu z konfigurátora doplníme do správy za vás. Stačí kontakt a obec, kde má prístrešok stáť. Ozveme sa do jedného pracovného dňa.</p>
-        </div>
-
-        <form id="dopyt" class="kh-form" method="post" action="/pages/nove-konfigurator#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
-          <input type="hidden" name="form_type" value="contact">
-          <input type="hidden" name="utf8" value="✓">
-          <fieldset>
-            <legend>Čo riešite?</legend>
-            <div class="kh-select" data-k-select>
-              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
-                <span data-k-select-label>Prístrešok pre auto</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
-                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
-                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
-              </ul>
-              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
-            </div>
-          </fieldset>
-
-          <div class="kh-form__grid">
-            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
-            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label>
-            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email"></label>
-            <label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2"></label>
-          </div>
-
-          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
-
-          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
-               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
-               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
-          <label class="kh-field kh-field--subor">
-            <span>Fotky miesta <small>nepovinné</small></span>
-            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
-            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene. Po odoslaní vám ukážeme, kam ich poslať.</small>
-          </label>
-
-          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
-
-          <div class="kh-form__submit">
-            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
-              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </div>
-        </form>
-        <div class="kh-dakujem" data-k-dakujem hidden>
-          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
-          <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>
-          <p class="kh-dakujem__text">Prišiel nám v poriadku. Ozveme sa do jedného pracovného dňa. Takto to bude pokračovať:</p>
-          <ol class="kh-dakujem__kroky">
-            <li><strong>Ozveme sa do jedného pracovného dňa</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
-            <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne, aj keď si nakoniec vyberiete inak.</span></li>
-            <li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, rozmiestnením stĺpov a termínom montáže.</span></li>
-          </ol>
-          <p class="kh-dakujem__fotky" data-k-fotky hidden>Fotky, ktoré ste vybrali, pošlite prosím e-mailom. Formulár ich k nám neprenesie.
-            <a href="mailto:obchod@koverta.sk?subject=Fotky%20k%20dopytu">Poslať fotky na obchod@koverta.sk</a></p>
-          <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
-          <p class="kh-dakujem__zaloha"><a data-k-mailto href="mailto:obchod@koverta.sk">Poslať ten istý dopyt aj e-mailom</a> <span>Ak by k nám formulár nedoručil, e-mail dôjde vždy.</span></p>
-          <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-        <div class="kh-dakujem kh-dakujem--chyba" data-k-chyba hidden>
-          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v6" stroke-linecap="round"/><path d="M12 17.2v.1" stroke-linecap="round"/></svg></p>
-          <h3 class="kh-dakujem__nadpis">Dopyt sa neodoslal</h3>
-          <p class="kh-dakujem__text">Spojenie zlyhalo, takže dopyt k nám nedošiel. Nič ste nestratili, všetko vyplnené vám otvoríme v e-maile jedným klikom:</p>
-          <p class="kh-dakujem__zaloha"><a class="k-btn k-btn--primary" data-k-mailto href="mailto:obchod@koverta.sk">Otvoriť e-mail s dopytom<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a> <span>Odíde na obchod@koverta.sk aj s tým, čo ste vyplnili.</span></p>
-          <p class="kh-dakujem__spoj">Alebo rovno zavolajte: <a href="tel:+421948482266">+421 948 482 266</a></p>
-          <button class="k-link" type="button" data-k-spat>Skúsiť odoslať znova <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-
-      </div>
-
-      <aside class="kh-cta__aside k-rise" data-k-delay="1">
-        <div class="kh-cta__aside-head">
-          <p class="k-eyebrow">Kompletný servis</p>
-          <h3>Od návrhu po montáž</h3>
-          <p>Jeden tím vás prevedie výberom riešenia, zameraním aj hotovou realizáciou.</p>
-        </div>
-
-        <!-- Telefón aj e-mail stoja hore v troch dlaždiciach hlavičky. Tu by
-             stáli tretíkrát na jednej obrazovke, tak sú preč a panel hovorí
-             len to, čo bude nasledovať po odoslaní dopytu. -->
-        <!-- Bočný panel držal adresu sídla. Tá odtiaľto odišla — sídlo nie je
-             miesto, kam sa oplatí prísť. Namiesto nej stojí to, čo človek na
-             kontaktnej stránke naozaj rieši: čo bude nasledovať po odoslaní. -->
-        <ol class="kh-cta__steps">
-          <li><span>01</span><strong>Ozveme sa</strong><small>Do jedného pracovného dňa, telefonicky alebo e-mailom.</small></li>
-          <li><span>02</span><strong>Pošleme cenovú ponuku</strong><small>S projektom prístrešku a tým, čo je v cene. Ponuka platí 7 dní.</small></li>
-          <li><span>03</span><strong>Prídeme zamerať</strong><small>Zadarmo a nezáväzne, keď sa rozhodnete pre realizáciu.</small></li>
-        </ol>
-
-        
-
-        <div class="kh-cta__score">
-          <span class="kh-fact__row">
-            <svg class="k-google k-google--lg" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
-              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
-              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
-              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
-            </svg>
-            <b>5,0</b>
-            <span class="k-stars" role="img" aria-label="5 z 5"><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg></span>
-          </span>
-          <small>Hodnotenie na Google</small>
-          <a href="https://www.google.com/maps/search/?api=1&query=Koverta%20Nitra">Prečítať recenzie
-            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-        </div>
-
-        <figure class="kh-cta__foto">
-          <img src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-f170-real-w1000.webp" alt="Hotové prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async">
-        </figure>
-      </aside>
-
-    </div>
-  </div>
-
-</section>
-</div>
-</main>
-<script src="{{ 'kfg-cfg-pages.js' | asset_url }}"></script>
-<script>
-(function () {
-  var PAGES = window.KV_PAGES || {};
-
-  var LABEL = { koverta: 'Prístrešky Koverta', zahrada: 'Záhradné prístrešky Koverta', bio: 'Bioklimatické pergoly Soltec', canopy: 'Pevné prestrešenia Soltec', carport: 'Carport Soltec' };
-  var page = new URLSearchParams(location.search).get('page');
-  if (!PAGES[page]) page = 'koverta';
-
-  document.querySelectorAll('[data-kv-tab]').forEach(function (a) {
-    if (a.dataset.kvTab === page) a.setAttribute('aria-current', 'page');
-  });
-  document.title = LABEL[page] + ' | 3D konfigurátor Koverta';
-
-  // The section markup expects to sit inside #SoltecPremium, and the page
-  // script that follows looks that id up the moment it runs.
-  var host = document.createElement('div');
-  host.id = 'SoltecPremium';
-  host.setAttribute('data-sp-root', '');
-  host.setAttribute('data-sp-page', page);
-  host.innerHTML = PAGES[page];
-  var koren = document.getElementById('kv-root');
-  // Statická náhrada nadpisu je len pre čítačku bez skriptu — teraz už je
-  // na stránke skutočná hlavička konfigurátora, tak ju netreba dvakrát.
-  var zaloha = koren.querySelector('[data-k-cfg-zaloha]');
-  if (zaloha) zaloha.parentNode.removeChild(zaloha);
-  koren.appendChild(host);
-
-  /* Runtime hľadá `#sp-dopyt` aj textové pole dopytu vnútri `#SoltecPremium`.
-     Formulár je v stránke staticky, aby ho videl aj prehliadač bez skriptu;
-     tu sa presunie pod konfigurátor dovnútra jeho koreňa. */
-  var obal = koren.querySelector('[data-k-cta-obal]');
-  var dopyt = obal && obal.querySelector('#sp-dopyt');
-  if (obal) koren.appendChild(obal);
-
-  /* Prvá otázka formulára sa predvyplní podľa toho, čo si človek skladal. */
-  var CO = { koverta: 'Prístrešok pre auto', zahrada: 'Záhradný prístrešok',
-             bio: 'Pergola', canopy: 'Pergola', carport: 'Prístrešok pre auto' };
-  var co = CO[page];
-  if (dopyt && co) {
-    var vstup = dopyt.querySelector('[data-k-select-input]');
-    var stitok = dopyt.querySelector('[data-k-select-label]');
-    var polozka = dopyt.querySelector('[data-k-select-option="' + co + '"]');
-    if (vstup && stitok && polozka) {
-      vstup.value = co;
-      stitok.textContent = co;
-      dopyt.querySelectorAll('[data-k-select-option]').forEach(function (o) {
-        o.setAttribute('aria-selected', String(o.dataset.kSelectOption === co));
-      });
-    }
-  }
-
-  /* The shared script turns the quote button into a prefilled e-mail when this
-     standalone build has no Shopify contact form. */
-})();
-</script>
-
-<!-- Retained only as a rollback copy; the maintained script is loaded below. -->
-
-<!-- Soltec runtime: single authoritative external build. -->
-
-<script src="{{ 'kfg-koverta-reference-geometry.js' | asset_url }}"></script>
-<script src="{{ 'kfg-scene-surface.js' | asset_url }}"></script>
-<script src="{{ 'kfg-kv-render3d.js' | asset_url }}"></script>
-<script src="{{ 'kfg-scene-life.js' | asset_url }}"></script>
-<script charset="utf-8" src="{{ 'kfg-soltec-premium.js' | asset_url }}"></script>
-
-<!-- Doplnky ku konfigurátoru: zadanie rozmeru číslom, fullscreen bez scrollovania.
-     Nadstavba nad runtime, nič v ňom neprepisuje. -->
-<script src="{{ 'kfg-koverta-cfg-enhance.js' | asset_url }}"></script>
-
-<!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
-     ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
-     dĺžka, oboje v milimetroch. Posuvník si hodnotu zarovná na najbližší
-     katalógový krok, takže aj nepresné číslo skončí na platnom rozmere. -->
-<script>
-(function kvRozmerZAdresy() {
-  var q;
-  try { q = new URLSearchParams(location.search); } catch (e) { return; }
-  var w = parseInt(q.get('w'), 10);
-  var l = parseInt(q.get('l'), 10);
-  if (!w && !l) return;
-
-  var pokusov = 0;
-  function nastav() {
-    var sw = document.querySelector('[data-sp-w]');
-    var sl = document.querySelector('[data-sp-l]');
-    /* Posuvníky sú v šablóne od začiatku, ale rozsah v milimetroch im
-       nastaví až runtime. Kým je max ešte jednotka zo šablóny, nemá zmysel
-       nič nastavovať. */
-    var pripravene = sw && sl && Number(sw.max) > 100 && Number(sl.max) > 100;
-    if (!pripravene) {
-      if (++pokusov > 100) return;
-      return window.setTimeout(nastav, 100);
-    }
-    [[sw, w], [sl, l]].forEach(function (par) {
-      var pole = par[0], hodnota = par[1];
-      if (!hodnota) return;
-      var min = Number(pole.min), max = Number(pole.max);
-      if (Number.isFinite(min) && hodnota < min) hodnota = min;
-      if (Number.isFinite(max) && hodnota > max) hodnota = max;
-      pole.value = String(hodnota);
-      pole.dispatchEvent(new Event('input', { bubbles: true }));
-      pole.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nastav);
-  else nastav();
-})();
-</script>
-
-<!-- Rozmer späť do adresy. Kto si niečo vyskladá, chce to poslať ďalej alebo
-     si to odložiť na neskôr — a adresa je na to jediné miesto, ktoré si
-     poradí aj bez toho, aby sme čokoľvek ukladali do prehliadača. Zápis ide
-     cez replaceState, takže tlačidlo Späť ostáva na predošlej stránke, nie
-     na predošlom rozmere. -->
-<script>
-(function kvRozmerDoAdresy() {
-  var cakac = null;
-  function zapis() {
-    var q;
-    try { q = new URLSearchParams(location.search); } catch (e) { return; }
-    var w = null, l = null;
-    if (window.SP_TEST && typeof window.SP_TEST.snapshot === 'function') {
-      try { var sn = window.SP_TEST.snapshot(); w = sn.width; l = sn.length; } catch (e) {}
-    }
-    if (!w || !l) {
-      var sw = document.querySelector('[data-sp-w]');
-      var sl = document.querySelector('[data-sp-l]');
-      if (!sw || !sl || Number(sw.max) <= 100) return;
-      w = Number(sw.value); l = Number(sl.value);
-    }
-    if (!w || !l) return;
-    if (q.get('w') === String(w) && q.get('l') === String(l)) return;
-    q.set('w', String(w));
-    q.set('l', String(l));
-    try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
-  }
-  function jeRozmer(e) {
-    var t = e.target;
-    return t && t.matches && t.matches('[data-sp-w], [data-sp-l]');
-  }
-  /* Počas ťahania sa zapisuje s odstupom, aby adresa neprepisovala pri každom
-     pixeli. Po pustení posuvníka (`change`) sa zapíše hneď: je to jedno
-     zapísanie, nie stovka, a čakať s ním nie je na čo. Odstup navyše
-     nefunguje spoľahlivo v okamihu, keď je vlákno zabraté vykresľovaním —
-     časovač sa spustí až po ňom a adresa vtedy meškala aj sekundu. */
-  document.addEventListener('input', function (e) {
-    if (!jeRozmer(e)) return;
-    window.clearTimeout(cakac);
-    cakac = window.setTimeout(zapis, 400);
-  }, true);
-  document.addEventListener('change', function (e) {
-    if (!jeRozmer(e)) return;
-    window.clearTimeout(cakac);
-    zapis();
-  }, true);
-})();
-</script>
-
-<!-- Výzva na celú obrazovku. Ukáže sa len na nízkom okne a len raz — kto ju
-     zavrie, už ju neuvidí. Fullscreen nie je nikde podmienkou používania. -->
-<script>
-(function kvFullscreen() {
-  var bar = document.querySelector('[data-kv-fs]');
-  if (!bar) return;
-  var KEY = 'kv-fs-dismissed';
-  var tesno = window.innerHeight < 900 || window.innerWidth < 1280;
-  var zavrete = false;
-  try { zavrete = localStorage.getItem(KEY) === '1'; } catch (e) {}
-  if (!tesno || zavrete || !document.documentElement.requestFullscreen) return;
-
-  /* Výzva stála vo vlastnom páse nad konfigurátorom a brala 58 px práve tam,
-     kde má byť vidieť vizualizáciu. Patrí vedľa prepínača Konfigurátor /
-     Kalkulácia — je to o tom istom a riadok je tam aj tak poloprázdny. */
-  var tabs = document.querySelector('.sp-cfg__tabs');
-  if (tabs && tabs.parentNode) {
-    var riadok = document.createElement('div');
-    riadok.className = 'kv-tabrow';
-    tabs.parentNode.insertBefore(riadok, tabs);
-    riadok.appendChild(tabs);
-    riadok.appendChild(bar);
-  }
-  bar.hidden = false;
-  bar.querySelector('[data-kv-fs-go]').addEventListener('click', function () {
-    var el = document.documentElement;
-    if (el.requestFullscreen) { el.requestFullscreen().catch(function () {}); }
-    /* Fullscreen prehliadača sám osebe nič nerieši — stránka pod ním ostane
-       bežnou stránkou a k prístrešku sa treba doscrollovať. Otvoríme rovno aj
-       pracovný režim konfigurátora, takže sa po kliknutí ocitneš v ňom celom. */
-    var otvor = document.querySelector('[data-sp-cfg-open]');
-    var uzJe = document.querySelector('.sp-cfg.is-full');
-    if (otvor && !uzJe) otvor.click();
-    bar.hidden = true;
-  });
-  bar.querySelector('[data-kv-fs-close]').addEventListener('click', function () {
-    bar.hidden = true;
-    try { localStorage.setItem(KEY, '1'); } catch (e) {}
-  });
-})();
-</script>
-
+{%- assign kv_dopyt = '/pages/kontakt#ponuka' -%}
 <!-- KOVERTA-SEO -->
 <meta name="theme-color" content="#12171a">
 <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
@@ -656,3 +299,441 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
   [data-k-cta-obal] h2,
   [data-k-cta-obal] h3 { font-family: var(--font-heading-family); }
 </style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Organization", "HomeAndConstructionBusiness"], "@id": "https://koverta.sk/#organizacia", "name": "Koverta", "url": "https://koverta.sk/", "logo": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-ikona-512.png", "description": "Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby na Slovensku. Zameranie a návrh zadarmo, doprava a montáž v cene.", "email": "obchod@koverta.sk", "telephone": "+421948482266", "areaServed": [{"@type": "Country", "name": "Slovensko"}, {"@type": "AdministrativeArea", "name": "Bratislavský kraj"}, {"@type": "AdministrativeArea", "name": "Trnavský kraj"}, {"@type": "AdministrativeArea", "name": "Nitriansky kraj"}, {"@type": "AdministrativeArea", "name": "Trenčiansky kraj"}, {"@type": "AdministrativeArea", "name": "Žilinský kraj"}, {"@type": "AdministrativeArea", "name": "Banskobystrický kraj"}, {"@type": "AdministrativeArea", "name": "Prešovský kraj"}, {"@type": "AdministrativeArea", "name": "Košický kraj"}], "sameAs": ["https://www.facebook.com/KovertaSK", "https://instagram.com/koverta.sk", "https://pinterest.com/KovertaSK"], "contactPoint": [{"@type": "ContactPoint", "contactType": "sales", "name": "Obchodné oddelenie", "email": "obchod@koverta.sk", "telephone": "+421948482266", "availableLanguage": ["sk", "cs"]}, {"@type": "ContactPoint", "contactType": "technical support", "name": "Projektové oddelenie", "email": "design@koverta.sk", "telephone": "+421911298341", "availableLanguage": ["sk"]}, {"@type": "ContactPoint", "contactType": "billing support", "name": "Účtovné oddelenie", "email": "financie@koverta.sk", "telephone": "+421905482266", "availableLanguage": ["sk"]}], "alternateName": ["Koverta.sk", "Koverta prístrešky"], "slogan": "Prístrešky a pergoly pre váš priestor", "knowsLanguage": ["sk", "cs", "en"], "currenciesAccepted": "EUR", "knowsAbout": ["prístrešky pre autá", "carporty", "záhradné prístrešky", "zastrešenie terasy", "bioklimatické pergoly", "pevné prestrešenia", "ZIP rolety", "lamelové tienenie", "brisoleje", "vonkajšie kuchyne", "oceľové konštrukcie", "hliníkové konštrukcie", "práškové lakovanie RAL", "ohlásenie drobnej stavby"], "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Zameranie na mieste"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Cenová ponuka a návrh"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Výroba prístreškov a pergol"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Doprava a montáž na kľúč"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Betónové pätky ako doplnková služba"}}], "image": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@4b84f069ffcbaa3018df464127dc62469d28f12c/assets/koverta-og.jpg", "legalName": "Venaco s. r. o.", "address": {"@type": "PostalAddress", "streetAddress": "J. C. Hronského 3427/6", "addressLocality": "Nitra", "postalCode": "949 07", "addressCountry": "SK"}, "identifier": [{"@type": "PropertyValue", "name": "IČO", "value": "45648107"}], "priceRange": "€€"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://koverta.sk/pages/konfigurator#konfigurator","name":"3D konfigurátor prístreškov a pergol Koverta","url":"https://koverta.sk/pages/konfigurator","applicationCategory":"DesignApplication","operatingSystem":"Webový prehliadač","inLanguage":"sk-SK","isAccessibleForFree":true,"description":"Online 3D konfigurátor: rozmer, strecha, farba a výbava prístrešku alebo pergoly s orientačnou cenou; zostavu pošlete ako nezáväzný dopyt.","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"provider":{"@id":"https://koverta.sk/#organizacia"},"hasPart":[{"@type":"WebPage","name":"Konfigurátor oceľového prístrešku pre auto Koverta","url":"https://koverta.sk/pages/konfigurator?page=koverta"},{"@type":"WebPage","name":"Konfigurátor hliníkového carportu Soltec","url":"https://koverta.sk/pages/konfigurator?page=carport"},{"@type":"WebPage","name":"Konfigurátor záhradného prístrešku Koverta","url":"https://koverta.sk/pages/konfigurator?page=zahrada"},{"@type":"WebPage","name":"Konfigurátor prestrešenia terasy a vstupu Soltec","url":"https://koverta.sk/pages/konfigurator?page=canopy"},{"@type":"WebPage","name":"Konfigurátor pergoly s otočnými lamelami Soltec","url":"https://koverta.sk/pages/konfigurator?page=bio"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Koverta", "item": "https://koverta.sk/"}, {"@type": "ListItem", "position": 2, "name": "3D konfigurátor"}]}</script>
+<main id="kv-root">
+<!-- Prepínač produktu. Predtým stál v hlavičke namiesto navigácie — teraz je
+     hlavička rovnaká ako na zvyšku webu a produkt sa vyberá tu, nad nástrojom.
+     Odkaz „Katalóg a ceny na koverta.sk" majiteľ odstránil: ceny sú priamo
+     v kalkulácii nástroja a odkaz preč z webu tu nemá čo robiť. -->
+<section class="k kv-cfg" aria-label="Výber produktu">
+  <div class="k-wrap kv-cfg__in">
+    <!-- Nadpis ostáva pre vyhľadávače a čítačky, na obrazovke nie je:
+         konfigurátor má byť vidno hneď bez úvodného textu. -->
+    <h1 class="k-visually-hidden" data-kv-nadpis>Poskladajte si prístrešok alebo pergolu</h1>
+    <!-- Výber v dvoch skupinách ako v menu webu. Na telefóne sú hore dve
+         veľké voľby (Pre autá / Pre dom a záhradu) a pod nimi len prístrešky
+         zvolenej skupiny — predtým bol jeden dlhý pás a nebolo vidieť, že sa
+         dá vybrať aj niečo iné. Na počítači stoja obe skupiny vedľa seba. -->
+    <div class="kv-cfg__skupiny" data-kv-skupiny>
+      <div class="kv-cfg__prepinac" role="tablist" aria-label="Čo potrebujete zastrešiť">
+        <button type="button" role="tab" data-kv-skupina="auta">Pre autá</button>
+        <button type="button" role="tab" data-kv-skupina="dom">Pre dom a záhradu</button>
+      </div>
+      <div class="kv-cfg__skupina" data-kv-panel="auta">
+        <p class="kv-cfg__label">Pre autá</p>
+        <nav class="kv-cfg__tabs" aria-label="Prístrešky pre autá">
+      <a href="?page=koverta" data-kv-tab="koverta"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 8.5 44 5.5"/><path d="M4 11 44 8"/><path d="M7 10.8V30M41 8.3V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Oceľový prístrešok pre auto</strong></span></a>
+      <a href="?page=carport" data-kv-tab="carport"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><rect x="3.5" y="5" width="41" height="4.5" rx=".6"/><path d="M7 9.5V30M41 9.5V30"/><path d="M13 28v-3l2.6-4h13.2l3.6 4h1.9c.9 0 1.7.8 1.7 1.7V28"/><circle cx="18" cy="28" r="1.9"/><circle cx="31" cy="28" r="1.9"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-mark.png?v=2" alt="Soltec" width="971" height="268"><strong>Hliníkový prístrešok pre auto</strong></span></a>
+        </nav>
+      </div>
+      <div class="kv-cfg__skupina" data-kv-panel="dom">
+        <p class="kv-cfg__label">Pre dom a záhradu</p>
+        <nav class="kv-cfg__tabs" aria-label="Pre dom a záhradu">
+      <a href="?page=canopy" data-kv-tab="canopy"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 2v28" stroke-width="2.4"/><rect x="4" y="8" width="40" height="3.6" rx=".5"/><path d="M41 11.6V30"/><path d="M11 30v-9.5h7V30"/><path d="M24 22h12M27 22v8M33 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-mark.png?v=2" alt="Soltec" width="971" height="268"><strong>Prestrešenie terasy a vstupu</strong></span></a>
+      <a href="?page=zahrada" data-kv-tab="zahrada"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 9.5 44 6.5"/><path d="M4 12 44 9"/><path d="M7 11.8V30M41 9.3V30"/><path d="M17 22h14M20 22v8M28 22v8"/><path d="M13 30v-5h3M35 30v-5h-3"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--koverta" src="{{ 'koverta-mark.svg' | asset_url }}" alt="Koverta" width="516" height="77"><strong>Prístrešok nad terasu a záhradu</strong></span></a>
+      <a href="?page=bio" data-kv-tab="bio"><svg class="kv-cfg__ikona" viewBox="0 0 48 32" width="48" height="32" aria-hidden="true"><path d="M4 10h40"/><path d="M7 10v20M41 10v20"/><path d="M8 9.5 11 5M14 9.5 17 5M20 9.5 23 5M26 9.5 29 5M32 9.5 35 5M38 9.5 41 5"/><path d="M17 22h14M20 22v8M28 22v8"/></svg><span class="kv-cfg__text"><img class="kv-cfg__logo kv-cfg__logo--soltec" src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-mark.png?v=2" alt="Soltec" width="971" height="268"><strong>Pergola s otočnými lamelami</strong></span></a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="page-width">
+  <div class="kv-fs" data-kv-fs hidden>
+    <span class="kv-fs__txt">Na celej obrazovke uvidíte vizualizáciu aj kroky naraz.</span>
+    <button type="button" data-kv-fs-go>Celá obrazovka</button>
+    <button type="button" class="kv-fs__close" data-kv-fs-close aria-label="Zavrieť">✕</button>
+  </div>
+</div>
+
+  <!-- Nadpis a úvod stránky pre čítačku, ktorá nespúšťa skript: samotný
+       konfigurátor sa vykresľuje až skriptom nižšie a bez neho by stránka
+       nemala ani nadpis. Keď skript nabehne, tento blok zmizne a nahradí
+       ho vlastná hlavička konfigurátora. -->
+  <div class="k-wrap" data-k-cfg-zaloha style="padding-block:clamp(48px,8vw,96px)">
+    <p class="k-eyebrow">Konfigurátor</p>
+    <h2 class="k-h2">3D konfigurátor prístreškov a pergol</h2>
+    <p>Vyberte riešenie a nastavte rozmer, farbu a výbavu. Vizualizácia aj orientačná cena sa menia hneď. Konfigurátor sa načíta v prehliadači so zapnutým JavaScriptom.</p>
+  </div>
+
+<!-- Dopyt ku konfigurátoru. Doteraz tu nebol: tlačidlo „Chcem presnú ponuku"
+     otváralo poštového klienta, čo je pre človeka v prehliadači slepá
+     odbočka. Formulár stojí v stránke aj bez skriptu; keď skript nabehne,
+     presunie sa pod konfigurátor. Vnútri koreňa konfigurátora byť nesmie:
+     zdedil by jeho úzku šírku, tak runtime hľadá formulár aj v stránke.
+
+     Obal nesie `k` aj `data-k-root`. Prvé dáva formuláru štýly zvyšku webu,
+     druhé ho prihlási do inicializácie v koverta-2026.js — tá beží len nad
+     `[data-k-root]` a konfigurátor doteraz taký prvok nemal, takže na tejto
+     stránke nefungoval ani výber v formulári, ani lišta súhlasu. Koreň
+     konfigurátora samotný `k` dostať nesmie: jeho resety by prepísali
+     vlastné štýly konfigurátora. -->
+<div class="k" data-k-root data-k-cta-obal>
+<section class="k-band kh-cta" id="sp-dopyt" aria-labelledby="ctaTitle">
+  <div class="k-wrap">
+    <div class="kh-cta__grid">
+
+      <div class="kh-cta__card k-rise">
+        <div class="kh-cta__head">
+          <p class="k-eyebrow">Z konfigurátora rovno k nám</p>
+          <h2 id="ctaTitle" class="k-h2">Pošlite nám svoju zostavu</h2>
+          <p class="kv-cta-odkaz">Odkaz na zostavu pripojíme k dopytu sami. <button type="button" class="kv-cta-odkaz__btn" data-kv-zdielat><span>Skopírovať odkaz</span></button></p>
+        </div>
+
+        <form id="dopyt" class="kh-form" method="post" action="/pages/konfigurator#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+          <input type="hidden" name="form_type" value="contact">
+          <input type="hidden" name="utf8" value="✓">
+          <fieldset>
+            <legend>Čo riešite?</legend>
+            <div class="kh-select" data-k-select>
+              <button class="kh-select__btn" type="button" data-k-select-btn aria-haspopup="listbox" aria-expanded="false">
+                <span data-k-select-label>Prístrešok pre auto</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="kh-select__list" role="listbox" data-k-select-list hidden>
+                <li role="option" tabindex="-1" aria-selected="true" data-k-select-option="Prístrešok pre auto">Prístrešok pre auto</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Záhradný prístrešok">Záhradný prístrešok</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Pergola">Pergola</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Tienenie">Tienenie</li>
+                <li role="option" tabindex="-1" aria-selected="false" data-k-select-option="Neviem, poraďte">Neviem, poraďte</li>
+              </ul>
+              <input type="hidden" name="contact[Čo rieši]" value="Prístrešok pre auto" data-k-select-input>
+            </div>
+          </fieldset>
+
+          <div class="kh-form__grid">
+            <label class="kh-field"><span>Meno</span><input type="text" name="contact[name]" autocomplete="name" required></label>
+            <label class="kh-field"><span>Telefón</span><input type="tel" name="contact[phone]" inputmode="tel" autocomplete="tel" required></label>
+            <label class="kh-field"><span>E-mail</span><input type="email" name="contact[email]" required autocomplete="email"></label>
+            <label class="kh-field"><span>Miesto realizácie</span><input type="text" name="contact[Miesto realizácie]" autocomplete="address-level2"></label>
+          </div>
+
+          <label class="kh-field"><span>Čo by sme mali vedieť?</span><textarea name="contact[body]" rows="3" placeholder="Približný rozmer, počet áut alebo čo chcete zastrešiť"></textarea></label>
+
+          <!-- Fotografie miesta sú pri prístreškoch to najužitočnejšie, čo nám
+               viete poslať: z jedného záberu je vidieť podklad, fasádu aj to,
+               kam sa dá stĺp postaviť. Pole je nepovinné a znesie viac súborov. -->
+          <label class="kh-field kh-field--subor">
+            <span>Fotky miesta <small>nepovinné</small></span>
+            <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
+          </label>
+
+          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/vseobecne-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/zasady-ochrany-osobnych-udajov">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+
+          <div class="kh-form__submit">
+            <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </form>
+        <div class="kh-dakujem" data-k-dakujem hidden>
+          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
+          <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>
+          <p class="kh-dakujem__text">Ozveme sa do jedného pracovného dňa.</p>
+          <ol class="kh-dakujem__kroky">
+            <li><strong>Ozveme sa</strong></li>
+            <li><strong>Pošleme ponuku</strong></li>
+            <li><strong>Postavíme</strong><span>Ak treba, predtým prídeme zamerať.</span></li>
+          </ol>
+          <p class="kh-dakujem__fotky" data-k-fotky hidden>
+            <a href="mailto:obchod@koverta.sk?subject=Fotky%20k%20dopytu">Poslať fotky na obchod@koverta.sk</a></p>
+          <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
+          <p class="kh-dakujem__zaloha"><a data-k-mailto href="mailto:obchod@koverta.sk">Poslať ten istý dopyt aj e-mailom</a> <span>Ak by k nám formulár nedoručil, e-mail dôjde vždy.</span></p>
+          <button class="k-link" type="button" data-k-znova>Poslať ďalší dopyt <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="kh-dakujem kh-dakujem--chyba" data-k-chyba hidden>
+          <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7v6" stroke-linecap="round"/><path d="M12 17.2v.1" stroke-linecap="round"/></svg></p>
+          <h3 class="kh-dakujem__nadpis">Dopyt sa neodoslal</h3>
+          <p class="kh-dakujem__text">Spojenie zlyhalo, takže dopyt k nám nedošiel. Nič ste nestratili, všetko vyplnené vám otvoríme v e-maile jedným klikom:</p>
+          <p class="kh-dakujem__zaloha"><a class="k-btn k-btn--primary" data-k-mailto href="mailto:obchod@koverta.sk">Otvoriť e-mail s dopytom<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a> <span>Odíde na obchod@koverta.sk aj s tým, čo ste vyplnili.</span></p>
+          <p class="kh-dakujem__spoj">Alebo rovno zavolajte: <a href="tel:+421948482266">+421 948 482 266</a></p>
+          <button class="k-link" type="button" data-k-spat>Skúsiť odoslať znova <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+
+      </div>
+
+      <aside class="kh-cta__aside k-rise" data-k-delay="1">
+        <div class="kh-cta__aside-head">
+          <p class="k-eyebrow">Kompletný servis</p>
+          <h3>Od návrhu po montáž</h3>
+        </div>
+
+        <!-- Telefón aj e-mail stoja hore v troch dlaždiciach hlavičky. Tu by
+             stáli tretíkrát na jednej obrazovke, tak sú preč a panel hovorí
+             len to, čo bude nasledovať po odoslaní dopytu. -->
+        <!-- Bočný panel držal adresu sídla. Tá odtiaľto odišla — sídlo nie je
+             miesto, kam sa oplatí prísť. Namiesto nej stojí to, čo človek na
+             kontaktnej stránke naozaj rieši: čo bude nasledovať po odoslaní. -->
+        <ol class="kh-cta__steps">
+          <li><span>01</span><strong>Ozveme sa</strong></li>
+          <li><span>02</span><strong>Pošleme ponuku</strong></li>
+          <li><span>03</span><strong>Postavíme</strong><small>Ak treba, predtým prídeme zamerať.</small></li>
+        </ol>
+
+        
+
+        <div class="kh-cta__score">
+          <span class="kh-fact__row">
+            <svg class="k-google k-google--lg" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+            </svg>
+            <b>5,0</b>
+            <span class="k-stars" role="img" aria-label="5 z 5"><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L10 14.6 4.8 17.5 6 11.7 1.6 7.7l5.9-.7z"/></svg></span>
+          </span>
+          <small>Hodnotenie na Google</small>
+          <a href="https://www.google.com/maps/search/?api=1&query=Koverta%20Nitra">Prečítať recenzie
+            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+
+        <figure class="kh-cta__foto">
+          <img src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@ff21f58b794bc47b6a55ba087c58bdd59718058d/assets/soltec-canopy-f170-real-w1000.webp?v=2" alt="Hotové prestrešenie vstupu do domu" width="2000" height="1239" loading="lazy" decoding="async">
+        </figure>
+      </aside>
+
+    </div>
+  </div>
+
+</section>
+</div>
+</main>
+<script src="{{ 'kfg-cfg-pages.js' | asset_url }}"></script>
+<script>
+(function () {
+  var PAGES = window.KV_PAGES || {};
+
+  var LABEL = { koverta: 'Prístrešky Koverta', zahrada: 'Záhradné prístrešky Koverta', bio: 'Bioklimatické pergoly Soltec', canopy: 'Pevné prestrešenia Soltec', carport: 'Carport Soltec' };
+  var page = new URLSearchParams(location.search).get('page');
+  if (!PAGES[page]) page = 'koverta';
+
+  document.querySelectorAll('[data-kv-tab]').forEach(function (a) {
+    if (a.dataset.kvTab === page) a.setAttribute('aria-current', 'page');
+  });
+  /* Skupina výberu: aktívna je tá, v ktorej je otvorený prístrešok. */
+  (function () {
+    var koren = document.querySelector('[data-kv-skupiny]');
+    if (!koren) return;
+    var nastav = function (sk) {
+      koren.setAttribute('data-aktivna', sk);
+      koren.querySelectorAll('[data-kv-skupina]').forEach(function (b) {
+        b.setAttribute('aria-selected', String(b.dataset.kvSkupina === sk));
+      });
+    };
+    nastav(/^(koverta|carport)$/.test(page) ? 'auta' : 'dom');
+    koren.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-kv-skupina]');
+      if (b) nastav(b.dataset.kvSkupina);
+    });
+  })();
+  document.title = LABEL[page] + ' | 3D konfigurátor Koverta';
+  /* Nadpis stránky stojí hore ako na zvyšku webu; text si berie z nadpisu
+     vybraného modelu, ktorý nesie konfigurátor (ten sa pod výberom skryje). */
+  var nadpis = document.querySelector('[data-kv-nadpis]');
+  var zModelu = (PAGES[page] || '').match(/<h1 class="sp-h2">([^<]*)<\/h1>/);
+  if (nadpis && zModelu) nadpis.textContent = zModelu[1];
+
+  // The section markup expects to sit inside #SoltecPremium, and the page
+  // script that follows looks that id up the moment it runs.
+  var host = document.createElement('div');
+  host.id = 'SoltecPremium';
+  host.setAttribute('data-sp-root', '');
+  host.setAttribute('data-sp-page', page);
+  host.innerHTML = PAGES[page];
+  var koren = document.getElementById('kv-root');
+  // Statická náhrada nadpisu je len pre čítačku bez skriptu — teraz už je
+  // na stránke skutočná hlavička konfigurátora, tak ju netreba dvakrát.
+  var zaloha = koren.querySelector('[data-k-cfg-zaloha]');
+  if (zaloha) zaloha.parentNode.removeChild(zaloha);
+  koren.appendChild(host);
+
+  /* Runtime hľadá `#sp-dopyt` aj textové pole dopytu vnútri `#SoltecPremium`.
+     Formulár je v stránke staticky, aby ho videl aj prehliadač bez skriptu;
+     tu sa presunie pod konfigurátor dovnútra jeho koreňa. */
+  var obal = koren.querySelector('[data-k-cta-obal]');
+  var dopyt = obal && obal.querySelector('#sp-dopyt');
+  if (obal) koren.appendChild(obal);
+
+  /* Prvá otázka formulára sa predvyplní podľa toho, čo si človek skladal. */
+  var CO = { koverta: 'Prístrešok pre auto', zahrada: 'Záhradný prístrešok',
+             bio: 'Pergola', canopy: 'Pergola', carport: 'Prístrešok pre auto' };
+  var co = CO[page];
+  if (dopyt && co) {
+    var vstup = dopyt.querySelector('[data-k-select-input]');
+    var stitok = dopyt.querySelector('[data-k-select-label]');
+    var polozka = dopyt.querySelector('[data-k-select-option="' + co + '"]');
+    if (vstup && stitok && polozka) {
+      vstup.value = co;
+      stitok.textContent = co;
+      dopyt.querySelectorAll('[data-k-select-option]').forEach(function (o) {
+        o.setAttribute('aria-selected', String(o.dataset.kSelectOption === co));
+      });
+    }
+  }
+
+  /* The shared script turns the quote button into a prefilled e-mail when this
+     standalone build has no Shopify contact form. */
+})();
+</script>
+
+<!-- Retained only as a rollback copy; the maintained script is loaded below. -->
+
+<!-- Soltec runtime: single authoritative external build. -->
+
+<!-- Odmeraná sieť odkvapu a zvodu (414 kB) patrí len oceľovým prístreškom
+     Koverta (auto aj záhrada). Soltec, prestrešenie terasy ani pergola ju
+     nepotrebujú, tak ju telefón pri nich ani nesťahuje, ani nespracúva.
+     Značka je v <template>, aby prevod do témy Shopify preložil jej adresu;
+     zapíše sa synchrónne, takže runtime ju má pred sebou ako doteraz. -->
+<template data-kv-geometria><script src="{{ 'kfg-koverta-reference-geometry.js' | asset_url }}"></script></template>
+<script>
+(function () {
+  var p = new URLSearchParams(location.search).get('page');
+  if (p === 'carport' || p === 'canopy' || p === 'bio') return;
+  var t = document.querySelector('template[data-kv-geometria]');
+  if (t) document.write(t.innerHTML);
+})();
+</script>
+<script src="{{ 'kfg-scene-surface.js' | asset_url }}"></script>
+<script src="{{ 'kfg-kv-render3d.js' | asset_url }}"></script>
+<script src="{{ 'kfg-scene-life.js' | asset_url }}"></script>
+<script charset="utf-8" src="{{ 'kfg-soltec-premium.js' | asset_url }}"></script>
+
+<!-- Doplnky ku konfigurátoru: zadanie rozmeru číslom, fullscreen bez scrollovania.
+     Nadstavba nad runtime, nič v ňom neprepisuje. -->
+<script src="{{ 'kfg-koverta-cfg-enhance.js' | asset_url }}"></script>
+
+<!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
+     ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
+     dĺžka, oboje v milimetroch. Posuvník si hodnotu zarovná na najbližší
+     katalógový krok, takže aj nepresné číslo skončí na platnom rozmere. -->
+<script>
+(function kvRozmerZAdresy() {
+  var q;
+  try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  var w = parseInt(q.get('w'), 10);
+  var l = parseInt(q.get('l'), 10);
+  if (!w && !l) return;
+
+  var pokusov = 0;
+  function nastav() {
+    var sw = document.querySelector('[data-sp-w]');
+    var sl = document.querySelector('[data-sp-l]');
+    /* Posuvníky sú v šablóne od začiatku, ale rozsah v milimetroch im
+       nastaví až runtime. Kým je max ešte jednotka zo šablóny, nemá zmysel
+       nič nastavovať. */
+    var pripravene = sw && sl && Number(sw.max) > 100 && Number(sl.max) > 100;
+    if (!pripravene) {
+      if (++pokusov > 100) return;
+      return window.setTimeout(nastav, 100);
+    }
+    [[sw, w], [sl, l]].forEach(function (par) {
+      var pole = par[0], hodnota = par[1];
+      if (!hodnota) return;
+      var min = Number(pole.min), max = Number(pole.max);
+      if (Number.isFinite(min) && hodnota < min) hodnota = min;
+      if (Number.isFinite(max) && hodnota > max) hodnota = max;
+      pole.value = String(hodnota);
+      pole.dispatchEvent(new Event('input', { bubbles: true }));
+      pole.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nastav);
+  else nastav();
+})();
+</script>
+
+<!-- Rozmer späť do adresy. Kto si niečo vyskladá, chce to poslať ďalej alebo
+     si to odložiť na neskôr — a adresa je na to jediné miesto, ktoré si
+     poradí aj bez toho, aby sme čokoľvek ukladali do prehliadača. Zápis ide
+     cez replaceState, takže tlačidlo Späť ostáva na predošlej stránke, nie
+     na predošlom rozmere. -->
+<script>
+(function kvRozmerDoAdresy() {
+  var cakac = null;
+  function zapis() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    var w = null, l = null;
+    if (window.SP_TEST && typeof window.SP_TEST.snapshot === 'function') {
+      try { var sn = window.SP_TEST.snapshot(); w = sn.width; l = sn.length; } catch (e) {}
+    }
+    if (!w || !l) {
+      var sw = document.querySelector('[data-sp-w]');
+      var sl = document.querySelector('[data-sp-l]');
+      if (!sw || !sl || Number(sw.max) <= 100) return;
+      w = Number(sw.value); l = Number(sl.value);
+    }
+    if (!w || !l) return;
+    if (q.get('w') === String(w) && q.get('l') === String(l)) return;
+    q.set('w', String(w));
+    q.set('l', String(l));
+    try { history.replaceState(history.state, '', location.pathname + '?' + q.toString()); } catch (e) {}
+  }
+  function jeRozmer(e) {
+    var t = e.target;
+    return t && t.matches && t.matches('[data-sp-w], [data-sp-l]');
+  }
+  /* Počas ťahania sa zapisuje s odstupom, aby adresa neprepisovala pri každom
+     pixeli. Po pustení posuvníka (`change`) sa zapíše hneď: je to jedno
+     zapísanie, nie stovka, a čakať s ním nie je na čo. Odstup navyše
+     nefunguje spoľahlivo v okamihu, keď je vlákno zabraté vykresľovaním —
+     časovač sa spustí až po ňom a adresa vtedy meškala aj sekundu. */
+  document.addEventListener('input', function (e) {
+    if (!jeRozmer(e)) return;
+    window.clearTimeout(cakac);
+    cakac = window.setTimeout(zapis, 400);
+  }, true);
+  document.addEventListener('change', function (e) {
+    if (!jeRozmer(e)) return;
+    window.clearTimeout(cakac);
+    zapis();
+  }, true);
+})();
+</script>
+
+<!-- Výzva na celú obrazovku. Ukáže sa len na nízkom okne a len raz — kto ju
+     zavrie, už ju neuvidí. Fullscreen nie je nikde podmienkou používania. -->
+<script>
+(function kvFullscreen() {
+  var bar = document.querySelector('[data-kv-fs]');
+  if (!bar) return;
+  var KEY = 'kv-fs-dismissed';
+  var tesno = window.innerHeight < 900 || window.innerWidth < 1280;
+  var zavrete = false;
+  try { zavrete = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  if (!tesno || zavrete || !document.documentElement.requestFullscreen) return;
+
+  /* Výzva stála vo vlastnom páse nad konfigurátorom a brala 58 px práve tam,
+     kde má byť vidieť vizualizáciu. Patrí vedľa prepínača Konfigurátor /
+     Kalkulácia — je to o tom istom a riadok je tam aj tak poloprázdny. */
+  var tabs = document.querySelector('.sp-cfg__tabs');
+  if (tabs && tabs.parentNode) {
+    var riadok = document.createElement('div');
+    riadok.className = 'kv-tabrow';
+    tabs.parentNode.insertBefore(riadok, tabs);
+    riadok.appendChild(tabs);
+    riadok.appendChild(bar);
+  }
+  bar.hidden = false;
+  bar.querySelector('[data-kv-fs-go]').addEventListener('click', function () {
+    var el = document.documentElement;
+    if (el.requestFullscreen) { el.requestFullscreen().catch(function () {}); }
+    /* Fullscreen prehliadača sám osebe nič nerieši — stránka pod ním ostane
+       bežnou stránkou a k prístrešku sa treba doscrollovať. Otvoríme rovno aj
+       pracovný režim konfigurátora, takže sa po kliknutí ocitneš v ňom celom. */
+    var otvor = document.querySelector('[data-sp-cfg-open]');
+    var uzJe = document.querySelector('.sp-cfg.is-full');
+    if (otvor && !uzJe) otvor.click();
+    bar.hidden = true;
+  });
+  bar.querySelector('[data-kv-fs-close]').addEventListener('click', function () {
+    bar.hidden = true;
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+  });
+})();
+</script>
+

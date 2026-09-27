@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% render 'kv-consentik' %}
+{%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
 <!-- Značky pre vyhľadávače.
 
      Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
@@ -13,63 +15,103 @@
      v štvrtom a piatom stĺpci STRANKY-NA-ZALOZENIE.txt. Vlastné sem
      nepíšeme: stáli by v hlavičke dvakrát a Google by druhý ignoroval.
      Adresu canonical dáva Shopify a je to jeho adresa, nie naša. -->
-<title>{{ page_title }}</title>
-{%- if page_description %}
-<meta name="description" content="{{ page_description | escape }}">
+{%- assign kv_titulok = page_title -%}
+{%- assign kv_popis = page_description -%}
+{%- comment -%} Úvod berie titulok a popis z webu, nie zo starých nastavení obchodu. {%- endcomment -%}
+{%- if template.name == 'index' -%}
+{%- assign kv_titulok = "Koverta | prístrešky pre autá, pergoly a 3D konfigurátor" -%}
+{%- assign kv_popis = "Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby aj Soltec. 3D konfigurátor s cenou, zameranie zadarmo, hodnotenie 5,0 na Google." -%}
+{%- endif -%}
+{%- if request.page_type == 'page' -%}{%- case page.handle -%}
+{%- when 'nove-404' -%}{%- assign kv_titulok = 'Stránka sa nenašla | Koverta' -%}{%- assign kv_popis = 'Táto adresa na webe Koverta neexistuje. Nájdite prístrešky, pergoly, tienenie alebo konfigurátor.' -%}
+{%- when 'nove-bioklimaticke-pergoly', 'bioklimaticke-pergoly', 'galeria-bioklimaticke-pergoly' -%}{%- assign kv_titulok = 'Bioklimatické pergoly Soltec s otočnými lamelami | Koverta' -%}{%- assign kv_popis = 'Prémiová hliníková pergola Soltec s otočnými lamelami: tieň, vzduch aj ochrana pred dažďom. Šesť modelov SL, 3D konfigurátor, montáž po celom Slovensku.' -%}
+{%- when 'nove-carport-soltec', 'galeria-pristresky-agava' -%}{%- assign kv_titulok = 'Prémiový hliníkový prístrešok pre auto Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové celohliníkové carporty Soltec pre 1 až 3 autá, voda odteká vnútri stĺpov. Rady F a SL, 3D konfigurátor s cenou, doprava a montáž v cene.' -%}
+{%- when 'nove-dakujeme', 'dakujeme' -%}{%- assign kv_titulok = 'Ďakujeme | Koverta' -%}{%- assign kv_popis = 'Dopyt sme prijali. Ozveme sa do jedného pracovného dňa.' -%}
+{%- when 'nove-konfigurator', 'konfigurator' -%}{%- assign kv_titulok = 'Konfigurátor prístreškov a pergol v 3D s cenou | Koverta' -%}{%- assign kv_popis = 'Online 3D konfigurátor: prístrešok pre auto, hliníkový carport Soltec, záhradný prístrešok, prestrešenie aj pergola s otočnými lamelami. Cena hneď.' -%}
+{%- when 'nove-kontakt', 'kontakt' -%}{%- assign kv_titulok = 'Kontakt | prístrešky a pergoly Koverta' -%}{%- assign kv_popis = 'Zameranie aj cenová ponuka sú zadarmo a nezáväzné. Volajte +421 948 482 266, píšte na obchod@koverta.sk alebo pošlite dopyt s fotkami.' -%}
+{%- when 'nove-obchodne-podmienky', 'vseobecne-obchodne-podmienky' -%}{%- assign kv_titulok = 'Obchodné podmienky | Koverta' -%}{%- assign kv_popis = 'Práva a povinnosti pri zmluve o dielo uzatvorenej na diaľku, od objednávky po odovzdanie.' -%}
+{%- when 'nove-ochrana-sukromia', 'zasady-ochrany-osobnych-udajov', 'informacie-o-cookies' -%}{%- assign kv_titulok = 'Ochrana súkromia | Koverta' -%}{%- assign kv_popis = 'Osobné údaje spracúvame podľa GDPR a zákona č. 18/2018 Z. z. Tu je, čo o vás uchovávame, prečo a ako dlho.' -%}
+{%- when 'nove-outdoor-kuchyne', 'vonkajsie-kuchyne' -%}{%- assign kv_titulok = 'Vonkajšie kuchyne Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie kuchyne Soltec do zastrešenej terasy aj pod pergolu. Hliníková konštrukcia, hliníkový obklad a kamenná doska 2 cm. Montáž v cene.' -%}
+{%- when 'nove-pevne-prestresenia', 'pergoly-s-pevnou-strechou-multiport' -%}{%- assign kv_titulok = 'Pevné prestrešenie terasy Soltec, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Prémiové prestrešenie terasy Soltec so zatepleným panelom 3 cm, bezpečnostným sklom alebo zelenou strechou. 3D konfigurátor, doprava a montáž v cene.' -%}
+{%- when 'nove-pouzite-modely', 'pouzite-modely' -%}{%- assign kv_titulok = 'O 3D modeloch | Koverta' -%}{%- assign kv_popis = 'Autori a licencie 3D modelov áut a posedenia, ktoré sa zobrazujú v konfigurátore Koverta.' -%}
+{%- when 'nove-pristresky-pre-auta', 'pristresky-pre-auta', 'o-pristreskoch-pre-auta' -%}{%- assign kv_titulok = 'Prístrešky pre autá na mieru, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Oceľové prístrešky pre 1 až 3 autá z vlastnej výroby, do 8 m bez stredového stĺpa. Rozmer si nastavíte v 3D konfigurátore s cenou. Montáž v cene.' -%}
+{%- when 'nove-produkty', 'produkty' -%}{%- assign kv_titulok = 'Všetky produkty | Koverta' -%}{%- assign kv_popis = 'Prehľad všetkého, čo Koverta vyrába a montuje: oceľové prístrešky pre autá, záhradné prístrešky, bioklimatické pergoly Soltec, tienenie a vonkajšie kuchyne.' -%}
+{%- when 'nove-realizacie', 'galeria-pristresky-pre-auta', 'galeria-zahradne-pristresky' -%}{%- assign kv_titulok = 'Realizácie prístreškov a pergol | Koverta' -%}{%- assign kv_popis = 'Prístrešky, pergoly a zastrešenia terás, ktoré sme postavili u zákazníkov vo viac ako 110 obciach na Slovensku. Fotografie z montáží podľa typu riešenia.' -%}
+{%- when 'nove-reklamacie', 'reklamacny-poriadok' -%}{%- assign kv_titulok = 'Reklamačný poriadok | Koverta' -%}{%- assign kv_popis = 'Ako a kde reklamovať, ako postupujeme pri riešení a ako prebiehajú záručné opravy.' -%}
+{%- when 'nove-tienenie', 'tienenie' -%}{%- assign kv_titulok = 'Tienenie terás a pergol Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie tienenie Soltec: ZIP rolety K130, posuvné panely H50, pevné steny, sklo G1/G2 a otočné lamely E300. Montáž po celom Slovensku.' -%}
+{%- when 'nove-zahradne-pristresky', 'pre-dom-a-zahradu', 'o-zahradnych-pristreskoch' -%}{%- assign kv_titulok = 'Záhradné prístrešky a pergoly, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Záhradné prístrešky Koverta nad terasu, vstup či posedenie. Oceľ, strecha z trapézu alebo sendviča, bočné výplne. 3D konfigurátor s cenou, montáž v cene.' -%}
+{%- endcase -%}
+{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}
+{%- when 'bioklimaticke-pergoly' -%}{%- assign kv_titulok = 'Bioklimatické pergoly Soltec s otočnými lamelami | Koverta' -%}{%- assign kv_popis = 'Prémiová hliníková pergola Soltec s otočnými lamelami: tieň, vzduch aj ochrana pred dažďom. Šesť modelov SL, 3D konfigurátor, montáž po celom Slovensku.' -%}
+{%- when 'pristresky-pre-auta-agava' -%}{%- assign kv_titulok = 'Prémiový hliníkový prístrešok pre auto Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové celohliníkové carporty Soltec pre 1 až 3 autá, voda odteká vnútri stĺpov. Rady F a SL, 3D konfigurátor s cenou, doprava a montáž v cene.' -%}
+{%- when 'outdoor-kuchyne' -%}{%- assign kv_titulok = 'Vonkajšie kuchyne Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie kuchyne Soltec do zastrešenej terasy aj pod pergolu. Hliníková konštrukcia, hliníkový obklad a kamenná doska 2 cm. Montáž v cene.' -%}
+{%- when 'pergoly-s-pevnou-strechou-multiport' -%}{%- assign kv_titulok = 'Pevné prestrešenie terasy Soltec, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Prémiové prestrešenie terasy Soltec so zatepleným panelom 3 cm, bezpečnostným sklom alebo zelenou strechou. 3D konfigurátor, doprava a montáž v cene.' -%}
+{%- when 'pristresky-pre-auta' -%}{%- assign kv_titulok = 'Prístrešky pre autá na mieru, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Oceľové prístrešky pre 1 až 3 autá z vlastnej výroby, do 8 m bez stredového stĺpa. Rozmer si nastavíte v 3D konfigurátore s cenou. Montáž v cene.' -%}
+{%- when 'tienenie' -%}{%- assign kv_titulok = 'Tienenie terás a pergol Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie tienenie Soltec: ZIP rolety K130, posuvné panely H50, pevné steny, sklo G1/G2 a otočné lamely E300. Montáž po celom Slovensku.' -%}
+{%- when 'zahradne-pristresky' -%}{%- assign kv_titulok = 'Záhradné prístrešky a pergoly, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Záhradné prístrešky Koverta nad terasu, vstup či posedenie. Oceľ, strecha z trapézu alebo sendviča, bočné výplne. 3D konfigurátor s cenou, montáž v cene.' -%}
+{%- endcase -%}{%- endif -%}
+<title>{{ kv_titulok }}</title>
+{%- if kv_popis != blank %}
+<meta name="description" content="{{ kv_popis | escape }}">
 {%- endif %}
-<link rel="canonical" href="{{ canonical_url }}">
+{%- comment -%} Jedna adresa pre jeden obsah vo vyhľadávaní. Staré a nove-* stránky
+   ostávajú funkčné (aj pre reklamy), len povedia Google, ktorá adresa je hlavná.
+   Zoznam je z tools/adresy-obchodu.json (presmerovania). {%- endcomment -%}
+{%- liquid
+  assign kv_canon = canonical_url
+  case request.path
+  when '/pages/pristresky-pre-auta', '/pages/o-pristreskoch-pre-auta', '/pages/nove-pristresky-pre-auta'
+    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta'
+  when '/pages/pre-dom-a-zahradu', '/pages/o-zahradnych-pristreskoch', '/pages/nove-zahradne-pristresky'
+    assign kv_canon = shop.url | append: '/collections/zahradne-pristresky'
+  when '/pages/bioklimaticke-pergoly', '/pages/galeria-bioklimaticke-pergoly', '/pages/nove-bioklimaticke-pergoly'
+    assign kv_canon = shop.url | append: '/collections/bioklimaticke-pergoly'
+  when '/pages/galeria-zahradne-pristresky', '/pages/nove-realizacie'
+    assign kv_canon = shop.url | append: '/pages/galeria-pristresky-pre-auta'
+  when '/pages/galeria-pristresky-agava', '/pages/nove-carport-soltec'
+    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta-agava'
+  when '/pages/pergoly-s-pevnou-strechou-multiport', '/pages/nove-pevne-prestresenia'
+    assign kv_canon = shop.url | append: '/collections/pergoly-s-pevnou-strechou-multiport'
+  when '/pages/tienenie', '/pages/nove-tienenie'
+    assign kv_canon = shop.url | append: '/collections/tienenie'
+  when '/pages/vonkajsie-kuchyne', '/pages/nove-outdoor-kuchyne'
+    assign kv_canon = shop.url | append: '/collections/outdoor-kuchyne'
+  when '/pages/informacie-o-cookies', '/pages/nove-ochrana-sukromia'
+    assign kv_canon = shop.url | append: '/pages/zasady-ochrany-osobnych-udajov'
+  when '/pages/nove-kontakt'
+    assign kv_canon = shop.url | append: '/pages/kontakt'
+  when '/pages/nove-obchodne-podmienky'
+    assign kv_canon = shop.url | append: '/pages/vseobecne-obchodne-podmienky'
+  when '/pages/nove-reklamacie'
+    assign kv_canon = shop.url | append: '/pages/reklamacny-poriadok'
+  when '/pages/nove-konfigurator'
+    assign kv_canon = shop.url | append: '/pages/konfigurator'
+  when '/pages/nove-produkty'
+    assign kv_canon = shop.url | append: '/pages/produkty'
+  endcase
+-%}
+<link rel="canonical" href="{{ kv_canon }}">
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:locale" content="sk_SK">
-<meta property="og:type" content="website">
-<meta property="og:title" content="{{ page_title | escape }}">
-<meta property="og:url" content="{{ canonical_url }}">
-{%- if page_description %}
-<meta property="og:description" content="{{ page_description | escape }}">
+<meta property="og:type" content="{% if request.page_type == 'product' %}product{% else %}website{% endif %}">
+<meta property="og:title" content="{{ kv_titulok | escape }}">
+<meta property="og:url" content="{{ kv_canon }}">
+{%- if kv_popis != blank %}
+<meta property="og:description" content="{{ kv_popis | escape }}">
 {%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ kv_titulok | escape }}">
+{%- if kv_popis != blank %}
+<meta name="twitter:description" content="{{ kv_popis | escape }}">
+{%- endif %}
+{%- if request.page_type == 'product' and product %}
+{%- assign kv_variant = product.selected_or_first_available_variant %}
+<meta property="og:price:amount" content="{{ kv_variant.price | divided_by: 100.0 }}">
+<meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
+{%- endif %}
+{%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
-<!-- Meranie: súhlas (Google Consent Mode v2) beží pred Tag Managerom, takže
-     kým návštevník nerozhodne, žiadna značka nesmie zapisovať do prehliadača. -->
-<script>
-(function (w) {
-  // Queue Clarity calls before GTM can run its consent tag. The loaded
-  // Clarity client consumes this queue; no analytics call is discarded.
-  if (typeof w.clarity !== 'function') {
-    w.clarity = function () { (w.clarity.q = w.clarity.q || []).push(arguments); };
-  }
-  w.dataLayer = w.dataLayer || [];
-  function gtag() { w.dataLayer.push(arguments); }
-  w.kvGtag = gtag;
-  w.KV_SUHLAS_KLUC = 'koverta-suhlas';
-  var v = null;
-  try { v = JSON.parse(w.localStorage.getItem(w.KV_SUHLAS_KLUC) || 'null'); } catch (e) {}
-  if (v && v.verzia !== 1) v = null;
-  w.kvSuhlas = v;
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    analytics_storage: 'denied',
-    functionality_storage: 'denied',
-    personalization_storage: 'denied',
-    security_storage: 'granted',
-    wait_for_update: 500
-  });
-  if (v) {
-    gtag('consent', 'update', {
-      ad_storage: v.marketing ? 'granted' : 'denied',
-      ad_user_data: v.marketing ? 'granted' : 'denied',
-      ad_personalization: v.marketing ? 'granted' : 'denied',
-      analytics_storage: v.analytika ? 'granted' : 'denied',
-      functionality_storage: v.preferencie ? 'granted' : 'denied',
-      personalization_storage: v.preferencie ? 'granted' : 'denied',
-      security_storage: 'granted'
-    });
-  }
-  gtag('set', 'ads_data_redaction', !(v && v.marketing));
-  gtag('set', 'url_passthrough', true);
-})(window);
-</script>
+{{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
 <!-- Google Tag Manager -->
 <script>
 (function (w, d, s, l, i) {
@@ -81,48 +123,66 @@
 </script>
 <!-- Koniec Google Tag Manager -->
 <link rel="icon" href="{{ 'favicon.svg' | asset_url }}" type="image/svg+xml">
-<link rel="icon" href="https://danielvendzur-code.github.io/koverta-web/assets/icon-192.png" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="https://danielvendzur-code.github.io/koverta-web/assets/apple-touch-icon.png" sizes="180x180">
-<link rel="manifest" href="https://danielvendzur-code.github.io/koverta-web/site.webmanifest">
+<link rel="icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-192.png?v=2" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-apple.png?v=2" sizes="180x180">
+<link rel="manifest" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@7c5f4f673f494c2841e5c1982b0385c5cab33dfd/site.webmanifest">
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
+{%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
+   ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
+   logá Koverta a Soltec cez celú obrazovku. Odkazy v tele stránky ostávajú,
+   aby poradie štýlov (a teda vzhľad) ostalo presne také isté. {%- endcomment -%}
+{%- if request.page_type == 'page' and page.handle == 'konfigurator' %}
+<link rel="stylesheet" href="{{ 'kfg-soltec-premium.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'kfg-koverta-cfg-skin.css' | asset_url }}">
+{%- endif %}
 </head>
 <body class="{% if template.name == 'index' %}k-home{% endif %}">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5KVNNWW5" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 <script>
   /* Skripty nesú v sebe cesty statického webu. Tu dostanú tie, ktoré platia
      v obchode: obrázky značiek a modely vybavenia sú na CDN, stránka
-     o 3D modeloch je v /pages/. */
+     o 3D modeloch je v /pages/ a fotky v menu majú presnú adresu
+     (menuFoto), aby žiadna nevracala 404. */
   window.KV_ADRESY = {
     znackaKoverta: {{ 'koverta-mark.svg' | asset_url | json }},
     znackaSoltec: "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png",
-    modely: '/pages/nove-pouzite-modely'
+    modely: '/pages/nove-pouzite-modely',
+    menuFoto: {"koverta-pristresok-auto-golf-lamelova-stena-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-pristresok-auto-golf-lamelova-stena-w1000.webp?v=2","soltec-carport-nitra-hero-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@63b6fa37453deae3cec07398ae2c6f0ea25ad48e/assets/soltec-carport-nitra-hero-w1000.webp?v=2","koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp?v=2","soltec-pergola-plna-strecha-pri-dome-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@ff21f58b794bc47b6a55ba087c58bdd59718058d/assets/soltec-pergola-plna-strecha-pri-dome-w1000.webp?v=2","soltec-pergola-pri-bazene-antracit-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-pri-bazene-antracit-w1000.webp?v=2","soltec-pergola-zip-rolety-a-pevne-vyplne-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-zip-rolety-a-pevne-vyplne-w1000.webp?v=2","soltec-outdoor-kuchyna-graz-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@ff21f58b794bc47b6a55ba087c58bdd59718058d/assets/soltec-outdoor-kuchyna-graz-w1000.webp?v=2","koverta-pristresok-pre-auto-pred-domom-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/koverta-pristresok-pre-auto-pred-domom-w1000.webp?v=2","koverta-pristresok-drevene-lamely-bocna-vypln-w1000.webp":"https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/koverta-pristresok-drevene-lamely-bocna-vypln-w1000.webp?v=2"}
   };
   /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
      fotografie a odkazy vo výbere riešenia. V značkovaní nie sú, takže ich
      prevod inak nevidí; bez tejto tabuľky by na Shopify ukazovali na
      /pages/assets/… a /carport-soltec/, teda nikam. */
   window.KV_CESTY = {
-    "./pristresky-pre-auta/": "/pages/nove-pristresky-pre-auta",
-    "./assets/koverta-pristresok-vahovce-takac-upscaled.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-pristresok-vahovce-takac-upscaled.jpg",
-    "./carport-soltec/": "/pages/nove-carport-soltec",
-    "./assets/soltec-carport-sl240-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-sl240-real.jpg",
-    "./zahradne-pristresky/": "/pages/nove-zahradne-pristresky",
-    "./assets/foto/20250522_144729-w600.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/foto/20250522_144729-w600.jpg",
-    "./bioklimaticke-pergoly/": "/pages/nove-bioklimaticke-pergoly",
-    "./assets/soltec-bio-hero-2026.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-bio-hero-2026.jpg",
-    "./pevne-prestresenia/": "/pages/nove-pevne-prestresenia",
-    "./assets/soltec-canopy-hero.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-hero.jpg",
-    "./tienenie/": "/pages/nove-tienenie",
-    "./assets/soltec-canopy-panels-real.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-canopy-panels-real.jpg",
-    "./outdoor-kuchyne/": "/pages/nove-outdoor-kuchyne",
-    "./assets/soltec-kuchyna-terasa.jpg": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-kuchyna-terasa.jpg",
+    "./pristresky-pre-auta/": "/collections/pristresky-pre-auta",
+    "./assets/koverta-pristresok-auto-golf-lamelova-stena.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-pristresok-auto-golf-lamelova-stena.jpg?v=2",
+    "./carport-soltec/": "/collections/pristresky-pre-auta-agava",
+    "./assets/soltec-carport-nitra-hero.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@63b6fa37453deae3cec07398ae2c6f0ea25ad48e/assets/soltec-carport-nitra-hero.jpg?v=2",
+    "./zahradne-pristresky/": "/collections/zahradne-pristresky",
+    "./assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg?v=2",
+    "./bioklimaticke-pergoly/": "/collections/bioklimaticke-pergoly",
+    "./assets/soltec-pergola-pri-bazene-antracit.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-pri-bazene-antracit.jpg?v=2",
+    "./pevne-prestresenia/": "/collections/pergoly-s-pevnou-strechou-multiport",
+    "./assets/soltec-pergola-plna-strecha-pri-dome.webp": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-pergola-plna-strecha-pri-dome.webp?v=2",
+    "./tienenie/": "/collections/tienenie",
+    "./assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg?v=2",
+    "./outdoor-kuchyne/": "/collections/outdoor-kuchyne",
+    "./assets/soltec-outdoor-kuchyna-graz.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-outdoor-kuchyna-graz.jpg?v=2",
     "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
-    "./assets/soltec-mark.png": "https://danielvendzur-code.github.io/koverta-web/assets/soltec-mark.png"
+    "./assets/soltec-mark.png": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-mark.png?v=2",
+    "./dakujeme/": "/pages/dakujeme"
   };
   window.KV_SCENE_ASSETS = "https://danielvendzur-code.github.io/koverta-web/konfigurator/scene-assets/";
 </script>
 {% section 'kv-hlavicka' %}
 {{ content_for_layout }}
 {% section 'kv-paticka' %}
+{%- unless template.name == 'product' or page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' -%}
+<div class="kh-dock" aria-label="Rýchly kontakt">
+  <a class="kh-dock__call" href="tel:+421948482266" aria-label="Zavolať"><svg viewBox="0 0 24 24"><path d="M6.6 3.5 9.4 8 7.8 9.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.6 4.4 2.8-.8 3.1c-.2.7-.8 1.2-1.5 1.2C9.5 20.8 3.2 14.5 3.2 6.8c0-.7.5-1.3 1.2-1.5l2.2-.8Z" stroke-linejoin="round"/></svg></a>
+  <a class="k-btn k-btn--primary" href="/pages/kontakt#ponuka">Nezáväzná cenová ponuka</a>
+</div>
+{%- endunless -%}
 <script src="{{ 'koverta-2026.js' | asset_url }}" defer></script>
 </body>
 </html>

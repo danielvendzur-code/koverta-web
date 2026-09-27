@@ -1,0 +1,41 @@
+{%- comment -%}
+  Technický nákres katalógového rozmeru: pôdorys so šírkou a hĺbkou v mierke
+  a čelný pohľad so svetlou výškou. w, l v mm; w_m, l_m ako text (5,2).
+{%- endcomment -%}
+{%- liquid
+  assign najvacsi = w
+  if l > w
+    assign najvacsi = l
+  endif
+  assign sw = w | times: 250 | divided_by: najvacsi | floor
+  assign sl = l | times: 250 | divided_by: najvacsi | floor
+  assign x0 = 300 | minus: sw | divided_by: 2 | floor | plus: 20
+  assign y0 = 300 | minus: sl | divided_by: 2 | floor | plus: 10
+  assign x1 = x0 | plus: sw
+  assign y1 = y0 | plus: sl
+  assign xs = x0 | plus: x1 | divided_by: 2 | floor
+  assign ys = y0 | plus: y1 | divided_by: 2 | floor
+  assign ykota = y1 | plus: 28
+  assign xkota = x0 | minus: 28
+  assign x0p = x0 | plus: 6
+  assign x1p = x1 | minus: 14
+  assign y0p = y0 | plus: 6
+  assign y1p = y1 | minus: 14
+-%}
+<figure class="kp-nakres">
+  <svg viewBox="0 0 340 344" role="img" aria-label="Pôdorys {{ w_m }} × {{ l_m }} m">
+    <defs><marker id="kpSipka" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 8 4 0 8z"/></marker></defs>
+    <rect class="kp-nakres__strecha" x="{{ x0 }}" y="{{ y0 }}" width="{{ sw }}" height="{{ sl }}" rx="2"/>
+    {%- for i in (1..9) -%}{%- assign yy = sl | times: i | divided_by: 10 | plus: y0 -%}<line class="kp-nakres__vlna" x1="{{ x0 }}" y1="{{ yy }}" x2="{{ x1 }}" y2="{{ yy }}"/>{%- endfor -%}
+    <rect class="kp-nakres__stlp" x="{{ x0p }}" y="{{ y0p }}" width="8" height="8"/>
+    <rect class="kp-nakres__stlp" x="{{ x1p }}" y="{{ y0p }}" width="8" height="8"/>
+    <rect class="kp-nakres__stlp" x="{{ x0p }}" y="{{ y1p }}" width="8" height="8"/>
+    <rect class="kp-nakres__stlp" x="{{ x1p }}" y="{{ y1p }}" width="8" height="8"/>
+    <line class="kp-nakres__kota" x1="{{ x0 }}" y1="{{ ykota }}" x2="{{ x1 }}" y2="{{ ykota }}" marker-start="url(#kpSipka)" marker-end="url(#kpSipka)"/>
+    <text class="kp-nakres__text" x="{{ xs }}" y="{{ ykota | plus: 18 }}" text-anchor="middle">{{ w_m }} m</text>
+    <line class="kp-nakres__kota" x1="{{ xkota }}" y1="{{ y0 }}" x2="{{ xkota }}" y2="{{ y1 }}" marker-start="url(#kpSipka)" marker-end="url(#kpSipka)"/>
+    <text class="kp-nakres__text" x="{{ xkota | minus: 8 }}" y="{{ ys }}" text-anchor="middle" transform="rotate(-90 {{ xkota | minus: 8 }} {{ ys }})">{{ l_m }} m</text>
+    <text class="kp-nakres__stred" x="{{ xs }}" y="{{ ys | plus: 5 }}" text-anchor="middle">{{ area }} m²</text>
+  </svg>
+  <figcaption>Pôdorys v mierke · šírka × hĺbka · svetlá výška 2,4 m</figcaption>
+</figure>

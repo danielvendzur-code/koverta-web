@@ -11,6 +11,8 @@ Zdrojom pravdy je cenník v konfigurátore (konfigurator/cfg-pages.js), nie
 ručne prepísané čísla. Keď sa cena zmení tam, stačí spustiť tento skript.
 """
 import io, json, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import adresy
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZAKLAD = 'https://koverta.sk'
@@ -23,6 +25,10 @@ def katalog():
         data = json.loads(re.search(r'data-sp-bio-data>(.*?)</script>', pages[kluc], re.S).group(1))
         out[kluc] = list(data['models'].values())[0]
     return out
+
+def produktova_url(kluc, w, l):
+    prefix = 'zahradny-pristresok-koverta-' if kluc == 'zahrada' else 'pristresok-koverta-'
+    return f'{ZAKLAD}/products/{prefix}{w}x{l}'
 
 def obrazok(zaklad):
     """Rozmer fotografie z hlavičky súboru JPEG.
@@ -167,6 +173,13 @@ def strankuj():
                 uvod, detail, odkazy, plocha = telo(kluc, w, l, cena, vsetky)
                 slug = f'{w}x{l}'
                 rel = f'{t["nadradUrl"]}/rozmer/{slug}/'
+                # Canonical smie ukazovať len na produkt, ktorý naozaj žije
+                # (tools/produkty-zive.json). Kým nežije ani starý, stránka
+                # je svojou vlastnou kanonickou adresou a ostáva v indexe.
+                zivy, _ = adresy.produkt(rel.strip('/'))
+                produkt = zivy or f'{adresy.PAGES}/{rel}'
+                robots = 'noindex,follow' if zivy else 'index,follow'
+                cta_produkt = (f'<a class="k-btn k-btn--primary" href="{zivy}">Kúpiť v e-shope</a>\n      ') if zivy else ''
                 wtxt, ltxt = f'{w/1000:g}'.replace('.', ','), f'{l/1000:g}'.replace('.', ',')
                 nazov = f'{t["druh"]} {wtxt} × {ltxt} m'
                 popis = (f'{nazov} — cena od {medzery(cena)} € s DPH, dopravou aj montážou. '
@@ -175,15 +188,16 @@ def strankuj():
                 # výrobku. Blok sa pri generovaní nahrádza celý, takže sa
                 # fotografia musí doplniť späť — bez nej má zdieľaný odkaz
                 # na ktorýkoľvek z rozmerov náhľad bez obrázka.
-                foto = f'{ZAKLAD}/assets/{t["foto"]}.jpg'
+                foto = f'{adresy.PAGES}/assets/{t["foto"]}.jpg'
                 fw, fh = obrazok(t['foto'])
                 seo = f'''<title>{nazov} · od {medzery(cena)} € | Koverta</title>
 <meta name="description" content="{popis}">
-<link rel="canonical" href="{ZAKLAD}/{rel}">
+<meta name="robots" content="{robots}">
+<link rel="canonical" href="{produkt}">
 <meta property="og:type" content="product">
 <meta property="og:title" content="{nazov}">
 <meta property="og:description" content="{popis}">
-<meta property="og:url" content="{ZAKLAD}/{rel}">
+<meta property="og:url" content="{produkt}">
 <meta property="og:image" content="{foto}">
 <meta property="og:image:width" content="{fw}">
 <meta property="og:image:height" content="{fh}">
@@ -201,14 +215,14 @@ def strankuj():
   "depth":{"@type":"QuantitativeValue","value":l,"unitCode":"MMT"},
   "offers":{"@type":"Offer","price":cena,"priceCurrency":"EUR",
             "availability":"https://schema.org/PreOrder",
-            "url":f"{ZAKLAD}/{rel}",
+            "url":produkt,
             "priceSpecification":{"@type":"PriceSpecification","price":cena,
               "priceCurrency":"EUR","valueAddedTaxIncluded":True}}
 }, ensure_ascii=False)}</script>
 <script type="application/ld+json">{json.dumps({
   "@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
-   {"@type":"ListItem","position":1,"name":"Domov","item":ZAKLAD+"/"},
-   {"@type":"ListItem","position":2,"name":t['nadrad'],"item":f"{ZAKLAD}/{t['nadradUrl']}/"},
+   {"@type":"ListItem","position":1,"name":"Domov","item":adresy.DOMENA+"/"},
+   {"@type":"ListItem","position":2,"name":t['nadrad'],"item":adresy.DOMENA+adresy.url_obchodu(t['nadradUrl'])},
    {"@type":"ListItem","position":3,"name":nazov}]
 }, ensure_ascii=False)}</script>'''
                 h = hlava.replace('<!--TITLE-->', '').replace('<!--DESC-->', '').replace('<!--SEO-->', seo)
@@ -256,8 +270,10 @@ def strankuj():
     <p class="k-copy" style="max-width:62ch">{detail}</p>
     <p class="k-copy" style="max-width:62ch"><strong>Uvedená cena je cena základnej zostavy.</strong> Konečnú sumu ovplyvní zvolený odtieň, pripravenosť podkladu a doplnky; potvrdíme ju v nezáväznej ponuke.</p>
 
+    <p class="k-copy" style="max-width:62ch"><strong>Kompletné riešenie na kľúč.</strong> Koverta je oceľový prístrešok vyrábaný na Slovensku. Súčasťou riešenia je nosná konštrukcia s povrchovou ochranou, strecha, integrované odvodnenie, doprava, odborná montáž a bezplatné zameranie. Rozmer upravíme podľa pozemku, parkovania alebo terasy a pripravíme cenovú ponuku pre realizáciu kdekoľvek na Slovensku.</p>
+
     <div class="kh-hero__actions" style="margin:2rem 0">
-      <a class="k-btn k-btn--primary" href="{cfg}">Pozrieť v 3D konfigurátore</a>
+      {cta_produkt}<a class="k-btn k-btn--{'line' if zivy else 'primary'}" href="{cfg}">Konfigurovať</a>
       <!-- Rozmer ide do adresy, nie do data atribútu: formulár je na
            katalógovej stránke, takže kontext musí prežiť preklik. -->
       <a class="k-btn k-btn--line" href="../../?w={w}&amp;l={l}#ponuka">Nezáväzná cenová ponuka</a>
@@ -267,6 +283,7 @@ def strankuj():
     <ul class="kv-related">{odkazy}<li><a href="../../">Celý katalóg rozmerov</a></li></ul>
   </div>
 </section>
+<script src="../../../assets/rozmer-produkt.js" defer></script>
 </main>'''
                 cesta = os.path.join(KOREN, rel)
                 os.makedirs(cesta, exist_ok=True)
@@ -288,21 +305,12 @@ def strankuj():
         if zmeny:
             io.open(cesta, 'w', encoding='utf-8').write(html)
 
-    # Rozmerové stránky sú normálne produktové varianty, preto patria do mapy
-    # webu. Pred zápisom odstránime staré rozmerové záznamy, aby bol skript
-    # opakovateľný a nevytváral duplicity.
+    # Rozmerové HTML sú po prechode na Shopify iba legacy náhľady. Produkčné
+    # /products/ URL vkladá do sitemap samotný Shopify; staré rozmerové URL
+    # preto z repozitárovej mapy odstránime a znovu ich nepridávame.
     sitemap_cesta = os.path.join(KOREN, 'sitemap.xml')
     sitemap = io.open(sitemap_cesta, encoding='utf-8').read()
     sitemap = re.sub(r'\s*<url><loc>https://koverta\.sk/(?:pristresky-pre-auta|zahradne-pristresky)/rozmer/[^<]+</loc>.*?</url>', '', sitemap)
-    zaznamy = []
-    for kluc, mo in kat.items():
-        t = SABLONY[kluc]
-        for l in mo['lengths']:
-            for w in mo['widths']:
-                zaznamy.append(
-                    f'  <url><loc>{ZAKLAD}/{t["nadradUrl"]}/rozmer/{w}x{l}/</loc>'
-                    '<changefreq>monthly</changefreq><priority>0.7</priority></url>')
-    sitemap = sitemap.replace('</urlset>', '\n'.join(zaznamy) + '\n</urlset>')
     io.open(sitemap_cesta, 'w', encoding='utf-8').write(sitemap)
     return pocet
 

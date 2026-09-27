@@ -1,0 +1,90 @@
+{{ 'koverta-product.css' | asset_url | stylesheet_tag }}
+<main class="kp-cart k" id="obsah">
+  <div class="k-wrap">
+    <header class="kp-cart__head">
+      <div>
+        <p class="kp-cart__eyebrow">Košík</p>
+        <h1 class="kp-cart__title">Vaša objednávka{% if cart.item_count > 0 %} <span>({{ cart.item_count }})</span>{% endif %}</h1>
+      </div>
+      <a class="kp-cart__spat" href="/collections/pristresky-pre-auta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Pokračovať vo výbere</a>
+    </header>
+
+    {%- if cart.item_count == 0 -%}
+      <div class="kp-cart__prazdny">
+        <h2>Košík je prázdny.</h2>
+        <p>Vyberte katalógový rozmer prístrešku a pridajte ho do košíka.</p>
+        <a class="k-btn k-btn--primary" href="/collections/pristresky-pre-auta">Prístrešky Koverta</a>
+      </div>
+    {%- else -%}
+      <form class="kp-cart__grid" action="{{ routes.cart_url }}" method="post" novalidate data-kp-cart>
+        <div class="kp-cart__polozky">
+          {%- for item in cart.items -%}
+            <article class="kp-cart__item">
+              <a class="kp-cart__foto" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+                {%- if item.image -%}<img src="{{ item.image | image_url: width: 360 }}" srcset="{{ item.image | image_url: width: 240 }} 240w, {{ item.image | image_url: width: 360 }} 360w, {{ item.image | image_url: width: 520 }} 520w" sizes="(max-width: 699px) 110px, 180px" width="{{ item.image.width }}" height="{{ item.image.height }}" alt="" loading="lazy">{%- endif -%}
+              </a>
+              <div class="kp-cart__info">
+                <a class="kp-cart__nazov" href="{{ item.url }}">{{ item.product.title }}</a>
+                {%- unless item.variant.title == 'Default Title' -%}<p class="kp-cart__variant">Farba: {{ item.variant.title }}</p>{%- endunless -%}
+                {%- for p in item.properties -%}{%- unless p.last == blank or p.first contains '_' -%}<p class="kp-cart__variant">{{ p.first }}: {{ p.last }}</p>{%- endunless -%}{%- endfor -%}
+                <p class="kp-cart__jedna">{% render 'koverta-cena', centy: item.final_price %} / ks · doprava a montáž v cene</p>
+                <div class="kp-cart__riadok">
+                  <div class="kp-cart__pocet" data-kp-pocet>
+                    <button type="button" data-kp-minus aria-label="Menej">−</button>
+                    <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric" aria-label="Množstvo {{ item.product.title | escape }}">
+                    <button type="button" data-kp-plus aria-label="Viac">+</button>
+                  </div>
+                  <a class="kp-cart__odstranit" href="{{ item.url_to_remove }}">Odstrániť</a>
+                </div>
+              </div>
+              <strong class="kp-cart__cena">{% render 'koverta-cena', centy: item.final_line_price %}</strong>
+            </article>
+          {%- endfor -%}
+          <button type="submit" name="update" class="kp-cart__aktualizovat" data-kp-update>Aktualizovať košík</button>
+        </div>
+
+        <aside class="kp-cart__suhrn" aria-label="Súhrn objednávky">
+          <h2>Súhrn</h2>
+          <dl>
+            <div><dt>Medzisúčet</dt><dd>{% render 'koverta-cena', centy: cart.items_subtotal_price %}</dd></div>
+            {%- if cart.cart_level_discount_applications.size > 0 -%}
+              {%- for zlava in cart.cart_level_discount_applications -%}
+                <div><dt>{{ zlava.title }}</dt><dd>−{% render 'koverta-cena', centy: zlava.total_allocated_amount %}</dd></div>
+              {%- endfor -%}
+            {%- endif -%}
+            <div><dt>Doprava a montáž</dt><dd>v cene</dd></div>
+            <div class="kp-cart__spolu"><dt>Spolu s DPH</dt><dd>{% render 'koverta-cena', centy: cart.total_price %}</dd></div>
+          </dl>
+          <div class="kp-cart__pokladna">
+            <button type="submit" name="checkout" class="k-btn k-btn--primary kp-cart__checkout">Pokračovať k objednávke</button>
+          </div>
+          <ul class="kp-cart__istoty">
+            <li>Pred výrobou vám zavoláme a overíme miesto montáže</li>
+            <li>Platba cez zabezpečenú pokladňu Shopify</li>
+            <li>Otázky: <a href="tel:+421948482266">+421 948 482 266</a></li>
+          </ul>
+        </aside>
+      </form>
+      <script>
+        (function () {
+          var f = document.querySelector('[data-kp-cart]');
+          if (!f) return;
+          f.querySelector('[data-kp-update]').hidden = true;
+          var odoslat = function () {
+            var b = f.querySelector('[data-kp-update]');
+            if (f.requestSubmit) f.requestSubmit(b); else b.click();
+          };
+          f.querySelectorAll('[data-kp-pocet]').forEach(function (s) {
+            var i = s.querySelector('input');
+            s.querySelector('[data-kp-minus]').addEventListener('click', function () { i.value = Math.max(0, (+i.value || 0) - 1); odoslat(); });
+            s.querySelector('[data-kp-plus]').addEventListener('click', function () { i.value = (+i.value || 0) + 1; odoslat(); });
+            i.addEventListener('change', odoslat);
+          });
+        })();
+      </script>
+    {%- endif -%}
+  </div>
+</main>
+{% schema %}
+{"name":"Koverta košík","settings":[]}
+{% endschema %}

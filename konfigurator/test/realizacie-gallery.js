@@ -17,7 +17,7 @@ async function dismissConsent(page) {
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
   await page.goto(URL, { waitUntil: 'load' });
   await dismissConsent(page);
-  await page.waitForSelector('#realGrid .kh-work__item[role="button"]');
+  await page.waitForSelector('#realGrid .kh-work__item [role="button"]');
 
   const all = page.locator('#realGrid .kh-work__item:not([hidden])');
   assert.equal(await all.count(), 200, 'The complete realization gallery must remain available');
@@ -47,7 +47,7 @@ async function dismissConsent(page) {
   await mobile.goto(URL, { waitUntil: 'load' });
   await mobile.setViewportSize({ width: 390, height: 844 });
   await dismissConsent(mobile);
-  await mobile.waitForSelector('#realGrid .kh-work__item[role="button"]');
+  await mobile.waitForSelector('#realGrid .kh-work__item [role="button"]');
   const viewport = await mobile.evaluate(() => ({
     innerWidth,
     media: matchMedia('(max-width: 719px)').matches

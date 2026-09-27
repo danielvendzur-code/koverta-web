@@ -1,15 +1,75 @@
 {%- assign kv_dopyt = '#ponuka' -%}
+<!-- KOVERTA-SEO -->
+<link rel="dns-prefetch" href="https://koverta.sk">
+<meta name="theme-color" content="#12171a">
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
+<!-- /KOVERTA-SEO -->
+<script>document.documentElement.classList.add('k-js')</script>
+<style>
+  /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
+  body { margin: 0; background: #fff; }
+  .k, .kv-header {
+    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
+  }
+  .k h1, .k h2, .k h3, .k .k-display, .k .k-h2, .k .k-h3, .k .k-h4,
+  .k .kh-fact strong, .k .kh-rev__big b, .k .kh-cta__row strong,
+  .k .kh-usp__item strong, .k .kh-soltec__lines strong, .k .kh-faq__item summary,
+  .kv-header .kv-mega__card strong, .k .kh-fact--score b, .k .kh-cta__score b, .k .kh-proc__n {
+    font-variation-settings: "wdth" 106;
+  }
+</style>
+<style>
+  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
+     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
+     funguje aj bez skriptu. */
+  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  @media (min-width: 1000px) {
+    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
+  }
+  .kv-legal__obsah-nadpis {
+    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
+  }
+  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
+  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
+  .kv-legal__obsah a {
+    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
+    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
+    color: #3b4247; text-decoration: none;
+    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
+  }
+  .kv-legal__obsah a::before {
+    content: counter(kvc, decimal-leading-zero);
+    font-size: 1.1rem; font-weight: 700; color: #8a6600;
+    font-variant-numeric: tabular-nums;
+  }
+  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
+  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
+  .kv-legal { max-width: 78ch; }
+  .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
+  .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
+  .kv-legal p, .kv-legal li { font-size: 1.55rem; line-height: 1.7; color: #3b4247; }
+  .kv-legal ul, .kv-legal ol { margin: 0 0 1.2rem 1.6rem; }
+  .kv-legal li { margin-bottom: .5rem; }
+  .kv-legal strong { color: #12171a; }
+  .kv-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Organization", "HomeAndConstructionBusiness"], "@id": "https://koverta.sk/#organizacia", "name": "Koverta", "url": "https://koverta.sk/", "logo": "https://danielvendzur-code.github.io/koverta-web/assets/koverta-ikona-512.png", "description": "Prístrešky pre autá, pergoly a zastrešenie terás z vlastnej výroby na Slovensku. Zameranie a návrh zadarmo, doprava a montáž v cene.", "email": "obchod@koverta.sk", "telephone": "+421948482266", "areaServed": [{"@type": "Country", "name": "Slovensko"}, {"@type": "AdministrativeArea", "name": "Bratislavský kraj"}, {"@type": "AdministrativeArea", "name": "Trnavský kraj"}, {"@type": "AdministrativeArea", "name": "Nitriansky kraj"}, {"@type": "AdministrativeArea", "name": "Trenčiansky kraj"}, {"@type": "AdministrativeArea", "name": "Žilinský kraj"}, {"@type": "AdministrativeArea", "name": "Banskobystrický kraj"}, {"@type": "AdministrativeArea", "name": "Prešovský kraj"}, {"@type": "AdministrativeArea", "name": "Košický kraj"}], "sameAs": ["https://www.facebook.com/KovertaSK", "https://instagram.com/koverta.sk", "https://pinterest.com/KovertaSK"], "contactPoint": [{"@type": "ContactPoint", "contactType": "sales", "name": "Obchodné oddelenie", "email": "obchod@koverta.sk", "telephone": "+421948482266", "availableLanguage": ["sk", "cs"]}, {"@type": "ContactPoint", "contactType": "technical support", "name": "Projektové oddelenie", "email": "design@koverta.sk", "telephone": "+421911298341", "availableLanguage": ["sk"]}, {"@type": "ContactPoint", "contactType": "billing support", "name": "Účtovné oddelenie", "email": "financie@koverta.sk", "telephone": "+421905482266", "availableLanguage": ["sk"]}], "alternateName": ["Koverta.sk", "Koverta prístrešky"], "slogan": "Prístrešky a pergoly pre váš priestor", "knowsLanguage": ["sk", "cs", "en"], "currenciesAccepted": "EUR", "knowsAbout": ["prístrešky pre autá", "carporty", "záhradné prístrešky", "zastrešenie terasy", "bioklimatické pergoly", "pevné prestrešenia", "ZIP rolety", "lamelové tienenie", "brisoleje", "vonkajšie kuchyne", "oceľové konštrukcie", "hliníkové konštrukcie", "práškové lakovanie RAL", "ohlásenie drobnej stavby"], "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Zameranie na mieste"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Cenová ponuka a návrh"}, "price": 0, "priceCurrency": "EUR"}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Výroba prístreškov a pergol"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Doprava a montáž na kľúč"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Betónové pätky ako doplnková služba"}}], "image": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@4b84f069ffcbaa3018df464127dc62469d28f12c/assets/koverta-og.jpg", "legalName": "Venaco s. r. o.", "address": {"@type": "PostalAddress", "streetAddress": "J. C. Hronského 3427/6", "addressLocality": "Nitra", "postalCode": "949 07", "addressCountry": "SK"}, "identifier": [{"@type": "PropertyValue", "name": "IČO", "value": "45648107"}], "priceRange": "€€"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Koverta","item":"https://koverta.sk/"},{"@type":"ListItem","position":2,"name":"Reklamačný poriadok"}]}</script>
 <main class="k" id="obsah" data-k-root>
 
 <section class="kh-hero kh-hero--kratky" aria-labelledby="pgTitle">
   <div class="kh-hero__bg">
-    <img src="https://danielvendzur-code.github.io/koverta-web/assets/foto/03-w1800.jpg" alt="" fetchpriority="high" decoding="async" width="1800" height="1350">
+    <img src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/foto/03-w1800.jpg?v=2" alt="" fetchpriority="high" decoding="async" width="1800" height="1350">
     <span class="kh-hero__scrim" aria-hidden="true"></span>
   </div>
   <div class="k-wrap kh-hero__inner">
     <div class="kh-hero__box" data-k-hero-box>
       <nav class="kh-crumbs k-rise" aria-label="Kde sa nachádzate">
-        <a href="/pages/nove-uvod">Koverta</a><span aria-hidden="true">/</span><span class="kh-crumbs__cast">Dokumenty</span><span aria-hidden="true">/</span><span aria-current="page">Reklamačný poriadok</span>
+        <a href="/">Koverta</a><span aria-hidden="true">/</span><span class="kh-crumbs__cast">Dokumenty</span><span aria-hidden="true">/</span><span aria-current="page">Reklamačný poriadok</span>
       </nav>
       <h1 id="pgTitle" class="k-display k-rise" data-k-headline>Reklamačný poriadok</h1>
       <p class="k-lead kh-hero__lead k-rise" data-k-delay="2">Ako a kde reklamovať, ako postupujeme pri riešení a ako prebiehajú záručné opravy.</p>
@@ -76,7 +136,7 @@
 <ol>
 <li>Objednávateľ môže uplatniť reklamáciu jednou z nasledovných možností:
 <ul>
-<li>vyplnením<span> </span><a href="https://drive.google.com/file/d/1szTuX1Bd2RNurD4GT7mwwT48nCxExWZJ/view?usp=sharing" target="_BLANK">reklamačného formulára</a>, ktorý sa nachádza na webovej stránke<span> </span><a href="/pages/nove-uvod">www.koverta.sk</a>, a jeho zaslaním poštou na adresu sídla zhotoviteľa alebo elektronickou poštou na adresu<span> </span><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a>,</li>
+<li>vyplnením<span> </span><a href="https://drive.google.com/file/d/1szTuX1Bd2RNurD4GT7mwwT48nCxExWZJ/view?usp=sharing" target="_BLANK">reklamačného formulára</a>, ktorý sa nachádza na webovej stránke<span> </span><a href="/">www.koverta.sk</a>, a jeho zaslaním poštou na adresu sídla zhotoviteľa alebo elektronickou poštou na adresu<span> </span><a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a>,</li>
 <li>spísaním reklamácie a zaslaním poštou na adresu sídla zhotoviteľa alebo elektronickou poštou.</li>
 </ul>
 </li>
@@ -130,10 +190,9 @@
         <div class="kh-cta__head">
           <p class="k-eyebrow">Cenová ponuka zadarmo</p>
           <h2 id="ctaTitle" class="k-h2">Máte otázku k tomuto dokumentu?</h2>
-          <p class="k-copy">Ozvite sa nám a vysvetlíme, čo z toho pre vašu objednávku plynie, ešte pred podpisom.</p>
         </div>
 
-        <form id="dopyt" class="kh-form" method="post" action="/pages/nove-kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
+        <form id="dopyt" class="kh-form" method="post" action="/pages/kontakt#dopyt" accept-charset="UTF-8" enctype="multipart/form-data" data-k-dopyt>
           <input type="hidden" name="form_type" value="contact">
           <input type="hidden" name="utf8" value="✓">
           <fieldset>
@@ -169,10 +228,10 @@
           <label class="kh-field kh-field--subor">
             <span>Fotky miesta <small>nepovinné</small></span>
             <input type="file" name="contact[Prílohy][]" accept="image/*,application/pdf" multiple data-k-subory>
-            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene. Po odoslaní vám ukážeme, kam ich poslať.</small>
+            <small class="kh-field__hint">Stačí pár záberov miesta, kde má prístrešok stáť. Pomôžu nám pri návrhu aj pri cene.</small>
           </label>
 
-          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/nove-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/nove-ochrana-sukromia">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
+          <label class="kh-form__suhlas"><input type="checkbox" name="contact[Súhlas]" value="Súhlasím s obchodnými podmienkami a so spracovaním osobných údajov" required><span>Súhlasím s <a href="/pages/vseobecne-obchodne-podmienky">obchodnými podmienkami</a> a so <a href="/pages/zasady-ochrany-osobnych-udajov">spracovaním osobných údajov</a> na účely vybavenia dopytu. Dopyt je nezáväzný.</span></label>
 
           <div class="kh-form__submit">
             <button class="k-btn k-btn--primary" type="submit">Odoslať dopyt
@@ -182,13 +241,13 @@
         <div class="kh-dakujem" data-k-dakujem hidden>
           <p class="kh-dakujem__znak" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
           <h3 class="kh-dakujem__nadpis">Dopyt je u nás</h3>
-          <p class="kh-dakujem__text">Prišiel nám v poriadku. Ozveme sa do jedného pracovného dňa. Takto to bude pokračovať:</p>
+          <p class="kh-dakujem__text">Ozveme sa do jedného pracovného dňa.</p>
           <ol class="kh-dakujem__kroky">
-            <li><strong>Ozveme sa do jedného pracovného dňa</strong><span>Telefonicky alebo e-mailom, podľa toho, čo vám vyhovuje.</span></li>
-            <li><strong>Prídeme zamerať</strong><span>Na mieste, zadarmo a nezáväzne, aj keď si nakoniec vyberiete inak.</span></li>
-            <li><strong>Pošleme návrh a cenu</strong><span>S rozmermi, rozmiestnením stĺpov a termínom montáže.</span></li>
+            <li><strong>Ozveme sa</strong></li>
+            <li><strong>Pošleme ponuku</strong></li>
+            <li><strong>Postavíme</strong><span>Ak treba, predtým prídeme zamerať.</span></li>
           </ol>
-          <p class="kh-dakujem__fotky" data-k-fotky hidden>Fotky, ktoré ste vybrali, pošlite prosím e-mailom. Formulár ich k nám neprenesie.
+          <p class="kh-dakujem__fotky" data-k-fotky hidden>
             <a href="mailto:obchod@koverta.sk?subject=Fotky%20k%20dopytu">Poslať fotky na obchod@koverta.sk</a></p>
           <p class="kh-dakujem__spoj">Súri to? <a href="tel:+421948482266">+421 948 482 266</a> · <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a></p>
           <p class="kh-dakujem__zaloha"><a data-k-mailto href="mailto:obchod@koverta.sk">Poslať ten istý dopyt aj e-mailom</a> <span>Ak by k nám formulár nedoručil, e-mail dôjde vždy.</span></p>
@@ -209,7 +268,6 @@
         <div class="kh-cta__aside-head">
           <p class="k-eyebrow">Kompletný servis</p>
           <h3>Od návrhu po montáž</h3>
-          <p>Jeden tím vás prevedie výberom riešenia, zameraním aj hotovou realizáciou.</p>
         </div>
 
         <a class="kh-cta__row" href="tel:+421948482266">
@@ -240,7 +298,7 @@
         </div>
       
         <figure class="kh-cta__foto">
-          <img src="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-f240-real.jpg" alt="Prístrešok pre dve autá" width="2000" height="1277" loading="lazy" decoding="async" srcset="https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-f240-real-w640.webp 640w, https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-f240-real-w1000.webp 1000w, https://danielvendzur-code.github.io/koverta-web/assets/soltec-carport-f240-real-w1600.webp 1600w" sizes="(max-width: 900px) 272px, 715px">
+          <img src="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-carport-f240-real.jpg?v=2" alt="Prístrešok pre dve autá" width="2000" height="1277" loading="lazy" decoding="async" srcset="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-carport-f240-real-w640.webp?v=2 640w, https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@ff21f58b794bc47b6a55ba087c58bdd59718058d/assets/soltec-carport-f240-real-w1000.webp?v=2 1000w, https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@ff21f58b794bc47b6a55ba087c58bdd59718058d/assets/soltec-carport-f240-real-w1600.webp?v=2 1600w" sizes="(max-width: 900px) 272px, 715px">
         </figure>
       </aside>
 
@@ -252,65 +310,6 @@
 </main>
 <!-- ============================================================ PÄTIČKA -->
 
-<!-- KOVERTA-SEO -->
-<link rel="preconnect" href="https://koverta.sk" crossorigin>
-<link rel="dns-prefetch" href="https://koverta.sk">
-<meta name="theme-color" content="#12171a">
-<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
-<!-- /KOVERTA-SEO -->
-<script>document.documentElement.classList.add('k-js')</script>
-<style>
-  /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
-  body { margin: 0; background: #fff; }
-  .k, .kv-header {
-    --font-heading-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
-    --font-body-family: "Archivo", "Archivo zaskok", "Helvetica Neue", Arial, sans-serif;
-  }
-  .k h1, .k h2, .k h3, .k .k-display, .k .k-h2, .k .k-h3, .k .k-h4,
-  .k .kh-fact strong, .k .kh-rev__big b, .k .kh-cta__row strong,
-  .k .kh-usp__item strong, .k .kh-soltec__lines strong, .k .kh-faq__item summary,
-  .kv-header .kv-mega__card strong, .k .kh-fact--score b, .k .kh-cta__score b, .k .kh-proc__n {
-    font-variation-settings: "wdth" 106;
-  }
-</style>
-<style>
-  /* Dokument má vyše 9 000 px textu. Bez obsahu sa v ňom nedá nič nájsť,
-     preto vedľa neho stojí prilepený zoznam častí. Robí sa pri stavbe, takže
-     funguje aj bez skriptu. */
-  .kv-legal__mriezka { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  @media (min-width: 1000px) {
-    .kv-legal__mriezka { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 56px; align-items: start; }
-    .kv-legal__obsah { position: sticky; top: clamp(96px, 13vh, 148px); }
-  }
-  .kv-legal__obsah-nadpis {
-    margin: 0 0 12px; font-size: 1.2rem; font-weight: 600;
-    letter-spacing: .16em; text-transform: uppercase; color: #6b7378;
-  }
-  .kv-legal__obsah ol { margin: 0; padding: 0; list-style: none; counter-reset: kvc; }
-  .kv-legal__obsah li { counter-increment: kvc; border-top: 1px solid rgba(18,23,26,.1); }
-  .kv-legal__obsah li:last-child { border-bottom: 1px solid rgba(18,23,26,.1); }
-  .kv-legal__obsah a {
-    display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px;
-    padding: 11px 0; font-size: 1.35rem; line-height: 1.45;
-    color: #3b4247; text-decoration: none;
-    transition: color 240ms ease, transform 320ms cubic-bezier(.16,1,.3,1);
-  }
-  .kv-legal__obsah a::before {
-    content: counter(kvc, decimal-leading-zero);
-    font-size: 1.1rem; font-weight: 700; color: #8a6600;
-    font-variant-numeric: tabular-nums;
-  }
-  .kv-legal__obsah a:hover { color: #12171a; transform: translateX(3px); }
-  .kv-legal h2 { scroll-margin-top: clamp(96px, 14vh, 156px); }
-  .kv-legal { max-width: 78ch; }
-  .kv-legal h2 { margin: 2.4rem 0 .8rem; font-size: 2rem; line-height: 1.25; }
-  .kv-legal h3, .kv-legal h4 { margin: 2rem 0 .6rem; font-size: 1.6rem; }
-  .kv-legal p, .kv-legal li { font-size: 1.55rem; line-height: 1.7; color: #3b4247; }
-  .kv-legal ul, .kv-legal ol { margin: 0 0 1.2rem 1.6rem; }
-  .kv-legal li { margin-bottom: .5rem; }
-  .kv-legal strong { color: #12171a; }
-  .kv-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-</style>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {

@@ -107,7 +107,7 @@ Never generalize all Koverta posts to 150×150.
 Roof-only exports do not prove post axes.
 
 Use Drive realisations for appearance checks:
-`https://drive.google.com/drive/folders/1SxXlJMzd3Ni6xh-hP13_hdUkmOVKiPO4`
+`[odkaz na Drive odstránený]`
 
 Soltec must remain untouched.
 

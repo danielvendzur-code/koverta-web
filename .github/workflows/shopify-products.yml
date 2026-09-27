@@ -1,0 +1,53 @@
+name: Shopify produkty — synchronizácia
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Čo synchronizovať"
+        required: true
+        type: choice
+        default: reference
+        options:
+          - reference
+          - all
+      apply:
+        description: "Zapísať zmeny do Shopify (inak iba dry-run)"
+        required: true
+        type: boolean
+        default: false
+      publish:
+        description: "Nastaviť produkty ACTIVE (inak DRAFT)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  products:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Overiť produktový katalóg
+        run: |
+          node tools/shopify-produkt-kontrola.js
+          node tools/shopify-products.js --check
+      - name: Synchronizovať produkty
+        env:
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+          SCOPE: ${{ inputs.scope }}
+          APPLY: ${{ inputs.apply }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          set -euo pipefail
+          args=(--scope="$SCOPE")
+          if [ "$APPLY" = "true" ]; then args+=(--apply); fi
+          if [ "$PUBLISH" = "true" ]; then args+=(--publish); fi
+          node tools/shopify-products.js "${args[@]}"

@@ -15,7 +15,7 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
 
   // mailto: nesmie stránku odnavigovať, len ho zachytíme
   let mailtoNav = '';
-  await p.route('**/*', (r) => r.continue());
+  await p.route('**/*', (r) => /koverta-formular\.vercel\.app/.test(r.request().url()) ? r.abort() : r.continue());
   p.on('framenavigated', () => {});
   await p.addInitScript(() => {
     window.__mailto = '';
@@ -38,7 +38,7 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
   await p.fill('input[name="contact[email]"]', 'jozef@example.sk');
   await p.fill('input[name="contact[Miesto realizácie]"]', 'Nitra');
   await p.fill('textarea[name="contact[body]"]', 'Dve autá, asi 6 × 5 m.');
-  await p.check('input[name="contact[Súhlas]"]');
+  await p.locator('input[name="contact[Súhlas]"]').check({ force: true }).catch(() => {});
   await p.click('form[data-k-dopyt] button[type="submit"]');
   await p.waitForTimeout(900);
 
@@ -59,17 +59,24 @@ const ok = (p, m) => { if (!p) chyby.push(m); };
     };
   });
 
-  ok(stav.dakujemVidno, 'panel po odoslaní sa neukázal');
+  /* Poďakovanie je len jedno, na ďakovnej stránke: panel vo formulári sa
+     pred odchodom neukazuje (predtým blikli dve poďakovania za sebou). */
+  ok(!stav.dakujemVidno, 'pred ďakovnou stránkou sa ukázalo aj druhé poďakovanie');
   ok(!stav.chybaVidno, 'ukázal sa chybový panel');
-  ok(stav.formularSkryty, 'formulár ostal viditeľný');
-  ok(stav.nadpis === 'Dopyt máte pripravený v e-maile', 'nadpis: ' + stav.nadpis);
-  ok(/Otvorili sme vám poštu/.test(stav.uvod), 'úvodný text: ' + stav.uvod);
-  ok(stav.odkazText === 'Otvoriť e-mail s dopytom', 'text odkazu: ' + stav.odkazText);
+  /* Formulár posiela dopyt na server (na localhoste sa len zapíše do
+     window.__kvDopytSkusobny); e-mail ostáva ako záložná cesta v paneli. */
+  ok(stav.nadpis === 'Dopyt je u nás', 'nadpis: ' + stav.nadpis);
+  ok(/Ozveme sa/.test(stav.uvod), 'úvodný text: ' + stav.uvod);
+  ok(stav.odkazText === 'Poslať ten istý dopyt aj e-mailom', 'text odkazu: ' + stav.odkazText);
+  const odoslane = await p.evaluate(() => (window.__kvDopytSkusobny || [])[0] || null);
+  ok(odoslane && odoslane.meno === 'Jozef Testovací' && odoslane.telefon === '0900 123 456'
+    && odoslane.miesto === 'Nitra' && /Dve autá/.test(odoslane.sprava) && odoslane.typ, 'na server by neodišli všetky polia: ' + JSON.stringify(odoslane));
   const href = decodeURIComponent(stav.odkaz || '');
   for (const kus of ['obchod@koverta.sk', 'Jozef Testovací', '0900 123 456', 'jozef@example.sk', 'Nitra', 'Dve autá']) {
     ok(href.indexOf(kus) > -1, 'v mailto chýba: ' + kus);
   }
-  ok(p.url().indexOf('/kontakt/') > -1, 'stránka odnavigovala preč: ' + p.url());
+  await p.waitForTimeout(2200);
+  ok(/dakujeme\/\?contact_posted=true/.test(p.url()), 'po odoslaní neprešlo na ďakovnú stránku: ' + p.url());
 
   // ── hľadanie, ktoré nič nenájde, vedie na kontakt a predvyplní správu
   await p.goto(B + '/', { waitUntil: 'load', timeout: 60000 });

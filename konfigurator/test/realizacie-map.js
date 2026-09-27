@@ -19,11 +19,11 @@ function unique(valuesToCheck, label) {
   return seen;
 }
 
-const markerIds = values(/class="kh-mapa__bod"[^>]*data-k-mapa-bod="([^"]+)"/g);
+const markerIds = values(/class="kh-mapa__bod(?: [^"]*)?"[^>]*data-k-mapa-bod="([^"]+)"/g);
 const listIds = values(/class="kh-mapa__polozka"[^>]*data-k-mapa-bod="([^"]+)"/g);
 const cardIds = values(/data-k-mapa-karta="([^"]+)"/g);
 
-assert.strictEqual(markerIds.length, 110, 'map must contain exactly 110 realization locations');
+assert.strictEqual(markerIds.length, 112, 'map must contain exactly 112 realization locations');
 assert.deepStrictEqual(unique(markerIds, 'markers'), unique(listIds, 'location list'));
 assert.deepStrictEqual(unique(markerIds, 'markers'), unique(cardIds, 'detail cards'));
 assert.match(html, /Viac ako 110 obcí/);
@@ -48,7 +48,7 @@ assert.match(
   /class="kh-mapa__karta kh-mapa__karta--bezfoto" data-k-mapa-karta="vranov-nad-toplou"/,
   'Vranov must use an honest text-only card until its own photo is supplied'
 );
-assert.match(llms, /\(110 obcí, 178 realizácií\)/);
+assert.match(llms, /\(112 obcí, 175 realizácií\)/);
 assert.match(llms, /Vranov nad Topľou/);
 
-console.log('realizacie-map: PASS (110 locations, complete marker/list/card mapping)');
+console.log('realizacie-map: PASS (112 locations, complete marker/list/card mapping)');
