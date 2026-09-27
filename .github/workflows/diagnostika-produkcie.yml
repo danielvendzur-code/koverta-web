@@ -53,71 +53,27 @@ jobs:
             sk.forEach((x) => console.log("BODY " + x));
             console.log("BODY inline skriptov:", (telo.match(/<script\b(?![^>]*\bsrc=)[^>]*>/gi) || []).length);
           '
-      - name: Lighthouse mobil 3× (sieť, blokujúce, tretie strany)
+      - name: Strop témy — koverta.sk s blokovanými skupinami skriptov (len meranie)
         env:
           ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
-          for i in 1 2 3; do
-            npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" --output=json --output-path="m-$i.json" || true
-          done
+          GOOGLE='--blocked-url-patterns=*googletagmanager.com* --blocked-url-patterns=*google-analytics.com* --blocked-url-patterns=*googleadservices.com* --blocked-url-patterns=*doubleclick.net* --blocked-url-patterns=*merchant-center-analytics.goog*'
+          FB='--blocked-url-patterns=*facebook.net* --blocked-url-patterns=*facebook.com*'
+          SHOP='--blocked-url-patterns=*/cdn/wpm/* --blocked-url-patterns=*/web-pixels* --blocked-url-patterns=*trekkie* --blocked-url-patterns=*perf-kit* --blocked-url-patterns=*shop-js* --blocked-url-patterns=*shop_events_listener* --blocked-url-patterns=*shop.app* --blocked-url-patterns=*shopifysvc.com* --blocked-url-patterns=*/checkouts/internal/preloads.js* --blocked-url-patterns=*load_feature* --blocked-url-patterns=*origin_trials* --blocked-url-patterns=*standard-actions* --blocked-url-patterns=*monorail*'
+          APPS='--blocked-url-patterns=*consentik* --blocked-url-patterns=*ez-terms* --blocked-url-patterns=*expivi.com* --blocked-url-patterns=*omegatheme.com* --blocked-url-patterns=*geojs.io* --blocked-url-patterns=*cloudflare.com/cdn-cgi*'
+          meraj() { for i in 1 2 3; do npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" $2 --output=json --output-path="s-$1-$i.json" || true; done; }
+          meraj nic ""
+          meraj google "$GOOGLE"
+          meraj fb "$FB"
+          meraj shop "$SHOP"
+          meraj apps "$APPS"
+          meraj vsetko "$GOOGLE $FB $SHOP $APPS"
           node -e '
             const fs = require("fs");
-            for (const i of [1, 2, 3]) {
-              const r = JSON.parse(fs.readFileSync(`m-${i}.json`, "utf8")); const a = r.audits;
-              const d = (id) => (a[id] && a[id].details && a[id].details.items) || [];
-              console.log(`\n===== BEH ${i}: perf ${Math.round(r.categories.performance.score * 100)} FCP ${Math.round(a["first-contentful-paint"].numericValue)} LCP ${Math.round(a["largest-contentful-paint"].numericValue)} TBT ${Math.round(a["total-blocking-time"].numericValue)} SI ${Math.round(a["speed-index"].numericValue)} CLS ${a["cumulative-layout-shift"].numericValue.toFixed(3)}`);
-              const lcp = d("largest-contentful-paint-element");
-              const uzol = lcp[0] && lcp[0].items && lcp[0].items[0] && lcp[0].items[0].node;
-              console.log("LCP prvok:", uzol && uzol.selector, uzol && JSON.stringify(uzol.boundingRect), "|", lcp[1] && lcp[1].items && lcp[1].items.map((f) => f.phase + " " + Math.round(f.timing)).join(", "));
-              console.log("LCP snippet:", uzol && uzol.snippet && uzol.snippet.slice(0, 300));
-              const m = a.metrics.details.items[0];
-              console.log("observed: FCP", m.observedFirstContentfulPaint, "LCP", m.observedLargestContentfulPaint, "DCL", m.observedDomContentLoaded, "load", m.observedLoad);
-              for (const id of ["render-blocking-insight", "render-blocking-resources"]) d(id).forEach((x) => console.log("BLOCK", id, x.url, x.wastedMs, x.totalBytes));
-              console.log("BOOT", d("bootup-time").slice(0, 12).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 80) + " " + Math.round(x.total) + "/" + Math.round(x.scripting)).join(" ; "));
-              console.log("3P", d("third-party-summary").map((x) => (x.entity && (x.entity.text || x.entity)) + " main " + Math.round(x.mainThreadTime) + " block " + Math.round(x.blockingTime) + " kB " + Math.round(x.transferSize / 1024)).join(" ; "));
-              console.log("LONG", d("long-tasks").slice(0, 12).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 70) + " @" + Math.round(x.startTime) + " " + Math.round(x.duration)).join(" ; "));
-              if (i === 1) {
-                d("network-requests").slice(0, 70).forEach((x) => console.log("NET", String(Math.round(x.networkRequestTime)).padStart(6), String(Math.round(x.networkEndTime)).padStart(6), (x.priority || "").padEnd(8), String(Math.round((x.transferSize || 0) / 1024)).padStart(5) + "k", (x.resourceType || "").padEnd(10), x.url.replace(/^https?:\/\//, "").slice(0, 150)));
-                for (const id of ["unused-javascript", "unused-css-rules", "uses-responsive-images", "image-delivery-insight", "legacy-javascript-insight", "font-display-insight", "network-dependency-tree-insight"]) {
-                  if (!a[id]) continue;
-                  console.log("AUDIT", id, a[id].score, a[id].displayValue || "", JSON.stringify(d(id).slice(0, 8).map((x) => [x.url, x.wastedBytes, x.wastedMs])).slice(0, 1500));
-                }
-              }
-            }
-          '
-      - name: Trace do prvého vykreslenia (čo drží FCP)
-        env:
-          ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
-        run: |
-          for i in 1 2; do
-            npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" --save-assets --output=json --output-path="t-$i.json" || true
-          done
-          ls -la t-*
-          node -e '
-            const fs = require("fs");
-            for (const i of [1, 2]) {
-              const ev = JSON.parse(fs.readFileSync(`t-${i}-0.trace.json`, "utf8")).traceEvents;
-              const nav = ev.find((e) => e.name === "navigationStart" && e.args && e.args.data && e.args.data.isLoadingMainFrame) || ev.find((e) => e.name === "navigationStart");
-              const t0 = nav.ts;
-              const ms = (ts) => Math.round((ts - t0) / 1000);
-              const mark = ev.filter((e) => /^(firstPaint|firstContentfulPaint|largestContentfulPaint::Candidate|domContentLoadedEventStart|loadEventStart|MarkDOMContent)$/.test(e.name)).map((e) => e.name + "@" + ms(e.ts));
-              console.log(`\n===== TRACE ${i}: ` + [...new Set(mark)].slice(0, 14).join(" "));
-              const fcpE = ev.find((e) => e.name === "firstContentfulPaint");
-              const fcp = fcpE ? fcpE.ts : t0 + 3e6;
-              // hlavné vlákno renderera stránky
-              const tm = ev.find((e) => e.name === "TracingStartedInBrowser");
-              const main = ev.filter((e) => e.name === "RunTask" && e.ph === "X" && e.ts < fcp + 50000 && e.dur > 15000);
-              const byThread = {};
-              main.forEach((e) => { const k = e.pid + ":" + e.tid; byThread[k] = (byThread[k] || 0) + e.dur; });
-              const hlavne = Object.entries(byThread).sort((a, b) => b[1] - a[1])[0][0];
-              const deti = ev.filter((e) => e.ph === "X" && (e.pid + ":" + e.tid) === hlavne && e.ts < fcp + 50000 && e.dur > 4000 && /^(EvaluateScript|FunctionCall|v8.compile|ParseHTML|UpdateLayoutTree|Layout|Paint|ParseAuthorStyleSheet|TimerFire|EventDispatch|v8.run|XHRReadyStateChange|FireAnimationFrame|RunMicrotasks|v8.evaluateModule|CompileScript|RunTask)$/.test(e.name));
-              deti.sort((a, b) => a.ts - b.ts).forEach((e) => {
-                const d = (e.args && (e.args.data || e.args.beginData)) || {};
-                const u = d.url || (d.stackTrace && d.stackTrace[0] && d.stackTrace[0].url) || d.functionName || d.type || "";
-                console.log("T" + i, String(ms(e.ts)).padStart(5), String(Math.round(e.dur / 1000)).padStart(4) + "ms", e.name.padEnd(18), String(u).replace(/^https?:\/\//, "").slice(0, 120), d.lineNumber || "");
-              });
-              // požiadavky začaté pred FCP
-              ev.filter((e) => e.name === "ResourceSendRequest" && e.ts < fcp).forEach((e) => console.log("R" + i, String(ms(e.ts)).padStart(5), (e.args.data.priority || "").padEnd(8), e.args.data.url.replace(/^https?:\/\//, "").slice(0, 130)));
+            for (const v of ["nic", "google", "fb", "shop", "apps", "vsetko"]) {
+              const x = [1, 2, 3].map((i) => `s-${v}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8"))).map((r) => ({ p: Math.round(r.categories.performance.score * 100), fcp: Math.round(r.audits["first-contentful-paint"].numericValue), lcp: Math.round(r.audits["largest-contentful-paint"].numericValue), tbt: Math.round(r.audits["total-blocking-time"].numericValue), si: Math.round(r.audits["speed-index"].numericValue), olcp: r.audits.metrics.details.items[0].observedLargestContentfulPaint }));
+              const med = (k) => x.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(x.length / 2)];
+              console.log(`STROP ${v.padEnd(7)} behy ` + x.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.olcp}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
             }
           '
