@@ -1,0 +1,88 @@
+# Diagnostika koverta.sk (len čítanie)
+#
+# Z runnera stiahne úvodnú stránku obchodu a vypíše, čo je v <head>
+# (skripty, štýly, preloady — vlastné aj Shopify a aplikácií), a z Lighthouse
+# sieťové požiadavky, render-blocking zdroje a cudzí kód. Nič nemení
+# a nič nenasadzuje; slúži na hľadanie brzdy LCP v živom obchode.
+name: Diagnostika produkcie
+
+on:
+  workflow_dispatch:
+    inputs:
+      adresa:
+        description: Adresa
+        required: true
+        default: https://koverta.sk/
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: [.github/workflows/diagnostika-produkcie.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostika:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: HTML hlavičky
+        env:
+          ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
+        run: |
+          curl -sSL -A 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' "$ADRESA" -o stranka.html
+          echo "HTML bajtov: $(wc -c < stranka.html), gzip: $(gzip -9c stranka.html | wc -c)"
+          node -e '
+            const t = require("fs").readFileSync("stranka.html", "utf8");
+            const hlava = t.slice(0, t.indexOf("</head>"));
+            console.log("HEAD bajtov:", hlava.length);
+            const re = /<(script|link|style)\b[^>]*>/gi; let m, i = 0;
+            while ((m = re.exec(hlava))) {
+              const tag = m[0];
+              let info = tag.replace(/\s+/g, " ").slice(0, 230);
+              if (m[1].toLowerCase() !== "link" && !/\bsrc=/.test(tag)) {
+                const koniec = hlava.indexOf("</" + m[1], m.index);
+                info += " [inline " + (koniec - m.index) + " B]";
+              }
+              console.log("HEAD " + String(++i).padStart(3) + " @" + m.index + " " + info);
+            }
+            const telo = t.slice(t.indexOf("</head>"));
+            const sk = [...telo.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/gi)].map((x) => x[0].replace(/\s+/g, " ").slice(0, 200));
+            sk.forEach((x) => console.log("BODY " + x));
+            console.log("BODY inline skriptov:", (telo.match(/<script\b(?![^>]*\bsrc=)[^>]*>/gi) || []).length);
+          '
+      - name: Lighthouse mobil 3× (sieť, blokujúce, tretie strany)
+        env:
+          ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
+        run: |
+          npm install --no-save lighthouse@12 >/dev/null 2>&1
+          for i in 1 2 3; do
+            npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" --output=json --output-path="m-$i.json" || true
+          done
+          node -e '
+            const fs = require("fs");
+            for (const i of [1, 2, 3]) {
+              const r = JSON.parse(fs.readFileSync(`m-${i}.json`, "utf8")); const a = r.audits;
+              const d = (id) => (a[id] && a[id].details && a[id].details.items) || [];
+              console.log(`\n===== BEH ${i}: perf ${Math.round(r.categories.performance.score * 100)} FCP ${Math.round(a["first-contentful-paint"].numericValue)} LCP ${Math.round(a["largest-contentful-paint"].numericValue)} TBT ${Math.round(a["total-blocking-time"].numericValue)} SI ${Math.round(a["speed-index"].numericValue)} CLS ${a["cumulative-layout-shift"].numericValue.toFixed(3)}`);
+              const lcp = d("largest-contentful-paint-element");
+              const uzol = lcp[0] && lcp[0].items && lcp[0].items[0] && lcp[0].items[0].node;
+              console.log("LCP prvok:", uzol && uzol.selector, uzol && JSON.stringify(uzol.boundingRect), "|", lcp[1] && lcp[1].items && lcp[1].items.map((f) => f.phase + " " + Math.round(f.timing)).join(", "));
+              console.log("LCP snippet:", uzol && uzol.snippet && uzol.snippet.slice(0, 300));
+              const m = a.metrics.details.items[0];
+              console.log("observed: FCP", m.observedFirstContentfulPaint, "LCP", m.observedLargestContentfulPaint, "DCL", m.observedDomContentLoaded, "load", m.observedLoad);
+              for (const id of ["render-blocking-insight", "render-blocking-resources"]) d(id).forEach((x) => console.log("BLOCK", id, x.url, x.wastedMs, x.totalBytes));
+              console.log("BOOT", d("bootup-time").slice(0, 12).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 80) + " " + Math.round(x.total) + "/" + Math.round(x.scripting)).join(" ; "));
+              console.log("3P", d("third-party-summary").map((x) => (x.entity && (x.entity.text || x.entity)) + " main " + Math.round(x.mainThreadTime) + " block " + Math.round(x.blockingTime) + " kB " + Math.round(x.transferSize / 1024)).join(" ; "));
+              console.log("LONG", d("long-tasks").slice(0, 12).map((x) => x.url.replace(/^https?:\/\//, "").slice(0, 70) + " @" + Math.round(x.startTime) + " " + Math.round(x.duration)).join(" ; "));
+              if (i === 1) {
+                d("network-requests").slice(0, 70).forEach((x) => console.log("NET", String(Math.round(x.networkRequestTime)).padStart(6), String(Math.round(x.networkEndTime)).padStart(6), (x.priority || "").padEnd(8), String(Math.round((x.transferSize || 0) / 1024)).padStart(5) + "k", (x.resourceType || "").padEnd(10), x.url.replace(/^https?:\/\//, "").slice(0, 150)));
+                for (const id of ["unused-javascript", "unused-css-rules", "uses-responsive-images", "image-delivery-insight", "legacy-javascript-insight", "font-display-insight", "network-dependency-tree-insight"]) {
+                  if (!a[id]) continue;
+                  console.log("AUDIT", id, a[id].score, a[id].displayValue || "", JSON.stringify(d(id).slice(0, 8).map((x) => [x.url, x.wastedBytes, x.wastedMs])).slice(0, 1500));
+                }
+              }
+            }
+          '
