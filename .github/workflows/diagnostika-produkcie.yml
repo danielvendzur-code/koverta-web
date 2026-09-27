@@ -86,3 +86,38 @@ jobs:
               }
             }
           '
+      - name: Trace do prvého vykreslenia (čo drží FCP)
+        env:
+          ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
+        run: |
+          for i in 1 2; do
+            npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" --save-assets --output=json --output-path="t-$i.json" || true
+          done
+          ls -la t-*
+          node -e '
+            const fs = require("fs");
+            for (const i of [1, 2]) {
+              const ev = JSON.parse(fs.readFileSync(`t-${i}-0.trace.json`, "utf8")).traceEvents;
+              const nav = ev.find((e) => e.name === "navigationStart" && e.args && e.args.data && e.args.data.isLoadingMainFrame) || ev.find((e) => e.name === "navigationStart");
+              const t0 = nav.ts;
+              const ms = (ts) => Math.round((ts - t0) / 1000);
+              const mark = ev.filter((e) => /^(firstPaint|firstContentfulPaint|largestContentfulPaint::Candidate|domContentLoadedEventStart|loadEventStart|MarkDOMContent)$/.test(e.name)).map((e) => e.name + "@" + ms(e.ts));
+              console.log(`\n===== TRACE ${i}: ` + [...new Set(mark)].slice(0, 14).join(" "));
+              const fcpE = ev.find((e) => e.name === "firstContentfulPaint");
+              const fcp = fcpE ? fcpE.ts : t0 + 3e6;
+              // hlavné vlákno renderera stránky
+              const tm = ev.find((e) => e.name === "TracingStartedInBrowser");
+              const main = ev.filter((e) => e.name === "RunTask" && e.ph === "X" && e.ts < fcp + 50000 && e.dur > 15000);
+              const byThread = {};
+              main.forEach((e) => { const k = e.pid + ":" + e.tid; byThread[k] = (byThread[k] || 0) + e.dur; });
+              const hlavne = Object.entries(byThread).sort((a, b) => b[1] - a[1])[0][0];
+              const deti = ev.filter((e) => e.ph === "X" && (e.pid + ":" + e.tid) === hlavne && e.ts < fcp + 50000 && e.dur > 4000 && /^(EvaluateScript|FunctionCall|v8.compile|ParseHTML|UpdateLayoutTree|Layout|Paint|ParseAuthorStyleSheet|TimerFire|EventDispatch|v8.run|XHRReadyStateChange|FireAnimationFrame|RunMicrotasks|v8.evaluateModule|CompileScript|RunTask)$/.test(e.name));
+              deti.sort((a, b) => a.ts - b.ts).forEach((e) => {
+                const d = (e.args && (e.args.data || e.args.beginData)) || {};
+                const u = d.url || (d.stackTrace && d.stackTrace[0] && d.stackTrace[0].url) || d.functionName || d.type || "";
+                console.log("T" + i, String(ms(e.ts)).padStart(5), String(Math.round(e.dur / 1000)).padStart(4) + "ms", e.name.padEnd(18), String(u).replace(/^https?:\/\//, "").slice(0, 120), d.lineNumber || "");
+              });
+              // požiadavky začaté pred FCP
+              ev.filter((e) => e.name === "ResourceSendRequest" && e.ts < fcp).forEach((e) => console.log("R" + i, String(ms(e.ts)).padStart(5), (e.args.data.priority || "").padEnd(8), e.args.data.url.replace(/^https?:\/\//, "").slice(0, 130)));
+            }
+          '
