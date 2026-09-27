@@ -30,15 +30,13 @@ jobs:
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
           curl -sSL -A 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' https://koverta.sk/ -o /tmp/produkcia.html
-          # Strop pre menší štýl: zoznam použitých pravidiel z repliky úvodu.
-          mkdir -p /tmp/lok /tmp/v0
+          # Kritický štýl úvodu z repliky (6 šírok okna).
           node .github/replika/varianty.js /tmp/produkcia.html /tmp/v0
           npm install --no-save playwright@1.55.0 >/dev/null 2>&1 && npx playwright install chromium >/dev/null 2>&1
-          LOKALNE_DIR=/tmp/lok node .github/replika/server.js /tmp/v0/pismo.html 8999 & sleep 1
-          node .github/replika/pouzite-css.js http://127.0.0.1:8999/ /tmp/lok/koverta-2026-uvod.css
-          export LOKALNE_DIR=/tmp/lok
-          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v /tmp/lok/koverta-2026-uvod.css
-          ls -la /tmp/v /tmp/lok
+          node .github/replika/server.js /tmp/v0/v0.html 8999 & sleep 1
+          node .github/replika/kriticke-css.js http://127.0.0.1:8999/ /tmp/krit.css
+          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v /tmp/krit.css
+          ls -la /tmp/v
           port=9000
           for v in $(ls /tmp/v | sed 's/\.html$//'); do
             port=$((port+1))
@@ -68,5 +66,6 @@ jobs:
               const el = r.audits["largest-contentful-paint-element"]?.details?.items || [];
               console.log("  LCP prvok:", JSON.stringify(el[0]?.items?.[0]?.node?.snippet || "").slice(0, 200), "fazy:", JSON.stringify((el[1]?.items || []).map((f) => [f.phase, Math.round(f.timing)])));
               for (const it of (r.audits["third-party-summary"]?.details?.items || []).slice(0, 6)) console.log("  3P", it.entity, Math.round(it.blockingTime), Math.round(it.mainThreadTime));
+              for (const k of Object.keys(r.audits).filter((k) => /lcp|render-blocking|network-dependency/.test(k))) { const au = r.audits[k]; console.log("  " + k, au.displayValue || "", JSON.stringify(au.details?.items || au.details || "").slice(0, 700)); }
             }
           '
