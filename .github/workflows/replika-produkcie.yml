@@ -1,0 +1,59 @@
+# Replika koverta.sk na runneri — skúška zmien témy bez nasadenia
+#
+# Runner stiahne presné HTML úvodu koverta.sk a naservíruje ho z localhostu.
+# Všetko ostatné (štýly, skripty Shopify a aplikácií, pixely, API) ide cez
+# proxy naživo z koverta.sk, takže tretie strany sa správajú ako v obchode.
+# Variant mení len to, čo by menila nová téma z tejto vetvy (súbory témy
+# sa podstrčia z shopify-tema/assets, značkovanie sa upraví v HTML).
+# Do Shopify sa nič nezapisuje, nič sa nenasadzuje.
+name: Replika produkcie
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/practical-dijkstra-d9d0nt]
+    paths: [.github/workflows/replika-produkcie.yml, .github/replika/**]
+
+permissions:
+  contents: read
+
+jobs:
+  replika:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Replika a Lighthouse
+        run: |
+          npm install --no-save lighthouse@12 >/dev/null 2>&1
+          curl -sSL -A 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' https://koverta.sk/ -o /tmp/produkcia.html
+          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v
+          ls -la /tmp/v
+          port=9000
+          for v in $(ls /tmp/v | sed 's/\.html$//'); do
+            port=$((port+1))
+            node .github/replika/server.js "/tmp/v/$v.html" $port &
+            sleep 1
+            for blok in ziv bez3p; do
+              extra=""
+              if [ "$blok" = bez3p ]; then
+                extra='--blocked-url-patterns=*googletagmanager.com* --blocked-url-patterns=*google-analytics.com* --blocked-url-patterns=*facebook.net* --blocked-url-patterns=*/cdn/wpm/* --blocked-url-patterns=*/web-pixels* --blocked-url-patterns=*trekkie* --blocked-url-patterns=*perf-kit* --blocked-url-patterns=*shop-js* --blocked-url-patterns=*shopifysvc.com* --blocked-url-patterns=*consentik* --blocked-url-patterns=*ez-terms* --blocked-url-patterns=*expivi.com* --blocked-url-patterns=*omegatheme.com* --blocked-url-patterns=*monorail*'
+              fi
+              for i in 1 2 3; do
+                npx lighthouse "http://127.0.0.1:$port/" --quiet --chrome-flags="--headless=new --no-sandbox" $extra --output=json --output-path="/tmp/v/$v-$blok-$i.json" || true
+              done
+            done
+          done
+          node -e '
+            const fs = require("fs");
+            const varianty = fs.readdirSync("/tmp/v").filter((f) => f.endsWith(".html")).map((f) => f.slice(0, -5));
+            for (const v of varianty) for (const blok of ["ziv", "bez3p"]) {
+              const x = [1, 2, 3].map((i) => `/tmp/v/${v}-${blok}-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8"))).map((r) => ({ p: Math.round(r.categories.performance.score * 100), fcp: Math.round(r.audits["first-contentful-paint"].numericValue), lcp: Math.round(r.audits["largest-contentful-paint"].numericValue), tbt: Math.round(r.audits["total-blocking-time"].numericValue), si: Math.round(r.audits["speed-index"].numericValue), o: r.audits.metrics.details.items[0].observedLargestContentfulPaint, br: (r.audits["largest-contentful-paint-element"].details?.items?.[1]?.items || []).map((f) => Math.round(f.timing)).join("/") }));
+              if (!x.length) continue;
+              const med = (k) => x.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(x.length / 2)];
+              console.log(`REPLIKA ${v.padEnd(14)} ${blok.padEnd(5)} behy ` + x.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.o}[${y.br}]`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
+            }
+          '
