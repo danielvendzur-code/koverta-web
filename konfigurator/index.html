@@ -76,7 +76,10 @@
   w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
   j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
+  /* GTM sa pripojí až po načítaní stránky: úvodná fotka a text sa ukážu
+     skôr a telefón počas načítania nič neblokuje. Súhlas, dopyt aj klik na
+     telefón medzitým čakajú v dataLayer a GTM ich spracuje hneď po pripojení. */
+  w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });
 })(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
 </script>
 <!-- Koniec Google Tag Manager -->
@@ -84,8 +87,8 @@
 <link rel="icon" href="/assets/koverta-ikona-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/koverta-ikona-apple.png" sizes="180x180">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="preload" href="../assets/pismo/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="../assets/pismo/archivo-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-v2.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-ext-v2.woff2" as="font" type="font/woff2" crossorigin>
 
 <style>:root, .color-scheme-1 {
   --color-background: 255,255,255; --gradient-background: #ffffff;
@@ -368,7 +371,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 <!-- Latest shared configurator skin. Kept external so customer fixes can be
      deployed without regenerating the large embedded price catalogue. -->
 <!-- Štýl webu: konfigurátor je jeho stránka, nie samostatná appka. -->
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=dd1067a016">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=f7cd304972">
 <link rel="stylesheet" href="./soltec-premium.css?v=d1f36340d9">
 <!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
 <link rel="stylesheet" href="./koverta-cfg-skin.css?v=3e8540c341">

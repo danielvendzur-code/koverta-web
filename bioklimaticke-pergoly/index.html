@@ -51,7 +51,10 @@
   w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
   j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
+  /* GTM sa pripojí až po načítaní stránky: úvodná fotka a text sa ukážu
+     skôr a telefón počas načítania nič neblokuje. Súhlas, dopyt aj klik na
+     telefón medzitým čakajú v dataLayer a GTM ich spracuje hneď po pripojení. */
+  w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });
 })(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
 </script>
 <!-- Koniec Google Tag Manager -->
@@ -83,14 +86,14 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Koľko stojí bioklimatická pergola?","acceptedAnswer":{"@type":"Answer","text":"Cenu určuje rozmer, rad, počet stĺpov, odtieň a doplnky. ZIP rolety, sklo, osvetlenie či ohrievače tvoria často podstatnú časť sumy, preto sa pergola nepredáva ako hotový balík. Napíšte nám rozmer terasy a miesto realizácie, cenu na konkrétnu zostavu pošleme do jedného pracovného dňa. Zameranie je zadarmo, doprava aj montáž sú v cene."}},{"@type":"Question","name":"Naozaj chráni pred dažďom?","acceptedAnswer":{"@type":"Answer","text":"Áno. Otočné lamely majú patentovaný tvar s tesnením, takže pri zatvorení voda stečie do žľabu integrovaného v ráme a odíde cez stĺpy. Nie je to utesnená zimná záhrada, pri silnom bočnom vetre sa niečo dostane dnu, ale pod pergolou sa v daždi normálne sedí."}},{"@type":"Question","name":"Čo sa stane, keď zaprší alebo sa zdvihne vietor a nie som doma?","acceptedAnswer":{"@type":"Answer","text":"Dažďový snímač lamely zavrie sám. Veterný snímač ich naopak otvorí, aby konštrukcia nebola zbytočne zaťažená. Pri snehu sa riaďte polohou lamiel, ktorú pre vašu zostavu určíme pri návrhu, a sneh odstráňte."}},{"@type":"Question","name":"Aká veľká pergola sa dá postaviť?","acceptedAnswer":{"@type":"Answer","text":"Jeden modul má až 6 m šírky alebo 9,3 m dĺžky (pri SL 240/60 najviac 40 m²). Väčšiu plochu prekryjeme viacerými modulmi vedľa seba. Ktorý rad to bude, vyráta výpočet podľa rozmeru, vetra a snehu u vás, nie číslo z katalógu."}},{"@type":"Question","name":"Dá sa pergola postaviť k stene?","acceptedAnswer":{"@type":"Answer","text":"Áno. Podľa konkrétneho riešenia sa kotví k nosnej stene domu alebo stojí samostatne na stĺpoch. Na strešnej terase alebo pod balkónom sa kotví špeciálnymi úchytmi, takže hydroizolácia zostane celistvá. Smer lamiel potvrdíme v návrhu podľa napojenia, rozmeru poľa, odvodnenia a orientácie terasy."}},{"@type":"Question","name":"Čo sa k pergole dá doplniť?","acceptedAnswer":{"@type":"Answer","text":"Bočné ZIP rolety, posuvné drevené alebo hliníkové panely, sklenené steny, integrované osvetlenie, ohrievače, reproduktory a diaľkové ovládanie. Doplniť sa dá aj presklený strop Glassport, ktorý pustí do domu viac denného svetla."}},{"@type":"Question","name":"Kedy musím výbavu doriešiť?","acceptedAnswer":{"@type":"Answer","text":"Hneď pri návrhu. Rolety, panely, osvetlenie aj snímače treba zohľadniť v ráme, vo vedení aj v prípojkách. Diely chodia zo Slovinska, preto dodatočná prestavba stojí podstatne viac než jedna montáž."}},{"@type":"Question","name":"Potrebujem na pergolu povolenie?","acceptedAnswer":{"@type":"Answer","text":"Zvyčajne do 50 m² zastavanej plochy postačí ohlásenie drobnej stavby. Odporúčame si však podmienky a požiadavky overiť na príslušnom stavebnom úrade. K ponuke dostávate rozmery aj osadenie konštrukcie, teda podklady, ktoré úrad zvyčajne žiada."}},{"@type":"Question","name":"Ako sa pergola udržiava?","acceptedAnswer":{"@type":"Answer","text":"Prakticky nijako. Práškový lak sa neošetruje. Raz ročne odporúčame prejsť odtok, vybrať lístie a skontrolovať, či sa lamely voľne otáčajú. Nič sa nemaže ani nenatiera."}},{"@type":"Question","name":"Kto pergolu vyrába a kto ju u mňa postaví?","acceptedAnswer":{"@type":"Answer","text":"Vyrába ju Soltec v Slovinsku, kde má aj vlastný vývoj; tieneniu sa venuje od roku 1998 a má za sebou vyše 7 000 realizácií. Systém má európsku značku CE a je odskúšaný na vietor. Na Slovensku robíme kompletný servis my: zameranie, návrh, pätky, dopravu, montáž aj odovzdanie."}}]}</script>
 <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
 <!-- /KOVERTA-SEO -->
-<link rel="preload" href="../assets/pismo/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="../assets/pismo/archivo-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-v2.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-ext-v2.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/koverta-ikona-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/koverta-ikona-apple.png" sizes="180x180">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=dd1067a016">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=f7cd304972">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }

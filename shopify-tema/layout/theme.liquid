@@ -118,14 +118,17 @@
   w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
   j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
+  /* GTM sa pripojí až po načítaní stránky: úvodná fotka a text sa ukážu
+     skôr a telefón počas načítania nič neblokuje. Súhlas, dopyt aj klik na
+     telefón medzitým čakajú v dataLayer a GTM ich spracuje hneď po pripojení. */
+  w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });
 })(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
 </script>
 <!-- Koniec Google Tag Manager -->
 <link rel="icon" href="{{ 'favicon.svg' | asset_url }}" type="image/svg+xml">
 <link rel="icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-192.png?v=2" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-apple.png?v=2" sizes="180x180">
-<link rel="manifest" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@7c5f4f673f494c2841e5c1982b0385c5cab33dfd/site.webmanifest">
+<link rel="manifest" href="https://danielvendzur-code.github.io/koverta-web/site.webmanifest">
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
 {%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
    ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
@@ -163,13 +166,13 @@
     "./bioklimaticke-pergoly/": "/collections/bioklimaticke-pergoly",
     "./assets/soltec-pergola-pri-bazene-antracit.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-pri-bazene-antracit.jpg?v=2",
     "./pevne-prestresenia/": "/collections/pergoly-s-pevnou-strechou-multiport",
-    "./assets/soltec-pergola-plna-strecha-pri-dome.webp": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-pergola-plna-strecha-pri-dome.webp?v=2",
+    "./assets/soltec-pergola-plna-strecha-pri-dome.webp": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@2ff4fc4988b133fedcc77986db2a20c4b4fd65e7/assets/soltec-pergola-plna-strecha-pri-dome.webp?v=2",
     "./tienenie/": "/collections/tienenie",
     "./assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg?v=2",
     "./outdoor-kuchyne/": "/collections/outdoor-kuchyne",
-    "./assets/soltec-outdoor-kuchyna-graz.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-outdoor-kuchyna-graz.jpg?v=2",
+    "./assets/soltec-outdoor-kuchyna-graz.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@71d3dfc11c7562fdd5c91fc2883b4cf0176bb58a/assets/soltec-outdoor-kuchyna-graz.jpg?v=2",
     "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
-    "./assets/soltec-mark.png": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@0214cc5781609b2180051ab9ef4b31330b9fa28b/assets/soltec-mark.png?v=2",
+    "./assets/soltec-mark.png": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@40d6124f257d7ff154e7ede76dddb60645cde84e/assets/soltec-mark.png?v=2",
     "./dakujeme/": "/pages/dakujeme"
   };
   window.KV_SCENE_ASSETS = "https://danielvendzur-code.github.io/koverta-web/konfigurator/scene-assets/";

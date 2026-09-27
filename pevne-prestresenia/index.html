@@ -51,7 +51,10 @@
   w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
   j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
+  /* GTM sa pripojí až po načítaní stránky: úvodná fotka a text sa ukážu
+     skôr a telefón počas načítania nič neblokuje. Súhlas, dopyt aj klik na
+     telefón medzitým čakajú v dataLayer a GTM ich spracuje hneď po pripojení. */
+  w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });
 })(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
 </script>
 <!-- Koniec Google Tag Manager -->
@@ -83,14 +86,14 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Koľko stojí pevné prestrešenie?","acceptedAnswer":{"@type":"Answer","text":"Cenu určuje rozmer, počet stĺpov, výplň strechy, kde je zateplený panel lacnejší než sklo, a odtieň. Napíšte nám, čo chcete zastrešiť a v akom rozmere: cenu pošleme do jedného pracovného dňa. Zameranie je zadarmo a doprava aj montáž sú v cene."}},{"@type":"Question","name":"Panel alebo sklo?","acceptedAnswer":{"@type":"Answer","text":"Panel drží teplotu a je lacnejší; sklo púšťa svetlo, ale pod ním býva v lete teplejšie. Pri zameraní povieme, čo sa k danej terase hodí."}},{"@type":"Question","name":"Ako je riešený spád?","acceptedAnswer":{"@type":"Answer","text":"Pri rade F je 2 % spád zatepleného panela integrovaný vo vodorovnom obvodovom ráme. Pri rade G určí skladbu a spád technický návrh podľa skla alebo zelenej strechy."}},{"@type":"Question","name":"Koľko unesie strecha?","acceptedAnswer":{"@type":"Answer","text":"Rad F so zatepleným panelom je počítaný na celkové zaťaženie 140 kg/m². Pri rade G sa prípustné zaťaženie líši podľa rozmeru, krytiny a hustoty sekundárnych profilov; konkrétnu konfiguráciu vyberáme podľa tabuľky výrobcu a lokality. Číslo pre vašu snehovú oblasť dáme k ponuke."}},{"@type":"Question","name":"Prehreje sa pod sklom terasa?","acceptedAnswer":{"@type":"Answer","text":"V lete áno, najmä ak je terasa na juh alebo na západ a sklo je číre. Riešia sa tým dve veci: tieniace ZIP rolety zvonku alebo lamelová clona nad sklom."}},{"@type":"Question","name":"Dá sa prestrešenie kotviť k domu?","acceptedAnswer":{"@type":"Answer","text":"Áno, kotvenie je vnútorné aj vonkajšie a konštrukcia sa dá zavesiť na stenu. Pri kotvení k stene ubudne rad stĺpov a pod prestrešením ostane viac miesta."}},{"@type":"Question","name":"Potrebujem povolenie?","acceptedAnswer":{"@type":"Answer","text":"Zvyčajne do 50 m² zastavanej plochy postačí ohlásenie drobnej stavby. Odporúčame si však podmienky a požiadavky overiť na príslušnom stavebnom úrade. K ponuke dostávate rozmery aj osadenie konštrukcie, teda podklady, ktoré úrad zvyčajne žiada."}},{"@type":"Question","name":"Aká je záruka?","acceptedAnswer":{"@type":"Answer","text":"Výrobca dáva na konštrukciu a lak 7 rokov, na zateplený panel 10 rokov pri dodržaní podmienok jeho dodávateľa. Práškový lak sa neošetruje."}}]}</script>
 <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/koverta-web/*"},"eagerness":"moderate"}]}</script>
 <!-- /KOVERTA-SEO -->
-<link rel="preload" href="../assets/pismo/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="../assets/pismo/archivo-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-v2.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/pismo/archivo-latin-ext-v2.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add('k-js')</script>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/koverta-ikona-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/koverta-ikona-apple.png" sizes="180x180">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="../assets/koverta-2026.css?v=dd1067a016">
+<link rel="stylesheet" href="../assets/koverta-2026.css?v=f7cd304972">
 <style>
   /* Len pre túto statickú plochu — v téme tieto premenné dodáva Shopify. */
   body { margin: 0; background: #fff; }
