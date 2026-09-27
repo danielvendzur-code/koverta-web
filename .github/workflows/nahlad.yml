@@ -4,7 +4,9 @@
 # `master`. Vercel odmietol, takže ostávajú Pages — lenže tie majú na
 # repozitár jediný zdroj. Zapnutie tohto postupu teda znamená, že Pages
 # prestanú servírovať `master` a začnú servírovať vetvu z `vetva` nižšie.
-# Späť na `master` sa vráti prepnutím zdroja v Settings → Pages.
+# Späť na `master` ich vráti pages.yml — sám pri každom posune do `master`,
+# alebo ručne (Actions → „GitHub Pages z master" → Run workflow). Živá téma
+# z Pages berie fotografie, takže po skončení náhľadu ich treba vrátiť.
 #
 # Zapnúť: Settings → Pages → Build and deployment → Source: GitHub Actions.
 # Potom Actions → „Náhľad vetvy na GitHub Pages" → Run workflow.
