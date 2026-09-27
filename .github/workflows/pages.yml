@@ -1,0 +1,49 @@
+# GitHub Pages z master
+#
+# Živá téma na koverta.sk berie z danielvendzur-code.github.io/koverta-web
+# stovky fotografií, manifest aj 3D modely konfigurátora. Pages preto musia
+# servírovať `master` — presne tak, ako je v repozitári, s jeho robots.txt
+# (Allow) a bez `noindex`, aby Google smel prehľadávať aj fotografie.
+#
+# Zdroj Pages je „GitHub Actions" (kvôli náhľadom vetiev, nahlad.yml).
+# Náhľad vetvy Pages dočasne prepíše; tento workflow ich vráti na `master`
+# pri každom posune do `master`, alebo ručne: Actions → „GitHub Pages
+# z master" → Run workflow.
+name: GitHub Pages z master
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  nasad:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.nasadenie.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      # Na web nepatria podklady a výstupy testov (qa-artifacts má sám
+      # 150 MB). Téma ani web z týchto priečinkov nič nenačítava.
+      - name: Vyhodiť, čo na web nepatrí
+        run: rm -rf qa-artifacts node_modules .git 04_REFERENCIE coordination archiv-expivi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: nasadenie
+        uses: actions/deploy-pages@v4
