@@ -1,0 +1,49 @@
+# Nové fotky do galérie realizácií — automaticky s vodoznakom Koverta
+#
+# Fotky sa nahrajú do pridat-fotky/<kategória>/ priamo v master (napr. cez
+# GitHub „Add file → Upload files“). Tento workflow im dá vodoznak, pridá
+# ich na začiatok ich kategórie v galérii, zdroje zmaže a spustí prenos do
+# Shopify aj na GitHub Pages. Návod je v pridat-fotky/NAVOD.md.
+name: Pridať fotky do galérie
+
+on:
+  push:
+    branches: [master]
+    paths: ['pridat-fotky/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: pridat-fotky
+  cancel-in-progress: false
+
+jobs:
+  pridat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Vodoznak a galéria
+        run: |
+          pip install --quiet pillow pillow-heif
+          python3 -c "import pillow_heif; pillow_heif.register_heif_opener()" || true
+          python3 tools/pridaj-realizacie.py
+      - name: Uložiť a nasadiť
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "koverta-bot"
+          git config user.email "noreply@koverta.sk"
+          git add -A assets/realizacie realizacie/index.html pridat-fotky
+          git diff --cached --quiet && { echo "Nič nové."; exit 0; }
+          git commit -m "Galéria: nové fotky s vodoznakom"
+          git push origin HEAD:master
+          # Commit od GITHUB_TOKEN sám nespustí ďalšie workflowy, preto ručne.
+          gh workflow run shopify.yml --ref master
+          gh workflow run pages.yml --ref master
