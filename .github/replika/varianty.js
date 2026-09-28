@@ -26,8 +26,24 @@ const cv = (t) => {
   return t.replace('</head>', css + '</head>');
 };
 
-const varianty = { v0, cv: cv(v0) };
-if (kritCss) { varianty.krit = krit(v0); varianty['krit-cv'] = cv(krit(v0)); }
+// Horná hranica: štýl aplikácie EZ Terms (zaškrtávanie podmienok, treba ho
+// len v košíku) sa stiahne bez blokovania vykreslenia.
+const EZ = /<link href="(https:\/\/cdn\.shopify\.com\/extensions\/[^"]*ez-terms[^"]*\/style\.min\.css)" rel="stylesheet" type="text\/css" media="all">/;
+const ezAsync = (t) => {
+  const m = t.match(EZ);
+  if (!m) throw new Error('ez: štýl nenájdený');
+  return t.replace(m[0], () => `<link href="${m[1]}" rel="stylesheet" type="text/css" media="print" onload="this.media='all'">`);
+};
+// Nasaditeľná verzia z témy: skript skoro v hlavičke sleduje, kedy parser
+// vloží štýl aplikácie, a hneď ho prepne na neblokujúci.
+const ezSledovac = (t) => {
+  const s = `<script>(function(){var o=new MutationObserver(function(z){z.forEach(function(m){m.addedNodes.forEach(function(n){if(n.tagName==='LINK'&&/ez-terms[^"]*style\\.min\\.css/.test(n.href||'')){n.media='print';n.onload=function(){n.media='all'};o.disconnect();}})})});o.observe(document.documentElement,{childList:true,subtree:true});addEventListener('DOMContentLoaded',function(){o.disconnect()});})();</script>`;
+  if (!/<meta name="viewport"[^>]*>/.test(t)) throw new Error('ez2: viewport');
+  return t.replace(/(<meta name="viewport"[^>]*>)/, (m) => m + s);
+};
+
+const varianty = { v0, ez: ezAsync(v0), 'ez-sledovac': ezSledovac(v0) };
+if (kritCss) { varianty['krit-ez'] = ezAsync(krit(v0)); varianty['krit-ez-sledovac'] = ezSledovac(krit(v0)); }
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length);
