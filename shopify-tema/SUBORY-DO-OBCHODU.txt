@@ -773,6 +773,8 @@ realizacie-auta-koverta-026-w640.webp	assets/realizacie/auta-koverta-026-w640.we
 realizacie-auta-koverta-026.jpg	assets/realizacie/auta-koverta-026.jpg
 realizacie-auta-koverta-028-w640.webp	assets/realizacie/auta-koverta-028-w640.webp
 realizacie-auta-koverta-028.jpg	assets/realizacie/auta-koverta-028.jpg
+realizacie-auta-koverta-046-w640.webp	assets/realizacie/auta-koverta-046-w640.webp
+realizacie-auta-koverta-046.jpg	assets/realizacie/auta-koverta-046.jpg
 realizacie-auta-koverta-048-w640.webp	assets/realizacie/auta-koverta-048-w640.webp
 realizacie-auta-koverta-048.jpg	assets/realizacie/auta-koverta-048.jpg
 realizacie-auta-koverta-053-w640.webp	assets/realizacie/auta-koverta-053-w640.webp
@@ -843,8 +845,6 @@ realizacie-auta-soltec-030-w640.webp	assets/realizacie/auta-soltec-030-w640.webp
 realizacie-auta-soltec-030.jpg	assets/realizacie/auta-soltec-030.jpg
 realizacie-auta-soltec-031-w640.webp	assets/realizacie/auta-soltec-031-w640.webp
 realizacie-auta-soltec-031.jpg	assets/realizacie/auta-soltec-031.jpg
-realizacie-auta-soltec-046-w640.webp	assets/realizacie/auta-soltec-046-w640.webp
-realizacie-auta-soltec-046.jpg	assets/realizacie/auta-soltec-046.jpg
 realizacie-auta-soltec-087-w640.webp	assets/realizacie/auta-soltec-087-w640.webp
 realizacie-auta-soltec-087.jpg	assets/realizacie/auta-soltec-087.jpg
 realizacie-auta-soltec-088-w640.webp	assets/realizacie/auta-soltec-088-w640.webp
