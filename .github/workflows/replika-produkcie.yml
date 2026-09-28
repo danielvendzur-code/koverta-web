@@ -47,7 +47,9 @@ jobs:
               if [ "$blok" = bez3p ]; then
                 extra='--blocked-url-patterns=*googletagmanager.com* --blocked-url-patterns=*google-analytics.com* --blocked-url-patterns=*facebook.net* --blocked-url-patterns=*/cdn/wpm/* --blocked-url-patterns=*/web-pixels* --blocked-url-patterns=*trekkie* --blocked-url-patterns=*perf-kit* --blocked-url-patterns=*shop-js* --blocked-url-patterns=*shopifysvc.com* --blocked-url-patterns=*consentik* --blocked-url-patterns=*ez-terms* --blocked-url-patterns=*expivi.com* --blocked-url-patterns=*omegatheme.com* --blocked-url-patterns=*monorail*'
               fi
-              for i in 1 2 3 4 5; do
+              # Zahrievací beh naplní pamäť repliky, nepočíta sa.
+              npx lighthouse "http://127.0.0.1:$port/" --quiet --chrome-flags="--headless=new --no-sandbox" --output=json --output-path=/tmp/zahriatie.json >/dev/null 2>&1 || true
+              for i in 1 2 3 4 5 6 7; do
                 npx lighthouse "http://127.0.0.1:$port/" --quiet --chrome-flags="--headless=new --no-sandbox" $extra --output=json --output-path="/tmp/v/$v-$blok-$i.json" || true
               done
             done
@@ -56,7 +58,7 @@ jobs:
             const fs = require("fs");
             const varianty = fs.readdirSync("/tmp/v").filter((f) => f.endsWith(".html")).map((f) => f.slice(0, -5));
             for (const v of varianty) {
-              const rr = [1, 2, 3, 4, 5].map((i) => `/tmp/v/${v}-ziv-${i}.json`).filter(fs.existsSync).map((f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { return null; } }).filter((r) => r && r.categories && r.categories.performance && r.audits);
+              const rr = [1, 2, 3, 4, 5, 6, 7].map((i) => `/tmp/v/${v}-ziv-${i}.json`).filter(fs.existsSync).map((f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { return null; } }).filter((r) => r && r.categories && r.categories.performance && r.audits);
               if (!rr.length) { console.log("REPLIKA", v, "bez vysledkov"); continue; }
               const a = (r, k) => (r.audits[k] || {}).numericValue;
               const x = rr.map((r) => ({ r, p: Math.round(r.categories.performance.score * 100), fcp: Math.round(a(r, "first-contentful-paint")), lcp: Math.round(a(r, "largest-contentful-paint")), tbt: Math.round(a(r, "total-blocking-time")), si: Math.round(a(r, "speed-index")), o: r.audits.metrics?.details?.items?.[0]?.observedLargestContentfulPaint }));

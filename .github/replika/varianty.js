@@ -42,8 +42,16 @@ const ezSledovac = (t) => {
   return t.replace(/(<meta name="viewport"[^>]*>)/, (m) => m + s);
 };
 
-const varianty = { v0, ez: ezAsync(v0), 'ez-sledovac': ezSledovac(v0) };
-if (kritCss) { varianty['krit-ez'] = ezAsync(krit(v0)); varianty['krit-ez-sledovac'] = ezSledovac(krit(v0)); }
+// Náš malý štýl pre obchod (1,6 kB) priamo v stránke namiesto ďalšej žiadosti.
+const shopCss = (t) => {
+  const m = t.match(/<link href="(\/cdn\/shop\/t\/\d+\/assets\/koverta-shopify\.css\?v=\d+)" rel="stylesheet" type="text\/css" media="all" \/>/);
+  if (!m) throw new Error('shopcss: nenájdený');
+  return t.replace(m[0], () => '<style>' + SHOPCSS + '</style>');
+};
+const SHOPCSS = fs.existsSync(path.join(__dirname, '..', '..', 'shopify-tema', 'assets', 'koverta-shopify.css')) ? fs.readFileSync(path.join(__dirname, '..', '..', 'shopify-tema', 'assets', 'koverta-shopify.css'), 'utf8') : '';
+
+const varianty = { v0, 'ez-sledovac': ezSledovac(v0) };
+if (kritCss) { varianty['krit-ez-sledovac'] = ezSledovac(krit(v0)); varianty['krit-ez-sledovac-shopcss'] = shopCss(ezSledovac(krit(v0))); }
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length);
