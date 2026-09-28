@@ -508,6 +508,33 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         state[dimension] = group.getAttribute('data-k-filter-default') || 'all';
       });
 
+      /* Každý druh má vlastnú adresu (?druh=bioklimaticke-pergoly,
+         ?znacka=soltec), aby sa dal poslať odkaz rovno na jednu kategóriu.
+         Adresa sa pri kliknutí prepíše bez nového záznamu v histórii. */
+      const parametre = new URLSearchParams(window.location.search);
+      groups.forEach((group) => {
+        const param = group.getAttribute('data-k-filter-param');
+        const hodnota = param && parametre.get(param);
+        if (!hodnota) return;
+        const button = [...group.querySelectorAll('button[data-k-filter]')]
+          .find((b) => (b.getAttribute('data-k-filter-url') || b.dataset.kFilter) === hodnota);
+        if (button) state[group.getAttribute('data-k-filter-group')] = button.dataset.kFilter;
+      });
+      const zapisAdresu = () => {
+        if (!window.history || !window.history.replaceState) return;
+        const url = new URL(window.location.href);
+        groups.forEach((group) => {
+          const param = group.getAttribute('data-k-filter-param');
+          if (!param) return;
+          const value = state[group.getAttribute('data-k-filter-group')] || 'all';
+          const button = group.querySelector(`button[data-k-filter="${CSS.escape(value)}"]`);
+          const slug = button && button.getAttribute('data-k-filter-url');
+          if (value === 'all' || !slug) url.searchParams.delete(param);
+          else url.searchParams.set(param, slug);
+        });
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      };
+
       const apply = () => {
         items.forEach((item) => {
           item.hidden = groups.some((group) => {
@@ -537,6 +564,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           button.addEventListener('click', () => {
             state[dimension] = button.dataset.kFilter;
             apply();
+            zapisAdresu();
           });
         });
       });
