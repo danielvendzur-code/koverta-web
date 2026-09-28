@@ -19,12 +19,18 @@ async function dismissConsent(page) {
   await dismissConsent(page);
   await page.waitForSelector('#realGrid .kh-work__item [role="button"]');
 
+  /* Počty sa berú z galérie samej: pri pridaní fotiek sa test nemá meniť,
+     má overiť, že sa zobrazuje celá a filter obmedzí prehliadanie. */
+  const total = await page.locator('#realGrid .kh-work__item').count();
+  const shadedTotal = await page.locator('#realGrid .kh-work__item[data-k-type~="tienenie"]').count();
+  assert(total >= 200, 'The realization gallery lost photographs: ' + total);
+  assert(shadedTotal > 0 && shadedTotal < total, 'Shading category is empty or unfiltered');
   const all = page.locator('#realGrid .kh-work__item:not([hidden])');
-  assert.equal(await all.count(), 200, 'The complete realization gallery must remain available');
+  assert.equal(await all.count(), total, 'The complete realization gallery must remain available');
   await all.first().click();
   const dialog = page.locator('.kv-lupa');
   await dialog.waitFor({ state: 'visible' });
-  assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), '1 / 200');
+  assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `1 / ${total}`);
   const firstSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
   await page.locator('.kv-lupa__sipka--dalsi').click();
   const secondSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
@@ -37,9 +43,9 @@ async function dismissConsent(page) {
 
   await page.getByRole('button', { name: 'Tienenie', exact: true }).click();
   const shaded = page.locator('#realGrid .kh-work__item:not([hidden])');
-  assert.equal(await shaded.count(), 26, 'Gallery filters must still limit the lightbox sequence');
+  assert.equal(await shaded.count(), shadedTotal, 'Gallery filters must still limit the lightbox sequence');
   await shaded.first().click();
-  assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), '1 / 26');
+  assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `1 / ${shadedTotal}`);
   await page.keyboard.press('Escape');
 
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -79,5 +85,5 @@ async function dismissConsent(page) {
   await mobileContext.close();
 
   await browser.close();
-  console.log('REALIZACIE_GALLERY_PASS 200-photo modal, arrows, keyboard, filtered sequence and mobile snap slider');
+  console.log('REALIZACIE_GALLERY_PASS full-gallery modal, arrows, keyboard, filtered sequence and mobile snap slider');
 })().catch((error) => { console.error(error); process.exit(1); });
