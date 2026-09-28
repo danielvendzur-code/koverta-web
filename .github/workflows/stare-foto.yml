@@ -1,0 +1,61 @@
+# Fotky zo starého webu (Shopify Files) — stiahnutie náhľadov na výber
+#
+# Zoznam súborov je v .github/stare-foto/zoznam.txt. Runner ich stiahne zo
+# Shopify CDN a do tej istej vetvy uloží malé náhľady (320 px) do
+# .github/stare-foto/male/, aby sa dali prezrieť a vybrať do galérie.
+# Súbory v zozname-vybrane.txt stiahne v plnej šírke 1600 px do
+# .github/stare-foto/plne/. Do Shopify sa nič nezapisuje.
+name: Stare foto
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/laughing-goldberg-2nd6pn]
+    paths: [.github/stare-foto/zoznam.txt, .github/stare-foto/zoznam-vybrane.txt, .github/workflows/stare-foto.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  stiahni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Stiahnuť
+        run: |
+          set -u
+          pip install --quiet pillow
+          ZAKLAD=https://cdn.shopify.com/s/files/1/0268/6356/6930/files
+          mkdir -p .github/stare-foto/male .github/stare-foto/plne /tmp/sf
+          i=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            i=$((i+1)); n=$(printf '%03d' $i)
+            [ -f ".github/stare-foto/male/$n.jpg" ] && continue
+            curl -fsSL "$ZAKLAD/$f?width=640" -o "/tmp/sf/$n" || { echo "CHYBA $n $f"; continue; }
+            python3 -c "
+          from PIL import Image; import sys
+          im=Image.open('/tmp/sf/$n').convert('RGB'); im.thumbnail((320,320)); im.save('.github/stare-foto/male/$n.jpg',quality=78)" || echo "CHYBA-OBR $n $f"
+          done < .github/stare-foto/zoznam.txt
+          if [ -f .github/stare-foto/zoznam-vybrane.txt ]; then
+            while IFS='|' read -r f ciel; do
+              [ -z "$f" ] && continue
+              [ -f ".github/stare-foto/plne/$ciel" ] && continue
+              curl -fsSL "$ZAKLAD/$f?width=1600" -o "/tmp/sf/p" || { echo "CHYBA $f"; continue; }
+              python3 -c "
+          from PIL import Image, ImageOps
+          im=ImageOps.exif_transpose(Image.open('/tmp/sf/p')).convert('RGB'); im.thumbnail((1600,1600)); im.save('.github/stare-foto/plne/$ciel',quality=84,optimize=True,progressive=True)"
+            done < .github/stare-foto/zoznam-vybrane.txt
+          fi
+          ls .github/stare-foto/male | wc -l
+      - name: Uložiť do vetvy
+        run: |
+          git config user.name "koverta-bot"
+          git config user.email "noreply@koverta.sk"
+          git add .github/stare-foto
+          git diff --cached --quiet && exit 0
+          git commit -m "Stare foto: náhľady zo Shopify"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
