@@ -37,7 +37,7 @@ jobs:
             port=$((port+1))
             node .github/replika/server.js "/tmp/v/$v.html" $port &
             sleep 1
-            for blok in ziv bezdup; do
+            for blok in ziv; do
               extra=""
               if [ "$blok" = bezdup ] && [ "$v" != v0 ]; then continue; fi
               if [ "$blok" = bezdup ]; then extra='--blocked-url-patterns=*id=G-0NHPFNEHKX* --blocked-url-patterns=*id=GT-WB74C64*'; fi

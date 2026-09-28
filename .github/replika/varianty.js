@@ -58,7 +58,15 @@ const fotka = (t) => {
   return t.replace(r, '/lokalne/$1');
 };
 
-const varianty = { v0, fotka: fotka(v0) };
+// GTM neskôr: pri prvej interakcii, inak N ms po načítaní stránky.
+const gtmPo = (ms) => (t) => {
+  const old = "w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });";
+  if (!t.includes(old)) throw new Error('gtm: snippet');
+  return t.replace(old, () => "var hotovo = false, ev = ['pointerdown', 'keydown', 'touchstart', 'scroll'], spusti = function () { if (hotovo) return; hotovo = true; ev.forEach(function (e) { w.removeEventListener(e, spusti, true); }); f.parentNode.insertBefore(j, f); }; ev.forEach(function (e) { w.addEventListener(e, spusti, { capture: true, passive: true }); }); w.addEventListener('load', function () { setTimeout(spusti, " + ms + "); });");
+};
+
+const varianty = { v0, 'gtm-2s': gtmPo(2000)(v0), 'gtm-4s': gtmPo(4000)(v0) };
+
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length);
