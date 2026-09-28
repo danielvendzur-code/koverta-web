@@ -833,6 +833,8 @@ realizacie-auta-koverta-rybnik-1-w640.webp	assets/realizacie/auta-koverta-rybnik
 realizacie-auta-koverta-rybnik-1.jpg	assets/realizacie/auta-koverta-rybnik-1.jpg
 realizacie-auta-koverta-rybnik-2-w640.webp	assets/realizacie/auta-koverta-rybnik-2-w640.webp
 realizacie-auta-koverta-rybnik-2.jpg	assets/realizacie/auta-koverta-rybnik-2.jpg
+realizacie-auta-koverta-rybnik-3-w640.webp	assets/realizacie/auta-koverta-rybnik-3-w640.webp
+realizacie-auta-koverta-rybnik-3.jpg	assets/realizacie/auta-koverta-rybnik-3.jpg
 realizacie-auta-soltec-001-w640.webp	assets/realizacie/auta-soltec-001-w640.webp
 realizacie-auta-soltec-001.jpg	assets/realizacie/auta-soltec-001.jpg
 realizacie-auta-soltec-002-w640.webp	assets/realizacie/auta-soltec-002-w640.webp
