@@ -49,6 +49,12 @@ KATEGORIE = {
 }
 NADPIS = {'auta': 'Prístrešky pre autá', 'pergoly': 'Bioklimatické pergoly', 'prestresenia': 'Pevné prestrešenia',
           'zahrada': 'Záhradné prístrešky', 'tienenie': 'Tienenie', 'kuchyne': 'Vonkajšie kuchyne'}
+# Výber v galérii: skupina (Autoprístrešky / Záhradné prístrešky / Iné)
+# a podvoľba; pevné prestrešenia Soltec aj záhradné prístrešky Koverta
+# patria pod „S pevnou strechou“ (znak pevne).
+SKUPINA = {'auta': ('auta', 'auta'), 'pergoly': ('zahrada', 'pergoly'),
+           'prestresenia': ('zahrada', 'prestresenia pevne'), 'zahrada': ('zahrada', 'zahrada pevne'),
+           'tienenie': ('ine', 'tienenie'), 'kuchyne': ('ine', 'kuchyne')}
 PORADIE = [('auta', 'koverta'), ('auta', 'soltec'), ('pergoly', 'soltec'), ('prestresenia', 'soltec'),
            ('zahrada', 'koverta'), ('tienenie', 'soltec'), ('kuchyne', 'soltec')]
 PRIPONY = ('.jpg', '.jpeg', '.png', '.webp', '.heic')
@@ -74,7 +80,8 @@ def s_vodoznakom(im):
 
 
 def html_fotky(typ, znacka, cesta, sirka, vyska, popis, alt, mala=640):
-    return (f'<figure class="kh-work__item k-rise k-reveal" data-k-type="{typ}" data-k-brand="{znacka}" data-k-delay="1">\n'
+    skupina, znaky = SKUPINA[typ]
+    return (f'<figure class="kh-work__item k-rise k-reveal" data-k-skupina="{skupina}" data-k-type="{znaky}" data-k-brand="{znacka}" data-k-delay="1">\n'
             f'        <span class="kh-work__media"><img src="../{cesta}.jpg" alt="{alt}" loading="lazy" decoding="async" '
             f'width="{sirka}" height="{vyska}" srcset="../{cesta}-w640.webp {mala}w, ../{cesta}.jpg {sirka}w" '
             f'sizes="(max-width: 900px) 86vw, 30vw"></span>\n'
@@ -129,7 +136,7 @@ def main():
     kon = t.index('</section>', zac)
     grid = t[zac:kon]
     figury = re.findall(r'<figure class="kh-work__item[^"]*"[^>]*>[\s\S]*?</figure>', grid)
-    kluc = lambda f: (re.search(r'data-k-type="([^"]*)"', f).group(1), re.search(r'data-k-brand="([^"]*)"', f).group(1))
+    kluc = lambda f: (re.search(r'data-k-type="([^"\s]*)', f).group(1), re.search(r'data-k-brand="([^"]*)"', f).group(1))
     # nové fotky idú na začiatok svojej kategórie, poradie kategórií ostáva
     vsetky = [(PORADIE.index((n[0], n[1])), 0, n[2]) for n in nove] + \
              [(PORADIE.index(kluc(f)) if kluc(f) in PORADIE else len(PORADIE), 1, f) for f in figury]
