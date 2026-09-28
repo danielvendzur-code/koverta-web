@@ -73,10 +73,10 @@ def s_vodoznakom(im):
     return vysledok.convert('RGB')
 
 
-def html_fotky(typ, znacka, cesta, sirka, vyska, popis, alt):
+def html_fotky(typ, znacka, cesta, sirka, vyska, popis, alt, mala=640):
     return (f'<figure class="kh-work__item k-rise k-reveal" data-k-type="{typ}" data-k-brand="{znacka}" data-k-delay="1">\n'
             f'        <span class="kh-work__media"><img src="../{cesta}.jpg" alt="{alt}" loading="lazy" decoding="async" '
-            f'width="{sirka}" height="{vyska}" srcset="../{cesta}-w640.webp 640w, ../{cesta}.jpg {sirka}w" '
+            f'width="{sirka}" height="{vyska}" srcset="../{cesta}-w640.webp {mala}w, ../{cesta}.jpg {sirka}w" '
             f'sizes="(max-width: 900px) 86vw, 30vw"></span>\n'
             f'        <figcaption class="kh-work__cap"><strong>{NADPIS[typ]}</strong><span>{popis}</span></figcaption>\n'
             f'      </figure>')
@@ -112,10 +112,13 @@ def main():
             os.makedirs(CIEL, exist_ok=True)
             im.save(os.path.join(KOREN, 'assets', nazov + '.jpg'), quality=78, optimize=True, progressive=True)
             w, h = im.size
-            im.resize((640, round(h * 640 / w)), Image.LANCZOS).save(
-                os.path.join(KOREN, 'assets', nazov + '-w640.webp'), 'WEBP', quality=72)
+            # Menšia verzia pre mobil: 640 px na šírku, fotka na výšku najviac
+            # 900 px vysoká (inak by mala na mobile zbytočne ~100 kB).
+            male = im.copy()
+            male.thumbnail((640, 900), Image.LANCZOS)
+            male.save(os.path.join(KOREN, 'assets', nazov + '-w640.webp'), 'WEBP', quality=68)
             alt = f'{alt_zaklad} — {popis}' if popis != predvoleny else alt_zaklad
-            nove.append((typ, znacka, html_fotky(typ, znacka, 'assets/' + nazov, w, h, popis, alt), zdroj))
+            nove.append((typ, znacka, html_fotky(typ, znacka, 'assets/' + nazov, w, h, popis, alt, male.width), zdroj))
             print('pridaná:', meno, '->', nazov + '.jpg', '|', popis)
     if not nove:
         print('Žiadne nové fotky.')
