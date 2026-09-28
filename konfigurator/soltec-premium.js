@@ -327,15 +327,15 @@ function kvAdresa(kluc, zaloha) {
         const sensorInputs = [...calc.querySelectorAll('[data-sp-sensor]')];
         const state = { key: priceData.order[0], w: 0, l: 0, load: 0, wValue: null, lValue: null };
 
+        /* Ako v konfigurátore: rozmer medzi dvoma hodnotami cenníka sa platí
+           podľa najbližšej väčšej, nie menšej. */
         const priceBandIndex = (values, value) => {
           if (!Array.isArray(values) || !values.length) return 0;
           const target = Number(value);
-          let index = 0;
-          for (let i = 1; i < values.length; i += 1) {
-            if (target < values[i]) break;
-            index = i;
+          for (let i = 0; i < values.length; i += 1) {
+            if (target <= values[i] + 0.5) return i;
           }
-          return index;
+          return values.length - 1;
         };
         const syncPriceBands = (currentModel) => {
           if (currentModel.type === 'grid') state.w = priceBandIndex(currentModel.widths, state.wValue);
@@ -1008,15 +1008,18 @@ function kvAdresa(kluc, zaloha) {
           return { w: w || 200, t: t || 24 };
         };
         const isLoad = () => model().type === 'load';
+        /* Rozmery v cenníku Soltec sú horné hranice: stĺpec 4300 je
+           najväčšia šírka modelu, riadok dĺžky je počet lamiel. Rozmer medzi
+           dvoma hodnotami sa preto platí podľa najbližšej väčšej — predtým sa
+           bral menší riadok aj stĺpec a napr. SL 170/36 so šírkou 3200 mm
+           stál ako pergola široká 3000 mm. Presná hodnota ostáva sama sebou. */
         const dimensionBandIndex = (values, value) => {
           if (!Array.isArray(values) || !values.length) return 0;
           const target = Number(value);
-          let index = 0;
-          for (let i = 1; i < values.length; i += 1) {
-            if (target < values[i]) break;
-            index = i;
+          for (let i = 0; i < values.length; i += 1) {
+            if (target <= values[i] + 0.5) return i;
           }
-          return index;
+          return values.length - 1;
         };
         const widthMM = () => isLoad()
           ? model().width
@@ -1572,10 +1575,9 @@ function kvAdresa(kluc, zaloha) {
         /* ------------------------------------------------------------ price */
         const zipPrice = (span) => {
           const table = BIO.zip;
-          let best = table[0];
-          for (const row of table) { if (row[0] <= span) best = row; }
-          if (span > table[table.length - 1][0]) return null;
-          return best[1];
+          /* Šírka rolety v cenníku je najväčšia pre daný riadok. */
+          for (const row of table) { if (span <= row[0] + 0.5) return row[1]; }
+          return null;
         };
         /* Soltec sa vyrába na milimeter, takže jeho posuvník ide plynulo a
            cena skáče po pásmach. Koverta má hotové veľkosti z cenníka a nič
@@ -1657,9 +1659,8 @@ function kvAdresa(kluc, zaloha) {
             if (kind === 'open') continue;
             const opt = SIDE_OPTS.find((o) => o.id === kind);
             const span = sideSpan(side);
-            /* Catalogue points are price-band boundaries. The configured
-               geometry remains exact, while the active price changes only
-               when the next published boundary is reached. */
+            /* Hodnoty v cenníku sú horné hranice pásiem. Geometria ostáva
+               presná, cena sa berie z najbližšej väčšej zverejnenej hodnoty. */
             const runRate = (code) => {
               const t = BIO.wallRun && BIO.wallRun[code];
               if (!t) return null;
@@ -1668,7 +1669,7 @@ function kvAdresa(kluc, zaloha) {
             };
             const WALL_CODE = { fi30: 'iso', fw25: 'wood' };
 
-            /* Published numeric keys are lower bounds of discrete price bands. */
+            /* Zverejnené hodnoty sú horné hranice pásiem (výška „do“). */
             const bandKey = (obj, want) => {
               const keys = Object.keys(obj).map(Number).sort((a, b) => a - b);
               return keys[dimensionBandIndex(keys, want)];
