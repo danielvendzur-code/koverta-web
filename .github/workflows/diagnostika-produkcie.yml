@@ -53,21 +53,25 @@ jobs:
             sk.forEach((x) => console.log("BODY " + x));
             console.log("BODY inline skriptov:", (telo.match(/<script\b(?![^>]*\bsrc=)[^>]*>/gi) || []).length);
           '
-      - name: Stav po upratani pixelov — 5x mobil, rozpad blokovania podla zdroja (len meranie)
+      - name: Scenáre na živom koverta.sk (blokované URL = len meranie, nič sa nemení)
         env:
           ADRESA: ${{ inputs.adresa || 'https://koverta.sk/' }}
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
-          for i in 1 2 3 4 5; do npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" --output=json --output-path="s-$i.json" || true; done
+          meraj() { for i in 1 2 3 4 5; do npx lighthouse "$ADRESA" --quiet --chrome-flags="--headless=new --no-sandbox" $2 --output=json --output-path="s-$1-$i.json" || true; done; }
+          meraj a-teraz ""
+          meraj b-bez-ezterms-css "--blocked-url-patterns=*ez-terms-and-conditions-checkbox*style.min.css*"
+          meraj c-bez-ga-migrated "--blocked-url-patterns=*id=G-0NHPFNEHKX*"
+          meraj d-bez-gy-pixel "--blocked-url-patterns=*id=GT-WB74C64*"
+          meraj e-bez-consentik "--blocked-url-patterns=*consentik*"
           node -e '
             const fs = require("fs");
-            const x = [1, 2, 3, 4, 5].map((i) => `s-${i}.json`).filter(fs.existsSync).map((f) => JSON.parse(fs.readFileSync(f, "utf8")));
-            const m = x.map((r) => ({ p: Math.round(r.categories.performance.score * 100), fcp: Math.round(r.audits["first-contentful-paint"].numericValue), lcp: Math.round(r.audits["largest-contentful-paint"].numericValue), tbt: Math.round(r.audits["total-blocking-time"].numericValue), si: Math.round(r.audits["speed-index"].numericValue), o: r.audits.metrics.details.items[0].observedLargestContentfulPaint }));
-            const med = (k) => m.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(m.length / 2)];
-            console.log("STAV behy " + m.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.o}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
-            const r = x[Math.floor(x.length / 2)];
-            for (const it of (r.audits["bootup-time"].details.items || []).slice(0, 25)) console.log("CPU", Math.round(it.total), Math.round(it.scripting), it.url.slice(0, 150));
-            for (const it of (r.audits["third-party-summary"].details?.items || [])) console.log("3P", it.entity, Math.round(it.blockingTime), Math.round(it.mainThreadTime), Math.round(it.transferSize / 1024) + "kB");
-            for (const it of (r.audits["network-requests"].details.items || [])) if (/script/i.test(it.resourceType)) console.log("JS", Math.round(it.transferSize / 1024) + "kB", it.url.slice(0, 150));
-            for (const it of (r.audits["long-tasks"]?.details?.items || []).slice(0, 20)) console.log("LT", Math.round(it.startTime), Math.round(it.duration), it.url.slice(0, 150));
+            for (const v of ["a-teraz", "b-bez-ezterms-css", "c-bez-ga-migrated", "d-bez-gy-pixel", "e-bez-consentik"]) {
+              const x = [1, 2, 3, 4, 5].map((i) => `s-${v}-${i}.json`).filter(fs.existsSync).map((f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { return null; } }).filter((r) => r && r.categories);
+              const a = (r, k) => Math.round((r.audits[k] || {}).numericValue);
+              const m = x.map((r) => ({ p: Math.round(r.categories.performance.score * 100), fcp: a(r, "first-contentful-paint"), lcp: a(r, "largest-contentful-paint"), tbt: a(r, "total-blocking-time"), si: a(r, "speed-index"), o: r.audits.metrics?.details?.items?.[0]?.observedLargestContentfulPaint }));
+              const med = (k) => m.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(m.length / 2)];
+              console.log(`SCENAR ${v.padEnd(20)} ` + m.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.o}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
+              if (v === "a-teraz" && x.length) { const r = x[0]; for (const k of ["render-blocking-resources", "largest-contentful-paint-element"]) console.log("  " + k, JSON.stringify(r.audits[k]?.details?.items || "").slice(0, 900)); }
+            }
           '
