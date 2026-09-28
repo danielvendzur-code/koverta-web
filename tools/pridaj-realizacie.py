@@ -55,8 +55,6 @@ NADPIS = {'auta': 'Prístrešky pre autá', 'pergoly': 'Bioklimatické pergoly',
 SKUPINA = {'auta': ('auta', 'auta'), 'pergoly': ('zahrada', 'pergoly'),
            'prestresenia': ('zahrada', 'prestresenia pevne'), 'zahrada': ('zahrada', 'zahrada pevne'),
            'tienenie': ('ine', 'tienenie'), 'kuchyne': ('ine', 'kuchyne')}
-PORADIE = [('auta', 'koverta'), ('auta', 'soltec'), ('pergoly', 'soltec'), ('prestresenia', 'soltec'),
-           ('zahrada', 'koverta'), ('tienenie', 'soltec'), ('kuchyne', 'soltec')]
 PRIPONY = ('.jpg', '.jpeg', '.png', '.webp', '.heic')
 
 
@@ -137,10 +135,14 @@ def main():
     grid = t[zac:kon]
     figury = re.findall(r'<figure class="kh-work__item[^"]*"[^>]*>[\s\S]*?</figure>', grid)
     kluc = lambda f: (re.search(r'data-k-type="([^"\s]*)', f).group(1), re.search(r'data-k-brand="([^"]*)"', f).group(1))
-    # nové fotky idú na začiatok svojej kategórie, poradie kategórií ostáva
-    vsetky = [(PORADIE.index((n[0], n[1])), 0, n[2]) for n in nove] + \
-             [(PORADIE.index(kluc(f)) if kluc(f) in PORADIE else len(PORADIE), 1, f) for f in figury]
-    vsetky.sort(key=lambda x: (x[0], x[1]))
+    # Galéria bez voľby je premiešaná (vybrané pekné fotky hore, asi tretina
+    # Soltec), preto sa nič neradí nanovo: nová fotka sa vloží pred prvú
+    # fotku svojej kategórie a značky, takže je aj v jej filtri prvá.
+    vsetky = list(figury)
+    for typ, znacka, novy, _ in reversed(nove):
+        miesto = next((i for i, f in enumerate(vsetky) if kluc(f) == (typ, znacka)), len(vsetky))
+        vsetky.insert(miesto, novy)
+    vsetky = [(0, 0, f) for f in vsetky]
     html = [re.sub(r'data-k-delay="\d+"', f'data-k-delay="{n % 6 + 1}"', f) for n, (_, _, f) in enumerate(vsetky)]
     koniec = grid[grid.rindex('</figure>') + len('</figure>'):]
     t = t[:zac] + '<div class="kh-work__grid" id="realGrid">\n      ' + '\n'.join(html) + koniec + t[kon:]
