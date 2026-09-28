@@ -50,8 +50,15 @@ const shopCss = (t) => {
 };
 const SHOPCSS = fs.existsSync(path.join(__dirname, '..', '..', 'shopify-tema', 'assets', 'koverta-shopify.css')) ? fs.readFileSync(path.join(__dirname, '..', '..', 'shopify-tema', 'assets', 'koverta-shopify.css'), 'utf8') : '';
 
-const varianty = { v0, 'ez-sledovac': ezSledovac(v0) };
-if (kritCss) { varianty['krit-ez-sledovac'] = ezSledovac(krit(v0)); varianty['krit-ez-sledovac-shopcss'] = shopCss(ezSledovac(krit(v0))); }
+// Úvodná fotka z toho istého servera ako stránka (bez spojenia na jsDelivr).
+const fotka = (t) => {
+  const r = /https:\/\/cdn\.jsdelivr\.net\/gh\/danielvendzur-code\/koverta-web@[0-9a-f]+\/assets\/(koverta-hero-sibenik-poster[^"?\s]*)\?v=2/g;
+  const n = (t.match(r) || []).length;
+  if (n < 2) throw new Error('fotka: ' + n);
+  return t.replace(r, '/lokalne/$1');
+};
+
+const varianty = { v0, fotka: fotka(v0) };
 for (const [meno, t] of Object.entries(varianty)) {
   fs.writeFileSync(path.join(ciel, meno + '.html'), t);
   console.log(meno, t.length);

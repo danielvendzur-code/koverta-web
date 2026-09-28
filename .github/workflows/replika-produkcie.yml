@@ -30,20 +30,17 @@ jobs:
         run: |
           npm install --no-save lighthouse@12 >/dev/null 2>&1
           curl -sSL -A 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' https://koverta.sk/ -o /tmp/produkcia.html
-          # Kritický štýl úvodu z repliky (6 šírok okna).
-          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v0
-          npm install --no-save playwright@1.55.0 >/dev/null 2>&1 && npx playwright install chromium >/dev/null 2>&1
-          node .github/replika/server.js /tmp/v0/v0.html 8999 & sleep 1
-          node .github/replika/kriticke-css.js http://127.0.0.1:8999/ /tmp/krit.css
-          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v /tmp/krit.css
+          node .github/replika/varianty.js /tmp/produkcia.html /tmp/v
           ls -la /tmp/v
           port=9000
           for v in $(ls /tmp/v | sed 's/\.html$//'); do
             port=$((port+1))
             node .github/replika/server.js "/tmp/v/$v.html" $port &
             sleep 1
-            for blok in ziv; do
+            for blok in ziv bezdup; do
               extra=""
+              if [ "$blok" = bezdup ] && [ "$v" != v0 ]; then continue; fi
+              if [ "$blok" = bezdup ]; then extra='--blocked-url-patterns=*id=G-0NHPFNEHKX* --blocked-url-patterns=*id=GT-WB74C64*'; fi
               if [ "$blok" = bez3p ]; then
                 extra='--blocked-url-patterns=*googletagmanager.com* --blocked-url-patterns=*google-analytics.com* --blocked-url-patterns=*facebook.net* --blocked-url-patterns=*/cdn/wpm/* --blocked-url-patterns=*/web-pixels* --blocked-url-patterns=*trekkie* --blocked-url-patterns=*perf-kit* --blocked-url-patterns=*shop-js* --blocked-url-patterns=*shopifysvc.com* --blocked-url-patterns=*consentik* --blocked-url-patterns=*ez-terms* --blocked-url-patterns=*expivi.com* --blocked-url-patterns=*omegatheme.com* --blocked-url-patterns=*monorail*'
               fi
@@ -57,13 +54,14 @@ jobs:
           node -e '
             const fs = require("fs");
             const varianty = fs.readdirSync("/tmp/v").filter((f) => f.endsWith(".html")).map((f) => f.slice(0, -5));
-            for (const v of varianty) {
-              const rr = [1, 2, 3, 4, 5, 6, 7].map((i) => `/tmp/v/${v}-ziv-${i}.json`).filter(fs.existsSync).map((f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { return null; } }).filter((r) => r && r.categories && r.categories.performance && r.audits);
-              if (!rr.length) { console.log("REPLIKA", v, "bez vysledkov"); continue; }
+            for (const vb of varianty.flatMap((x) => [[x, "ziv"], [x, "bezdup"]])) {
+              const [v, blok] = vb;
+              const rr = [1, 2, 3, 4, 5, 6, 7].map((i) => `/tmp/v/${v}-${blok}-${i}.json`).filter(fs.existsSync).map((f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { return null; } }).filter((r) => r && r.categories && r.categories.performance && r.audits);
+              if (!rr.length) continue;
               const a = (r, k) => (r.audits[k] || {}).numericValue;
               const x = rr.map((r) => ({ r, p: Math.round(r.categories.performance.score * 100), fcp: Math.round(a(r, "first-contentful-paint")), lcp: Math.round(a(r, "largest-contentful-paint")), tbt: Math.round(a(r, "total-blocking-time")), si: Math.round(a(r, "speed-index")), o: r.audits.metrics?.details?.items?.[0]?.observedLargestContentfulPaint }));
               const med = (k) => x.map((y) => y[k]).sort((a, b) => a - b)[Math.floor(x.length / 2)];
-              console.log(`REPLIKA ${v.padEnd(26)} behy ` + x.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.o}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
+              console.log(`REPLIKA ${(v + "/" + blok).padEnd(26)} behy ` + x.map((y) => `${y.p}/${y.lcp}/${y.tbt}/o${y.o}`).join(" ") + ` | MEDIAN perf ${med("p")} fcp ${med("fcp")} lcp ${med("lcp")} tbt ${med("tbt")} si ${med("si")}`);
               const r = x.slice().sort((a, b) => a.p - b.p)[Math.floor(x.length / 2)].r;
               const el = r.audits["largest-contentful-paint-element"]?.details?.items || [];
               console.log("  LCP prvok:", JSON.stringify(el[0]?.items?.[0]?.node?.snippet || "").slice(0, 200), "fazy:", JSON.stringify((el[1]?.items || []).map((f) => [f.phase, Math.round(f.timing)])));
