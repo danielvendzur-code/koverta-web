@@ -3935,7 +3935,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (autaItem) {
       const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
       if (lis[0]) {
-        setMenuPhoto(lis[0], 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
+        setMenuPhoto(lis[0], 'koverta-pristresok-dve-auta-devin.jpg');
         addDesc(lis[0], 'Pre 1, 2, 3 a viac áut. Vlastný dizajn a výroba.');
       }
       if (lis[1]) {
@@ -3951,10 +3951,10 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     if (domItem) {
       const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
       const byHref = (part) => lis.find((li) => zhodaMenu((li.querySelector('a') || {}).getAttribute ? li.querySelector('a').getAttribute('href') : '', part));
-      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
+      setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-hvozdnica.jpg');
       setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-pergola-pri-bazene-antracit.jpg');
-      setMenuPhoto(byHref('tienenie'), 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg');
+      setMenuPhoto(byHref('tienenie'), 'soltec-tienenie-lamely-velka-luka.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
       addDesc(byHref('zahradne-pristresky'), 'Oceľové prestrešenie terasy, vstupu alebo posedenia.');
       addDesc(byHref('pevne-prestresenia'), 'Pevná strecha s čistou hliníkovou konštrukciou.');
@@ -3968,7 +3968,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       const panel = realItem.querySelector('.kv-mega');
       const list = panel && panel.querySelector('.kv-pod');
       if (panel && list) {
-        const photos = ['koverta-pristresok-pre-auto-pred-domom.jpg', 'koverta-pristresok-drevene-lamely-bocna-vypln.jpg'];
+        const photos = ['soltec-carport-plavecky-03.jpg', 'soltec-bioklimaticka-pergola-lucenec.jpg'];
         [].slice.call(list.querySelectorAll(':scope > li')).forEach((li, i) => {
           const a = li.querySelector(':scope > a');
           if (!a) return;
@@ -3978,7 +3978,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
           img.loading = 'lazy';
           img.decoding = 'async';
-          img.alt = i === 0 ? 'Realizácia prístrešku Koverta pri rodinnom dome' : 'Detail realizácie prístrešku Koverta';
+          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá, Plavecký Štvrtok' : 'Bioklimatická pergola Soltec pri bazéne, Lučenec';
           photo.appendChild(img);
           a.insertBefore(photo, a.firstChild);
 
@@ -3996,12 +3996,12 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     }
 
     /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
-    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-auto-golf-lamelova-stena.jpg');
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-dve-auta-devin.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-nitra-hero.jpg');
-    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-antracit-lamelova-stena.jpg');
+    setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-hvozdnica.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-pergola-pri-bazene-antracit.jpg');
-    setDrawerPhoto('tienenie', 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg');
+    setDrawerPhoto('tienenie', 'soltec-tienenie-lamely-velka-luka.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');
 
     const drawerReal = [].slice.call(header.querySelectorAll('.kv-drawer__sk')).find((d) => {
@@ -4010,7 +4010,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
     });
     if (drawerReal && drawerReal.dataset.kBatch5 !== 'true') {
       const list = drawerReal.querySelector('.kv-drawer__rad');
-      const photos = ['koverta-pristresok-pre-auto-pred-domom.jpg', 'koverta-pristresok-drevene-lamely-bocna-vypln.jpg'];
+      const photos = ['soltec-carport-plavecky-03.jpg', 'soltec-bioklimaticka-pergola-lucenec.jpg'];
       if (list) {
         list.classList.remove('kv-drawer__rad--text');
         list.classList.add('kv-drawer__rad--real');
@@ -4023,7 +4023,7 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
           img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
           img.loading = 'lazy';
           img.decoding = 'async';
-          img.alt = i === 0 ? 'Realizácia prístrešku Koverta' : 'Detail realizácie prístrešku Koverta';
+          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá, Plavecký Štvrtok' : 'Bioklimatická pergola Soltec pri bazéne, Lučenec';
           photo.appendChild(img);
           const body = document.createElement('span');
           body.className = 'kv-drawer__telo';
