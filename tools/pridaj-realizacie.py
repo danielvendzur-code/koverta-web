@@ -65,12 +65,19 @@ def slug(text):
 
 def s_vodoznakom(im):
     """Vodoznak ako na starom webe: 40 % šírky, 6,5 % od pravého okraja,
-    10 % výšky od spodku."""
+    10 % výšky od spodku.
+
+    Staré fotky sú 4:3 a galéria ich tak aj ukazuje. Širšiu fotku (napr.
+    16:9) galéria oreže na stred 4:3 — vodoznak sa preto meria a kladie
+    v tejto viditeľnej časti, inak by bol väčší než na ostatných fotkách
+    a jeho koniec by orezanie odrezalo."""
     znak = Image.open(VODOZNAK).convert('RGBA')
     w, h = im.size
-    sirka = round(w * 0.40)
+    oblast = min(w, round(h * 4 / 3))
+    x0 = (w - oblast) // 2
+    sirka = round(oblast * 0.40)
     znak = znak.resize((sirka, round(znak.height * sirka / znak.width)), Image.LANCZOS)
-    x = w - round(w * 0.065) - znak.width
+    x = x0 + oblast - round(oblast * 0.065) - znak.width
     y = h - round(h * 0.10) - znak.height
     vysledok = im.convert('RGBA')
     vysledok.alpha_composite(znak, (x, y))
