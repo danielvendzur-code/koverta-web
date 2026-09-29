@@ -423,10 +423,6 @@ foto-zadar_10-w1000.png	assets/foto/zadar_10-w1000.png
 foto-zadar_5-w1000-w1000.webp	assets/foto/zadar_5-w1000-w1000.webp
 foto-zadar_5-w1000-w640.webp	assets/foto/zadar_5-w1000-w640.webp
 foto-zadar_5-w1000.png	assets/foto/zadar_5-w1000.png
-katalogy-soltec-bioklimaticke-pergoly-2026-sk.pdf	assets/katalogy/soltec-bioklimaticke-pergoly-2026-sk.pdf
-katalogy-soltec-pevne-prestresenia-2026-sk.pdf	assets/katalogy/soltec-pevne-prestresenia-2026-sk.pdf
-katalogy-soltec-tienenie-a-doplnky-2026-sk.pdf	assets/katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf
-katalogy-soltec-vonkajsie-kuchyne-2026-sk.pdf	assets/katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf
 koverta-hero-sibenik-mobil.mp4	assets/koverta-hero-sibenik-mobil.mp4
 koverta-hero-sibenik-poster-mobil.webp	assets/koverta-hero-sibenik-poster-mobil.webp
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
@@ -515,7 +511,6 @@ koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
-koverta-technicke-poziadavky-na-podklad.pdf	assets/koverta-technicke-poziadavky-na-podklad.pdf
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
