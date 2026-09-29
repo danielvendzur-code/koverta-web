@@ -500,17 +500,33 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
       /* Položka smie patriť do viacerých skupín naraz — pergola je aj
          „Záhrada“, aj „Pergoly“ (data-k-type="zahrada pergoly"). */
       const znaky = (item, dimension) => (item.getAttribute(`data-k-${dimension}`) || '').split(/\s+/);
+      const dim = (group) => group.getAttribute('data-k-filter-group');
       const state = {};
 
       groups.forEach((group) => {
-        const dimension = group.getAttribute('data-k-filter-group');
+        const dimension = dim(group);
         if (!dimension) return;
         state[dimension] = group.getAttribute('data-k-filter-default') || 'all';
       });
 
+      /* Podvýber (galéria: Záhradné prístrešky → Bioklimatické / Pevné).
+         Skupina s data-k-filter-parent ukáže len tlačidlá, ktorých
+         data-k-filter-for obsahuje zvolenú hodnotu nadradenej skupiny;
+         keď nadradená nemá žiadne podvoľby, celý riadok sa skryje. */
+      const rodic = (group) => group.getAttribute('data-k-filter-parent');
+      const pre = (button) => (button.getAttribute('data-k-filter-for') || '').split(/\s+/).filter(Boolean);
+      const patri = (group, button) => {
+        const nad = rodic(group);
+        if (!nad) return true;
+        const zoznam = pre(button);
+        return !zoznam.length || zoznam.includes(state[nad] || 'all');
+      };
+
       /* Každý druh má vlastnú adresu (?druh=bioklimaticke-pergoly,
          ?znacka=soltec), aby sa dal poslať odkaz rovno na jednu kategóriu.
-         Adresa sa pri kliknutí prepíše bez nového záznamu v histórii. */
+         Adresa sa pri kliknutí prepíše bez nového záznamu v histórii.
+         Nadradená skupina aj podvýber smú zdieľať jeden parameter: odkaz
+         na podvoľbu nastaví aj jej nadradenú skupinu. */
       const parametre = new URLSearchParams(window.location.search);
       groups.forEach((group) => {
         const param = group.getAttribute('data-k-filter-param');
@@ -518,51 +534,88 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
         if (!hodnota) return;
         const button = [...group.querySelectorAll('button[data-k-filter]')]
           .find((b) => (b.getAttribute('data-k-filter-url') || b.dataset.kFilter) === hodnota);
-        if (button) state[group.getAttribute('data-k-filter-group')] = button.dataset.kFilter;
+        if (!button) return;
+        state[dim(group)] = button.dataset.kFilter;
+        const nad = rodic(group);
+        if (nad && pre(button).length) state[nad] = pre(button)[0];
       });
       const zapisAdresu = () => {
         if (!window.history || !window.history.replaceState) return;
         const url = new URL(window.location.href);
+        const hodnoty = {};
         groups.forEach((group) => {
           const param = group.getAttribute('data-k-filter-param');
           if (!param) return;
-          const value = state[group.getAttribute('data-k-filter-group')] || 'all';
+          const value = state[dim(group)] || 'all';
           const button = group.querySelector(`button[data-k-filter="${CSS.escape(value)}"]`);
           const slug = button && button.getAttribute('data-k-filter-url');
-          if (value === 'all' || !slug) url.searchParams.delete(param);
-          else url.searchParams.set(param, slug);
+          if (value !== 'all' && slug) hodnoty[param] = slug;
+          else if (!(param in hodnoty)) hodnoty[param] = null;
+        });
+        Object.keys(hodnoty).forEach((param) => {
+          if (hodnoty[param]) url.searchParams.set(param, hodnoty[param]);
+          else url.searchParams.delete(param);
         });
         window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
       };
 
+      const vyhovuje = (item, stav) => groups.every((group) => {
+        const value = stav[dim(group)] || 'all';
+        return value === 'all' || znaky(item, dim(group)).includes(value);
+      });
+
+      /* Čo by ukázal klik: zvolená hodnota a pod ňou každá ďalšia skupina,
+         ktorá by s ňou nemala žiadnu fotku (napr. Koverta pri zvolených
+         bioklimatických pergolách), sa vráti na „Všetko“. Tlačidlo je tak
+         sivé len vtedy, keď by naozaj nič neukázalo. */
+      const pocet = (stav) => items.filter((item) => vyhovuje(item, stav)).length;
+      const poKliku = (dimension, value) => {
+        const stav = { ...state, [dimension]: value };
+        const poradie = groups.map(dim);
+        const za = poradie.slice(poradie.indexOf(dimension) + 1);
+        za.forEach((d) => { if (rodic(groups[poradie.indexOf(d)]) === dimension) stav[d] = 'all'; });
+        /* Uvoľňuje sa od najhlbšej voľby: Koverta pri bioklimatických
+           pergolách zruší len podvýber a ostane v záhradných prístreškoch. */
+        for (let i = za.length - 1; i >= 0 && !pocet(stav); i -= 1) stav[za[i]] = 'all';
+        return stav;
+      };
+
       const apply = () => {
-        items.forEach((item) => {
-          item.hidden = groups.some((group) => {
-            const dimension = group.getAttribute('data-k-filter-group');
-            const value = state[dimension] || 'all';
-            return value !== 'all' && !znaky(item, dimension).includes(value);
-          });
-        });
+        items.forEach((item) => { item.hidden = !vyhovuje(item, state); });
 
         groups.forEach((group) => {
-          const dimension = group.getAttribute('data-k-filter-group');
+          const dimension = dim(group);
+          let viditelne = 0;
           group.querySelectorAll('button[data-k-filter]').forEach((button) => {
+            const ukaz = patri(group, button);
+            button.hidden = !ukaz;
+            if (ukaz && button.dataset.kFilter !== 'all') viditelne += 1;
             button.setAttribute('aria-pressed', String(button.dataset.kFilter === state[dimension]));
-            const candidate = { ...state, [dimension]: button.dataset.kFilter };
-            button.disabled = !items.some((item) => groups.every((otherGroup) => {
-              const otherDimension = otherGroup.getAttribute('data-k-filter-group');
-              const value = candidate[otherDimension] || 'all';
-              return value === 'all' || znaky(item, otherDimension).includes(value);
-            }));
+            const kolko = pocet(poKliku(dimension, button.dataset.kFilter));
+            button.disabled = !kolko;
+            const miesto = button.querySelector('[data-k-filter-count]');
+            if (miesto) miesto.textContent = String(kolko);
           });
+          if (rodic(group)) {
+            const blok = group.closest('[data-k-filter-block]') || group;
+            blok.hidden = !viditelne;
+          }
+          /* Na telefóne je rad posúvaný do strany — zvolená voľba má byť
+             v zábere (len vodorovný posun, stránka sa nehýbe). */
+          const zvoleny = group.querySelector('button[aria-pressed="true"]');
+          if (zvoleny && group.scrollWidth > group.clientWidth + 1) {
+            const r = group.getBoundingClientRect();
+            const z = zvoleny.getBoundingClientRect();
+            if (z.left < r.left || z.right > r.right) group.scrollLeft += z.left - r.left - 20;
+          }
         });
       };
 
       groups.forEach((group) => {
-        const dimension = group.getAttribute('data-k-filter-group');
+        const dimension = dim(group);
         group.querySelectorAll('button[data-k-filter]').forEach((button) => {
           button.addEventListener('click', () => {
-            state[dimension] = button.dataset.kFilter;
+            Object.assign(state, poKliku(dimension, button.dataset.kFilter));
             apply();
             zapisAdresu();
           });

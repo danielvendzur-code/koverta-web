@@ -49,8 +49,12 @@ KATEGORIE = {
 }
 NADPIS = {'auta': 'Prístrešky pre autá', 'pergoly': 'Bioklimatické pergoly', 'prestresenia': 'Pevné prestrešenia',
           'zahrada': 'Záhradné prístrešky', 'tienenie': 'Tienenie', 'kuchyne': 'Vonkajšie kuchyne'}
-PORADIE = [('auta', 'koverta'), ('auta', 'soltec'), ('pergoly', 'soltec'), ('prestresenia', 'soltec'),
-           ('zahrada', 'koverta'), ('tienenie', 'soltec'), ('kuchyne', 'soltec')]
+# Výber v galérii: skupina (Autoprístrešky / Záhradné prístrešky / Iné)
+# a podvoľba; pevné prestrešenia Soltec aj záhradné prístrešky Koverta
+# patria pod „S pevnou strechou“ (znak pevne).
+SKUPINA = {'auta': ('auta', 'auta'), 'pergoly': ('zahrada', 'pergoly'),
+           'prestresenia': ('zahrada', 'prestresenia pevne'), 'zahrada': ('zahrada', 'zahrada pevne'),
+           'tienenie': ('ine', 'tienenie'), 'kuchyne': ('ine', 'kuchyne')}
 PRIPONY = ('.jpg', '.jpeg', '.png', '.webp', '.heic')
 
 
@@ -61,12 +65,19 @@ def slug(text):
 
 def s_vodoznakom(im):
     """Vodoznak ako na starom webe: 40 % šírky, 6,5 % od pravého okraja,
-    10 % výšky od spodku."""
+    10 % výšky od spodku.
+
+    Staré fotky sú 4:3 a galéria ich tak aj ukazuje. Širšiu fotku (napr.
+    16:9) galéria oreže na stred 4:3 — vodoznak sa preto meria a kladie
+    v tejto viditeľnej časti, inak by bol väčší než na ostatných fotkách
+    a jeho koniec by orezanie odrezalo."""
     znak = Image.open(VODOZNAK).convert('RGBA')
     w, h = im.size
-    sirka = round(w * 0.40)
+    oblast = min(w, round(h * 4 / 3))
+    x0 = (w - oblast) // 2
+    sirka = round(oblast * 0.40)
     znak = znak.resize((sirka, round(znak.height * sirka / znak.width)), Image.LANCZOS)
-    x = w - round(w * 0.065) - znak.width
+    x = x0 + oblast - round(oblast * 0.065) - znak.width
     y = h - round(h * 0.10) - znak.height
     vysledok = im.convert('RGBA')
     vysledok.alpha_composite(znak, (x, y))
@@ -74,7 +85,8 @@ def s_vodoznakom(im):
 
 
 def html_fotky(typ, znacka, cesta, sirka, vyska, popis, alt, mala=640):
-    return (f'<figure class="kh-work__item k-rise k-reveal" data-k-type="{typ}" data-k-brand="{znacka}" data-k-delay="1">\n'
+    skupina, znaky = SKUPINA[typ]
+    return (f'<figure class="kh-work__item k-rise k-reveal" data-k-skupina="{skupina}" data-k-type="{znaky}" data-k-brand="{znacka}" data-k-delay="1">\n'
             f'        <span class="kh-work__media"><img src="../{cesta}.jpg" alt="{alt}" loading="lazy" decoding="async" '
             f'width="{sirka}" height="{vyska}" srcset="../{cesta}-w640.webp {mala}w, ../{cesta}.jpg {sirka}w" '
             f'sizes="(max-width: 900px) 86vw, 30vw"></span>\n'
@@ -129,11 +141,15 @@ def main():
     kon = t.index('</section>', zac)
     grid = t[zac:kon]
     figury = re.findall(r'<figure class="kh-work__item[^"]*"[^>]*>[\s\S]*?</figure>', grid)
-    kluc = lambda f: (re.search(r'data-k-type="([^"]*)"', f).group(1), re.search(r'data-k-brand="([^"]*)"', f).group(1))
-    # nové fotky idú na začiatok svojej kategórie, poradie kategórií ostáva
-    vsetky = [(PORADIE.index((n[0], n[1])), 0, n[2]) for n in nove] + \
-             [(PORADIE.index(kluc(f)) if kluc(f) in PORADIE else len(PORADIE), 1, f) for f in figury]
-    vsetky.sort(key=lambda x: (x[0], x[1]))
+    kluc = lambda f: (re.search(r'data-k-type="([^"\s]*)', f).group(1), re.search(r'data-k-brand="([^"]*)"', f).group(1))
+    # Galéria bez voľby je premiešaná (vybrané pekné fotky hore, asi tretina
+    # Soltec), preto sa nič neradí nanovo: nová fotka sa vloží pred prvú
+    # fotku svojej kategórie a značky, takže je aj v jej filtri prvá.
+    vsetky = list(figury)
+    for typ, znacka, novy, _ in reversed(nove):
+        miesto = next((i for i, f in enumerate(vsetky) if kluc(f) == (typ, znacka)), len(vsetky))
+        vsetky.insert(miesto, novy)
+    vsetky = [(0, 0, f) for f in vsetky]
     html = [re.sub(r'data-k-delay="\d+"', f'data-k-delay="{n % 6 + 1}"', f) for n, (_, _, f) in enumerate(vsetky)]
     koniec = grid[grid.rindex('</figure>') + len('</figure>'):]
     t = t[:zac] + '<div class="kh-work__grid" id="realGrid">\n      ' + '\n'.join(html) + koniec + t[kon:]

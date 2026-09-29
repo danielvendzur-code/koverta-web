@@ -41,12 +41,28 @@ async function dismissConsent(page) {
     'Keyboard navigation must return to the previous photograph');
   await page.keyboard.press('Escape');
 
+  /* Výber ako v konfigurátore: Tienenie je podvoľba skupiny „Iné“. */
+  assert(await page.locator('[data-k-filter-block]').isHidden(), 'Sub-choice row must stay hidden until a group is chosen');
+  await page.getByRole('button', { name: 'Iné', exact: true }).click();
   await page.getByRole('button', { name: 'Tienenie', exact: true }).click();
+  assert.match(page.url(), /[?&]druh=tienenie\b/, 'Sub-choice must have its own address');
   const shaded = page.locator('#realGrid .kh-work__item:not([hidden])');
   assert.equal(await shaded.count(), shadedTotal, 'Gallery filters must still limit the lightbox sequence');
   await shaded.first().click();
   assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `1 / ${shadedTotal}`);
   await page.keyboard.press('Escape');
+
+  /* Staré aj nové odkazy na kategóriu: podvoľba nastaví aj skupinu nad ňou
+     a zmena značky uvoľní len voľbu, ktorá by nič neukázala. */
+  await page.goto(URL + '?druh=bioklimaticke-pergoly', { waitUntil: 'load' });
+  const pergolas = await page.locator('#realGrid .kh-work__item[data-k-type~="pergoly"]').count();
+  assert.equal(await page.locator('#realGrid .kh-work__item:not([hidden])').count(), pergolas);
+  assert.equal(await page.getByRole('button', { name: 'Záhradné prístrešky' }).getAttribute('aria-pressed'), 'true');
+  await page.getByRole('button', { name: 'Koverta', exact: true }).click();
+  const kovertaGarden = await page.locator('#realGrid .kh-work__item[data-k-skupina="zahrada"][data-k-brand="koverta"]').count();
+  assert(kovertaGarden > 0, 'Koverta garden shelters are missing');
+  assert.equal(await page.locator('#realGrid .kh-work__item:not([hidden])').count(), kovertaGarden,
+    'Switching brand must keep the garden group and drop only the empty sub-choice');
 
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const mobile = await mobileContext.newPage();
@@ -85,5 +101,5 @@ async function dismissConsent(page) {
   await mobileContext.close();
 
   await browser.close();
-  console.log('REALIZACIE_GALLERY_PASS full-gallery modal, arrows, keyboard, filtered sequence and mobile snap slider');
+  console.log('REALIZACIE_GALLERY_PASS brand/group/sub-choice filters, full-gallery modal, arrows, keyboard, filtered sequence and mobile snap slider');
 })().catch((error) => { console.error(error); process.exit(1); });

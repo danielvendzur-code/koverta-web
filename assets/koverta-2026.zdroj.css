@@ -14435,3 +14435,116 @@ body.ma-kh-modal { overflow: hidden; }
   .k-home .kh-hero .kh-hero__inner > .kh-hero__box { flex: 0 0 auto !important; align-self: stretch !important; max-width: none !important; }
   .k-home .kh-hero .kh-hero__inner { padding-bottom: 14px !important; }
 }
+
+/* --- Galéria realizácií: výber ako v konfigurátore ------------------------
+   Značka ako karty s logom (Koverta / Soltec), pod ňou čo hľadáte a pri
+   záhradných prístreškoch a „Iné“ ešte podvýber. Bez piktogramov; vybraná
+   voľba má tmavý rám a jemne žlté pozadie ako karta v konfigurátore.
+   Počet fotiek pri každej voľbe ukazuje, čo sa po kliknutí zobrazí. */
+.k .kh-work__bar:has(.kh-gal) { display: block; }
+.k .kh-gal { display: grid; gap: 16px; width: 100%; }
+.k .kh-gal[hidden], .k .kh-gal__rad[hidden], .k .kh-gal button[hidden] { display: none; }
+.k .kh-gal__rad { display: grid; gap: 8px; min-width: 0; }
+.k .kh-gal__label {
+  margin: 0;
+  font-family: var(--k-head);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-grey);
+}
+.k .kh-gal__volby { display: flex; flex-wrap: wrap; gap: 8px; }
+.k .kh-gal__volby button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 14px 8px 16px;
+  border: 1px solid var(--k-hair);
+  border-radius: 12px;
+  background: var(--k-white);
+  color: var(--k-ink);
+  font-family: var(--k-head);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  transition: border-color 180ms var(--k-ease), background-color 180ms var(--k-ease), box-shadow 180ms var(--k-ease);
+}
+.k .kh-gal__volby button:hover:not(:disabled) { border-color: rgba(18, 23, 26, .45); }
+.k .kh-gal__volby button:focus-visible { outline: 2px solid var(--k-amber); outline-offset: 2px; }
+.k .kh-gal__volby button[aria-pressed="true"] {
+  border-color: var(--k-ink);
+  background: var(--k-amber-soft);
+  color: var(--k-ink);
+  box-shadow: inset 0 0 0 1px var(--k-ink);
+}
+.k .kh-gal__volby button:disabled { opacity: .38; cursor: not-allowed; }
+.k .kh-gal__pocet {
+  min-width: 26px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--k-bone-deep);
+  color: var(--k-grey);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.k .kh-gal__volby button[aria-pressed="true"] .kh-gal__pocet { background: var(--k-white); color: var(--k-ink); }
+/* Značka: tri rovnaké karty s logom a krátkym popisom. */
+.k .kh-gal__volby--znacka { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 820px; }
+.k .kh-gal__volby--znacka button { justify-content: space-between; min-height: 68px; padding: 10px 14px 10px 16px; }
+.k .kh-gal__text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.k .kh-gal__text strong { font-size: 14px; font-weight: 650; }
+.k .kh-gal__text small { font-family: var(--k-body, inherit); font-size: 12.5px; font-weight: 500; color: var(--k-grey); letter-spacing: 0; }
+.k .kh-gal__logo { display: block; width: auto; height: 15px; }
+.k .kh-gal__logo--soltec { height: 18px; }
+/* Podvýber je o stupeň tichší — patrí k voľbe nad ním. */
+.k .kh-gal__rad--pod { padding-left: 14px; border-left: 2px solid var(--k-amber); }
+.k .kh-gal__volby--pod button { min-height: 42px; font-size: 13.5px; }
+@media (max-width: 719px) {
+  .k .kh-gal { gap: 14px; }
+  /* Na telefóne vodorovne posúvané pásy ako v konfigurátore; kus ďalšej
+     voľby na okraji ukazuje, že sa dá posúvať. */
+  .k .kh-gal__volby {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--k-gut) * -1);
+    padding: 2px var(--k-gut) 4px;
+    scroll-padding-inline: var(--k-gut);
+  }
+  .k .kh-gal__volby::-webkit-scrollbar { display: none; }
+  .k .kh-gal__volby button { flex: 0 0 auto; white-space: nowrap; }
+  /* Značky sú len tri — stoja vedľa seba, aby bolo Koverta aj Soltec
+     vidieť hneď bez posúvania. */
+  .k .kh-gal__volby--znacka {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    max-width: none;
+    margin-inline: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .k .kh-gal__volby--znacka button {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 64px;
+    padding: 9px 10px;
+    white-space: normal;
+  }
+  .k .kh-gal__volby--znacka small { display: none; }
+  .k .kh-gal__volby--znacka .kh-gal__text strong { font-size: 13px; }
+  .k .kh-gal__logo { height: 12px; max-width: 100%; }
+  .k .kh-gal__logo--soltec { height: 15px; }
+  .k .kh-gal__rad--pod { padding-left: 0; border-left: 0; }
+}
