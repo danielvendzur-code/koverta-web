@@ -486,6 +486,9 @@ koverta-pristresok-garaz.jpg	assets/koverta-pristresok-garaz.jpg
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp
 koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg
+koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp
+koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp
+koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg
 koverta-pristresok-lamelova-vypln-janovce-w1000.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w1000.webp
 koverta-pristresok-lamelova-vypln-janovce-w640.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w640.webp
 koverta-pristresok-lamelova-vypln-janovce.jpg	assets/koverta-pristresok-lamelova-vypln-janovce.jpg
