@@ -224,11 +224,28 @@ function adresa(subor) {
 
 /* ---------------------------------------------------------------- prepisy */
 
+/* Katalógy Soltec (PDF) sú nahraté v Súboroch obchodu, aby sa odkaz volal
+   koverta.sk/cdn/shop/files/… — adresa z jsDelivr alebo GitHub Pages je
+   v prehliadači vidno a majiteľ ju nechce. Nový katalóg treba najprv nahrať
+   do Obsah → Súbory v Shopify a doplniť sem, inak prevod zlyhá. */
+const KATALOGY_V_OBCHODE = {
+  'katalogy/soltec-bioklimaticke-pergoly-2026-sk.pdf': 'katalog-soltec-bioklimaticke-pergoly-2026.pdf',
+  'katalogy/soltec-pevne-prestresenia-2026-sk.pdf': 'katalog-soltec-pevne-prestresenia-2026.pdf',
+  'katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf': 'katalog-soltec-tienenie-a-doplnky-2026.pdf',
+  'katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf': 'katalog-soltec-vonkajsie-kuchyne-2026.pdf',
+  'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad.pdf',
+};
+
 function naSubor(url) {
   const bez = url.split('?')[0].split('#')[0];
   const m = bez.match(/(?:^|\/)assets\/(.+)$/);
   if (!m) return null;
   const vnutri = m[1];
+  if (/\.pdf$/i.test(vnutri)) {
+    if (KATALOGY_V_OBCHODE[vnutri]) return '/cdn/shop/files/' + KATALOGY_V_OBCHODE[vnutri];
+    chyby.push('PDF assets/' + vnutri + ' nie je v Súboroch obchodu (KATALOGY_V_OBCHODE)');
+    return null;
+  }
   const naDisku = path.join(KOREN, 'assets', vnutri);
   if (!fs.existsSync(naDisku)) { chyby.push('chýba súbor: assets/' + vnutri); return null; }
   /* Podpriečinky v téme neexistujú, meno sa preto splošti: `foto/a.webp` sa
@@ -307,6 +324,10 @@ const ATRIBUTY = /\b(src|href|srcset|imagesrcset|poster|content|data-k-video|dat
 
 function prepis(html, mapa, zaklad) {
   return html.replace(ATRIBUTY, (cele, meno, hodnota) => {
+    /* Súbor zo Súborov obchodu ide cez doménu obchodu (koverta.sk/cdn/shop/
+       files/…), nie cez cdn.shopify.com — adresa PDF je v prehliadači vidno. */
+    const zObchodu = meno === 'href' && hodnota.match(/^https:\/\/cdn\.shopify\.com\/s\/files\/1\/0268\/6356\/6930\/files\/([^?#"]+\.pdf)(?:\?[^"#]*)?$/i);
+    if (zObchodu) return meno + '="/cdn/shop/files/' + zObchodu[1] + '"';
     if (/^(?:https?:|mailto:|tel:|data:|#|\{\{|\{%)/.test(hodnota)) return cele;
     const kusy = (meno === 'srcset' || meno === 'imagesrcset') ? hodnota.split(',') : [hodnota];
     let zmenene = false;
