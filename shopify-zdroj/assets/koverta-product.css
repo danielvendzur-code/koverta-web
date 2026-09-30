@@ -152,6 +152,9 @@
 .kp .kp-lista .k-btn { min-height: 48px; padding-inline: 20px; white-space: nowrap; }
 .kp-lista__tel { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border: 1px solid rgba(18, 23, 26, .22); border-radius: 999px; color: var(--k-ink); text-decoration: none; }
 .kp-lista__tel svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+/* Chat poradcu: ten istý kruh ako telefón, len ako tlačidlo. */
+.kp-lista__chat { padding: 0; background: transparent; font: inherit; cursor: pointer; }
+@media (max-width: 400px) { .kp .kp-lista .k-btn { padding-inline: 14px; } .kp-lista { gap: 8px; } }
 
 /* ------------------------------------------------------------------ tablet */
 @media (max-width: 1099px) {

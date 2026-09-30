@@ -60,6 +60,50 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
   });
 }
 
+/* Chat poradcu (repo koverta-chatbot-backend). Skript nemá čo robiť pri
+   prvom vykreslení, preto sa stiahne až po prvom pohybe, dotyku, klávese
+   alebo scrollovaní; tlačidlo chatu v lište ho stiahne a hneď otvorí.
+   V 3D konfigurátore chat nie je. Keď sa skript nenačíta, tlačidlo vedie
+   na WhatsApp, aby nezostalo mŕtve. */
+if (typeof window !== 'undefined' && !window.kvChat
+  && !/(^|\/)(pages\/(nove-)?)?konfigurator(\/|$)/.test(window.location.pathname)) {
+  window.kvChat = (function () {
+    var SRC = window.KV_CHAT_SRC || 'https://koverta-chatbot-backend.vercel.app/chatbot.js';
+    var nacitanie = null;
+    var UDALOSTI = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'wheel'];
+    function nacitaj() {
+      if (!nacitanie) {
+        UDALOSTI.forEach(function (u) { window.removeEventListener(u, nacitaj, { passive: true }); });
+        nacitanie = new Promise(function (ok, zle) {
+          var s = document.createElement('script');
+          s.src = SRC;
+          s.async = true;
+          s.onload = ok;
+          s.onerror = zle;
+          document.head.appendChild(s);
+        });
+      }
+      return nacitanie;
+    }
+    UDALOSTI.forEach(function (u) { window.addEventListener(u, nacitaj, { passive: true }); });
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-koverta-chat]') : null;
+      // Po načítaní kliky vybavuje chat sám.
+      if (!b || window.__kovertaChat2) return;
+      e.preventDefault();
+      b.setAttribute('aria-busy', 'true');
+      nacitaj().then(function () {
+        b.removeAttribute('aria-busy');
+        if (window.KovertaChat && window.KovertaChat.open) window.KovertaChat.open(b.getAttribute('data-koverta-chat') || '');
+      }, function () {
+        b.removeAttribute('aria-busy');
+        window.location.href = 'https://wa.me/421948482266';
+      });
+    });
+    return { nacitaj: nacitaj };
+  })();
+}
+
 (() => {
   /* Skryté východisko odhaľovania platí len vtedy, keď skript naozaj beží.
      Keby sa nenačítal alebo spadol, ostal by celý web prázdny — a to sa už

@@ -2779,7 +2779,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   background: rgba(255, 255, 255, 0.96);
 }
 @media (max-width: 759px) {
-  .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr); }
+  .kh-dock { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; }
   body:has(.kh-dock) { padding-bottom: 74px; }
 }
 .kh-dock__call {
@@ -2790,6 +2790,10 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   color: var(--k-ink);
 }
 .kh-dock__call svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+/* Chat poradcu: rovnaký kruh ako telefón. Tlačidlo namiesto odkazu, takže
+   potrebuje vynulovať predvolený vzhľad prehliadača. */
+.kh-dock__chat { padding: 0; background: transparent; font: inherit; cursor: pointer; }
+.kh-dock__chat[aria-busy="true"] svg { opacity: .45; }
 /* Dok stojí mimo `.k`, takže sem nedosiahne ani zrušenie podčiarknutia
    odkazov — tlačidlo aj telefón vyzerali ako holé odkazy. */
 .kh-dock .k-btn { width: 100%; min-height: 48px; }
@@ -14142,7 +14146,7 @@ body.ma-kh-modal { overflow: hidden; }
 
 /* Spodná lišta na telefóne o kúsok nižšia: menej zakrýva obsah. */
 @media (max-width: 759px) {
-  .kh-dock { grid-template-columns: 44px minmax(0, 1fr); gap: 8px; padding: 7px 10px calc(7px + env(safe-area-inset-bottom)); }
+  .kh-dock { grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 8px; padding: 7px 10px calc(7px + env(safe-area-inset-bottom)); }
   .kh-dock .kh-dock__call { width: 44px; height: 44px; min-height: 44px; }
   .kh-dock .kh-dock__call svg { width: 18px; height: 18px; }
   .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 44px; height: 44px; padding-block: 0; font-size: 15px; }
@@ -14319,10 +14323,12 @@ body.ma-kh-modal { overflow: hidden; }
 @media (max-width: 759px) {
   .kh-dock { transform: translate3d(0, 0, 0); backface-visibility: hidden; will-change: transform; contain: layout paint; }
   .kh-dock.je-hero-skryty { transform: translate3d(0, calc(100% + 12px), 0); }
-  .kh-dock { grid-template-columns: 48px minmax(0, 1fr); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+  .kh-dock { grid-template-columns: 48px minmax(0, 1fr) 48px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
   .kh-dock .kh-dock__call { width: 48px; height: 48px; min-height: 48px; }
   .kh-dock .kh-dock__call svg { width: 19px; height: 19px; }
   .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 48px; height: 48px; font-size: 16px; }
+  /* Tri prvky v lište: text ponuky sa zmestí aj na 360 px široký displej. */
+  .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { padding-inline: 10px; white-space: nowrap; }
   body:has(.kh-dock) { padding-bottom: 66px; }
 }
 
