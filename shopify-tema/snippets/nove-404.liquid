@@ -33,6 +33,11 @@
   .kh-404__dlazdica:hover { border-color:var(--k-ink); transform:translateY(-2px); }
   .kh-404__dlazdica strong { display:block; font-family:var(--k-head); font-size:16px; color:var(--k-ink); }
   .kh-404__dlazdica span { display:block; margin-top:4px; font-size:13.5px; line-height:1.55; color:var(--k-muted); }
+  button.kh-404__dlazdica { width:100%; padding:16px 18px; border:1px solid var(--k-hair); border-radius:var(--k-r-sm);
+    background:var(--k-white); font:inherit; text-align:left; cursor:pointer; }
+  .kh-404__kontakt .kh-404__rad { grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); }
+  .kh-404__kontakt { margin-top:44px; padding-top:32px; border-top:1px solid var(--k-hair); }
+  .kh-404__kontakt .k-copy { max-width:78ch; margin-top:10px; }
 </style>
 <main id="obsah" class="k">
   <section class="k-band kh-cta" aria-labelledby="ch404">
@@ -53,7 +58,17 @@
         <a class="kh-404__dlazdica" href="/pages/galeria-pristresky-pre-auta"><strong>Realizácie</strong><span>Fotografie z montáží vo viac ako 110 obciach</span></a>
       </div>
       <p class="k-copy kh-404__tip" data-k-404-tip hidden></p>
-      <p class="k-copy kh-404__spodok">Neviete si rady? Zavolajte na <a href="tel:+421948482266">+421 948 482 266</a> alebo napíšte na <a href="mailto:obchod@koverta.sk">obchod@koverta.sk</a>. Prípadne si otvorte <a href="/">úvodnú stránku</a>.</p>
+      <div class="kh-404__kontakt" aria-labelledby="ch404k">
+        <h2 id="ch404k" class="k-h3">Nenašli ste, čo ste hľadali? Ozvite sa priamo nám</h2>
+        <p class="k-copy">Roman Vendžúr, konateľ Koverta, a kolegovia z obchodu vám poradia s výberom aj cenou. Na správu odpovedáme do jedného pracovného dňa.</p>
+        <div class="kh-404__rad">
+          <a class="kh-404__dlazdica" href="tel:+421948482266"><strong>+421 948 482 266</strong><span>Zavolajte nám</span></a>
+          <a class="kh-404__dlazdica" href="mailto:obchod@koverta.sk"><strong>obchod@koverta.sk</strong><span>Napíšte e-mail</span></a>
+          <a class="kh-404__dlazdica" href="https://wa.me/421948482266" target="_blank" rel="noopener"><strong>WhatsApp</strong><span>Správa na to isté číslo</span></a>
+          <button class="kh-404__dlazdica" type="button" data-koverta-chat><strong>Chat s poradcom</strong><span>Odpovie hneď, aj s orientačnou cenou</span></button>
+        </div>
+      </div>
+      <p class="k-copy kh-404__spodok">Alebo sa vráťte na <a href="/">úvodnú stránku</a>.</p>
     </div>
   </section>
 </main>
