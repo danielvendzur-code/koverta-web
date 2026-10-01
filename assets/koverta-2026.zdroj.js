@@ -3089,6 +3089,8 @@ if (typeof window !== 'undefined' && !window.kvChat
     const zacaty = Date.now();
     const prekaza = () => {
       if (!modal.hidden || document.hidden || document.body.classList.contains('ma-kh-modal')) return true;
+      // Fokus v chate je vo vnorenom shadow DOM; formuláre dokumentu ho nevidia.
+      if (document.documentElement.getAttribute('data-koverta-chat-open') === 'true') return true;
       const akt = document.activeElement;
       if (akt && akt !== document.body && akt.closest && akt.closest('form, [role="dialog"], [aria-modal="true"]')) return true;
       const pise = [...document.querySelectorAll('form input:not([type="hidden"]):not([type="checkbox"]):not([type="file"]), form textarea')]
@@ -3633,7 +3635,20 @@ if (typeof window !== 'undefined' && !window.kvChat
       const skusPustit = () => { if (smie && vidno) pusti(); };
       const povol = () => {
         const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
-        window.setTimeout(() => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 }), 5000);
+        const zacni = () => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 });
+        if (window.matchMedia('(max-width: 759px)').matches) {
+          // Na telefóne najprv kompletný úvod s fotografiou. Dekoratívne
+          // video sa sťahuje až keď návštevník začne web používať; pevný
+          // časovač zbytočne spúšťal ďalší veľký prenos aj bez interakcie.
+          const udalosti = ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'];
+          const pouzivaWeb = () => {
+            udalosti.forEach(u => window.removeEventListener(u, pouzivaWeb));
+            zacni();
+          };
+          udalosti.forEach(u => window.addEventListener(u, pouzivaWeb, { passive: true }));
+        } else {
+          window.setTimeout(zacni, 5000);
+        }
       };
       if (document.readyState === 'complete') povol();
       else window.addEventListener('load', povol, { once: true });
