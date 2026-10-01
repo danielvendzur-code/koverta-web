@@ -1,0 +1,48 @@
+name: Výkon webu pred a po
+on:
+  push:
+    branches: [fix/vykon-pred-po-20261001]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        stranka: [uvod, pristresky-pre-auta, zahradne-pristresky, bioklimaticke-pergoly, realizacie, kontakt]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: po
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          ref: f15ec98a490c7f5d897cd5f6bb4ea6a537ea1639
+          path: pred
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pripraviť rovnaký merací nástroj a servery
+        run: |
+          cd po
+          npm install --no-save lighthouse@12.8.2 chrome-launcher@1.0.0
+          python3 -m http.server 8080 --directory ../pred > ../server-pred.log 2>&1 &
+          python3 -m http.server 8081 --directory . > ../server-po.log 2>&1 &
+      - name: Tri behy mobil aj desktop pred a po; živý obchod osobitne
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          STRANKA: ${{ matrix.stranka }}
+        run: |
+          cd po
+          node tools/meraj-pagespeed.mjs --zaklad=http://localhost:8080 --cesta="$STRANKA" --vystup=../vysledky/pred
+          node tools/meraj-pagespeed.mjs --zaklad=http://localhost:8081 --cesta="$STRANKA" --vystup=../vysledky/po
+          node tools/meraj-pagespeed.mjs --zaklad=https://koverta.sk --obchod --cesta="$STRANKA" --vystup=../vysledky/obchod
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vykon-${{ matrix.stranka }}
+          path: vysledky/
+          retention-days: 14

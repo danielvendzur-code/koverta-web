@@ -481,6 +481,18 @@ function prepisCss(text, zdroj) {
 
 /* ---------------------------------------------------------------- beh */
 
+
+/* Každá hlavná stránka načíta svoj menší štýl už v hlave. Plný štýl ostáva
+   pre produkty, konfigurátor a ďalšie šablóny. Poradie voči aplikáciám
+   aj ostatným štýlom je rovnaké ako pred rozdelením. */
+function stylyStranok(v) {
+  const vybrane = v.sablony.filter((s) => /koverta-2026-(?:uvod|pristresky-pre-auta|zahradne-pristresky|bioklimaticke-pergoly|realizacie|kontakt)\.css/.test(s.stylStranky));
+  const predvoleny = v.sablony.find((s) => /koverta-2026\.css/.test(s.stylStranky));
+  if (!predvoleny) { chyby.push('chýba predvolený plný štýl'); return ''; }
+  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + s.stylStranky).join('\n')
+    + '\n{%- else %}\n' + predvoleny.stylStranky + '\n{%- endif %}';
+}
+
 function preved() {
   /* Modely vybavenia si konfigurátor načítava sám za behu, takže na ne
      v značkovaní nič neukazuje a prevodník by ich prehliadol. */
@@ -544,7 +556,15 @@ function preved() {
     const medzi = prepis(html.slice(html.indexOf('</main>') + 7, html.indexOf('<footer class="k kf"')), mapa, zaklad);
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
-    const hlavaPrvky = prvky(hlava).filter((p) => !shopifyRobiSam(p)).map((p) => prepis(p, mapa, zaklad));
+    let stylStranky = '';
+    const hlavaPrvky = prvky(hlava).filter((p) => !shopifyRobiSam(p)).map((p) => {
+      const prevedeny = prepis(p, mapa, zaklad);
+      if (/<link[^>]+rel="stylesheet"/.test(p) && /koverta-2026(?:-[a-z-]+)?\.css/.test(p)) {
+        stylStranky = prevedeny;
+        return '<!-- KOVERTA-STYL-STRANKY -->';
+      }
+      return prevedeny;
+    });
     /* Preload úvodnej fotografie. Ostatné značky, ktoré Shopify skladá sám,
        sa zahadzujú, no tento Shopify nenapíše — bez neho sa fotografia (LCP)
        začne sťahovať až keď na ňu parser narazí v tele, za všetkými skriptmi
@@ -563,7 +583,7 @@ function preved() {
     const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)]
       .map((m) => naAdresyObchodu(m[0], mapa));
     const og = naAdresyObchodu((html.match(/<meta property="og:image" content="([^"]*)"/) || [, ''])[1], mapa);
-    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky };
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky, stylStranky };
   });
 
   /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
@@ -705,7 +725,7 @@ ${canonVetvy()}
 {%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
 {{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
-${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).join('\n')}
+${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).map((p) => p === '<!-- KOVERTA-STYL-STRANKY -->' ? stylyStranok(v) : p).join('\n')}
 {%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
    ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
    logá Koverta a Soltec cez celú obrazovku. Odkazy v tele stránky ostávajú,

@@ -63,4 +63,5 @@ if (require.main === module) {
     fs.writeFileSync(CIEL, novy);
     console.log('koverta-2026.css: ' + Buffer.byteLength(novy) + ' B (zdroj ' + fs.statSync(ZDROJ).size + ' B)');
   }
+  require('./css-stranky.js').vyrobStylyStranok(process.argv.includes('--kontrola'));
 }

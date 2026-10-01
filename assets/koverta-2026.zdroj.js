@@ -1306,9 +1306,9 @@ if (typeof window !== 'undefined' && !window.kvChat
        Kým sa stiahne — a keby sa nestiahol vôbec — platí pôvodný index
        z otvorenej stránky, takže vyhľadávanie funguje vždy. */
     const cestaIndexu = () => {
-      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
       const href = css ? css.getAttribute('href') : '';
-      const zaklad = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      const zaklad = href ? href.replace(/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './assets/';
       /* Index sa berie s tou istou značkou verzie ako štýl. Bez nej ostával
          v prehliadači starý zoznam aj po tom, čo na webe pribudla stránka —
          hľadalo sa v tom, čo tam bolo minule. */
@@ -1319,8 +1319,8 @@ if (typeof window !== 'undefined' && !window.kvChat
     /* Odkazy v indexe sú od koreňa webu, lebo ten istý index slúži všetkým
        podstránkam. Na podstránke sa preto pred ne dá „../“. */
     const koren = () => {
-      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
-      const zaklad = css ? css.getAttribute('href').replace(/assets\/koverta-2026\.css.*$/, '') : './';
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
+      const zaklad = css ? css.getAttribute('href').replace(/assets\/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './';
       return zaklad || './';
     };
 
@@ -2797,17 +2797,7 @@ if (typeof window !== 'undefined' && !window.kvChat
           if (!odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
              ani náhradná e-mailová cesta sa nerátajú. */
-          if (prilohyChyba && fotky) {
-            uvolni();
-            textySpat();
-            ukaz(true);
-            /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
-            const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
-            const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
-            if (veta) veta.textContent = text; else fotky.insertBefore(document.createTextNode(text), fotky.firstChild);
-            kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené' });
-            return;
-          }
+          const ciastocnyDopyt = Boolean(prilohyChyba && fotky);
           /* Ďakovná stránka: konverziu podľa adresy vie merať aj ten, kto
              nečíta dataLayer. `contact_posted=true` je ten istý znak, aký
              posiela kontaktný formulár Shopify. Odchádza sa, až keď GTM
@@ -2817,17 +2807,30 @@ if (typeof window !== 'undefined' && !window.kvChat
             if (odisiel) return;
             odisiel = true;
             const cesta = kvCesta('./dakujeme/');
-            const koren = ((document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]') || {}).getAttribute
-              ? document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]').getAttribute('href') : '')
-              .replace(/assets\/koverta-2026\.css.*$/, '') || './';
+            const koren = ((document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]') || {}).getAttribute
+              ? document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]').getAttribute('href') : '')
+              .replace(/assets\/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') || './';
             window.location.assign((cesta.charAt(0) === '/' ? cesta : koren + 'dakujeme/') + '?contact_posted=true');
           };
           /* Poďakovanie je len jedno — na ďakovnej stránke. Panel vo formulári
              sa pred odchodom neukazuje (predtým blikli dve poďakovania za
              sebou); tlačidlo ostane „odosiela sa“, kým stránka neodíde. Keď
              sa návštevník vráti späť, uvidí panel, že dopyt prišiel. */
-          window.addEventListener('pageshow', (ev) => { if (ev.persisted) { uvolni(); textySpat(); ukaz(false); } }, { once: true });
-          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené', eventCallback: nadakujem, eventTimeout: 1500 });
+          if (!ciastocnyDopyt) window.addEventListener('pageshow', (ev) => { if (ev.persisted) { uvolni(); textySpat(); ukaz(false); } }, { once: true });
+          // Jedno miesto merania po potvrdení serverom. Pri chybe príloh
+          // sa návštevník nepresmeruje; potvrdený dopyt sa stále započíta.
+          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené',
+            ...(ciastocnyDopyt ? {} : { eventCallback: nadakujem, eventTimeout: 1500 }) });
+          if (ciastocnyDopyt) {
+            uvolni();
+            textySpat();
+            ukaz(true);
+            /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
+            const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
+            const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
+            if (veta) veta.textContent = text; else fotky.insertBefore(document.createTextNode(text), fotky.firstChild);
+            return;
+          }
           window.setTimeout(nadakujem, 1600);
         } catch (err) {
           window.clearTimeout(cakac);
@@ -3842,13 +3845,13 @@ if (typeof window !== 'undefined' && !window.kvChat
        obrazové položky realizácií. Odkazy sa nemenia.
     */
     const menuAsset = (name) => {
-      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
       const href = link ? (link.getAttribute('href') || '') : '';
       /* Na Shopify je štýl na CDN obchodu, kde tieto fotky nie sú —
          berú sa z GitHub Pages ako ostatné obrázky témy. */
       const base = /cdn\.shopify\.com|\/cdn\/shop\//.test(href)
         ? 'https://danielvendzur-code.github.io/koverta-web/assets/'
-        : href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+        : href ? href.replace(/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './assets/';
       /* Náhľad v ponuke je najviac 230 px široký. Sťahovať naň celú
          fotografiu znamená 300 až 400 kB na jeden obrázok a sedem obrázkov
          v jednej ponuke — a na obrazovke z toho vidno dvestotridsať pixelov.
