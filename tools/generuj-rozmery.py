@@ -148,6 +148,13 @@ def skrutka(html, hlbka):
 def strankuj():
     kat = katalog()
     zdroj = io.open(os.path.join(KOREN, 'pristresky-pre-auta/index.html'), encoding='utf-8').read()
+    # Produktové rozmery majú vlastné sekcie: z kategórie preberáme hlavu,
+    # ale naďalej celý spoločný štýl, nie menší štýl kategórie.
+    styl = os.path.join(KOREN, 'assets', 'koverta-2026.css')
+    import hashlib
+    verzia = hashlib.sha1(io.open(styl, 'rb').read()).hexdigest()[:10]
+    zdroj = re.sub(r'koverta-2026-pristresky-pre-auta\.css\?v=[^"\s]+',
+                   'koverta-2026.css?v=' + verzia, zdroj)
     a = zdroj.find('<main'); b = zdroj.find('</main>') + len('</main>')
     hlava, pata = zdroj[:a], zdroj[b:]
     # hlava obsahuje SEO pre rodičovskú stránku — tie bloky nahradíme
