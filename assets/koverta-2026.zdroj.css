@@ -14412,6 +14412,11 @@ body.ma-kh-modal { overflow: hidden; }
   body:not(.k-home) .k .kh-hero .kh-hero__bg img {
     height: clamp(140px, calc(100svh - var(--kv-hlava, 65px) - 380px), calc(100vw * 724 / 900)) !important;
   }
+  /* Záhradná fotografia má v súbore 24 čiernych riadkov hore aj dole.
+     Object-fit oreže iba tieto okraje, obsah fotografie sa nemení. */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg img[src*="koverta-zahradny-pristresok-slovensky-grob"] {
+    height: clamp(140px, calc(100svh - var(--kv-hlava, 65px) - 380px), calc(100vw * 676 / 900)) !important;
+  }
 }
 
 /* Úvodná stránka na telefóne: video je nižšie a jeho spodok plynulo

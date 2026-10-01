@@ -31,9 +31,11 @@ for (const cesta of cesty) for (const druh of ['mobil', 'desktop']) {
     : volby.obchod !== undefined ? mapa[cesta].url || (mapa[cesta].typ === 'kolekcia' ? '/collections/' : '/pages/') + mapa[cesta].handle
     : '/' + (cesta ? cesta + '/' : '');
   const behy = [];
+  const opakovane = new Set();
   for (let i = 1; i <= pocet; i++) {
-    const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless=new', '--no-sandbox'] });
+    let chrome;
     try {
+      chrome = await chromeLauncher.launch({ chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'] });
       const { lhr } = await lighthouse(zaklad + ciel, { port: chrome.port, output: 'json', logLevel: 'error' }, druh === 'desktop' ? desktop : undefined);
       if (lhr.runtimeError) throw new Error(lhr.runtimeError.message);
       const subor = `${cesta || 'uvod'}-${druh}-${i}.json`;
@@ -51,7 +53,14 @@ for (const cesta of cesty) for (const druh of ['mobil', 'desktop']) {
       };
       behy.push(beh);
       console.log(JSON.stringify({ cesta: cesta || '/', druh, beh: i, skore: beh.skore, lcp: Math.round(beh.lcp), cls: beh.cls, tbt: Math.round(beh.tbt) }));
-    } finally { await chrome.kill(); }
+    } catch (e) {
+      // Opakuje sa iba pád spojenia s Chrome, nikdy úspešný nameraný beh.
+      if (e.code === 'ECONNREFUSED' && !opakovane.has(i)) {
+        opakovane.add(i);
+        console.warn('Chrome prerušil spojenie, nový čistý beh ' + i);
+        i--;
+      } else throw e;
+    } finally { if (chrome) await chrome.kill(); }
   }
   suhrn.push({ cesta: cesta || '/', druh, behy, median: Object.fromEntries(['skore', 'lcp', 'cls', 'tbt'].map((k) => [k, median(behy.map((b) => b[k]))])) });
   fs.writeFileSync(path.join(vystup, 'median.json'), JSON.stringify(suhrn, null, 2));
