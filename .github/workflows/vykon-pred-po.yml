@@ -6,12 +6,59 @@ on:
       - 'assets/**'
       - '**/*.html'
       - 'tools/css-stranky.js'
+      - 'tools/pridaj-realizacie.py'
+      - '.github/workflows/vykon-pred-po.yml'
       - 'tools/meraj-pagespeed.mjs'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
+  zostavit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      sha: ${{ steps.hotovo.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vygenerovať a skontrolovať zdroje
+        run: |
+          set -euo pipefail
+          npm install --no-save postcss@8.5.28 terser@5.51.2
+          node tools/zmensi-js.js
+          node tools/zmensi-css.js
+          node tools/verzie-suborov.js --oprav
+          python3 tools/cta-kontrola.py
+          node tools/seo-audit.js
+          node tools/rozmery-obrazkov.js
+          node tools/spolocne-casti.js --kontrola
+          node tools/shopify-kontrola.js
+      - name: Najprv uložiť assets, potom vyrobiť tému
+        id: hotovo
+        run: |
+          set -euo pipefail
+          git config user.name "koverta-bot"
+          git config user.email "noreply@koverta.sk"
+          git add assets '*.html'
+          if ! git diff --cached --quiet; then
+            git commit -m "Výkon: vygenerované assets a ich verzie"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
+          git add shopify-tema
+          if ! git diff --cached --quiet; then
+            git commit -m "Téma: zostavenie po uložených assets"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
   lighthouse:
+    needs: zostavit
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     strategy:
@@ -21,11 +68,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.zostavit.outputs.sha }}
           path: po
           fetch-depth: 0
       - uses: actions/checkout@v4
         with:
-          ref: f15ec98a490c7f5d897cd5f6bb4ea6a537ea1639
+          ref: 7c2415542bc85d151bddadcbdda0667e651e1c94
           path: pred
       - uses: actions/setup-node@v4
         with:

@@ -4267,7 +4267,22 @@ if (typeof window !== 'undefined' && !window.kvChat
      čo musí odpovedať na prvý dotyk: odkrytie obsahu, nadpis, hlavička
      a video v úvode. Zvyšok sa rozdelí do snímkov po ôsmich
      milisekundách, takže žiadny z nich nezmešká svoj termín. */
-  const HNED = [initReveal, initHeadline, initAnchors, initVideo];
+  /* Pri výpadku menšej CDN verzie skúsi galéria pôvodnú fotografiu raz.
+     Funkčné obrázky ani lazy loading tým nevytvárajú ďalšie požiadavky. */
+  function initFotoNahrada(root) {
+    root.querySelectorAll('#realGrid img[srcset]').forEach((img) => {
+      if (img.dataset.kFotoReady) return;
+      img.dataset.kFotoReady = 'true';
+      const nahrad = () => {
+        if (!img.hasAttribute('srcset') || !img.getAttribute('src')) return;
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+      };
+      img.addEventListener('error', nahrad, { once: true });
+      if (img.complete && !img.naturalWidth) nahrad();
+    });
+  }
+  const HNED = [initFotoNahrada, initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initVyberRozmeru, initSelect, initSubory, initScrub, initPrelet,
                  initDopyt, initDopytModal, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];

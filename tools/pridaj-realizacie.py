@@ -75,10 +75,14 @@ def s_vodoznakom(im):
     w, h = im.size
     oblast = min(w, round(h * 4 / 3))
     x0 = (w - oblast) // 2
+    # Aj portrét sa v galérii oreže na stred: vodoznak musí zostať vnútri
+    # viditeľného obdĺžnika, nie pri spodku odrezanej pôvodnej fotografie.
+    viditelna_vyska = min(h, round(w * 3 / 4))
+    y0 = (h - viditelna_vyska) // 2
     sirka = round(oblast * 0.40)
     znak = znak.resize((sirka, round(znak.height * sirka / znak.width)), Image.LANCZOS)
     x = x0 + oblast - round(oblast * 0.065) - znak.width
-    y = h - round(h * 0.10) - znak.height
+    y = y0 + viditelna_vyska - round(viditelna_vyska * 0.10) - znak.height
     vysledok = im.convert('RGBA')
     vysledok.alpha_composite(znak, (x, y))
     return vysledok.convert('RGB')
