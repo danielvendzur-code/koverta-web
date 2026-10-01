@@ -1,7 +1,7 @@
 name: Výkon webu pred a po
 on:
   push:
-    branches: [fix/vykon-pred-po-20261001]
+    branches: [fix/vykon-pred-po-20261001, fix/plynule-rozhranie-20261001]
     paths:
       - 'assets/**'
       - '**/*.html'
@@ -9,6 +9,8 @@ on:
       - 'tools/pridaj-realizacie.py'
       - '.github/workflows/vykon-pred-po.yml'
       - 'tools/meraj-pagespeed.mjs'
+      - 'tools/zmensi-js.js'
+      - 'tools/rozhranie-kontrola.cjs'
   workflow_dispatch:
 permissions:
   contents: write
@@ -73,7 +75,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/checkout@v4
         with:
-          ref: 7c2415542bc85d151bddadcbdda0667e651e1c94
+          ref: ${{ github.ref_name == 'fix/plynule-rozhranie-20261001' && '56d22abb6c0b076ab1df0db808bfb86871e668fd' || '7c2415542bc85d151bddadcbdda0667e651e1c94' }}
           path: pred
       - uses: actions/setup-node@v4
         with:
@@ -98,4 +100,25 @@ jobs:
         with:
           name: vykon-${{ matrix.stranka }}
           path: vysledky/
+          retention-days: 14
+  rozhranie:
+    needs: zostavit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.zostavit.outputs.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Lišta, formulár a rýchle preklikávanie FAQ na mobile aj PC
+        run: node tools/rozhranie-kontrola.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rozhranie-mobil-pc
+          path: qa-artifacts/rozhranie/
           retention-days: 14

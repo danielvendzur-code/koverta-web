@@ -16,6 +16,8 @@ const zaklad = (volby.zaklad || 'https://koverta.sk').replace(/\/$/, '');
 const vystup = path.resolve(volby.vystup || '/tmp/koverta-lighthouse-' + Date.now());
 const pocet = Number(volby.behy || 3);
 if (!Number.isInteger(pocet) || pocet < 3) throw new Error('Medián vyžaduje aspoň tri behy.');
+const zariadenia = volby.zariadenie ? [volby.zariadenie] : ['mobil', 'desktop'];
+if (zariadenia.some((z) => !['mobil', 'desktop'].includes(z))) throw new Error('Zariadenie musí byť mobil alebo desktop.');
 const mapa = JSON.parse(fs.readFileSync(new URL('./adresy-obchodu.json', import.meta.url), 'utf8')).stranky;
 const vsetkyCesty = ['', 'pristresky-pre-auta', 'zahradne-pristresky', 'bioklimaticke-pergoly', 'realizacie', 'kontakt'];
 const cesty = volby.cesta !== undefined ? [volby.cesta === 'uvod' ? '' : volby.cesta] : vsetkyCesty;
@@ -26,7 +28,7 @@ const median = (hodnoty) => {
 };
 fs.mkdirSync(vystup, { recursive: true });
 const suhrn = [];
-for (const cesta of cesty) for (const druh of ['mobil', 'desktop']) {
+for (const cesta of cesty) for (const druh of zariadenia) {
   const ciel = volby.nove !== undefined ? (cesta ? '/pages/nove-' + cesta : '/')
     : volby.obchod !== undefined ? mapa[cesta].url || (mapa[cesta].typ === 'kolekcia' ? '/collections/' : '/pages/') + mapa[cesta].handle
     : '/' + (cesta ? cesta + '/' : '');
