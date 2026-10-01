@@ -2,6 +2,11 @@ name: Výkon webu pred a po
 on:
   push:
     branches: [fix/vykon-pred-po-20261001]
+    paths:
+      - 'assets/**'
+      - '**/*.html'
+      - 'tools/css-stranky.js'
+      - 'tools/meraj-pagespeed.mjs'
   workflow_dispatch:
 permissions:
   contents: read
