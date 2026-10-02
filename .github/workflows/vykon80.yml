@@ -23,6 +23,7 @@ jobs:
           CHROME_PATH: /usr/bin/google-chrome
         run: |
           npm install --no-save postcss@8.5.28 terser@5.51.2 playwright@1.58.2
+          python3 tools/optimalizuj-video.py
           node tools/zmensi-js.js
           node tools/zmensi-css.js
           node tools/kriticke-css.cjs --vloz

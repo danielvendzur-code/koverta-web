@@ -148,7 +148,7 @@ const SHOPIFY_ZDROJ = path.join(KOREN, 'shopify-zdroj');
 const DO_TEMY = new Set(['.css', '.js', '.woff2', '.woff', '.svg']);
 /* Fotografie prvej obrazovky patria na rovnakú CDN ako téma. Zoznam
    vyplnia preload odkazy zo zdrojových stránok, vrátane srcset variantov. */
-const SKORE_FOTKY = new Set();
+const SKORE_FOTKY = new Set(['koverta-hero-sibenik.mp4', 'koverta-hero-sibenik-mobil-rychle.mp4']);
 
 const chyby = [];
 const doObchodu = new Map();
