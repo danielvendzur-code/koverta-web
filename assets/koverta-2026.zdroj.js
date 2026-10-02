@@ -469,8 +469,10 @@ if (typeof window !== 'undefined' && !window.kvChat
          dráhu dokončil až za koncom dokumentu, by tam ostal v polovici — a
          teda polopriehľadný. Posledná obrazovka je preto vždy hotová. */
       const dno = (document.documentElement.scrollHeight - window.scrollY - vh) < 4;
-      bloky.forEach((b) => {
-        const r = b.blok.getBoundingClientRect();
+      // Najprv všetky rozmery, potom zápisy: jeden prepočet na snímok.
+      const rozmery = bloky.map((b) => b.blok.getBoundingClientRect());
+      bloky.forEach((b, i) => {
+        const r = rozmery[i];
         /* Prvky ďaleko mimo okna sa nepočítajú — držia si poslednú hodnotu,
            takže to, čo už prešlo hore, ostáva hotové. */
         if (r.bottom < -240 || r.top > vh + 240) return;
@@ -3721,6 +3723,11 @@ if (typeof window !== 'undefined' && !window.kvChat
        o toľko povyrástla a viditeľne poskočila — a s ňou aj údaje pod ňou.
        Meriame preto len vtedy, keď je stránka na vrchu a lišta je vo svojom
        pokojnom rozmere; inak si necháme poslednú platnú hodnotu. */
+    const bar = header.querySelector('[data-k-bar]');
+    const pas = header.querySelector('.kv-topbar');
+    const uvodnaVyska = header.getBoundingClientRect().height;
+    const uvodnaLista = bar ? bar.getBoundingClientRect().height : 76;
+    let vyskaPasu = pas ? pas.getBoundingClientRect().height : 0;
     let poslednaV = null;
     let cakaV = false;
     const mer = () => {
@@ -3734,7 +3741,10 @@ if (typeof window !== 'undefined' && !window.kvChat
       document.documentElement.style.setProperty('--kv-hlava', v + 'px');
     };
     const naplanV = () => { if (!cakaV) { cakaV = true; requestAnimationFrame(mer); } };
-    mer();
+    if (window.scrollY <= 8 && uvodnaVyska > 0) {
+      poslednaV = Math.round(uvodnaVyska);
+      document.documentElement.style.setProperty('--kv-hlava', poslednaV + 'px');
+    }
     window.addEventListener('resize', naplanV, { passive: true });
     window.addEventListener('load', naplanV, { once: true });
     window.addEventListener('scroll', () => { if (window.scrollY <= 8) naplanV(); }, { passive: true });
@@ -3748,7 +3758,6 @@ if (typeof window !== 'undefined' && !window.kvChat
 
        Prilepí sa až potom, čo úplne odscrollovala, takže obsah nikam
        neposkočí a nič sa nemusí dopĺňať rozperou. */
-    const bar = header.querySelector('[data-k-bar]');
     if (bar) {
       let posledneY = window.scrollY;
       let ceka = false;
@@ -3758,15 +3767,15 @@ if (typeof window !== 'undefined' && !window.kvChat
          snímku scrollu. Meranie prvku núti prehliadač dokončiť rozloženie —
          dve také merania na snímok boli pri scrollovaní zbytočná práca
          a bolo to cítiť. */
-      let vyskaListy = 76;
-      let vyskaHlavicky = 117;
+      let vyskaListy = uvodnaLista || 76;
+      let vyskaHlavicky = uvodnaVyska || 117;
       const premeraj = () => {
         const v = bar.getBoundingClientRect().height;
         if (v > 0) vyskaListy = v;
         const h = header.offsetHeight;
         if (h > 0) vyskaHlavicky = h;
+        vyskaPasu = pas ? pas.getBoundingClientRect().height : 0;
       };
-      premeraj();
       window.addEventListener('resize', premeraj, { passive: true });
       window.addEventListener('load', premeraj, { once: true });
 
@@ -3779,8 +3788,7 @@ if (typeof window !== 'undefined' && !window.kvChat
         /* Telefón v lište má zmysel až vtedy, keď servisný pás s tým istým
            číslom odscrolluje preč. Kým je pás vidieť, číslo v lište by bolo
            to isté číslo dvakrát pod sebou. */
-        const pas = header.querySelector('.kv-topbar');
-        bar.classList.toggle('ma-schovany-pas', !pas || y >= pas.offsetHeight - 2);
+        bar.classList.toggle('ma-schovany-pas', !pas || y >= vyskaPasu - 2);
 
         if (y <= hranica) {
           /* pri vrchu stránky je lišta na svojom mieste v toku */
@@ -4254,13 +4262,13 @@ if (typeof window !== 'undefined' && !window.kvChat
 
   function init(scope) {
     const ulohy = [];
+    scope.querySelectorAll('[data-k-header]').forEach((h) => spusti(initHeader, h));
     scope.querySelectorAll('[data-k-root]').forEach((root) => {
       if (root.dataset.kReady === 'true') return;
       root.dataset.kReady = 'true';
       HNED.forEach((fn) => spusti(fn, root));
       POTOM.forEach((fn) => ulohy.push(() => spusti(fn, root)));
     });
-    scope.querySelectorAll('[data-k-header]').forEach((h) => spusti(initHeader, h));
     const dok = scope === document ? document : scope;
     // Vyhľadávanie je v hlavičke, teda mimo [data-k-root] — inicializuje sa
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.

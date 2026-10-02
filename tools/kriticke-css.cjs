@@ -71,10 +71,10 @@ const root = path.resolve(__dirname, '..');
         let html = fs.readFileSync(filename, 'utf8').replace(/<!-- KOVERTA-KRITICKY-ZACIATOK -->[\s\S]*?<!-- KOVERTA-KRITICKY-KONIEC -->\n?/g, '');
         const link = html.match(/<link[^>]+href="([^"]*assets\/koverta-2026-[a-z-]+\.css[^\"]*)"[^>]*>/);
         if (!link) throw new Error(file + ': chýba štýl');
-        const original = link[0].replace(/ media="print" onload="this.media='all'"/, '');
+        const original = link[0].replace(/ media="print" onload="[^"]*"/, '');
         const base = link[1].split('koverta-2026-')[0];
         const inline = small.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (tag,q,u) => /^(https?:|data:|\/\/|\/|#)/.test(u) ? tag : 'url(' + base + u + ')');
-        html = html.replace(link[0], '<!-- KOVERTA-KRITICKY-ZACIATOK -->\n<style data-k-kriticky="' + name + '">' + inline + '</style>\n<!-- KOVERTA-KRITICKY-KONIEC -->\n' + original.replace('<link ', '<link media="print" onload="this.media=\'all\'" '));
+        html = html.replace(link[0], '<!-- KOVERTA-KRITICKY-ZACIATOK -->\n<style data-k-kriticky="' + name + '">' + inline + '</style>\n<!-- KOVERTA-KRITICKY-KONIEC -->\n' + original.replace('<link ', '<link media="print" onload="this.media=\'all\';var s=document.querySelector(\'style[data-k-kriticky]\');if(s)s.remove()" '));
         // Noscript je súčasťou bloku, aby ďalšie zostavenie nevytvorilo duplikát.
         html = html.replace('<!-- KOVERTA-KRITICKY-KONIEC -->', '<noscript>' + original + '</noscript>\n<!-- KOVERTA-KRITICKY-KONIEC -->');
         fs.writeFileSync(filename, html);

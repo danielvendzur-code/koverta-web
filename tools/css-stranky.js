@@ -31,7 +31,8 @@ function vyrobStylyStranok(kontrola = false) {
   }).join('\n');
   const triedySkriptov = new Set(skripty.match(/(?:kh-|kv-|kf(?:-|__)|k-)[\w-]+/g) || []);
   for (const [meno, subor] of Object.entries(STRANKY)) {
-    const html = fs.readFileSync(path.join(KOREN, subor), 'utf8');
+    const html = fs.readFileSync(path.join(KOREN, subor), 'utf8')
+      .replace(/<!-- KOVERTA-KRITICKY-ZACIATOK -->[\s\S]*?<!-- KOVERTA-KRITICKY-KONIEC -->/g, '');
     const dostupnost = new Map();
     const jeDostupna = (trieda) => {
       if (!dostupnost.has(trieda)) dostupnost.set(trieda, html.includes(trieda) || triedySkriptov.has(trieda)

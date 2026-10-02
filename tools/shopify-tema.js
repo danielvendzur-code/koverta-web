@@ -504,7 +504,7 @@ function stylyStranok(v) {
     const snippet = 'kv-kriticky-' + meno;
     fs.writeFileSync(path.join(CIEL, 'snippets', snippet + '.liquid'), '<style data-k-kriticky="' + meno + '">' + css + '</style>\n');
     return "{%- render '" + snippet + "' -%}\n"
-      + s.stylStranky.replace('<link ', '<link media="print" onload="this.media=\'all\'" ')
+      + s.stylStranky.replace('<link ', '<link media="print" onload="this.media=\'all\';var s=document.querySelector(\'style[data-k-kriticky]\');if(s)s.remove()" ')
       + '\n<noscript>' + s.stylStranky + '</noscript>';
   };
   return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + styl(s)).join('\n')
