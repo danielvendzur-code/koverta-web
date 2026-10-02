@@ -23,7 +23,7 @@ const root = path.resolve(__dirname, '..');
         await p.route('https://**/*', r => r.abort());
         await p.goto('http://127.0.0.1:8089/' + file, { waitUntil: 'load' });
         await p.waitForFunction(() => document.querySelector('[data-k-root]')?.dataset.kReady === 'true');
-        await p.evaluate(() => document.fonts.ready);
+        await p.evaluate(async () => { await document.fonts.ready; await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame); });
         const used = await p.evaluate(() => {
           const sheet = [...document.styleSheets].find(s => s.href && /koverta-2026[^/]*\.css/.test(s.href));
           const main = document.querySelector('main');
@@ -35,7 +35,7 @@ const root = path.resolve(__dirname, '..');
           }
           // Pseudostavy odstránime konzervatívne: menu potrebuje aj hover/focus.
           const matches = selector => selector.split(',').some(s => {
-            const clean = s.replace(/::?[a-zA-Z-]+(\((?:[^()]|\([^()]*\))*\))?/g, '').trim() || '*';
+            const clean = s.replace(/\.(?:is-|je-|ma-)[\w-]+/g, '').replace(/::?[a-zA-Z-]+(\((?:[^()]|\([^()]*\))*\))?/g, '').trim() || '*';
             try { return [...document.querySelectorAll(clean)].some(e => top.has(e)); }
             catch { return true; }
           });

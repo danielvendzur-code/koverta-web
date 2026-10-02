@@ -32,6 +32,7 @@ jobs:
           node tools/rozmery-obrazkov.js
           node tools/spolocne-casti.js --kontrola
           node tools/rozhranie-kontrola.cjs
+          node tools/prva-obrazovka-kontrola.cjs
       - name: Uložiť assets a tému
         id: hotovo
         run: |
