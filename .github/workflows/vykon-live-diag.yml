@@ -15,11 +15,13 @@ jobs:
           node-version: 22
       - name: Porovnať štart a prvý obraz bez zmeny produkcie
         env:
-          CHROME_PATH: /usr/bin/google-chrome
+          CHROME_PATH: ${{ github.workspace }}/.chrome153/chrome-linux64/chrome
           KOVER_QA_OUT: vysledky
         run: |
           mkdir vysledky
-          npm install --no-save playwright@1.58.2
+          curl --fail --location --silent --show-error https://storage.googleapis.com/chrome-for-testing-public/153.0.8010.36/linux64/chrome-linux64.zip --output chrome.zip
+          unzip -q chrome.zip -d .chrome153
+          npm install --no-save playwright@1.58.2 lighthouse@13.5.0
           node tools/experiment-live.cjs
       - uses: actions/upload-artifact@v4
         if: always()

@@ -1,32 +1,21 @@
-const {chromium}=require('playwright');const fs=require('node:fs');
+const fs=require('node:fs');const {spawn}=require('node:child_process');const {chromium}=require('playwright');
 (async()=>{
-const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/google-chrome',args:['--no-sandbox']});
-console.log('CHROME '+browser.version());
-try{
- for(const path of ['/','/collections/zahradne-pristresky']){
- const ctx=await browser.newContext({viewport:{width:412,height:823},isMobile:true,deviceScaleFactor:1.75});
- const page=await ctx.newPage();const cdp=await ctx.newCDPSession(page);
- await page.addInitScript(()=>{
- window.kM={lcp:[],paint:[],long:[]};
- new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.lcp.push({time:e.startTime,tag:e.element?.tagName,url:e.url})}).observe({type:'largest-contentful-paint',buffered:true});
- new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.paint.push({name:e.name,time:e.startTime})}).observe({type:'paint',buffered:true});
- new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.long.push({time:e.startTime,duration:e.duration})}).observe({type:'longtask',buffered:true});
- });
- await cdp.send('Profiler.enable');await cdp.send('Profiler.start');
- await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing,loading,disabled-by-default-devtools.timeline',transferMode:'ReturnAsStream'});
- await page.goto('https://koverta.sk'+path,{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(8000);
- const result=await page.evaluate(()=>({...window.kM,resources:performance.getEntriesByType('resource').map(r=>({url:r.name,start:r.startTime,end:r.responseEnd,transfer:r.transferSize})),video:[...document.querySelectorAll('video')].map(v=>({time:v.currentTime,poster:v.poster,paused:v.paused})),css:[...document.querySelectorAll('link[rel="stylesheet"][href*="koverta-2026"]')].map(l=>({url:l.href,early:[...document.head.children].indexOf(l)}))}));
- const profile=(await cdp.send('Profiler.stop')).profile;
- const complete=new Promise(resolve=>cdp.once('Tracing.tracingComplete',resolve));await cdp.send('Tracing.end');const event=await complete;let trace='';
- while(true){const chunk=await cdp.send('IO.read',{handle:event.stream});trace+=chunk.data;if(chunk.eof)break}await cdp.send('IO.close',{handle:event.stream});
- const parsed=JSON.parse(trace);
- const tasks=parsed.traceEvents.filter(e=>e.ph==='X'&&e.dur>40000).sort((a,b)=>b.dur-a.dur).slice(0,30).map(e=>({name:e.name,ms:e.dur/1000,args:e.args}));
- const byid=new Map(profile.nodes.map(n=>[n.id,n]));const weights=new Map();
- profile.samples.forEach((id,i)=>weights.set(id,(weights.get(id)||0)+(profile.timeDeltas[i]||0)));
- const top=[...weights].sort((a,b)=>b[1]-a[1]).slice(0,30).map(([id,d])=>({ms:d/1000,function:byid.get(id).callFrame.functionName,url:byid.get(id).callFrame.url,line:byid.get(id).callFrame.lineNumber}));
- const name=path==='/'?'uvod':'zahrada';const out=process.env.KOVER_QA_OUT||'vysledky';
- fs.writeFileSync(out+'/'+name+'-trace.json',trace);fs.writeFileSync(out+'/'+name+'-profile.json',JSON.stringify(profile));fs.writeFileSync(out+'/'+name+'-timing.json',JSON.stringify(result));
- console.log('TRACE '+JSON.stringify({path,result,tasks,top}));await ctx.close();
+ const out=process.env.KOVER_QA_OUT||'vysledky';
+ for(const [slug,url] of [['uvod','https://koverta.sk/'],['zahrada','https://koverta.sk/collections/zahradne-pristresky']]){
+  await new Promise((resolve,reject)=>{const p=spawn(process.execPath,['node_modules/lighthouse/cli/index.js',url,'--only-categories=performance','--output=json','--output-path='+out+'/'+slug+'.json','--save-assets','--quiet','--chrome-flags=--headless --no-sandbox'],{stdio:'inherit',env:process.env});p.on('exit',code=>code===0?resolve():reject(Error('Lighthouse '+code)));p.on('error',reject)});
+  const r=JSON.parse(fs.readFileSync(out+'/'+slug+'.json','utf8')),a=r.audits;
+  const pick={};for(const key of ['metrics','lcp-breakdown-insight','render-blocking-insight','largest-contentful-paint-element','lcp-discovery-insight'])if(a[key])pick[key]={score:a[key].score,displayValue:a[key].displayValue,details:a[key].details};
+  const network=a['network-requests']?.details?.items.filter(x=>/koverta-2026|woff|grob-mobil|hero.*poster|hero.*mp4|style.min.css/.test(x.url))||[];
+  console.log('LH_MATCH '+JSON.stringify({slug,score:r.categories.performance.score*100,version:r.lighthouseVersion,ua:r.environment.hostUserAgent,warnings:r.runWarnings,settings:r.configSettings.throttling,metrics:['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index'].map(k=>({name:k,value:a[k].numericValue})),pick,network}));
  }
-}finally{await browser.close()}
+ const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,args:['--no-sandbox']});console.log('CHROME_MATCH '+browser.version());
+ try{
+  for(const url of ['https://koverta.sk/','https://koverta.sk/collections/zahradne-pristresky']){
+   const ctx=await browser.newContext({viewport:{width:412,height:823},isMobile:true,deviceScaleFactor:1.75});const page=await ctx.newPage();
+   await page.addInitScript(()=>{window.kM=[];new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.push({time:e.startTime,url:e.url,tag:e.element?.tagName})}).observe({type:'largest-contentful-paint',buffered:true})});
+   await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(6000);
+   console.log('CHROME_DOM '+JSON.stringify(await page.evaluate(()=>({url:location.href,lcp:window.kM,css:[...document.querySelectorAll('link[rel="stylesheet"][href*="koverta-2026"]')].map(l=>({position:[...document.head.children].indexOf(l),url:l.href})),video:[...document.querySelectorAll('video')].map(v=>({time:v.currentTime,paused:v.paused,poster:v.poster})),images:performance.getEntriesByType('resource').filter(r=>/grob-mobil|hero.*poster/.test(r.name)).map(r=>({url:r.name,start:r.startTime,end:r.responseEnd,transfer:r.transferSize}))}))));
+   await ctx.close();
+  }
+ }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
