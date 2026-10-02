@@ -1,41 +1,32 @@
-const {chromium}=require('playwright');
-const fs=require('node:fs');
-const assert=require('node:assert/strict');
-const out=process.env.KOVER_QA_OUT||'vysledky';
-const pages=['/','/collections/pristresky-pre-auta','/collections/zahradne-pristresky','/collections/bioklimaticke-pergoly','/pages/galeria-pristresky-pre-auta','/pages/kontakt'];
+const {chromium}=require('playwright');const fs=require('node:fs');
 (async()=>{
- const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/google-chrome',args:['--no-sandbox']});
- try{
-  for(const path of ['/','/collections/zahradne-pristresky'])for(let beh=1;beh<=3;beh++)for(const variant of ['povodne','dekodovanie-sync','bez-blur']){
-   const ctx=await browser.newContext({viewport:{width:412,height:823},isMobile:true,deviceScaleFactor:1.75});
-   const page=await ctx.newPage();const cdp=await ctx.newCDPSession(page);
-   await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:200000,uploadThroughput:90000});
-   await page.addInitScript(()=>{
-    window.kM={lcp:[],paint:[],long:[],cls:[]};
-    new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.lcp.push({time:e.startTime,tag:e.element?.tagName,src:e.url})}).observe({type:'largest-contentful-paint',buffered:true});
-    new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.paint.push({name:e.name,time:e.startTime})}).observe({type:'paint',buffered:true});
-    new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.long.push({time:e.startTime,duration:e.duration})}).observe({type:'longtask',buffered:true});
-    new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.kM.cls.push(e.value)}).observe({type:'layout-shift',buffered:true});
-   });
-   const url='https://koverta.sk'+path;
-   await page.route(url,async route=>{
-    const response=await route.fetch();let body=await response.text();
-    const match=body.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]*koverta-2026-(?:uvod|zahradne-pristresky)\.css[^"]*)"[^>]*>/);
-    if(!match)throw Error('Chýba štýl');
-    if(variant==='dekodovanie-sync'){
-     body=body.replace(/<img\b[^>]*fetchpriority="high"[^>]*>/g,t=>t.replace('decoding="async"','decoding="sync"'));
-    }
-    if(variant==='bez-blur'){
-     body=body.replace('</head>','<style>@media(max-width:759px){.kh-hero::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}</style></head>');
-    }
-
-    await route.fulfill({response,body});
-   });
-   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-   await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(6000);
-   const result=await page.evaluate(()=>({...window.kM,video:[...document.querySelectorAll('video')].map(v=>({time:v.currentTime,paused:v.paused})),resources:performance.getEntriesByType('resource').filter(r=>/koverta-2026|woff|consentik|style.min|grob-mobil/.test(r.name)).map(r=>({name:r.name,start:r.startTime,end:r.responseEnd,duration:r.duration,transfer:r.transferSize})),dom:performance.getEntriesByType('navigation')[0].domContentLoadedEventEnd,blur:document.querySelector('.kh-hero')?getComputedStyle(document.querySelector('.kh-hero'),'::after').backdropFilter:null}));
-   console.log('LIVE_PERF '+JSON.stringify({path,variant,beh,lcp:result.lcp,paint:result.paint,long:result.long.reduce((s,t)=>s+Math.max(0,t.duration-50),0),cls:result.cls.reduce((s,v)=>s+v,0),video:result.video,resources:result.resources,longTasks:result.long,errors}));
-   fs.writeFileSync(out+'/'+(path==='/'?'uvod':'zahrada')+'-'+variant+'-'+beh+'.json',JSON.stringify(result,null,2));await ctx.close();
-  }
- }finally{await browser.close();}
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/google-chrome',args:['--no-sandbox']});
+console.log('CHROME '+browser.version());
+try{
+ for(const path of ['/','/collections/zahradne-pristresky']){
+ const ctx=await browser.newContext({viewport:{width:412,height:823},isMobile:true,deviceScaleFactor:1.75});
+ const page=await ctx.newPage();const cdp=await ctx.newCDPSession(page);
+ await page.addInitScript(()=>{
+ window.kM={lcp:[],paint:[],long:[]};
+ new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.lcp.push({time:e.startTime,tag:e.element?.tagName,url:e.url})}).observe({type:'largest-contentful-paint',buffered:true});
+ new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.paint.push({name:e.name,time:e.startTime})}).observe({type:'paint',buffered:true});
+ new PerformanceObserver(l=>{for(const e of l.getEntries())window.kM.long.push({time:e.startTime,duration:e.duration})}).observe({type:'longtask',buffered:true});
+ });
+ await cdp.send('Profiler.enable');await cdp.send('Profiler.start');
+ await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing,loading,disabled-by-default-devtools.timeline',transferMode:'ReturnAsStream'});
+ await page.goto('https://koverta.sk'+path,{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(8000);
+ const result=await page.evaluate(()=>({...window.kM,resources:performance.getEntriesByType('resource').map(r=>({url:r.name,start:r.startTime,end:r.responseEnd,transfer:r.transferSize})),video:[...document.querySelectorAll('video')].map(v=>({time:v.currentTime,poster:v.poster,paused:v.paused})),css:[...document.querySelectorAll('link[rel="stylesheet"][href*="koverta-2026"]')].map(l=>({url:l.href,early:[...document.head.children].indexOf(l)}))}));
+ const profile=(await cdp.send('Profiler.stop')).profile;
+ const complete=new Promise(resolve=>cdp.once('Tracing.tracingComplete',resolve));await cdp.send('Tracing.end');const event=await complete;let trace='';
+ while(true){const chunk=await cdp.send('IO.read',{handle:event.stream});trace+=chunk.data;if(chunk.eof)break}await cdp.send('IO.close',{handle:event.stream});
+ const parsed=JSON.parse(trace);
+ const tasks=parsed.traceEvents.filter(e=>e.ph==='X'&&e.dur>40000).sort((a,b)=>b.dur-a.dur).slice(0,30).map(e=>({name:e.name,ms:e.dur/1000,args:e.args}));
+ const byid=new Map(profile.nodes.map(n=>[n.id,n]));const weights=new Map();
+ profile.samples.forEach((id,i)=>weights.set(id,(weights.get(id)||0)+(profile.timeDeltas[i]||0)));
+ const top=[...weights].sort((a,b)=>b[1]-a[1]).slice(0,30).map(([id,d])=>({ms:d/1000,function:byid.get(id).callFrame.functionName,url:byid.get(id).callFrame.url,line:byid.get(id).callFrame.lineNumber}));
+ const name=path==='/'?'uvod':'zahrada';const out=process.env.KOVER_QA_OUT||'vysledky';
+ fs.writeFileSync(out+'/'+name+'-trace.json',trace);fs.writeFileSync(out+'/'+name+'-profile.json',JSON.stringify(profile));fs.writeFileSync(out+'/'+name+'-timing.json',JSON.stringify(result));
+ console.log('TRACE '+JSON.stringify({path,result,tasks,top}));await ctx.close();
+ }
+}finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
