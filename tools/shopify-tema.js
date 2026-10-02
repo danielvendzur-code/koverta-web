@@ -146,6 +146,9 @@ const PRESKOC = new Set(['node_modules', '.git', 'coordination', 'qa-artifacts',
 const SHOPIFY_ZDROJ = path.join(KOREN, 'shopify-zdroj');
 
 const DO_TEMY = new Set(['.css', '.js', '.woff2', '.woff', '.svg']);
+/* Fotografie prvej obrazovky patria na rovnakú CDN ako téma. Zoznam
+   vyplnia preload odkazy zo zdrojových stránok, vrátane srcset variantov. */
+const SKORE_FOTKY = new Set();
 
 const chyby = [];
 const doObchodu = new Map();
@@ -252,7 +255,7 @@ function naSubor(url) {
      stane `foto-a.webp`. Rovnako v Súboroch obchodu, aby sa dve rôzne
      fotografie s rovnakým menom neprebili. */
   const meno = vnutri.replace(/\//g, '-');
-  if (DO_TEMY.has(path.extname(vnutri).toLowerCase())) {
+  if (DO_TEMY.has(path.extname(vnutri).toLowerCase()) || SKORE_FOTKY.has(vnutri)) {
     doTemy.set(meno, naDisku);
     return "{{ '" + meno + "' | asset_url }}";
   }
@@ -418,6 +421,7 @@ function ogNaCdn(text) {
 }
 
 function shopifyRobiSam(prvok) {
+  if (/data-k-kriticky=/.test(prvok) || /^<noscript/.test(prvok)) return true;
   return /<title|<meta name="description"|<link rel="canonical"|<meta property="og:|<meta name="twitter:|application\/ld\+json|<link rel="preload"|<meta charset|<meta name="viewport"/i.test(prvok);
 }
 
@@ -489,7 +493,21 @@ function stylyStranok(v) {
   const vybrane = v.sablony.filter((s) => /koverta-2026-(?:uvod|pristresky-pre-auta|zahradne-pristresky|bioklimaticke-pergoly|realizacie|kontakt)\.css/.test(s.stylStranky));
   const predvoleny = v.sablony.find((s) => /koverta-2026\.css/.test(s.stylStranky));
   if (!predvoleny) { chyby.push('chýba predvolený plný štýl'); return ''; }
-  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + s.stylStranky).join('\n')
+  const styl = (s) => {
+    const meno = s.stylStranky.match(/koverta-2026-([a-z-]+)\.css/)[1];
+    const subor = path.join(KOREN, 'assets', 'koverta-kriticky-' + meno + '.css');
+    if (!fs.existsSync(subor)) throw new Error('Chýba kritický štýl ' + meno + '; spusti tools/kriticke-css.cjs');
+    const css = prepisCss(fs.readFileSync(subor, 'utf8'), subor).replace(CSS_URL, (tag, q, u) => {
+      if (/^(https?:|data:|\/\/|#)/.test(u)) return tag;
+      return "url({{ '" + u + "' | asset_url | split: '?' | first }})";
+    });
+    const snippet = 'kv-kriticky-' + meno;
+    fs.writeFileSync(path.join(CIEL, 'snippets', snippet + '.liquid'), '<style data-k-kriticky="' + meno + '">' + css + '</style>\n');
+    return "{%- render '" + snippet + "' -%}\n"
+      + s.stylStranky.replace('<link ', '<link media="print" onload="this.media=\'all\'" ')
+      + '\n<noscript>' + s.stylStranky + '</noscript>';
+  };
+  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + styl(s)).join('\n')
     + '\n{%- else %}\n' + predvoleny.stylStranky + '\n{%- endif %}';
 }
 
@@ -511,6 +529,12 @@ function preved() {
   else chyby.push('chýba konfigurator/koverta-decal.svg');
 
   const zoznam = najdiStranky(KOREN);
+  for (const subor of zoznam) {
+    const html = fs.readFileSync(subor, 'utf8');
+    for (const tag of html.match(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/g) || []) {
+      for (const m of tag.matchAll(/assets\/([^"?\s,]+\.(?:webp|jpe?g|png))/g)) SKORE_FOTKY.add(m[1]);
+    }
+  }
   const mapa = new Map();
   for (const s of zoznam) { const a = adresa(s); mapa.set(a.cesta, a.odkaz); }
 

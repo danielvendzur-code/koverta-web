@@ -3523,7 +3523,7 @@ if (typeof window !== 'undefined' && !window.kvChat
       const mobil = v.getAttribute('data-k-video-mobil');
       if (uzky && !mobil) return;
 
-      let pustene = false;
+      let pustene = v.dataset.kVideoSpustene === 'true';
       const pusti = () => {
         if (!pustene) {
           pustene = true;
@@ -3594,40 +3594,18 @@ if (typeof window !== 'undefined' && !window.kvChat
       v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
       v.addEventListener('error', vzdaj);
 
-      /* Video sa začne sťahovať až po načítaní stránky a chvíli pokoja.
-         Dovtedy je na jeho mieste tá istá fotografia (plagát), takže úvod
-         vyzerá rovnako. Keby sa 1–2 MB videa sťahovali hneď, delili by sa
-         o linku s fotkou, písmom a štýlmi a telefón by prvú obrazovku
-         vykreslil neskôr — PageSpeed to na mobile počítal ako LCP 8,5 s.
+      /* Video sa rozbieha pri prvom vykreslení, bez časovača a interakcie.
+         Native poster z tej istej fotografie je dostupný pred prvým snímkom;
+         rovnaký preloaded obrázok sa nesťahuje druhýkrát. */
+      const img = v.parentElement.querySelector('picture img');
+      if (img) v.poster = img.currentSrc || img.src;
+      v.style.opacity = '1';
+      v.style.transition = 'none';
+      let vidno = v.getBoundingClientRect().top < window.innerHeight;
+      const skusPustit = () => { if (vidno && !v.hidden) pusti(); };
+      skusPustit();
 
-         Päť sekúnd, nie jeden a pol: prvý snímok videa prehliadač berie
-         ako nový „najväčší obsah" (LCP) a pri spustení krátko po načítaní
-         posunul LCP z 3 s na 5,5–6 s — v dvoch z piatich meraní na mobile
-         (Lighthouse, 5 behov na runneri; s oneskorením 5 s ani raz). */
-      let smie = false;
-      let vidno = false;
-      const skusPustit = () => { if (smie && vidno) pusti(); };
-      const povol = () => {
-        const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
-        const zacni = () => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 });
-        if (window.matchMedia('(max-width: 759px)').matches) {
-          // Na telefóne najprv kompletný úvod s fotografiou. Dekoratívne
-          // video sa sťahuje až keď návštevník začne web používať; pevný
-          // časovač zbytočne spúšťal ďalší veľký prenos aj bez interakcie.
-          const udalosti = ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'];
-          const pouzivaWeb = () => {
-            udalosti.forEach(u => window.removeEventListener(u, pouzivaWeb));
-            zacni();
-          };
-          udalosti.forEach(u => window.addEventListener(u, pouzivaWeb, { passive: true }));
-        } else {
-          window.setTimeout(zacni, 5000);
-        }
-      };
-      if (document.readyState === 'complete') povol();
-      else window.addEventListener('load', povol, { once: true });
-
-      if (!('IntersectionObserver' in window)) { vidno = true; return; }
+      if (!('IntersectionObserver' in window)) { vidno = true; skusPustit(); return; }
       if (v.getBoundingClientRect().top < window.innerHeight) vidno = true;
       const sled = new IntersectionObserver((zaznamy) => {
         zaznamy.forEach((z) => {
