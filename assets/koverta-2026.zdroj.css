@@ -14589,3 +14589,7 @@ body.ma-kh-modal { overflow: hidden; }
   .k .kh-gal__logo--soltec { height: 15px; }
   .k .kh-gal__rad--pod { padding-left: 0; border-left: 0; }
 }
+
+/* Úvodný text je obsah prvej obrazovky: skript ho už znovu neskryje.
+   Transformácia zachová príchod; odhaľovanie ďalších sekcií sa nemení. */
+.k-js main > section:first-child .k-rise { opacity: 1; }
