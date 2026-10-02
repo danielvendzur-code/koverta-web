@@ -1,0 +1,24 @@
+name: Diagnostika výkonu živého Shopify webu
+on:
+  push:
+    branches: [qa/vykon-live-20261002]
+permissions:
+  contents: read
+jobs:
+  meranie:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lighthouse a stopy živého webu
+        run: |
+          mkdir vysledky
+          npx --yes lighthouse@13.5.0 https://koverta.sk/ --chrome-flags="--headless --no-sandbox" --only-categories=performance --output=json --output-path=vysledky/uvod.json --save-assets
+          node -e "const r=require('./vysledky/uvod.json');console.log(JSON.stringify({score:r.categories.performance.score,metrics:Object.fromEntries(['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index'].map(k=>[k,r.audits[k].numericValue]))}))"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostika-live
+          path: vysledky/
