@@ -9,16 +9,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Lighthouse a stopy živého webu
+      - name: Porovnať štart a prvý obraz bez zmeny produkcie
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          KOVER_QA_OUT: vysledky
         run: |
           mkdir vysledky
-          npx --yes lighthouse@13.5.0 https://koverta.sk/ --chrome-flags="--headless --no-sandbox" --only-categories=performance --output=json --output-path=vysledky/uvod.json --save-assets
-          node -e "const r=require('./vysledky/uvod.json');console.log(JSON.stringify({score:r.categories.performance.score,metrics:Object.fromEntries(['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index'].map(k=>[k,r.audits[k].numericValue]))}))"
+          npm install --no-save playwright@1.58.2
+          node tools/experiment-live.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: diagnostika-live
+          name: experiment-live
           path: vysledky/
