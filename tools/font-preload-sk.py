@@ -9,8 +9,8 @@ for page in root.rglob('*.html'):
     text=page.read_text()
     if 'konfigurator' in page.parts:
         # Prednačítanie konfigurátora ostáva nezmenené; nejde o úvodnú stránku.
-        page.write_text(text.replace('archivo-sk-v3.woff2','archivo-latin-ext-v2.woff2'))
+        page.write_text(text.replace('archivo-sk-v3.woff2','archivo-latin-ext-v2.woff2').replace('archivo-latin-sk-v4.woff2','archivo-latin-v2.woff2'))
         continue
-    changed=re.sub(r'<link\b[^>]*>', lambda m: m[0].replace('archivo-latin-ext-v2.woff2','archivo-sk-v3.woff2') if 'rel="preload"' in m[0] and 'as="font"' in m[0] else m[0],text)
+    changed=re.sub(r'<link\b[^>]*>', lambda m: m[0].replace('archivo-latin-ext-v2.woff2','archivo-sk-v3.woff2').replace('archivo-latin-v2.woff2','archivo-latin-sk-v4.woff2') if 'rel="preload"' in m[0] and 'as="font"' in m[0] else m[0],text)
     if changed!=text:page.write_text(changed);count+=1
 print('Slovenský font v prednačítaní:',count,'stránok')

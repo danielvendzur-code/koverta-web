@@ -140,7 +140,9 @@ const layoutSubor = path.join(TEMA, 'layout', 'theme.liquid');
 if (fs.existsSync(layoutSubor)) {
   const text = fs.readFileSync(layoutSubor, 'utf8');
   if (!/request\.page_type\s*==\s*['"]product['"]/.test(text)) nalez(layoutSubor, 'layout nemá dynamický product og:type');
-  if (!/koverta-shopify\.css/.test(text)) nalez(layoutSubor, 'layout nenačítava koverta-shopify.css');
+  const zakladCss = fs.readFileSync(path.join(KOREN, 'shopify-zdroj/assets/koverta-shopify.css'), 'utf8');
+  const vlozenyZaklad = text.includes('<style data-k-shopify-zaklad>' + zakladCss + '</style>');
+  if (!/koverta-shopify\.css/.test(text) && !vlozenyZaklad) nalez(layoutSubor, 'layout nenačítava koverta-shopify.css ani jeho presnú vloženú verziu');
 }
 const headerSubor = path.join(TEMA, 'sections', 'kv-hlavicka.liquid');
 if (fs.existsSync(headerSubor)) {
