@@ -333,7 +333,7 @@
     <picture><source media="(max-width: 759px)" srcset="./assets/koverta-hero-sibenik-poster-mobil-w480.webp 480w, ./assets/koverta-hero-sibenik-poster-mobil-w800.webp 800w, ./assets/koverta-hero-sibenik-poster-mobil.webp 900w" sizes="100vw" width="900" height="724" type="image/webp"><img src="./assets/koverta-hero-sibenik-poster.jpg" width="1920" height="1080" alt="Bioklimatická pergola Soltec pri kamennom dome" fetchpriority="high" decoding="async" srcset="./assets/koverta-hero-sibenik-poster-w640.webp 640w, ./assets/koverta-hero-sibenik-poster-w1000.webp 1000w, ./assets/koverta-hero-sibenik-poster-w1600.webp 1600w, ./assets/koverta-hero-sibenik-poster-w1920.webp 1920w" sizes="(max-width: 759px) 100vw, (max-width: 900px) 190vh, 100vw"></picture>
     <video class="kh-hero__video" data-k-video="./assets/koverta-hero-sibenik.mp4" data-k-video-webm="./assets/koverta-hero-sibenik.webm" data-k-video-mobil="./assets/koverta-hero-sibenik-mobil-rychle.mp4" data-k-video-end="11" muted loop playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback noplaybackrate" preload="none" tabindex="-1" aria-hidden="true"></video>
     <script>/* Video pozadia začína bez čakania na hlavný skript; rešpektuje úsporu dát a pohybu. */
-    (function(s){var v=s.previousElementSibling,c=navigator.connection;if(!v||matchMedia('(prefers-reduced-motion: reduce)').matches||c&&(c.saveData||/(^|-)[23]g$/.test(c.effectiveType||'')))return;var m=matchMedia('(max-width:759px)').matches,i=v.parentNode.querySelector('picture img'),p=v.parentNode.querySelector('picture source'),ss=m&&p?p.srcset:i.srcset,cs=ss.split(',').map(function(x){var a=x.trim().split(/\s+/);return{u:a[0],w:parseInt(a[1])||99999}}),w=(m||innerWidth>900?innerWidth:innerHeight*1.9)*(devicePixelRatio||1);v.poster=(cs.find(function(x){return x.w>=w})||cs[cs.length-1]).u;var u=m?v.dataset.kVideoMobil:v.dataset.kVideo;if(!v.canPlayType('video/mp4'))u=v.dataset.kVideoWebm;if(!u)return;v.muted=true;v.defaultMuted=true;v.preload='auto';v.src=u;v.dataset.kVideoSpustene='true';v.style.opacity='1';v.style.transition='none';var q=v.play();if(q&&q.catch)q.catch(function(){});})(document.currentScript);</script>
+    (function(s){var v=s.previousElementSibling,c=navigator.connection;if(!v||matchMedia('(prefers-reduced-motion: reduce)').matches||c&&(c.saveData||/(^|-)[23]g$/.test(c.effectiveType||'')))return;var m=matchMedia('(max-width:759px)').matches;var u=m?v.dataset.kVideoMobil:v.dataset.kVideo;if(!v.canPlayType('video/mp4'))u=v.dataset.kVideoWebm;if(!u)return;v.muted=true;v.defaultMuted=true;v.preload='auto';v.src=u;v.dataset.kVideoSpustene='true';v.style.opacity='0';v.style.transition='none';v.addEventListener('playing',function(){v.style.opacity='1'},{once:true});var q=v.play();if(q&&q.catch)q.catch(function(){});})(document.currentScript);</script>
     <span class="kh-hero__scrim" aria-hidden="true"></span>
   </div>
 
@@ -1370,7 +1370,7 @@
   </div>
 </footer>
 
-<script src="./assets/koverta-2026.js?v=d371bb88b0" defer></script>
+<script src="./assets/koverta-2026.js?v=75647cb42e" defer></script>
 <script>
 /* ?flat — vypne animácie a odhalí všetko naraz. Len na snímkovanie dizajnu. */
 if (new URLSearchParams(location.search).has('flat')) {
