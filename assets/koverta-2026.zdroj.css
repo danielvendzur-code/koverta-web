@@ -13877,6 +13877,11 @@ body.ma-kh-modal { overflow: hidden; }
 .kh-form--jednoduchy .kh-field[hidden] { display: none !important; }
 .kh-form--jednoduchy .kh-form__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .kh-form--jednoduchy .kh-form__grid > .kh-field:nth-child(3) { grid-column: auto; }
+.kh-form__grid > .kh-field { min-width: 0; }
+/* Vstupy v riadku sú zarovnané aj pri zalomenom popise. */
+.kh-form__grid > .kh-field > input,
+.kh-form__grid > .kh-field > select,
+.kh-form__grid > .kh-field > textarea { margin-top: auto; }
 .kh-form--jednoduchy .kh-field > span { margin-bottom: 6px; font: 600 13px/1.2 var(--k-head); color: var(--k-ink); letter-spacing: 0; text-transform: none; }
 .kh-form--jednoduchy .kh-field > span small { margin-left: 4px; color: var(--k-muted); font-weight: 500; }
 .kh-form--jednoduchy .kh-field input,
@@ -14321,7 +14326,7 @@ body.ma-kh-modal { overflow: hidden; }
 /* Spodný pás na telefóne: vlastná vrstva, aby sa pri scrollovaní a pri
    schovávaní adresného riadku netriasol, a o maličko väčší. */
 @media (max-width: 759px) {
-  .kh-dock { transform: translate3d(0, 0, 0); backface-visibility: hidden; will-change: transform; contain: layout paint; }
+  .kh-dock { transform: none; backface-visibility: visible; will-change: auto; contain: none; }
   .kh-dock.je-hero-skryty { transform: translate3d(0, calc(100% + 12px), 0); }
   .kh-dock { grid-template-columns: 48px minmax(0, 1fr) 48px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
   .kh-dock .kh-dock__call { width: 48px; height: 48px; min-height: 48px; }
@@ -14329,7 +14334,27 @@ body.ma-kh-modal { overflow: hidden; }
   .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { min-height: 48px; height: 48px; font-size: 16px; }
   /* Tri prvky v lište: text ponuky sa zmestí aj na 360 px široký displej. */
   .kh-dock .k-btn:not(.kv-bar__cta):not(.k-btn--maly), .k .kh-dock .k-btn--primary { padding-inline: 10px; white-space: nowrap; }
-  body:has(.kh-dock) { padding-bottom: 66px; }
+  body:has(.kh-dock) { padding-bottom: var(--kv-dok, calc(66px + env(safe-area-inset-bottom, 0px))); }
+  /* Na konci stránky ostáva lišta pri okraji bez pruženia celého obsahu. */
+  html:has(.kh-dock) { overscroll-behavior-y: none; }
+  .ma-klavesnicu .kh-dock,
+  .ma-otvorene-menu .kh-dock { display: grid; visibility: hidden; opacity: 0; pointer-events: none; }
+  /* Vlastné rozmery lišty platia aj mimo .k a nezávisia od Shopify resetu. */
+  .kh-dock, .kh-dock * { box-sizing: border-box; }
+  .kh-dock .k-btn { min-width: 0; max-width: 100%; overflow: visible; }
+}
+
+[data-k-faq] { overflow-anchor: none; }
+[data-k-faq] > details { box-sizing: border-box; }
+/* Otvorenie nemení šírku textu ani odsadenie otázky. */
+.k [data-k-faq] .kh-faq__item { margin-inline: 0; padding-inline: 0; }
+.k [data-k-faq] .kh-faq__item > summary { padding-inline: 0; }
+.k [data-k-faq] .kh-faq__item > summary ~ * {
+  padding-left: calc(var(--k-faq-cislo) + var(--k-faq-medzera));
+  padding-right: 42px;
+}
+@media (max-width: 599px) {
+  .k [data-k-faq] .kh-faq__item > summary ~ * { padding-right: 0; }
 }
 
 /* Úvod na telefóne: fotka (a video na úvode) je pripravená vopred — orez
@@ -14394,7 +14419,7 @@ body.ma-kh-modal { overflow: hidden; }
    takže pod priesvitnou lištou Safari (adresa, tlačidlá) je čierna,
    nie biela ďalšia sekcia. Rozloženie úvodu sa nemení. */
 @media (max-width: 759px) {
-  body:not(.k-home) .k .kh-hero.kh-hero { min-height: calc(100lvh - var(--kv-hlavicka, 61px)) !important; }
+  body:not(.k-home) .k .kh-hero.kh-hero { min-height: calc(100svh - var(--kv-hlava, 65px)) !important; padding-top: 0 !important; }
 }
 /* Podstránky na telefóne: rovnaké rozloženie ako Carport Soltec. Kvality
    pod tlačidlami sa neukazujú; nadpis má vždy miesto na tri riadky (kratší
@@ -14404,6 +14429,16 @@ body.ma-kh-modal { overflow: hidden; }
   body:not(.k-home) .k .kh-hero__trust { display: none !important; }
   body:not(.k-home) .k .kh-hero .kh-hero__box > .k-display { min-height: 3lh; align-content: end; }
   body:not(.k-home) .k .kh-hero .kh-hero__box > .kh-hero__lead { min-height: 3lh; }
+  /* Pri otvorenej lište Safari nechávame miesto aj pre obe výzvy. Na
+     nízkych displejoch sa zmenší len fotografická časť, text ostáva celý. */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg img {
+    height: clamp(140px, calc(100svh - var(--kv-hlava, 65px) - 380px), calc(100vw * 724 / 900)) !important;
+  }
+  /* Záhradná fotografia má v súbore 24 čiernych riadkov hore aj dole.
+     Object-fit oreže iba tieto okraje, obsah fotografie sa nemení. */
+  body:not(.k-home) .k .kh-hero .kh-hero__bg img[src*="koverta-zahradny-pristresok-slovensky-grob"] {
+    height: clamp(140px, calc(100svh - var(--kv-hlava, 65px) - 380px), calc(100vw * 676 / 900)) !important;
+  }
 }
 
 /* Úvodná stránka na telefóne: video je nižšie a jeho spodok plynulo

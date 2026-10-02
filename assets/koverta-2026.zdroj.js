@@ -82,6 +82,9 @@ if (typeof window !== 'undefined' && !window.kvChat
           s.onerror = zle;
           document.head.appendChild(s);
         });
+        /* Automatické prednačítanie po scrollovaní nemá neobslúženú
+           chybu; po výpadku CDN dovolíme ďalšiemu kliknutiu nový pokus. */
+        nacitanie.catch(function () { nacitanie = null; });
       }
       return nacitanie;
     }
@@ -1306,9 +1309,9 @@ if (typeof window !== 'undefined' && !window.kvChat
        Kým sa stiahne — a keby sa nestiahol vôbec — platí pôvodný index
        z otvorenej stránky, takže vyhľadávanie funguje vždy. */
     const cestaIndexu = () => {
-      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
       const href = css ? css.getAttribute('href') : '';
-      const zaklad = href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+      const zaklad = href ? href.replace(/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './assets/';
       /* Index sa berie s tou istou značkou verzie ako štýl. Bez nej ostával
          v prehliadači starý zoznam aj po tom, čo na webe pribudla stránka —
          hľadalo sa v tom, čo tam bolo minule. */
@@ -1319,8 +1322,8 @@ if (typeof window !== 'undefined' && !window.kvChat
     /* Odkazy v indexe sú od koreňa webu, lebo ten istý index slúži všetkým
        podstránkam. Na podstránke sa preto pred ne dá „../“. */
     const koren = () => {
-      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
-      const zaklad = css ? css.getAttribute('href').replace(/assets\/koverta-2026\.css.*$/, '') : './';
+      const css = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
+      const zaklad = css ? css.getAttribute('href').replace(/assets\/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './';
       return zaklad || './';
     };
 
@@ -1674,16 +1677,8 @@ if (typeof window !== 'undefined' && !window.kvChat
      `<details>` prepína obsah okamžite. Odpoveď skočila von, riadky pod ňou
      odleteli nadol a keď sa pritom zatvárala otázka nad tou, na ktorú človek
      klikol, ušla mu spod kurzora aj tá — preklikávanie zoznamu poskakovalo.
-     Prepnutie preto riadi skript a robí tri veci:
-
-     1. Výšku odpovede prejde od nuly po jej skutočnú mieru a naspäť, takže sa
-        obsah vysunie namiesto toho, aby sa objavil.
-     2. Zatvorenie predošlej otázky beží v tom istom čase ako otvorenie novej,
-        nie po ňom. Zoznam sa hýbe raz, nie dvakrát.
-     3. Ak sa zatvára niečo nad kliknutým riadkom, drží ten riadok po celý
-        prechod na mieste: stránka sa doscrolluje presne o toľko, o koľko sa
-        obsah nad ním zmenšil. Otázka, na ktorú človek klikol, tak ostane pod
-        kurzorom.
+     Skript animuje celú výšku karty. Zatvorenie predošlej otázky beží
+     súčasne s otvorením novej, bez vynúteného scrollovania stránky.
 
      Bez skriptu aj pri obmedzenom pohybe ostáva pôvodné správanie `<details>`:
      klik otvorí, klik zatvorí, len bez prechodu. */
@@ -1706,45 +1701,32 @@ if (typeof window !== 'undefined' && !window.kvChat
     }
   }
 
-  function faqOtvor(d, hybat) {
-    const t = faqTelo(d);
+  /* Animuje sa celý details vrátane paddingu odpovede. Samotná odpoveď
+     ani pri height:0 nestratila padding, ktorý pri zatvorení náhle zmizol.
+     Pri ďalšom kliknutí nadviažeme na práve vykreslenú výšku. */
+  function faqPrepni(d, otvorit, hybat) {
+    const od = d.getBoundingClientRect().height;
+    faqStop(d);
+    d.style.removeProperty('overflow');
+    d.__kFaqCiel = otvorit;
+    d.open = otvorit;
+    const ciel = d.getBoundingClientRect().height;
+    if (!hybat || typeof d.animate !== 'function') return;
     d.open = true;
-    if (!t || !hybat || typeof t.animate !== 'function') return;
-    faqStop(t);
-    const ciel = t.scrollHeight;
-    const beh = t.animate(
-      [{ height: '0px', opacity: 0 }, { height: ciel + 'px', opacity: 1 }],
-      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
-    );
-    t.__kBeh = beh;
-    beh.onfinish = () => { t.__kBeh = null; };
-  }
-
-  function faqZavri(d, hybat) {
-    const t = faqTelo(d);
-    if (!t || !hybat || typeof t.animate !== 'function') { d.open = false; return; }
-    faqStop(t);
-    const od = t.getBoundingClientRect().height || t.scrollHeight;
-    const beh = t.animate(
-      [{ height: od + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
-      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
-    );
-    t.__kBeh = beh;
-    beh.onfinish = () => { t.__kBeh = null; d.open = false; };
-  }
-
-  /* Riadok ostane na mieste, aj keď sa nad ním obsah zmenší. Meria sa každý
-     snímok pred vykreslením, takže na obrazovke nie je vidieť žiadny posun. */
-  function faqDrz(prvok) {
-    const ciel = prvok.getBoundingClientRect().top;
-    const koniec = performance.now() + FAQ_CAS + 80;
-    const krok = () => {
-      const rozdiel = prvok.getBoundingClientRect().top - ciel;
-      if (Math.abs(rozdiel) > 0.5) window.scrollBy(0, rozdiel);
-      if (performance.now() < koniec) requestAnimationFrame(krok);
+    d.style.overflow = 'hidden';
+    const beh = d.animate([{ height: od + 'px' }, { height: ciel + 'px' }],
+      { duration: FAQ_CAS, easing: FAQ_KRIVKA, fill: 'both' });
+    d.__kBeh = beh;
+    beh.onfinish = () => {
+      d.open = otvorit;
+      d.__kBeh = null;
+      d.style.removeProperty('overflow');
+      beh.cancel();
     };
-    requestAnimationFrame(krok);
   }
+
+  function faqOtvor(d, hybat) { faqPrepni(d, true, hybat); }
+  function faqZavri(d, hybat) { faqPrepni(d, false, hybat); }
 
   function initFaq(root) {
     const tichy = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -1756,20 +1738,12 @@ if (typeof window !== 'undefined' && !window.kvChat
         sum.addEventListener('click', (e) => {
           e.preventDefault();
           const hybat = !tichy.matches;
-          const bolo = d.open;
-          /* Otvorené otázky, ktoré v zozname stoja nad touto. Len kvôli nim
-             sa oplatí riadok držať — čo sa zatvára pod ním, jeho polohu
-             nezmení. */
-          const nad = items.filter(
-            (x) => x !== d && x.open &&
-              (x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING)
-          );
+          const bolo = d.__kFaqCiel === undefined ? d.open : d.__kFaqCiel;
           if (bolo) {
             faqZavri(d, hybat);
           } else {
-            items.forEach((x) => { if (x !== d && x.open) faqZavri(x, hybat); });
+            items.forEach((x) => { if (x !== d && x.open && x.__kFaqCiel !== false) faqZavri(x, hybat); });
             faqOtvor(d, hybat);
-            if (hybat && nad.length) faqDrz(sum);
           }
         });
       });
@@ -2797,17 +2771,7 @@ if (typeof window !== 'undefined' && !window.kvChat
           if (!odpoved.ok) throw new Error('HTTP ' + odpoved.status);
           /* Len potvrdený dopyt: server odpovedal 2xx. Chyba, výpadok siete
              ani náhradná e-mailová cesta sa nerátajú. */
-          if (prilohyChyba && fotky) {
-            uvolni();
-            textySpat();
-            ukaz(true);
-            /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
-            const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
-            const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
-            if (veta) veta.textContent = text; else fotky.insertBefore(document.createTextNode(text), fotky.firstChild);
-            kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené' });
-            return;
-          }
+          const ciastocnyDopyt = Boolean(prilohyChyba && fotky);
           /* Ďakovná stránka: konverziu podľa adresy vie merať aj ten, kto
              nečíta dataLayer. `contact_posted=true` je ten istý znak, aký
              posiela kontaktný formulár Shopify. Odchádza sa, až keď GTM
@@ -2817,17 +2781,30 @@ if (typeof window !== 'undefined' && !window.kvChat
             if (odisiel) return;
             odisiel = true;
             const cesta = kvCesta('./dakujeme/');
-            const koren = ((document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]') || {}).getAttribute
-              ? document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]').getAttribute('href') : '')
-              .replace(/assets\/koverta-2026\.css.*$/, '') || './';
+            const koren = ((document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]') || {}).getAttribute
+              ? document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]').getAttribute('href') : '')
+              .replace(/assets\/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') || './';
             window.location.assign((cesta.charAt(0) === '/' ? cesta : koren + 'dakujeme/') + '?contact_posted=true');
           };
           /* Poďakovanie je len jedno — na ďakovnej stránke. Panel vo formulári
              sa pred odchodom neukazuje (predtým blikli dve poďakovania za
              sebou); tlačidlo ostane „odosiela sa“, kým stránka neodíde. Keď
              sa návštevník vráti späť, uvidí panel, že dopyt prišiel. */
-          window.addEventListener('pageshow', (ev) => { if (ev.persisted) { uvolni(); textySpat(); ukaz(false); } }, { once: true });
-          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené', eventCallback: nadakujem, eventTimeout: 1500 });
+          if (!ciastocnyDopyt) window.addEventListener('pageshow', (ev) => { if (ev.persisted) { uvolni(); textySpat(); ukaz(false); } }, { once: true });
+          // Jedno miesto merania po potvrdení serverom. Pri chybe príloh
+          // sa návštevník nepresmeruje; potvrdený dopyt sa stále započíta.
+          kvMeraj('dopyt_odoslany', { dopyt_typ: telo.typ || 'neuvedené',
+            ...(ciastocnyDopyt ? {} : { eventCallback: nadakujem, eventTimeout: 1500 }) });
+          if (ciastocnyDopyt) {
+            uvolni();
+            textySpat();
+            ukaz(true);
+            /* Dopyt prišiel, fotky nie: zostaneme na stránke a povieme to. */
+            const veta = fotky.firstChild && fotky.firstChild.nodeType === 3 ? fotky.firstChild : null;
+            const text = prilohyChyba + ' Dopyt sme prijali, fotky nám prosím pošlite e-mailom. ';
+            if (veta) veta.textContent = text; else fotky.insertBefore(document.createTextNode(text), fotky.firstChild);
+            return;
+          }
           window.setTimeout(nadakujem, 1600);
         } catch (err) {
           window.clearTimeout(cakac);
@@ -3086,6 +3063,8 @@ if (typeof window !== 'undefined' && !window.kvChat
     const zacaty = Date.now();
     const prekaza = () => {
       if (!modal.hidden || document.hidden || document.body.classList.contains('ma-kh-modal')) return true;
+      // Fokus v chate je vo vnorenom shadow DOM; formuláre dokumentu ho nevidia.
+      if (document.documentElement.getAttribute('data-koverta-chat-open') === 'true') return true;
       const akt = document.activeElement;
       if (akt && akt !== document.body && akt.closest && akt.closest('form, [role="dialog"], [aria-modal="true"]')) return true;
       const pise = [...document.querySelectorAll('form input:not([type="hidden"]):not([type="checkbox"]):not([type="file"]), form textarea')]
@@ -3630,7 +3609,20 @@ if (typeof window !== 'undefined' && !window.kvChat
       const skusPustit = () => { if (smie && vidno) pusti(); };
       const povol = () => {
         const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
-        window.setTimeout(() => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 }), 5000);
+        const zacni = () => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 });
+        if (window.matchMedia('(max-width: 759px)').matches) {
+          // Na telefóne najprv kompletný úvod s fotografiou. Dekoratívne
+          // video sa sťahuje až keď návštevník začne web používať; pevný
+          // časovač zbytočne spúšťal ďalší veľký prenos aj bez interakcie.
+          const udalosti = ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'];
+          const pouzivaWeb = () => {
+            udalosti.forEach(u => window.removeEventListener(u, pouzivaWeb));
+            zacni();
+          };
+          udalosti.forEach(u => window.addEventListener(u, pouzivaWeb, { passive: true }));
+        } else {
+          window.setTimeout(zacni, 5000);
+        }
       };
       if (document.readyState === 'complete') povol();
       else window.addEventListener('load', povol, { once: true });
@@ -3669,7 +3661,6 @@ if (typeof window !== 'undefined' && !window.kvChat
       if (v === posledna) return;
       posledna = v;
       if (v > 0) doc.documentElement.style.setProperty('--kv-dok', v + 'px');
-      else doc.documentElement.style.removeProperty('--kv-dok');
     };
     const naplan = () => { if (!caka) { caka = true; requestAnimationFrame(mer); } };
     mer();
@@ -3726,12 +3717,16 @@ if (typeof window !== 'undefined' && !window.kvChat
     if (vv) {
       let malo = null;
       const klavesnica = () => {
-        const je = (window.innerHeight - vv.height) > 100;
+        const pole = doc.activeElement;
+        const pise = pole && (pole.matches('input, textarea, select') || pole.isContentEditable);
+        const je = !!pise && vv.scale < 1.05 && (window.innerHeight - vv.height) > 150;
         if (je === malo) return;
         malo = je;
         doc.documentElement.classList.toggle('ma-klavesnicu', je);
       };
       vv.addEventListener('resize', klavesnica, { passive: true });
+      doc.addEventListener('focusin', klavesnica);
+      doc.addEventListener('focusout', () => requestAnimationFrame(klavesnica));
       klavesnica();
     }
   }
@@ -3842,13 +3837,13 @@ if (typeof window !== 'undefined' && !window.kvChat
        obrazové položky realizácií. Odkazy sa nemenia.
     */
     const menuAsset = (name) => {
-      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026.css"]');
+      const link = document.querySelector('link[rel="stylesheet"][href*="koverta-2026"][href*=".css"]');
       const href = link ? (link.getAttribute('href') || '') : '';
       /* Na Shopify je štýl na CDN obchodu, kde tieto fotky nie sú —
          berú sa z GitHub Pages ako ostatné obrázky témy. */
       const base = /cdn\.shopify\.com|\/cdn\/shop\//.test(href)
         ? 'https://danielvendzur-code.github.io/koverta-web/assets/'
-        : href ? href.replace(/koverta-2026\.css.*$/, '') : './assets/';
+        : href ? href.replace(/koverta-2026(?:-[a-z-]+)?\.css.*$/, '') : './assets/';
       /* Náhľad v ponuke je najviac 230 px široký. Sťahovať naň celú
          fotografiu znamená 300 až 400 kB na jeden obrázok a sedem obrázkov
          v jednej ponuke — a na obrazovke z toho vidno dvestotridsať pixelov.
@@ -4249,7 +4244,22 @@ if (typeof window !== 'undefined' && !window.kvChat
      čo musí odpovedať na prvý dotyk: odkrytie obsahu, nadpis, hlavička
      a video v úvode. Zvyšok sa rozdelí do snímkov po ôsmich
      milisekundách, takže žiadny z nich nezmešká svoj termín. */
-  const HNED = [initReveal, initHeadline, initAnchors, initVideo];
+  /* Pri výpadku menšej CDN verzie skúsi galéria pôvodnú fotografiu raz.
+     Funkčné obrázky ani lazy loading tým nevytvárajú ďalšie požiadavky. */
+  function initFotoNahrada(root) {
+    root.querySelectorAll('#realGrid img[srcset]').forEach((img) => {
+      if (img.dataset.kFotoReady) return;
+      img.dataset.kFotoReady = 'true';
+      const nahrad = () => {
+        if (!img.hasAttribute('srcset') || !img.getAttribute('src')) return;
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+      };
+      img.addEventListener('error', nahrad, { once: true });
+      if (img.complete && !img.naturalWidth) nahrad();
+    });
+  }
+  const HNED = [initFotoNahrada, initReveal, initHeadline, initAnchors, initVideo];
   const POTOM = [initRail, initFilters, initFaq, initTyp, initProcess, initShots,
                  initMatTabs, initVyberRozmeru, initSelect, initSubory, initScrub, initPrelet,
                  initDopyt, initDopytModal, predvyplnHladane, initMapa, initLupa, initVrstvy, initSlucka, initKviz, initBrandDialog, initTyp2];
