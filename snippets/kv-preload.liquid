@@ -1,5 +1,9 @@
 
+{%- if page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' %}
 <link rel="preload" href="{{ 'pismo-archivo-latin-v2.woff2' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>
+{%- else %}
+<link rel="preload" href="{{ 'pismo-archivo-latin-sk-v4.woff2' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>
+{%- endif %}
 <link rel="preload" href="{{ 'pismo-archivo-sk-v3.woff2' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>
 {%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'soltec-pergola-pri-bazene-antracit-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
