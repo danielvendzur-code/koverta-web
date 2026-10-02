@@ -278,6 +278,7 @@ if (typeof window !== 'undefined' && !window.kvChat
   /* --- 2 · posuvná lišta -------------------------------------------------- */
 
   function initRail(root) {
+    const prveStavy = [];
     root.querySelectorAll('[data-k-rail]').forEach((wrap) => {
       const rail = wrap.querySelector('[data-k-rail-track]');
       const prev = wrap.querySelector('[data-k-rail-prev]');
@@ -293,11 +294,16 @@ if (typeof window !== 'undefined' && !window.kvChat
         return Math.max(1, Math.round(rail.clientWidth / unit)) * unit;
       };
 
-      const sync = () => {
+      const zmerStav = () => {
         const max = rail.scrollWidth - rail.clientWidth - 2;
-        prev.disabled = rail.scrollLeft <= 2;
-        next.disabled = rail.scrollLeft >= max;
+        const left = rail.scrollLeft;
+        return { pred: left <= 2, dalsi: left >= max };
       };
+      const zapisStav = (stav) => {
+        if (prev.disabled !== stav.pred) prev.disabled = stav.pred;
+        if (next.disabled !== stav.dalsi) next.disabled = stav.dalsi;
+      };
+      const sync = () => zapisStav(zmerStav());
 
       // Stav šípok nedorovnávame len zo scroll udalosti — tá je asynchrónna
       // a počas plynulého posunu sa škrtí.
@@ -311,7 +317,7 @@ if (typeof window !== 'undefined' && !window.kvChat
       next.addEventListener('click', () => move(1));
       rail.addEventListener('scroll', sync, { passive: true });
       window.addEventListener('resize', sync);
-      sync();
+      prveStavy.push({ zmerStav, zapisStav });
 
       rail.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') { e.preventDefault(); move(1); }
@@ -351,6 +357,11 @@ if (typeof window !== 'undefined' && !window.kvChat
       rail.addEventListener('pointerup', release);
       rail.addEventListener('pointerleave', release);
     });
+    /* Najprv zmeriame všetky lišty, až potom meníme tlačidlá. Striedanie
+       čítania rozmerov a zápisu disabled nútilo prehliadač pri každej
+       ďalšej galérii znovu prepočítať štýl celej stránky. */
+    const stavy = prveStavy.map((s) => s.zmerStav());
+    prveStavy.forEach((s, i) => s.zapisStav(stavy[i]));
   }
 
   /* --- 2b · pohyb viazaný na polohu scrollu -------------------------------
@@ -2906,8 +2917,14 @@ if (typeof window !== 'undefined' && !window.kvChat
     const suhlasBox = suhlasPole && suhlasPole.querySelector('input[type="checkbox"]');
     if (suhlasBox) { suhlasBox.required = false; suhlasBox.defaultChecked = true; suhlasBox.checked = true; suhlasBox.hidden = true; }
     if (suhlas) {
-      const odkazy = [...suhlas.querySelectorAll('a')].map((x) => x.getAttribute('href'));
-      suhlas.innerHTML = 'Odoslaním súhlasíte so <a href="' + (odkazy[1] || '#') + '">spracovaním údajov</a> a <a href="' + (odkazy[0] || '#') + '">podmienkami</a>.';
+      /* Modal kopíruje už zjednodušený formulár. Poradie odkazov je v ňom
+         opačné než v pôvodnom HTML, preto sa vyberajú podľa významu. */
+      const odkazy = [...suhlas.querySelectorAll('a')];
+      const najdiOdkaz = (vyznam) => {
+        const a = odkazy.find((x) => vyznam.test(x.textContent + ' ' + x.getAttribute('href')));
+        return a ? a.getAttribute('href') : '#';
+      };
+      suhlas.innerHTML = 'Odoslaním súhlasíte so <a href="' + najdiOdkaz(/spracovan|ochran|sukrom|údaj|udaj|privacy/i) + '">spracovaním údajov</a> a <a href="' + najdiOdkaz(/podmien|terms/i) + '">podmienkami</a>.';
       suhlasPole.classList.add('kh-form__suhlas--text');
       const odoslat = form.querySelector('.kh-form__submit');
       if (odoslat) odoslat.after(suhlasPole);
