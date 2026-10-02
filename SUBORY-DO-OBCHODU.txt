@@ -424,6 +424,8 @@ foto-zadar_5-w1000-w1000.webp	assets/foto/zadar_5-w1000-w1000.webp
 foto-zadar_5-w1000-w640.webp	assets/foto/zadar_5-w1000-w640.webp
 foto-zadar_5-w1000.png	assets/foto/zadar_5-w1000.png
 koverta-hero-sibenik-mobil.mp4	assets/koverta-hero-sibenik-mobil.mp4
+koverta-hero-sibenik-poster-mobil-w480.webp	assets/koverta-hero-sibenik-poster-mobil-w480.webp
+koverta-hero-sibenik-poster-mobil-w800.webp	assets/koverta-hero-sibenik-poster-mobil-w800.webp
 koverta-hero-sibenik-poster-mobil.webp	assets/koverta-hero-sibenik-poster-mobil.webp
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
 koverta-hero-sibenik-poster-w1600.webp	assets/koverta-hero-sibenik-poster-w1600.webp
