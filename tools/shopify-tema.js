@@ -748,7 +748,7 @@ ${canonVetvy()}
 {%- endif %}
 {%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
-{{ 'koverta-shopify.css' | asset_url | stylesheet_tag }}
+<style data-k-shopify-zaklad>${fs.readFileSync(path.join(KOREN, 'shopify-zdroj/assets/koverta-shopify.css'), 'utf8')}</style>
 ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).map((p) => p === '<!-- KOVERTA-STYL-STRANKY -->' ? stylyStranok(v) : p).join('\n')}
 {%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
    ich Safari na iPhone nečaká a na okamih ukázal výber produktu bez štýlov —
@@ -1051,7 +1051,7 @@ function zapisPreload(v) {
   });
   const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
   const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
-    + pismo('pismo-archivo-latin-v2.woff2') + '\n' + pismo('pismo-archivo-sk-v3.woff2') + '\n'
+    + "{%- if page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' %}\n" + pismo('pismo-archivo-latin-v2.woff2') + "\n{%- else %}\n" + pismo('pismo-archivo-latin-sk-v4.woff2') + "\n{%- endif %}\n" + pismo('pismo-archivo-sk-v3.woff2') + '\n'
     + vetvy.join('\n') + '\n';
   fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-preload.liquid'), text);
 }
