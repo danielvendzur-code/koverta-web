@@ -130,17 +130,29 @@
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-apple.png?v=2" sizes="180x180">
 <link rel="manifest" href="https://danielvendzur-code.github.io/koverta-web/site.webmanifest">
 {%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+{%- render 'kv-kriticky-bioklimaticke-pergoly' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}"></noscript>
 {%- elsif template.name == 'index' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+{%- render 'kv-kriticky-uvod' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-kontakt' or page.handle == 'kontakt' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+{%- render 'kv-kriticky-kontakt' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+{%- render 'kv-kriticky-pristresky-pre-auta' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+{%- render 'kv-kriticky-realizacie' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+{%- render 'kv-kriticky-zahradne-pristresky' -%}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+<noscript><link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}"></noscript>
 {%- else %}
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
 {%- endif %}
@@ -172,19 +184,19 @@
      /pages/assets/… a /carport-soltec/, teda nikam. */
   window.KV_CESTY = {
     "./pristresky-pre-auta/": "/collections/pristresky-pre-auta",
-    "./assets/koverta-pristresok-auto-golf-lamelova-stena.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-pristresok-auto-golf-lamelova-stena.jpg?v=2",
+    "./assets/koverta-pristresok-auto-golf-lamelova-stena.jpg": "{{ 'koverta-pristresok-auto-golf-lamelova-stena.jpg' | asset_url }}",
     "./carport-soltec/": "/collections/pristresky-pre-auta-agava",
-    "./assets/soltec-carport-nitra-hero.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@63b6fa37453deae3cec07398ae2c6f0ea25ad48e/assets/soltec-carport-nitra-hero.jpg?v=2",
+    "./assets/soltec-carport-nitra-hero.jpg": "{{ 'soltec-carport-nitra-hero.jpg' | asset_url }}",
     "./zahradne-pristresky/": "/collections/zahradne-pristresky",
     "./assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@42774e22755405663c0523a20cc9eedea0fe898d/assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg?v=2",
     "./bioklimaticke-pergoly/": "/collections/bioklimaticke-pergoly",
-    "./assets/soltec-pergola-pri-bazene-antracit.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-pri-bazene-antracit.jpg?v=2",
+    "./assets/soltec-pergola-pri-bazene-antracit.jpg": "{{ 'soltec-pergola-pri-bazene-antracit.jpg' | asset_url }}",
     "./pevne-prestresenia/": "/collections/pergoly-s-pevnou-strechou-multiport",
-    "./assets/soltec-pergola-plna-strecha-pri-dome.webp": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@2ff4fc4988b133fedcc77986db2a20c4b4fd65e7/assets/soltec-pergola-plna-strecha-pri-dome.webp?v=2",
+    "./assets/soltec-pergola-plna-strecha-pri-dome.webp": "{{ 'soltec-pergola-plna-strecha-pri-dome.webp' | asset_url }}",
     "./tienenie/": "/collections/tienenie",
-    "./assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@d888d1bb7afbf5b0ad3e02dd924a143659bd34b8/assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg?v=2",
+    "./assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg": "{{ 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg' | asset_url }}",
     "./outdoor-kuchyne/": "/collections/outdoor-kuchyne",
-    "./assets/soltec-outdoor-kuchyna-graz.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@71d3dfc11c7562fdd5c91fc2883b4cf0176bb58a/assets/soltec-outdoor-kuchyna-graz.jpg?v=2",
+    "./assets/soltec-outdoor-kuchyna-graz.jpg": "{{ 'soltec-outdoor-kuchyna-graz.jpg' | asset_url }}",
     "./assets/koverta-mark.svg": "{{ 'koverta-mark.svg' | asset_url }}",
     "./assets/soltec-mark.png": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@40d6124f257d7ff154e7ede76dddb60645cde84e/assets/soltec-mark.png?v=2",
     "./dakujeme/": "/pages/dakujeme"

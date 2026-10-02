@@ -469,8 +469,10 @@ if (typeof window !== 'undefined' && !window.kvChat
          dráhu dokončil až za koncom dokumentu, by tam ostal v polovici — a
          teda polopriehľadný. Posledná obrazovka je preto vždy hotová. */
       const dno = (document.documentElement.scrollHeight - window.scrollY - vh) < 4;
-      bloky.forEach((b) => {
-        const r = b.blok.getBoundingClientRect();
+      // Najprv všetky rozmery, potom zápisy: jeden prepočet na snímok.
+      const rozmery = bloky.map((b) => b.blok.getBoundingClientRect());
+      bloky.forEach((b, i) => {
+        const r = rozmery[i];
         /* Prvky ďaleko mimo okna sa nepočítajú — držia si poslednú hodnotu,
            takže to, čo už prešlo hore, ostáva hotové. */
         if (r.bottom < -240 || r.top > vh + 240) return;
@@ -3523,7 +3525,7 @@ if (typeof window !== 'undefined' && !window.kvChat
       const mobil = v.getAttribute('data-k-video-mobil');
       if (uzky && !mobil) return;
 
-      let pustene = false;
+      let pustene = v.dataset.kVideoSpustene === 'true';
       const pusti = () => {
         if (!pustene) {
           pustene = true;
@@ -3594,40 +3596,18 @@ if (typeof window !== 'undefined' && !window.kvChat
       v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
       v.addEventListener('error', vzdaj);
 
-      /* Video sa začne sťahovať až po načítaní stránky a chvíli pokoja.
-         Dovtedy je na jeho mieste tá istá fotografia (plagát), takže úvod
-         vyzerá rovnako. Keby sa 1–2 MB videa sťahovali hneď, delili by sa
-         o linku s fotkou, písmom a štýlmi a telefón by prvú obrazovku
-         vykreslil neskôr — PageSpeed to na mobile počítal ako LCP 8,5 s.
+      /* Video sa rozbieha pri prvom vykreslení, bez časovača a interakcie.
+         Native poster z tej istej fotografie je dostupný pred prvým snímkom;
+         rovnaký preloaded obrázok sa nesťahuje druhýkrát. */
+      const img = v.parentElement.querySelector('picture img');
+      if (img) v.poster = img.currentSrc || img.src;
+      v.style.opacity = '1';
+      v.style.transition = 'none';
+      let vidno = v.getBoundingClientRect().top < window.innerHeight;
+      const skusPustit = () => { if (vidno && !v.hidden) pusti(); };
+      skusPustit();
 
-         Päť sekúnd, nie jeden a pol: prvý snímok videa prehliadač berie
-         ako nový „najväčší obsah" (LCP) a pri spustení krátko po načítaní
-         posunul LCP z 3 s na 5,5–6 s — v dvoch z piatich meraní na mobile
-         (Lighthouse, 5 behov na runneri; s oneskorením 5 s ani raz). */
-      let smie = false;
-      let vidno = false;
-      const skusPustit = () => { if (smie && vidno) pusti(); };
-      const povol = () => {
-        const pokoj = window.requestIdleCallback || ((f) => window.setTimeout(f, 1));
-        const zacni = () => pokoj(() => { smie = true; skusPustit(); }, { timeout: 2000 });
-        if (window.matchMedia('(max-width: 759px)').matches) {
-          // Na telefóne najprv kompletný úvod s fotografiou. Dekoratívne
-          // video sa sťahuje až keď návštevník začne web používať; pevný
-          // časovač zbytočne spúšťal ďalší veľký prenos aj bez interakcie.
-          const udalosti = ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'];
-          const pouzivaWeb = () => {
-            udalosti.forEach(u => window.removeEventListener(u, pouzivaWeb));
-            zacni();
-          };
-          udalosti.forEach(u => window.addEventListener(u, pouzivaWeb, { passive: true }));
-        } else {
-          window.setTimeout(zacni, 5000);
-        }
-      };
-      if (document.readyState === 'complete') povol();
-      else window.addEventListener('load', povol, { once: true });
-
-      if (!('IntersectionObserver' in window)) { vidno = true; return; }
+      if (!('IntersectionObserver' in window)) { vidno = true; skusPustit(); return; }
       if (v.getBoundingClientRect().top < window.innerHeight) vidno = true;
       const sled = new IntersectionObserver((zaznamy) => {
         zaznamy.forEach((z) => {
@@ -3743,6 +3723,11 @@ if (typeof window !== 'undefined' && !window.kvChat
        o toľko povyrástla a viditeľne poskočila — a s ňou aj údaje pod ňou.
        Meriame preto len vtedy, keď je stránka na vrchu a lišta je vo svojom
        pokojnom rozmere; inak si necháme poslednú platnú hodnotu. */
+    const bar = header.querySelector('[data-k-bar]');
+    const pas = header.querySelector('.kv-topbar');
+    const uvodnaVyska = header.getBoundingClientRect().height;
+    const uvodnaLista = bar ? bar.getBoundingClientRect().height : 76;
+    let vyskaPasu = pas ? pas.getBoundingClientRect().height : 0;
     let poslednaV = null;
     let cakaV = false;
     const mer = () => {
@@ -3756,7 +3741,10 @@ if (typeof window !== 'undefined' && !window.kvChat
       document.documentElement.style.setProperty('--kv-hlava', v + 'px');
     };
     const naplanV = () => { if (!cakaV) { cakaV = true; requestAnimationFrame(mer); } };
-    mer();
+    if (window.scrollY <= 8 && uvodnaVyska > 0) {
+      poslednaV = Math.round(uvodnaVyska);
+      document.documentElement.style.setProperty('--kv-hlava', poslednaV + 'px');
+    }
     window.addEventListener('resize', naplanV, { passive: true });
     window.addEventListener('load', naplanV, { once: true });
     window.addEventListener('scroll', () => { if (window.scrollY <= 8) naplanV(); }, { passive: true });
@@ -3770,7 +3758,6 @@ if (typeof window !== 'undefined' && !window.kvChat
 
        Prilepí sa až potom, čo úplne odscrollovala, takže obsah nikam
        neposkočí a nič sa nemusí dopĺňať rozperou. */
-    const bar = header.querySelector('[data-k-bar]');
     if (bar) {
       let posledneY = window.scrollY;
       let ceka = false;
@@ -3780,15 +3767,15 @@ if (typeof window !== 'undefined' && !window.kvChat
          snímku scrollu. Meranie prvku núti prehliadač dokončiť rozloženie —
          dve také merania na snímok boli pri scrollovaní zbytočná práca
          a bolo to cítiť. */
-      let vyskaListy = 76;
-      let vyskaHlavicky = 117;
+      let vyskaListy = uvodnaLista || 76;
+      let vyskaHlavicky = uvodnaVyska || 117;
       const premeraj = () => {
         const v = bar.getBoundingClientRect().height;
         if (v > 0) vyskaListy = v;
         const h = header.offsetHeight;
         if (h > 0) vyskaHlavicky = h;
+        vyskaPasu = pas ? pas.getBoundingClientRect().height : 0;
       };
-      premeraj();
       window.addEventListener('resize', premeraj, { passive: true });
       window.addEventListener('load', premeraj, { once: true });
 
@@ -3801,8 +3788,7 @@ if (typeof window !== 'undefined' && !window.kvChat
         /* Telefón v lište má zmysel až vtedy, keď servisný pás s tým istým
            číslom odscrolluje preč. Kým je pás vidieť, číslo v lište by bolo
            to isté číslo dvakrát pod sebou. */
-        const pas = header.querySelector('.kv-topbar');
-        bar.classList.toggle('ma-schovany-pas', !pas || y >= pas.offsetHeight - 2);
+        bar.classList.toggle('ma-schovany-pas', !pas || y >= vyskaPasu - 2);
 
         if (y <= hranica) {
           /* pri vrchu stránky je lišta na svojom mieste v toku */
@@ -4276,13 +4262,13 @@ if (typeof window !== 'undefined' && !window.kvChat
 
   function init(scope) {
     const ulohy = [];
+    scope.querySelectorAll('[data-k-header]').forEach((h) => spusti(initHeader, h));
     scope.querySelectorAll('[data-k-root]').forEach((root) => {
       if (root.dataset.kReady === 'true') return;
       root.dataset.kReady = 'true';
       HNED.forEach((fn) => spusti(fn, root));
       POTOM.forEach((fn) => ulohy.push(() => spusti(fn, root)));
     });
-    scope.querySelectorAll('[data-k-header]').forEach((h) => spusti(initHeader, h));
     const dok = scope === document ? document : scope;
     // Vyhľadávanie je v hlavičke, teda mimo [data-k-root] — inicializuje sa
     // na úrovni dokumentu, aby videlo aj obsah stránky, v ktorom hľadá.

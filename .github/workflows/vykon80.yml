@@ -1,0 +1,98 @@
+name: Výkon 80 a okamžité video
+on:
+  push:
+    branches: [fix/vykon80-video-20261002]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  zostavit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      sha: ${{ steps.hotovo.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Zostaviť a overiť
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          npm install --no-save postcss@8.5.28 terser@5.51.2 playwright@1.58.2
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python3 tools/optimalizuj-video.py
+          python3 tools/font-preload-sk.py
+          node tools/zmensi-js.js
+          node tools/zmensi-css.js
+          node tools/kriticke-css.cjs --vloz
+          node tools/verzie-suborov.js --oprav
+          python3 tools/cta-kontrola.py
+          node tools/seo-audit.js
+          node tools/rozmery-obrazkov.js
+          node tools/spolocne-casti.js --kontrola
+          node tools/rozhranie-kontrola.cjs
+          node tools/prva-obrazovka-kontrola.cjs
+      - name: Uložiť assets a tému
+        id: hotovo
+        run: |
+          git config user.name koverta-bot
+          git config user.email noreply@koverta.sk
+          git add assets '*.html'
+          if ! git diff --cached --quiet; then
+            git commit -m "Výkon: kritické štýly a zostavené assets"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
+          git add shopify-tema
+          if ! git diff --cached --quiet; then
+            git commit -m "Téma: rýchla prvá obrazovka a video bez čakania"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kontrola-rozhrania80
+          path: qa-artifacts/rozhranie/
+  meranie:
+    needs: zostavit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        stranka: [uvod, zahradne-pristresky, kontakt]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.zostavit.outputs.sha }}
+          path: po
+      - uses: actions/checkout@v4
+        with:
+          ref: 328cc017b8dbcd3df615bcbeacdb85e7a251084b
+          path: pred
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tri behy pred a po pri rovnakej kompresii
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          STRANKA: ${{ matrix.stranka }}
+        run: |
+          cd po
+          npm install --no-save lighthouse@12.8.2 chrome-launcher@1.0.0
+          python3 tools/serve-vykon.py 8080 ../pred > /tmp/pred.log 2>&1 &
+          python3 tools/serve-vykon.py 8081 . > /tmp/po.log 2>&1 &
+          node tools/meraj-pagespeed.mjs --zaklad=http://localhost:8080 --cesta="$STRANKA" --vystup=../vysledky/pred
+          node tools/meraj-pagespeed.mjs --zaklad=http://localhost:8081 --cesta="$STRANKA" --vystup=../vysledky/po
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vykon80-${{ matrix.stranka }}
+          path: vysledky/
