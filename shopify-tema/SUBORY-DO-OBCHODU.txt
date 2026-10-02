@@ -419,7 +419,6 @@ foto-zadar_5-w1000-w1000.webp	assets/foto/zadar_5-w1000-w1000.webp
 foto-zadar_5-w1000-w640.webp	assets/foto/zadar_5-w1000-w640.webp
 foto-zadar_5-w1000.png	assets/foto/zadar_5-w1000.png
 koverta-hero-sibenik-poster-w1000.webp	assets/koverta-hero-sibenik-poster-w1000.webp
-koverta-hero-sibenik-poster.jpg	assets/koverta-hero-sibenik-poster.jpg
 koverta-hero-sibenik.webm	assets/koverta-hero-sibenik.webm
 koverta-ikona-192.png	assets/koverta-ikona-192.png
 koverta-ikona-apple.png	assets/koverta-ikona-apple.png
