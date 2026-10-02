@@ -3500,15 +3500,8 @@ if (typeof window !== 'undefined' && !window.kvChat
     if (REDUCED.matches) return;
     const siet = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     if (siet && (siet.saveData === true || /(^|-)[23]g$/.test(siet.effectiveType || ''))) return;
-    /* Úvodné video má 7,6 MB. Na počítači sa stiahne na pozadí a nikto si to
-       nevšimne, na telefóne je to celý dátový balík za jednu návštevu. Telefón
-       preto dostáva vlastný zostrih: 960 × 540, dvadsaťpäť sekúnd, 3,2 MB.
-       Na telefóne je úvodné video na celú šírku v pomere 16 : 9 nad textom
-       (koverta-2026.css, „Úvod na telefóne“), takže je vidieť celý záber
-       a netreba ho orezávať na výšku ani zväčšovať — výrez na výšku z 720p
-       zdroja bol rozmazaný. Hranica je 900 px, pod ňou je telefón aj otočený
-       tablet. Značka bez vlastného zostrihu na úzkej obrazovke ostáva na
-       fotografii. */
+    /* Telefón dostáva samostatné komprimované MP4. Značka bez mobilného
+       zdroja na úzkej obrazovke ostáva na fotografii. */
     const uzky = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
 
     vsetky.forEach((v) => {
@@ -3596,11 +3589,10 @@ if (typeof window !== 'undefined' && !window.kvChat
       v.addEventListener('playing', () => { v.classList.add('je-vidno'); v.style.opacity = '1'; }, { once: true });
       v.addEventListener('error', vzdaj);
 
-      /* Prenos a play začínajú hneď. Kým nie je prvý snímok dostupný,
-         viditeľná zostáva už prednačítaná fotografia pod videom.
-         Native poster by ju znovu kreslil cez ďalšiu obrazovú vrstvu. */
-      v.removeAttribute('poster');
-      v.style.opacity = !v.paused && v.readyState >= 2 ? '1' : '0';
+      /* Prenos a play začínajú hneď. Úvodný bootstrap už vybral rovnaký
+         responsive poster ako preload fotografie. Video je s ním viditeľné
+         ešte pred prvým snímkom; jeho príchod preto neposúva LCP. */
+      v.style.opacity = v.poster || !v.paused && v.readyState >= 2 ? '1' : '0';
       v.style.transition = 'none';
       let vidno = v.getBoundingClientRect().top < window.innerHeight;
       const skusPustit = () => { if (vidno && !v.hidden) pusti(); };
