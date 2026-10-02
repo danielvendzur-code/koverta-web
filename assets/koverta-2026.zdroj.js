@@ -3600,7 +3600,7 @@ if (typeof window !== 'undefined' && !window.kvChat
          Native poster z tej istej fotografie je dostupný pred prvým snímkom;
          rovnaký preloaded obrázok sa nesťahuje druhýkrát. */
       const img = v.parentElement.querySelector('picture img');
-      if (img) v.poster = img.currentSrc || img.src;
+      if (img && !v.poster) v.poster = img.currentSrc || img.src;
       v.style.opacity = '1';
       v.style.transition = 'none';
       let vidno = v.getBoundingClientRect().top < window.innerHeight;
