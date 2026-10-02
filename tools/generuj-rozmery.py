@@ -148,6 +148,9 @@ def skrutka(html, hlbka):
 def strankuj():
     kat = katalog()
     zdroj = io.open(os.path.join(KOREN, 'pristresky-pre-auta/index.html'), encoding='utf-8').read()
+    # Kritický štýl patrí konkrétnej hlavnej stránke, nie rozmerovej šablóne.
+    zdroj = re.sub(r'<!-- KOVERTA-KRITICKY-ZACIATOK -->.*?<!-- KOVERTA-KRITICKY-KONIEC -->\n?', '', zdroj, flags=re.S)
+    zdroj = re.sub(r' media="print" onload="[^"]*"', '', zdroj)
     # Produktové rozmery majú vlastné sekcie: z kategórie preberáme hlavu,
     # ale naďalej celý spoločný štýl, nie menší štýl kategórie.
     styl = os.path.join(KOREN, 'assets', 'koverta-2026.css')
