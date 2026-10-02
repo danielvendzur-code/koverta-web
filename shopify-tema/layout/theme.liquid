@@ -3,6 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+{%- elsif template.name == 'index' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+{%- elsif page.handle == 'nove-kontakt' or page.handle == 'kontakt' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+{%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+{%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+{%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
+<link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+{%- else %}
+
+{%- endif %}
 {%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
 {% render 'kv-consentik' %}
 <!-- Značky pre vyhľadávače.
@@ -146,17 +161,17 @@ body { margin: 0; background: #fff; }
 <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@8509cc040ac0816c72a74f5fdbf30fe9224c6c16/assets/koverta-ikona-apple.png?v=2" sizes="180x180">
 <link rel="manifest" href="https://danielvendzur-code.github.io/koverta-web/site.webmanifest">
 {%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+
 {%- elsif template.name == 'index' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+
 {%- elsif page.handle == 'nove-kontakt' or page.handle == 'kontakt' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+
 {%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+
 {%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+
 {%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+
 {%- else %}
 <link rel="stylesheet" href="{{ 'koverta-2026.css' | asset_url }}">
 {%- endif %}
