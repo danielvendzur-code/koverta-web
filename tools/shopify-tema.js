@@ -694,8 +694,8 @@ function zapis(v) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{% render 'kv-consentik' %}
 {%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
+{% render 'kv-consentik' %}
 <!-- Značky pre vyhľadávače.
 
      Prevod ich zo stránok zahadzuje, lebo na Shopify ich skladá obchod —
@@ -1051,6 +1051,11 @@ function zapisPreload(v) {
   });
   const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
   const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
+    + '<link rel="preconnect" href="https://cdn.shopify.com">\n'
+    /* Shopify vkladá štýl zapnutej aplikácie EZ Terms na koniec head.
+       Skorý preload pripraví rovnaký súbor bez zmeny jeho aplikovania.
+       Ak aplikácia vydá novú verziu, jej vlastný link ostáva autoritatívny. */
+    + '<link rel="preload" as="style" href="https://cdn.shopify.com/extensions/01a0ee83-5f2f-7cf3-81e7-4eff32b918da/ez-terms-and-conditions-checkbox-177/assets/style.min.css">\n'
     + "{%- if page.handle == 'konfigurator' or page.handle == 'nove-konfigurator' %}\n" + pismo('pismo-archivo-latin-v2.woff2') + "\n{%- else %}\n" + pismo('pismo-archivo-latin-sk-v4.woff2') + "\n{%- endif %}\n" + pismo('pismo-archivo-sk-v3.woff2') + '\n'
     + vetvy.join('\n') + '\n';
   fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-preload.liquid'), text);
