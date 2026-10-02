@@ -3,7 +3,7 @@ const fs = require('node:fs');
 (async () => {
   const browser = await chromium.launch({executablePath:process.env.CHROME_PATH||'/tmp/koverta-chromium',args:['--no-sandbox']});
   try {
-    for(let beh=1;beh<=3;beh++) for(const variant of ['povodne','galeria']) {
+    for(let beh=1;beh<=3;beh++) for(const variant of ['povodne','sync','galeria']) {
       const context = await browser.newContext({viewport:{width:412,height:823},isMobile:true,deviceScaleFactor:1.75});
       const page = await context.newPage();
       const cdp = await context.newCDPSession(page);
@@ -16,10 +16,11 @@ const fs = require('node:fs');
         new PerformanceObserver(l=>{for(const e of l.getEntries())window.kMerenie.dlhe.push({cas:e.startTime,dlzka:e.duration});}).observe({type:'longtask',buffered:true});
         new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.kMerenie.cls.push(e.value)}).observe({type:'layout-shift',buffered:true});
       });
-      if(variant==='galeria') await page.route('**/koverta-2026.js?*',async route=>{
+      await page.route('**/koverta-2026.js?*',async route=>{
         const response=await route.fetch();
-        await route.fulfill({response,body:fs.readFileSync('tools/galeria-kandidat.js','utf8')});
+        await route.fulfill({response,body:variant==='galeria'?fs.readFileSync('tools/galeria-kandidat.js','utf8'):await response.text()});
       });
+      await page.route('https://koverta.sk/',async route=>{const response=await route.fetch();let body=await response.text();if(variant==='sync')body=body.replace('fetchpriority="high" decoding="async"','fetchpriority="high" decoding="sync"');await route.fulfill({response,body});});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto('https://koverta.sk/',{waitUntil:'domcontentloaded',timeout:60000});
       await page.waitForTimeout(6000);
