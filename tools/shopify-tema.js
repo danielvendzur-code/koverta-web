@@ -489,15 +489,15 @@ function prepisCss(text, zdroj) {
 /* Každá hlavná stránka načíta svoj menší štýl už v hlave. Plný štýl ostáva
    pre produkty, konfigurátor a ďalšie šablóny. Poradie voči aplikáciám
    aj ostatným štýlom je rovnaké ako pred rozdelením. */
-function stylyStranok(v) {
+function stylyStranok(v, skoro = false) {
   const vybrane = v.sablony.filter((s) => /koverta-2026-(?:uvod|pristresky-pre-auta|zahradne-pristresky|bioklimaticke-pergoly|realizacie|kontakt)\.css/.test(s.stylStranky));
   const predvoleny = v.sablony.find((s) => /koverta-2026\.css/.test(s.stylStranky));
   if (!predvoleny) { chyby.push('chýba predvolený plný štýl'); return ''; }
-  /* Menší štýl je prednačítaný hneď na začiatku head. Jedna úplná
-     stylesheet nespôsobuje neskorú výmenu kritického CSS a druhý layout.
-     Na živom Shopify toto skrátilo LCP, zároveň funguje aj bez JavaScriptu. */
-  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + s.stylStranky).join('\n')
-    + '\n{%- else %}\n' + predvoleny.stylStranky + '\n{%- endif %}';
+  /* Menší štýl sa uplatní už na začiatku head, pred skriptmi aplikácií.
+     Samotný preload ho len stiahol; neskorý link ešte odkladal prvý paint.
+     Ostatné stránky si ponechajú plný štýl na pôvodnom mieste. */
+  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + (skoro ? s.stylStranky : '')).join('\n')
+    + '\n{%- else %}\n' + (skoro ? '' : predvoleny.stylStranky) + '\n{%- endif %}';
 }
 
 function preved() {
@@ -685,6 +685,7 @@ function zapis(v) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${stylyStranok(v, true)}
 {%- render 'kv-preload', page: page, collection: collection, template: template, request: request %}
 {% render 'kv-consentik' %}
 <!-- Značky pre vyhľadávače.
@@ -1038,9 +1039,7 @@ function zapisPreload(v) {
     x.preloadFotky.forEach((p) => {
       for (const m of p.matchAll(/(https:\/\/[^/"\s]+)\//g)) povod.add(m[1]);
     });
-    const styl = /koverta-2026-(?:uvod|pristresky-pre-auta|zahradne-pristresky|bioklimaticke-pergoly|realizacie|kontakt)\.css/.test(x.stylStranky)
-      ? '\n' + x.stylStranky.replace('rel="stylesheet"', 'rel="preload" as="style"') : '';
-    return '{%- if ' + podmienka(x) + ' %}\n' + x.preloadFotky.join('\n') + styl + '\n{%- endif %}';
+    return '{%- if ' + podmienka(x) + ' %}\n' + x.preloadFotky.join('\n') + '\n{%- endif %}';
   });
   const pismo = (meno) => `<link rel="preload" href="{{ '${meno}' | asset_url | split: '?' | first }}" as="font" type="font/woff2" crossorigin>`;
   const text = [...povod].sort().map((o) => `<link rel="preconnect" href="${o}">`).join('\n') + '\n'
