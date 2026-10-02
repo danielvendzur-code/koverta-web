@@ -3593,15 +3593,14 @@ if (typeof window !== 'undefined' && !window.kvChat
           if (v.currentTime >= vlastnyKoniec) v.currentTime = 0;
         });
       }
-      v.addEventListener('playing', () => v.classList.add('je-vidno'), { once: true });
+      v.addEventListener('playing', () => { v.classList.add('je-vidno'); v.style.opacity = '1'; }, { once: true });
       v.addEventListener('error', vzdaj);
 
-      /* Video sa rozbieha pri prvom vykreslení, bez časovača a interakcie.
-         Native poster z tej istej fotografie je dostupný pred prvým snímkom;
-         rovnaký preloaded obrázok sa nesťahuje druhýkrát. */
-      const img = v.parentElement.querySelector('picture img');
-      if (img && !v.poster) v.poster = img.currentSrc || img.src;
-      v.style.opacity = '1';
+      /* Prenos a play začínajú hneď. Kým nie je prvý snímok dostupný,
+         viditeľná zostáva už prednačítaná fotografia pod videom.
+         Native poster by ju znovu kreslil cez ďalšiu obrazovú vrstvu. */
+      v.removeAttribute('poster');
+      v.style.opacity = !v.paused && v.readyState >= 2 ? '1' : '0';
       v.style.transition = 'none';
       let vidno = v.getBoundingClientRect().top < window.innerHeight;
       const skusPustit = () => { if (vidno && !v.hidden) pusti(); };
