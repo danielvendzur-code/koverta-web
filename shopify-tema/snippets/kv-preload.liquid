@@ -10,6 +10,7 @@
 {%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'soltec-pergola-pri-bazene-antracit-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width: 760px)" href="{{ 'soltec-pergola-pri-bazene-antracit.jpg' | asset_url }}" fetchpriority="high" imagesrcset="{{ 'soltec-pergola-pri-bazene-antracit-w640.webp' | asset_url }} 640w, {{ 'soltec-pergola-pri-bazene-antracit-w1000.webp' | asset_url }} 1000w, {{ 'soltec-pergola-pri-bazene-antracit-w1600.webp' | asset_url }} 1600w" imagesizes="100vw">
+<link rel="preload" as="style" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
 {%- endif %}
 {%- if page.handle == 'nove-carport-soltec' or collection.handle == 'pristresky-pre-auta-agava' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'soltec-carport-nitra-hero-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
@@ -21,9 +22,11 @@
 {%- if template.name == 'index' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'koverta-hero-sibenik-poster-mobil.webp' | asset_url }}" imagesrcset="{{ 'koverta-hero-sibenik-poster-mobil-w480.webp' | asset_url }} 480w, {{ 'koverta-hero-sibenik-poster-mobil-w800.webp' | asset_url }} 800w, {{ 'koverta-hero-sibenik-poster-mobil.webp' | asset_url }} 900w" imagesizes="100vw" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width: 760px)" href="{{ 'koverta-hero-sibenik-poster-w1600.webp' | asset_url }}" imagesrcset="{{ 'koverta-hero-sibenik-poster-w640.webp' | asset_url }} 640w, {{ 'koverta-hero-sibenik-poster-w1000.webp' | asset_url }} 1000w, {{ 'koverta-hero-sibenik-poster-w1600.webp' | asset_url }} 1600w, {{ 'koverta-hero-sibenik-poster-w1920.webp' | asset_url }} 1920w" imagesizes="(max-width: 759px) 100vw, (max-width: 900px) 190vh, 100vw" fetchpriority="high">
+<link rel="preload" as="style" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
 {%- endif %}
 {%- if page.handle == 'nove-kontakt' or page.handle == 'kontakt' %}
 <link rel="preload" as="image" href="{{ 'koverta-pristresok-garaz.jpg' | asset_url }}" fetchpriority="high" imagesrcset="{{ 'koverta-pristresok-garaz-w1000.webp' | asset_url }} 1000w, {{ 'koverta-pristresok-garaz.jpg' | asset_url }} 1800w" imagesizes="100vw">
+<link rel="preload" as="style" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
 {%- endif %}
 {%- if page.handle == 'nove-obchodne-podmienky' or page.handle == 'vseobecne-obchodne-podmienky' %}
 <link rel="preload" as="image" href="{{ 'foto-03-w1800.jpg' | asset_url }}" fetchpriority="high">
@@ -45,6 +48,7 @@
 {%- if page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'koverta-pristresok-auto-golf-lamelova-stena-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width: 760px)" href="{{ 'koverta-pristresok-auto-golf-lamelova-stena.jpg' | asset_url }}" fetchpriority="high" imagesrcset="{{ 'koverta-pristresok-auto-golf-lamelova-stena-w640.webp' | asset_url }} 640w, {{ 'koverta-pristresok-auto-golf-lamelova-stena-w1000.webp' | asset_url }} 1000w, {{ 'koverta-pristresok-auto-golf-lamelova-stena-w1600.webp' | asset_url }} 1600w" imagesizes="100vw">
+<link rel="preload" as="style" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
 {%- endif %}
 {%- if page.handle == 'nove-produkty' or page.handle == 'produkty' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'koverta-zahradny-pristresok-bratislava-hero-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
@@ -53,6 +57,7 @@
 {%- if page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'foto-img_5269-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width: 760px)" href="{{ 'foto-img_5269-w1800.jpg' | asset_url }}" fetchpriority="high" imagesrcset="{{ 'foto-img_5269-w1800-w1000.webp' | asset_url }} 1000w, {{ 'foto-img_5269-w1800-w1600.webp' | asset_url }} 1600w, {{ 'foto-img_5269-w1800.jpg' | asset_url }} 1800w" imagesizes="100vw">
+<link rel="preload" as="style" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
 {%- endif %}
 {%- if page.handle == 'nove-reklamacie' or page.handle == 'reklamacny-poriadok' %}
 <link rel="preload" as="image" href="{{ 'foto-03-w1800.jpg' | asset_url }}" fetchpriority="high">
@@ -64,4 +69,5 @@
 {%- if page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
 <link rel="preload" as="image" media="(max-width: 759px)" href="{{ 'koverta-zahradny-pristresok-slovensky-grob-mobil.webp' | asset_url }}" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width: 760px)" href="{{ 'koverta-zahradny-pristresok-slovensky-grob.jpg' | asset_url }}" fetchpriority="high" imagesrcset="{{ 'koverta-zahradny-pristresok-slovensky-grob-w640.webp' | asset_url }} 640w, {{ 'koverta-zahradny-pristresok-slovensky-grob-w1000.webp' | asset_url }} 1000w, {{ 'koverta-zahradny-pristresok-slovensky-grob-w1600.webp' | asset_url }} 1600w" imagesizes="100vw">
+<link rel="preload" as="style" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
 {%- endif %}
