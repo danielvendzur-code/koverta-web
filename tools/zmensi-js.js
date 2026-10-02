@@ -13,9 +13,9 @@
  *   node tools/zmensi-js.js            prestaví koverta-2026.js zo zdroja
  *   node tools/zmensi-js.js --kontrola len overí, že sa zhodujú
  *
- * Terser tu len zahodí komentáre a medzery: bez `compress` a bez `mangle`,
- * úvodzovky ostávajú pôvodné. Kód, mená premenných aj reťazce (cesty,
- * názvy udalostí pre GTM) sú tie isté. Verzia je pevná, aby výstup nezávisel
+ * Terser používa štandardnú kompresiu bez unsafe transformácií a skracuje
+ * lokálne premenné. Názvy funkcií, globálne API, vlastnosti objektov a
+ * reťazce (cesty, udalosti GTM) ostávajú. Verzia je pevná, aby výstup nezávisel
  * od toho, kto ho spustil: npm install --no-save terser@5.51.2
  */
 'use strict';
@@ -41,8 +41,9 @@ if (nainstalovana !== VERZIA) {
 (async () => {
   const zdroj = fs.readFileSync(ZDROJ, 'utf8');
   const vysledok = await terser.minify(zdroj, {
-    compress: false,
-    mangle: false,
+    compress: { defaults: true, passes: 2 },
+    mangle: { keep_fnames: true },
+    keep_fnames: true,
     ecma: 2020,
     format: { comments: false, quote_style: 3 }
   });

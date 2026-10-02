@@ -82,6 +82,9 @@ if (typeof window !== 'undefined' && !window.kvChat
           s.onerror = zle;
           document.head.appendChild(s);
         });
+        /* Automatické prednačítanie po scrollovaní nemá neobslúženú
+           chybu; po výpadku CDN dovolíme ďalšiemu kliknutiu nový pokus. */
+        nacitanie.catch(function () { nacitanie = null; });
       }
       return nacitanie;
     }
@@ -1674,16 +1677,8 @@ if (typeof window !== 'undefined' && !window.kvChat
      `<details>` prepína obsah okamžite. Odpoveď skočila von, riadky pod ňou
      odleteli nadol a keď sa pritom zatvárala otázka nad tou, na ktorú človek
      klikol, ušla mu spod kurzora aj tá — preklikávanie zoznamu poskakovalo.
-     Prepnutie preto riadi skript a robí tri veci:
-
-     1. Výšku odpovede prejde od nuly po jej skutočnú mieru a naspäť, takže sa
-        obsah vysunie namiesto toho, aby sa objavil.
-     2. Zatvorenie predošlej otázky beží v tom istom čase ako otvorenie novej,
-        nie po ňom. Zoznam sa hýbe raz, nie dvakrát.
-     3. Ak sa zatvára niečo nad kliknutým riadkom, drží ten riadok po celý
-        prechod na mieste: stránka sa doscrolluje presne o toľko, o koľko sa
-        obsah nad ním zmenšil. Otázka, na ktorú človek klikol, tak ostane pod
-        kurzorom.
+     Skript animuje celú výšku karty. Zatvorenie predošlej otázky beží
+     súčasne s otvorením novej, bez vynúteného scrollovania stránky.
 
      Bez skriptu aj pri obmedzenom pohybe ostáva pôvodné správanie `<details>`:
      klik otvorí, klik zatvorí, len bez prechodu. */
@@ -1706,45 +1701,32 @@ if (typeof window !== 'undefined' && !window.kvChat
     }
   }
 
-  function faqOtvor(d, hybat) {
-    const t = faqTelo(d);
+  /* Animuje sa celý details vrátane paddingu odpovede. Samotná odpoveď
+     ani pri height:0 nestratila padding, ktorý pri zatvorení náhle zmizol.
+     Pri ďalšom kliknutí nadviažeme na práve vykreslenú výšku. */
+  function faqPrepni(d, otvorit, hybat) {
+    const od = d.getBoundingClientRect().height;
+    faqStop(d);
+    d.style.removeProperty('overflow');
+    d.__kFaqCiel = otvorit;
+    d.open = otvorit;
+    const ciel = d.getBoundingClientRect().height;
+    if (!hybat || typeof d.animate !== 'function') return;
     d.open = true;
-    if (!t || !hybat || typeof t.animate !== 'function') return;
-    faqStop(t);
-    const ciel = t.scrollHeight;
-    const beh = t.animate(
-      [{ height: '0px', opacity: 0 }, { height: ciel + 'px', opacity: 1 }],
-      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
-    );
-    t.__kBeh = beh;
-    beh.onfinish = () => { t.__kBeh = null; };
-  }
-
-  function faqZavri(d, hybat) {
-    const t = faqTelo(d);
-    if (!t || !hybat || typeof t.animate !== 'function') { d.open = false; return; }
-    faqStop(t);
-    const od = t.getBoundingClientRect().height || t.scrollHeight;
-    const beh = t.animate(
-      [{ height: od + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
-      { duration: FAQ_CAS, easing: FAQ_KRIVKA }
-    );
-    t.__kBeh = beh;
-    beh.onfinish = () => { t.__kBeh = null; d.open = false; };
-  }
-
-  /* Riadok ostane na mieste, aj keď sa nad ním obsah zmenší. Meria sa každý
-     snímok pred vykreslením, takže na obrazovke nie je vidieť žiadny posun. */
-  function faqDrz(prvok) {
-    const ciel = prvok.getBoundingClientRect().top;
-    const koniec = performance.now() + FAQ_CAS + 80;
-    const krok = () => {
-      const rozdiel = prvok.getBoundingClientRect().top - ciel;
-      if (Math.abs(rozdiel) > 0.5) window.scrollBy(0, rozdiel);
-      if (performance.now() < koniec) requestAnimationFrame(krok);
+    d.style.overflow = 'hidden';
+    const beh = d.animate([{ height: od + 'px' }, { height: ciel + 'px' }],
+      { duration: FAQ_CAS, easing: FAQ_KRIVKA, fill: 'both' });
+    d.__kBeh = beh;
+    beh.onfinish = () => {
+      d.open = otvorit;
+      d.__kBeh = null;
+      d.style.removeProperty('overflow');
+      beh.cancel();
     };
-    requestAnimationFrame(krok);
   }
+
+  function faqOtvor(d, hybat) { faqPrepni(d, true, hybat); }
+  function faqZavri(d, hybat) { faqPrepni(d, false, hybat); }
 
   function initFaq(root) {
     const tichy = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -1756,20 +1738,12 @@ if (typeof window !== 'undefined' && !window.kvChat
         sum.addEventListener('click', (e) => {
           e.preventDefault();
           const hybat = !tichy.matches;
-          const bolo = d.open;
-          /* Otvorené otázky, ktoré v zozname stoja nad touto. Len kvôli nim
-             sa oplatí riadok držať — čo sa zatvára pod ním, jeho polohu
-             nezmení. */
-          const nad = items.filter(
-            (x) => x !== d && x.open &&
-              (x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING)
-          );
+          const bolo = d.__kFaqCiel === undefined ? d.open : d.__kFaqCiel;
           if (bolo) {
             faqZavri(d, hybat);
           } else {
-            items.forEach((x) => { if (x !== d && x.open) faqZavri(x, hybat); });
+            items.forEach((x) => { if (x !== d && x.open && x.__kFaqCiel !== false) faqZavri(x, hybat); });
             faqOtvor(d, hybat);
-            if (hybat && nad.length) faqDrz(sum);
           }
         });
       });
@@ -3687,7 +3661,6 @@ if (typeof window !== 'undefined' && !window.kvChat
       if (v === posledna) return;
       posledna = v;
       if (v > 0) doc.documentElement.style.setProperty('--kv-dok', v + 'px');
-      else doc.documentElement.style.removeProperty('--kv-dok');
     };
     const naplan = () => { if (!caka) { caka = true; requestAnimationFrame(mer); } };
     mer();
@@ -3744,12 +3717,16 @@ if (typeof window !== 'undefined' && !window.kvChat
     if (vv) {
       let malo = null;
       const klavesnica = () => {
-        const je = (window.innerHeight - vv.height) > 100;
+        const pole = doc.activeElement;
+        const pise = pole && (pole.matches('input, textarea, select') || pole.isContentEditable);
+        const je = !!pise && vv.scale < 1.05 && (window.innerHeight - vv.height) > 150;
         if (je === malo) return;
         malo = je;
         doc.documentElement.classList.toggle('ma-klavesnicu', je);
       };
       vv.addEventListener('resize', klavesnica, { passive: true });
+      doc.addEventListener('focusin', klavesnica);
+      doc.addEventListener('focusout', () => requestAnimationFrame(klavesnica));
       klavesnica();
     }
   }
