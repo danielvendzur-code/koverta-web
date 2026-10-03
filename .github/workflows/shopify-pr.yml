@@ -9,6 +9,7 @@ on:
       - 'shopify-tema/**'
       - 'shopify-zdroj/**'
       - 'tools/shopify-*.js'
+      - 'tools/shopify-*.cjs'
       - 'tools/spolocne-casti.js'
       - '.github/workflows/shopify*.yml'
 
@@ -40,3 +41,4 @@ jobs:
           node tools/shopify-redirects.js --check
           node tools/shopify-tema.js
           node tools/shopify-kontrola.js
+          node tools/shopify-kriticke-css-kontrola.cjs
