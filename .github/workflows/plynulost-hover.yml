@@ -2,7 +2,7 @@ name: Plynulosť a hover — zostavenie a kontrola
 on:
   push:
     branches: [fix/plynulost-hover-20261003]
-    paths: ['assets/koverta-2026.zdroj.js', 'assets/koverta-2026.zdroj.css', 'tools/shopify-tema.js', 'tools/shopify-kriticke-css-kontrola.cjs', '.github/workflows/plynulost-hover.yml']
+    paths: ['assets/koverta-2026.zdroj.js', 'assets/koverta-2026.zdroj.css', 'tools/shopify-tema.js', 'tools/shopify-kriticke-css-kontrola.cjs', 'tools/ovladanie-kontrola.cjs', '.github/workflows/plynulost-hover.yml']
 permissions:
   contents: write
 jobs:
