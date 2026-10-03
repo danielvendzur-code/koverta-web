@@ -12102,6 +12102,15 @@ main.k img[src*="soltec-tienenie-lamely-velka-luka"] { object-position: 52% 42%;
 .k .kh-ponuka__kus--vstup .kh-ponuka__akcia { border-color:transparent; }
 .k .kh-ponuka__kus--vstup .kh-ponuka__karta::before { content:none; }
 
+/* Na žltej karte výberu zostáva akcia tmavá aj pri hoveri fotografie
+   alebo klávesnicovom zameraní celej karty. */
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia,
+.k .kh-ponuka__kus--vstup .kh-ponuka__karta:is(:hover, :focus-visible) .kh-ponuka__akcia {
+  background: var(--k-ink);
+  color: var(--k-white);
+}
+.k .kh-ponuka__kus--vstup .kh-ponuka__akcia:hover { background: #000; color: var(--k-white); }
+
 /* Brand offer router */
 .kh-brand-dialog[hidden] { display:none; }
 .kh-brand-dialog { position:fixed; inset:0; z-index:1200; display:grid; place-items:center; padding:20px; }
