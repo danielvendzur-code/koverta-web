@@ -4,17 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {%- if page.handle == 'nove-bioklimaticke-pergoly' or collection.handle == 'bioklimaticke-pergoly' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+{%- render 'kv-kriticky-bioklimaticke-pergoly' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-bioklimaticke-pergoly.css' | asset_url }}"></noscript>
 {%- elsif template.name == 'index' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+{%- render 'kv-kriticky-uvod' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-uvod.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-kontakt' or page.handle == 'kontakt' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+{%- render 'kv-kriticky-kontakt' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+{%- render 'kv-kriticky-pristresky-pre-auta' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+{%- render 'kv-kriticky-realizacie' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}"></noscript>
 {%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
-<link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+{%- render 'kv-kriticky-zahradne-pristresky' %}
+<link media="print" onload="this.media='all';var s=document.querySelector('style[data-k-kriticky]');if(s)s.remove()" rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
+<noscript><link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}"></noscript>
 {%- else %}
 
 {%- endif %}
