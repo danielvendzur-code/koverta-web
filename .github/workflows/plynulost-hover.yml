@@ -1,0 +1,59 @@
+name: Plynulosť a hover — zostavenie a kontrola
+on:
+  push:
+    branches: [fix/plynulost-hover-20261003]
+    paths: ['assets/koverta-2026.zdroj.js', 'assets/koverta-2026.zdroj.css', 'tools/shopify-tema.js', 'tools/shopify-kriticke-css-kontrola.cjs', 'tools/ovladanie-kontrola.cjs', '.github/workflows/plynulost-hover.yml']
+permissions:
+  contents: write
+jobs:
+  zostavit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Zostaviť a overiť rozhranie
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          set -euo pipefail
+          npm install --no-save postcss@8.5.28 terser@5.51.2 playwright@1.58.2
+          node tools/zmensi-js.js
+          node tools/zmensi-css.js
+          node tools/kriticke-css.cjs --vloz
+          node tools/verzie-suborov.js --oprav
+          python3 tools/cta-kontrola.py
+          node tools/seo-audit.js
+          node tools/rozmery-obrazkov.js
+          node tools/spolocne-casti.js --kontrola
+          node konfigurator/test/realizacie-map.js
+          node tools/rozhranie-kontrola.cjs
+          node tools/ovladanie-kontrola.cjs
+          node tools/prva-obrazovka-kontrola.cjs
+      - name: Uložiť assets a potom zostaviť tému
+        run: |
+          set -euo pipefail
+          git config user.name koverta-bot
+          git config user.email noreply@koverta.sk
+          git add assets '*.html'
+          if ! git diff --cached --quiet; then
+            git commit -m "Plynulosť: zostavené assets a verzie"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+          node tools/shopify-tema.js
+          node tools/shopify-kontrola.js
+          node tools/shopify-kriticke-css-kontrola.cjs
+          git add shopify-tema
+          if ! git diff --cached --quiet; then
+            git commit -m "Téma: overená plynulosť a ovládanie kvízu"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plynulost-kontrola
+          path: qa-artifacts/rozhranie/

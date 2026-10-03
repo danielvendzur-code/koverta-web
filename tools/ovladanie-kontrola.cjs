@@ -31,7 +31,8 @@ const root=path.resolve(__dirname,'..');
         await track.scrollIntoViewIfNeeded();
         const before=await track.evaluate(e=>e.scrollLeft);
         await wrap.locator('[data-k-rail-next]').click();
-        await page.waitForFunction(x=>document.querySelector('[data-k-rail-track]').scrollLeft>x,before);
+        // Scroll a aktualizácia šípky prebehnú v samostatných snímkach.
+        await page.waitForFunction(x=>document.querySelector('[data-k-rail-track]').scrollLeft>x && !document.querySelector('[data-k-rail-prev]').disabled,before);
         assert.equal(await wrap.locator('[data-k-rail-prev]').isDisabled(),false);
         await wrap.locator('[data-k-rail-prev]').click();
         await page.waitForFunction(()=>document.querySelector('[data-k-rail-track]').scrollLeft<=2);
