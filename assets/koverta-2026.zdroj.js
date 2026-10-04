@@ -2278,19 +2278,19 @@ if (typeof window !== 'undefined' && !window.kvChat
       scena.className = 'kh-rev__scena';
       scena.setAttribute('aria-hidden', 'true');
       const kopia = new Image();
-      kopia.src = obr.currentSrc || obr.getAttribute('src');
+      const adresa = obr.currentSrc || obr.getAttribute('src');
       kopia.alt = '';
       kopia.decoding = 'async';
       scena.appendChild(kopia);
       document.body.appendChild(scena);
-      const kus = { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, kopia: kopia, w: 0, h: 0, letí: null };
+      const kus = { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, kopia: kopia, adresa: adresa, w: 0, h: 0, letí: null };
       /* Po obnovení stránky priamo v tejto časti webu ešte fotografie nie sú
          načítané. Kým nie sú, nesmie sa prelet spustiť — inak by leteli tri
          prázdne rámčeky a fotografie v piatom kroku by boli medzitým skryté.
          Do tej chvíle teda stoja na svojom mieste v kroku a prelet čaká. */
       /* `naplan` je deklarovaný nižšie; šípka odloží jeho vyhľadanie až na
          chvíľu, keď fotografia doletí — vtedy už dávno existuje. */
-      if (!kopia.complete) kopia.addEventListener('load', () => naplan(), { once: true });
+      kopia.addEventListener('load', () => naplan(), { once: true });
       return kus;
     });
 
@@ -2302,6 +2302,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     /* Vykresľovaná hodnota preletu a príznak, že sa má dobiehať ďalej. */
     let mojP = null;
     let bezi = false;
+    let poslednyCas = null;
     const hladko = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* Prelet mieri do prvých troch kariet. Keď si niekto v recenziách posunie
@@ -2323,6 +2324,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     const vypni = () => {
       vratKartu();
       mojP = null;
+      poslednyCas = null;
       kusy.forEach((k) => {
         if (k.letí !== 'vyp') {
           k.scena.style.display = 'none';
@@ -2334,13 +2336,14 @@ if (typeof window !== 'undefined' && !window.kvChat
       });
     };
 
-    const zmer = () => {
+    const zmer = (cas = performance.now()) => {
       ceka = false;
       const vh = window.innerHeight || 1;
       if (vedla()) { vypni(); return; }
       if (window.innerWidth < 1000) {
         vratKartu();
         mojP = null;
+        poslednyCas = null;
         kusy.forEach((k) => {
           if (k.letí !== false) {
             k.scena.style.display = 'none';
@@ -2383,9 +2386,15 @@ if (typeof window !== 'undefined' && !window.kvChat
          nedohaňa nič — tam má byť pohyb čo najkratší. */
       if (hladko) {
         if (mojP === null) mojP = p;
+        /* Pri 60 Hz zostáva pôvodné tempo 0,24. Čas medzi snímkami drží
+           rovnaké dobiehanie aj pri 120 Hz a pri občasnom pomalšom snímku.
+           Po návrate z neaktívnej karty sa nedoženie celá prestávka naraz. */
+        const dt = poslednyCas === null ? 1000 / 60 : Math.max(0, Math.min(64, cas - poslednyCas));
+        poslednyCas = cas;
+        const podiel = 1 - Math.pow(1 - 0.24, dt / (1000 / 60));
         const rozdiel = p - mojP;
         if (Math.abs(rozdiel) < 0.0008) mojP = p;
-        else { mojP += rozdiel * 0.24; bezi = true; }
+        else { mojP += rozdiel * podiel; bezi = true; }
         p = mojP;
       }
       /* Kým nie je načítaná každá z troch kópií, prelet nebeží: fotografie
@@ -2438,11 +2447,12 @@ if (typeof window !== 'undefined' && !window.kvChat
           }
           return;
         }
-        k.letí = p;
+        const vstupDoPreletu = !(typeof k.letí === 'number' && k.letí > 0.001 && k.letí < 0.999);
 
         const d = merania[i].d;
         const z = merania[i].z;
         if (!d.width || !z.width) return;
+        k.letí = p;
 
         /* Rozmer sa nastaví len vtedy, keď sa naozaj zmenil — inak by sa
            rozloženie prepočítavalo v každom snímku a obraz by sa chvel. */
@@ -2452,9 +2462,13 @@ if (typeof window !== 'undefined' && !window.kvChat
           k.scena.style.width = d.width.toFixed(1) + 'px';
           k.scena.style.height = d.height.toFixed(1) + 'px';
         }
-        k.scena.style.display = 'block';
-        k.slot.style.visibility = 'hidden';
-        k.zdroj.style.visibility = 'hidden';
+        /* Viditeľnosť sa mení len pri vstupe do preletu. Počas letu stačí
+           posun; opakované zápisy stavu nepatria do každého snímku. */
+        if (vstupDoPreletu) {
+          k.scena.style.display = 'block';
+          k.slot.style.visibility = 'hidden';
+          k.zdroj.style.visibility = 'hidden';
+        }
 
         const x = medzi(z.left, d.left, e);
         const y = medzi(z.top, d.top, e);
@@ -2465,14 +2479,28 @@ if (typeof window !== 'undefined' && !window.kvChat
     };
 
     const naplan = () => { if (!ceka) { ceka = true; requestAnimationFrame(krok); } };
-    function krok() {
+    function krok(cas) {
       bezi = false;
-      zmer();
+      zmer(cas);
       if (bezi) { ceka = true; requestAnimationFrame(krok); }
+      else poslednyCas = null;
     }
     window.addEventListener('scroll', naplan, { passive: true });
     window.addEventListener('resize', naplan, { passive: true });
     kolaj.addEventListener('scroll', naplan, { passive: true });
+    /* Kópie fotografií nepotrebujú sieť ani dekódovanie pri otvorení hero.
+       Pripravíme ich o obrazovku skôr, než príde sekcia postupu. Dráha,
+       fotografie aj kontrola pripravenosti preletu zostávajú rovnaké. */
+    const nacitajKopie = () => kusy.forEach((k) => { k.kopia.src = k.adresa; });
+    if ('IntersectionObserver' in window) {
+      const priprava = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        priprava.disconnect();
+        nacitajKopie();
+      }, { rootMargin: '100% 0px' });
+      priprava.observe(trio.closest('.kh-proc') || trio);
+      priprava.observe(zoznam);
+    } else nacitajKopie();
     zmer();
   }
 
@@ -3053,7 +3081,9 @@ if (typeof window !== 'undefined' && !window.kvChat
     modal.querySelectorAll('[data-k-modal-close]').forEach((b) => b.addEventListener('click', zavri));
     document.addEventListener('click', (e) => {
       const a = e.target.closest && e.target.closest('a[href*="#ponuka"], button[data-k-dopyt-open], [data-k-modal-open]');
-      if (!a || modal.contains(a)) return;
+      /* Dlaždica výberu používa rovnakú kotvu, ale otvára vlastný kvíz.
+         Dopytové okno by otázky prekrylo a zablokovalo ich ovládanie. */
+      if (!a || modal.contains(a) || a.hasAttribute('data-k-kviz-otvor')) return;
       e.preventDefault(); otvor(a);
     });
     document.addEventListener('keydown', (e) => {

@@ -493,10 +493,17 @@ function stylyStranok(v, skoro = false) {
   const vybrane = v.sablony.filter((s) => /koverta-2026-(?:uvod|pristresky-pre-auta|zahradne-pristresky|bioklimaticke-pergoly|realizacie|kontakt)\.css/.test(s.stylStranky));
   const predvoleny = v.sablony.find((s) => /koverta-2026\.css/.test(s.stylStranky));
   if (!predvoleny) { chyby.push('chýba predvolený plný štýl'); return ''; }
-  /* Menší štýl sa uplatní už na začiatku head, pred skriptmi aplikácií.
-     Samotný preload ho len stiahol; neskorý link ešte odkladal prvý paint.
-     Ostatné stránky si ponechajú plný štýl na pôvodnom mieste. */
-  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + (skoro ? s.stylStranky : '')).join('\n')
+  /* Prvá obrazovka má tie isté vložené pravidlá ako statický web.
+     Plný štýl sa načíta popri nej. Noscript zachová celý vzhľad aj bez JS.
+     Liquid render vyberie iba útržok aktuálnej stránky; CSS adresy už vedú
+     na asset_url, nie na neexistujúci priečinok /assets/pismo v obchode. */
+  const skoryStyl = (s) => {
+    if (!s.kriticky) return s.stylStranky;
+    const asyncLink = s.stylStranky.replace('<link ', '<link media="print" onload="this.media=\'all\';var s=document.querySelector(\'style[data-k-kriticky]\');if(s)s.remove()" ');
+    return "{%- render 'kv-kriticky-" + s.kritickyMeno + "' %}\n" + asyncLink
+      + '\n<noscript>' + s.stylStranky + '</noscript>';
+  };
+  return vybrane.map((s, i) => '{%- ' + (i ? 'elsif ' : 'if ') + podmienka(s) + ' %}\n' + (skoro ? skoryStyl(s) : '')).join('\n')
     + '\n{%- else %}\n' + (skoro ? '' : predvoleny.stylStranky) + '\n{%- endif %}';
 }
 
@@ -570,6 +577,12 @@ function preved() {
     const hlava = html.slice(html.indexOf('<head>'), html.indexOf('</head>'));
     const chvost = html.slice(html.indexOf('</footer>') + 9, html.indexOf('</body>'));
     let stylStranky = '';
+    const kritickyTag = hlava.match(/<style data-k-kriticky="([^"]+)">([\s\S]*?)<\/style>/);
+    const kritickyMeno = kritickyTag ? kritickyTag[1] : '';
+    const kriticky = kritickyTag ? '<style data-k-kriticky="' + kritickyTag[1] + '">' + kritickyTag[2].replace(CSS_URL, (tag, q, u) => {
+      const adresa = naSubor(u);
+      return adresa ? 'url("' + adresa + '")' : tag;
+    }) + '</style>' : '';
     const hlavaPrvky = prvky(hlava).filter((p) => !shopifyRobiSam(p)).map((p) => {
       const prevedeny = prepis(p, mapa, zaklad);
       if (/<link[^>]+rel="stylesheet"/.test(p) && /koverta-2026(?:-[a-z-]+)?\.css/.test(p)) {
@@ -598,7 +611,7 @@ function preved() {
     const ld = [...html.matchAll(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g)]
       .map((m) => naAdresyObchodu(m[0], mapa));
     const og = naAdresyObchodu((html.match(/<meta property="og:image" content="([^"]*)"/) || [, ''])[1], mapa);
-    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky, stylStranky };
+    return { a, kde, hlavny, medzi, dopyt, titulok, celyTitulok, popis, hlavaPrvky, chvostPrvky, ld, og, preloadFotky, stylStranky, kriticky, kritickyMeno };
   });
 
   /* Cesty napísané rovno v texte skriptu úvodu. Hľadajú sa ako reťazcové
@@ -817,6 +830,7 @@ ${v.spolocnyChvost.join('\n')}
    * aplikácie sa umiestňuje raz a platí pre všetky. */
   for (const s of v.sablony) {
     if (s.a.rozmer) continue;
+    if (s.kriticky) fs.writeFileSync(path.join(CIEL, 'snippets', 'kv-kriticky-' + s.kritickyMeno + '.liquid'), s.kriticky + '\n');
     const hlava = "{%- assign kv_dopyt = '" + s.dopyt.replace(/'/g, "\\'") + "' -%}\n";
     /* Štýly vlastné stránke (konfigurátor má svoje dve CSS) idú PRED jej
        obsah, skripty za neho. Kým boli štýly až na konci, prehliadač stihol
