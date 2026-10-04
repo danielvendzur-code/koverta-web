@@ -4011,7 +4011,7 @@ if (typeof window !== 'undefined' && !window.kvChat
           img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
           img.loading = 'lazy';
           img.decoding = 'async';
-          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá, Plavecký Štvrtok' : 'Bioklimatická pergola Soltec pri bazéne, Lučenec';
+          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá' : 'Bioklimatická pergola Soltec pri bazéne';
           photo.appendChild(img);
           a.insertBefore(photo, a.firstChild);
 
@@ -4056,7 +4056,7 @@ if (typeof window !== 'undefined' && !window.kvChat
           img.setAttribute('data-k-menu-src', menuAsset(photos[i] || photos[0]));
           img.loading = 'lazy';
           img.decoding = 'async';
-          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá, Plavecký Štvrtok' : 'Bioklimatická pergola Soltec pri bazéne, Lučenec';
+          img.alt = i === 0 ? 'Hliníkový carport Soltec pre tri autá' : 'Bioklimatická pergola Soltec pri bazéne';
           photo.appendChild(img);
           const body = document.createElement('span');
           body.className = 'kv-drawer__telo';
