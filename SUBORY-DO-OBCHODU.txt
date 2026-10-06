@@ -460,9 +460,6 @@ koverta-pristresok-dve-auta-velke-ulany-w1000.webp	assets/koverta-pristresok-dve
 koverta-pristresok-dve-auta-velke-ulany-w640.webp	assets/koverta-pristresok-dve-auta-velke-ulany-w640.webp
 koverta-pristresok-dve-auta-velke-ulany.jpg	assets/koverta-pristresok-dve-auta-velke-ulany.jpg
 koverta-pristresok-garaz-w640.webp	assets/koverta-pristresok-garaz-w640.webp
-koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w1000.webp
-koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom-w640.webp
-koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg	assets/koverta-pristresok-hnedy-nad-vjazdom-tehlovy-dom.jpg
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg
@@ -492,6 +489,9 @@ koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
+koverta-pristresok-trapezova-strecha-lamelove-steny-w1000.webp	assets/koverta-pristresok-trapezova-strecha-lamelove-steny-w1000.webp
+koverta-pristresok-trapezova-strecha-lamelove-steny-w640.webp	assets/koverta-pristresok-trapezova-strecha-lamelove-steny-w640.webp
+koverta-pristresok-trapezova-strecha-lamelove-steny.jpg	assets/koverta-pristresok-trapezova-strecha-lamelove-steny.jpg
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
