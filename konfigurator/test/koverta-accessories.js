@@ -6,7 +6,7 @@ const { prepareContext, watchErrors } = require('./browser-qa');
 
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 const SIDES = ['rear', 'front', 'left', 'right'];
-const MATERIALS = ['kvdrevo', 'kvwpc', 'kvhlinik'];
+const MATERIALS = ['kvdrevo', 'kvhlinik'];
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -136,6 +136,18 @@ function expectedWallAnchor(snap, side) {
   }
 
   const i = side === 'left' ? 0 : axes.length - 1;
+  /* Zadná lamelová stena (strana left) stojí za stĺpmi cez celú šírku. */
+  if (side === 'left' && /^kv(drevo|wpc|hlinik)$/.test(String((snap.sides || {}).left))) {
+    const gw = Math.round(Math.min(sections[i].d, sections[i].w) * 0.42);
+    return {
+      axis: 'y',
+      out: -1,
+      vFace: leftEdges[i] - gw - 2,
+      runFrom: inset,
+      runTo: snap.width - inset,
+      cuts: []
+    };
+  }
   return {
     axis: 'y',
     out: side === 'left' ? -1 : 1,
@@ -509,7 +521,7 @@ function validateAccessoryContacts(snap, label) {
         document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(overflow <= 4, `${device}: accessory configuration causes horizontal overflow: ${overflow}`);
       checkErrors();
-      console.log(`ACCESSORIES_PASS ${device}: drainage, insulation, LED, wood/WPC/aluminium walls, all four wall sides, 4/6-post resize, 7000x5200, 7000x6000, 360-degree rotation`);
+      console.log(`ACCESSORIES_PASS ${device}: drainage, insulation, LED, wood/aluminium walls, all four wall sides, 4/6-post resize, 7000x5200, 7000x6000, 360-degree rotation`);
       await context.close();
     }
   } finally {

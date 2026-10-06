@@ -14613,3 +14613,33 @@ body.ma-kh-modal { overflow: hidden; }
 /* Úvodný text je obsah prvej obrazovky: skript ho už znovu neskryje.
    Transformácia zachová príchod; odhaľovanie ďalších sekcií sa nemení. */
 .k-js main > section:first-child .k-rise { opacity: 1; }
+
+/* Záhradné prístrešky: strecha je v hornej tretine fotky. Pri predvolenom
+   ohnisku (64 % odhora) ju široký úvod odrezal; majiteľ chcel vidieť viac
+   strechy. */
+@media (min-width: 720px) {
+  .k .kh-hero__bg img[src*="zahradny-pristresok-slovensky-grob"] { object-position: 50% 0%; }
+}
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero .kh-hero__bg img[src*="zahradny-pristresok-slovensky-grob"] { object-position: 50% 0% !important; }
+}
+
+/* Úvod podstránok na telefóne (10/2026): text začína až pod fotkou a
+   tlačidlá stoja vždy dole na prvej obrazovke, na každej podstránke na tom
+   istom mieste — nezávisle od dĺžky nadpisu a textu. Úvod webu (video) sa
+   nemení. */
+@media (max-width: 759px) {
+  body:not(.k-home) .k .kh-hero__inner {
+    margin-top: 0 !important; padding-top: 18px !important; padding-bottom: 22px !important;
+    flex: 1 1 auto; display: flex; flex-direction: column;
+  }
+  body:not(.k-home) .k .kh-hero__box { flex: 1 1 auto; display: flex; flex-direction: column; }
+  /* Pri jednom tlačidle ostáva miesto po druhom prázdne, aby hlavné
+     tlačidlo stálo na každej podstránke rovnako vysoko. */
+  body:not(.k-home) .k .kh-hero__box > .kh-hero__actions { margin-top: auto; min-height: 98px; align-content: flex-start; }
+  body:not(.k-home) .k .kh-hero .k-display { font-size: clamp(30px, 8.6vw, 40px); line-height: 1.04; text-wrap: balance; }
+  body:not(.k-home) .k .kh-hero__box > .k-display,
+  body:not(.k-home) .k .kh-hero__box > h1 { margin-bottom: 12px; }
+  body:not(.k-home) .k .kh-hero__box > .k-lead,
+  body:not(.k-home) .k .kh-hero__lead { margin-bottom: 18px; }
+}

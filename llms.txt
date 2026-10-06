@@ -25,7 +25,7 @@
 - Obklad: hliníkové profily cez celú konštrukciu (voliteľné).
 - Povrch: práškový lak vypálený v peci; výber zo 14 základných farieb, ďalšie odtiene z palety RAL za rozdielnu cenu. Lemovanie atiky je v hliníkovom prevedení s garanciou povrchu 40 rokov.
 - Strecha: pultová z trapézového plechu 0,75 mm s antikondenzačnou vrstvou (v lete chládok, bez kondenzácie a bubnovania dažďa). Odkvapový systém je v cene prístrešku.
-- Výplne bokov: lamely z hliníka, dreva alebo WPC, prípadne plná stena.
+- Výplne bokov: fixné alebo posuvné panely s lamelami z hliníka alebo dreva.
 - Elektro: prípojka vedená vnútri stĺpa, LED v podhľade, príprava na fotovoltiku.
 - Kotvenie: betónové pätky (doplnková služba) alebo kotvenie do existujúcej spevnenej plochy.
 - Rozmery: šírka do 8 m, štandardná svetlá výška 2,4 m.

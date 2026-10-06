@@ -1895,7 +1895,7 @@ if (typeof window !== 'undefined' && !window.kvChat
 
     const RIESENIA = {
       auta: { nazov: 'Prístrešok pre autá', znacka: 'koverta', odkaz: './pristresky-pre-auta/',
-        foto: './assets/koverta-pristresok-auto-golf-lamelova-stena.jpg',
+        foto: './assets/koverta-pristresok-pre-auto-lucenec.jpg',
         preco: 'Oceľová konštrukcia z vlastnej výroby. Pultová strecha z trapézového profilu má lemovanie, odkvap a izoláciu proti prehrievaniu a hluku dažďa; voda odchádza odkvapom a zvodom.' },
       carport: { nazov: 'Carport Soltec', znacka: 'soltec', odkaz: './carport-soltec/',
         foto: './assets/soltec-carport-nitra-hero.jpg',
@@ -3968,7 +3968,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     if (autaItem) {
       const lis = autaItem.querySelectorAll('.kv-mega__rad > li');
       if (lis[0]) {
-        setMenuPhoto(lis[0], 'koverta-pristresok-dve-auta-devin.jpg');
+        setMenuPhoto(lis[0], 'koverta-pristresok-pre-auto-lucenec.jpg');
         addDesc(lis[0], 'Pre 1, 2, 3 a viac áut. Vlastný dizajn a výroba.');
       }
       if (lis[1]) {
@@ -4029,7 +4029,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     }
 
     /* Rovnaké overené fotografie aj v mobilnej zásuvke. */
-    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-dve-auta-devin.jpg');
+    setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-pre-auto-lucenec.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-nitra-hero.jpg');
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-hvozdnica.jpg');
     setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
