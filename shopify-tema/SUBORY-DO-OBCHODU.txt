@@ -463,9 +463,9 @@ koverta-pristresok-garaz-w640.webp	assets/koverta-pristresok-garaz-w640.webp
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w1000.webp
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto-w640.webp
 koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg	assets/koverta-pristresok-jedno-auto-betonova-platna-nove-mesto.jpg
-koverta-pristresok-lamelova-vypln-janovce-w1000.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w1000.webp
-koverta-pristresok-lamelova-vypln-janovce-w640.webp	assets/koverta-pristresok-lamelova-vypln-janovce-w640.webp
-koverta-pristresok-lamelova-vypln-janovce.jpg	assets/koverta-pristresok-lamelova-vypln-janovce.jpg
+koverta-pristresok-lamelove-steny-antracit-w1000.webp	assets/koverta-pristresok-lamelove-steny-antracit-w1000.webp
+koverta-pristresok-lamelove-steny-antracit-w640.webp	assets/koverta-pristresok-lamelove-steny-antracit-w640.webp
+koverta-pristresok-lamelove-steny-antracit.jpg	assets/koverta-pristresok-lamelove-steny-antracit.jpg
 koverta-pristresok-led-osvetlenie-vecer-w1000.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w1000.webp
 koverta-pristresok-led-osvetlenie-vecer-w1600.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w1600.webp
 koverta-pristresok-led-osvetlenie-vecer-w640.webp	assets/koverta-pristresok-led-osvetlenie-vecer-w640.webp
@@ -489,9 +489,9 @@ koverta-pristresok-ram-a-bocna-vypln-w1000.webp	assets/koverta-pristresok-ram-a-
 koverta-pristresok-ram-a-bocna-vypln-w1600.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w1600.webp
 koverta-pristresok-ram-a-bocna-vypln-w640.webp	assets/koverta-pristresok-ram-a-bocna-vypln-w640.webp
 koverta-pristresok-ram-a-bocna-vypln.jpg	assets/koverta-pristresok-ram-a-bocna-vypln.jpg
-koverta-pristresok-trapezova-strecha-lamelove-steny-w1000.webp	assets/koverta-pristresok-trapezova-strecha-lamelove-steny-w1000.webp
-koverta-pristresok-trapezova-strecha-lamelove-steny-w640.webp	assets/koverta-pristresok-trapezova-strecha-lamelove-steny-w640.webp
-koverta-pristresok-trapezova-strecha-lamelove-steny.jpg	assets/koverta-pristresok-trapezova-strecha-lamelove-steny.jpg
+koverta-pristresok-trapezova-strecha-nova-bana-w1000.webp	assets/koverta-pristresok-trapezova-strecha-nova-bana-w1000.webp
+koverta-pristresok-trapezova-strecha-nova-bana-w640.webp	assets/koverta-pristresok-trapezova-strecha-nova-bana-w640.webp
+koverta-pristresok-trapezova-strecha-nova-bana.jpg	assets/koverta-pristresok-trapezova-strecha-nova-bana.jpg
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1000.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w1600.webp
 koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp	assets/koverta-zahradny-pristresok-antracit-lamelova-stena-w640.webp
