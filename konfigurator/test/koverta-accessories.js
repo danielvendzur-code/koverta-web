@@ -6,7 +6,7 @@ const { prepareContext, watchErrors } = require('./browser-qa');
 
 const URL = process.env.KV_URL || 'http://127.0.0.1:8901/konfigurator/?page=koverta';
 const SIDES = ['rear', 'front', 'left', 'right'];
-const MATERIALS = ['kvdrevo', 'kvwpc', 'kvhlinik'];
+const MATERIALS = ['kvdrevo', 'kvhlinik'];
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -521,7 +521,7 @@ function validateAccessoryContacts(snap, label) {
         document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(overflow <= 4, `${device}: accessory configuration causes horizontal overflow: ${overflow}`);
       checkErrors();
-      console.log(`ACCESSORIES_PASS ${device}: drainage, insulation, LED, wood/WPC/aluminium walls, all four wall sides, 4/6-post resize, 7000x5200, 7000x6000, 360-degree rotation`);
+      console.log(`ACCESSORIES_PASS ${device}: drainage, insulation, LED, wood/aluminium walls, all four wall sides, 4/6-post resize, 7000x5200, 7000x6000, 360-degree rotation`);
       await context.close();
     }
   } finally {

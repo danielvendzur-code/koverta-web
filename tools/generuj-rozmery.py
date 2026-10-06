@@ -75,8 +75,8 @@ SABLONY = {
  'koverta': dict(
     nadrad='Prístrešky pre autá', nadradUrl='pristresky-pre-auta',
     cfg='koverta', druh='Prístrešok Koverta',
-    foto='koverta-pristresok-auto-golf-lamelova-stena',
-    fotoAlt='Oceľový prístrešok Koverta s lamelovou bočnou stenou'),
+    foto='koverta-pristresok-pre-auto-lucenec',
+    fotoAlt='Antracitový prístrešok Koverta pre auto pri rodinnom dome'),
  'zahrada': dict(
     nadrad='Záhradné prístrešky', nadradUrl='zahradne-pristresky',
     cfg='zahrada', druh='Záhradný prístrešok Koverta',

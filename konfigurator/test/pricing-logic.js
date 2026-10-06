@@ -127,8 +127,8 @@ async function revealControl(page, selector) {
     assert(catalogue.surcharge && catalogue.surcharge.frame == null && catalogue.surcharge.louver == null,
       'Configurator invented a Koverta colour surcharge');
     assert(JSON.stringify(catalogue.sideOpts.filter(item => item.id !== 'open').map(item => item.id)) === JSON.stringify([
-      'kvdrevo','kvwpc','kvhlinik'
-    ]), 'Current supported Koverta side-wall material set changed');
+      'kvdrevo','kvhlinik'
+    ]), 'Current supported Koverta side-wall material set changed (WPC sa neponúka)');
     /* Kotvenie do betónu aj odkvap so zvodom sú súčasťou zostavy, takže sa
        ako voľba neponúkajú vôbec; izolácia strechy z ponuky doplnkov odišla
        spolu s nimi. Zostáva svetlo a elektrická prípojka. */
