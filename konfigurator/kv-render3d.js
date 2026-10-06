@@ -1323,10 +1323,20 @@ void main() {
        a rezy rovinou), takže vejár stačí a je najlacnejší. */
     stav.nastavScenu = function (plochy, klasifikuj) {
       stav.tienPlatny = false;
-      stav.taaPlatna = false;
       const g = stav.gl;
       let pocetVrcholov = 0;
       for (const f of plochy) if (f.w && f.w.length > 2) pocetVrcholov += (f.w.length - 2) * 3;
+      /* História časového vyhladzovania sa zahadzovala pri každej zmene
+         siete. Pri otváraní lamiel alebo posúvaní krídel sa sieť mení
+         v každom snímku, takže vyhladzovanie nikdy nemalo z čoho brať:
+         každý snímok išiel na plátno sám, posunutý o iný zlomok pixela —
+         obraz zrnil a po zastavení sa naraz vyhladil (trhnutie). Keď
+         ostáva rovnaký počet vrcholov, je to tá istá zostava v inej polohe
+         a história platí ďalej: pohnuté lamely z nej vyreže orezanie
+         rozptylom okolia (FS_TAA), stojace časti ostanú vyhladené. Pri inej
+         zostave (rozmer, doplnok) sa história zahodí ako doteraz. */
+      if (pocetVrcholov !== stav.pocetVrcholovSiete) stav.taaPlatna = false;
+      stav.pocetVrcholovSiete = pocetVrcholov;
       if (!pocetVrcholov) { stav.siet = null; return; }
 
       const PLAVAKOV = 14;
@@ -1528,7 +1538,9 @@ void main() {
          tieňa. Ten rozhoduje o mäkkosti okraja tieňa, nie o jase plochy,
          a pri otáčaní ho oko nestihne prečítať. Rozlíšenie sa neuberá nikdy. */
       stav.kvalita = {
-        tienVzoriek: pohyb ? (st === 0 ? 6 : 8) : (st === 0 ? 12 : 16),
+        /* Silný stroj (stupeň 2) má v pohybe 12 vzoriek tieňa: s ôsmimi bol
+           okraj tieňa lamiel počas otvárania zrnitý a pri zastavení zmäkol. */
+        tienVzoriek: pohyb ? (st === 0 ? 6 : st === 1 ? 8 : 12) : (st === 0 ? 12 : 16),
         ssao: true, ziara: true, podkladDetail: true, stupen: st, pohyb: Boolean(pohyb),
         vzoriek: stav.maxVzoriek
       };
