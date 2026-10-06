@@ -833,10 +833,11 @@ function kvAdresa(kluc, zaloha) {
            doska. Kreslí sa preto po jednej lamele ako telesu a medzera ostáva
            prázdna; plnou plochou s nakreslenými čiarami by sa stena zavrela
            a spoza nej by prestalo byť vidieť. */
-        /* Odmerané z modelu Koverta v Expivi: lamela 100 mm vysoká a 20 mm
-           hrubá, rozteč 140 mm, teda 40 mm medzera. Stena beží od 298 mm nad
-           zemou po 2 218 mm a jej líce sedí 15 mm pod vonkajším lícom rámu. */
-        const KV_SLAT = { pitch: 140, vyska: 100, hrubka: 20, od: 298, po: 2218, zapust: 15 };
+        /* Podľa majiteľa (10/2026): stena má 16 vodorovných lamiel 100 × 25 mm
+           (výška × hĺbka) s medzerou 25 mm, teda rozteč 125 mm. Rad 16 lamiel
+           meria 1 975 mm; stena začína 150 mm nad zemou. Keď je prístrešok
+           nižší, rad sa oreže zhora, viac ako 16 lamiel sa nekreslí. */
+        const KV_SLAT = { pitch: 125, vyska: 100, hrubka: 25, od: 150, po: 2400, zapust: 15, kusov: 16 };
         const KV_TONE = { drevo: '#a8845c', wpc: '#7c6a5c' };
         /* the tone of the board at a given height, the same on every face */
         const boardTone = (k, hex) => {
@@ -1402,6 +1403,22 @@ function kvAdresa(kluc, zaloha) {
           }
           const xi = side === 'left' ? 0 : n - 1;
           const r = rez(xi);
+          /* Zadná stena Koverty (strana `left`) z lamiel stojí za zadnou
+             stranou prístrešku: celá je za stĺpmi a beží cez celú šírku od
+             vonkajšieho líca jedného rohového stĺpa po druhé. Predná a ostatné
+             výplne ostávajú medzi stĺpmi. */
+          if (side === 'left' && model().roofKit === 'koverta' && KV_MAT[state.sides.left]) {
+            const gwZa = Math.round(Math.min(r.d, r.w) * 0.42);
+            return {
+              axis: 'y',
+              out: -1,
+              vFace: xs[xi] - gwZa - 2,
+              runFrom: vsun,
+              runTo: W - vsun,
+              cuts: [],
+              guideScale: Math.min(r.d, r.w)
+            };
+          }
           const vFace = side === 'left' ? xs[xi] : xs[xi] + r.d;
           return {
             axis: 'y',
@@ -4179,7 +4196,7 @@ function kvAdresa(kluc, zaloha) {
                 const embed = Math.min(KV_SLAT.zapust, Math.max(0, gw - 2)) / Math.max(1, uLen);
                 const slatT0 = Math.max(0, t0 - embed);
                 const slatT1 = Math.min(1, t1 + embed);
-                const n = Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                const n = Math.min(KV_SLAT.kusov, Math.floor((po - od + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch));
                 for (let i = 0; i < Math.min(n, 40); i++) {
                   const a = od + KV_SLAT.pitch * i;
                   const tone = mat === 'drevo' ? boardTone(i, KV_TONE.drevo)
@@ -4205,7 +4222,7 @@ function kvAdresa(kluc, zaloha) {
                 /* Horný profil sedí tesne na hornej lamele, rovnako ako spodný
                    pri spodnej — nie hore pod strechou s medzerou nad lamelami. */
                 const lamelaOd = zBase + gw;
-                const kusov = Math.floor((zTop - gw - lamelaOd + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch);
+                const kusov = Math.min(KV_SLAT.kusov, Math.floor((zTop - gw - lamelaOd + (KV_SLAT.pitch - KV_SLAT.vyska)) / KV_SLAT.pitch));
                 if (kusov > 0) zTop = Math.min(zTop, lamelaOd + KV_SLAT.pitch * (Math.min(kusov, 40) - 1) + KV_SLAT.vyska + gw);
                 const frameZ0 = zBase;
                 const frameZ1 = Math.max(frameZ0 + gw, zTop);
