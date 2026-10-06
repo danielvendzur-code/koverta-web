@@ -7082,7 +7082,10 @@ function kvAdresa(kluc, zaloha) {
             syncLouverReadout();
           };
           window.requestAnimationFrame(run);
-          stageTimer = window.setTimeout(run, 60);
+          /* Záloha len pre skrytú kartu, kde rAF nepríde. Pri 60 ms na
+             pomalšej grafike časovač predbiehal snímok prehliadača a
+             kreslilo sa mimo rytmu displeja — pohyb lamiel trhal. */
+          stageTimer = window.setTimeout(run, document.hidden ? 60 : 250);
         };
 
         let louverRun = 0, moverTimer = 0;
