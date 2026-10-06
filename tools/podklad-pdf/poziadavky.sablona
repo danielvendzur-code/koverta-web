@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Technické požiadavky na podklad prístrešku Koverta</title>
+<style>
+  @font-face { font-family: Archivo; src: url(../../assets/pismo/archivo-latin-v2.woff2) format("woff2"); font-weight: 400 800; unicode-range: U+0-FF,U+2000-206F,U+20AC; }
+  @font-face { font-family: Archivo; src: url(../../assets/pismo/archivo-latin-ext-v2.woff2) format("woff2"); font-weight: 400 800; unicode-range: U+100-2FF; }
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10pt/1.5 Archivo, Arial, sans-serif; color: #12171a; }
+  .titul { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
+  .titul img.logo { width: 62mm; }
+  .titul h1 { margin: 0; font-size: 34pt; line-height: 1.08; font-weight: 750; letter-spacing: -0.01em; }
+  .titul h1 span { display: block; width: 26mm; height: 2.4mm; background: #ffcc00; margin-bottom: 9mm; }
+  .titul p { margin: 6mm 0 0; font-size: 12pt; color: #4a5563; }
+  .titul .datum { font-size: 9.5pt; color: #6b7075; }
+  section { page-break-after: always; }
+  section:last-of-type { page-break-after: auto; }
+  .hlava { display: flex; align-items: baseline; gap: 5mm; border-bottom: 0.4mm solid #12171a; padding-bottom: 2.5mm; margin-bottom: 5mm; }
+  .hlava b { font-size: 22pt; color: #8a6600; font-weight: 750; }
+  .hlava h2 { margin: 0; font-size: 15pt; font-weight: 700; }
+  figure { margin: 0 0 5mm; }
+  figure img { width: 100%; border-radius: 2mm; display: block; }
+  dl { display: grid; grid-template-columns: 34mm 1fr; gap: 1.6mm 4mm; margin: 0 0 4mm; }
+  dt { font-weight: 700; }
+  dd { margin: 0; }
+  p { margin: 0 0 2.6mm; }
+  ol { margin: 0; padding-left: 5mm; }
+  ol li { margin-bottom: 2.4mm; }
+  .pozn { color: #4a5563; font-size: 9pt; }
+  footer { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 8pt; color: #6b7075; display: flex; justify-content: space-between; border-top: 0.2mm solid #d9d7d2; padding-top: 2mm; }
+</style>
+</head>
+<body>
+<footer><span>Venaco s.r.o. · IČO 45648107 · IČ DPH SK2023076407 · J. C. Hronského 3427/6, 949 07 Nitra</span><span>+421 948 482 266 · obchod@koverta.sk · koverta.sk</span></footer>
+
+<div class="titul">
+  <img class="logo" src="../../assets/koverta-logo.svg" alt="Koverta">
+  <div>
+    <h1><span></span>Technické požiadavky<br>na podklad a montáž<br>prístrešku</h1>
+    <p>Platné pre všetky prístrešky Koverta. Podklad si môžete pripraviť sami podľa týchto požiadaviek a dodaného projektu, alebo ho na želanie zhotovíme my.</p>
+  </div>
+  <p class="datum">Vydanie 6. 10. 2026</p>
+</div>
+
+<section>
+  <div class="hlava"><b>01</b><h2>Monolitické betónové základové pätky</h2></div>
+  <figure><img src="../../assets/koverta-podklad-patky.webp" alt=""></figure>
+  <dl>
+    <dt>Rozmery</dt><dd>min. 500 × 500 mm (šírka × dĺžka); presné rozmery a počet pätiek závisia od zvoleného prístrešku a sú v projekte</dd>
+    <dt>Hĺbka založenia</dt><dd>do nezámrznej hĺbky, minimálne však 600 mm</dd>
+    <dt>Vrch pätky</dt><dd>min. 100 mm pod hornou hranou dlažby (60 mm dlažba + 40 mm drvené kamenivo 4–8 mm)</dd>
+    <dt>Podklad</dt><dd>štrkové lôžko, lomový kameň – makadam 0–32 mm, min. hrúbka 150 mm, zhutnené</dd>
+    <dt>Výstuž</dt><dd>betonárska výstuž ⌀10 / 150 × 150 mm vo všetkých smeroch (výstuž odfotiť alebo naznačiť na betóne kvôli neskoršiemu vŕtaniu kotiev)</dd>
+    <dt>Betón</dt><dd>STN EN 206-1 – C20/25 XC2, XF2 (SK) – Cl 0,4 – Dmax 22 – S3</dd>
+  </dl>
+  <p>Pätky je možné zhotoviť s použitím betónových debniacich tvárnic, výkopom do rastlého terénu zaliateho prostým betónom alebo železobetónom, prípadne kombináciou oboch možností.</p>
+  <p>Dlažbu a podkladné vrstvy v mieste oceľovej konštrukcie osaďte až po zakotvení konštrukcie. Maximálny sklon plochy státia je 1,0–1,5 %, sklon vyhotovte v kratšom smere.</p>
+</section>
+
+<section>
+  <div class="hlava"><b>02</b><h2>Monolitická betónová základová doska</h2></div>
+  <figure><img src="../../assets/koverta-podklad-platna.webp" alt=""></figure>
+  <dl>
+    <dt>Rozmery</dt><dd>minimálna hrúbka 150 mm, šírka × dĺžka podľa zvoleného prístrešku</dd>
+    <dt>Podklad</dt><dd>štrkové lôžko, lomový kameň – makadam 0–32 mm, min. hrúbka 150 mm, zhutnené</dd>
+    <dt>Výstuž</dt><dd>zváraná oceľová výstuž, KARI rohož ⌀8 / 150 × 150 mm pri oboch povrchoch</dd>
+    <dt>Betón</dt><dd>STN EN 206-1 – C20/25 XC2, XF2 (SK) – Cl 0,4 – Dmax 22 – S3</dd>
+  </dl>
+  <p>Vodorovný podklad je základná požiadavka pre úspešnú montáž a dodržanie kolmosti stĺpov. Maximálny sklon plochy státia je 1,0–1,5 %, sklon vyhotovte v kratšom smere. Pri doske priliehajúcej k existujúcej budove treba zabezpečiť dilatačnú medzeru.</p>
+  <p>Hrúbka dosky je dôležitá pre pevné ukotvenie: stĺpy sa kotvia mechanickými alebo chemickými kotvami, ktoré vyžadujú minimálnu hĺbku betónu. Minimálna vzdialenosť kotvy od okraja betónu je 150 mm.</p>
+</section>
+
+<section>
+  <div class="hlava"><b>03</b><h2>Monolitické betónové základové pásy</h2></div>
+  <figure><img src="../../assets/koverta-podklad-pasy.webp" alt=""></figure>
+  <dl>
+    <dt>Rozmery</dt><dd>min. šírka 300 mm, min. hĺbka 600 mm, minimálne však do nezámrznej hĺbky; celkové rozmery podľa zvoleného prístrešku</dd>
+    <dt>Podklad</dt><dd>štrkové lôžko, lomový kameň – makadam 0–32 mm, min. hrúbka 150 mm, zhutnené</dd>
+    <dt>Výstuž</dt><dd>3 + 2 + 3 ⌀10 hlavná výstuž, strmene ⌀8 / 250 mm (výstuž odfotiť alebo naznačiť na betóne v mieste kotvenia)</dd>
+    <dt>Betón</dt><dd>STN EN 206-1 – C20/25 XC2, XF2 (SK) – Cl 0,4 – Dmax 22 – S3</dd>
+  </dl>
+  <p>Základový pás musí byť po celej dĺžke výškovo dorovnaný. Vodorovnosť je základná požiadavka pre úspešnú montáž a dodržanie kolmosti stĺpov. Maximálny sklon plochy státia je 1,0–1,5 %, sklon vyhotovte v kratšom smere.</p>
+</section>
+
+<section>
+  <div class="hlava"><b>04</b><h2>Všeobecné podmienky pre všetky druhy podkladu</h2></div>
+  <ol>
+    <li>Os základových konštrukcií osaďte na os stĺpov oceľovej konštrukcie, maximálna odchýlka ±50 mm.</li>
+    <li>Výškové odsadenie hornej hrany dvoch susedných základov je maximálne ±50 mm v smere sklonu a ±10 mm v smere rovinnosti.</li>
+    <li>Odchýlka vodorovnosti hornej hrany základov v mieste kotvenia je maximálne ±5 mm.</li>
+    <li>Spodnú hranu základových konštrukcií osaďte do nezámrznej hĺbky, minimálne však 600 mm.</li>
+    <li>Ak niektorú z uvedených požiadaviek nie je možné dodržať, vopred o tom informujte realizátora oceľovej konštrukcie.</li>
+  </ol>
+  <p class="pozn" style="margin-top:6mm">Presné rozmery, počet a rozmiestnenie základov dostanete v projekte spolu s cenovou ponukou. S prípravou podkladu vám radi poradíme: +421 948 482 266, obchod@koverta.sk.</p>
+</section>
+</body>
+</html>

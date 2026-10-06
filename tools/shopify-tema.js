@@ -236,7 +236,7 @@ const KATALOGY_V_OBCHODE = {
   'katalogy/soltec-pevne-prestresenia-2026-sk.pdf': 'katalog-soltec-pevne-prestresenia-2026.pdf',
   'katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf': 'katalog-soltec-tienenie-a-doplnky-2026.pdf',
   'katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf': 'katalog-soltec-vonkajsie-kuchyne-2026.pdf',
-  'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad.pdf',
+  'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad-2026-10.pdf',
 };
 
 function naSubor(url) {
