@@ -858,7 +858,7 @@ function kvAdresa(kluc, zaloha) {
         };
 
         /* Výplne bokov sú Soltec cenník. Prístrešky Koverta majú vlastné —
-           lamely z dreva, WPC alebo hliníka — a nič iné. Zoznam preto smie
+           lamely z dreva alebo hliníka — a nič iné. Zoznam preto smie
            prísť z dát stránky; keď nepríde, ostáva Soltec. */
         const SOLTEC_SIDE_OPTS = [
           { id: 'open',  label: 'Otvorená',                     note: 'bez výplne' },

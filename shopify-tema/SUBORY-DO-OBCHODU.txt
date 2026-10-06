@@ -436,10 +436,6 @@ koverta-podklad-patky-w800.webp	assets/koverta-podklad-patky-w800.webp
 koverta-podklad-patky.webp	assets/koverta-podklad-patky.webp
 koverta-podklad-platna-w800.webp	assets/koverta-podklad-platna-w800.webp
 koverta-podklad-platna.webp	assets/koverta-podklad-platna.webp
-koverta-pristresok-auto-golf-lamelova-stena-w1000.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w1000.webp
-koverta-pristresok-auto-golf-lamelova-stena-w1600.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w1600.webp
-koverta-pristresok-auto-golf-lamelova-stena-w640.webp	assets/koverta-pristresok-auto-golf-lamelova-stena-w640.webp
-koverta-pristresok-auto-golf-lamelova-stena.jpg	assets/koverta-pristresok-auto-golf-lamelova-stena.jpg
 koverta-pristresok-auto-trnava-hero-w1000.webp	assets/koverta-pristresok-auto-trnava-hero-w1000.webp
 koverta-pristresok-auto-trnava-hero-w640.webp	assets/koverta-pristresok-auto-trnava-hero-w640.webp
 koverta-pristresok-auto-trnava-hero.jpg	assets/koverta-pristresok-auto-trnava-hero.jpg
