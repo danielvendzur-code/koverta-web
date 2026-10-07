@@ -1185,6 +1185,8 @@ soltec-prestresenie-rez-zelena.webp	assets/soltec-prestresenie-rez-zelena.webp
 soltec-prestresenie-vchod-lamely-w1000.webp	assets/soltec-prestresenie-vchod-lamely-w1000.webp
 soltec-prestresenie-vchod-lamely-w640.webp	assets/soltec-prestresenie-vchod-lamely-w640.webp
 soltec-prestresenie-vchod-lamely.jpg	assets/soltec-prestresenie-vchod-lamely.jpg
+soltec-prestresenie-zelena-strecha-w640.webp	assets/soltec-prestresenie-zelena-strecha-w640.webp
+soltec-prestresenie-zelena-strecha.jpg	assets/soltec-prestresenie-zelena-strecha.jpg
 soltec-roof-glass-w1000.webp	assets/soltec-roof-glass-w1000.webp
 soltec-roof-glass-w640.webp	assets/soltec-roof-glass-w640.webp
 soltec-roof-glass.jpg	assets/soltec-roof-glass.jpg
