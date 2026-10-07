@@ -1050,10 +1050,9 @@ soltec-carport-2cars-box-w1000.webp	assets/soltec-carport-2cars-box-w1000.webp
 soltec-carport-2cars-box-w1600.webp	assets/soltec-carport-2cars-box-w1600.webp
 soltec-carport-2cars-box-w640.webp	assets/soltec-carport-2cars-box-w640.webp
 soltec-carport-2cars-box.jpg	assets/soltec-carport-2cars-box.jpg
-soltec-carport-box-real-w1000.webp	assets/soltec-carport-box-real-w1000.webp
-soltec-carport-box-real-w1600.webp	assets/soltec-carport-box-real-w1600.webp
-soltec-carport-box-real-w640.webp	assets/soltec-carport-box-real-w640.webp
-soltec-carport-box-real.jpg	assets/soltec-carport-box-real.jpg
+soltec-carport-box-bezovy-dom-w1000.webp	assets/soltec-carport-box-bezovy-dom-w1000.webp
+soltec-carport-box-bezovy-dom-w640.webp	assets/soltec-carport-box-bezovy-dom-w640.webp
+soltec-carport-box-bezovy-dom.jpg	assets/soltec-carport-box-bezovy-dom.jpg
 soltec-carport-drevene-oplastenie-boxu-w1000.webp	assets/soltec-carport-drevene-oplastenie-boxu-w1000.webp
 soltec-carport-drevene-oplastenie-boxu-w1600.webp	assets/soltec-carport-drevene-oplastenie-boxu-w1600.webp
 soltec-carport-drevene-oplastenie-boxu-w640.webp	assets/soltec-carport-drevene-oplastenie-boxu-w640.webp
@@ -1065,6 +1064,9 @@ soltec-carport-f240-real-w1000.webp	assets/soltec-carport-f240-real-w1000.webp
 soltec-carport-f240-real-w1600.webp	assets/soltec-carport-f240-real-w1600.webp
 soltec-carport-f240-real-w640.webp	assets/soltec-carport-f240-real-w640.webp
 soltec-carport-f240-real.jpg	assets/soltec-carport-f240-real.jpg
+soltec-carport-montaz-w1000.webp	assets/soltec-carport-montaz-w1000.webp
+soltec-carport-montaz-w640.webp	assets/soltec-carport-montaz-w640.webp
+soltec-carport-montaz.jpg	assets/soltec-carport-montaz.jpg
 soltec-carport-nakres-f170-1-auto.webp	assets/soltec-carport-nakres-f170-1-auto.webp
 soltec-carport-nakres-f170-box.webp	assets/soltec-carport-nakres-f170-box.webp
 soltec-carport-nakres-f170-predlzeny.webp	assets/soltec-carport-nakres-f170-predlzeny.webp
