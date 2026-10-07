@@ -14643,3 +14643,37 @@ body.ma-kh-modal { overflow: hidden; }
   body:not(.k-home) .k .kh-hero__box > .k-lead,
   body:not(.k-home) .k .kh-hero__lead { margin-bottom: 18px; }
 }
+
+/* Carport Soltec: rám má sedem odtieňov, zateplený panel dvojfarebné
+   kombinácie (zvrchu / zospodu), preto je vzorka rozdelená uhlopriečne. */
+.k .kh-odtiene__nadpis { margin: clamp(22px, 2.4vw, 30px) 0 0; font-family: var(--k-head); font-size: 15px; font-weight: 700; color: var(--k-white); }
+.k .kh-odtiene__nadpis span { display: block; margin-top: 4px; font-family: inherit; font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.62); }
+.k .kh-vzor .kh-odtiene--7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.k .kh-vzor .kh-odtiene--duo { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.k .kh-odtiene--duo .kh-odtien i { background: linear-gradient(135deg, var(--odtien) 50%, var(--odtien2) 50%); }
+@media (max-width: 719px) {
+  .k .kh-vzor .kh-odtiene--7, .k .kh-vzor .kh-odtiene--duo { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Carport Soltec: modely a rozmery. Rad = model, karty = varianty bez boxu
+   a s boxom. Na telefóne sa karty posúvajú do strany, aby stránka nebola
+   o dvanásť obrazoviek dlhšia. */
+.k .kh-typy__rad { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: clamp(22px, 2.6vw, 34px) 0; border-top: 1px solid rgba(18,23,26,.14); }
+.k .kh-typy__rad:first-of-type { border-top: 0; }
+.k .kh-typy__hlava { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 4px 16px; }
+.k .kh-typy__kod { margin: 0; font-family: var(--k-head); font-size: clamp(26px, 2.4vw, 36px); line-height: 1; letter-spacing: -.02em; }
+.k .kh-typy__pod { margin: 0; font-weight: 700; color: #4b5357; }
+.k .kh-typy__popis { grid-column: 1 / -1; margin: 6px 0 0; max-width: 92ch; font-size: 15px; line-height: 1.55; color: #5d6569; }
+.k .kh-typy__karty { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.k .kh-typy__karta { display: flex; flex-direction: column; min-width: 0; padding: 0 0 18px; overflow: hidden; background: #fff; border: 1px solid rgba(18,23,26,.14); border-radius: 18px; }
+.k .kh-typy__karta img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; border-bottom: 1px solid rgba(18,23,26,.08); }
+.k .kh-typy__karta h4 { margin: 16px 18px 6px; font-family: var(--k-head); font-size: 18px; line-height: 1.2; }
+.k .kh-typy__karta p { margin: 0 18px 12px; font-size: 14px; line-height: 1.5; color: #5d6569; }
+.k .kh-typy__karta dl { display: grid; margin: auto 18px 0; border-top: 1px solid rgba(18,23,26,.12); }
+.k .kh-typy__karta dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(18,23,26,.08); font-size: 14px; }
+.k .kh-typy__karta dt { color: #687074; }
+.k .kh-typy__karta dd { margin: 0; text-align: right; font-weight: 700; }
+@media (max-width: 899px) {
+  .k .kh-typy__karty { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(260px, 78%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .k .kh-typy__karta { scroll-snap-align: start; }
+}
