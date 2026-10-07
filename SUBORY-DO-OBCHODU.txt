@@ -1093,10 +1093,10 @@ soltec-carport-plavecky-04.jpg	assets/soltec-carport-plavecky-04.jpg
 soltec-carport-plavecky-05-w1000.webp	assets/soltec-carport-plavecky-05-w1000.webp
 soltec-carport-plavecky-05-w640.webp	assets/soltec-carport-plavecky-05-w640.webp
 soltec-carport-plavecky-05.jpg	assets/soltec-carport-plavecky-05.jpg
+soltec-carport-povazany-w1000.webp	assets/soltec-carport-povazany-w1000.webp
+soltec-carport-povazany-w640.webp	assets/soltec-carport-povazany-w640.webp
+soltec-carport-povazany.jpg	assets/soltec-carport-povazany.jpg
 soltec-carport-trencin-w1000.webp	assets/soltec-carport-trencin-w1000.webp
-soltec-carport-trencin-w1600.webp	assets/soltec-carport-trencin-w1600.webp
-soltec-carport-trencin-w640.webp	assets/soltec-carport-trencin-w640.webp
-soltec-carport-trencin.jpg	assets/soltec-carport-trencin.jpg
 soltec-carport-vstup-garaz-w1000.webp	assets/soltec-carport-vstup-garaz-w1000.webp
 soltec-carport-vstup-garaz-w640.webp	assets/soltec-carport-vstup-garaz-w640.webp
 soltec-carport-vstup-garaz.jpg	assets/soltec-carport-vstup-garaz.jpg
@@ -1180,6 +1180,9 @@ soltec-sklenene-posuvne-panely-a-brisoleje.jpg	assets/soltec-sklenene-posuvne-pa
 soltec-tienenie-lamely-velka-luka-w1000.webp	assets/soltec-tienenie-lamely-velka-luka-w1000.webp
 soltec-tienenie-lamely-velka-luka-w640.webp	assets/soltec-tienenie-lamely-velka-luka-w640.webp
 soltec-tienenie-lamely-velka-luka.jpg	assets/soltec-tienenie-lamely-velka-luka.jpg
+soltec-tienenie-posuvne-panely-balkon-w1000.webp	assets/soltec-tienenie-posuvne-panely-balkon-w1000.webp
+soltec-tienenie-posuvne-panely-balkon-w640.webp	assets/soltec-tienenie-posuvne-panely-balkon-w640.webp
+soltec-tienenie-posuvne-panely-balkon.jpg	assets/soltec-tienenie-posuvne-panely-balkon.jpg
 soltec-tienenie-posuvne-panely-h50.jpg	assets/soltec-tienenie-posuvne-panely-h50.jpg
 soltec-vstupny-pristresok-dekorovy-podhlad-detail-w1000.webp	assets/soltec-vstupny-pristresok-dekorovy-podhlad-detail-w1000.webp
 soltec-vstupny-pristresok-dekorovy-podhlad-detail-w1600.webp	assets/soltec-vstupny-pristresok-dekorovy-podhlad-detail-w1600.webp
