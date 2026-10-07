@@ -14677,3 +14677,13 @@ body.ma-kh-modal { overflow: hidden; }
   .k .kh-typy__karty { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(260px, 78%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
   .k .kh-typy__karta { scroll-snap-align: start; }
 }
+
+/* Pevné prestrešenia: dva nákresy na model (4 a 6 stĺpov), strechy radu G
+   s fotografiou aj rezom a mriežka príslušenstva. */
+.k .kh-typy__karty--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.k .kh-typy__karty--doplnky { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.k .kh-typy__karty--doplnky .kh-typy__karta img { aspect-ratio: 4 / 3; object-fit: cover; }
+.k .kh-typy__karta img.kh-typy__rez { aspect-ratio: auto; object-fit: contain; padding: 22px 18px 8px; }
+@media (max-width: 899px) {
+  .k .kh-typy__karty--2, .k .kh-typy__karty--doplnky { grid-template-columns: none; }
+}
