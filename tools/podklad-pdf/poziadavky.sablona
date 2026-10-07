@@ -29,11 +29,9 @@
   ol { margin: 0; padding-left: 5mm; }
   ol li { margin-bottom: 2.4mm; }
   .pozn { color: #4a5563; font-size: 9pt; }
-  footer { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 8pt; color: #6b7075; display: flex; justify-content: space-between; border-top: 0.2mm solid #d9d7d2; padding-top: 2mm; }
 </style>
 </head>
 <body>
-<footer><span>Venaco s.r.o. · IČO 45648107 · IČ DPH SK2023076407 · J. C. Hronského 3427/6, 949 07 Nitra</span><span>+421 948 482 266 · obchod@koverta.sk · koverta.sk</span></footer>
 
 <div class="titul">
   <img class="logo" src="../../assets/koverta-logo.svg" alt="Koverta">

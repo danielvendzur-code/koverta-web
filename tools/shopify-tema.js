@@ -236,7 +236,7 @@ const KATALOGY_V_OBCHODE = {
   'katalogy/soltec-pevne-prestresenia-2026-sk.pdf': 'katalog-soltec-pevne-prestresenia-2026.pdf',
   'katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf': 'katalog-soltec-tienenie-a-doplnky-2026.pdf',
   'katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf': 'katalog-soltec-vonkajsie-kuchyne-2026.pdf',
-  'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad-2026-10.pdf',
+  'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad-2026-10-07.pdf',
 };
 
 function naSubor(url) {
@@ -740,6 +740,34 @@ ${canonVetvy()}
 {%- endif %}
 {%- render 'kv-og', page: page, product: product, collection: collection, template: template, request: request %}
 {{ content_for_header }}
+{%- comment -%} Súhlas vracajúceho sa návštevníka (cookie Consentiku) pošle
+  consent update ešte pred GTM. Consentik ho inak pošle až po načítaní
+  stránky a zobrazenie stránky odíde bez súhlasu, takže Analytics stratí
+  zdroj návštevy. Musí byť za Consentikom (prepisuje dataLayer) a pred GTM.
+  Kód dodala marketingová agentúra. {%- endcomment -%}
+<script>
+(function () {
+  var m = document.cookie.match(/(?:^|;\\s*)cookiesNotification=([^;]+)/);
+  if (!m) return; // novy navstevnik, suhlas este nedal
+  var cats;
+  try { cats = JSON.parse(decodeURIComponent(m[1]))[0].categoriesSelected || []; }
+  catch (e) { return; }
+  function st(c) { return cats.indexOf(c) > -1 ? 'granted' : 'denied'; }
+  window.dataLayer = window.dataLayer || [];
+  function g() { window.dataLayer.push(arguments); }
+  // Rovnake mapovanie kategorii ako pouziva samotny Consentik
+  g('consent', 'update', {
+    ad_storage: st('marketing'),
+    ad_user_data: st('marketing'),
+    ad_personalization: st('marketing'),
+    analytics_storage: st('analytics'),
+    functionality_storage: st('necessary'),
+    personalization_storage: st('preferences'),
+    security_storage: st('necessary'),
+    cst_update: 'granted' // bez tohto kluca Consentik update zahodi
+  });
+})();
+</script>
 <style data-k-shopify-zaklad>${fs.readFileSync(path.join(KOREN, 'shopify-zdroj/assets/koverta-shopify.css'), 'utf8')}</style>
 ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).map((p) => p === '<!-- KOVERTA-STYL-STRANKY -->' ? stylyStranok(v) : p).join('\n')}
 {%- comment -%} Konfigurátor: jeho štýly musia byť v hlavičke. V tele stránky
