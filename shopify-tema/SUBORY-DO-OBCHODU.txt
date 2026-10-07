@@ -1034,6 +1034,9 @@ soltec-canopy-f170-real-w1000.webp	assets/soltec-canopy-f170-real-w1000.webp
 soltec-canopy-f170-real-w1600.webp	assets/soltec-canopy-f170-real-w1600.webp
 soltec-canopy-f170-real-w640.webp	assets/soltec-canopy-f170-real-w640.webp
 soltec-canopy-f170-real.jpg	assets/soltec-canopy-f170-real.jpg
+soltec-canopy-glassport-pool-w1000.webp	assets/soltec-canopy-glassport-pool-w1000.webp
+soltec-canopy-glassport-pool-w640.webp	assets/soltec-canopy-glassport-pool-w640.webp
+soltec-canopy-glassport-pool.jpg	assets/soltec-canopy-glassport-pool.jpg
 soltec-canopy-hero-w1000.webp	assets/soltec-canopy-hero-w1000.webp
 soltec-canopy-hero-w1600.webp	assets/soltec-canopy-hero-w1600.webp
 soltec-canopy-hero-w640.webp	assets/soltec-canopy-hero-w640.webp
@@ -1166,6 +1169,9 @@ soltec-pergola-zip-roleta-nad-terasou-w1000.webp	assets/soltec-pergola-zip-rolet
 soltec-pergola-zip-roleta-nad-terasou-w1600.webp	assets/soltec-pergola-zip-roleta-nad-terasou-w1600.webp
 soltec-pergola-zip-roleta-nad-terasou-w640.webp	assets/soltec-pergola-zip-roleta-nad-terasou-w640.webp
 soltec-pergola-zip-roleta-nad-terasou.jpg	assets/soltec-pergola-zip-roleta-nad-terasou.jpg
+soltec-prestresenie-f-terasa-pri-dome-w1000.webp	assets/soltec-prestresenie-f-terasa-pri-dome-w1000.webp
+soltec-prestresenie-f-terasa-pri-dome-w640.webp	assets/soltec-prestresenie-f-terasa-pri-dome-w640.webp
+soltec-prestresenie-f-terasa-pri-dome.jpg	assets/soltec-prestresenie-f-terasa-pri-dome.jpg
 soltec-prestresenie-nakres-f170-4-stlpy.webp	assets/soltec-prestresenie-nakres-f170-4-stlpy.webp
 soltec-prestresenie-nakres-f170-6-stlpy.webp	assets/soltec-prestresenie-nakres-f170-6-stlpy.webp
 soltec-prestresenie-nakres-f240-4-stlpy.webp	assets/soltec-prestresenie-nakres-f240-4-stlpy.webp
@@ -1176,7 +1182,9 @@ soltec-prestresenie-nakres-g240-4-stlpy.webp	assets/soltec-prestresenie-nakres-g
 soltec-prestresenie-nakres-g240-6-stlpy.webp	assets/soltec-prestresenie-nakres-g240-6-stlpy.webp
 soltec-prestresenie-rez-sklo.webp	assets/soltec-prestresenie-rez-sklo.webp
 soltec-prestresenie-rez-zelena.webp	assets/soltec-prestresenie-rez-zelena.webp
-soltec-prestresenie-vchod.webp	assets/soltec-prestresenie-vchod.webp
+soltec-prestresenie-vchod-lamely-w1000.webp	assets/soltec-prestresenie-vchod-lamely-w1000.webp
+soltec-prestresenie-vchod-lamely-w640.webp	assets/soltec-prestresenie-vchod-lamely-w640.webp
+soltec-prestresenie-vchod-lamely.jpg	assets/soltec-prestresenie-vchod-lamely.jpg
 soltec-roof-glass-w1000.webp	assets/soltec-roof-glass-w1000.webp
 soltec-roof-glass-w640.webp	assets/soltec-roof-glass-w640.webp
 soltec-roof-glass.jpg	assets/soltec-roof-glass.jpg
@@ -1195,3 +1203,6 @@ soltec-vstupny-pristresok-dreveny-podhlad-led-w1000.webp	assets/soltec-vstupny-p
 soltec-vstupny-pristresok-dreveny-podhlad-led-w1600.webp	assets/soltec-vstupny-pristresok-dreveny-podhlad-led-w1600.webp
 soltec-vstupny-pristresok-dreveny-podhlad-led-w640.webp	assets/soltec-vstupny-pristresok-dreveny-podhlad-led-w640.webp
 soltec-vstupny-pristresok-dreveny-podhlad-led.jpg	assets/soltec-vstupny-pristresok-dreveny-podhlad-led.jpg
+soltec-zelena-strecha-detail-w1000.webp	assets/soltec-zelena-strecha-detail-w1000.webp
+soltec-zelena-strecha-detail-w640.webp	assets/soltec-zelena-strecha-detail-w640.webp
+soltec-zelena-strecha-detail.jpg	assets/soltec-zelena-strecha-detail.jpg
