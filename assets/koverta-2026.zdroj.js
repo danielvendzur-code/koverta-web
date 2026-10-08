@@ -60,18 +60,16 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
   });
 }
 
-/* Košík pre Tag Manager: pridanie do košíka a prechod k objednávke. Nákup
-   samotný prebieha v pokladni Shopify a meria ho aplikácia Google & YouTube. */
+/* Pridanie do košíka meria Google & YouTube po úspechu Shopify.
+   Samostatný submit nie je potvrdením pridania; neposielame druhú udalosť.
+   Prechod k objednávke zatiaľ ponechávame do overenia hlavnej cesty. */
 if (typeof document !== 'undefined' && !document.kvKosikMeranie) {
   document.kvKosikMeranie = true;
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (!f || !f.getAttribute) return;
     var akcia = f.getAttribute('action') || '';
-    if (/\/cart\/add/.test(akcia)) {
-      var cena = document.querySelector('meta[property="og:price:amount"]');
-      kvMeraj('add_to_cart', { currency: 'EUR', value: cena ? Number(cena.getAttribute('content')) || undefined : undefined });
-    } else if (/\/cart\b/.test(akcia) && e.submitter && e.submitter.name === 'checkout') {
+    if (/\/cart\b/.test(akcia) && !/\/cart\/add/.test(akcia) && e.submitter && e.submitter.name === 'checkout') {
       kvMeraj('begin_checkout', { currency: 'EUR' });
     }
   });
