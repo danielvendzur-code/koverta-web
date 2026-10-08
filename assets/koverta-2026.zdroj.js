@@ -60,6 +60,23 @@ if (typeof document !== 'undefined' && !document.kvTelefonMeranie) {
   });
 }
 
+/* Košík pre Tag Manager: pridanie do košíka a prechod k objednávke. Nákup
+   samotný prebieha v pokladni Shopify a meria ho aplikácia Google & YouTube. */
+if (typeof document !== 'undefined' && !document.kvKosikMeranie) {
+  document.kvKosikMeranie = true;
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f || !f.getAttribute) return;
+    var akcia = f.getAttribute('action') || '';
+    if (/\/cart\/add/.test(akcia)) {
+      var cena = document.querySelector('meta[property="og:price:amount"]');
+      kvMeraj('add_to_cart', { currency: 'EUR', value: cena ? Number(cena.getAttribute('content')) || undefined : undefined });
+    } else if (/\/cart\b/.test(akcia) && e.submitter && e.submitter.name === 'checkout') {
+      kvMeraj('begin_checkout', { currency: 'EUR' });
+    }
+  });
+}
+
 /* Chat poradcu (repo koverta-chatbot-backend). Skript nemá čo robiť pri
    prvom vykreslení, preto sa stiahne až po prvom pohybe, dotyku, klávese
    alebo scrollovaní; tlačidlo chatu v lište ho stiahne a hneď otvorí.
