@@ -51,10 +51,19 @@
   w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
   j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  /* GTM sa pripojí až po načítaní stránky: úvodná fotka a text sa ukážu
-     skôr a telefón počas načítania nič neblokuje. Súhlas, dopyt aj klik na
-     telefón medzitým čakajú v dataLayer a GTM ich spracuje hneď po pripojení. */
-  w.addEventListener('load', function () { f.parentNode.insertBefore(j, f); });
+  /* GTM sa pripojí pri prvom dotyku, scrollovaní, pohybe myši či klávese,
+     najneskôr 6 s po načítaní stránky. Úvod sa tak vykreslí a ovláda bez
+     čakania na značky. Súhlas, dopyt aj klik na telefón medzitým čakajú
+     v dataLayer a GTM ich spracuje hneď po pripojení. */
+  var hotovo = false, udalosti = ['pointerdown', 'touchstart', 'scroll', 'keydown', 'mousemove'];
+  function pripoj() {
+    if (hotovo) return; hotovo = true;
+    udalosti.forEach(function (u) { w.removeEventListener(u, pripoj, true); });
+    f.parentNode.insertBefore(j, f);
+  }
+  udalosti.forEach(function (u) { w.addEventListener(u, pripoj, { capture: true, passive: true }); });
+  function poNacitani() { w.setTimeout(pripoj, 6000); }
+  if (d.readyState === 'complete') poNacitani(); else w.addEventListener('load', poNacitani);
 })(window, document, 'script', 'dataLayer', 'GTM-5KVNNWW5');
 </script>
 <!-- Koniec Google Tag Manager -->
