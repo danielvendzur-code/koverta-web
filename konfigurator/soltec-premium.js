@@ -876,7 +876,7 @@ function kvAdresa(kluc, zaloha) {
              sibírskeho smrekovca do 4 m a FI30 z ISO panela do 6 m. Na
              terasách a pergolách L44 v cenníku 2026 nie je vôbec. Ostávajú
              teda tam, kam patria — medzi prevedenia boxu. */
-          { id: 'e300',  label: 'Brisoleje E300',                    note: 'na nacenenie' }
+          { id: 'e300',  label: 'Brisoleje E300',                    note: 'podľa plochy' }
         ];
         const SIDE_OPTS = (Array.isArray(BIO.sideOpts) && BIO.sideOpts.length)
           ? BIO.sideOpts : SOLTEC_SIDE_OPTS;
@@ -1590,11 +1590,40 @@ function kvAdresa(kluc, zaloha) {
         };
 
         /* ------------------------------------------------------------ price */
+        /* Cenník 2026, str. 75: ZIP K130 podľa dĺžky a výšky. Hlavná tabuľka
+           pri modeli končí na 6 115 mm a výšku nepozná; zvyšok, kam roleta
+           ešte siaha (dĺžka do 6 500 mm, výška do 3 000 mm), sa berie odtiaľto. */
+        const ZIP_K130_H = [1000, 1500, 2000, 2500, 3000];
+        const ZIP_K130 = [
+          [819, 769, 895, 1023, 1150, 1279], [1002, 790, 922, 1053, 1185, 1316], [1184, 819, 956, 1090, 1226, 1363],
+          [1367, 845, 986, 1125, 1267, 1406], [1549, 873, 1017, 1163, 1309, 1453], [1732, 903, 1052, 1200, 1352, 1501],
+          [1915, 928, 1083, 1236, 1390, 1545], [2097, 945, 1102, 1258, 1416, 1572], [2280, 957, 1115, 1274, 1434, 1592],
+          [2462, 985, 1148, 1310, 1476, 1637], [2645, 1011, 1179, 1347, 1515, 1684], [2828, 1039, 1212, 1386, 1556, 1729],
+          [3010, 1066, 1244, 1422, 1598, 1775], [3193, 1092, 1276, 1458, 1638, 1819], [3375, 1122, 1309, 1495, 1682, 1867],
+          [3558, 1150, 1341, 1533, 1723, 1914], [3741, 1177, 1371, 1567, 1761, 1956], [3923, 1204, 1404, 1604, 1802, 2004],
+          [4106, 1224, 1426, 1631, 1833, 2036], [4288, 1235, 1442, 1647, 1853, 2058], [4471, 1262, 1473, 1684, 1892, 2104],
+          [4654, 1292, 1508, 1722, 1935, 2152], [4836, 1320, 1540, 1759, 1978, 2197], [5019, 1347, 1572, 1796, 2021, 2243],
+          [5201, 1373, 1601, 1830, 2058, 2286], [5384, 1395, 1627, 1860, 2091, 2323], [5567, 1422, 1657, 1892, 2130, 2365],
+          [5749, 1664, 1904, 2144, 2385, 2626], [5931, 1689, 1934, 2178, 2423, 2667], [6113, 1715, 1963, 2212, 2460, 2709],
+          [6295, 1739, 1992, 2246, 2497, 2750], [6477, 1764, 2022, 2279, 2534, 2791], [6500, 1790, 2052, 2313, 2571, 2833]
+        ];
+        const ZIP_MAX_L = 6500, ZIP_MAX_H = 3000;
         const zipPrice = (span) => {
-          const table = BIO.zip;
+          if (span > ZIP_MAX_L + 0.5 || state.height > ZIP_MAX_H) return null;
           /* Šírka rolety v cenníku je najväčšia pre daný riadok. */
-          for (const row of table) { if (span <= row[0] + 0.5) return row[1]; }
+          if (state.height <= 2800) {
+            for (const row of BIO.zip || []) { if (span <= row[0] + 0.5) return row[1]; }
+          }
+          const hi = ZIP_K130_H.findIndex((h) => state.height <= h);
+          for (const row of ZIP_K130) { if (span <= row[0] + 0.5) return row[1 + hi]; }
           return null;
+        };
+        /* Brise-soleil E300: cenník 2026, str. 90 — cena za m², výška lamiel
+           do 2 800 mm. */
+        const e300Price = (span) => {
+          const rate = BIO.walls && BIO.walls.e300;
+          if (!rate || state.height > 2800) return null;
+          return Math.round(rate * (span / 1000) * (state.height / 1000));
         };
         /* Soltec sa vyrába na milimeter, takže jeho posuvník ide plynulo a
            cena skáče po pásmach. Koverta má hotové veľkosti z cenníka a nič
@@ -1739,7 +1768,8 @@ function kvAdresa(kluc, zaloha) {
 
             let value = null, note = '';
             if (kvMat) value = kvWall();
-            else if (kind === 'zip') value = span <= 6500 && state.height <= 2800 ? zipPrice(span) : null;
+            else if (kind === 'zip') value = zipPrice(span);
+            else if (kind === 'e300') value = e300Price(span);
             else if (WALL_CODE[kind]) {
               const rate = runRate(WALL_CODE[kind]);
               value = rate ? Math.round(rate * (span / 1000)) : null;
@@ -6682,8 +6712,8 @@ function kvAdresa(kluc, zaloha) {
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
           if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
-          if (state.sides[side] === 'zip' && (span > 6500 || state.height > 2800)) {
-            note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 2 800 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
+          if (state.sides[side] === 'zip' && (span > 6500 || state.height > 3000)) {
+            note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 3 000 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
           }
           q('[data-sp-side-note]').textContent = note;
           renderSideMover();
