@@ -867,8 +867,8 @@ function kvAdresa(kluc, zaloha) {
           { id: 'g2',    label: 'Sklenené skladacie panely G2', note: 'podľa rozmeru' },
           { id: 'h50l',  label: 'Posuvné panely H50, drevo',   note: 'podľa rozmeru' },
           { id: 'h50a',  label: 'Posuvné panely H50, hliník',  note: 'podľa rozmeru' },
-          { id: 'fi30',  label: 'Stena ISO 3, izolačný panel 30 mm', note: 'podľa výšky' },
-          { id: 'fw25',  label: 'Stena WOOD, sibírsky smrekovec',  note: 'podľa výšky' },
+          { id: 'fi30',  label: 'Stena ISO 3, izolačný panel 30 mm', note: 'podľa plochy' },
+          { id: 'fw25',  label: 'Stena WOOD, sibírsky smrekovec',  note: 'podľa plochy' },
           /* L44-ES a L44-ALU 20/20 tu boli ako bočné steny, ale v cenníku nie
              sú steny: sú to plášte lopy — „LOPA / L44-ES", „LOPA / L44-ALU
              20/20" — a účtujú sa ako celý zadný box daného rozmeru, nie na
@@ -1705,14 +1705,6 @@ function kvAdresa(kluc, zaloha) {
             if (kind === 'open') continue;
             const opt = SIDE_OPTS.find((o) => o.id === kind);
             const span = sideSpan(side);
-            /* Hodnoty v cenníku sú horné hranice pásiem. Geometria ostáva
-               presná, cena sa berie z najbližšej väčšej zverejnenej hodnoty. */
-            const runRate = (code) => {
-              const t = BIO.wallRun && BIO.wallRun[code];
-              if (!t) return null;
-              const bands = Object.keys(t).map(Number).sort((a, b) => a - b);
-              return t[bands[dimensionBandIndex(bands, state.height)]];
-            };
             const WALL_CODE = { fi30: 'iso', fw25: 'wood' };
 
             /* Zverejnené hodnoty sú horné hranice pásiem (výška „do“). */
@@ -1733,11 +1725,16 @@ function kvAdresa(kluc, zaloha) {
             const glassPrice = () => {
               const g = BIO.glassPanel;
               if (!g) return null;
-              const sys = ['2', '3', '4'].find((k) => span <= g[k].len[g[k].len.length - 1] && span >= g[k].len[0]);
+              /* Strana kratšia než najmenší rozmer v cenníku sa ocení ako
+                 ten najmenší — rovnako ako všade inde najbližšia väčšia. */
+              /* Cenník 2026, str. 86–87: najprv štandardné systémy 2, 3 a 4
+                 líšt, nad 6 m systémy s plnými lištami (až do 12 m). */
+              const sys = span < g['2'].len[0] ? '2'
+                : ['2', '3', '4', '2p', '3p', '4p'].find((k) => g[k] && span <= g[k].len[g[k].len.length - 1] && span >= g[k].len[0]);
               if (!sys) return null;
               const t = g[sys], band = t.h[bandKey(t.h, state.height)];
               const li = dimensionBandIndex(t.len, span);
-              return { v: band[li], n: Number(sys) };
+              return { v: band[li], n: parseInt(sys, 10), plne: sys.endsWith('p') };
             };
             /* Steny Koverta stoja v cenníku ako celá strana podľa rozpätia,
                nie sadzbou za meter. Tabuľka visí na modeli, lebo záhradný
@@ -1768,17 +1765,25 @@ function kvAdresa(kluc, zaloha) {
 
             let value = null, note = '';
             if (kvMat) value = kvWall();
-            else if (kind === 'zip') value = zipPrice(span);
+            else if (kind === 'zip') {
+              /* Roleta K130 je najviac 6 500 mm dlhá. Dlhšia strana sa
+                 rozdelí na rovnaké polia a každé sa ocení z cenníka. */
+              const polia = Math.max(1, Math.ceil(span / ZIP_MAX_L));
+              const jedno = zipPrice(span / polia);
+              value = jedno === null ? null : jedno * polia;
+              if (polia > 1) note = `${polia} ${polia < 5 ? 'polia' : 'polí'} po ${mm(Math.round(span / polia))}`;
+            }
             else if (kind === 'e300') value = e300Price(span);
             else if (WALL_CODE[kind]) {
-              const rate = runRate(WALL_CODE[kind]);
-              value = rate ? Math.round(rate * (span / 1000)) : null;
+              /* Cenník 2026, str. 83: pevné steny FW25 a FI30 sa účtujú za m². */
+              const rate = BIO.walls && BIO.walls[kind];
+              value = rate ? Math.round(rate * (span / 1000) * (state.height / 1000)) : null;
             } else if (kind === 'h50l' || kind === 'h50a') {
               const r = slidePrice(kind === 'h50l' ? 'wood' : 'alu');
               if (r) { value = r.v; note = `${r.n} ${r.n === 1 ? 'krídlo' : r.n < 5 ? 'krídla' : 'krídel'}, 2 vodiace lišty`; }
             } else if (kind === 'g1') {
               const r = glassPrice();
-              if (r) { value = r.v; note = `${r.n} vodiace lišty`; }   // 2, 3 or 4 - always the plural that takes 'vodiace'
+              if (r) { value = r.v; note = `${r.n} ${r.plne ? 'plné vodiace' : 'vodiace'} lišty`; }   // 2, 3 or 4 - always the plural that takes 'vodiace'
             } else if (kind === 'g2') {
               /* "glass folding panels ... CENA SE DOLOCI POSAMEZNO ZA VSAK
                  PROJEKT" - the folding system has no table in the book, and
@@ -1809,7 +1814,7 @@ function kvAdresa(kluc, zaloha) {
             const lens = ['500', '1000', '1500'];
             const set = BIO.addons.led[state.ledSet.type];
             const v = set ? set[lens[state.ledSet.len]] : null;
-            const label = { warm: 'teplá biela', neutral: 'neutrálna', rgb: 'RGBW' }[state.ledSet.type];
+            const label = { warm: 'teplá biela', neutral: 'neutrálna', rgb: 'RGB' }[state.ledSet.type];
             lines.push({
               k: `LED ${mm(Number(lens[state.ledSet.len]))} · ${label} × ${qty}`,
               v: v ? v * qty : null, sum: v ? v * qty : 0
@@ -6712,8 +6717,11 @@ function kvAdresa(kluc, zaloha) {
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
           if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
-          if (state.sides[side] === 'zip' && (span > 6500 || state.height > 3000)) {
-            note += ' ZIP roleta K130 zvláda šírku do 6 500 mm a výšku do 3 000 mm. Pri týchto rozmeroch ju rozdelíme na dve polia a nacenime individuálne.';
+          if (state.sides[side] === 'zip' && span > 6500) {
+            note += ' ZIP roleta K130 má najviac 6 500 mm, preto je táto strana rozdelená na ' + Math.ceil(span / 6500) + ' polia.';
+          }
+          if (state.sides[side] === 'zip' && state.height > 3000) {
+            note += ' ZIP roleta K130 zvláda výšku do 3 000 mm, pri vyššej ju nacenime individuálne.';
           }
           q('[data-sp-side-note]').textContent = note;
           renderSideMover();
@@ -7522,7 +7530,7 @@ function kvAdresa(kluc, zaloha) {
               state.ceiling !== 'none' && ceilingOptions().length
                 ? `Dekoratívny strop: ${state.ceiling === 'wood' ? 'drevené lamely' : 'ALU lamely'}, ${area1.format(ceilingArea())} m².` : '',
               state.ledSet.on
-                ? `LED osvetlenie: ${state.ledSet.qty} ks, ${{ warm: 'teplá biela', neutral: 'neutrálna', rgb: 'RGBW' }[state.ledSet.type]}, ${mm(Number(['500', '1000', '1500'][state.ledSet.len]))}.` : '',
+                ? `LED osvetlenie: ${state.ledSet.qty} ks, ${{ warm: 'teplá biela', neutral: 'neutrálna', rgb: 'RGB' }[state.ledSet.type]}, ${mm(Number(['500', '1000', '1500'][state.ledSet.len]))}.` : '',
               sensorsOn.length ? `Senzory: ${sensorsOn.map((k) => sensorLabel[k] || k).join(', ')}.` : '',
               state.anchor !== 'none' ? `Vonkajšie kotvenie: ${anchorLabel[state.anchor] || state.anchor}.` : '',
               picked.length ? `Ďalšie doplnky: ${picked.join('; ')}.` : '',
