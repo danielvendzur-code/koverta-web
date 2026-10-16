@@ -8025,7 +8025,8 @@ function kvAdresa(kluc, zaloha) {
         try { window.kvZapisZostavu = zapisZostavu; } catch (e) {}
         try {
           const z = new URLSearchParams(location.search).get('z');
-          if (z) obnovZostavu(dekodujZostavu(z));
+          /* Odkaz nesmie obísť limity modelu (napr. 40 m² pri SL 240/60). */
+          if (z && obnovZostavu(dekodujZostavu(z)) !== false) clampToModel();
         } catch (e) {}
         buildModels();
         renderAll();
