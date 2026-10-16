@@ -1,5 +1,5 @@
 {
-  "overene": "2026-10-16T04:30:40.143Z",
+  "overene": "2026-10-16T11:22:14.526Z",
   "zdroj": "https://koverta.sk HEAD",
   "nove": {
     "pristresok-koverta-2500x5200": true,
@@ -41,7 +41,7 @@
     "pristresok-koverta-2500x6000": false,
     "pristresok-koverta-2800x6000": false,
     "pristresok-koverta-3000x6000": false,
-    "pristresok-koverta-3200x6000": true,
+    "pristresok-koverta-3200x6000": false,
     "pristresok-koverta-3500x6000": false,
     "pristresok-koverta-3800x6000": false,
     "pristresok-koverta-4000x6000": false,
@@ -131,7 +131,7 @@
     "zahradny-pristresok-7-x-3m": false,
     "zahradny-pristresok-8-x-3m": false,
     "zahradny-pristresok-3-x-4m": false,
-    "zahradny-pristresok-4-x-4m": true,
+    "zahradny-pristresok-4-x-4m": false,
     "zahradny-pristresok-5-x-4m": false,
     "zahradny-pristresok-6-x-4m": false,
     "zahradny-pristresok-7-x-4m": false,
