@@ -1608,12 +1608,21 @@ function kvAdresa(kluc, zaloha) {
           [6295, 1739, 1992, 2246, 2497, 2750], [6477, 1764, 2022, 2279, 2534, 2791], [6500, 1790, 2052, 2313, 2571, 2833]
         ];
         const ZIP_MAX_L = 6500, ZIP_MAX_H = 3000;
-        const zipPrice = (span) => {
-          if (span > ZIP_MAX_L + 0.5 || state.height > ZIP_MAX_H) return null;
+        /* Tabuľka ZIP daného modelu (cenník 2026 pri každom modeli, „pergola
+           s výškou do 3 m“). SL 240/60 má zvlášť tabuľku pre strany cez šírku. */
+        const zipTable = (side) => {
+          const m = model();
+          if ((side === 'left' || side === 'right') && Array.isArray(m.zipW)) return m.zipW;
+          return Array.isArray(m.zip) ? m.zip : (BIO.zip || []);
+        };
+        const zipMaxL = (side) => {
+          const t = zipTable(side);
+          return Math.max(ZIP_MAX_L, t.length ? t[t.length - 1][0] : 0);
+        };
+        const zipPrice = (span, side) => {
+          if (span > zipMaxL(side) + 0.5 || state.height > ZIP_MAX_H) return null;
           /* Šírka rolety v cenníku je najväčšia pre daný riadok. */
-          if (state.height <= 2800) {
-            for (const row of BIO.zip || []) { if (span <= row[0] + 0.5) return row[1]; }
-          }
+          for (const row of zipTable(side)) { if (span <= row[0] + 0.5) return row[1]; }
           const hi = ZIP_K130_H.findIndex((h) => state.height <= h);
           for (const row of ZIP_K130) { if (span <= row[0] + 0.5) return row[1 + hi]; }
           return null;
@@ -1768,8 +1777,8 @@ function kvAdresa(kluc, zaloha) {
             else if (kind === 'zip') {
               /* Roleta K130 je najviac 6 500 mm dlhá. Dlhšia strana sa
                  rozdelí na rovnaké polia a každé sa ocení z cenníka. */
-              const polia = Math.max(1, Math.ceil(span / ZIP_MAX_L));
-              const jedno = zipPrice(span / polia);
+              const polia = Math.max(1, Math.ceil(span / zipMaxL(side)));
+              const jedno = zipPrice(span / polia, side);
               value = jedno === null ? null : jedno * polia;
               if (polia > 1) note = `${polia} ${polia < 5 ? 'polia' : 'polí'} po ${mm(Math.round(span / polia))}`;
             }
@@ -6717,8 +6726,8 @@ function kvAdresa(kluc, zaloha) {
           const span = sideSpan(side);
           let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
           if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
-          if (state.sides[side] === 'zip' && span > 6500) {
-            note += ' ZIP roleta K130 má najviac 6 500 mm, preto je táto strana rozdelená na ' + Math.ceil(span / 6500) + ' polia.';
+          if (state.sides[side] === 'zip' && span > zipMaxL(side)) {
+            note += ' ZIP roleta K130 je na túto stranu príliš dlhá, preto je rozdelená na ' + Math.ceil(span / zipMaxL(side)) + ' polia.';
           }
           if (state.sides[side] === 'zip' && state.height > 3000) {
             note += ' ZIP roleta K130 zvláda výšku do 3 000 mm, pri vyššej ju nacenime individuálne.';
