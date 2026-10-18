@@ -7352,10 +7352,9 @@ function kvAdresa(kluc, zaloha) {
         const clampToModel = () => {
           const m = model();
           clampIdx();
-          if (state.model === '240/60' && widthMM() > 5000 && lengthMM() > m.post4) {
-            // Catalogue rule: above 6 m length the 240/60 tops out at 5 m width.
-            state.widthValue = 5000;
-          }
+          /* Rozmery obmedzuje len cenník (str. 28: SL 240/60 až 6 × 9,319 m).
+             Limit 40 m² z technickej strany 29 platí pre zostavu na 6 stĺpoch,
+             väčšie rozmery majú v cenníku povinný medziľahlý stĺp. */
           if (m.maxArea && m.widths && widthMM() * lengthMM() > m.maxArea * 1000000) {
             const maxWidthByArea = Math.floor((m.maxArea * 1000000) / lengthMM());
             state.widthValue = Math.max(m.widths[0], Math.min(state.widthValue, maxWidthByArea));
@@ -8025,7 +8024,7 @@ function kvAdresa(kluc, zaloha) {
         try { window.kvZapisZostavu = zapisZostavu; } catch (e) {}
         try {
           const z = new URLSearchParams(location.search).get('z');
-          /* Odkaz nesmie obísť limity modelu (napr. 40 m² pri SL 240/60). */
+          /* Odkaz nesmie obísť limity modelu. */
           if (z && obnovZostavu(dekodujZostavu(z)) !== false) clampToModel();
         } catch (e) {}
         buildModels();
