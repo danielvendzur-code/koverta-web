@@ -1922,7 +1922,7 @@ if (typeof window !== 'undefined' && !window.kvChat
         foto: './assets/soltec-pergola-pri-bazene-antracit.jpg',
         preco: 'Otočné lamely: tieň, prevetranie alebo zavretá strecha podľa počasia. Jeden modul až 6 m široký alebo 9,3 m dlhý.' },
       pevne: { nazov: 'Pevné prestrešenie', znacka: 'soltec', odkaz: './pevne-prestresenia/',
-        foto: './assets/soltec-pergola-plna-strecha-pri-dome.webp',
+        foto: './assets/soltec-prestresenie-vajnory-karta.jpg',
         preco: 'Hliníková konštrukcia s ISO panelom 30 mm alebo so sklom. Zastrešenie, ktoré drží po celý rok.' },
       tienenie: { nazov: 'Tienenie', znacka: 'soltec', odkaz: './tienenie/',
         foto: './assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg',
@@ -4000,7 +4000,7 @@ if (typeof window !== 'undefined' && !window.kvChat
       const lis = [].slice.call(domItem.querySelectorAll('.kv-mega__rad > li'));
       const byHref = (part) => lis.find((li) => zhodaMenu((li.querySelector('a') || {}).getAttribute ? li.querySelector('a').getAttribute('href') : '', part));
       setMenuPhoto(byHref('zahradne-pristresky'), 'koverta-zahradny-pristresok-hvozdnica.jpg');
-      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
+      setMenuPhoto(byHref('pevne-prestresenia'), 'soltec-prestresenie-vajnory-menu-w1000.webp');
       setMenuPhoto(byHref('bioklimaticke-pergoly'), 'soltec-pergola-pri-bazene-antracit.jpg');
       setMenuPhoto(byHref('tienenie'), 'soltec-tienenie-lamely-velka-luka.jpg');
       setMenuPhoto(byHref('outdoor-kuchyne'), 'soltec-outdoor-kuchyna-graz.jpg');
@@ -4047,7 +4047,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     setDrawerPhoto('pristresky-pre-auta', 'koverta-pristresok-pre-auto-lucenec.jpg');
     setDrawerPhoto('carport-soltec', 'soltec-carport-nitra-hero.jpg');
     setDrawerPhoto('zahradne-pristresky', 'koverta-zahradny-pristresok-hvozdnica.jpg');
-    setDrawerPhoto('pevne-prestresenia', 'soltec-pergola-plna-strecha-pri-dome-w1000.webp');
+    setDrawerPhoto('pevne-prestresenia', 'soltec-prestresenie-vajnory-menu-w1000.webp');
     setDrawerPhoto('bioklimaticke-pergoly', 'soltec-pergola-pri-bazene-antracit.jpg');
     setDrawerPhoto('tienenie', 'soltec-tienenie-lamely-velka-luka.jpg');
     setDrawerPhoto('outdoor-kuchyne', 'soltec-outdoor-kuchyna-graz.jpg');

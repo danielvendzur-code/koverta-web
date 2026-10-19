@@ -1184,10 +1184,6 @@ soltec-pergola-farebny-graf-2026-w1000.webp	assets/soltec-pergola-farebny-graf-2
 soltec-pergola-farebny-graf-2026-w1600.webp	assets/soltec-pergola-farebny-graf-2026-w1600.webp
 soltec-pergola-farebny-graf-2026-w640.webp	assets/soltec-pergola-farebny-graf-2026-w640.webp
 soltec-pergola-farebny-graf-2026.webp	assets/soltec-pergola-farebny-graf-2026.webp
-soltec-pergola-plna-strecha-pri-dome-w1000.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1000.webp
-soltec-pergola-plna-strecha-pri-dome-w1600.webp	assets/soltec-pergola-plna-strecha-pri-dome-w1600.webp
-soltec-pergola-plna-strecha-pri-dome-w640.webp	assets/soltec-pergola-plna-strecha-pri-dome-w640.webp
-soltec-pergola-plna-strecha-pri-dome.webp	assets/soltec-pergola-plna-strecha-pri-dome.webp
 soltec-pergola-pri-bazene-zip-roleta-w1000.webp	assets/soltec-pergola-pri-bazene-zip-roleta-w1000.webp
 soltec-pergola-pri-bazene-zip-roleta-w640.webp	assets/soltec-pergola-pri-bazene-zip-roleta-w640.webp
 soltec-pergola-pri-bazene-zip-roleta.webp	assets/soltec-pergola-pri-bazene-zip-roleta.webp
@@ -1227,6 +1223,14 @@ soltec-prestresenie-nakres-g240-4-stlpy.webp	assets/soltec-prestresenie-nakres-g
 soltec-prestresenie-nakres-g240-6-stlpy.webp	assets/soltec-prestresenie-nakres-g240-6-stlpy.webp
 soltec-prestresenie-rez-sklo.webp	assets/soltec-prestresenie-rez-sklo.webp
 soltec-prestresenie-rez-zelena.webp	assets/soltec-prestresenie-rez-zelena.webp
+soltec-prestresenie-vajnory-karta-w1000.webp	assets/soltec-prestresenie-vajnory-karta-w1000.webp
+soltec-prestresenie-vajnory-karta-w640.webp	assets/soltec-prestresenie-vajnory-karta-w640.webp
+soltec-prestresenie-vajnory-karta.jpg	assets/soltec-prestresenie-vajnory-karta.jpg
+soltec-prestresenie-vajnory-menu-w1000.webp	assets/soltec-prestresenie-vajnory-menu-w1000.webp
+soltec-prestresenie-vajnory-ponuka-w1000.webp	assets/soltec-prestresenie-vajnory-ponuka-w1000.webp
+soltec-prestresenie-vajnory-ponuka-w1600.webp	assets/soltec-prestresenie-vajnory-ponuka-w1600.webp
+soltec-prestresenie-vajnory-ponuka-w640.webp	assets/soltec-prestresenie-vajnory-ponuka-w640.webp
+soltec-prestresenie-vajnory-ponuka.webp	assets/soltec-prestresenie-vajnory-ponuka.webp
 soltec-prestresenie-vchod-lamely-w1000.webp	assets/soltec-prestresenie-vchod-lamely-w1000.webp
 soltec-prestresenie-vchod-lamely-w640.webp	assets/soltec-prestresenie-vchod-lamely-w640.webp
 soltec-prestresenie-vchod-lamely.jpg	assets/soltec-prestresenie-vchod-lamely.jpg
