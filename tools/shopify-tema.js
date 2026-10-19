@@ -232,10 +232,8 @@ function adresa(subor) {
    v prehliadači vidno a majiteľ ju nechce. Nový katalóg treba najprv nahrať
    do Obsah → Súbory v Shopify a doplniť sem, inak prevod zlyhá. */
 const KATALOGY_V_OBCHODE = {
-  'katalogy/soltec-bioklimaticke-pergoly-2026-sk.pdf': 'katalog-soltec-bioklimaticke-pergoly-2026.pdf',
-  'katalogy/soltec-pevne-prestresenia-2026-sk.pdf': 'katalog-soltec-pevne-prestresenia-2026.pdf',
-  'katalogy/soltec-tienenie-a-doplnky-2026-sk.pdf': 'katalog-soltec-tienenie-a-doplnky-2026.pdf',
-  'katalogy/soltec-vonkajsie-kuchyne-2026-sk.pdf': 'katalog-soltec-vonkajsie-kuchyne-2026.pdf',
+  'katalogy/soltec-cennik-pergoly-a-pristresky-2026-sk.pdf': 'cennik-soltec-pergoly-a-pristresky-2026-sk.pdf',
+  'katalogy/soltec-vonkajsie-kuchyne-katalog-en.pdf': 'katalog-soltec-vonkajsie-kuchyne-en.pdf',
   'koverta-technicke-poziadavky-na-podklad.pdf': 'koverta-technicke-poziadavky-na-podklad-2026-10-07.pdf',
 };
 
