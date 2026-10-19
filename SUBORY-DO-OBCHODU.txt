@@ -862,6 +862,8 @@ realizacie-auta-soltec-248-w640.webp	assets/realizacie/auta-soltec-248-w640.webp
 realizacie-auta-soltec-248.jpg	assets/realizacie/auta-soltec-248.jpg
 realizacie-auta-soltec-249-w640.webp	assets/realizacie/auta-soltec-249-w640.webp
 realizacie-auta-soltec-249.jpg	assets/realizacie/auta-soltec-249.jpg
+realizacie-auta-soltec-carport-f-pozdlz-domu-w640.webp	assets/realizacie/auta-soltec-carport-f-pozdlz-domu-w640.webp
+realizacie-auta-soltec-carport-f-pozdlz-domu.jpg	assets/realizacie/auta-soltec-carport-f-pozdlz-domu.jpg
 realizacie-pergoly-soltec-004-w640.webp	assets/realizacie/pergoly-soltec-004-w640.webp
 realizacie-pergoly-soltec-004.jpg	assets/realizacie/pergoly-soltec-004.jpg
 realizacie-pergoly-soltec-005-w640.webp	assets/realizacie/pergoly-soltec-005-w640.webp
