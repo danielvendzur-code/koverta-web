@@ -1123,6 +1123,10 @@ soltec-carport-nitra-clean-w1000.webp	assets/soltec-carport-nitra-clean-w1000.we
 soltec-carport-nitra-clean-w1600.webp	assets/soltec-carport-nitra-clean-w1600.webp
 soltec-carport-nitra-clean-w640.webp	assets/soltec-carport-nitra-clean-w640.webp
 soltec-carport-nitra-clean.jpg	assets/soltec-carport-nitra-clean.jpg
+soltec-carport-nitra-hero-w1000.webp	assets/soltec-carport-nitra-hero-w1000.webp
+soltec-carport-nitra-hero-w1600.webp	assets/soltec-carport-nitra-hero-w1600.webp
+soltec-carport-nitra-hero-w640.webp	assets/soltec-carport-nitra-hero-w640.webp
+soltec-carport-nitra-hero.jpg	assets/soltec-carport-nitra-hero.jpg
 soltec-carport-plavecky-03-w1000.webp	assets/soltec-carport-plavecky-03-w1000.webp
 soltec-carport-plavecky-03-w640.webp	assets/soltec-carport-plavecky-03-w640.webp
 soltec-carport-plavecky-03.jpg	assets/soltec-carport-plavecky-03.jpg
