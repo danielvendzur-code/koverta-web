@@ -14686,4 +14686,19 @@ body.ma-kh-modal { overflow: hidden; }
 }
 .k .kh-typy__karty--doplnky .kh-typy__karta img { aspect-ratio: 4 / 3; object-fit: cover; }
 .k .kh-typy__karty--strechy .kh-typy__karta > img:first-child { aspect-ratio: 16 / 9; object-fit: cover; }
+/* Na širokej obrazovke bez prázdneho miesta vpravo: na pevných prestrešeniach
+   dva modely vedľa seba (karty zarovnané cez subgrid), strechy radu G majú
+   popis vľavo a karty vpravo; na carporte je popis radu vľavo a tri karty
+   vpravo; desať doplnkov ide v dvoch radoch po päť. */
+@media (min-width: 1200px) {
+  .k .kh-typy--vedla .k-wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+  .k .kh-typy--vedla .k-wrap > :not(.kh-typy__rad) { grid-column: 1 / -1; }
+  .k .kh-typy--vedla .kh-typy__rad { grid-row: span 2; grid-template-rows: subgrid; border-top: 0; }
+  .k .kh-typy--vedla .kh-typy__karty--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k .kh-typy--vedla .kh-typy__rad:has(.kh-typy__karty--strechy) { grid-column: 1 / -1; grid-row: auto; grid-template-rows: none; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; align-items: start; }
+  .k .kh-typy--bok .kh-typy__rad { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); column-gap: 16px; align-items: start; }
+  .k .kh-typy--bok .kh-typy__hlava { grid-template-columns: minmax(0, 1fr); }
+  .k .kh-typy--bok .kh-typy__karty { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .k .kh-typy__karty--doplnky { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
 .k .kh-typy__karta img.kh-typy__rez { aspect-ratio: auto; object-fit: contain; padding: 12px 10px 4px; }
