@@ -770,8 +770,6 @@ realizacie-auta-koverta-069-w640.webp	assets/realizacie/auta-koverta-069-w640.we
 realizacie-auta-koverta-069.jpg	assets/realizacie/auta-koverta-069.jpg
 realizacie-auta-koverta-073-w640.webp	assets/realizacie/auta-koverta-073-w640.webp
 realizacie-auta-koverta-073.jpg	assets/realizacie/auta-koverta-073.jpg
-realizacie-auta-koverta-075-w640.webp	assets/realizacie/auta-koverta-075-w640.webp
-realizacie-auta-koverta-075.jpg	assets/realizacie/auta-koverta-075.jpg
 realizacie-auta-koverta-078-w640.webp	assets/realizacie/auta-koverta-078-w640.webp
 realizacie-auta-koverta-078.jpg	assets/realizacie/auta-koverta-078.jpg
 realizacie-auta-koverta-081-w640.webp	assets/realizacie/auta-koverta-081-w640.webp
@@ -960,6 +958,12 @@ realizacie-pergoly-soltec-217-w640.webp	assets/realizacie/pergoly-soltec-217-w64
 realizacie-pergoly-soltec-217.jpg	assets/realizacie/pergoly-soltec-217.jpg
 realizacie-pergoly-soltec-218-w640.webp	assets/realizacie/pergoly-soltec-218-w640.webp
 realizacie-pergoly-soltec-218.jpg	assets/realizacie/pergoly-soltec-218.jpg
+realizacie-pergoly-soltec-lucenec-pergola-pri-bazene-w640.webp	assets/realizacie/pergoly-soltec-lucenec-pergola-pri-bazene-w640.webp
+realizacie-pergoly-soltec-lucenec-pergola-pri-bazene.jpg	assets/realizacie/pergoly-soltec-lucenec-pergola-pri-bazene.jpg
+realizacie-pergoly-soltec-lucenec-pohlad-spod-lamiel-w640.webp	assets/realizacie/pergoly-soltec-lucenec-pohlad-spod-lamiel-w640.webp
+realizacie-pergoly-soltec-lucenec-pohlad-spod-lamiel.jpg	assets/realizacie/pergoly-soltec-lucenec-pohlad-spod-lamiel.jpg
+realizacie-pergoly-soltec-lucenec-zip-rolety-w640.webp	assets/realizacie/pergoly-soltec-lucenec-zip-rolety-w640.webp
+realizacie-pergoly-soltec-lucenec-zip-rolety.jpg	assets/realizacie/pergoly-soltec-lucenec-zip-rolety.jpg
 realizacie-prestresenia-soltec-020-w640.webp	assets/realizacie/prestresenia-soltec-020-w640.webp
 realizacie-prestresenia-soltec-020.jpg	assets/realizacie/prestresenia-soltec-020.jpg
 realizacie-prestresenia-soltec-021-w640.webp	assets/realizacie/prestresenia-soltec-021-w640.webp
