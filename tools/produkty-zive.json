@@ -1,5 +1,5 @@
 {
-  "overene": "2026-10-24T20:47:41.692Z",
+  "overene": "2026-10-25T04:39:27.020Z",
   "zdroj": "https://koverta.sk HEAD",
   "nove": {
     "pristresok-koverta-2500x5200": true,
@@ -56,7 +56,7 @@
     "pristresok-koverta-6200x6000": false,
     "pristresok-koverta-6600x6000": false,
     "pristresok-koverta-7000x6000": false,
-    "zahradny-pristresok-koverta-3000x3000": true,
+    "zahradny-pristresok-koverta-3000x3000": false,
     "zahradny-pristresok-koverta-4000x3000": false,
     "zahradny-pristresok-koverta-5000x3000": false,
     "zahradny-pristresok-koverta-6000x3000": false,
@@ -114,7 +114,7 @@
     "pristresok-pre-1-auto-3-8-x-6m": false,
     "pristresok-pre-1-auto-4-x-6m": false,
     "pristresok-pre-1-auto-4-2-x-6m": false,
-    "pristresok-pre-1-auto-4-5-x-6m": true,
+    "pristresok-pre-1-auto-4-5-x-6m": false,
     "pristresok-pre-2-auta-5-x-6m": false,
     "pristresok-pre-2-auta-5-2-x-6-0m": false,
     "pristresok-pre-2-auta-5-4-x-6m": false,
@@ -131,7 +131,7 @@
     "zahradny-pristresok-7-x-3m": false,
     "zahradny-pristresok-8-x-3m": false,
     "zahradny-pristresok-3-x-4m": false,
-    "zahradny-pristresok-4-x-4m": true,
+    "zahradny-pristresok-4-x-4m": false,
     "zahradny-pristresok-5-x-4m": false,
     "zahradny-pristresok-6-x-4m": false,
     "zahradny-pristresok-7-x-4m": false,
