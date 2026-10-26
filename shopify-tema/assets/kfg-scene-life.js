@@ -573,9 +573,35 @@ function kvAdresa(kluc, zaloha) {
       panel.querySelector('.sp-scene__paint').hidden=state.mode!=='car';
       const dazdRiadok=panel.querySelector('.sp-scene__rain');
       if(dazdRiadok)dazdRiadok.hidden=state.weather!=='rain';
-      panel.querySelector('[data-scene-car]').hidden=state.mode!=='car';
-      countSelect.value=state.count;carSelect.value=state.car;
-      [...countSelect.options].forEach(o=>{o.disabled=o.value!=='auto' && Number(o.value)>currentPlan.capacity;});
+      panel.querySelector('[data-scene-car]').hidden=state.mode!=='car'||carSelect.dataset.jedenModel==='true';
+      /* V ponuke ostáva len to, čo sa pod týmto prístreškom naozaj dá
+         vybrať. Voľby, ktoré sa nezmestia, sa neukazujú vôbec (predtým
+         ostali v zozname šedé a nedali sa označiť). Model auta sa ponúka,
+         len keď sa pod prístrešok zmestí aspoň jeden kus. */
+      const kapacita=currentPlan.capacity||0;
+      [...countSelect.options].forEach(o=>{
+        const off=o.value==='auto'?kapacita<=1:Number(o.value)>Math.max(1,kapacita);
+        o.disabled=off;o.hidden=off;});
+      if(context&&state.mode==='car') {
+        let zmena=false;
+        [...carSelect.options].forEach(o=>{
+          if(o.value==='auto')return;
+          let ok=true;
+          try{ok=parkCars(context,'1',o.value,false).items.length>0;}catch(e){}
+          o.disabled=!ok;o.hidden=!ok;
+          if(!ok&&state.car===o.value){state.car='auto';zmena=true;}
+        });
+        /* Keď sa zmestí len jeden model, výber nemá čo ponúknuť. */
+        const modely=[...carSelect.options].filter(o=>o.value!=='auto'&&!o.hidden).length;
+        carSelect.dataset.jedenModel=String(modely<=1);
+        if(zmena){planningKey='';window.setTimeout(update,0);}
+      }
+      const viditelne=[...countSelect.options].filter(o=>!o.hidden);
+      countSelect.hidden=viditelne.length<=1;
+      const zvoleny=[...countSelect.options].find(o=>o.value===state.count);
+      countSelect.value=zvoleny&&!zvoleny.hidden?state.count:(viditelne[0]||zvoleny||{value:state.count}).value;
+      carSelect.value=state.car;
+      carSelect.hidden=state.mode!=='car'||carSelect.dataset.jedenModel==='true';
       const pauza=panel.querySelector('[data-scene-pause]');
       if(pauza)pauza.textContent=state.paused?'Spustiť':'Pozastaviť';
       /* Plátno vie kresliť aj bez WebGL, ale vybavenie ani dážď do plochého

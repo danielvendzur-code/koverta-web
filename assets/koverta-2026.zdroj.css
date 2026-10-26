@@ -14702,3 +14702,9 @@ body.ma-kh-modal { overflow: hidden; }
   .k .kh-typy__karty--doplnky { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 .k .kh-typy__karta img.kh-typy__rez { aspect-ratio: auto; object-fit: contain; padding: 12px 10px 4px; }
+
+/* Proces na úvode: krok 01 (návrh alebo konfigurátor) vedie do konfigurátora
+   klikom na obrázok aj tlačidlom pod textom. */
+.k .kh-proc__media--odkaz { display: block; cursor: pointer; }
+.k .kh-proc__media--odkaz:focus-visible { outline: 2px solid var(--k-amber); outline-offset: -2px; }
+.k .kh-proc__body .kh-proc__cta { align-self: flex-start; width: auto; margin-top: 6px; }
