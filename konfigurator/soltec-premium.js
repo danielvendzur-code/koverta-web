@@ -1054,6 +1054,22 @@ function kvAdresa(kluc, zaloha) {
           return bp ? Math.min(bp.d, lengthMM()) : 0;
         };
         const clearLengthMM = () => lengthMM() - boxDepthMM();
+        /* Úsek strany, ktorý zaberá zadný box: stojí na začiatku dĺžky (x od 0)
+           pri zadnej hrane (y od 0). Roleta, panel či stena sa na tento úsek
+           nekreslia ani neúčtujú — inak stáli v tej istej rovine ako stena
+           boxu a obe plochy sa kreslili cez seba. Vracia [od, do] v osi strany
+           alebo null. */
+        const boxNaStrane = (side) => {
+          if (!state.box || !state.box.on) return null;
+          const bp = boxPrice();
+          if (!bp) return null;
+          const W = widthMM(), L = lengthMM();
+          const bw = Math.min(bp.w, W), bd = Math.min(bp.d, L);
+          if (side === 'rear') return [0, bd];
+          if (side === 'front') return bw >= W - 1 ? [0, bd] : null;
+          if (side === 'left') return [0, bw];
+          return null;
+        };
         const carFits = (key) => {
           const c = CARS[key];
           return Boolean(c) && clearLengthMM() >= c.length + 240 && widthMM() >= 2300;
@@ -1107,7 +1123,17 @@ function kvAdresa(kluc, zaloha) {
         const kvStrednyNaBoku = () => true;
         const kvStranyStien = () => ((model().kvGeom && model().roofKit === 'koverta' && Array.isArray(model().wallPriced))
           ? model().wallPriced : null);
-        const kvStenaSmie = (strana) => { const d = kvStranyStien(); return !d || d.indexOf(strana) > -1; };
+        /* Strana, ktorou prístrešok priľne k domu (osadenie „Pri stene“,
+           „V rohu“…), výplň nedostane: stena, ZIP roleta či panel by stáli
+           tesne pred fasádou a v náhľade sa kreslili cez ňu. Strany, ktoré
+           pripúšťa model, a strany pri dome sa preto skladajú do jedného
+           pravidla. */
+        const kvStenaSmie = (strana) => {
+          const d = kvStranyStien();
+          if (d && d.indexOf(strana) < 0) return false;
+          return placementWalls().indexOf(strana) < 0;
+        };
+        const prvaVolnaStrana = () => ['rear', 'front', 'left', 'right'].find((k) => kvStenaSmie(k)) || 'front';
         const kvStlpyVCele = () => {
           const nad = Number(model().stenaStredStlpNad) || 0;
           if (!nad || !kvStenovyRezim() || widthMM() <= nad) return [];
@@ -1364,7 +1390,11 @@ function kvAdresa(kluc, zaloha) {
           });
           return out;
         };
-        const sideSpan = (side) => (side === 'front' || side === 'rear' ? lengthMM() : widthMM());
+        const sideSpan = (side) => {
+          const cela = side === 'front' || side === 'rear' ? lengthMM() : widthMM();
+          const box = boxNaStrane(side);
+          return box ? Math.max(0, cela - (box[1] - box[0])) : cela;
+        };
 
         /* KOVER​TA side-wall anchors must follow the real faces of the current
            post sections, not the generic Soltec 120 mm post placeholder.
@@ -1714,6 +1744,7 @@ function kvAdresa(kluc, zaloha) {
             if (kind === 'open') continue;
             const opt = SIDE_OPTS.find((o) => o.id === kind);
             const span = sideSpan(side);
+            if (span < 200) continue;   // celú stranu zaberá box
             const WALL_CODE = { fi30: 'iso', fw25: 'wood' };
 
             /* Zverejnené hodnoty sú horné hranice pásiem (výška „do“). */
@@ -4126,8 +4157,12 @@ function kvAdresa(kluc, zaloha) {
             }
 
             const vFace = axis === 'x' ? a[1] : a[0];
-            const runFrom = axis === 'x' ? a[0] : a[1];
+            let runFrom = axis === 'x' ? a[0] : a[1];
             const runTo = axis === 'x' ? b[0] : b[1];
+            /* Kde stojí box, výplň začína až za ním (pozri boxNaStrane). */
+            const boxUsek = boxNaStrane(side);
+            if (boxUsek) runFrom = Math.max(runFrom, boxUsek[1]);
+            if (runTo - runFrom < 200) return;
 
             /* the posts standing inside this run divide it into bays */
             /* Lamelová stena Koverta je jedno pole cez celú stranu: lamely
@@ -6683,7 +6718,7 @@ function kvAdresa(kluc, zaloha) {
             plan.textContent = `${mm(widthMM())} × ${mm(lengthMM())}`;
           }
           const host = q('[data-sp-side-opts]');
-          if (!kvStenaSmie(state.activeSide)) state.activeSide = kvStranyStien()[0];
+          if (!kvStenaSmie(state.activeSide)) state.activeSide = prvaVolnaStrana();
           const side = state.activeSide;
           host.textContent = '';
           let lastGroup = '';
@@ -6697,6 +6732,8 @@ function kvAdresa(kluc, zaloha) {
           /* Koverta: zo všetkých štyroch strán sa uzavrieť nedá — keď už
              stoja tri steny, štvrtá strana ponúka len „Otvorená“. */
           const plno = state.sides[side] === 'open' && kvSteny().length >= kvMaxStien();
+          /* Stranu, ktorú celú zaberá zadný box, už nie je čím uzavrieť. */
+          const podBoxom = Boolean(boxNaStrane(side)) && sideSpan(side) < 200;
           SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
             .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
@@ -6713,7 +6750,7 @@ function kvAdresa(kluc, zaloha) {
             b.className = 'sp-sideopt';
             b.dataset.spSideOpt = o.id;
             b.setAttribute('aria-pressed', String(state.sides[side] === o.id));
-            if (o.id !== 'open' && plno) b.disabled = true;
+            if (o.id !== 'open' && (plno || podBoxom)) b.disabled = true;
             b.innerHTML = `<span class="sp-sideopt__copy"><strong>${o.label}</strong><em>${o.note}</em></span>`
               + `<i class="sp-sideopt__check" aria-hidden="true"></i>`;
             host.appendChild(b);
@@ -6724,8 +6761,10 @@ function kvAdresa(kluc, zaloha) {
             btn.classList.toggle('is-set', state.sides[btn.dataset.spSide] !== 'open');
           });
           const span = sideSpan(side);
-          let note = `${SIDE_LABEL[side]} strana meria ${mm(span)}.`;
+          let note = `${SIDE_LABEL[side]} strana meria ${mm(side === 'front' || side === 'rear' ? lengthMM() : widthMM())}.`;
           if (plno) note += ' Prístrešok sa nedá uzavrieť zo všetkých štyroch strán, jedna ostáva otvorená na vjazd.';
+          if (podBoxom) note = `${SIDE_LABEL[side]} stranu celú zaberá zadný box, výplň na ňu netreba.`;
+          else if (boxNaStrane(side)) note += ` Časť pri boxe zakrýva jeho stena, výplň meria ${mm(span)}.`;
           if (state.sides[side] === 'zip' && span > zipMaxL(side)) {
             note += ' ZIP roleta K130 je na túto stranu príliš dlhá, preto je rozdelená na ' + Math.ceil(span / zipMaxL(side)) + ' polia.';
           }
@@ -6846,7 +6885,11 @@ function kvAdresa(kluc, zaloha) {
             if (typeof picked === 'number') count += picked;
             else if (picked === undefined ? on : picked) count++;
             html.push(`<div class="sp-add${off ? ' is-off' : ''}"><div class="sp-add__head"><div class="sp-add__t">${title}<small>${note}</small></div>`
-              + `<label class="sp-switch"><input type="checkbox" name="doplnok-${key}" data-sp-add-on="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}><span></span></label></div>`
+              /* Namiesto prepínača tlačidlo „Pridať“ / „Pridané“: pri doplnku
+                 sa zákazník rozhoduje, či ho chce, nie čo „zapína“. Vstup ostáva
+                 ten istý checkbox, takže logika aj testy sa nemenia. */
+              + `<label class="sp-pridat"><input type="checkbox" name="doplnok-${key}" data-sp-add-on="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}>`
+              + `<span class="sp-pridat__btn"><i aria-hidden="true"></i><b class="sp-pridat__nie">Pridať</b><b class="sp-pridat__ano">Pridané</b></span></label></div>`
               + `<div class="sp-add__body"${on ? '' : ' hidden'}>${on ? body() : ''}</div></div>`);
           };
 
@@ -7432,6 +7475,7 @@ function kvAdresa(kluc, zaloha) {
             }
           } else if (t.dataset.spPlace) {
             state.placement = t.dataset.spPlace;
+            ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) { state.sides[k] = 'open'; state.sideOpen[k] = 0; } });
           } else if (t.dataset.spLouver) {
             runMover('louver', Number(t.dataset.spLouver));
             return;

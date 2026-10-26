@@ -1627,3 +1627,24 @@
     justify-content: center; gap: .4rem;
   }
 }
+
+/* Doplnky: tlačidlo „Pridať“ / „Pridané“ namiesto prepínača. Skrytý
+   checkbox ostáva nositeľom stavu (data-sp-add-on). */
+#SoltecPremium .sp-pridat { display: inline-flex; flex: none; cursor: pointer; }
+#SoltecPremium .sp-pridat input { position: absolute; opacity: 0; pointer-events: none; }
+#SoltecPremium .sp-pridat__btn { display: inline-flex; align-items: center; gap: .55rem; min-height: 3.6rem; padding: .5rem 1.4rem .5rem 1.1rem; border: 1px solid var(--sp-line); border-radius: 100px; background: #fff; color: var(--sp-ink); font-size: 1.3rem; line-height: 1; white-space: nowrap; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+#SoltecPremium .sp-pridat__btn b { font-weight: 600; }
+#SoltecPremium .sp-pridat__btn i { position: relative; width: 1.2rem; height: 1.2rem; flex: none; }
+#SoltecPremium .sp-pridat__btn i::before,
+#SoltecPremium .sp-pridat__btn i::after { content: ''; position: absolute; left: 50%; top: 50%; width: 1.2rem; height: .16rem; border-radius: 1px; background: currentColor; transform: translate(-50%, -50%); }
+#SoltecPremium .sp-pridat__btn i::after { transform: translate(-50%, -50%) rotate(90deg); }
+#SoltecPremium .sp-pridat__ano { display: none; }
+#SoltecPremium .sp-pridat:hover .sp-pridat__btn { border-color: var(--sp-ink); }
+#SoltecPremium .sp-pridat input:checked + .sp-pridat__btn { background: var(--sp-ink); border-color: var(--sp-ink); color: #fff; }
+#SoltecPremium .sp-pridat input:checked + .sp-pridat__btn .sp-pridat__nie { display: none; }
+#SoltecPremium .sp-pridat input:checked + .sp-pridat__btn .sp-pridat__ano { display: inline; }
+/* fajka: kratšie a dlhšie rameno otočené o 45° */
+#SoltecPremium .sp-pridat input:checked + .sp-pridat__btn i::before { width: .5rem; left: .15rem; top: .7rem; transform: rotate(45deg); }
+#SoltecPremium .sp-pridat input:checked + .sp-pridat__btn i::after { width: .95rem; left: .38rem; top: .55rem; transform: rotate(-50deg); }
+#SoltecPremium .sp-pridat input:disabled + .sp-pridat__btn { opacity: .45; cursor: not-allowed; }
+#SoltecPremium .sp-pridat input:focus-visible + .sp-pridat__btn { outline: 2px solid var(--sp-ink); outline-offset: 2px; }
