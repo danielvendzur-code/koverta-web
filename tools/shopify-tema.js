@@ -789,7 +789,7 @@ ${v.spolocnaHlava.filter((p) => !/KV_SUHLAS_KLUC|Meranie: súhlas/.test(p)).map(
     znackaSoltec: ${FOTKY === 'pages'
       ? JSON.stringify(PAGES_ZAKLAD + '/assets/soltec-mark.png')
       : "{{ 'soltec-mark.png' | file_url | json }}"},
-    modely: '/pages/${PREDPONA}pouzite-modely',
+    modely: ${JSON.stringify((cielObchodu('pouzite-modely') || { url: '/pages/' + PREDPONA + 'pouzite-modely' }).url)},
     menuFoto: ${JSON.stringify(menuFotky())}
   };
   /* Cesty, ktoré koverta-2026.js nesie rovno v texte a skladá z nich
