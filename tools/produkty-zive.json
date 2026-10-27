@@ -1,5 +1,5 @@
 {
-  "overene": "2026-10-27T17:59:59.448Z",
+  "overene": "2026-10-27T22:12:29.993Z",
   "zdroj": "https://koverta.sk HEAD",
   "nove": {
     "pristresok-koverta-2500x5200": true,
@@ -39,7 +39,7 @@
     "pristresok-koverta-6600x5600": false,
     "pristresok-koverta-7000x5600": false,
     "pristresok-koverta-2500x6000": false,
-    "pristresok-koverta-2800x6000": false,
+    "pristresok-koverta-2800x6000": true,
     "pristresok-koverta-3000x6000": false,
     "pristresok-koverta-3200x6000": false,
     "pristresok-koverta-3500x6000": false,
