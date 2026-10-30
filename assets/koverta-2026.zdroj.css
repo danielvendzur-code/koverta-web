@@ -14708,14 +14708,10 @@ body.ma-kh-modal { overflow: hidden; }
 }
 .k .kh-typy__karta img.kh-typy__rez { aspect-ratio: auto; object-fit: contain; padding: 12px 10px 4px; }
 
-/* Proces na úvode: krok 01 (návrh alebo konfigurátor) vedie do konfigurátora.
-   Tlačidlo leží v obrázku, nie pod textom: všetky karty procesu majú výšku
-   najvyššej z nich, takže tlačidlo pod textom zväčšilo obrázky v ostatných
-   krokoch a orezalo popisky na nákrese pätky. */
-.k .kh-proc__media--odkaz { display: block; position: relative; cursor: pointer; }
+/* Proces na úvode: do konfigurátora vedie obrázok kroku 01 a tlačidlo pod
+   zoznamom krokov v ľavom stĺpci. Tlačidlo nesmie byť v karte kroku: všetky
+   karty majú výšku najvyššej z nich, takže tlačidlo pod textom zväčšilo
+   obrázky v ostatných krokoch a orezalo popisky na nákrese pätky. */
+.k .kh-proc__media--odkaz { display: block; cursor: pointer; }
 .k .kh-proc__media--odkaz:focus-visible { outline: 2px solid var(--k-amber); outline-offset: -2px; }
-.k .kh-proc__media-cta { position: absolute; left: clamp(14px, 2vw, 24px); bottom: clamp(14px, 2vw, 24px); z-index: 1;
-  display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 999px;
-  background: var(--k-amber); color: var(--k-ink); font-weight: 700; font-size: 15px; line-height: 1;
-  box-shadow: 0 6px 18px rgba(18, 23, 26, .18); transition: transform .18s ease; }
-.k .kh-proc__media--odkaz:hover .kh-proc__media-cta { transform: translateY(-1px); }
+.k .kh-proc__aside .kh-proc__cta { align-self: flex-start; width: auto; }
