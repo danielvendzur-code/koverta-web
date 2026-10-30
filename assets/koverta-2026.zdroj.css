@@ -14715,3 +14715,14 @@ body.ma-kh-modal { overflow: hidden; }
 .k .kh-proc__media--odkaz { display: block; cursor: pointer; }
 .k .kh-proc__media--odkaz:focus-visible { outline: 2px solid var(--k-amber); outline-offset: -2px; }
 .k .kh-proc__aside .kh-proc__cta { align-self: flex-start; width: auto; }
+
+/* Autori 3D modelov: jednoduchý zoznam, ktorý vyžaduje licencia CC BY. */
+.k .kh-autori { overflow-x: auto; border: 1px solid var(--k-hair); border-radius: var(--k-r-sm, 12px); background: var(--k-white); }
+.k .kh-autori table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.k .kh-autori th, .k .kh-autori td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--k-hair); vertical-align: top; }
+.k .kh-autori th { font-size: 13px; font-weight: 700; color: var(--k-grey); }
+.k .kh-autori tr:last-child td { border-bottom: 0; }
+.k .kh-autori a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.k .kh-autori__pozn { margin: 12px 0 0; font-size: 13px; color: var(--k-grey); }
+.k .kh-autori td:last-child { white-space: nowrap; }
+@media (max-width: 599px) { .k .kh-autori th, .k .kh-autori td { padding: 10px 12px; font-size: 14px; } }
