@@ -2298,7 +2298,11 @@ if (typeof window !== 'undefined' && !window.kvChat
       kopia.decoding = 'async';
       scena.appendChild(kopia);
       document.body.appendChild(scena);
-      const kus = { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, kopia: kopia, w: 0, h: 0, letí: null };
+      /* Zaoblenie kreslí orez (clip-path), nie border-radius — ten by sa
+         s mierkou zväčšoval a zmenšoval spolu s fotografiou. */
+      scena.style.borderRadius = '0';
+      const kus = { karta: karta, slot: slot, zdroj: zdroje[i], scena: scena, kopia: kopia, w: 0, h: 0, letí: null,
+        r: parseFloat(getComputedStyle(slot).borderTopLeftRadius) || 14 };
       /* Po obnovení stránky priamo v tejto časti webu ešte fotografie nie sú
          načítané. Kým nie sú, nesmie sa prelet spustiť — inak by leteli tri
          prázdne rámčeky a fotografie v piatom kroku by boli medzitým skryté.
@@ -2317,6 +2321,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     /* Vykresľovaná hodnota preletu a príznak, že sa má dobiehať ďalej. */
     let mojP = null;
     let bezi = false;
+    let posledny = 0;
     const hladko = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* Prelet mieri do prvých troch kariet. Keď si niekto v recenziách posunie
@@ -2397,10 +2402,17 @@ if (typeof window !== 'undefined' && !window.kvChat
          keď scroll prichádza po stovkách pixelov. Pri obmedzenom pohybe sa
          nedohaňa nič — tam má byť pohyb čo najkratší. */
       if (hladko) {
+        /* Doťahovanie podľa uplynulého času (časová konštanta 110 ms), nie
+           podľa počtu snímok. Pevný podiel na snímok bežal na rýchlom
+           monitore inak než na pomalom a keď prehliadač snímok vynechal,
+           fotografia poskočila o celý zameškaný kus naraz. */
+        const teraz = performance.now();
+        const dt = posledny ? Math.min(64, teraz - posledny) : 16;
+        posledny = teraz;
         if (mojP === null) mojP = p;
         const rozdiel = p - mojP;
-        if (Math.abs(rozdiel) < 0.0008) mojP = p;
-        else { mojP += rozdiel * 0.24; bezi = true; }
+        if (Math.abs(rozdiel) < 0.0006) mojP = p;
+        else { mojP += rozdiel * (1 - Math.exp(-dt / 110)); bezi = true; }
         p = mojP;
       }
       /* Kým nie je načítaná každá z troch kópií, prelet nebeží: fotografie
@@ -2445,6 +2457,7 @@ if (typeof window !== 'undefined' && !window.kvChat
         if (k.kp !== kp) { k.kp = kp; k.karta.style.setProperty('--k-p', kp); }
 
         if (!letí) {
+          posledny = 0;
           if (k.letí !== p) {
             k.scena.style.display = 'none';
             k.slot.style.visibility = p >= 0.999 ? '' : 'hidden';
@@ -2471,11 +2484,42 @@ if (typeof window !== 'undefined' && !window.kvChat
         k.slot.style.visibility = 'hidden';
         k.zdroj.style.visibility = 'hidden';
 
-        const x = medzi(z.left, d.left, e);
-        const y = medzi(z.top, d.top, e);
-        const m = medzi(z.width, d.width, e) / k.w;
+        /* Prvá fotografia v piatom kroku je vysoká (cez dva riadky), karta
+           recenzie má pomer 4 : 3. Rovnomerná mierka podľa šírky jej preto
+           hneď na začiatku letu zmenila tvar — skrátila sa o tretinu a bočné
+           fotografie sa cez seba prekryli. Teraz sa šírka aj výška
+           prelínajú zvlášť: scéna sa zmenší tak, aby obdĺžnik pokryla
+           (ako `object-fit: cover`), a orez (clip-path) z nej nechá presne
+           ten obdĺžnik, ktorý má byť v tej chvíli vidieť. Na začiatku je to
+           tvar fotografie v kroku, na konci tvar karty — bez skoku. */
+        /* Fotografie vyrážajú s odstupom. Dve z pravého stĺpca kroku stoja
+           pod sebou a v recenziách majú stáť vedľa seba; keď leteli naraz,
+           spodná prešla cez hornú. Spodná preto počká, kým horná odíde. */
+        const odstup = [0, 0.04, 0.3][i] || 0;
+        const ei = orez((e - odstup) / (1 - odstup));
+        /* Vodorovne sa fotografie rozídu hneď na začiatku (ease-out), zvislo
+           idú rovnomerne. Dve fotografie, ktoré v kroku stoja pod sebou, majú
+           v recenziách stáť vedľa seba — keby sa najprv dvíhali, spodná by
+           prešla cez hornú. Zvislý pohyb ostáva rovnomerný, takže sa na
+           obrazovke nikdy neotočia späť. */
+        const ex = 1 - (1 - ei) * (1 - ei);
+        const x = medzi(z.left, d.left, ex);
+        const y = medzi(z.top, d.top, ei);
+        /* Veľkosť sa mení pozvoľna (smoothstep), poloha rovnomerne. Malé
+           fotografie z pravého stĺpca kroku sa pri rovnomernom zväčšovaní
+           rozrástli skôr, než sa od seba vzdialili — chvíľu sa prekrývali
+           a vyčnievali za okraj karty. Takto najprv odídu a až potom
+           narastú do veľkosti karty recenzie. */
+        const ev = ei * ei * (3 - 2 * ei);
+        const sir = medzi(z.width, d.width, ev);
+        const vys = medzi(z.height, d.height, ev);
+        const m = Math.max(sir / k.w, vys / k.h);
+        const ox = (k.w - sir / m) / 2;
+        const oy = (k.h - vys / m) / 2;
+        const zaobl = (k.r / m).toFixed(2);
+        k.scena.style.clipPath = 'inset(' + oy.toFixed(2) + 'px ' + ox.toFixed(2) + 'px round ' + zaobl + 'px)';
         k.scena.style.transform =
-          'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + m.toFixed(4) + ')';
+          'translate3d(' + (x - ox * m).toFixed(2) + 'px,' + (y - oy * m).toFixed(2) + 'px,0) scale(' + m.toFixed(4) + ')';
       });
     };
 
