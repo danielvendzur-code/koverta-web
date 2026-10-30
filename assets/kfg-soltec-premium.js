@@ -794,7 +794,7 @@ function kvAdresa(kluc, zaloha) {
             + '<li><b>Cena</b>: mení sa pri každej voľbe. Je orientačná, bez DPH, za konštrukciu podľa cenníka výrobcu. Doprava a montáž sú v konečnej ponuke vždy zahrnuté.</li>'
             + '<li><b>Väčší rozmer</b>: keď „+“ narazí na hranicu, konfigurátor prepne na väčší model, ak ho výrobca má; inak rozmer nacenime na mieru.</li>'
             + '<li><b>Poslať a zdieľať</b>: pod cenou pošlete hotovú zostavu do dopytu alebo skopírujete odkaz, ktorý si zapamätá model, rozmer aj farbu.</li>'
-            + '<li><a href="' + kvAdresa('modely', '../pouzite-modely/') + '" target="_blank" rel="noopener">O 3D modeloch</a>: autori a licencie áut a záhradného nábytku v scéne.</li>'
+            + '<li><a href="' + kvAdresa('modely', '../pouzite-modely/') + '" target="_blank" rel="noopener">Autori 3D modelov</a> áut a posedenia v scéne.</li>'
             + '</ul>';
           kolona.appendChild(d);
         };
