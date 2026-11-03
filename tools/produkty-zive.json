@@ -1,5 +1,5 @@
 {
-  "overene": "2026-11-03T00:56:58.217Z",
+  "overene": "2026-11-03T14:11:16.039Z",
   "zdroj": "https://koverta.sk HEAD",
   "nove": {
     "pristresok-koverta-2500x5200": true,
@@ -100,7 +100,7 @@
     "pristresok-pre-2-auta-5-x-5-6m": true,
     "pristresok-pre-2-auta-5-2-x-5-6m": true,
     "pristresok-pre-2-auta-5-4-x-5-6m": true,
-    "pristresok-pre-2-auta-5-6-x-5-6m": true,
+    "pristresok-pre-2-auta-5-6-x-5-6m": false,
     "pristresok-pre-2-auta-5-8-x-5-6m": false,
     "pristresok-pre-2-auta-6-x-5-6m": false,
     "pristresok-pre-2-auta-6-2-x-5-6m": false,
