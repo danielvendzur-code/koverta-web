@@ -11,11 +11,11 @@ Nový obsah ide na **staré, indexované adresy** (`tools/adresy-obchodu.json`):
 |---|---|
 | Prístrešky pre autá | `/collections/pristresky-pre-auta` (1 642 návštev / 90 dní) |
 | Bioklimatické pergoly | `/collections/bioklimaticke-pergoly` (891) |
-| Carport Soltec | `/collections/pristresky-pre-auta-agava` (411) |
-| Pevné prestrešenia | `/collections/pergoly-s-pevnou-strechou-multiport` |
+| Carport Soltec | `/collections/pristresky-pre-auta-soltec` (411) |
+| Pevné prestrešenia | `/collections/pergoly-soltec` |
 | Záhradné prístrešky, tienenie, kuchyne | `/collections/zahradne-pristresky`, `/tienenie`, `/outdoor-kuchyne` |
 | Kontakt, podmienky, súkromie, reklamácie | `/pages/kontakt`, `/pages/vseobecne-obchodne-podmienky`, `/pages/zasady-ochrany-osobnych-udajov`, `/pages/reklamacny-poriadok` |
-| Realizácie | `/pages/galeria-pristresky-pre-auta` |
+| Realizácie | `/pages/galeria` |
 | Konfigurátor, produkty, 3D modely | `/pages/konfigurator`, `/pages/produkty`, `/pages/pouzite-modely` (založené 23. 9.) |
 
 Téma obsah priradí podľa handle, šablóny v obchode sa nemenia. Kolekcie
@@ -68,7 +68,7 @@ Kroky 2, 4 a 5 vie spraviť Claude cez Shopify API na pokyn „spúšťame“.
 ## Čo overí smoke test po spustení
 
 `curl -I` na: `/`, `/collections/pristresky-pre-auta`, `/pages/kontakt`,
-`/pages/galeria-pristresky-pre-auta`, `/pages/konfigurator`,
+`/pages/galeria`, `/pages/konfigurator`,
 `/products/pristresok-koverta-5000x6000` (200), starý produkt (301 → nový),
 `/pages/nove-kontakt` (301), og:image z hlavičky (200), `robots.txt`,
 `sitemap.xml`.

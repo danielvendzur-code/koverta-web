@@ -182,6 +182,15 @@ function cielObchodu(cesta) {
   return Object.assign({}, z, { url: (z.typ === 'kolekcia' ? '/collections/' : '/pages/') + z.handle });
 }
 
+/* Handle cieľa a jeho staré handle (`stare_handle`): po premenovaní adresy
+   v obchode téma spozná obsah na novej aj starej adrese, takže nezáleží na
+   tom, či sa najprv nasadí téma, alebo premenuje kolekcia. Starú adresu
+   potom presmeruje Shopify (301). */
+function handlyCiela(ciel) {
+  return [ciel.handle].concat(ciel.stare_handle || []);
+}
+const bezDuplicit = (a) => a.filter((h, i) => a.indexOf(h) === i);
+
 /* Produkty rozmerov. Kým nový produkt nie je v obchode zverejnený, jeho
    adresa vracia 404 — odkaz vtedy ide na starý produkt s tým istým
    rozmerom (tools/shopify-product-redirects.json), ktorý žije. Rozhoduje
@@ -888,7 +897,7 @@ ${v.spolocnyChvost.join('\n')}
   const potrebujeZive = (x) => /kv_zive/.test(x.hlavny + x.medzi + x.ld.join(''));
   const vetva = (handles, x) => "{%- when '" + handles.join("', '") + "' -%}\n" +
     (potrebujeZive(x) ? '  ' + ZIVE + '\n' : '') + "  {% include '" + x.a.handle + "' %}\n";
-  const strankyVetvy = obsahy.map((x) => vetva([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)), x));
+  const strankyVetvy = obsahy.map((x) => vetva(bezDuplicit([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? handlyCiela(x.a.ciel) : [], stareStranky(x))), x));
   fs.writeFileSync(path.join(CIEL, 'sections', 'kv-stranka.liquid'),
     '{%- case page.handle -%}\n' + strankyVetvy.join('') +
     '{%- else -%}\n' +
@@ -898,7 +907,7 @@ ${v.spolocnyChvost.join('\n')}
     '\n{% schema %}\n' +
     JSON.stringify({ name: 'Koverta stránka', settings: [] }, null, 2) +
     '\n{% endschema %}\n');
-  const kolekcieVetvy = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => vetva([x.a.ciel.handle], x));
+  const kolekcieVetvy = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => vetva(handlyCiela(x.a.ciel), x));
   fs.writeFileSync(path.join(CIEL, 'templates', 'collection.liquid'),
     '{%- case collection.handle -%}\n' + kolekcieVetvy.join('') +
     "{%- else -%}\n  {% render 'koverta-obchod', druh: 'kolekcia', collection: collection %}\n{%- endcase -%}\n");
@@ -1034,8 +1043,8 @@ function seoVetvy(v) {
   const lit = (t) => "'" + String(t || '').replace(/'/g, '’') + "'";
   const priradenie = (x) => '{%- assign kv_titulok = ' + lit(x.celyTitulok) + ' -%}' + (x.popis ? '{%- assign kv_popis = ' + lit(x.popis) + ' -%}' : '');
   const obsahy = v.sablony.filter((x) => !x.a.rozmer && x.a.druh !== 'index' && x.celyTitulok);
-  const stranky = obsahy.map((x) => "{%- when '" + [x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? [x.a.ciel.handle] : [], stareStranky(x)).join("', '") + "' -%}" + priradenie(x)).join('\n');
-  const kolekcie = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => "{%- when '" + x.a.ciel.handle + "' -%}" + priradenie(x)).join('\n');
+  const stranky = obsahy.map((x) => "{%- when '" + bezDuplicit([x.a.handle].concat(x.a.ciel && x.a.ciel.typ === 'stranka' ? handlyCiela(x.a.ciel) : [], stareStranky(x))).join("', '") + "' -%}" + priradenie(x)).join('\n');
+  const kolekcie = obsahy.filter((x) => x.a.ciel && x.a.ciel.typ === 'kolekcia').map((x) => "{%- when '" + handlyCiela(x.a.ciel).join("', '") + "' -%}" + priradenie(x)).join('\n');
   return "{%- if request.page_type == 'page' -%}{%- case page.handle -%}\n" + stranky + "\n{%- endcase -%}\n" +
     "{%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}\n" + kolekcie + "\n{%- endcase -%}{%- endif -%}";
 }
@@ -1044,8 +1053,8 @@ function seoVetvy(v) {
 function podmienka(x) {
   if (x.a.druh === 'index') return "template.name == 'index'";
   const c = ["page.handle == '" + x.a.handle + "'"];
-  if (x.a.ciel && x.a.ciel.typ === 'stranka') c.push("page.handle == '" + x.a.ciel.handle + "'");
-  if (x.a.ciel && x.a.ciel.typ === 'kolekcia') c.push("collection.handle == '" + x.a.ciel.handle + "'");
+  if (x.a.ciel && x.a.ciel.typ === 'stranka') handlyCiela(x.a.ciel).forEach((h) => c.push("page.handle == '" + h + "'"));
+  if (x.a.ciel && x.a.ciel.typ === 'kolekcia') handlyCiela(x.a.ciel).forEach((h) => c.push("collection.handle == '" + h + "'"));
   return c.join(' or ');
 }
 
