@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{{ 'koverta-2026-kontakt.css' | asset_url }}">
 {%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
 <link rel="stylesheet" href="{{ 'koverta-2026-pristresky-pre-auta.css' | asset_url }}">
-{%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
+{%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria' or page.handle == 'galeria-pristresky-pre-auta' %}
 <link rel="stylesheet" href="{{ 'koverta-2026-realizacie.css' | asset_url }}">
 {%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
 <link rel="stylesheet" href="{{ 'koverta-2026-zahradne-pristresky.css' | asset_url }}">
@@ -51,16 +51,16 @@
 {%- when 'nove-pouzite-modely', 'pouzite-modely' -%}{%- assign kv_titulok = 'Autori 3D modelov | Koverta' -%}{%- assign kv_popis = 'Autori a licencie 3D modelov áut a posedenia, ktoré sa zobrazujú v konfigurátore Koverta.' -%}
 {%- when 'nove-pristresky-pre-auta', 'pristresky-pre-auta', 'o-pristreskoch-pre-auta' -%}{%- assign kv_titulok = 'Prístrešky pre autá na mieru, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Oceľové prístrešky pre 1 až 3 autá z vlastnej výroby, do 8 m bez stredového stĺpa. Rozmer si nastavíte v 3D konfigurátore s cenou. Montáž v cene.' -%}
 {%- when 'nove-produkty', 'produkty' -%}{%- assign kv_titulok = 'Všetky produkty | Koverta' -%}{%- assign kv_popis = 'Prehľad všetkého, čo Koverta vyrába a montuje: oceľové prístrešky pre autá, záhradné prístrešky, bioklimatické pergoly Soltec, tienenie a vonkajšie kuchyne.' -%}
-{%- when 'nove-realizacie', 'galeria-pristresky-pre-auta', 'galeria-zahradne-pristresky' -%}{%- assign kv_titulok = 'Realizácie prístreškov a pergol | Koverta' -%}{%- assign kv_popis = 'Prístrešky, pergoly a zastrešenia terás, ktoré sme postavili u zákazníkov vo viac ako 110 obciach na Slovensku. Fotografie z montáží podľa typu riešenia.' -%}
+{%- when 'nove-realizacie', 'galeria', 'galeria-pristresky-pre-auta', 'galeria-zahradne-pristresky' -%}{%- assign kv_titulok = 'Realizácie prístreškov a pergol | Koverta' -%}{%- assign kv_popis = 'Prístrešky, pergoly a zastrešenia terás, ktoré sme postavili u zákazníkov vo viac ako 110 obciach na Slovensku. Fotografie z montáží podľa typu riešenia.' -%}
 {%- when 'nove-reklamacie', 'reklamacny-poriadok' -%}{%- assign kv_titulok = 'Reklamačný poriadok | Koverta' -%}{%- assign kv_popis = 'Ako a kde reklamovať, ako postupujeme pri riešení a ako prebiehajú záručné opravy.' -%}
 {%- when 'nove-tienenie', 'tienenie' -%}{%- assign kv_titulok = 'Tienenie terás a pergol Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie tienenie Soltec: ZIP rolety K130, posuvné panely H50, pevné steny, sklo G1/G2 a otočné lamely E300. Montáž po celom Slovensku.' -%}
 {%- when 'nove-zahradne-pristresky', 'pre-dom-a-zahradu', 'o-zahradnych-pristreskoch' -%}{%- assign kv_titulok = 'Záhradné prístrešky a pergoly, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Záhradné prístrešky Koverta nad terasu, vstup či posedenie. Oceľ, strecha z trapézu alebo sendviča, bočné výplne. 3D konfigurátor s cenou, montáž v cene.' -%}
 {%- endcase -%}
 {%- elsif request.page_type == 'collection' -%}{%- case collection.handle -%}
 {%- when 'bioklimaticke-pergoly' -%}{%- assign kv_titulok = 'Bioklimatické pergoly Soltec s otočnými lamelami | Koverta' -%}{%- assign kv_popis = 'Prémiová hliníková pergola Soltec s otočnými lamelami: tieň, vzduch aj ochrana pred dažďom. Šesť modelov SL, 3D konfigurátor, montáž po celom Slovensku.' -%}
-{%- when 'pristresky-pre-auta-agava' -%}{%- assign kv_titulok = 'Prémiový hliníkový prístrešok pre auto Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové celohliníkové carporty Soltec pre 1 až 3 autá, voda odteká vnútri stĺpov. Rady F a SL, 3D konfigurátor s cenou, doprava a montáž v cene.' -%}
+{%- when 'pristresky-pre-auta-soltec', 'pristresky-pre-auta-agava' -%}{%- assign kv_titulok = 'Prémiový hliníkový prístrešok pre auto Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové celohliníkové carporty Soltec pre 1 až 3 autá, voda odteká vnútri stĺpov. Rady F a SL, 3D konfigurátor s cenou, doprava a montáž v cene.' -%}
 {%- when 'outdoor-kuchyne' -%}{%- assign kv_titulok = 'Vonkajšie kuchyne Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie kuchyne Soltec do zastrešenej terasy aj pod pergolu. Hliníková konštrukcia, hliníkový obklad a kamenná doska 2 cm. Montáž v cene.' -%}
-{%- when 'pergoly-s-pevnou-strechou-multiport' -%}{%- assign kv_titulok = 'Pevné prestrešenie terasy Soltec, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Prémiové prestrešenie terasy Soltec so zatepleným panelom 3 cm, bezpečnostným sklom alebo zelenou strechou. 3D konfigurátor, doprava a montáž v cene.' -%}
+{%- when 'pergoly-soltec', 'pergoly-s-pevnou-strechou-multiport' -%}{%- assign kv_titulok = 'Pevné prestrešenie terasy Soltec, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Prémiové prestrešenie terasy Soltec so zatepleným panelom 3 cm, bezpečnostným sklom alebo zelenou strechou. 3D konfigurátor, doprava a montáž v cene.' -%}
 {%- when 'pristresky-pre-auta' -%}{%- assign kv_titulok = 'Prístrešky pre autá na mieru, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Oceľové prístrešky pre 1 až 3 autá z vlastnej výroby, do 8 m bez stredového stĺpa. Rozmer si nastavíte v 3D konfigurátore s cenou. Montáž v cene.' -%}
 {%- when 'tienenie' -%}{%- assign kv_titulok = 'Tienenie terás a pergol Soltec | Koverta' -%}{%- assign kv_popis = 'Prémiové vonkajšie tienenie Soltec: ZIP rolety K130, posuvné panely H50, pevné steny, sklo G1/G2 a otočné lamely E300. Montáž po celom Slovensku.' -%}
 {%- when 'zahradne-pristresky' -%}{%- assign kv_titulok = 'Záhradné prístrešky a pergoly, 3D konfigurátor | Koverta' -%}{%- assign kv_popis = 'Záhradné prístrešky Koverta nad terasu, vstup či posedenie. Oceľ, strecha z trapézu alebo sendviča, bočné výplne. 3D konfigurátor s cenou, montáž v cene.' -%}
@@ -81,12 +81,12 @@
     assign kv_canon = shop.url | append: '/collections/zahradne-pristresky'
   when '/pages/bioklimaticke-pergoly', '/pages/galeria-bioklimaticke-pergoly', '/pages/nove-bioklimaticke-pergoly'
     assign kv_canon = shop.url | append: '/collections/bioklimaticke-pergoly'
-  when '/pages/galeria-zahradne-pristresky', '/pages/nove-realizacie'
-    assign kv_canon = shop.url | append: '/pages/galeria-pristresky-pre-auta'
-  when '/pages/galeria-pristresky-agava', '/pages/nove-carport-soltec'
-    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta-agava'
-  when '/pages/pergoly-s-pevnou-strechou-multiport', '/pages/nove-pevne-prestresenia'
-    assign kv_canon = shop.url | append: '/collections/pergoly-s-pevnou-strechou-multiport'
+  when '/pages/galeria-zahradne-pristresky', '/pages/nove-realizacie', '/pages/galeria-pristresky-pre-auta'
+    assign kv_canon = shop.url | append: '/pages/galeria'
+  when '/pages/galeria-pristresky-agava', '/pages/nove-carport-soltec', '/collections/pristresky-pre-auta-agava'
+    assign kv_canon = shop.url | append: '/collections/pristresky-pre-auta-soltec'
+  when '/pages/pergoly-s-pevnou-strechou-multiport', '/pages/nove-pevne-prestresenia', '/collections/pergoly-s-pevnou-strechou-multiport'
+    assign kv_canon = shop.url | append: '/collections/pergoly-soltec'
   when '/pages/tienenie', '/pages/nove-tienenie'
     assign kv_canon = shop.url | append: '/collections/tienenie'
   when '/pages/vonkajsie-kuchyne', '/pages/nove-outdoor-kuchyne'
@@ -205,7 +205,7 @@ body { margin: 0; background: #fff; }
 
 {%- elsif page.handle == 'nove-pristresky-pre-auta' or collection.handle == 'pristresky-pre-auta' %}
 
-{%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria-pristresky-pre-auta' %}
+{%- elsif page.handle == 'nove-realizacie' or page.handle == 'galeria' or page.handle == 'galeria-pristresky-pre-auta' %}
 
 {%- elsif page.handle == 'nove-zahradne-pristresky' or collection.handle == 'zahradne-pristresky' %}
 
@@ -241,13 +241,13 @@ body { margin: 0; background: #fff; }
   window.KV_CESTY = {
     "./pristresky-pre-auta/": "/collections/pristresky-pre-auta",
     "./assets/koverta-pristresok-pre-auto-lucenec.jpg": "{{ 'koverta-pristresok-pre-auto-lucenec.jpg' | asset_url }}",
-    "./carport-soltec/": "/collections/pristresky-pre-auta-agava",
+    "./carport-soltec/": "/collections/pristresky-pre-auta-soltec",
     "./assets/soltec-carport-nitra-hero.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@85d77ff2a31500334f16525ed9f6c519d9e30dfa/assets/soltec-carport-nitra-hero.jpg?v=2",
     "./zahradne-pristresky/": "/collections/zahradne-pristresky",
     "./assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@85d77ff2a31500334f16525ed9f6c519d9e30dfa/assets/koverta-zahradny-pristresok-antracit-lamelova-stena.jpg?v=2",
     "./bioklimaticke-pergoly/": "/collections/bioklimaticke-pergoly",
     "./assets/soltec-pergola-pri-bazene-antracit.jpg": "{{ 'soltec-pergola-pri-bazene-antracit.jpg' | asset_url }}",
-    "./pevne-prestresenia/": "/collections/pergoly-s-pevnou-strechou-multiport",
+    "./pevne-prestresenia/": "/collections/pergoly-soltec",
     "./assets/soltec-prestresenie-vajnory-karta.jpg": "https://cdn.jsdelivr.net/gh/danielvendzur-code/koverta-web@e5a7e3db0c4dce880b04c12cba2c068fd9df0bcc/assets/soltec-prestresenie-vajnory-karta.jpg?v=2",
     "./tienenie/": "/collections/tienenie",
     "./assets/soltec-pergola-zip-rolety-a-pevne-vyplne.jpg": "{{ 'soltec-pergola-zip-rolety-a-pevne-vyplne.jpg' | asset_url }}",

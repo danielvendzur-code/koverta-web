@@ -3929,12 +3929,12 @@ if (typeof window !== 'undefined' && !window.kvChat
        neťukne. Držia sa preto rovnako ako v mega menu a `src` dostanú až pri
        otvorení. */
     /* Posledná časť adresy sa porovnáva celá: na Shopify má Carport Soltec
-       adresu /collections/pristresky-pre-auta-agava a pri porovnaní „obsahuje
+       adresu /collections/pristresky-pre-auta-soltec a pri porovnaní „obsahuje
        pristresky-pre-auta“ dostal fotku prístreškov Koverta. Kolekcie na
        Shopify majú iné mená ako stránky webu, preto aj ich aliasy. */
     const ALIAS_MENU = {
-      'carport-soltec': ['carport-soltec', 'pristresky-pre-auta-agava'],
-      'pevne-prestresenia': ['pevne-prestresenia', 'pergoly-s-pevnou-strechou-multiport']
+      'carport-soltec': ['carport-soltec', 'pristresky-pre-auta-soltec', 'pristresky-pre-auta-agava'],
+      'pevne-prestresenia': ['pevne-prestresenia', 'pergoly-soltec', 'pergoly-s-pevnou-strechou-multiport']
     };
     const zhodaMenu = (href, part) => {
       const koniec = String(href || '').split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop();
