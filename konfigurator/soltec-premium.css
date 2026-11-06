@@ -1648,3 +1648,12 @@
 #SoltecPremium .sp-pridat input:checked + .sp-pridat__btn i::after { width: .95rem; left: .38rem; top: .55rem; transform: rotate(-50deg); }
 #SoltecPremium .sp-pridat input:disabled + .sp-pridat__btn { opacity: .45; cursor: not-allowed; }
 #SoltecPremium .sp-pridat input:focus-visible + .sp-pridat__btn { outline: 2px solid var(--sp-ink); outline-offset: 2px; }
+
+/* Celá obrazovka: zavrieť (X) sedí v pravom hornom rohu a tlačidlo
+   Priblížiť naň dosadalo spodkom. V pracovnom režime ide Priblížiť aj
+   ovládanie priblíženia o kúsok nižšie, pod X. */
+#SoltecPremium .sp-cfg.is-full .sp-zoom { top: 7.6rem; }
+#SoltecPremium .sp-cfg.is-full .sp-zoom-tools { top: 11.9rem; }
+@media(max-width: 749px) {
+  #SoltecPremium .sp-cfg.is-full .sp-zoom { top: 7rem; }
+}

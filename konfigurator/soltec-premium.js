@@ -2223,7 +2223,10 @@ function kvAdresa(kluc, zaloha) {
           const w = Math.max(2, Math.round(cssW * dpr));
           const h = Math.max(2, Math.round(cssH * dpr));
           if (surface.width !== w || surface.height !== h) { surface.width = w; surface.height = h; }
-          if (surface.style.width !== cssW + 'px') {
+          /* Šírka aj výška zvlášť: pri celej obrazovke na širokom monitore sa
+             mení len výška. Plátno vtedy ostalo v starej výške a model bol
+             roztiahnutý, kým sa nezmenila aj šírka. */
+          if (surface.style.width !== cssW + 'px' || surface.style.height !== cssH + 'px') {
             surface.style.width = cssW + 'px';
             surface.style.height = cssH + 'px';
           }

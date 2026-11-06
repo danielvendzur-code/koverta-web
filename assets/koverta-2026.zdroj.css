@@ -14726,3 +14726,60 @@ body.ma-kh-modal { overflow: hidden; }
 .k .kh-autori__pozn { margin: 12px 0 0; font-size: 13px; color: var(--k-grey); }
 .k .kh-autori td:last-child { white-space: nowrap; }
 @media (max-width: 599px) { .k .kh-autori th, .k .kh-autori td { padding: 10px 12px; font-size: 14px; } }
+
+/* ==========================================================================
+   VRSTVA · Drobnosti 6. 11.: okraje kariet, proces na nízkej obrazovke,
+   fotky z montáží bez čísel a čiar
+   ========================================================================== */
+/* Karta výberu konfigurátora mala svetlé pozadie a vnútorný rámik pod
+   fotkou. Na zaoblenom okraji fotka nezakryje posledný pixel, takže
+   v rohoch presvital biely kúsok. Pozadie je tmavé ako sekcia, rámik je
+   len pri hover a kreslí sa nad fotkou. */
+.k .kh-kfg__karta {
+  background: #12171a;
+  box-shadow: none;
+  isolation: isolate;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+.k .kh-kfg__karta:hover { box-shadow: none; }
+.k .kh-kfg__karta::after { border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0); transition: box-shadow 200ms var(--k-ease); }
+.k .kh-kfg__karta:hover::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45); }
+
+/* Proces na nízkej obrazovke (notebook 1366 × 657, okno prehliadača s
+   panelmi): pripnutý blok bol vyšší ako okno, spodok textu v karte aj
+   tlačidlo konfigurátora boli odrezané. Fotka sa zníži podľa výšky okna,
+   riadky krokov sú hustejšie — text sa nemení. */
+@media (min-width: 900px) and (max-height: 880px) {
+  .k .kh-proc__grid { top: 76px; }
+  .k .kh-proc__aside { gap: 18px; }
+  .k .kh-proc__row { padding-block: 11px; }
+  .k .kh-proc__cta { min-height: 48px; }
+  .k .kh-proc__panel .kh-proc__media:not(.kh-proc__media--trio) { max-height: calc(100vh - 76px - 300px); max-height: calc(100svh - 76px - 300px); }
+  .k .kh-proc__panel .kh-proc__body { padding: 26px 30px; }
+}
+
+/* Fotky z montáží: iba fotky. Bez poradového čísla, bez linky nad
+   popisom a bez zmeny farby pri prejdení myšou. Popis ostáva pre
+   čítačky a vyhľadávače, na obrazovke ho nevidno. */
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__body::before { content: none; }
+.k .kh-cat__item:not(:has(.kh-cat__card)) .kh-cat__media img,
+.k .kh-cat__item:not(:has(.kh-cat__card)):hover .kh-cat__media img { transform: none; transition: none; filter: none; }
+
+/* Strechy radu G: tri možnosti (panel, sklo, zelená) idú v jednom rade cez
+   celú šírku, popis nad nimi. Veta pod doplnkami doplní to, čo nemá fotku. */
+.k .kh-typy__karty--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1200px) {
+  .k .kh-typy--vedla .kh-typy__rad:has(.kh-typy__karty--3.kh-typy__karty--strechy) { grid-template-columns: minmax(0, 1fr); row-gap: 18px; }
+  .k .kh-typy__karty--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 899px) { .k .kh-typy__karty--3 { grid-template-columns: none; } }
+.k .kh-typy__dalej { margin: 18px 0 0; max-width: 70ch; color: var(--k-muted); }

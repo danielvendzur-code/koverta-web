@@ -94,8 +94,10 @@ module.exports = async function routingSmoke(browser) {
       await gotoControl('[data-sp-frame-color]');
       await page.locator('[data-sp-frame-color]:not([aria-pressed="true"])').first().click();
       assert((await snapshot()).frameColor !== resized.frameColor, `${route}: colour did not change`);
-      await gotoControl('[data-sp-side]');
-      await page.locator('[data-sp-side]').first().click();
+      /* Strana pri stene domu (prestrešenie, montáž na stenu) sa nedá
+         uzavrieť, a preto je jej tlačidlo skryté. Klikne sa prvá voľná strana. */
+      await gotoControl('[data-sp-side]:not([hidden])');
+      await page.locator('[data-sp-side]:not([hidden])').first().click();
       await page.locator(kv ? '[data-sp-side-opt]:not([data-sp-side-opt="open"])' : '[data-sp-side-opt="fi30"]').first().click();
       const withSide = await snapshot();
       assert(Object.values(withSide.sides).some(v => v !== 'open'), `${route}: side did not change`);
