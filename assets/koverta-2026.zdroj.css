@@ -14801,3 +14801,31 @@ body.ma-kh-modal { overflow: hidden; }
 .k .kh-vs tbody td small { font-size: 11.5px; line-height: 1.4; margin-top: 2px; }
 .k .kh-vs--data table { font-size: 13.5px; }
 .k .kh-vs--data th, .k .kh-vs--data td { padding-block: 8px; }
+
+/* Kompaktné karty modelov, striech a vzorník farieb (Soltec, 6. 11.) —
+   rovnaký dôvod ako pri tabuľkách: na notebooku so zväčšením pôsobili
+   prvky obrovsky. Obsah sa nemení. */
+.k .kh-typy__kod { font-size: 26px; line-height: 1.1; }
+.k .kh-typy__pod { font-size: 13px; }
+.k .kh-typy__popis { font-size: 13.5px; line-height: 1.55; max-width: 70ch; }
+.k .kh-typy__karta h4 { font-size: 15px; }
+.k .kh-typy__karta dt, .k .kh-typy__karta dd { font-size: 12.5px; }
+.k .kh-typy__karta p { font-size: 13px; line-height: 1.5; }
+.k .kh-typy__karty:not(.kh-typy__karty--strechy):not(.kh-typy__karty--doplnky) .kh-typy__karta > img { max-height: 180px; object-fit: contain; }
+.k .kh-typy__karty--strechy .kh-typy__karta > img:first-child { aspect-ratio: 16 / 9; max-height: 190px; }
+.k .kh-typy__karta img.kh-typy__rez { max-height: 130px; }
+.k .kh-typy__karty--doplnky .kh-typy__karta img { max-height: 170px; }
+.k .kh-vzor { padding: 26px 28px; }
+.k .kh-farby__pas { font-size: 13.5px; }
+.k .kh-odtiene__nadpis { font-size: 13px; }
+.k .kh-odtien i { width: 60px; height: 60px; }
+.k .kh-odtien b { font-size: 12.5px; }
+.k .kh-odtien span { font-size: 11.5px; }
+/* Čo je v cene (všetky produktové stránky) a riadky tienenia: menšie čísla,
+   nadpisy a vnútorné okraje. */
+.k .kh-vcene li { padding: 24px 22px 26px; }
+.k .kh-vcene__cislo { font-size: 32px; line-height: 1; }
+.k .kh-vcene__nazov { font-size: 18px; }
+.k .kh-vcene__body { font-size: 13.5px; }
+.k .kh-shade-product__head { padding: 24px; }
+.k .kh-shade-product__head h3 { font-size: 22px; }
