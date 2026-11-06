@@ -14783,10 +14783,3 @@ body.ma-kh-modal { overflow: hidden; }
 }
 @media (max-width: 899px) { .k .kh-typy__karty--3 { grid-template-columns: none; } }
 .k .kh-typy__dalej { margin: 18px 0 0; max-width: 70ch; color: var(--k-muted); }
-
-/* Carport Soltec: na širokej obrazovke výrez zo stredu odrezal oba Mercedesy
-   pod kapotou. Výrez ide nižšie, autá sú celé; strecha ostáva vidno. */
-@media (min-width: 760px) {
-  .k .kh-hero__bg img[src*="soltec-carport-nitra-hero"],
-  body:not(.k-home) .k .kh-hero .kh-hero__bg img[src*="soltec-carport-nitra-hero"] { object-position: 50% 74% !important; }
-}
