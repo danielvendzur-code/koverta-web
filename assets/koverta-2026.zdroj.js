@@ -1120,16 +1120,14 @@ if (typeof window !== 'undefined' && !window.kvChat
   // hľadá naživo v obsahu stránky: v položkách menu, v dlaždiciach ponuky,
   // v realizáciách aj v otázkach. Index sa stavia z DOM, takže sa nemôže
   // rozísť s tým, čo je na stránke; navyše nesie ručné synonymá, aby si
-  // návštevník našiel „lamely" alebo „smetiak" bez znalosti názvu produktu.
+  // návštevník našiel napríklad „lamely" bez znalosti názvu produktu.
   const SYNONYMS = {
     'pristresky pre auta': 'carport auto garaz parkovanie pristresok pre auto dve auta',
     'carport soltec': 'carport hlinik premium auto',
     'zahradne pristresky': 'terasa vstup posedenie zahrada pristresok',
     tienenie: 'lamely zaluzie clona slnko roleta zip screen tien',
-    'boxy na smetne kose': 'smetiak kos odpad kontajner box popolnica',
     'bioklimaticke pergoly': 'otocne lamely pergola bio zip rolety osvetlenie led',
     'pevne prestresenia': 'iso panel sklo sklenena strecha multiport prestresenie',
-    'pergoly s otvaracou strechou': 'cabrio posuvna strecha otvaratelna',
     'vonkajsie kuchyne': 'outdoor kuchyna grill gril nerez varenie'
   };
 
