@@ -543,6 +543,8 @@ function kvAdresa(kluc, zaloha) {
       <div class="sp-scene__body">
         <div class="sp-scene__row"><div class="sp-scene__choices" role="group" aria-label="Vybavenie priestoru">
           <button type="button" data-scene-mode="none">Prázdny</button><button type="button" data-scene-mode="car">Auto</button><button type="button" data-scene-mode="bistro">Posedenie</button></div></div>
+        <div class="sp-scene__row" data-scene-envrow hidden><div class="sp-scene__choices" role="group" aria-label="Prostredie">
+          <button type="button" data-scene-env="studio" aria-pressed="true">Štúdio</button><button type="button" data-scene-env="dom" aria-pressed="false">Pri dome</button><button type="button" data-scene-env="zahrada" aria-pressed="false">Záhrada</button></div></div>
         <div class="sp-scene__row sp-scene__more" data-scene-countrow>
         <select name="auto-model" data-scene-car aria-label="Model auta"><option value="auto">Auto podľa priestoru</option><option value="sedan">Sedan</option><option value="sport">Športové</option><option value="city">Malé auto</option></select>
         <select id="sp-scene-count" aria-label="Počet zostáv"><option value="1">1 kus</option><option value="2">2 kusy</option><option value="3">3 kusy</option><option value="auto">Koľko sa zmestí</option></select>
@@ -640,6 +642,13 @@ function kvAdresa(kluc, zaloha) {
       const head=e.target.closest('summary');
       if(head){e.preventDefault();panel.classList.toggle('is-peek');return;}
       const b=e.target.closest('button');if(!b)return;
+      /* Prostredie (štúdio / reálna scéna) patrí vykresľovaču stavby, nie
+         vybaveniu: oznámi sa udalosťou a konfigurátor si ho prevezme. */
+      if(b.dataset.sceneEnv){
+        panel.querySelectorAll('[data-scene-env]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+        root.dispatchEvent(new CustomEvent('kv-prostredie',{detail:{scena:b.dataset.sceneEnv}}));
+        return;
+      }
       /* Posedenie má priestor vyplniť, auto nie: jedno auto je bežná
          predstava parkovania, tri kusy nábytku bežná predstava terasy. */
       if(b.dataset.sceneMode){state.mode=b.dataset.sceneMode;state.count=b.dataset.sceneMode==='bistro'?'auto':'1';}

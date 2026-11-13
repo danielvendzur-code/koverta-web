@@ -2117,6 +2117,7 @@ function kvAdresa(kluc, zaloha) {
            podhľad, drevené odtiene sú drevo a zvyšok je prášková farba. */
         const triedaMaterialu = (face) => {
           const M = window.KvRender3D.MATERIALY;
+          if (face.kulisa && face.mat3d && M[face.mat3d]) return M[face.mat3d];
           if (face.bg) return M.dlazba;
           if (face.material === 'zinc') return M.zinok;
           if (face.material === 'latka') return M.latka || M.lak;
@@ -2166,9 +2167,76 @@ function kvAdresa(kluc, zaloha) {
           return painter3D;
         };
 
+        /* Reálna scéna (scene-prostredie.js). Štúdio je predvolené; iná scéna
+           sa zapne voľbou v paneli scény alebo parametrom `?scena=dom`.
+           Modul aj obrázky sa načítajú až pri prvom zapnutí, takže štúdio
+           nestojí ani bajt navyše. */
+        const prostredie = { scena: 'studio', nastavene: 'studio', nacitava: null, modul: null };
+        try {
+          const m = /[?&]scena=(dom|zahrada|studio)\b/.exec(location.search);
+          if (m) prostredie.scena = m[1];
+        } catch (e) {}
+        const modulProstredia = () => {
+          if (window.KvProstredie) return Promise.resolve(window.KvProstredie);
+          if (!prostredie.modul) prostredie.modul = new Promise((ok, chyba) => {
+            const sc = document.createElement('script');
+            /* Prívesok ?v= berie z konfigurátora, aby prehliadač po zmene
+               nevzal starú verziu zo svojej pamäte. */
+            const hl = new URL(document.querySelector('script[src*="soltec-premium.js"]').src);
+            sc.src = new URL('scene-prostredie.js' + hl.search, hl).href;
+            sc.onload = () => (window.KvProstredie ? ok(window.KvProstredie) : chyba(new Error('prostredie')));
+            sc.onerror = chyba;
+            document.head.appendChild(sc);
+          });
+          return prostredie.modul;
+        };
+        const nastavScenu = (scena) => {
+          prostredie.scena = scena;
+          scheduleStage();
+        };
+        try { window.SP_TEST.setScena = nastavScenu; window.SP_TEST.scena = () => prostredie.nastavene; } catch (e) {}
+        cfgRoot.addEventListener('kv-prostredie', (e) => {
+          const sc = e.detail && e.detail.scena;
+          if (sc === 'studio' || sc === 'dom' || sc === 'zahrada') nastavScenu(sc);
+        });
+        /* Slabší stroj dostane reálnu scénu odľahčenú: bez kariet listov
+           a trsov trávy (to je väčšina trojuholníkov aj priehľadných
+           pixelov). Štúdio je pre všetkých rovnaké. */
+        const slabyStroj = Number(navigator.deviceMemory || 8) <= 4 && Number(navigator.hardwareConcurrency || 8) <= 4;
+        /* Kulisy podľa obalu stavby. Zozadu domu sa nekreslia vôbec — dom
+           nemá zadnú stenu a kamera by videla dovnútra. */
+        const kulisyPreZaber = (faces, smer) => {
+          if (prostredie.nastavene === 'studio' || !window.KvProstredie) return { plochy: [], dlazba: null, kluc: '' };
+          let obal = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+          for (const f of faces) if (!f.bg && f.w) for (const q of f.w) for (let k = 0; k < 3; k++) {
+            if (q[k] < obal[k]) obal[k] = q[k];
+            if (q[k] > obal[k + 3]) obal[k + 3] = q[k];
+          }
+          if (!Number.isFinite(obal[0])) return { plochy: [], dlazba: null, kluc: '' };
+          const zozadu = smer && smer[1] < -0.04;
+          const walls = (placement && placement().walls) || [];
+          const k = window.KvProstredie.kulisy(prostredie.nastavene, obal, {
+            naStene: walls.indexOf('rear') > -1,
+            lite: slabyStroj,
+            /* Tá istá rodina, pre ktorú panel scény ponúka auto. */
+            prijazd: /^(carport|koverta)$/.test(String(BIO.page || ''))
+          });
+          if (zozadu) k.plochy = k.plochy.filter((f) => !f.domova);
+          k.kluc = prostredie.nastavene + (zozadu ? ':z' : ':p');
+          return k;
+        };
+
         const paint3D = (faces, camera) => {
           if (!pripravPainter3D()) return false;
           const { r, surface } = painter3D;
+          if (prostredie.scena !== prostredie.nastavene && !prostredie.nacitava) {
+            const ciel = prostredie.scena;
+            prostredie.nacitava = (ciel === 'studio' ? Promise.resolve(null)
+              : modulProstredia().then((m) => m.nacitaj(ciel)))
+              .then((p) => { r.nastavProstredie(p); prostredie.nastavene = p ? ciel : 'studio'; })
+              .catch(() => { r.nastavProstredie(null); prostredie.nastavene = 'studio'; prostredie.scena = 'studio'; })
+              .then(() => { prostredie.nacitava = null; klucSiete = null; scheduleStage(); });
+          }
           /* Doostrovanie z predchádzajúceho pohľadu už neplatí — nový snímok
              kreslí niečo iné. */
           if (painter3D.doostr) { cancelAnimationFrame(painter3D.doostr); painter3D.doostr = 0; }
@@ -2234,12 +2302,17 @@ function kvAdresa(kluc, zaloha) {
 
           /* Sieť sa prestavia len vtedy, keď sa zmenila geometria. Pri
              otáčaní sa na kartu neposiela ani bajt navyše. */
-          const kluc = camera.geometryKey;
+          const kul = kulisyPreZaber(faces, camera.smer);
+          const kluc = camera.geometryKey + '|' + kul.kluc;
+          if (r.prostredie) r.prostredie.dlazba = kul.dlazba;
           if (kluc !== klucSiete) {
             /* Nálepka s logom (decal) potrebuje textúru, ktorú 3D vykresľovač
                nemá — kreslil ju ako prázdny biely obdĺžnik a na stĺpe
                vyzerala ako chyba. Kým textúru nevie, nálepka sa v 3D vynechá. */
-            r.nastavScenu(faces.filter((f) => !f.decal), triedaMaterialu);
+            /* V reálnej scéne domovú stenu stavby nahrádza fasáda kulís. */
+            const vlastne = prostredie.nastavene === 'studio' ? faces
+              : faces.filter((f) => !f.houseWall);
+            r.nastavScenu(vlastne.filter((f) => !f.decal).concat(kul.plochy), triedaMaterialu);
             klucSiete = kluc;
           }
 
@@ -2282,6 +2355,11 @@ function kvAdresa(kluc, zaloha) {
              dekódovanie konštrukcie uprostred snímku. */
           if (r.kresliNavyse && sceneLife.needsDraw) r.kresliNavyse.aktivne = sceneLife.needsDraw();
           canvas.dataset.renderer = 'webgl2-pbr';
+          if (!prostredie.riadok) {
+            const riadok = cfgRoot.querySelector('[data-scene-envrow]');
+            if (riadok) { riadok.hidden = false; prostredie.riadok = riadok;
+              riadok.querySelectorAll('[data-scene-env]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.sceneEnv === prostredie.scena))); }
+          }
           /* Testy aj ladenie čítajú počet plôch z tohto atribútu. */
           canvas.dataset.faceCount = String(faces.length);
           /* Dva údaje pre kontroly, nie pre diváka: z akých materiálov je
@@ -3174,6 +3252,7 @@ function kvAdresa(kluc, zaloha) {
                 sourceFill: fill,
                 material: o.material || '',
                 decal: o.decal || false,
+                houseWall: o.houseWall === true,
                 /* Ktoré plochy sú jednostranné, vie geometria — tá istá
                    informácia, ktorou doteraz orezávala odvrátené steny. */
                 cull: Boolean(o.cull),
@@ -3250,6 +3329,8 @@ function kvAdresa(kluc, zaloha) {
                  grafickej karte; doterajší maliar ich ignoruje. */
               normal,
               material: o.material || '',
+              /* Domová stena štúdia — v reálnej scéne ju nahradí fasáda. */
+              houseWall: o.houseWall === true,
               fill: lit, sourceFill: fill, decal: o.decal || false,
               vertexFills: vertexFills,
               edge: o.edge !== false,
@@ -3710,7 +3791,7 @@ function kvAdresa(kluc, zaloha) {
                 : [v + (off || 0) * nrm[0], u, z]);
               const band = (zA, zB, hex, off, extra) => quad(
                 [P(u0, zA, off), P(u1, zA, off), P(u1, zB, off), P(u0, zB, off)],
-                hex, Object.assign({ normal: nrm, cull: true, edge: false, fit: false }, extra || {}));
+                hex, Object.assign({ normal: nrm, cull: true, edge: false, fit: false, houseWall: true }, extra || {}));
               /* Priehľadná stena (typ bez stĺpov): pergolu je cez ňu vidieť,
                  no je jasné, že stojí medzi stenami. */
               if (sklo) { band(0, wallTop, 'rgba(206,220,228,.30)', 0, { raw: true, cull: false }); return; }
