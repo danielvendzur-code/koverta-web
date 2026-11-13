@@ -2215,16 +2215,19 @@ function kvAdresa(kluc, zaloha) {
             if (q[k] > obal[k + 3]) obal[k + 3] = q[k];
           }
           if (!Number.isFinite(obal[0])) return { plochy: [], dlazba: null, kluc: '' };
-          const zozadu = smer && smer[1] < -0.04;
           const walls = (placement && placement().walls) || [];
           const k = window.KvProstredie.kulisy(prostredie.nastavene, obal, {
+            /* Polomer obletu kamery: stromy a plot musia stáť za ním, inak
+               by nimi kamera pri otáčaní prešla. */
+            dosahKamery: Math.max(obal[3] - obal[0], obal[4] - obal[1], obal[5] - obal[2]) * 2.9,
             naStene: walls.indexOf('rear') > -1,
             lite: slabyStroj,
             /* Tá istá rodina, pre ktorú panel scény ponúka auto. */
             prijazd: /^(carport|koverta)$/.test(String(BIO.page || ''))
           });
-          if (zozadu) k.plochy = k.plochy.filter((f) => !f.domova);
-          k.kluc = prostredie.nastavene + (zozadu ? ':z' : ':p');
+          /* Dom je uzavretý a zakrývajúce kulisy rozplynie vykresľovač —
+             pri obletení sa preto nič neodoberá ani nestavia nanovo. */
+          k.kluc = prostredie.nastavene;
           return k;
         };
 
@@ -2948,6 +2951,20 @@ function kvAdresa(kluc, zaloha) {
           const headZ = (x) => H + (fallShown && panelRoof
             ? Math.round(fall * (1 - Math.min(1, Math.max(0, x / Math.max(1, L))))) : 0);
 
+          /* Reálna scéna: kamera sa nesmie dostať za dom ani pod zem.
+             Pri dome sa obieha len predná polovica — ako keď človek chodí
+             po dvore okolo prístrešku; za stenou domu nič nie je. Uhol sa
+             zastaví plynulo na hranici, nie skokom. */
+          if (prostredie.nastavene !== 'studio') {
+            if (view.el < 0.03) view.el = 0.03;
+            if (prostredie.nastavene === 'dom') {
+              const dosah = Math.max(L, W, H) * 2.9 * Math.cos(view.el);
+              const minCa = Math.max(-0.95, Math.min(0.6, (1800 - W / 2) / Math.max(1, dosah)));
+              const hranica = Math.acos(minCa);
+              const a = Math.atan2(Math.sin(view.az), Math.cos(view.az));
+              if (Math.abs(a) > hranica) view.az = Math.sign(a) * hranica;
+            }
+          }
           const ca = Math.cos(view.az), sa = Math.sin(view.az);
           const ce = Math.cos(view.el), se = Math.sin(view.el);
 

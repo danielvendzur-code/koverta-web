@@ -43,10 +43,10 @@
             Math.sin(VYSKA_SLNKA)],
     ozarenie: { hore: [0.4222, 0.4861, 0.6994], bok: [0.2898, 0.3405, 0.4932] },
     jas: 0.85,
-    travaJas: 1.12,
+    travaJas: 1.02,
     /* Vzdialený trávnik osvetlený tým istým slnkom a oblohou — zem pri
        horizonte, kam sa podklad rozplynie. */
-    zemDalka: [0.060, 0.098, 0.034],
+    zemDalka: [0.084, 0.126, 0.060],
     odrazivostZeme: [0.16, 0.20, 0.12]
   };
 
@@ -290,6 +290,17 @@
     if (!S || scena === 'studio' || !obal) return { plochy: [], dlazba: null };
     const o = moznosti || {};
     lite = Boolean(o.lite);
+    /* Kamera obieha stred stavby po kružnici s polomerom dosahKamery.
+       Stromy musia stáť za ňou, inak by nimi pri otáčaní prešla —
+       poloha sa preto posunie od stredu von, smer ostáva. */
+    const Rk = Number(o.dosahKamery) > 0 ? Number(o.dosahKamery) : 18000;
+    const cxS = (obal[0] + obal[3]) / 2, cyS = (obal[1] + obal[4]) / 2;
+    const zaKamerou = (x, y, rezerva) => {
+      const dx = x - cxS, dy = y - cyS, d = Math.hypot(dx, dy) || 1;
+      const min = Rk + (rezerva || 6500);
+      return d >= min ? [x, y] : [cxS + dx / d * min, cyS + dy / d * min];
+    };
+    const stromZa = (x, y, vyska, seed) => { const q = zaKamerou(x, y, vyska * 0.42 + 3000); strom(pridaj, q[0], q[1], vyska, seed); };
     farbyDomu();
     const [x0, y0, , x1, y1, z1] = obal;
     const L = x1 - x0, W = y1 - y0;
@@ -456,8 +467,8 @@
         /* Zeleň je na strane záhrady (x1), dvor s príjazdom ostáva voľný. */
         ker(pridaj, u1 - 700, yF + 650, 560, 31);
         ker(pridaj, x1 + 1500, y1 + 1400, 520, 32, '#6c8a4f');
-        strom(pridaj, u1 + 4200, yF + 2600, 8400, 5);
-        strom(pridaj, x1 + 2500, yF - 5200, 7600, 13);
+        stromZa(u1 + 4200, yF + 2600, 8400, 5);
+        stromZa(x1 + 2500, yF - 5200, 7600, 13);
       } else {
         /* Záhon pri fasáde mimo dlažby a kvetináče pri vstupe na terasu. */
         const ker1 = Math.max(u0 + 700, x0 - 1000 - 1800), ker2 = Math.min(u1 - 700, x1 + 1000 + 1800);
@@ -470,8 +481,8 @@
           teleso(pridaj('#2f4524', 'listie'), [xk, yF + 520, 1050], [290, 290, 370], { rows: 8, cols: 12, amp: 0.12, frek: 2.6, seed: Math.round(xk) });
           karty(pridaj('#9aa77f', 'karta'), [xk, yF + 520, 1050], [340, 340, 420], 46, 300, Math.round(Math.abs(xk)) % 997, { plocha: true });
         }
-        strom(pridaj, u1 + 4200, yF + 2200, 8200, 5);
-        strom(pridaj, u0 - 5200, yF - 3500, 9000, 9);
+        stromZa(u1 + 4200, yF + 2200, 8200, 5);
+        stromZa(u0 - 5200, yF - 3500, 9000, 9);
       }
 
       /* Atika rovnej strechy a bočné steny domu, aby bol dom telesom aj
@@ -480,13 +491,25 @@
       quad([P(u0, vyskaDomu + 260, 0), P(u1, vyskaDomu + 260, 0), P(u1, vyskaDomu + 260, -hlbka), P(u0, vyskaDomu + 260, -hlbka)], '#8a8d90', [0, 0, 1], 'omietka');
       quad([P(u0, 0, -hlbka), P(u0, 0, 0), P(u0, vyskaDomu + 260, 0), P(u0, vyskaDomu + 260, -hlbka)], OMIETKA, [-1, 0, 0], 'omietka');
       quad([P(u1, 0, 0), P(u1, 0, -hlbka), P(u1, vyskaDomu + 260, -hlbka), P(u1, vyskaDomu + 260, 0)], OMIETKA, [1, 0, 0], 'omietka');
+      /* Zadná stena: dom je uzavreté teleso, aby pri obletení kamerou
+         nemusel miznúť. Čo z neho zakrýva výrobok, rozplynie vykresľovač. */
+      quad([P(u1, 0, -hlbka), P(u0, 0, -hlbka), P(u0, SOKEL_V, -hlbka), P(u1, SOKEL_V, -hlbka)], SOKEL, [0, -1, 0], 'omietka');
+      quad([P(u1, SOKEL_V, -hlbka), P(u0, SOKEL_V, -hlbka), P(u0, vyskaDomu + 260, -hlbka), P(u1, vyskaDomu + 260, -hlbka)], OMIETKA, [0, -1, 0], 'omietka');
+      for (let i = 0; i < nOkien; i++) {
+        const c = u0 + (u1 - u0) * (i + 0.5) / nOkien;
+        for (const [za, zb] of [[900, 2300], [zP, zP1]]) {
+          quad([P(c + 650, za, -hlbka - 8), P(c - 650, za, -hlbka - 8), P(c - 650, zb, -hlbka - 8), P(c + 650, zb, -hlbka - 8)], RAM, [0, -1, 0], 'lak');
+          quad([P(c + 580, za + 70, -hlbka - 14), P(c - 580, za + 70, -hlbka - 14), P(c - 580, zb - 70, -hlbka - 14), P(c + 580, zb - 70, -hlbka - 14)], SKLO, [0, -1, 0], 'okno');
+        }
+      }
     }
 
     if (S.plot) {
       /* Strihaný živý plot za stavbou: zaoblený kváder s nerovným
          povrchom, delený na úseky, aby sa šum neopakoval. Dá scéne pozadie
          a mierku a nič nezakryje. */
-      const yP = y0 - 5200, h = 1750, d = 1000;
+      /* Plot stojí za kružnicou obletu kamery, aby ním nikdy neprešla. */
+      const yP = Math.min(y0 - 5200, cyS - (Rk + 2200)), h = 1750, d = 1000;
       const a = x0 - 10000, b = x1 + 10000;
       const useky = Math.max(3, Math.round((b - a) / 6000));
       for (let i = 0; i < useky; i++) {
@@ -506,12 +529,23 @@
             }
           });
       }
-      strom(pridaj, x0 - 6500, yP - 2600, 7800, 3);
-      strom(pridaj, x1 + 5200, yP - 3400, 9200, 7);
-      strom(pridaj, (x0 + x1) / 2 + 1800, yP - 5200, 8400, 11);
+      stromZa(x0 - 6500, yP - 2600, 7800, 3);
+      stromZa(x1 + 5200, yP - 3400, 9200, 7);
+      stromZa((x0 + x1) / 2 + 1800, yP - 5200, 8400, 11);
       ker(pridaj, x0 - 2600, y1 + 1600, 650, 21);
       ker(pridaj, x0 - 3300, y1 + 900, 480, 22, '#6c8a4f');
       ker(pridaj, x1 + 2800, y0 - 1800, 720, 23);
+    }
+
+    /* Veľký trávnik pod celou scénou. Podklad konfigurátora siaha len
+       ~12 m od stavby; stromy a plot stoja za kružnicou obletu kamery
+       (20–30 m) a bez tejto plochy by viseli nad vzdialenou zemou oblohy.
+       Leží 4 mm pod podkladom, takže tam, kde sa prekrývajú, vyhrá
+       podklad konfigurátora. */
+    {
+      const R = Rk + 40000;
+      plochy.push({ w: [[cxS - R, cyS - R, -4], [cxS + R, cyS - R, -4], [cxS + R, cyS + R, -4], [cxS - R, cyS + R, -4]],
+        fill: '#7a8a6a', sourceFill: '#7a8a6a', normal: [0, 0, 1], bg: true, kulisa: true, cull: false, edge: false, mat3d: 'dlazba' });
     }
 
     /* Trsy pri okraji dlažby a riedko v trávniku okolo terasy. */
