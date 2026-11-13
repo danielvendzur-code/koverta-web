@@ -622,8 +622,10 @@
       if (S.dom && !pozdlzX) a = Math.min(a, yFas);
       const sg = pozdlzX ? n[1] : n[0];
       const box = (d0, d1, u0, u1, z0, z1, fill) => {
+        /* uv nesie vnútornú normálu steny: shader podľa nej stenu plynulo
+           rozplynie, keď kamera prejde za ňu (bez prestavby siete). */
         const push = (w, nv, normal) => plochy.push({ w, fill, sourceFill: fill, normal, cull: false, kulisa: false,
-          stena: true, domova: true, mat3d: 'omietka', edge: false });
+          stena: true, stenaSkry: true, uv: w.map(() => [n[0], n[1]]), domova: true, mat3d: 'omietka', edge: false });
         /* d0..d1 je hrúbka kolmo na stenu (od jej roviny von), u0..u1 dĺžka. */
         const vA = st.v - sg * d1, vB = st.v - sg * d0;
         const lo = Math.min(vA, vB), hi = Math.max(vA, vB);

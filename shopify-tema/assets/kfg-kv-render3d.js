@@ -651,6 +651,19 @@ void main() {
     float prah = fract(52.9829189 * fract(dot(gl_FragCoord.xy + 5.588238 * uSnimok, vec2(0.06711056, 0.00583715))));
     if (blizko > 0.02 && blizko * 1.02 > prah) discard;
   }
+  /* Stena, na ktorú je stavba pripevnená: keď kamera prejde za ňu,
+     rozplynie sa rastrom (časové vyhladzovanie z neho spraví plynulú
+     priehľadnosť), aby nezakryla výrobok. Vnútornú normálu steny nesie
+     uv. Sieť sa pri tom neprestavuje, takže otáčanie sa nezasekne. */
+  if ((priznakyBit & 128) != 0) {
+    float strana = dot(normalize(uOko - uStred), vec3(vUV, 0.0));
+    /* Ako architektonický rez: spodných 32 cm (sokel) ostane, aby bolo
+       jasné, kde stena stojí a odkiaľ je tieň na dlažbe. Nad ním zmizne
+       celá — polopriehľadný raster by v pokoji ostal zrnitý. */
+    float skry = vPoz.z < 320.0 ? 0.0 : 1.0 - smoothstep(-0.31, -0.27, strana);
+    float prahS = fract(52.9829189 * fract(dot(gl_FragCoord.xy + 5.588238 * uSnimok, vec2(0.06711056, 0.00583715))));
+    if (skry > 0.0 && skry >= prahS) discard;
+  }
 #endif
   vec4 karta = vec4(1.0);
   float pokrytie = 1.0;
@@ -1645,7 +1658,7 @@ void main() {
             data[at + 11] = farba[3];
             data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
               + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
-              + (mat.omietka ? 8 : 0);
+              + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0);
             /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
                scény, dosah dlažby aj výrez tieňovej mapy. */
             data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
@@ -2239,6 +2252,13 @@ void main() {
          a pritom je to najdrahší priechod celého snímku: dvadsaťštyri tisíc
          trojuholníkov a plocha dva tisíc krát dva tisíc pixelov. Za jedno
          ťahanie je to zopár stoviek zbytočných priechodov. */
+      /* Autá v reálnej scéne vrhajú skutočný tieň. Mapa sa kreslí len pri
+         zmene, takže keď sa auto pridá, presunie alebo zmizne, treba ju
+         prekresliť — o to sa stará podpis vybavenia. */
+      const vybavenieTien = stav.prostredie && stav.kresliNavyse && stav.kresliNavyse.tien
+        && stav.kresliNavyse.aktivne !== false ? stav.kresliNavyse : null;
+      const podpisVybavenia = vybavenieTien && vybavenieTien.tienPodpis ? vybavenieTien.tienPodpis() : '';
+      if (podpisVybavenia !== (stav.podpisVybavenia || '')) { stav.podpisVybavenia = podpisVybavenia; stav.tienPlatny = false; }
       if (!stav.tienPlatny) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
       gl.viewport(0, 0, t.rozmer, t.rozmer);
@@ -2256,6 +2276,11 @@ void main() {
       gl.uniform1f(stav.programy.tien.u.uPosunPoNormale, 0);
       gl.bindVertexArray(s.vao);
       gl.drawArrays(gl.TRIANGLES, 0, s.pocetVrhacov);
+      if (vybavenieTien && podpisVybavenia) {
+        gl.bindVertexArray(null);
+        vybavenieTien.tien(gl, sm);
+        gl.bindVertexArray(s.vao);
+      }
       gl.disable(gl.CULL_FACE);
       stav.tienPlatny = true;
       stav.tienMatica = sm;
@@ -2414,6 +2439,14 @@ void main() {
            ich preskočí; vlastný dopadový tieň si kreslí sám. */
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
         gl.bindVertexArray(null);
+        /* Vybavenie (autá) dostane oblohu scény a smer slnka, aby sa lak
+           a sklo odrážali v tom istom okolí a svietilo na ne to isté slnko. */
+        kam.obloha = stav.prostredie && stav.prostredie.oblohaT
+          ? { tex: stav.prostredie.oblohaT, otoc: stav.prostredie.otocenie || 0, jas: stav.prostredie.jas || 1 } : null;
+        kam.slnko = stav.slnko;
+        /* Tieňová mapa pre vybavenie: auto pod strechou je v jej tieni. */
+        kam.tienMapa = stav.prostredie && stav.tien && stav.tienMatica
+          ? { tex: stav.tien.t, matica: stav.tienMatica, rozmer: stav.tien.rozmer } : null;
         stav.kresliNavyse('nepriehladne', gl, kam);
         /* Mapa normál pod autom by inak držala stĺp alebo dlažbu za ním
            a zatienenie by ich obrys nakreslilo na karosériu. Vykresľovač

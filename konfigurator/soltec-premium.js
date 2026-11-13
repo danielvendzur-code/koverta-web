@@ -2207,8 +2207,14 @@ function kvAdresa(kluc, zaloha) {
         const slabyStroj = Number(navigator.deviceMemory || 8) <= 4 && Number(navigator.hardwareConcurrency || 8) <= 4;
         /* Kulisy podľa obalu stavby. Zozadu domu sa nekreslia vôbec — dom
            nemá zadnú stenu a kamera by videla dovnútra. */
+        /* Kulisy sa stavajú len pri zmene. Kým sa volali v každom snímku,
+           stálo stavanie domu, stromov a plota ~4 ms na snímok aj počas
+           otáčania — na telefóne to bola polovica rozpočtu snímku a pohyb
+           sekal. Teraz sa výsledok drží, kým sa nezmení stavba ani scéna. */
+        let kulisyPamat = null;
         const kulisyPreZaber = (faces, smer) => {
           if (prostredie.nastavene === 'studio' || !window.KvProstredie) return { plochy: [], dlazba: null, kluc: '' };
+          if (kulisyPamat && kulisyPamat.faces === faces && kulisyPamat.scena === prostredie.nastavene) return kulisyPamat.vysledok;
           /* Obal je samotná stavba. Steny štúdia doň nepatria: posunuli by
              fasádu, výšku domu aj dosah kamery o presah steny. */
           let obal = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
@@ -2220,9 +2226,9 @@ function kvAdresa(kluc, zaloha) {
           const walls = (placement && placement().walls) || [];
           /* Steny, na ktoré je stavba pripevnená (pri stene, v rohu, medzi
              stenami). Rovinu, rozsah a výšku berú zo stien štúdia, takže
-             sa stavby dotýkajú presne tam, kde v štúdiu. Stena, za ktorou
-             je kamera, sa nekreslí — inak by zakryla celý výrobok (to isté
-             robí štúdio). Sklenená stena ostáva zo štúdia. */
+             sa stavby dotýkajú presne tam, kde v štúdiu. Stenu, za ktorou
+             je kamera, rozplynie shader (inak by zakryla výrobok) — bez
+             prestavby siete. Sklenená stena ostáva zo štúdia. */
           const steny = [];
           for (const f of faces) {
             if (!f.houseWall || !f.w || /^rgba/.test(String(f.sourceFill || ''))) continue;
@@ -2236,9 +2242,16 @@ function kvAdresa(kluc, zaloha) {
               vyska: Math.max(...f.w.map((q) => q[2]))
             });
           }
-          const viditelne = steny.filter((s) => !smer || smer[0] * s.n[0] + smer[1] * s.n[1] > -0.30);
+          /* Rovnaký vstup dá rovnaké kulisy aj pri novom poli plôch —
+             vrátia sa tie isté, bez stavania a bez prestavby siete. */
+          const vstup = [prostredie.nastavene, obal.map((x) => Math.round(x)).join(','),
+            JSON.stringify(steny), walls.join(','), slabyStroj, String(BIO.page || '')].join('|');
+          if (kulisyPamat && kulisyPamat.vstup === vstup) {
+            kulisyPamat.faces = faces;
+            return kulisyPamat.vysledok;
+          }
           const k = window.KvProstredie.kulisy(prostredie.nastavene, obal, {
-            steny: viditelne,
+            steny,
             /* Polomer obletu kamery: stromy a plot musia stáť za ním, inak
                by nimi kamera pri otáčaní prešla. */
             dosahKamery: Math.max(obal[3] - obal[0], obal[4] - obal[1], obal[5] - obal[2]) * 2.9,
@@ -2249,7 +2262,8 @@ function kvAdresa(kluc, zaloha) {
           });
           /* Dom je uzavretý a zakrývajúce kulisy rozplynie vykresľovač —
              pri obletení sa preto nič neodoberá ani nestavia nanovo. */
-          k.kluc = prostredie.nastavene + '|' + viditelne.map((s) => s.n.join(',')).join(';');
+          k.kluc = prostredie.nastavene;
+          kulisyPamat = { faces, scena: prostredie.nastavene, vstup, vysledok: k };
           return k;
         };
 
@@ -2372,7 +2386,8 @@ function kvAdresa(kluc, zaloha) {
             const opis = {
               VW: camera.VW, VH: camera.VH, scale: camera.scale,
               ox: camera.ox, oy: camera.oy, DIST: camera.DIST,
-              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia, hdr: 1
+              near: kam.near, far: kam.far, mvp: kam.pohladProjekcia, hdr: 1,
+              obloha: kam.obloha || null, slnko: kam.slnko || null, tienMapa: kam.tienMapa || null
             };
             if (faza === 'nepriehladne') sceneLife.draw(gl, opis);
             else if (faza === 'normaly') { if (sceneLife.drawNormalMask) sceneLife.drawNormalMask(gl, opis); }
@@ -2381,6 +2396,12 @@ function kvAdresa(kluc, zaloha) {
           /* Prázdna scéna nič nekreslí a vykresľovač si potom ušetrí
              dekódovanie konštrukcie uprostred snímku. */
           if (r.kresliNavyse && sceneLife.needsDraw) r.kresliNavyse.aktivne = sceneLife.needsDraw();
+          /* Skutočný tieň áut (len reálna scéna): vykresľovač si ho vypýta
+             pri kreslení tieňovej mapy. */
+          if (r.kresliNavyse && sceneLife.drawShadow) {
+            r.kresliNavyse.tien = (gl, matica) => sceneLife.drawShadow(gl, matica);
+            r.kresliNavyse.tienPodpis = () => sceneLife.shadowKey();
+          }
           canvas.dataset.renderer = 'webgl2-pbr';
           if (!prostredie.riadok) {
             const riadok = cfgRoot.querySelector('[data-scene-envrow]');
