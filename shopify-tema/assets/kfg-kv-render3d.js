@@ -215,7 +215,14 @@ uniform float uPozadie;
    aké používa vyhladzovanie hrán — v obyčajnom JPG sa tak zmestí aj jas
    oblohy nad bielou. uProstredie = 0 je štúdio a vtedy sa nič z toho
    nepoužije. */
+/* Štúdio sa prekladá bez reálnej scény: uProstredie je tam konštanta 0
+   a prekladač celý kód scény vyhodí. Softvérové kreslenie (testy, slabé
+   stroje bez GPU) by inak platilo za obe vetvy v každom pixeli. */
+#ifdef PROSTREDIE
 uniform float uProstredie;
+#else
+const float uProstredie = 0.0;
+#endif
 uniform sampler2D uOblohaMapa;
 uniform float uOblohaOtoc;
 uniform float uOblohaJas;
@@ -610,11 +617,11 @@ void main() {
   int priznakyBit = int(vParam.w + 0.5);
   float priznaky = vParam.w;
   bool jeSklo = (priznakyBit & 4) != 0;
-  bool jeListie = (priznakyBit & 16) != 0;
+  bool jeListie = uProstredie > 0.5 && (priznakyBit & 16) != 0;
   /* Karta s listami: štvorec s textúrou vetvičky, priehľadné miesta sa
      vyrežú. Takto robia zeleň hry aj offline renderery pri stromoch
      v pozadí — tisíce listov za cenu pár stoviek trojuholníkov. */
-  bool jeKarta = (priznakyBit & 32) != 0;
+  bool jeKarta = uProstredie > 0.5 && (priznakyBit & 32) != 0;
   vec4 karta = vec4(1.0);
   float pokrytie = 1.0;
   if (jeKarta) {
@@ -1837,6 +1844,18 @@ void main() {
       return t;
     }
     stav.nastavProstredie = function (p) {
+      /* Varianty shaderov s reálnou scénou sa preložia až pri prvom
+         zapnutí scény — štúdio za ne neplatí ani pri načítaní. */
+      if (p && !stav.programy.hlavnyP) {
+        try {
+          const sP = (zdroj) => zdroj.replace(HLAVICKA, HLAVICKA + '#define PROSTREDIE 1\n');
+          stav.programy.hlavnyP = program(gl, VS_HLAVNY, sP(FS_HLAVNY));
+          stav.programy.pozadieP = program(gl, VS_PLOCHA, sP(FS_POZADIE));
+        } catch (e) {
+          if (global.console && console.warn) console.warn('kv-render3d prostredie:', e.message);
+          p = null;
+        }
+      }
       const stare = stav.prostredie;
       if (stare) ['oblohaT', 'travaT', 'trava2T', 'travaNT', 'listyT', 'dlazbaT', 'dlazbaNT'].forEach((k) => stare[k] && gl.deleteTexture(stare[k]));
       stav.prostredie = null;
@@ -2199,8 +2218,9 @@ void main() {
       /* Obloha ide prvá a bez zápisu do hĺbky — je nekonečne ďaleko. */
       gl.depthMask(false);
       gl.disable(gl.DEPTH_TEST);
-      plocha(stav.programy.pozadie, () => {
-        const p = stav.programy.pozadie;
+      const progPozadie = stav.prostredie ? stav.programy.pozadieP : stav.programy.pozadie;
+      plocha(progPozadie, () => {
+        const p = progPozadie;
         gl.uniformMatrix4fv(p.u.uInvPohladProjekcia, false, invertuj(kam.pohladProjekcia));
         gl.uniform3fv(p.u.uOko, kam.oko);
         gl.uniform3fv(p.u.uSlnko, stav.slnko);
@@ -2213,7 +2233,7 @@ void main() {
       gl.enable(gl.DEPTH_TEST);
       gl.depthMask(true);
 
-      const P = stav.programy.hlavny;
+      const P = stav.prostredie ? stav.programy.hlavnyP : stav.programy.hlavny;
       gl.useProgram(P);
       gl.uniformMatrix4fv(P.u.uPohladProjekcia, false, kam.pohladProjekcia);
       gl.uniformMatrix4fv(P.u.uSlnkoMatica, false, sm);
