@@ -266,14 +266,31 @@
 
   /* ---------------------------------------------------------------- KULISY */
 
-  const OMIETKA = '#e9e6df', SOKEL = '#5d6064', ATIKA = '#3b3f43',
-        SKLO = '#6d7b84', RAM = '#2f3437', BRANA = '#d9d7d2', PLOT = '#2e4a22';
+  let OMIETKA = '#e9e6df', SOKEL = '#5d6064', ATIKA = '#3b3f43',
+        SKLO = '#6d7b84', RAM = '#2f3437', SOKEL_V = 300;
+  /* Farby domu sa dajú pre nahrávanie videa nastaviť tak, aby sa podobali
+     domu na fotke realizácie (window.KV_SCENA_FARBY = { omietka, sokel,
+     atika, ram }). V konfigurátore na webe ostávajú predvolené. */
+  function farbyDomu() {
+    const z = { omietka: '#e9e6df', sokel: '#5d6064', atika: '#3b3f43', ram: '#2f3437' };
+    let f = {};
+    try { f = global.KV_SCENA_FARBY || {}; } catch (e) {}
+    const ok = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+    OMIETKA = ok(f.omietka) ? f.omietka : z.omietka;
+    SOKEL = ok(f.sokel) ? f.sokel : z.sokel;
+    ATIKA = ok(f.atika) ? f.atika : z.atika;
+    RAM = ok(f.ram) ? f.ram : z.ram;
+    /* Výška sokla v mm — pri dome s tehlovým prízemím ako na fotke až po
+       strop prízemia (napr. 2900). */
+    SOKEL_V = Number.isFinite(Number(f.sokelVyska)) ? Math.max(0, Math.min(6000, Number(f.sokelVyska))) : 300;
+  }
 
   function kulisy(scena, obal, moznosti) {
     const S = SCENY[scena];
     if (!S || scena === 'studio' || !obal) return { plochy: [], dlazba: null };
     const o = moznosti || {};
     lite = Boolean(o.lite);
+    farbyDomu();
     const [x0, y0, , x1, y1, z1] = obal;
     const L = x1 - x0, W = y1 - y0;
     const plochy = [];
@@ -305,8 +322,11 @@
     /* Spevnená plocha: pod stavbou a meter okolo, pri prístrešku pre autá
        aj príjazd smerom k ulici (+y). Mimo nej je trávnik. */
     const okraj = 1000;
+    /* Príjazd vedie od čela prístrešku na strane x0 — tam, odkiaľ sa na
+       prístrešok s autami prirodzene pozerá (a odkiaľ býva fotená väčšina
+       realizácií): kamera tak stojí na dlažbe dvora, nie v tráve. */
     const dlazba = o.prijazd && S.dom
-      ? [x0 - 600, (o.naStene ? y0 : y0 - 350), x1 + 5200, y1 + 400]
+      ? [x0 - 5200, (o.naStene ? y0 : y0 - 350), x1 + 600, y1 + 4500]
       : [x0 - okraj, y0 - (S.dom ? 2600 : okraj), x1 + okraj, y1 + okraj];
 
     if (S.dom) {
@@ -335,7 +355,7 @@
       if (auto) {
         /* Vchodové dvere pod prístreškom bližšie k vjazdu, vedľa úzke
            okno; na poschodí rad okien. */
-        const dv = Math.min(x1 - 1400, Math.max(x0 + 800, x1 - 2600));
+        const dv = Math.max(x0 + 300, Math.min(x1 - 1400, x0 + 1500));
         otvory.push([dv, dv + 1100, 0, 2250, 'dvere']);
         otvory.push([dv - 900, dv - 300, 300, 2250]);
         otvory.push([u0 + 900, u0 + 900 + 1500, 900, 2350]);
@@ -365,7 +385,7 @@
         const pas = (za, zb) => {
           if (zb - za < 1) return;
           /* Sokel: tmavý pás pri zemi, ako má každý dom. */
-          const zs = Math.min(zb, Math.max(za, 300));
+          const zs = Math.min(zb, Math.max(za, SOKEL_V));
           if (zs > za) quad([P(a, za), P(b, za), P(b, zs), P(a, zs)], SOKEL, nF, 'omietka');
           if (zb > zs) quad([P(a, zs), P(b, zs), P(b, zb), P(a, zb)], OMIETKA, nF, 'omietka');
         };
@@ -407,14 +427,15 @@
         /* Príjazd končí na hranici pozemku: tam je plot s vjazdom, za ním
            chodník, obrubník a ulica. Dlažba tak vedie odniekiaľ niekam
            a nie je len vydláždený štvorec pod autom. */
-        const xH = dlazba[2], sirkaCh = 1600, xU = xH + sirkaCh, sirkaU = 6500;
+        /* Hranica pozemku (xH), chodník po xU, za ním ulica — smerom k −x. */
+        const xH = dlazba[0], sirkaCh = 1600, xU = xH - sirkaCh, sirkaU = 6500;
         const ya = y0 - 30000, yb = y1 + 30000;
-        quad([[xH, ya, 3], [xU, ya, 3], [xU, yb, 3], [xH, yb, 3]], '#8e8c87', [0, 0, 1], 'omietka', { cull: false });
+        quad([[xU, ya, 3], [xH, ya, 3], [xH, yb, 3], [xU, yb, 3]], '#8e8c87', [0, 0, 1], 'omietka', { cull: false });
         for (let yy = ya; yy < yb; yy += 2000) {
-          quad([[xH, yy, 4], [xU, yy, 4], [xU, yy + 25, 4], [xH, yy + 25, 4]], '#6f6d69', [0, 0, 1], 'omietka', { cull: false });
+          quad([[xU, yy, 4], [xH, yy, 4], [xH, yy + 25, 4], [xU, yy + 25, 4]], '#6f6d69', [0, 0, 1], 'omietka', { cull: false });
         }
-        quad([[xU, ya, 1], [xU + sirkaU, ya, 1], [xU + sirkaU, yb, 1], [xU, yb, 1]], '#3c3e40', [0, 0, 1], 'asfalt', { cull: false });
-        kvader(pridaj('#a9a7a2', 'omietka'), [xU - 150, ya, 0], [xU, yb, 130]);
+        quad([[xU - sirkaU, ya, 1], [xU, ya, 1], [xU, yb, 1], [xU - sirkaU, yb, 1]], '#3c3e40', [0, 0, 1], 'asfalt', { cull: false });
+        kvader(pridaj('#a9a7a2', 'omietka'), [xU, ya, 0], [xU + 150, yb, 130]);
         /* Plot na hranici pozemku: antracitové stĺpiky a vodorovné lamely,
            s medzerou na vjazd. */
         const plotZ = 950, vjazd0 = dlazba[1] - 200, vjazd1 = dlazba[3] + 200;
@@ -424,17 +445,19 @@
           for (let yy = ua; yy <= ub + 1; yy += 2000) kvader(pl, [xH - 30, Math.min(yy, ub) - 30, 0], [xH + 30, Math.min(yy, ub) + 30, plotZ + 40]);
           for (let zz = 140; zz < plotZ; zz += 165) kvader(pl, [xH - 10, ua, zz], [xH + 10, ub, zz + 70]);
         };
-        plot(y1 + 300 > vjazd1 ? vjazd1 : vjazd1, y1 + 16000);
+        /* Plot len na strane domu — na voľnej strane by stál medzi kamerou
+           a prístreškom. */
         plot(Math.min(yF, y0) - 9000, vjazd0);
         /* Biela prerušovaná čiara v strede ulice. */
         for (let yy = ya; yy < yb; yy += 6000) {
-          quad([[xU + sirkaU / 2 - 60, yy, 6], [xU + sirkaU / 2 + 60, yy, 6], [xU + sirkaU / 2 + 60, yy + 3000, 6], [xU + sirkaU / 2 - 60, yy + 3000, 6]], '#e8e6e0', [0, 0, 1], 'omietka', { cull: false });
+          quad([[xU - sirkaU / 2 - 60, yy, 6], [xU - sirkaU / 2 + 60, yy, 6], [xU - sirkaU / 2 + 60, yy + 3000, 6], [xU - sirkaU / 2 - 60, yy + 3000, 6]], '#e8e6e0', [0, 0, 1], 'omietka', { cull: false });
         }
         /* Kríky pri fasáde mimo príjazdu. */
-        ker(pridaj, u0 + 900, yF + 650, 560, 31);
-        ker(pridaj, x0 - 1400, yF + 700, 520, 32, '#6c8a4f');
-        strom(pridaj, u0 - 4800, yF + 3800, 8400, 5);
-        strom(pridaj, x0 - 6000, y1 + 6500, 7600, 13);
+        /* Zeleň je na strane záhrady (x1), dvor s príjazdom ostáva voľný. */
+        ker(pridaj, u1 - 700, yF + 650, 560, 31);
+        ker(pridaj, x1 + 1500, y1 + 1400, 520, 32, '#6c8a4f');
+        strom(pridaj, u1 + 4200, yF + 2600, 8400, 5);
+        strom(pridaj, x1 + 2500, yF - 5200, 7600, 13);
       } else {
         /* Záhon pri fasáde mimo dlažby a kvetináče pri vstupe na terasu. */
         const ker1 = Math.max(u0 + 700, x0 - 1000 - 1800), ker2 = Math.min(u1 - 700, x1 + 1000 + 1800);
