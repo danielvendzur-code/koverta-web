@@ -1273,7 +1273,7 @@
 .kh-faq__sign::before,
 .kh-faq__sign::after { content: ""; position: absolute; width: 14px; height: 1.5px; border-radius: 1px; background: currentColor; transition: transform 380ms var(--k-ease-out); }
 .kh-faq__sign::after { transform: rotate(90deg); }
-.kh-faq__item[open] .kh-faq__sign::after { transform: rotate(0deg); }
+.kh-faq__item[open]:not(.is-zatvara) .kh-faq__sign::after { transform: rotate(0deg); }
 .kh-faq__item > div { padding: 0 42px clamp(22px, 2vw, 30px) 0; }
 .kh-faq__item > div p { font-size: 15px; line-height: 1.68; color: var(--k-muted); max-width: 70ch; }
 
@@ -1396,8 +1396,8 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 .kh-faq__intro .k-copy { color:rgba(255,255,255,.68); }
 .kh-faq__list { align-content:start; padding:clamp(18px,2.6vw,42px) clamp(26px,4vw,66px); border-top:0; }
 .kh-faq__item { position:relative; padding-left:0; transition:padding-left 360ms var(--k-ease-out),border-color 240ms var(--k-ease); }
-.kh-faq__item[open] { padding-left:18px; }
-.kh-faq__item[open]::before { content:""; position:absolute; left:0; }
+.kh-faq__item[open]:not(.is-zatvara) { padding-left:18px; }
+.kh-faq__item[open]:not(.is-zatvara)::before { content:""; position:absolute; left:0; }
 
 /* Formulár: riadne labels, veľké polia, segmentový výber a čitateľný servis. */
 .kh-cta__grid { gap:0; align-items:stretch; }
@@ -1501,7 +1501,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   outline: none;
 }
 /* --- FAQ: viac značkovej farby ------------------------------------------ */
-.kh-faq__item[open] { box-shadow: none; }
+.kh-faq__item[open]:not(.is-zatvara) { box-shadow: none; }
 
 /* ==========================================================================
    OPRAVY KONTRASTU
@@ -1685,12 +1685,12 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   border-radius: 0;
 }
 .kh-faq__item:last-child { border-bottom: 0; }
-.kh-faq__item[open] { border-color: transparent; border-bottom-color: var(--k-hair-soft); }
-.kh-faq__item[open]::before { top: 0; bottom: 0; width: 3px; background: var(--k-amber); }
+.kh-faq__item[open]:not(.is-zatvara) { border-color: transparent; border-bottom-color: var(--k-hair-soft); }
+.kh-faq__item[open]:not(.is-zatvara)::before { top: 0; bottom: 0; width: 3px; background: var(--k-amber); }
 .kh-faq__item summary:hover { color: var(--k-amber-deep); }
 
 .kh-faq__sign { background: transparent; }
-.kh-faq__item[open] .kh-faq__sign { color: var(--k-ink); }
+.kh-faq__item[open]:not(.is-zatvara) .kh-faq__sign { color: var(--k-ink); }
 
 @media (max-width: 999px) {
   .kh-faq__intro { border-radius: var(--k-r); }
@@ -1979,7 +1979,7 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
 /* Otázky na bielom páse: zoznam dostane béžový podklad, otvorená otázka bielu,
    inak by panel na bielom zmizol. */
 .kh-faq__list { background: var(--k-bone); }
-.kh-faq__item[open] { background: var(--k-white); }
+.kh-faq__item[open]:not(.is-zatvara) { background: var(--k-white); }
 .kh-faq__sign { border-color: rgba(18, 23, 26, 0.2); }
 
 /* Kontakt na béžovom páse — biela karta formulára tak vystúpi. */
@@ -2145,8 +2145,8 @@ a.kh-cta__row:hover { color: var(--k-amber); padding-left: 6px; box-shadow: none
   transition: background-color 240ms var(--k-ease), border-color 240ms var(--k-ease), color 240ms var(--k-ease);
 }
 .kh-faq__item > summary:hover .kh-faq__sign { border-color: var(--k-amber-deep); background: var(--k-amber); color: var(--k-ink); }
-.kh-faq__item[open] > summary { color: var(--k-amber-deep); }
-.kh-faq__item[open] .kh-faq__sign { background: var(--k-amber); border-color: var(--k-amber); }
+.kh-faq__item[open]:not(.is-zatvara) > summary { color: var(--k-amber-deep); }
+.kh-faq__item[open]:not(.is-zatvara) .kh-faq__sign { background: var(--k-amber); border-color: var(--k-amber); }
 .kh-faq__answer { font-size: 14.5px; line-height: 1.65; color: var(--k-muted); }
 
 /* --- KONTAKT: celá sekcia bez scrollu ---------------------------------- */
@@ -6385,7 +6385,7 @@ footer.kf { background: var(--k-ink); color: #fff; }
   color: var(--k-grey);
   transition: color 240ms var(--k-ease);
 }
-.k .kh-faq__item[open] summary::before,
+.k .kh-faq__item[open]:not(.is-zatvara) summary::before,
 .k .kh-faq__item summary:hover::before { color: var(--k-amber-deep); }
 /* Odpoveď sa zarovná pod text otázky, nie pod jej číslo. */
 .k .kh-faq__item > div { padding-left: calc(2.1em + 16px); }
@@ -9345,18 +9345,18 @@ footer.kf { background: var(--k-ink); color: #fff; }
    karty materiálu. Otázka ostáva tmavá — nemení sa jej farba, len znamienko
    plus sa zmení na mínus a zožltne. Odpoveď je tmavšia a zarovnaná pod
    otázku, nie pod číslo. */
-.k .kh-faq__item[open] {
+.k .kh-faq__item[open]:not(.is-zatvara) {
   border: 0;
   border-radius: var(--k-r-sm);
   background: var(--k-white);
   box-shadow: var(--k-shadow-sm);
 }
 /* Jantárový pás zľava preč — na otvorenie stačí biela plocha a znamienko. */
-.k .kh-faq__item[open]::before { content: none; }
+.k .kh-faq__item[open]:not(.is-zatvara)::before { content: none; }
 /* Otázka nemení farbu. Zožltne len znamienko, to je celé. */
-.k .kh-faq__item[open] > summary,
-.k .kh-faq__item[open] > summary::before { color: var(--k-ink); }
-.k .kh-faq__item[open] > summary:hover { color: var(--k-amber-deep); }
+.k .kh-faq__item[open]:not(.is-zatvara) > summary,
+.k .kh-faq__item[open]:not(.is-zatvara) > summary::before { color: var(--k-ink); }
+.k .kh-faq__item[open]:not(.is-zatvara) > summary:hover { color: var(--k-amber-deep); }
 
 .k .kh-faq__item[open] .kh-faq__odp,
 .k .kh-faq__item[open] > div,
@@ -9609,11 +9609,11 @@ footer.kf { background: var(--k-ink); color: #fff; }
 /* Karta rastie von z riadku, nie dovnútra textu. Osemnásťpixelové odsadenie
    zľava tu ostalo po jantárovom páse, ktorý vzala vrstva 106 — bez pásu už
    posúva otázku bezdôvodne. */
-.k .kh-faq__item[open] {
+.k .kh-faq__item[open]:not(.is-zatvara) {
   margin-inline: calc(-1 * var(--k-faq-vsun));
   padding-inline: 0;
 }
-.k .kh-faq__item[open] > summary { padding-inline: var(--k-faq-vsun); }
+.k .kh-faq__item[open]:not(.is-zatvara) > summary { padding-inline: var(--k-faq-vsun); }
 .k .kh-faq__item[open] > summary ~ * {
   padding-left: calc(var(--k-faq-cislo) + var(--k-faq-medzera) + var(--k-faq-vsun));
   padding-right: calc(42px + var(--k-faq-vsun));
@@ -14829,3 +14829,13 @@ body.ma-kh-modal { overflow: hidden; }
 .k .kh-vcene__body { font-size: 13.5px; }
 .k .kh-shade-product__head { padding: 24px; }
 .k .kh-shade-product__head h3 { font-size: 22px; }
+
+
+/* ==========================================================================
+   Zatváranie otázky bez oneskorenia
+   ==========================================================================
+   Počas animovaného zatvárania ostáva <details> technicky otvorený (inak by
+   obsah zmizol skôr, než sa výška stiahne). Vzhľad otvorenej karty — biela
+   plocha, tieň, okraj, znamienko — sa preto viaže na [open]:not(.is-zatvara):
+   pri kliknutí sa vráti do zatvoreného stavu hneď a prechody bežia súčasne
+   so sťahovaním výšky, nie až po ňom. */

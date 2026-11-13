@@ -173,3 +173,22 @@ vyžadovalo prihlásenie. Pri Ferrari nebola overená licencia pôvodného model
 Lounge má 23 486 trojuholníkov a 185 010 bajtov gzip; rozmery 3,16 × 2,40 × 0,822 m. Sedadlá smerujú k drevenému stolíku, majú prešité lemy, tenšie nohy a doplnky (podnos, lampáš, kvetináč).
 
 Pôvodné vstupy bistro zostavy sa dajú obnoviť skriptom `../tools/fetch-bistro-source.py`; manifest obsahuje presné URL aj SHA-256.
+
+## Reálna scéna (prostredie/)
+
+Načítava sa až po voľbe „Pri dome" alebo „Záhrada" v paneli scény
+(`konfigurator/scene-prostredie.js`). Všetko je CC0 — voľné aj na komerčné
+použitie, bez povinnosti uvádzať autora; uvedené pre prehľad.
+
+- `obloha.jpg` — Poly Haven, „Kloofendal 48d Partly Cloudy (Pure Sky)",
+  https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky (CC0).
+  Zmenšené na 2048 × 1024 a uložené kódovaním x/(1+x) s gamou 2,2.
+- `dlazba.jpg`, `dlazba-n.jpg` — Poly Haven, „Concrete Tiles 02",
+  https://polyhaven.com/a/concrete_tiles_02 (CC0), farebná a normálová mapa 1K.
+- `trava.jpg`, `trava-n.jpg` — ambientCG, „Grass001",
+  https://ambientcg.com/view?id=Grass001 (CC0), farebná a normálová mapa 1K.
+- `trava2.jpg` — ambientCG, „Grass004", https://ambientcg.com/view?id=Grass004 (CC0).
+- `listy.webp` — atlas zložený z ambientCG „LeafSet024"
+  (https://ambientcg.com/view?id=LeafSet024) a „Foliage008"
+  (https://ambientcg.com/view?id=Foliage008), obe CC0: horná polovica dve
+  vetvičky s listami, spodná dva trsy stebiel.
