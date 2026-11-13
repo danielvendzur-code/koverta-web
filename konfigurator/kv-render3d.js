@@ -1638,6 +1638,17 @@ void main() {
        ostala platná. `ox`/`oy` sú posun stredu obrazu, preto všeobecný
        zrezaný ihlan a nie symetrická matica. */
     stav.nastavKameru = function (k) {
+      /* Kamera pre nahrávanie videa (zhoda s fotkou realizácie): presná
+         poloha oka, bod, kam sa pozerá, a zvislý uhol záberu.
+         window.KV_KAMERA = { oko: [x, y, z], ciel: [x, y, z], fov: stupne }
+         v milimetroch scény. Na webe nie je nastavená a nič sa nemení. */
+      let presna = null;
+      try { presna = global.KV_KAMERA || null; } catch (e) {}
+      if (presna && Array.isArray(presna.oko) && Array.isArray(presna.ciel) && presna.fov > 1) {
+        const d = vec3.sub(presna.oko, presna.ciel);
+        const dl = vec3.len(d) || 1;
+        k = Object.assign({}, k, { target: presna.ciel.slice(), smer: vec3.mul(d, 1 / dl), DIST: dl, presnaFov: presna.fov, presnaRoll: Number(presna.roll) || 0 });
+      }
       const { VW, VH, scale, ox, oy, DIST, target, smer } = k;
       const oko = vec3.add(target, vec3.mul(smer, DIST));
 
@@ -1659,8 +1670,15 @@ void main() {
       const se = smer[2];                                /* sin(el) */
       const ca = ce > 1e-9 ?  smer[1] / ce : 1;          /* cos(az) */
       const sa = ce > 1e-9 ? -smer[0] / ce : 0;          /* sin(az) */
-      const doprava = [ca, sa, 0];
-      const hore = [sa * se, -ca * se, ce];
+      let doprava = [ca, sa, 0];
+      let hore = [sa * se, -ca * se, ce];
+      /* Náklon fotoaparátu (stupne) — len kamera pre video. */
+      if (k.presnaRoll) {
+        const rr = k.presnaRoll * Math.PI / 180, cr = Math.cos(rr), sr = Math.sin(rr);
+        const d0 = doprava, h0 = hore;
+        doprava = [d0[0] * cr + h0[0] * sr, d0[1] * cr + h0[1] * sr, d0[2] * cr + h0[2] * sr];
+        hore = [h0[0] * cr - d0[0] * sr, h0[1] * cr - d0[1] * sr, h0[2] * cr - d0[2] * sr];
+      }
       const dozadu = [smer[0], smer[1], smer[2]];
       const pohlad = new Float32Array([
         doprava[0], hore[0], dozadu[0], 0,
@@ -1680,13 +1698,20 @@ void main() {
         ? Math.hypot(o[3] - o[0], o[4] - o[1], o[5] - o[2]) / 2
         : DIST * 0.5;
       const rezerva = Math.max(polomerScény * 1.25, DIST * 0.08);
-      const near = Math.max(DIST - rezerva, DIST * 0.04, 1);
-      const far = DIST + rezerva;
+      let near = Math.max(DIST - rezerva, DIST * 0.04, 1);
+      let far = DIST + rezerva;
+      /* Blízka kamera videa vidí aj dom a stromy ďaleko za stavbou. */
+      if (k.presnaFov) { near = Math.max(400, Math.min(near, DIST * 0.35)); far = DIST + 90000; }
       const m = near / DIST;
-      const l = (0 - ox) / scale * m;
-      const r = (VW - ox) / scale * m;
-      const t = (oy) / scale * m;
-      const b = (oy - VH) / scale * m;
+      let l = (0 - ox) / scale * m;
+      let r = (VW - ox) / scale * m;
+      let t = (oy) / scale * m;
+      let b = (oy - VH) / scale * m;
+      if (k.presnaFov) {
+        /* Symetrický záber so stredom v strede obrazu — tak fotí telefón. */
+        t = near * Math.tan(k.presnaFov * Math.PI / 360); b = -t;
+        r = t * (VW / VH); l = -r;
+      }
 
       const projekcia = mat4.frustum(l, r, b, t, near, far);
       stav.kamera = {

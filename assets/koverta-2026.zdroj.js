@@ -1735,9 +1735,11 @@ if (typeof window !== 'undefined' && !window.kvChat
     faqStop(d);
     d.style.removeProperty('overflow');
     d.__kFaqCiel = otvorit;
+    /* Vzhľad zatvorenej otázky hneď, nie až po dobehnutí výšky (CSS). */
+    d.classList.toggle('is-zatvara', !otvorit);
     d.open = otvorit;
     const ciel = d.getBoundingClientRect().height;
-    if (!hybat || typeof d.animate !== 'function') return;
+    if (!hybat || typeof d.animate !== 'function') { d.classList.remove('is-zatvara'); return; }
     d.open = true;
     d.style.overflow = 'hidden';
     const beh = d.animate([{ height: od + 'px' }, { height: ciel + 'px' }],
@@ -1745,6 +1747,7 @@ if (typeof window !== 'undefined' && !window.kvChat
     d.__kBeh = beh;
     beh.onfinish = () => {
       d.open = otvorit;
+      d.classList.remove('is-zatvara');
       d.__kBeh = null;
       d.style.removeProperty('overflow');
       beh.cancel();

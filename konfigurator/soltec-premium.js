@@ -2183,7 +2183,9 @@ function kvAdresa(kluc, zaloha) {
             /* Prívesok ?v= berie z konfigurátora, aby prehliadač po zmene
                nevzal starú verziu zo svojej pamäte. */
             const hl = new URL(document.querySelector('script[src*="soltec-premium.js"]').src);
-            sc.src = new URL('scene-prostredie.js' + hl.search, hl).href;
+            /* V téme Shopify majú súbory konfigurátora predponu kfg-. */
+            const predpona = /\/kfg-soltec-premium\.js$/.test(hl.pathname) ? 'kfg-' : '';
+            sc.src = new URL(predpona + 'scene-prostredie.js' + hl.search, hl).href;
             sc.onload = () => (window.KvProstredie ? ok(window.KvProstredie) : chyba(new Error('prostredie')));
             sc.onerror = chyba;
             document.head.appendChild(sc);

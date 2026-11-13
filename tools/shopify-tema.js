@@ -520,6 +520,14 @@ function preved() {
      takže na ňu v značkovaní ani v štýle nič neukazuje a prevod by ju
      prehliadol. V téme preto musí ležať pod presne týmto menom, bez predpony
      `kfg-` — inak ju tá adresa nenájde a v scéne ostane biely štvorec. */
+  /* Reálna scéna (scene-prostredie.js) sa načítava až po kliknutí na
+     „Pri dome“ / „Záhrada“, adresou odvodenou od skriptu konfigurátora —
+     v téme teda vedľa kfg-soltec-premium.js pod menom s rovnakou predponou.
+     Jej obrázky idú s modelmi zo scene-assets (KV_SCENE_ASSETS). */
+  const prostredie = path.join(KOREN, 'konfigurator', 'scene-prostredie.js');
+  if (fs.existsSync(prostredie)) doTemy.set('kfg-scene-prostredie.js', prostredie);
+  else chyby.push('chýba konfigurator/scene-prostredie.js');
+
   const decal = path.join(KOREN, 'konfigurator', 'koverta-decal.svg');
   if (fs.existsSync(decal)) doTemy.set('koverta-decal.svg', decal);
   else chyby.push('chýba konfigurator/koverta-decal.svg');
