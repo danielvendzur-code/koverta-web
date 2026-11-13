@@ -2117,7 +2117,7 @@ function kvAdresa(kluc, zaloha) {
            podhľad, drevené odtiene sú drevo a zvyšok je prášková farba. */
         const triedaMaterialu = (face) => {
           const M = window.KvRender3D.MATERIALY;
-          if (face.kulisa && face.mat3d && M[face.mat3d]) return M[face.mat3d];
+          if ((face.kulisa || face.stena) && face.mat3d && M[face.mat3d]) return M[face.mat3d];
           if (face.bg) return M.dlazba;
           if (face.material === 'zinc') return M.zinok;
           if (face.material === 'latka') return M.latka || M.lak;
@@ -2209,14 +2209,36 @@ function kvAdresa(kluc, zaloha) {
            nemá zadnú stenu a kamera by videla dovnútra. */
         const kulisyPreZaber = (faces, smer) => {
           if (prostredie.nastavene === 'studio' || !window.KvProstredie) return { plochy: [], dlazba: null, kluc: '' };
+          /* Obal je samotná stavba. Steny štúdia doň nepatria: posunuli by
+             fasádu, výšku domu aj dosah kamery o presah steny. */
           let obal = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
-          for (const f of faces) if (!f.bg && f.w) for (const q of f.w) for (let k = 0; k < 3; k++) {
+          for (const f of faces) if (!f.bg && !f.houseWall && f.w) for (const q of f.w) for (let k = 0; k < 3; k++) {
             if (q[k] < obal[k]) obal[k] = q[k];
             if (q[k] > obal[k + 3]) obal[k + 3] = q[k];
           }
           if (!Number.isFinite(obal[0])) return { plochy: [], dlazba: null, kluc: '' };
           const walls = (placement && placement().walls) || [];
+          /* Steny, na ktoré je stavba pripevnená (pri stene, v rohu, medzi
+             stenami). Rovinu, rozsah a výšku berú zo stien štúdia, takže
+             sa stavby dotýkajú presne tam, kde v štúdiu. Stena, za ktorou
+             je kamera, sa nekreslí — inak by zakryla celý výrobok (to isté
+             robí štúdio). Sklenená stena ostáva zo štúdia. */
+          const steny = [];
+          for (const f of faces) {
+            if (!f.houseWall || !f.w || /^rgba/.test(String(f.sourceFill || ''))) continue;
+            const n = f.normal || [0, 0, 0];
+            const pozdlzX = Math.abs(n[1]) > 0.5;
+            const us = f.w.map((q) => q[pozdlzX ? 0 : 1]);
+            steny.push({
+              n: [Math.round(n[0]), Math.round(n[1]), 0],
+              v: f.w[0][pozdlzX ? 1 : 0],
+              a: Math.min(...us), b: Math.max(...us),
+              vyska: Math.max(...f.w.map((q) => q[2]))
+            });
+          }
+          const viditelne = steny.filter((s) => !smer || smer[0] * s.n[0] + smer[1] * s.n[1] > -0.30);
           const k = window.KvProstredie.kulisy(prostredie.nastavene, obal, {
+            steny: viditelne,
             /* Polomer obletu kamery: stromy a plot musia stáť za ním, inak
                by nimi kamera pri otáčaní prešla. */
             dosahKamery: Math.max(obal[3] - obal[0], obal[4] - obal[1], obal[5] - obal[2]) * 2.9,
@@ -2227,7 +2249,7 @@ function kvAdresa(kluc, zaloha) {
           });
           /* Dom je uzavretý a zakrývajúce kulisy rozplynie vykresľovač —
              pri obletení sa preto nič neodoberá ani nestavia nanovo. */
-          k.kluc = prostredie.nastavene;
+          k.kluc = prostredie.nastavene + '|' + viditelne.map((s) => s.n.join(',')).join(';');
           return k;
         };
 
@@ -2316,7 +2338,7 @@ function kvAdresa(kluc, zaloha) {
                vyzerala ako chyba. Kým textúru nevie, nálepka sa v 3D vynechá. */
             /* V reálnej scéne domovú stenu stavby nahrádza fasáda kulís. */
             const vlastne = prostredie.nastavene === 'studio' ? faces
-              : faces.filter((f) => !f.houseWall);
+              : faces.filter((f) => !f.houseWall || f.stenaSklo);
             r.nastavScenu(vlastne.filter((f) => !f.decal).concat(kul.plochy), triedaMaterialu);
             klucSiete = kluc;
           }
@@ -3272,6 +3294,7 @@ function kvAdresa(kluc, zaloha) {
                 material: o.material || '',
                 decal: o.decal || false,
                 houseWall: o.houseWall === true,
+                stenaSklo: o.stenaSklo === true,
                 /* Ktoré plochy sú jednostranné, vie geometria — tá istá
                    informácia, ktorou doteraz orezávala odvrátené steny. */
                 cull: Boolean(o.cull),
@@ -3350,6 +3373,7 @@ function kvAdresa(kluc, zaloha) {
               material: o.material || '',
               /* Domová stena štúdia — v reálnej scéne ju nahradí fasáda. */
               houseWall: o.houseWall === true,
+              stenaSklo: o.stenaSklo === true,
               fill: lit, sourceFill: fill, decal: o.decal || false,
               vertexFills: vertexFills,
               edge: o.edge !== false,
@@ -3813,7 +3837,7 @@ function kvAdresa(kluc, zaloha) {
                 hex, Object.assign({ normal: nrm, cull: true, edge: false, fit: false, houseWall: true }, extra || {}));
               /* Priehľadná stena (typ bez stĺpov): pergolu je cez ňu vidieť,
                  no je jasné, že stojí medzi stenami. */
-              if (sklo) { band(0, wallTop, 'rgba(206,220,228,.30)', 0, { raw: true, cull: false }); return; }
+              if (sklo) { band(0, wallTop, 'rgba(206,220,228,.30)', 0, { raw: true, cull: false, stenaSklo: true }); return; }
               band(0, wallTop, wallHex);
               // the shadow the roof throws on the wall it is fixed to
               band(H - 40, H + beam, 'rgba(24,26,28,.13)', 1.0, { raw: true, bias: 200 });

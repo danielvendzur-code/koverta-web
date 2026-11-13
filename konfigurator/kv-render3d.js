@@ -173,10 +173,15 @@
     /* Kulisy reálnej scény (dom, garáž). Nie sú výrobok — sú len okolie,
        podľa ktorého sa zákazník zorientuje. Omietka je matná a svetlá,
        okno je tmavé hladké sklo, ktoré odráža oblohu. */
-    omietka:  { kov: 0.00, drsnost: 0.92, odraz: 0.86 },
+    omietka:  { kov: 0.00, drsnost: 0.92, odraz: 0.86, omietka: 1 },
     /* Dvojsklo s tmavým interiérom za ním: odráža ako tmavé zrkadlo.
        Holý Fresnel skla (4 %) dal na fasáde čierne diery bez oblohy. */
     okno:     { kov: 0.72, drsnost: 0.05, odraz: 1.00 },
+    /* Izba za oknom: svetlo do nej ide len oknom, takže cez sklo pôsobí
+       šero. Odrazivosť je preto zámerne nízka — nahrádza tieň fasády,
+       ktorý kulisy nevrhajú. */
+    interier: { kov: 0.00, drsnost: 0.95, odraz: 0.11 },
+    zaclona:  { kov: 0.00, drsnost: 0.90, odraz: 0.30 },
     brana:    { kov: 0.10, drsnost: 0.55, odraz: 0.80 },
     plot:     { kov: 0.00, drsnost: 0.92, odraz: 0.85, listie: 1 },
     listie:   { kov: 0.00, drsnost: 0.86, odraz: 0.85, listie: 1 },
@@ -228,6 +233,14 @@ uniform float uOblohaOtoc;
 uniform float uOblohaJas;
 uniform vec3 uZemDalka;
 
+/* Hodnotový šum 3D (0..1) pre zrno omietky. */
+float hashO(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float sumOmietky(vec3 x) {
+  vec3 i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hashO(i), hashO(i + vec3(1, 0, 0)), f.x), mix(hashO(i + vec3(0, 1, 0)), hashO(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(hashO(i + vec3(0, 0, 1)), hashO(i + vec3(1, 0, 1)), f.x), mix(hashO(i + vec3(0, 1, 1)), hashO(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
 vec3 oblohaZMapy(vec3 dir, float lod) {
   float u = atan(dir.y, dir.x) * 0.15915494 + 0.5 + uOblohaOtoc;
   float v = acos(clamp(dir.z, -1.0, 1.0)) * 0.31830989;
@@ -847,6 +860,32 @@ void main() {
        k slnku ako biele škvrny. */
     drsnost = 0.82;
   }
+#ifdef PROSTREDIE
+  /* Omietka reálnej scény: škrabaná fasádna omietka má zrno v mierke
+     milimetrov a o kúsok väčšie hrudky. Hladká biela plocha je to prvé,
+     čo prezradí render — zrno chytí šikmé slnko a dá stene materiál.
+     Reliéf sa počíta z derivácií na obrazovke (bez textúry a bez
+     dotyčníc), do diaľky sa utlmí, kým by z neho bol len šum. Pri zemi
+     je stena o odtieň tmavšia — odstrek z dažďa, ako na každom dome. */
+  if ((priznakyBit & 8) != 0 && !jePodklad) {
+    vec3 dpx = dFdx(vPoz), dpy = dFdy(vPoz);
+    float stopa = max(length(dpx), length(dpy));
+    float jemne = 1.0 - smoothstep(0.9, 3.0, stopa), hrube = 1.0 - smoothstep(4.0, 16.0, stopa);
+    float utlmO = max(jemne, hrube);
+    float hrb = (sumOmietky(vPoz / 2.6) - 0.5) * 0.5 * jemne + (sumOmietky(vPoz / 11.0 + 3.1) - 0.5) * 1.1 * hrube + 0.5;
+    if (utlmO > 0.01) {
+      float bx = dFdx(hrb), by = dFdy(hrb);
+      vec3 r1 = cross(dpy, nGeo), r2 = cross(nGeo, dpx);
+      float det = dot(dpx, r1);
+      vec3 grad = sign(det) * (bx * r1 + by * r2);
+      vec3 nb = normalize(abs(det) * nGeo - grad * 0.9 * utlmO);
+      if (dot(nb, nGeo) > 0.5) { n = dot(n, nGeo) < 0.0 ? -nb : nb; }
+    }
+    float flak = sumOmietky(vPoz / 1400.0 + 7.7);
+    podkladFarba *= (0.985 + (hrb - 0.5) * 0.05 * utlmO) * (0.975 + flak * 0.05)
+                  * mix(0.90, 1.0, smoothstep(60.0, 520.0, vPoz.z));
+  }
+#endif
   float a = drsnost * drsnost;
 
   vec3 albedo = podkladFarba;
@@ -1605,7 +1644,8 @@ void main() {
             /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
             data[at + 11] = farba[3];
             data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
-              + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0);
+              + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
+              + (mat.omietka ? 8 : 0);
             /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
                scény, dosah dlažby aj výrez tieňovej mapy. */
             data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
