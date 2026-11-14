@@ -216,8 +216,12 @@
     if (!root) return;
     var bar = root.querySelector('.sp-stage__bar');
     // Tlačidlo dáva zmysel len tam, kde sú lamely alebo pohyblivé strany.
+    // Runtime s hákom `sp:move` vie pohnúť aj samotnými stranami (ZIP na
+    // carporte či prestrešení) a sám značí `data-sp-pohyb`, kedy je čím
+    // hýbať — tlačidlá sa podľa toho ukážu alebo skryjú v CSS.
     var maLamely = !!root.querySelector('[data-sp-louver-range]');
-    if (!bar || !maLamely) return;
+    var hak = !!root.querySelector('[data-sp-move-hook]');
+    if (!bar || (!maLamely && !hak)) return;
     if (bar.querySelector('.kv-allmove')) return;
 
     var wrap = document.createElement('div');
