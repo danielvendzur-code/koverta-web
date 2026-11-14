@@ -43,7 +43,11 @@ function kvAdresa(kluc, zaloha) {
          vrcholy; na hrane svetla z nich boli červené zúbky. Vpredu
          (prvých 16 % dĺžky) sa také vrcholy prefarbia na neutrálnu sivú
          rovnakého jasu. */
-      bezCervenejVpredu:true },
+      bezCervenejVpredu:true,
+      /* Lak Mini má vo vrcholoch zapečené tiene z textúry (činiteľ 80 až
+         176). Na veľkých trojuholníkoch kapoty z nich boli škvrny; polovica
+         rozptylu ostane, aby lak nestratil plastickosť. */
+      rozptylLaku:0.45 },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-sofaset.bin.gz', bounds:[0,-1315,0,4130,1315,1291] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
@@ -70,6 +74,26 @@ function kvAdresa(kluc, zaloha) {
         const B=new Uint8Array(data);
         for(let i=12;i<B.length;i+=16)if(B[i+3]===m&&B[i]===r&&B[i+1]===g&&B[i+2]===b){B[i]=r2;B[i+1]=g2;B[i+2]=b2;B[i+3]=m2;}
       });
+      /* Hladké normály: vrcholy na tom istom mieste a s tým istým materiálom
+         dostanú priemer normál susedov, ktoré s nimi zvierajú menej než 35°.
+         Ploché trojuholníky karosérie (BMW je z polovice „low poly") sa
+         v odraze oblohy čítali ako mozaika; ostré hrany (nad 35°) ostanú. */
+      {
+        const V=new DataView(data),n=data.byteLength/16,skup=new Map();
+        for(let i=0;i<n;i++){const o=i*16;
+          const k=V.getInt16(o,true)+','+V.getInt16(o+2,true)+','+V.getInt16(o+4,true)+','+V.getUint8(o+15);
+          let g=skup.get(k);if(!g){g=[];skup.set(k,g);}g.push(i);}
+        const COS=Math.cos(35*Math.PI/180),nov=new Float32Array(n*3);
+        for(const g of skup.values()){
+          for(const i of g){const o=i*16,ax=V.getInt16(o+6,true)/32767,ay=V.getInt16(o+8,true)/32767,az=V.getInt16(o+10,true)/32767;
+            let sx=0,sy=0,sz=0;
+            for(const j of g){const q=j*16,bx=V.getInt16(q+6,true)/32767,by=V.getInt16(q+8,true)/32767,bz=V.getInt16(q+10,true)/32767;
+              if(ax*bx+ay*by+az*bz>=COS){sx+=bx;sy+=by;sz+=bz;}}
+            const m=Math.hypot(sx,sy,sz)||1;nov[i*3]=sx/m;nov[i*3+1]=sy/m;nov[i*3+2]=sz/m;}
+        }
+        for(let i=0;i<n;i++){const o=i*16;
+          V.setInt16(o+6,Math.round(nov[i*3]*32767),true);V.setInt16(o+8,Math.round(nov[i*3+1]*32767),true);V.setInt16(o+10,Math.round(nov[i*3+2]*32767),true);}
+      }
       if(models[key].bezCervenejVpredu){
         const B=new Uint8Array(data),V=new DataView(data),lim=models[key].bounds[3]*0.16;
         for(let i=0;i+16<=B.length;i+=16){
@@ -822,7 +846,7 @@ function kvAdresa(kluc, zaloha) {
            v textúre, si takto svetlá a tmavé miesta ponechá a lak sa aj tak
            dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
         `precision highp float;${SPAT_TON}varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
-        uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
+        uniform vec3 eye;uniform vec3 paint;uniform float paintVar;uniform float overcast;uniform float alpha;
         uniform sampler2D sky;uniform float skyOn;uniform float skyRot;uniform float skyGain;uniform float skyV;uniform vec3 sunDir;uniform float sunOn;
         uniform sampler2D shadowMap;uniform mat4 shadowMat;uniform float shadowOn;uniform float shadowTexel;
         /* Tieň slnka z tej istej tieňovej mapy, akú má konštrukcia: auto pod
@@ -856,7 +880,7 @@ function kvAdresa(kluc, zaloha) {
           float kd=max(0.,dot(n,key))*sh;float l=.36+.56*kd+.22*max(0.,dot(n,fill))+.34*max(0.,-n.z)+.13*max(0.,n.z);
           l=mix(l,.64+.27*max(0.,n.z)+.16*max(0.,-n.z),overcast);
           vec3 base=color;float spec=.03;float gloss=20.;
-          if(kind>.5&&kind<1.5){base=paint*(color.r*2.);spec=.32;gloss=65.;}
+          if(kind>.5&&kind<1.5){base=paint*mix(1.,color.r*2.,paintVar);spec=.32;gloss=65.;}
           if(kind>1.5&&kind<2.5){spec=.55;gloss=100.;}
           if(kind>2.5&&kind<3.5){spec=.4;gloss=45.;}
           vec3 result=base*l;
@@ -1179,6 +1203,7 @@ function kvAdresa(kluc, zaloha) {
         }
         gl.uniform3f(U(p,'offset'),item.x,item.y,item.z);
         gl.uniform2f(U(p,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
+        gl.uniform1f(U(p,'paintVar'),models[item.key]&&models[item.key].rozptylLaku!==undefined?models[item.key].rozptylLaku:1);
         gl.drawArrays(gl.TRIANGLES,0,m.count);
       }
     }

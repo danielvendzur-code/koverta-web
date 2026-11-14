@@ -1980,10 +1980,10 @@ function kvAdresa(kluc, zaloha) {
         try {
           window.SP_TEST = window.SP_TEST || {};
           window.SP_TEST.setView = (az, el) => { stopCamera(); view.az = az; view.el = el; viewTouched = true; };
-          window.SP_TEST.redraw = () => { cachedGeometry = null; renderAll(); };
+          window.SP_TEST.redraw = () => { cachedGeometry = null; geometryPamat.clear(); renderAll(); };
           /* Len pre produktové rendre: oddialenie pod 100 %, aby sa do záberu
              zmestil celý tieň. Ovládanie na stránke ide od 100 % vyššie. */
-          window.SP_TEST.setZoom = (z) => { manualZoom = z; cachedGeometry = null; renderAll(); };
+          window.SP_TEST.setZoom = (z) => { manualZoom = z; cachedGeometry = null; geometryPamat.clear(); renderAll(); };
           window.SP_TEST.redrawStage = () => { drawStage(); };
           window.SP_TEST.snapshot = () => ({
             page: BIO.page, model: state.model, zoom: manualZoom, width: widthMM(), length: lengthMM(), height: state.height,
@@ -2022,6 +2022,12 @@ function kvAdresa(kluc, zaloha) {
            No BSP fragments, centroid ordering or expanded polygon strokes can
            reveal a hidden steel member through another opaque member. */
         let depthPainter = null, cachedGeometry = null, sceneLife = null;
+        /* Posledné tvary geometrie podľa kľúča. Koverta sa stavia podľa
+           štvrtiny, z ktorej sa na ňu pozerá; s jedinou pamäťou sa pri každom
+           prechode cez os postavila celá nanovo (~40 ms, na telefóne viac)
+           a otáčanie v tých miestach trhlo. Osem stačí na všetky štvrtiny
+           zhora aj zdola; pri zmene zostavy staré vypadnú samy. */
+        const geometryPamat = new Map();
         let motionDetail = false, detailTimer = 0;
         /* Kým je prst alebo tlačidlo myši dole, model sa hýbe — o tom netreba
            rozhodovať podľa času. Časovač doostrenia sa preto počas ťahania
@@ -2353,7 +2359,7 @@ function kvAdresa(kluc, zaloha) {
             /* V reálnej scéne domovú stenu stavby nahrádza fasáda kulís. */
             const vlastne = prostredie.nastavene === 'studio' ? faces
               : faces.filter((f) => !f.houseWall || f.stenaSklo);
-            r.nastavScenu(vlastne.filter((f) => !f.decal).concat(kul.plochy), triedaMaterialu);
+            r.nastavScenu(vlastne.filter((f) => !f.decal).concat(kul.plochy), triedaMaterialu, kluc);
             klucSiete = kluc;
           }
 
@@ -3252,6 +3258,10 @@ function kvAdresa(kluc, zaloha) {
             : [];
           const geometryKey = JSON.stringify(state) + '|'
             + [overcast, stupenDetailu, krokPrahu].concat(geometryViewKey).join(',');
+          if (!(cachedGeometry && cachedGeometry.key === geometryKey) && geometryPamat.has(geometryKey)) {
+            cachedGeometry = geometryPamat.get(geometryKey);
+            geometryPamat.delete(geometryKey); geometryPamat.set(geometryKey, cachedGeometry);
+          }
           const cacheHit = Boolean(cachedGeometry && cachedGeometry.key === geometryKey);
           canvas.dataset.geometryCache = cacheHit ? 'hit' : 'miss';
           const re3D = Boolean(pripravPainter3D());
@@ -6275,6 +6285,8 @@ function kvAdresa(kluc, zaloha) {
           }
 
             cachedGeometry = { key: geometryKey, faces: rawFaces, sceneryObstacles, accessories: lastKvAccessoryGeometry };
+            geometryPamat.set(geometryKey, cachedGeometry);
+            while (geometryPamat.size > 8) geometryPamat.delete(geometryPamat.keys().next().value);
           }
           layer = 0;
 

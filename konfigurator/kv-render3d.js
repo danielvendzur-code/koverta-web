@@ -1109,7 +1109,10 @@ void main() {
 
   if (jeKarta) priehladnost = pokrytie;
   oFarba = vec4(uKodovat > 0.5 ? zakoduj(farba) : farba, priehladnost);
-  oNormHlbka = vec4(n * 0.5 + 0.5, 1.0);
+  /* Priehľadnosť mapy normál nesie, čo je výrobok (1) a čo okolie
+     (podklad, kulisy: 0,75). Zatienenie berie oboje; zvýraznenie hrán
+     v tónovaní len výrobok. */
+  oNormHlbka = vec4(n * 0.5 + 0.5, (jePodklad || (priznakyBit & 64) != 0) ? 0.75 : 1.0);
 }
 `;
 
@@ -1242,7 +1245,38 @@ uniform float uVineta;
 uniform float uExpozicia;
 uniform float uKontrast;
 uniform int uLadenieTon;   /* 1 = len zatienenie, 2 = len žiara */
+uniform sampler2D uNormH;
+uniform sampler2D uHlbkaH;
+uniform mat3 uPohlad3;
+uniform vec2 uTexelH;
+uniform float uHrany;
 out vec4 oFarba;
+
+/* Hrany výrobku (ako „Cavity" v Blenderi). Skutočný hliníkový profil má
+   hranu zaoblenú o milimeter či dva a tá chytí svetlo ako tenká svetlá
+   linka; vnútorný kút je o odtieň tmavší. V sieti sú hrany ostré, takže
+   sa to dopočíta z mapy normál: kde sa normály susedov rozchádzajú
+   (vypuklá hrana), pridá sa trocha svetla, kde sa zbiehajú (kút), uberie.
+   Len na výrobku a len kde je hĺbka spojitá — obrys proti pozadiu ani
+   stĺp pred nosníkom hranou nie sú. */
+float hranaVyrobku() {
+  vec4 n0 = texture(uNormH, vUV);
+  if (n0.a < 0.9) return 0.0;
+  vec2 tx = uTexelH;
+  vec4 nl = texture(uNormH, vUV - vec2(tx.x, 0.0)), nr = texture(uNormH, vUV + vec2(tx.x, 0.0));
+  vec4 nd = texture(uNormH, vUV - vec2(0.0, tx.y)), nu = texture(uNormH, vUV + vec2(0.0, tx.y));
+  if (min(min(nl.a, nr.a), min(nd.a, nu.a)) < 0.9) return 0.0;
+  float d0 = texture(uHlbkaH, vUV).r;
+  float dl = texture(uHlbkaH, vUV - vec2(tx.x, 0.0)).r, dr = texture(uHlbkaH, vUV + vec2(tx.x, 0.0)).r;
+  float dd = texture(uHlbkaH, vUV - vec2(0.0, tx.y)).r, du = texture(uHlbkaH, vUV + vec2(0.0, tx.y)).r;
+  /* Spojitosť: rozdiel oproti susedom nesmie byť väčší, než aký dá
+     naklonená plocha (lineárny priebeh), inak je to skok na inú časť. */
+  float skokX = abs(dl + dr - 2.0 * d0), skokY = abs(dd + du - 2.0 * d0);
+  if (max(skokX, skokY) > 0.0015) return 0.0;
+  vec3 L = uPohlad3 * (nl.xyz * 2.0 - 1.0), R = uPohlad3 * (nr.xyz * 2.0 - 1.0);
+  vec3 D = uPohlad3 * (nd.xyz * 2.0 - 1.0), U = uPohlad3 * (nu.xyz * 2.0 - 1.0);
+  return clamp((R.x - L.x) + (U.y - D.y), -1.5, 1.5);
+}
 
 /* ACES filmic. Je to tá istá krivka, akú má film aj každý poriadny renderer:
    svetlá sa nezrezávajú do bielej plochy, ale plynule doň prechádzajú —
@@ -1260,6 +1294,13 @@ void main() {
   if (uLadenieTon == 1) { oFarba = vec4(vec3(ao), 1.0); return; }
   if (uLadenieTon == 2) { oFarba = vec4(texture(uZiara, vUV).rgb, 1.0); return; }
   c *= ao;
+  if (uHrany > 0.0) {
+    float h = hranaVyrobku();
+    /* Vypuklá hrana: svetlo odrazené od zaoblenia (pridané, nie násobené —
+       aj na antracite je hrana svetlá). Kút: o odtieň tmavší. */
+    if (h > 0.0) c = c * (1.0 + 0.35 * h * uHrany) + vec3(0.020, 0.021, 0.023) * h * uHrany;
+    else c *= 1.0 + 0.22 * h * uHrany;
+  }
   c += texture(uZiara, vUV).rgb * uSilaZiary;
   c *= uExpozicia;
   c = aces(c);
@@ -1632,6 +1673,9 @@ void main() {
          a jemne. Odmerané na rovnakom zábere (pozri ostrenie-test). */
       ostrenieVPohybe: 0.55,
       ostrenieVPokoji: 0.22,
+      /* Zvýraznenie hrán výrobku (0 = vypnuté). Štúdio zatiaľ bez neho. */
+      silaHran: 0,
+      silaHranStudio: 0,
       /* Vinetácia sa na fotografii výrobku nerobí. Pri 0,24 ubrala v rohu
          záberu štrnásť percent jasu a zo svetlej steny štúdia bola sivá —
          práve to robilo z obrazu zašedený render namiesto fotky. Ostáva
@@ -1669,113 +1713,133 @@ void main() {
     /* Plochy prídu ako polygóny vo svetových súradniciach. Rozložíme ich na
        trojuholníky vejárom — polygóny sú konvexné (vznikajú ako obdĺžniky
        a rezy rovinou), takže vejár stačí a je najlacnejší. */
-    stav.nastavScenu = function (plochy, klasifikuj) {
+    stav.nastavScenu = function (plochy, klasifikuj, kluc) {
       stav.tienPlatny = false;
       const g = stav.gl;
-      let pocetVrcholov = 0;
-      for (const f of plochy) if (f.w && f.w.length > 2) pocetVrcholov += (f.w.length - 2) * 3;
-      /* História časového vyhladzovania sa zahadzovala pri každej zmene
-         siete. Pri otváraní lamiel alebo posúvaní krídel sa sieť mení
-         v každom snímku, takže vyhladzovanie nikdy nemalo z čoho brať:
-         každý snímok išiel na plátno sám, posunutý o iný zlomok pixela —
-         obraz zrnil a po zastavení sa naraz vyhladil (trhnutie). Keď
-         ostáva rovnaký počet vrcholov, je to tá istá zostava v inej polohe
-         a história platí ďalej: pohnuté lamely z nej vyreže orezanie
-         rozptylom okolia (FS_TAA), stojace časti ostanú vyhladené. Pri inej
-         zostave (rozmer, doplnok) sa história zahodí ako doteraz. */
-      if (pocetVrcholov !== stav.pocetVrcholovSiete) stav.taaPlatna = false;
-      stav.pocetVrcholovSiete = pocetVrcholov;
-      if (!pocetVrcholov) { stav.siet = null; return; }
-
+      /* Zabalená sieť podľa kľúča. Koverta sa pri prechode cez os pohľadu
+         stavia z iných plôch; pri návrate na známy uhol sa zabalené dáta
+         len nahrajú na kartu — bez balenia, ktoré na telefóne trvalo desiatky
+         milisekúnd a otáčanie v tých miestach trhlo. */
       const PLAVAKOV = 16;
-      const data = new Float32Array(pocetVrcholov * PLAVAKOV);
+      const zabal = () => {
+        let pocetVrcholov = 0;
+        for (const f of plochy) if (f.w && f.w.length > 2) pocetVrcholov += (f.w.length - 2) * 3;
+        /* História časového vyhladzovania sa zahadzovala pri každej zmene
+           siete. Pri otváraní lamiel alebo posúvaní krídel sa sieť mení
+           v každom snímku, takže vyhladzovanie nikdy nemalo z čoho brať:
+           každý snímok išiel na plátno sám, posunutý o iný zlomok pixela —
+           obraz zrnil a po zastavení sa naraz vyhladil (trhnutie). Keď
+           ostáva rovnaký počet vrcholov, je to tá istá zostava v inej polohe
+           a história platí ďalej: pohnuté lamely z nej vyreže orezanie
+           rozptylom okolia (FS_TAA), stojace časti ostanú vyhladené. Pri inej
+           zostave (rozmer, doplnok) sa história zahodí ako doteraz. */
+        if (!pocetVrcholov) return { pocetVrcholov: 0 };
 
-      /* Nepriehľadné a priehľadné zvlášť: priehľadné sa musia kresliť
-         po nepriehľadných a zozadu dopredu, inak sa sklo prekryje samo. */
-      const nepriehl = [], priehl = [];
-      for (const f of plochy) {
-        if (!f.w || f.w.length < 3) continue;
-        const farba = rozlozFarbu(f.sourceFill || f.fill);
-        (farba[3] < 0.999 ? priehl : nepriehl).push({ f, farba });
-      }
-      priehl.sort((a, b) => b.f.depthAvg - a.f.depthAvg);
+        const data = new Float32Array(pocetVrcholov * PLAVAKOV);
 
-      /* Poradie, ktoré si geometria pýta, je poradie — nie vzdialenosť.
-         Doteraz išlo na kartu tak, ako prišlo: čísla ako 50 000, ktoré po
-         prenásobení krokom dali plechu takmer meter náskoku v hĺbke. Pri
-         streche prístrešku to nebolo vidieť, ale skrutky na nej sa do toho
-         metra stratili — na zábere z nich ostali kúsky, ktoré vyzerali ako
-         zrno. Z rôznych čísel sa preto spraví rebríček a na kartu ide jeho
-         stupeň. Jeden stupeň je pol milimetra hĺbky: dosť na to, aby dve
-         plochy v jednej rovine nesúperili, a málo na to, aby detail
-         predbehol niečo, čo je pred ním. */
-      const stupne = new Map();
-      for (const f of plochy) {
-        if (!f.w || f.w.length < 3) continue;
-        stupne.set((f.bias || 0), 0);
-      }
-      const kluce = [...stupne.keys()].sort((a, b) => a - b);
-      kluce.forEach((k, i) => stupne.set(k, i));
-
-      const hranice = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
-      const hraniceVrhacov = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
-      let at = 0;
-
-      const zapis = (polozka) => {
-        const { f, farba } = polozka;
-        const w = f.w;
-        const mat = klasifikuj ? klasifikuj(f) : MATERIALY.zakladny;
-        /* Normála: ak ju geometria dodala, veríme jej — je presnejšia než
-           dopočet z troch bodov, ktoré môžu byť po reze rovinou takmer
-           kolineárne. */
-        let n = f.normal;
-        if (!n) {
-          const a = w[0], b = w[1], c = w[2];
-          const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-          const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-          n = vec3.norm(vec3.cross(u, v));
+        /* Nepriehľadné a priehľadné zvlášť: priehľadné sa musia kresliť
+           po nepriehľadných a zozadu dopredu, inak sa sklo prekryje samo. */
+        const nepriehl = [], priehl = [];
+        for (const f of plochy) {
+          if (!f.w || f.w.length < 3) continue;
+          const farba = rozlozFarbu(f.sourceFill || f.fill);
+          (farba[3] < 0.999 ? priehl : nepriehl).push({ f, farba });
         }
-        /* Zaoblené kulisy (koruny stromov, plot) nesú normálu pre každý
-           vrchol, aby sa tieňovali hladko a nie ako mnohosten. */
-        const nv = f.nv && f.nv.length === w.length ? f.nv : null;
-        for (let i = 1; i < w.length - 1; i++) {
-          for (const j of [0, i, i + 1]) {
-            const p = w[j], nn = nv ? nv[j] : n;
-            data[at] = p[0]; data[at + 1] = p[1]; data[at + 2] = p[2];
-            data[at + 3] = nn[0]; data[at + 4] = nn[1]; data[at + 5] = nn[2];
-            const od = mat.odraz === undefined ? 1 : mat.odraz;
-            data[at + 6] = farba[0] * od; data[at + 7] = farba[1] * od; data[at + 8] = farba[2] * od;
-            data[at + 9] = mat.kov; data[at + 10] = mat.drsnost;
-            /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
-            data[at + 11] = farba[3];
-            data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
-              + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
-              + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.bezSlnka ? 256 : 0);
-            /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
-               scény, dosah dlažby aj výrez tieňovej mapy. */
-            data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
-            if (f.uv) { data[at + 14] = f.uv[j][0]; data[at + 15] = f.uv[j][1]; }
-            at += PLAVAKOV;
-            if (!f.kulisa) for (let k = 0; k < 3; k++) {
-              if (p[k] < hranice[k]) hranice[k] = p[k];
-              if (p[k] > hranice[k + 3]) hranice[k + 3] = p[k];
-              if (!f.bg) {
-                if (p[k] < hraniceVrhacov[k]) hraniceVrhacov[k] = p[k];
-                if (p[k] > hraniceVrhacov[k + 3]) hraniceVrhacov[k + 3] = p[k];
+        priehl.sort((a, b) => b.f.depthAvg - a.f.depthAvg);
+
+        /* Poradie, ktoré si geometria pýta, je poradie — nie vzdialenosť.
+           Doteraz išlo na kartu tak, ako prišlo: čísla ako 50 000, ktoré po
+           prenásobení krokom dali plechu takmer meter náskoku v hĺbke. Pri
+           streche prístrešku to nebolo vidieť, ale skrutky na nej sa do toho
+           metra stratili — na zábere z nich ostali kúsky, ktoré vyzerali ako
+           zrno. Z rôznych čísel sa preto spraví rebríček a na kartu ide jeho
+           stupeň. Jeden stupeň je pol milimetra hĺbky: dosť na to, aby dve
+           plochy v jednej rovine nesúperili, a málo na to, aby detail
+           predbehol niečo, čo je pred ním. */
+        const stupne = new Map();
+        for (const f of plochy) {
+          if (!f.w || f.w.length < 3) continue;
+          stupne.set((f.bias || 0), 0);
+        }
+        const kluce = [...stupne.keys()].sort((a, b) => a - b);
+        kluce.forEach((k, i) => stupne.set(k, i));
+
+        const hranice = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+        const hraniceVrhacov = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+        let at = 0;
+
+        const zapis = (polozka) => {
+          const { f, farba } = polozka;
+          const w = f.w;
+          const mat = klasifikuj ? klasifikuj(f) : MATERIALY.zakladny;
+          /* Normála: ak ju geometria dodala, veríme jej — je presnejšia než
+             dopočet z troch bodov, ktoré môžu byť po reze rovinou takmer
+             kolineárne. */
+          let n = f.normal;
+          if (!n) {
+            const a = w[0], b = w[1], c = w[2];
+            const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+            const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+            n = vec3.norm(vec3.cross(u, v));
+          }
+          /* Zaoblené kulisy (koruny stromov, plot) nesú normálu pre každý
+             vrchol, aby sa tieňovali hladko a nie ako mnohosten. */
+          const nv = f.nv && f.nv.length === w.length ? f.nv : null;
+          for (let i = 1; i < w.length - 1; i++) {
+            for (const j of [0, i, i + 1]) {
+              const p = w[j], nn = nv ? nv[j] : n;
+              data[at] = p[0]; data[at + 1] = p[1]; data[at + 2] = p[2];
+              data[at + 3] = nn[0]; data[at + 4] = nn[1]; data[at + 5] = nn[2];
+              const od = mat.odraz === undefined ? 1 : mat.odraz;
+              data[at + 6] = farba[0] * od; data[at + 7] = farba[1] * od; data[at + 8] = farba[2] * od;
+              data[at + 9] = mat.kov; data[at + 10] = mat.drsnost;
+              /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
+              data[at + 11] = farba[3];
+              data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
+                + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
+                + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.bezSlnka ? 256 : 0);
+              /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
+                 scény, dosah dlažby aj výrez tieňovej mapy. */
+              data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
+              if (f.uv) { data[at + 14] = f.uv[j][0]; data[at + 15] = f.uv[j][1]; }
+              at += PLAVAKOV;
+              if (!f.kulisa) for (let k = 0; k < 3; k++) {
+                if (p[k] < hranice[k]) hranice[k] = p[k];
+                if (p[k] > hranice[k + 3]) hranice[k + 3] = p[k];
+                if (!f.bg) {
+                  if (p[k] < hraniceVrhacov[k]) hraniceVrhacov[k] = p[k];
+                  if (p[k] > hraniceVrhacov[k + 3]) hraniceVrhacov[k + 3] = p[k];
+                }
               }
             }
           }
-        }
-      };
+        };
 
-      /* Poradie v buffri: najprv nepriehľadní vrhači, potom nepriehľadný
-         podklad, nakoniec priehľadné. Vďaka tomu vie tieňový priechod
-         nakresliť prvý úsek jedným `drawArrays` bez ďalšieho buffra. */
-      for (const p of nepriehl) if (!p.f.bg && !p.f.kulisa) zapis(p);
-      const pocetVrhacov = at / PLAVAKOV;
-      for (const p of nepriehl) if (p.f.bg || p.f.kulisa) zapis(p);
-      const deliaci = at / PLAVAKOV;
-      for (const p of priehl) zapis(p);
+        /* Poradie v buffri: najprv nepriehľadní vrhači, potom nepriehľadný
+           podklad, nakoniec priehľadné. Vďaka tomu vie tieňový priechod
+           nakresliť prvý úsek jedným `drawArrays` bez ďalšieho buffra. */
+        for (const p of nepriehl) if (!p.f.bg && !p.f.kulisa) zapis(p);
+        const pocetVrhacov = at / PLAVAKOV;
+        for (const p of nepriehl) if (p.f.bg || p.f.kulisa) zapis(p);
+        const deliaci = at / PLAVAKOV;
+        for (const p of priehl) zapis(p);
+        return { data, at, deliaci, pocetVrhacov, hranice, hraniceVrhacov, pocetVrcholov };
+      };
+      if (!stav.pamatSieti) stav.pamatSieti = new Map();
+      let z = kluc ? stav.pamatSieti.get(kluc) : null;
+      if (z) { stav.pamatSieti.delete(kluc); stav.pamatSieti.set(kluc, z); }
+      else {
+        z = zabal();
+        if (kluc && z.pocetVrcholov) {
+          stav.pamatSieti.set(kluc, z);
+          while (stav.pamatSieti.size > 8) stav.pamatSieti.delete(stav.pamatSieti.keys().next().value);
+        }
+      }
+      const pocetVrcholov = z.pocetVrcholov;
+      if (pocetVrcholov !== stav.pocetVrcholovSiete) stav.taaPlatna = false;
+      stav.pocetVrcholovSiete = pocetVrcholov;
+      if (!pocetVrcholov) { stav.siet = null; return; }
+      const { data, at, deliaci, pocetVrhacov, hranice, hraniceVrhacov } = z;
 
       if (!stav.siet) {
         stav.siet = { vao: g.createVertexArray(), buffer: g.createBuffer(), kapacita: 0 };
@@ -2705,6 +2769,14 @@ void main() {
         gl.uniform1f(p.u.uExpozicia, stav.expozicia);
         gl.uniform1f(p.u.uKontrast, stav.kontrast);
         gl.uniform1i(p.u.uLadenieTon, stav.ladenieTon | 0);
+        gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, c.normT);
+        gl.uniform1i(p.u.uNormH, 3);
+        gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, c.hlbkaT);
+        gl.uniform1i(p.u.uHlbkaH, 4);
+        const pv = kam.pohlad;
+        gl.uniformMatrix3fv(p.u.uPohlad3, false, new Float32Array([pv[0], pv[1], pv[2], pv[4], pv[5], pv[6], pv[8], pv[9], pv[10]]));
+        gl.uniform2f(p.u.uTexelH, 1 / sirka, 1 / vyska);
+        gl.uniform1f(p.u.uHrany, stav.prostredie ? stav.silaHran : stav.silaHranStudio);
       });
       gl.disable(gl.BLEND);
 
