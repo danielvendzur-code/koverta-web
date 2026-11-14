@@ -4308,10 +4308,15 @@ function kvAdresa(kluc, zaloha) {
                 b = [kvAnchor.vFace, kvAnchor.runTo, 0];
               }
             } else {
-              if (side === 'rear')  { a = [post, 0, 0]; b = [L - post, 0, 0]; axis = 'x'; out = -1; }
-              if (side === 'front') { a = [post, W, 0]; b = [L - post, W, 0]; axis = 'x'; out = 1; }
-              if (side === 'left')  { a = [0, post, 0]; b = [0, W - post, 0]; axis = 'y'; out = -1; }
-              if (side === 'right') { a = [L, post, 0]; b = [L, W - post, 0]; axis = 'y'; out = 1; }
+              /* Pri stene na tom konci strany nestojí stĺp (pozri kresliStlp),
+                 takže výplň nemá končiť o hrúbku stĺpa skôr. Vodiaca lišta sa
+                 tam kotví priamo do steny domu a roleta či panel vyplnia celý
+                 otvor až k nej — inak medzi ZIP a domom ostal pás svetla. */
+              const pri = (s) => (walls.indexOf(s) > -1 ? 0 : post);
+              if (side === 'rear')  { a = [pri('left'), 0, 0]; b = [L - pri('right'), 0, 0]; axis = 'x'; out = -1; }
+              if (side === 'front') { a = [pri('left'), W, 0]; b = [L - pri('right'), W, 0]; axis = 'x'; out = 1; }
+              if (side === 'left')  { a = [0, pri('rear'), 0]; b = [0, W - pri('front'), 0]; axis = 'y'; out = -1; }
+              if (side === 'right') { a = [L, pri('rear'), 0]; b = [L, W - pri('front'), 0]; axis = 'y'; out = 1; }
             }
 
             const vFace = axis === 'x' ? a[1] : a[0];
@@ -7247,17 +7252,30 @@ function kvAdresa(kluc, zaloha) {
                tým, čo je najviac vidieť, a každá strana si dobehne po svojej
                vlastnej dráhe z miesta, kde práve bola. */
             zaciatky: null,
+            /* Bez lamiel (Soltec carport či prestrešenie so ZIP) strecha nemá
+               čím hýbať a beh ťahá najvzdialenejšia strana: od nej sa ráta
+               trvanie aj podiel dráhy. Inak by „Zavrieť všetko" pri strechu
+               na nule skočilo rovno na koniec, bez pohybu. */
+            lamely: () => Boolean(cfgRoot.querySelector('[data-sp-louver-range]')),
+            postup: 0,
             zapamataj: () => {
               const z = { strecha: state.louverT, boky: {} };
               Object.keys(state.sides).forEach((k) => {
                 if (SIDE_MOVES[state.sides[k]]) z.boky[k] = state.sideOpen[k] || 0;
               });
+              if (!MOVER.all.lamely()) {
+                const ciel = MOVER.all.ciel;
+                z.strecha = Object.keys(z.boky).reduce((a, k) => (Math.abs(ciel - z.boky[k]) > Math.abs(ciel - a) ? z.boky[k] : a), ciel);
+                z.bezLamiel = true;
+              }
+              MOVER.all.postup = z.strecha;
               MOVER.all.zaciatky = z;
             },
-            get: () => state.louverT,
+            get: () => (MOVER.all.zaciatky && MOVER.all.zaciatky.bezLamiel ? MOVER.all.postup : state.louverT),
             set: (v) => {
               const z = MOVER.all.zaciatky;
-              state.louverT = v;
+              MOVER.all.postup = v;
+              if (!z || !z.bezLamiel) state.louverT = v;
               if (!z) {
                 Object.keys(state.sides).forEach((k) => {
                   if (SIDE_MOVES[state.sides[k]]) state.sideOpen[k] = v;
@@ -7465,6 +7483,13 @@ function kvAdresa(kluc, zaloha) {
           });
           cfgRoot.querySelectorAll('[data-sp-place]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.spPlace === state.placement)));
           syncLouver();
+          /* „Zavrieť všetko / Otvoriť všetko" (koverta-cfg-enhance.js) patrí
+             všade, kde sa niečo hýbe: lamely strechy alebo aspoň jedna
+             pohyblivá strana — ZIP roleta či posuvné panely aj na carporte
+             a prestrešení, nielen na bioklimatickej pergole. */
+          if (cfgRoot.querySelector('[data-sp-louver-range]')
+              || Object.keys(state.sides).some((k) => SIDE_MOVES[state.sides[k]])) cfgRoot.setAttribute('data-sp-pohyb', '1');
+          else cfgRoot.removeAttribute('data-sp-pohyb');
           /* Pri jedinom modeli krok s jeho výberom neexistuje; popis dielov
              sa vypisuje pod rozmerom, tak sa oba ciele hľadajú opatrne. */
           const modelVal = q('[data-sp-model-val]');
@@ -7859,12 +7884,46 @@ function kvAdresa(kluc, zaloha) {
         const cfgSection = cfgRoot.closest('.sp-cfg');
         const spacer = root.querySelector('[data-sp-cfg-spacer]');
         let lastFocus = null;
+        /* Na telefóne (pod 750 px) karta vybavenia a lišta pohľadov stoja pod
+           kresbou v toku a vo fullscreene brali okolo 300 px — z iPhonu
+           ostalo krokom konfigurátora 56 px a nedalo sa v nich posúvať ani nič
+           vybrať. Kým je fullscreen zapnutý, presunú sa preto na začiatok
+           panelu krokov: hore ostane len kresba a karta, lišta aj kroky sa
+           posúvajú pod ňou. Pri zatvorení sa vrátia presne na pôvodné miesto. */
+        const fullStage = cfgRoot.querySelector('.sp-stage');
+        const fullPanel = cfgRoot.querySelector('.sp-panel');
+        const telefon = window.matchMedia ? window.matchMedia('(max-width: 749px)') : null;
+        let presunute = null;
+        const fullPresun = () => {
+          const chcem = Boolean(cfgSection && cfgSection.classList.contains('is-full') && telefon && telefon.matches);
+          if (chcem && !presunute && fullStage && fullPanel) {
+            const kusy = Array.from(fullStage.children).filter((el) => el.matches('.sp-scene-dock, .sp-stage__bar'));
+            if (!kusy.length) return;
+            presunute = kusy.map((el) => ({ el, rodic: el.parentNode, za: el.nextSibling }));
+            const pod = document.createElement('div');
+            pod.className = 'kv-full-pod';
+            kusy.forEach((el) => pod.appendChild(el));
+            fullPanel.insertBefore(pod, fullPanel.firstChild);
+            fullPanel.scrollTop = 0;
+          } else if (!chcem && presunute) {
+            const pod = presunute[0].el.parentNode;
+            presunute.slice().reverse().forEach((k) => k.rodic.insertBefore(k.el, k.za && k.za.parentNode === k.rodic ? k.za : null));
+            if (pod && pod.classList && pod.classList.contains('kv-full-pod') && !pod.children.length) pod.remove();
+            presunute = null;
+          }
+        };
+        if (telefon) {
+          const zmena = () => { fullPresun(); drawStage(); };
+          if (telefon.addEventListener) telefon.addEventListener('change', zmena);
+          else if (telefon.addListener) telefon.addListener(zmena);
+        }
         const setFull = (on) => {
           if (!cfgSection) return;
           if (on) lastFocus = document.activeElement;
           // hold the page height so leaving full screen does not jump the scroll position
           if (spacer) spacer.style.height = on ? cfgRoot.getBoundingClientRect().height + 'px' : '';
           cfgSection.classList.toggle('is-full', on);
+          fullPresun();
           document.documentElement.style.overflow = on ? 'hidden' : '';
           cfgRoot.setAttribute('role', on ? 'dialog' : 'group');
           if (on) cfgRoot.setAttribute('aria-modal', 'true'); else cfgRoot.removeAttribute('aria-modal');

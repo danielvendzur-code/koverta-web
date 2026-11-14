@@ -719,9 +719,15 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     riadok.appendChild(bar);
   }
   bar.hidden = false;
+  /* `nasa` = celú obrazovku zapla táto výzva. Len vtedy ju pri zatvorení
+     pracovného režimu aj sami vypneme a naopak. */
+  var nasa = false;
   bar.querySelector('[data-kv-fs-go]').addEventListener('click', function () {
     var el = document.documentElement;
-    if (el.requestFullscreen) { el.requestFullscreen().catch(function () {}); }
+    if (el.requestFullscreen) {
+      nasa = true;
+      el.requestFullscreen().catch(function () { nasa = false; bar.hidden = false; });
+    }
     /* Fullscreen prehliadača sám osebe nič nerieši — stránka pod ním ostane
        bežnou stránkou a k prístrešku sa treba doscrollovať. Otvoríme rovno aj
        pracovný režim konfigurátora, takže sa po kliknutí ocitneš v ňom celom. */
@@ -729,6 +735,28 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     var uzJe = document.querySelector('.sp-cfg.is-full');
     if (otvor && !uzJe) otvor.click();
     bar.hidden = true;
+  });
+  /* Výzva sa skrývala natrvalo už po prvom použití: kto celú obrazovku
+     zavrel, nemal ju ako zapnúť znova. Vráti sa vždy, keď celá obrazovka
+     skončí — trvalo zmizne len po kliknutí na krížik. */
+  document.addEventListener('fullscreenchange', function () {
+    if (document.fullscreenElement) return;
+    var bolaNasa = nasa;
+    nasa = false;
+    var zavrela = false;
+    try { zavrela = localStorage.getItem(KEY) === '1'; } catch (e) {}
+    if (!zavrela) bar.hidden = false;
+    /* Esc vypne celú obrazovku prehliadača skôr, než ho stránka dostane —
+       pracovný režim konfigurátora by inak ostal visieť nad stránkou. */
+    var zavri = document.querySelector('.sp-cfg.is-full [data-sp-cfg-close]');
+    if (bolaNasa && zavri) zavri.click();
+  });
+  /* A naopak: kto pracovný režim zavrie krížikom, chce späť na stránku —
+     nie ostať v celej obrazovke prehliadača bez konfigurátora. */
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-sp-cfg-close]') : null;
+    if (!t || !nasa || !document.fullscreenElement || !document.exitFullscreen) return;
+    document.exitFullscreen().catch(function () {});
   });
   bar.querySelector('[data-kv-fs-close]').addEventListener('click', function () {
     bar.hidden = true;
