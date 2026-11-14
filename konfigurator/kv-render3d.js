@@ -1102,9 +1102,13 @@ void main() {
        horizont. */
     /* V reálnej scéne prechádza do tej istej vzdialenej zeme, akú má
        pozadie (lúky s kresbou a opar), nie do jednej plochej zelenej. */
-    vec3 dalka = uProstredie > 0.5 ? farbaProstredia(normalize(vPoz - uOko), 0.0, 40.0)
-                                   : mix(uOzarDole, uOzarBok, 0.55) * 0.92;
-    farba = mix(dalka, farba, zanik);
+    /* Počíta sa len tam, kde sa naozaj použije — inak by sa obzor a kresba
+       lúk rátali pre každý pixel dlažby a trávy pri stavbe. */
+    if (zanik < 0.999) {
+      vec3 dalka = uProstredie > 0.5 ? farbaProstredia(normalize(vPoz - uOko), 0.0, 40.0)
+                                     : mix(uOzarDole, uOzarBok, 0.55) * 0.92;
+      farba = mix(dalka, farba, zanik);
+    }
   }
 
   if (jeKarta) priehladnost = pokrytie;
