@@ -4279,6 +4279,21 @@ function kvAdresa(kluc, zaloha) {
           }
 
           // side infills
+          const plcInf = placement();
+          /* Stojí v rade `py` (0 zadný, 1 predný) na mieste `xi` stĺp?
+             Presne rovnaké pravidlá ako kresliStlp vyššie — výplň sa delí a
+             končí len pri stĺpoch, ktoré naozaj stoja. */
+          const stlpStoji = (xi, n, py) => {
+            if (plcInf.noPosts) return false;
+            if (py === 0 && walls.indexOf('rear') > -1) return false;
+            if (py === 1 && walls.indexOf('front') > -1) return false;
+            if (walls.indexOf('left') > -1 && xi === 0) return false;
+            if (walls.indexOf('right') > -1 && xi === n - 1) return false;
+            if (plcInf.cantilever === 'left' && xi === 0) return false;
+            if (plcInf.cantilever === 'right' && xi === n - 1) return false;
+            if (plcInf.freePosts && xi !== 0 && xi !== n - 1) return false;
+            return true;
+          };
           const infill = (side) => {
             const kind = state.sides[side];
             if (kind === 'open') return;
@@ -4308,15 +4323,19 @@ function kvAdresa(kluc, zaloha) {
                 b = [kvAnchor.vFace, kvAnchor.runTo, 0];
               }
             } else {
-              /* Pri stene na tom konci strany nestojí stĺp (pozri kresliStlp),
-                 takže výplň nemá končiť o hrúbku stĺpa skôr. Vodiaca lišta sa
-                 tam kotví priamo do steny domu a roleta či panel vyplnia celý
-                 otvor až k nej — inak medzi ZIP a domom ostal pás svetla. */
-              const pri = (s) => (walls.indexOf(s) > -1 ? 0 : post);
-              if (side === 'rear')  { a = [pri('left'), 0, 0]; b = [L - pri('right'), 0, 0]; axis = 'x'; out = -1; }
-              if (side === 'front') { a = [pri('left'), W, 0]; b = [L - pri('right'), W, 0]; axis = 'x'; out = 1; }
-              if (side === 'left')  { a = [0, pri('rear'), 0]; b = [0, W - pri('front'), 0]; axis = 'y'; out = -1; }
-              if (side === 'right') { a = [L, pri('rear'), 0]; b = [L, W - pri('front'), 0]; axis = 'y'; out = 1; }
+              /* Výplň končí pri rohovom stĺpe — ale len tam, kde stĺp naozaj
+                 stojí. Rovnaké pravidlá ako kresliStlp: pri stene domu stĺp nie
+                 je (rám sa podľa cenníka Soltec kotví do steny skrutkami M16),
+                 pri type „Bez stĺpov" nie je v žiadnom rohu a pri konzole
+                 chýba na jej strane. Tam vodiaca lišta stojí priamo v rohu
+                 a roleta či panel vyplnia celý otvor — inak ostal pri stene
+                 alebo v rohu pás svetla široký ako stĺp. */
+              const nStlp = Math.max(1, postXs().length);
+              const pri = (rx, ry) => (stlpStoji(rx ? nStlp - 1 : 0, nStlp, ry) ? post : 0);
+              if (side === 'rear')  { a = [pri(0, 0), 0, 0]; b = [L - pri(1, 0), 0, 0]; axis = 'x'; out = -1; }
+              if (side === 'front') { a = [pri(0, 1), W, 0]; b = [L - pri(1, 1), W, 0]; axis = 'x'; out = 1; }
+              if (side === 'left')  { a = [0, pri(0, 0), 0]; b = [0, W - pri(0, 1), 0]; axis = 'y'; out = -1; }
+              if (side === 'right') { a = [L, pri(1, 0), 0]; b = [L, W - pri(1, 1), 0]; axis = 'y'; out = 1; }
             }
 
             const vFace = axis === 'x' ? a[1] : a[0];
@@ -4338,6 +4357,10 @@ function kvAdresa(kluc, zaloha) {
             if (axis === 'x' && !oneField) {
               const rowXs = postXs();
               rowXs.forEach((px, xi) => {
+                /* Soltec: stĺp, ktorý v tomto osadení nestojí (pri stene, typ
+                   „Bez stĺpov", stredné pri voľnom rozmiestnení), výplň nedelí —
+                   inak by na jeho mieste ostala svetlá medzera. */
+                if (!kvAnchor && !stlpStoji(xi, rowXs.length, side === 'rear' ? 0 : 1)) return;
                 /* Only the cut around a real post is structural here. Koverta
                    cannot use the generic 120 mm width: its active section may
                    be 190 mm along X. The overall accessory run remains owned
