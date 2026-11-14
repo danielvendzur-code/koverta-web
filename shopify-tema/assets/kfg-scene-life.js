@@ -38,7 +38,16 @@ function kvAdresa(kluc, zaloha) {
     sport: { file:'porsche-911.bin.gz', bounds:[0,-1005,0,4519,1005,1285],
       label:'Porsche 911', short:'športové' },
     city: { file:'mini-cooper.bin.gz', bounds:[0,-1001,0,3876,1001,1474],
-      label:'Mini Cooper', short:'malé auto' },
+      label:'Mini Cooper', short:'malé auto',
+      /* Okolo svetlometov má predloha z textúry zapečené červenohnedé
+         vrcholy; na hrane svetla z nich boli červené zúbky. Vpredu
+         (prvých 16 % dĺžky) sa také vrcholy prefarbia na neutrálnu sivú
+         rovnakého jasu. */
+      bezCervenejVpredu:true,
+      /* Lak Mini má vo vrcholoch zapečené tiene z textúry (činiteľ 80 až
+         176). Na veľkých trojuholníkoch kapoty z nich boli škvrny; polovica
+         rozptylu ostane, aby lak nestratil plastickosť. */
+      rozptylLaku:0.45 },
     bistro: { file:'patio-bistro.bin.gz', bounds:[-426,-906,2,316,811,894] },
     lounge: { file:'patio-sofaset.bin.gz', bounds:[0,-1315,0,4130,1315,1291] },
     sofa: { file:'patio-sofa.bin.gz', bounds:[-1200,-750,0,1200,750,822] }
@@ -65,6 +74,34 @@ function kvAdresa(kluc, zaloha) {
         const B=new Uint8Array(data);
         for(let i=12;i<B.length;i+=16)if(B[i+3]===m&&B[i]===r&&B[i+1]===g&&B[i+2]===b){B[i]=r2;B[i+1]=g2;B[i+2]=b2;B[i+3]=m2;}
       });
+      /* Hladké normály: vrcholy na tom istom mieste a s tým istým materiálom
+         dostanú priemer normál susedov, ktoré s nimi zvierajú menej než 35°.
+         Ploché trojuholníky karosérie (BMW je z polovice „low poly") sa
+         v odraze oblohy čítali ako mozaika; ostré hrany (nad 35°) ostanú. */
+      {
+        const V=new DataView(data),n=data.byteLength/16,skup=new Map();
+        for(let i=0;i<n;i++){const o=i*16;
+          const k=V.getInt16(o,true)+','+V.getInt16(o+2,true)+','+V.getInt16(o+4,true)+','+V.getUint8(o+15);
+          let g=skup.get(k);if(!g){g=[];skup.set(k,g);}g.push(i);}
+        const COS=Math.cos(35*Math.PI/180),nov=new Float32Array(n*3);
+        for(const g of skup.values()){
+          for(const i of g){const o=i*16,ax=V.getInt16(o+6,true)/32767,ay=V.getInt16(o+8,true)/32767,az=V.getInt16(o+10,true)/32767;
+            let sx=0,sy=0,sz=0;
+            for(const j of g){const q=j*16,bx=V.getInt16(q+6,true)/32767,by=V.getInt16(q+8,true)/32767,bz=V.getInt16(q+10,true)/32767;
+              if(ax*bx+ay*by+az*bz>=COS){sx+=bx;sy+=by;sz+=bz;}}
+            const m=Math.hypot(sx,sy,sz)||1;nov[i*3]=sx/m;nov[i*3+1]=sy/m;nov[i*3+2]=sz/m;}
+        }
+        for(let i=0;i<n;i++){const o=i*16;
+          V.setInt16(o+6,Math.round(nov[i*3]*32767),true);V.setInt16(o+8,Math.round(nov[i*3+1]*32767),true);V.setInt16(o+10,Math.round(nov[i*3+2]*32767),true);}
+      }
+      if(models[key].bezCervenejVpredu){
+        const B=new Uint8Array(data),V=new DataView(data),lim=models[key].bounds[3]*0.16;
+        for(let i=0;i+16<=B.length;i+=16){
+          if(B[i+15]!==0||V.getInt16(i,true)>lim)continue;
+          const r=B[i+12],g=B[i+13],b=B[i+14];
+          if(r>g+25&&r>b+25){const y=Math.round(r*.3+g*.59+b*.11);B[i+12]=y;B[i+13]=y;B[i+14]=y;}
+        }
+      }
       return data;
     }).catch(e => { assets.delete(key); throw e; }));
     return assets.get(key);
@@ -809,13 +846,41 @@ function kvAdresa(kluc, zaloha) {
            v textúre, si takto svetlá a tmavé miesta ponechá a lak sa aj tak
            dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
         `precision highp float;${SPAT_TON}varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
-        uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
+        uniform vec3 eye;uniform vec3 paint;uniform float paintVar;uniform float overcast;uniform float alpha;
+        uniform sampler2D sky;uniform float skyOn;uniform float skyRot;uniform float skyGain;uniform float skyV;uniform vec3 sunDir;uniform float sunOn;
+        uniform sampler2D shadowMap;uniform mat4 shadowMat;uniform float shadowOn;uniform float shadowTexel;
+        /* Tieň slnka z tej istej tieňovej mapy, akú má konštrukcia: auto pod
+           strechou je v jej tieni, rovnako ako dlažba vedľa neho. Posun po
+           normále a 25 vzoriek dajú mäkký okraj bez samotienenia. */
+        float tienAuta(vec3 n){
+          if(shadowOn<.5)return 1.;
+          vec4 q=shadowMat*vec4(world+n*35.,1.);vec3 s=q.xyz/q.w*.5+.5;
+          if(s.x<0.||s.x>1.||s.y<0.||s.y>1.||s.z>1.)return 1.;
+          float sum=0.;
+          for(int i=-2;i<=2;i++)for(int j=-2;j<=2;j++){
+            float d=texture2D(shadowMap,s.xy+vec2(float(i),float(j))*shadowTexel*1.3).r;
+            sum+=(s.z-0.0004<=d)?1.:0.;}
+          return sum/25.;
+        }
+        /* Okolie reálnej scény: tá istá mapa oblohy, akú má konštrukcia,
+           prevedená na farbu obrazovky. Pod horizontom je zem a tráva.
+           Bez mapy (štúdio) ostáva pôvodný sivý prechod. */
+        vec3 okolie(vec3 d,float rozmaz,bool see){
+          vec3 stare=mix(vec3(see?.08:.20,see?.09:.21,see?.11:.23),vec3(.44,.48,.53),smoothstep(-.12,.7,d.z));
+          if(skyOn<.5)return stare;
+          float u=atan(d.y,d.x)*.15915494+.5+skyRot;float w=min(acos(clamp(max(d.z,.03),-1.,1.))*.31830989/max(skyV,.05),1.);
+          vec3 e=texture2D(sky,vec2(u,w),rozmaz).rgb;vec3 y=pow(clamp(e,0.,.9995),vec3(2.2));
+          vec3 h=min(y/(1.-y)*skyGain,vec3(6.));vec3 obr=pow(h/(1.+h),vec3(1./2.2));
+          vec3 zem=vec3(.16,.19,.13);
+          return mix(obr,zem,smoothstep(.02,-.10,d.z));
+        }
         void main(){vec3 n=normalize(normal);vec3 v=normalize(eye-world);if(dot(n,v)<0.)n=-n;
-          vec3 key=normalize(vec3(-.25,.62,.74)),fill=normalize(vec3(.86,-.1,.50));
-          float kd=max(0.,dot(n,key));float l=.36+.56*kd+.22*max(0.,dot(n,fill))+.34*max(0.,-n.z)+.13*max(0.,n.z);
+          vec3 key=sunOn>.5?normalize(sunDir):normalize(vec3(-.25,.62,.74)),fill=normalize(vec3(.86,-.1,.50));
+          float sh=sunOn>.5?tienAuta(n):1.;
+          float kd=max(0.,dot(n,key))*sh;float l=.36+.56*kd+.22*max(0.,dot(n,fill))+.34*max(0.,-n.z)+.13*max(0.,n.z);
           l=mix(l,.64+.27*max(0.,n.z)+.16*max(0.,-n.z),overcast);
           vec3 base=color;float spec=.03;float gloss=20.;
-          if(kind>.5&&kind<1.5){base=paint*(color.r*2.);spec=.32;gloss=65.;}
+          if(kind>.5&&kind<1.5){base=paint*mix(1.,color.r*2.,paintVar);spec=.32;gloss=65.;}
           if(kind>1.5&&kind<2.5){spec=.55;gloss=100.;}
           if(kind>2.5&&kind<3.5){spec=.4;gloss=45.;}
           vec3 result=base*l;
@@ -828,15 +893,31 @@ function kvAdresa(kluc, zaloha) {
              nasadená na svetlé telo. Sklo si silný odraz ponecháva. */
           if(kind>.5&&kind<3.5){vec3 r=reflect(-v,n);
             bool see=kind>1.5&&kind<2.5;
-            vec3 env=mix(vec3(see?.08:.20,see?.09:.21,see?.11:.23),vec3(.44,.48,.53),smoothstep(-.12,.7,r.z));
+            vec3 env=okolie(r,see?0.:(kind<1.5?4.:3.),see);
             result=mix(result,env,(see?.30:.11)+fres*(see?.22:.12));}
-          result+=spec*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
+          result+=spec*sh*pow(max(0.,dot(n,normalize(key+v))),gloss)*(1.-overcast*.65);
           /* Lak auta má dve vrstvy: pigment a nad ním číry lak. Bez tej druhej
              sa karoséria lesknúť nezačne — ostane matná ako plast. Ostrý úzky
              odlesk plus jemné presvetlenie hrán je presne to, čo z plochy robí
              lakovaný plech. */
-          if(kind>.5&&kind<1.5)result+=(.20*pow(max(0.,dot(n,normalize(key+v))),240.)+fres*.07)*(1.-overcast*.55);
-          if(kind>3.5&&kind<4.5)result=mix(result,base,.7);
+          if(kind>.5&&kind<1.5)result+=(.20*sh*pow(max(0.,dot(n,normalize(key+v))),240.)+fres*.07)*(1.-overcast*.55);
+          /* Svetlá. Doteraz plochá biela a červená farba — na fotke auta je
+             to najslabšie miesto. Svetlomet je číry kryt nad chrómovým
+             reflektorom: tmavší, chladný, s ostrým odleskom a odrazom
+             okolia; denné svietenie mu dá jemný chladný svit. Zadné svetlo
+             je hlboká červená pod lesklým krytom s ľahkým vlastným svitom.
+             Vlastný svit je slabý (deň), aby svetlo nevyzeralo ako žiarovka. */
+          if(kind>3.5&&kind<4.5){
+            bool cervene=base.r>base.g*1.8;
+            vec3 r=reflect(-v,n);
+            float fr=.05+.95*pow(1.-max(0.,dot(n,v)),5.);
+            vec3 kryt=okolie(r,0.,true);
+            vec3 vnutro=cervene
+              ? base*vec3(.62,.30,.30)*(.55+.45*l)+vec3(.30,.02,.02)
+              : mix(vec3(.16,.17,.19),base,.42)*(.62+.38*l)+vec3(.10,.11,.12);
+            result=mix(vnutro,kryt,clamp(fr*.85+.08,0.,1.));
+            result+=(cervene?.45:.6)*sh*pow(max(0.,dot(n,normalize(key+v))),cervene?160.:260.)*(1.-overcast*.7);
+          }
           if(kind>4.5&&kind<5.5){float weave=sin(world.x*1.8)*sin(world.y*1.7+world.z*1.6);result=base*l*(.99+.01*weave);}
           if(kind>5.5){float grain=sin(world.x*.075+sin(world.y*.31)*.8);result=base*l*(.97+.03*grain);}
           gl_FragColor=vec4(spatTon(clamp(result,0.,1.)),alpha);}`);
@@ -947,11 +1028,7 @@ function kvAdresa(kluc, zaloha) {
        priechod zapíše do mapy normál „bez normály“ všade, kde auto naozaj
        vidno (rovnaká geometria, hĺbka LEQUAL), a zatienenie ho preskočí
        rovnako ako oblohu. Farbu ani hĺbku nemení. */
-    function drawNormalMask(gl,camera) {
-      if(!context||typeof WebGL2RenderingContext==='undefined'||!(gl instanceof WebGL2RenderingContext))return false;
-      init(gl);
-      const drawn=currentPlan.items.filter(i=>loaded.has(i.key));
-      if(!drawn.length)return false;
+    function pripravMasku(gl){
       if(gpu.mask===undefined) {
         try {
           gpu.mask=program(gl,`#version 300 es
@@ -963,6 +1040,46 @@ function kvAdresa(kluc, zaloha) {
             void main(){normala=vec4(0.);}`);
         } catch(e) { gpu.mask=null; }
       }
+      return Boolean(gpu.mask);
+    }
+    /* Podpis toho, čo vrhá tieň: model, poloha, natočenie. Keď sa zmení,
+       vykresľovač prekreslí tieňovú mapu. Bez áut prázdny reťazec. */
+    function shadowKey(){
+      if(!context)return '';
+      return currentPlan.items.filter(i=>loaded.has(i.key)&&models[i.key]&&/^(sedan|sport|city|bistro|lounge|sofa)$/.test(i.key))
+        .map(i=>[i.key,Math.round(i.x),Math.round(i.y),Math.round(i.z),(i.rotation||0).toFixed(3)].join(',')).join(';');
+    }
+    /* Auto do tieňovej mapy reálnej scény: len hĺbka, maticou slnka. */
+    function drawShadow(gl,matica){
+      if(!context||typeof WebGL2RenderingContext==='undefined'||!(gl instanceof WebGL2RenderingContext))return false;
+      init(gl);
+      if(!pripravMasku(gl))return false;
+      const drawn=currentPlan.items.filter(i=>loaded.has(i.key));
+      if(!drawn.length)return false;
+      const m=gpu.mask,main=gpu.main;
+      for(const name of ['n','c','material']){const loc=A(main,name);if(loc>=0)gl.disableVertexAttribArray(loc);}
+      gl.useProgram(m);
+      uniformCamera(gl,m,{mvp:matica,scale:1,ox:0,oy:0,VW:1,VH:1,DIST:1,near:1,far:2});
+      gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);
+      const pa=A(m,'p');gl.enableVertexAttribArray(pa);
+      for(const item of drawn) {
+        let mesh=gpu.meshes.get(item.key);
+        if(!mesh){const data=loaded.get(item.key);mesh={buffer:gl.createBuffer(),count:data.byteLength/16};gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gpu.meshes.set(item.key,mesh);}
+        gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
+        gl.vertexAttribPointer(pa,3,gl.SHORT,false,16,0);
+        gl.uniform3f(U(m,'offset'),item.x,item.y,item.z);
+        gl.uniform2f(U(m,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
+        gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+      }
+      gl.disableVertexAttribArray(pa);
+      return true;
+    }
+    function drawNormalMask(gl,camera) {
+      if(!context||typeof WebGL2RenderingContext==='undefined'||!(gl instanceof WebGL2RenderingContext))return false;
+      init(gl);
+      const drawn=currentPlan.items.filter(i=>loaded.has(i.key));
+      if(!drawn.length)return false;
+      if(!pripravMasku(gl))return false;
       const m=gpu.mask;if(!m)return false;
       const main=gpu.main;
       for(const name of ['n','c','material']){const loc=A(main,name);if(loc>=0)gl.disableVertexAttribArray(loc);}
@@ -1056,6 +1173,26 @@ function kvAdresa(kluc, zaloha) {
       gl.uniform3fv(U(p,'paint'),(PAINTS[state.paint]||PAINTS.graphite).rgb);
       gl.uniform1f(U(p,'overcast'),state.weather==='sun'?0:.85);
       gl.uniform1f(U(p,'alpha'),1);
+      const ob=camera.obloha;
+      const uSky=place(p,'skyOn');
+      if(uSky){
+        if(ob&&ob.tex){
+          gl.activeTexture(gl.TEXTURE12);gl.bindTexture(gl.TEXTURE_2D,ob.tex);
+          gl.uniform1i(U(p,'sky'),12);gl.uniform1f(uSky,1);
+          gl.uniform1f(U(p,'skyRot'),ob.otoc||0);gl.uniform1f(U(p,'skyGain'),ob.jas||1);gl.uniform1f(U(p,'skyV'),ob.v||1);
+          gl.activeTexture(gl.TEXTURE0);
+        } else gl.uniform1f(uSky,0);
+        const tm=camera.tienMapa;
+        if(ob&&tm&&tm.tex&&tm.matica){
+          gl.activeTexture(gl.TEXTURE13);gl.bindTexture(gl.TEXTURE_2D,tm.tex);
+          gl.uniform1i(U(p,'shadowMap'),13);gl.uniformMatrix4fv(U(p,'shadowMat'),false,tm.matica);
+          gl.uniform1f(U(p,'shadowTexel'),1/(tm.rozmer||2048));gl.uniform1f(U(p,'shadowOn'),1);
+          gl.activeTexture(gl.TEXTURE0);
+        } else gl.uniform1f(U(p,'shadowOn'),0);
+        const sl=camera.slnko;
+        if(ob&&sl&&sl[2]>0.02){gl.uniform3f(U(p,'sunDir'),sl[0],sl[1],sl[2]);gl.uniform1f(U(p,'sunOn'),1);}
+        else gl.uniform1f(U(p,'sunOn'),0);
+      }
       gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.disable(gl.CULL_FACE);
       for(const item of currentPlan.items) {
         const data=loaded.get(item.key);if(!data)continue;
@@ -1066,6 +1203,7 @@ function kvAdresa(kluc, zaloha) {
         }
         gl.uniform3f(U(p,'offset'),item.x,item.y,item.z);
         gl.uniform2f(U(p,'spin'),Math.cos(item.rotation||0),Math.sin(item.rotation||0));
+        gl.uniform1f(U(p,'paintVar'),models[item.key]&&models[item.key].rozptylLaku!==undefined?models[item.key].rozptylLaku:1);
         gl.drawArrays(gl.TRIANGLES,0,m.count);
       }
     }
@@ -1118,7 +1256,7 @@ function kvAdresa(kluc, zaloha) {
        snímky líšia osvetlením celého modelu a ten rozdiel sa počíta ako voda.
        Hodnota 'cloud' už nemá tlačidlo, ale renderer jej rozumie a svieti
        ňou rovnako ako dažďom. */
-    return {state,prepare,draw,drawNormalMask,
+    return {state,prepare,draw,drawNormalMask,drawShadow,shadowKey,
       /* Či `draw` niečo nakreslí: auto so svojím dopadovým tieňom, alebo dážď.
          Vykresľovač podľa toho vie, či musí konštrukciu dekódovať uprostred
          snímku (kv-render3d, vratné kódovanie hrán) — bez vybavenia netreba. */
