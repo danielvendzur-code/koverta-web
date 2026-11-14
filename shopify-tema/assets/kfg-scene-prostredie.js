@@ -592,9 +592,16 @@
        Leží 4 mm pod podkladom, takže tam, kde sa prekrývajú, vyhrá
        podklad konfigurátora. */
     {
-      const R = Rk + 40000;
-      plochy.push({ w: [[cxS - R, cyS - R, -4], [cxS + R, cyS - R, -4], [cxS + R, cyS + R, -4], [cxS - R, cyS + R, -4]],
-        fill: '#7a8a6a', sourceFill: '#7a8a6a', normal: [0, 0, 1], bg: true, kulisa: true, cull: false, edge: false, mat3d: 'dlazba' });
+      /* 400 m: okraj trávnika musí byť až pri horizonte, kde ho schová
+         opar. Pri 40 m bol pri nízkom pohľade vidieť ako vodorovná čiara
+         a za ňou pás pozadia namiesto trávy. */
+      const R = Rk + 400000;
+      /* V tej istej rovine ako podklad, s najnižším poradím hĺbky: kde sa
+         prekrývajú, vyhrá podklad. Kým ležal 4 mm nižšie, bol na okraji
+         podkladu v diaľke tmavý jednopixelový lem (schodík). */
+      plochy.push({ w: [[cxS - R, cyS - R, 0], [cxS + R, cyS - R, 0], [cxS + R, cyS + R, 0], [cxS - R, cyS + R, 0]],
+        fill: '#7a8a6a', sourceFill: '#7a8a6a', normal: [0, 0, 1], bg: true, kulisa: true, cull: false, edge: false, mat3d: 'dlazba',
+        bias: -1e6 });
     }
 
     /* Trsy pri okraji dlažby a riedko v trávniku okolo terasy. */
