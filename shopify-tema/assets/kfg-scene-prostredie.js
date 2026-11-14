@@ -440,37 +440,21 @@
         quad([P(a, zb - r, -ost), P(b, zb - r, -ost), P(b, zb, -ost), P(a, zb, -ost)], RAM, nF, 'lak');
         quad([P(a, za + r, -ost), P(a + r, za + r, -ost), P(a + r, zb - r, -ost), P(a, zb - r, -ost)], RAM, nF, 'lak');
         quad([P(b - r, za + r, -ost), P(b, za + r, -ost), P(b, zb - r, -ost), P(b - r, zb - r, -ost)], RAM, nF, 'lak');
-        /* Izba za oknom: zadná stena, podlaha, strop a boky. Je v dome, kam
-           priame slnko takmer nedopadne, preto má materiál „interier“
-           s nízkou odrazivosťou — cez sklo pôsobí ako šerá miestnosť, tak
-           ako na fotke domu cez deň. Po bokoch svetlé záclony. */
+        /* Sklo s izbou za ním (interior mapping, ako okná v hrách): jedna
+           nepriehľadná plocha, izbu — steny, podlahu, strop a záclony —
+           dopočíta shader lúčom. Kým bola izba z vlastných škatúľ a sklo
+           priehľadné, izby susedných okien sa prekrývali a pri otáčaní
+           v oknách blikalo a miznutie (sklo nemá hĺbku, časové
+           vyhladzovanie ho nevedelo posunúť). V uv ide šírka a výška skla
+           (celá časť) a poloha na skle (desatinná časť), aby shader poznal
+           rozmer izby; nepárna výška znamená okno s parapetom. */
         {
-          const d0 = -ost - 20, d1 = -ost - 3400;
-          const zF = za > 0 ? za - 900 : 40, zC = Math.max(zb + 350, zF + 2650);
-          const ua = Math.max(u0 + 30, a - 1600), ub = Math.min(u1 - 30, b + 1600);
-          quad([P(ua, zF, d1), P(ub, zF, d1), P(ub, zC, d1), P(ua, zC, d1)], '#d9d3c9', nF, 'interier', { cull: false });
-          quad([P(ua, zF, d0), P(ub, zF, d0), P(ub, zF, d1), P(ua, zF, d1)], '#8b7258', [0, 0, 1], 'interier', { cull: false });
-          quad([P(ua, zC, d1), P(ub, zC, d1), P(ub, zC, d0), P(ua, zC, d0)], '#ebe8e2', [0, 0, -1], 'interier', { cull: false });
-          quad([P(ua, zF, d1), P(ua, zF, d0), P(ua, zC, d0), P(ua, zC, d1)], '#d4cec4', [1, 0, 0], 'interier', { cull: false });
-          quad([P(ub, zF, d0), P(ub, zF, d1), P(ub, zC, d1), P(ub, zC, d0)], '#d4cec4', [-1, 0, 0], 'interier', { cull: false });
-          /* Záclony: dva závesy po krajoch okna, mierne zvlnené. */
-          const sz = Math.min(700, (b - a) * 0.24), dz = -ost - 140;
-          for (const [c0, c1] of [[a + r, a + r + sz], [b - r - sz, b - r]]) {
-            /* Záhyby ako sínusovka: normála v každom vrchole, aby sa
-               záves tieňoval hladko a nie ako harmonika. */
-            const kus = 14, w = (c1 - c0) / kus, hl = 38;
-            const bod = (k) => dz + Math.sin(k / kus * Math.PI * 5) * hl;
-            const nrm = (k) => { const t = Math.cos(k / kus * Math.PI * 5) * hl * Math.PI * 5 / (c1 - c0); const m = Math.hypot(t, 1); return [t / m, 1 / m, 0]; };
-            for (let k = 0; k < kus; k++) {
-              const q = [P(c0 + k * w, za + r + 30, bod(k)), P(c0 + (k + 1) * w, za + r + 30, bod(k + 1)), P(c0 + (k + 1) * w, zb - r, bod(k + 1)), P(c0 + k * w, zb - r, bod(k))];
-              const nn = [nrm(k), nrm(k + 1), nrm(k + 1), nrm(k)];
-              plochy.push({ w: q, nv: nn, fill: '#f1ede5', sourceFill: '#f1ede5', normal: [0, 1, 0], cull: false, kulisa: true, domova: true, mat3d: 'zaclona', edge: false });
-            }
-          }
+          const sx = (b - r) - (a + r), sy = (zb - r) - (za + r);
+          const U = (u) => Math.floor(sx / 10) + 0.001 + 0.998 * u;
+          const V = (v) => Math.floor(sy / 20) * 2 + (za > 0 ? 1 : 0) + 0.001 + 0.998 * v;
+          quad([P(a + r, za + r, -ost + 6), P(b - r, za + r, -ost + 6), P(b - r, zb - r, -ost + 6), P(a + r, zb - r, -ost + 6)],
+            '#7d8a90', nF, 'oknoIzba', { uv: [[U(0), V(0)], [U(1), V(0)], [U(1), V(1)], [U(0), V(1)]] });
         }
-        /* Sklo: skutočne priehľadné, odraz podľa Fresnela. */
-        quad([P(a + r, za + r, -ost + 6), P(b - r, za + r, -ost + 6), P(b - r, zb - r, -ost + 6), P(a + r, zb - r, -ost + 6)],
-          'rgba(128,142,150,.5)', nF, 'sklo', { depthAvg: 1e9 });
         /* Široké posuvné okno má uprostred stĺpik krídla. */
         if (b - a > 2000) {
           const c = (a + b) / 2;

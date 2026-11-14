@@ -170,24 +170,11 @@ body { background: var(--k-white); color: var(--k-ink); }
 #SoltecPremium .sp-rule { display: none; }
 #SoltecPremium .sp-cfg__head { margin-bottom: clamp(2rem, 2.2vw, 3.2rem); }
 
-/* --- 4 · Prepínač Konfigurátor / Kalkulácia ------------------------------ */
-#SoltecPremium .sp-cfg__tabs {
-  padding: .4rem;
-  border: 1px solid var(--k-hair);
-  border-radius: var(--k-r-pill);
-  background: var(--k-white);
-}
-#SoltecPremium .sp-cfg__tabs button {
-  min-height: 3.8rem;
-  padding: 0 2.2rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-}
-#SoltecPremium .sp-cfg__tabs button[aria-selected="true"] {
-  background: var(--k-ink);
-  color: #fff;
-  box-shadow: none;
-}
+/* --- 4 · Prepínač Konfigurátor / Kalkulácia ------------------------------
+   Skrytý (rozhodnutie majiteľa): rozpis ceny je aj tak posledný krok
+   konfigurátora a dva prepínače nad sebou zbytočne zaberali miesto.
+   Značkovanie a obsluha ostávajú, len sa nezobrazujú. */
+#SoltecPremium .sp-cfg__tabs { display: none !important; }
 
 /* --- 5 · Kroky ----------------------------------------------------------
    Rovnaký rytmus ako „Vyskladajte si riešenie" na webe: číslo v jantárovom
@@ -270,8 +257,6 @@ body { background: var(--k-white); color: var(--k-ink); }
   .kv-bar__cta { justify-content: center; }
 
   #SoltecPremium .sp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #SoltecPremium .sp-cfg__tabs { width: 100%; }
-  #SoltecPremium .sp-cfg__tabs button { flex: 1; padding: 0 1rem; }
   #SoltecPremium .sp-quote { position: sticky; bottom: 1rem; }
 }
 
