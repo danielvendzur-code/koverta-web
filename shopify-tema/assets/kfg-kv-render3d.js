@@ -1674,8 +1674,8 @@ void main() {
       ostrenieVPohybe: 0.55,
       ostrenieVPokoji: 0.22,
       /* Zvýraznenie hrán výrobku (0 = vypnuté). Štúdio zatiaľ bez neho. */
-      silaHran: 0,
-      silaHranStudio: 0,
+      silaHran: 1.0,
+      silaHranStudio: 0.8,
       /* Vinetácia sa na fotografii výrobku nerobí. Pri 0,24 ubrala v rohu
          záberu štrnásť percent jasu a zo svetlej steny štúdia bola sivá —
          práve to robilo z obrazu zašedený render namiesto fotky. Ostáva
