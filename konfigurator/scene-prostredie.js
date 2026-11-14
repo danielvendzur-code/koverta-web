@@ -198,11 +198,12 @@
       const zN = h(1) * 2 - 1, ang = h(2) * Math.PI * 2, rN = Math.sqrt(1 - zN * zN);
       let d = [rN * Math.cos(ang), rN * Math.sin(ang), zN];
       if (opt.smer) d = opt.smer(d, h);
-      const hlbka = opt.plocha ? 1 : 0.62 + 0.38 * Math.sqrt(h(3));
+      const hlbka = opt.plocha ? (opt.plocha === true ? 1 : 1 - opt.plocha * h(3)) : 0.62 + 0.38 * Math.sqrt(h(3));
       const q = [c[0] + d[0] * r[0] * hlbka, c[1] + d[1] * r[1] * hlbka, c[2] + d[2] * r[2] * hlbka];
       if (opt.zMin !== undefined && q[2] < opt.zMin) continue;
       /* náhodná orientácia karty, mierne natočená von */
-      let nk = [d[0] + (h(4) - 0.5) * 1.6, d[1] + (h(5) - 0.5) * 1.6, d[2] + (h(6) - 0.5) * 1.6];
+      const nak = opt.naklon === undefined ? 1.6 : opt.naklon;
+      let nk = [d[0] + (h(4) - 0.5) * nak, d[1] + (h(5) - 0.5) * nak, d[2] + (h(6) - 0.5) * nak];
       const m = Math.hypot(nk[0], nk[1], nk[2]) || 1; nk = nk.map((v) => v / m);
       const pom = Math.abs(nk[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
       let u = [pom[1] * nk[2] - pom[2] * nk[1], pom[2] * nk[0] - pom[0] * nk[2], pom[0] * nk[1] - pom[1] * nk[0]];
@@ -511,8 +512,13 @@
         if ((u1 - 900) - ker2 > 1200) ker(pridaj, (u1 - 900 + ker2) / 2, yF + 600, 450, 34, '#6c8a4f');
         for (const xk of [x0 - 650, x1 + 650]) {
           valec(pridaj('#3a3e42', 'lak'), [xk, yF + 520], 210, 260, 0, 620, 16);
-          teleso(pridaj('#2f4524', 'listie'), [xk, yF + 520, 1050], [290, 290, 370], { rows: 8, cols: 12, amp: 0.12, frek: 2.6, seed: Math.round(xk) });
-          karty(pridaj('#9aa77f', 'karta'), [xk, yF + 520, 1050], [340, 340, 420], 46, 300, Math.round(Math.abs(xk)) % 997, { plocha: true });
+          /* Strihaný buxus: listy sedia hneď na povrchu a kryjú ho celý.
+             Pri 46 kartách 50 mm nad jadrom bolo medzi nimi vidieť holé
+             tmavé jadro a z niektorých uhlov to bola zelená guľa s pár
+             lístkami. Hustejšie, menšie karty natočené viac von a
+             rozložené v tenkej vrstve tvoria súvislý list. */
+          teleso(pridaj('#36532b', 'listie'), [xk, yF + 520, 1050], [300, 300, 380], { rows: 8, cols: 12, amp: 0.10, frek: 2.6, seed: Math.round(xk) });
+          karty(pridaj('#9aa77f', 'karta'), [xk, yF + 520, 1050], [330, 330, 410], 180, 240, Math.round(Math.abs(xk)) % 997, { plocha: 0.12, naklon: 0.8 });
         }
         stromZa(u1 + 4200, yF + 2200, 8200, 5);
         stromZa(u0 - 5200, yF - 3500, 9000, 9);

@@ -157,8 +157,11 @@
     sklo:     { kov: 0.00, drsnost: 0.04, odraz: 1.00, sklo: 1 },
     panel:    { kov: 0.04, drsnost: 0.55, odraz: 0.68 },
     drevo:    { kov: 0.00, drsnost: 0.72, odraz: 0.62 },
-    /* Tkanina ZIP rolety: matná, bez lesku, nepriehľadná. */
-    latka:    { kov: 0.00, drsnost: 0.92, odraz: 0.58 },
+    /* Tkanina ZIP rolety: nepriehľadná, s jemným leskom PVC povlaku
+       vlákien. Pri drsnosti 0,92 a odraze 0,58 vyšla tmavšia než antracitový
+       rám okolo nej a na obraze to bola čierna doska bez materiálu —
+       skutočný screen je tmavosivý a v šikmom svetle sa jemne leskne. */
+    latka:    { kov: 0.00, drsnost: 0.74, odraz: 0.92 },
     polykarb: { kov: 0.00, drsnost: 0.18, odraz: 1.00 },
     /* Odmerané: pri 0,66 mala podlaha jas 208 a pozadie 213 — na obraze
        splynuli a model vyzeral, akoby stál v prázdne. Podlaha musí byť
@@ -820,6 +823,8 @@ void main() {
      definované. Potrebuje ich vzdialená zem (farbaZemeDetail). */
   vec3 smerD = normalize(vPoz - uOko);
   float stopaD = length(fwidth(smerD.xy / max(-smerD.z, 0.004)));
+  /* Derivácie polohy pre lístie na jadre kríka (nižšie, vo vetve). */
+  vec3 dPozX = dFdx(vPoz), dPozY = dFdy(vPoz);
   /* Trávnik za koncom zániku je celý nahradený vzdialenou zemou —
      osvetlenie, textúry ani tieň sa preň nemusia počítať. Výsledok je ten
      istý, len bez práce: pri nízkom pohľade je to tretina obrazu. */
@@ -1066,6 +1071,51 @@ void main() {
     podkladFarba = mix(podkladFarba, vec3(dot(podkladFarba, vec3(0.2126, 0.7152, 0.0722))), 0.18);
     /* Vnútro koruny a spodok zhlukov sú v tieni vlastných listov. */
     podkladFarba *= mix(0.42, 1.0, smoothstep(-0.75, 0.65, nGeo.z));
+#ifdef PROSTREDIE
+    /* Zblízka nie je jadro kríka hladká guľa. Medzi kartami bolo vidieť
+       holé tmavé teleso, ktoré prezradilo render (buxus v kvetináči, kríky
+       pri fasáde). Na jeho povrch sa premietnu lístky z textúry kariet —
+       z troch smerov podľa normály, v troch posunutých vrstvách, nech
+       nevznikne mriežka — a medzi nimi ostanú tmavé medzery. Gradienty
+       idú z nezalomených súradníc, takže na hranách dlaždíc nie sú švy.
+       Od zhruba 2 cm na pixel sa detail prelína späť do zrna vyššie:
+       stromy v diaľke ostávajú, ako boli, a nič sa pri pohybe nemihá. */
+    float stopaL = max(length(dPozX), length(dPozY));
+    float blizkoL = 1.0 - smoothstep(14.0, 34.0, stopaL);
+    if (blizkoL > 0.0) {
+      /* Ostrá váha (8. mocnina): na väčšine povrchu stačí jeden smer
+         premietania a prelína sa len v úzkom pásme okolo uhlopriečok —
+         jedno čítanie textúry na vrstvu namiesto troch. */
+      vec3 wL = abs(nGeo); wL *= wL; wL *= wL; wL *= wL;
+      wL /= max(wL.x + wL.y + wL.z, 1e-4);
+      float pokrL = 0.0;
+      vec3 farbaL = vec3(0.0);
+      for (int k = 0; k < 3; k++) {
+        float mier = k == 0 ? 1.0 / 240.0 : (k == 1 ? 1.0 / 190.0 : 1.0 / 150.0);
+        vec2 posun = k == 0 ? vec2(0.0) : (k == 1 ? vec2(0.5, 0.37) : vec2(0.23, 0.71));
+        float uOff = k == 1 ? 0.5 : 0.0;
+        for (int o = 0; o < 3; o++) {
+          float w = o == 0 ? wL.x : (o == 1 ? wL.y : wL.z);
+          if (w < 0.06) continue;
+          vec2 c = (o == 0 ? vPoz.yz : (o == 1 ? vPoz.xz : vPoz.xy)) * mier + posun;
+          vec2 gx = (o == 0 ? dPozX.yz : (o == 1 ? dPozX.xz : dPozX.xy)) * mier * 0.5;
+          vec2 gy = (o == 0 ? dPozY.yz : (o == 1 ? dPozY.xz : dPozY.xy)) * mier * 0.5;
+          vec4 t = textureGrad(uListy, vec2(uOff, 0.0) + fract(c) * 0.5, gx, gy);
+          float a = smoothstep(0.35, 0.65, t.a) * w;
+          farbaL += pow(t.rgb, vec3(2.2)) * a;
+          pokrL += a;
+        }
+      }
+      /* Vrstvy sa prekrývajú — pokrytie je spojenie, nie súčet. */
+      float krytL = clamp(pokrL, 0.0, 1.0);
+      vec3 listL = farbaL / max(pokrL, 1e-4);
+      listL = mix(listL, vec3(dot(listL, vec3(0.2126, 0.7152, 0.0722))), 0.38);
+      /* Odtieň ako karty kríka (#9aa77f), o kúsok tmavší — je to vnútro. */
+      listL *= vec3(0.325, 0.386, 0.212) * 1.75 * 0.82 * mix(0.55, 1.0, smoothstep(-0.75, 0.65, nGeo.z));
+      vec3 jadroL = mix(podkladFarba * 0.62, listL, krytL);
+      podkladFarba = mix(podkladFarba, jadroL, blizkoL);
+    }
+#endif
   }
   if (jeKarta) {
     vec3 kl = pow(karta.rgb, vec3(2.2));
