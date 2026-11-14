@@ -2273,7 +2273,7 @@ function kvAdresa(kluc, zaloha) {
           if (prostredie.scena !== prostredie.nastavene && !prostredie.nacitava) {
             const ciel = prostredie.scena;
             prostredie.nacitava = (ciel === 'studio' ? Promise.resolve(null)
-              : modulProstredia().then((m) => m.nacitaj(ciel)))
+              : modulProstredia().then((m) => m.nacitaj(ciel, { lite: slabyStroj })))
               .then((p) => { r.nastavProstredie(p); prostredie.nastavene = p ? ciel : 'studio'; })
               .catch(() => { r.nastavProstredie(null); prostredie.nastavene = 'studio'; prostredie.scena = 'studio'; })
               .then(() => { prostredie.nacitava = null; klucSiete = null; scheduleStage(); });

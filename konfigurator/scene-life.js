@@ -823,7 +823,7 @@ function kvAdresa(kluc, zaloha) {
            dá prefarbiť. Sto dvadsať osem znamená "bez zmeny". */
         `precision highp float;${SPAT_TON}varying vec3 normal;varying vec3 color;varying float kind;varying vec3 world;
         uniform vec3 eye;uniform vec3 paint;uniform float overcast;uniform float alpha;
-        uniform sampler2D sky;uniform float skyOn;uniform float skyRot;uniform float skyGain;uniform vec3 sunDir;uniform float sunOn;
+        uniform sampler2D sky;uniform float skyOn;uniform float skyRot;uniform float skyGain;uniform float skyV;uniform vec3 sunDir;uniform float sunOn;
         uniform sampler2D shadowMap;uniform mat4 shadowMat;uniform float shadowOn;uniform float shadowTexel;
         /* Tieň slnka z tej istej tieňovej mapy, akú má konštrukcia: auto pod
            strechou je v jej tieni, rovnako ako dlažba vedľa neho. Posun po
@@ -844,7 +844,7 @@ function kvAdresa(kluc, zaloha) {
         vec3 okolie(vec3 d,float rozmaz,bool see){
           vec3 stare=mix(vec3(see?.08:.20,see?.09:.21,see?.11:.23),vec3(.44,.48,.53),smoothstep(-.12,.7,d.z));
           if(skyOn<.5)return stare;
-          float u=atan(d.y,d.x)*.15915494+.5+skyRot;float w=acos(clamp(max(d.z,.03),-1.,1.))*.31830989;
+          float u=atan(d.y,d.x)*.15915494+.5+skyRot;float w=min(acos(clamp(max(d.z,.03),-1.,1.))*.31830989/max(skyV,.05),1.);
           vec3 e=texture2D(sky,vec2(u,w),rozmaz).rgb;vec3 y=pow(clamp(e,0.,.9995),vec3(2.2));
           vec3 h=min(y/(1.-y)*skyGain,vec3(6.));vec3 obr=pow(h/(1.+h),vec3(1./2.2));
           vec3 zem=vec3(.16,.19,.13);
@@ -1155,7 +1155,7 @@ function kvAdresa(kluc, zaloha) {
         if(ob&&ob.tex){
           gl.activeTexture(gl.TEXTURE12);gl.bindTexture(gl.TEXTURE_2D,ob.tex);
           gl.uniform1i(U(p,'sky'),12);gl.uniform1f(uSky,1);
-          gl.uniform1f(U(p,'skyRot'),ob.otoc||0);gl.uniform1f(U(p,'skyGain'),ob.jas||1);
+          gl.uniform1f(U(p,'skyRot'),ob.otoc||0);gl.uniform1f(U(p,'skyGain'),ob.jas||1);gl.uniform1f(U(p,'skyV'),ob.v||1);
           gl.activeTexture(gl.TEXTURE0);
         } else gl.uniform1f(uSky,0);
         const tm=camera.tienMapa;

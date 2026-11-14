@@ -180,11 +180,16 @@ Načítava sa až po voľbe „Pri dome" alebo „Záhrada" v paneli scény
 (`konfigurator/scene-prostredie.js`). Všetko je CC0 — voľné aj na komerčné
 použitie, bez povinnosti uvádzať autora; uvedené pre prehľad.
 
-- `obloha.jpg` — Poly Haven, „Kloofendal 48d Partly Cloudy (Pure Sky)",
+- `obloha.jpg`, `obloha-4k.jpg` — Poly Haven, „Kloofendal 48d Partly Cloudy (Pure Sky)",
   https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky (CC0).
-  Zmenšené na 2048 × 1024 a uložené kódovaním x/(1+x) s gamou 2,2.
+  Uložené kódovaním x/(1+x) s gamou 2,2 (mierka 1,0 — overené proti
+  pôvodnému súboru, odchýlka 0,3 %). `obloha.jpg` je celá guľa 2048 × 1024
+  (slabšie stroje), `obloha-4k.jpg` z 4K HDR len horná pologuľa a kúsok
+  pod horizont: 4096 × 1152, riadky 0 až 56,25 % výšky, JPEG 90.
 - `dlazba.jpg`, `dlazba-n.jpg` — Poly Haven, „Concrete Tiles 02",
-  https://polyhaven.com/a/concrete_tiles_02 (CC0), farebná a normálová mapa 1K.
+  https://polyhaven.com/a/concrete_tiles_02 (CC0), farebná a normálová mapa 1K
+  (slabšie stroje); `dlazba-2k.jpg`, `dlazba-n-2k.jpg` tá istá predloha v 2K
+  (JPEG 82), pre ostatné.
 - `trava.jpg`, `trava-n.jpg` — ambientCG, „Grass001",
   https://ambientcg.com/view?id=Grass001 (CC0), farebná a normálová mapa 1K.
 - `trava2.jpg` — ambientCG, „Grass004", https://ambientcg.com/view?id=Grass004 (CC0).

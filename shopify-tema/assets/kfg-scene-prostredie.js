@@ -12,7 +12,7 @@
      zahrada  bez domu: spevnená plocha v trávniku a živý plot v pozadí
 
    Podklady (licencia CC0, uvedené v scene-assets/CREDITS.md)
-     obloha.jpg  Poly Haven „Kloofendal 48d Partly Cloudy (Pure Sky)“,
+     obloha.jpg, obloha-4k.jpg  Poly Haven „Kloofendal 48d Partly Cloudy (Pure Sky)“,
                  2048 × 1024, uložené kódovaním x/(1+x) s gamou 2,2
      trava.jpg   ambientCG „Grass001“, farebná mapa 1024 × 1024
 
@@ -72,12 +72,20 @@
   }
 
   /* Nastavenie pre vykresľovač. Pri štúdiu null. */
-  function nacitaj(scena) {
+  /* Silný stroj dostane ostrú oblohu 4K (len horná pologuľa, 4096 × 1152)
+     a dlažbu 2K — v detailoch na telefóne bola 1K dlažba aj 2K obloha
+     zväčšená a rozmazaná. Slabší stroj (moznosti.lite) ostáva pri
+     pôvodných 1K/2K súboroch, aby mu nedošla grafická pamäť. */
+  function nacitaj(scena, moznosti) {
     if (!SCENY[scena] || scena === 'studio') return Promise.resolve(null);
-    return Promise.all([obrazok('obloha.jpg'), obrazok('trava.jpg'), obrazok('trava2.jpg'),
-      obrazok('trava-n.jpg'), obrazok('listy.webp'), obrazok('dlazba.jpg'), obrazok('dlazba-n.jpg')])
+    const lite = Boolean(moznosti && moznosti.lite);
+    const oblohaSubor = lite ? 'obloha.jpg' : 'obloha-4k.jpg';
+    return Promise.all([obrazok(oblohaSubor), obrazok('trava.jpg'), obrazok('trava2.jpg'),
+      obrazok('trava-n.jpg'), obrazok('listy.webp'), obrazok(lite ? 'dlazba.jpg' : 'dlazba-2k.jpg'),
+      obrazok(lite ? 'dlazba-n.jpg' : 'dlazba-n-2k.jpg')])
       .then(([obloha, trava, trava2, travaN, listy, dlazba, dlazbaN]) =>
-        Object.assign({ scena, obloha, trava, trava2, travaN, listy, dlazba, dlazbaN }, OBLOHA));
+        Object.assign({ scena, obloha, trava, trava2, travaN, listy, dlazba, dlazbaN,
+          oblohaV: lite ? 1 : 0.5625, oblohaLod: lite ? 0 : 1 }, OBLOHA));
   }
 
   /* ------------------------------------------------------------ TVARY
@@ -300,7 +308,11 @@
       const min = Rk + (rezerva || 6500);
       return d >= min ? [x, y] : [cxS + dx / d * min, cyS + dy / d * min];
     };
-    const stromZa = (x, y, vyska, seed) => { const q = zaKamerou(x, y, vyska * 0.42 + 3000); strom(pridaj, q[0], q[1], vyska, seed); };
+    /* Koruna aj s kartami listov siaha ~0,45 výšky stromu od kmeňa. Kým
+       bola rezerva 0,42 výšky + 3 m, kamera sa pri nízkom pohľade dostala
+       do pásma, kde sa listy pri oku rozplývajú, a na oblohe viseli úlomky
+       koruny. Teraz je medzi korunou a obletom kamery vždy aspoň 4,5 m. */
+    const stromZa = (x, y, vyska, seed) => { const q = zaKamerou(x, y, vyska * 0.48 + 4500); strom(pridaj, q[0], q[1], vyska, seed); };
     farbyDomu();
     const [x0, y0, , x1, y1, z1] = obal;
     const L = x1 - x0, W = y1 - y0;

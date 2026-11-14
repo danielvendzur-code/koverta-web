@@ -180,8 +180,8 @@
     /* Izba za oknom: svetlo do nej ide len oknom, takže cez sklo pôsobí
        šero. Odrazivosť je preto zámerne nízka — nahrádza tieň fasády,
        ktorý kulisy nevrhajú. */
-    interier: { kov: 0.00, drsnost: 0.95, odraz: 0.11 },
-    zaclona:  { kov: 0.00, drsnost: 0.90, odraz: 0.30 },
+    interier: { kov: 0.00, drsnost: 0.95, odraz: 0.11, bezSlnka: 1 },
+    zaclona:  { kov: 0.00, drsnost: 0.90, odraz: 0.30, bezSlnka: 1 },
     brana:    { kov: 0.10, drsnost: 0.55, odraz: 0.80 },
     plot:     { kov: 0.00, drsnost: 0.92, odraz: 0.85, listie: 1 },
     listie:   { kov: 0.00, drsnost: 0.86, odraz: 0.85, listie: 1 },
@@ -230,6 +230,11 @@ const float uProstredie = 0.0;
 #endif
 uniform sampler2D uOblohaMapa;
 uniform float uOblohaOtoc;
+/* Aká časť zvislej osi mapy je v textúre (1 = celá guľa, 0,5625 = horná
+   pologuľa a kúsok pod horizont) a o koľko úrovní je mapa ostrejšia než
+   pôvodná 2K — aby rozmazané odrazy ostali rozmazané rovnako. */
+uniform float uOblohaV;
+uniform float uOblohaLod;
 uniform float uOblohaJas;
 uniform vec3 uZemDalka;
 
@@ -243,8 +248,8 @@ float sumOmietky(vec3 x) {
 }
 vec3 oblohaZMapy(vec3 dir, float lod) {
   float u = atan(dir.y, dir.x) * 0.15915494 + 0.5 + uOblohaOtoc;
-  float v = acos(clamp(dir.z, -1.0, 1.0)) * 0.31830989;
-  vec3 e = textureLod(uOblohaMapa, vec2(u, v), lod).rgb;
+  float v = min(acos(clamp(dir.z, -1.0, 1.0)) * 0.31830989 / max(uOblohaV, 0.05), 1.0);
+  vec3 e = textureLod(uOblohaMapa, vec2(u, v), lod + min(lod, uOblohaLod)).rgb;
   vec3 y = pow(clamp(e, 0.0, 0.9995), vec3(2.2));
   return y / (1.0 - y) * uOblohaJas;
 }
@@ -252,21 +257,66 @@ vec3 oblohaZMapy(vec3 dir, float lod) {
 /* Okolie reálnej scény v danom smere: nad horizontom obloha z mapy, pod
    ním vzdialená zem. Pri horizonte sa zem rozplynie do oparu oblohy — tak,
    ako to vidí fotoaparát. */
+/* Výška obrysu korún nad horizontom (v radiánoch) pre daný azimut. Koruny
+   sú oblúky rôznej šírky a výšky; prekrývajú sa a vyhráva vyššia. */
+float korunyObzoru(float az, float hustota, float seed, float zaklad, float amp) {
+  float u = az * hustota * 0.15915494 + seed;
+  float i = floor(u), f = fract(u);
+  float h = zaklad;
+  for (int k = -1; k <= 1; k++) {
+    float bunka = mod(i + float(k), hustota);   /* bez švu pri ±π */
+    float r = fract(sin(bunka * 12.9898 + seed * 78.233) * 43758.5453);
+    float x = (f - float(k) - 0.5) / (0.42 + 0.38 * r);
+    float tvar = sqrt(max(1.0 - x * x, 0.0));
+    h = max(h, zaklad + amp * (0.5 + 0.5 * r) * tvar);
+  }
+  return h;
+}
 vec3 farbaProstredia(vec3 dir, float lod, float strop) {
   vec3 nebo = min(oblohaZMapy(vec3(dir.xy, max(dir.z, 0.015)), lod), vec3(strop));
   vec3 opar = oblohaZMapy(normalize(vec3(dir.xy, 0.03)), max(lod, 4.0));
+  /* Vzdialená zem nie je jednoliata zelená: sú to lúky a polia, miestami
+     suššie a svetlejšie, miestami tmavšie. Bod na zemi sa odhadne z uhla
+     pod horizontom (v násobkoch výšky oka) a kresba sa utlmí, kým by bola
+     jemnejšia než pixel. */
+  vec3 zemZaklad = uZemDalka;
+  if (dir.z < 0.0) {
+    float d = 1.0 / max(-dir.z, 0.004);
+    vec2 g = dir.xy * d;
+    float stopaG = length(fwidth(g));
+    float pole = sumOmietky(vec3(g * 0.035, 1.7)) * 0.65 + sumOmietky(vec3(g * 0.11, 4.2)) * 0.35;
+    float detailZ = 1.0 - smoothstep(4.0, 16.0, stopaG);
+    zemZaklad = uZemDalka * mix(vec3(1.0), mix(vec3(0.80, 0.85, 0.83), vec3(1.24, 1.15, 0.82), pole), detailZ);
+  }
   /* Vzdialená zem sa k horizontu stráca v opare. */
-  vec3 zem = mix(uZemDalka, opar * 0.78, exp(-max(-dir.z, 0.0) * 45.0) * 0.55);
+  vec3 zem = mix(zemZaklad, opar * 0.78, exp(-max(-dir.z, 0.0) * 45.0) * 0.55);
   /* Pás stromov na obzore. Fotografia oblohy je bez zeme a holý horizont
      pôsobí ako púšť; nízky nepravidelný okraj zelene v opare je to, čo na
      každom pozemku za plotom vidno. */
+  /* Dve vrstvy korún namiesto jednej hladkej vlnovky — tá pôsobila ako
+     plochá silueta kopcov. Zadná vrstva: husté malé koruny ďaleko v opare.
+     Predná: skupiny väčších stromov s medzerami, tmavšie a sýtejšie.
+     Koruna je oblúk; vrch je na svetle svetlejší, spodok v tieni, a cez
+     korunu ide jemná kresba listov. Okraj sa vyhladí podľa veľkosti pixela. */
   float az = atan(dir.y, dir.x);
-  float hs = 0.034 + 0.016 * (sin(az * 7.0) + 0.6 * sin(az * 13.7 + 1.3) + 0.35 * sin(az * 31.0 + 2.1)
-                             + 0.2 * sin(az * 67.0 + 0.4) + 0.25 * sin(az * 151.0 + 0.9)
-                             + 0.15 * sin(az * 293.0 + 2.6)) / 2.55;
-  vec3 stromy = mix(vec3(0.020, 0.036, 0.016), opar, 0.24);
+  float aa = max(fwidth(dir.z), 2e-4);
   vec3 c = mix(zem, nebo, smoothstep(-0.006, 0.006, dir.z));
-  return mix(c, stromy, (1.0 - smoothstep(hs - 0.003, hs + 0.003, dir.z)) * smoothstep(-0.010, 0.0, dir.z));
+  /* Zadná vrstva: základňa sa pomaly vlní (terén, rôzne vzdialené rady),
+     na nej väčšie koruny a cez ne drobné — obrys tak nie je pravidelný. */
+  float zakl = 0.013 + 0.005 * (sin(az * 5.0 + 0.3) * 0.6 + sin(az * 11.7 + 2.0) * 0.4);
+  float h1 = max(korunyObzoru(az, 230.0, 3.7, zakl, 0.013),
+                 korunyObzoru(az, 610.0, 8.1, zakl + 0.003, 0.0075));
+  float skupina = smoothstep(0.42, 0.62, 0.5 + 0.30 * sin(az * 3.0 + 1.1) + 0.20 * sin(az * 7.3 + 0.4));
+  float h2 = mix(zakl - 0.004, max(korunyObzoru(az, 95.0, 11.3, zakl, 0.026),
+                                   korunyObzoru(az, 300.0, 2.9, zakl + 0.006, 0.012)), skupina);
+  float kresba = sumOmietky(vec3(az * 140.0, dir.z * 900.0, 0.0)) * 0.6 + sumOmietky(vec3(az * 420.0, dir.z * 2600.0, 5.0)) * 0.4;
+  float t1 = clamp(dir.z / max(h1, 1e-3), 0.0, 1.0), t2 = clamp(dir.z / max(h2, 1e-3), 0.0, 1.0);
+  vec3 zadne = mix(vec3(0.022, 0.040, 0.020), opar, 0.34) * mix(0.80, 1.10, t1) * (0.90 + 0.20 * kresba);
+  vec3 predne = mix(vec3(0.018, 0.034, 0.014), opar, 0.20) * mix(0.70, 1.22, t2) * (0.86 + 0.28 * kresba);
+  float pod = smoothstep(-0.010, 0.0, dir.z);
+  c = mix(c, zadne, (1.0 - smoothstep(h1 - aa, h1 + aa, dir.z)) * pod);
+  c = mix(c, predne, (1.0 - smoothstep(h2 - aa, h2 + aa, dir.z)) * pod);
+  return c;
 }
 
 vec3 farbaOblohy(vec3 dir, vec3 slnko, float zamracene) {
@@ -726,7 +776,15 @@ void main() {
          čo oko spozná, a hneď z plochy spraví trávnik, nie zelený koberec.
          Rozdiel je malý (± 6 %) a hrana pásu mäkká. */
       float pas = smoothstep(-0.35, 0.35, sin(vPoz.x * 3.14159 / 1500.0));
-      podkladFarba = tr * uTravaJas * (0.90 + vlnaT * 0.12) * mix(0.94, 1.06, pas);
+      /* Trsy v strednej mierke (30 cm až 1,2 m). Textúra sa pri pohľade
+         pod uhlom spriemeruje do jednej farby a trávnik do desiatich metrov
+         splynul s plochou zelenou. Táto kresba je počítaná, nie čítaná,
+         takže prežije aj tam — a utlmí sa až vtedy, keď by bola jemnejšia
+         než pixel. */
+      float stopaT = max(length(dFdx(vPoz.xy)), length(dFdy(vPoz.xy)));
+      float trsy = (sumOmietky(vec3(vPoz.xy / 330.0, 2.3)) - 0.5) * (1.0 - smoothstep(110.0, 220.0, stopaT))
+                 + (sumOmietky(vec3(vPoz.xy / 1250.0, 6.1)) - 0.5) * (1.0 - smoothstep(420.0, 840.0, stopaT));
+      podkladFarba = tr * uTravaJas * (0.90 + vlnaT * 0.12) * mix(0.94, 1.06, pas) * (1.0 + trsy * 0.16);
       drsnost = 0.96;
     } else if (von > -120.0) {
       /* Okraj z dlažby, nie betónový pás: rad kociek uložených naprieč
@@ -859,12 +917,15 @@ void main() {
        vlastnú zeleň. Priemer textúry je okolo (0,057; 0,108; 0,019). */
     vec3 zrnoL = (l1 * 0.6 + l2 * 0.4) / vec3(0.057, 0.108, 0.019);
     podkladFarba = vFarba * mix(vec3(1.0), zrnoL, 0.55);
+    podkladFarba = mix(podkladFarba, vec3(dot(podkladFarba, vec3(0.2126, 0.7152, 0.0722))), 0.18);
     /* Vnútro koruny a spodok zhlukov sú v tieni vlastných listov. */
     podkladFarba *= mix(0.42, 1.0, smoothstep(-0.75, 0.65, nGeo.z));
   }
   if (jeKarta) {
     vec3 kl = pow(karta.rgb, vec3(2.2));
-    kl = mix(kl, vec3(dot(kl, vec3(0.2126, 0.7152, 0.0722))), 0.22);
+    /* Sýtosť ako na fotke: listy na slnku majú okolo 0,5, nie 0,7 —
+       pri 0,22 odfarbenia pôsobil plot neónovo, ako plast. */
+    kl = mix(kl, vec3(dot(kl, vec3(0.2126, 0.7152, 0.0722))), 0.38);
     podkladFarba = kl * vFarba * 1.75;
     /* Trs trávy (spodná polovica atlasu): pri zemi je hustý a v tieni
        vlastných stebiel, navrchu na svetle. */
@@ -883,7 +944,9 @@ void main() {
   if ((priznakyBit & 8) != 0 && !jePodklad) {
     vec3 dpx = dFdx(vPoz), dpy = dFdy(vPoz);
     float stopa = max(length(dpx), length(dpy));
-    float jemne = 1.0 - smoothstep(0.9, 3.0, stopa), hrube = 1.0 - smoothstep(4.0, 16.0, stopa);
+    /* Zrno sa ukáže len vtedy, keď má na obrazovke aspoň tri pixely —
+       jemnejšie by sa pri otáčaní mihalo (aliasing), nie tvorilo materiál. */
+    float jemne = 1.0 - smoothstep(0.5, 0.9, stopa), hrube = 1.0 - smoothstep(2.4, 3.8, stopa);
     float utlmO = max(jemne, hrube);
     float hrb = (sumOmietky(vPoz / 2.6) - 0.5) * 0.5 * jemne + (sumOmietky(vPoz / 11.0 + 3.1) - 0.5) * 1.1 * hrube + 0.5;
     if (utlmO > 0.01) {
@@ -921,6 +984,10 @@ void main() {
   vec3 spec = fresnel(f0, vdh) * rozdelenieGGX(ndh, a) * viditelnostSmith(ndvGeo, ndl, a);
   vec3 dif = difAlbedo / PI;
   vec3 priame = (dif + spec) * uSvetloSlnka * ndl * tien;
+  /* Izba za oknom: fasáda tieň nevrhá (je kulisa), takže by do izby
+     svietilo slnko celou plochou a záclony by svietili ako lampa. Do izby
+     sa dostane len zlomok priameho svetla. */
+  if ((priznakyBit & 256) != 0) priame *= 0.12;
   /* List prepúšťa svetlo: zo strany od slnka presvitá žltozeleno. */
   if (jeKarta && vUV.y < 0.5) priame += difAlbedo * vec3(1.0, 1.05, 0.7) * uSvetloSlnka * max(dot(-nGeo, l), 0.0) * 0.12;
 
@@ -1033,7 +1100,10 @@ void main() {
     /* Aj tam, kde už dlažba nemá kresbu, ostáva podlahou — prechádza do
        tónu odrazu zeme, nie do farby steny. Práve ten rozdiel drží
        horizont. */
-    vec3 dalka = uProstredie > 0.5 ? uZemDalka : mix(uOzarDole, uOzarBok, 0.55) * 0.92;
+    /* V reálnej scéne prechádza do tej istej vzdialenej zeme, akú má
+       pozadie (lúky s kresbou a opar), nie do jednej plochej zelenej. */
+    vec3 dalka = uProstredie > 0.5 ? farbaProstredia(normalize(vPoz - uOko), 0.0, 40.0)
+                                   : mix(uOzarDole, uOzarBok, 0.55) * 0.92;
     farba = mix(dalka, farba, zanik);
   }
 
@@ -1288,12 +1358,29 @@ in vec2 vUV;
 uniform sampler2D uZdroj;
 uniform vec2 uTexel;
 uniform float uFxaa;
+uniform float uOstrenie;
 out vec4 oFarba;
 const vec3 JAS = vec3(0.299, 0.587, 0.114);
 vec3 t(vec2 uv) { return texture(uZdroj, uv).rgb; }
+/* Doostrenie podľa kontrastu (RCAS z AMD FidelityFX FSR, MIT).
+   Časové vyhladzovanie v pohybe skladá obraz z prevzorkovanej histórie
+   a tá ho o kúsok zmäkčí — hrany profilov a škáry dlažby pri otáčaní
+   strácali kresbu. RCAS ostrí len toľko, koľko okolie pixela unesie bez
+   prestrelenia: kde by vznikol svetlý alebo tmavý lem, ostrí menej.
+   Plochy a šum sa nezosilnia, lebo váha závisí od miestneho rozsahu. */
+vec3 ostri(vec3 e, float sila) {
+  vec3 b = t(vUV + vec2(0.0, -uTexel.y)), d = t(vUV + vec2(-uTexel.x, 0.0));
+  vec3 f = t(vUV + vec2(uTexel.x, 0.0)), h = t(vUV + vec2(0.0, uTexel.y));
+  vec3 mn4 = min(min(b, d), min(f, h)), mx4 = max(max(b, d), max(f, h));
+  vec3 hitMin = min(mn4, e) / (4.0 * mx4 + 1e-4);
+  vec3 hitMax = (1.0 - max(mx4, e)) / (4.0 * mn4 - 4.0 - 1e-4);
+  vec3 lobeRGB = max(-hitMin, hitMax);
+  float lobe = max(-0.1875, min(max(lobeRGB.r, max(lobeRGB.g, lobeRGB.b)), 0.0)) * sila;
+  return clamp((lobe * (b + d + f + h) + e) / (4.0 * lobe + 1.0), 0.0, 1.0);
+}
 void main() {
   vec3 m = t(vUV);
-  if (uFxaa < 0.5) { oFarba = vec4(m, 1.0); return; }
+  if (uFxaa < 0.5) { oFarba = vec4(uOstrenie > 0.001 ? ostri(m, uOstrenie) : m, 1.0); return; }
   float lNW = dot(t(vUV + vec2(-1.0, -1.0) * uTexel), JAS);
   float lNE = dot(t(vUV + vec2( 1.0, -1.0) * uTexel), JAS);
   float lSW = dot(t(vUV + vec2(-1.0,  1.0) * uTexel), JAS);
@@ -1540,6 +1627,11 @@ void main() {
       zamracene: 0,
       silaAO: 0.62,
       silaZiary: 0.55,
+      /* Doostrenie RCAS (0 = vypnuté, 1 = najsilnejšie). V pohybe vracia
+         kresbu, ktorú vezme časové vyhladzovanie; v pokoji len reálna scéna
+         a jemne. Odmerané na rovnakom zábere (pozri ostrenie-test). */
+      ostrenieVPohybe: 0.55,
+      ostrenieVPokoji: 0.22,
       /* Vinetácia sa na fotografii výrobku nerobí. Pri 0,24 ubrala v rohu
          záberu štrnásť percent jasu a zo svetlej steny štúdia bola sivá —
          práve to robilo z obrazu zašedený render namiesto fotky. Ostáva
@@ -1658,7 +1750,7 @@ void main() {
             data[at + 11] = farba[3];
             data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
               + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
-              + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0);
+              + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.bezSlnka ? 256 : 0);
             /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
                scény, dosah dlažby aj výrez tieňovej mapy. */
             data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
@@ -1785,6 +1877,11 @@ void main() {
       const rezerva = Math.max(polomerScény * 1.25, DIST * 0.08);
       let near = Math.max(DIST - rezerva, DIST * 0.04, 1);
       let far = DIST + rezerva;
+      /* Reálna scéna: veľký trávnik siaha ~40 m za obal obletu kamery.
+         Kým ho orezávala zadná rovina, bola v tráve ostrá vodorovná čiara
+         a za ňou len pozadie bez kresby. Blízka rovina ostáva, takže
+         presnosť hĺbky pri stavbe sa nemení. */
+      if (stav.prostredie) far = Math.max(far, DIST * 2.2 + 42000);
       /* Blízka kamera videa vidí aj dom a stromy ďaleko za stavbou. */
       if (k.presnaFov) { near = Math.max(400, Math.min(near, DIST * 0.35)); far = DIST + 90000; }
       const m = near / DIST;
@@ -1916,8 +2013,11 @@ void main() {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, opakovat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
       const an = gl.getExtension('EXT_texture_filter_anisotropic');
+      /* Dlažba a tráva sa vidia skoro vždy pod ostrým uhlom; pri 8× sa
+         v polovici dvora rozmazali. 16× je strop bežných kariet a stojí
+         len pár čítaní navyše na tých plochách. */
       if (an && opakovat) gl.texParameterf(gl.TEXTURE_2D, an.TEXTURE_MAX_ANISOTROPY_EXT,
-        Math.min(8, gl.getParameter(an.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+        Math.min(16, gl.getParameter(an.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
       gl.bindTexture(gl.TEXTURE_2D, null);
       return t;
     }
@@ -1964,6 +2064,8 @@ void main() {
       gl.bindTexture(gl.TEXTURE_2D, e.oblohaT);
       gl.uniform1i(P.u.uOblohaMapa, 5);
       gl.uniform1f(P.u.uOblohaOtoc, e.otocenie || 0);
+      gl.uniform1f(P.u.uOblohaV, e.oblohaV || 1);
+      gl.uniform1f(P.u.uOblohaLod, e.oblohaLod || 0);
       gl.uniform1f(P.u.uOblohaJas, e.jas || 1);
       gl.uniform3fv(P.u.uZemDalka, e.zemDalka || [0.10, 0.13, 0.06]);
       if (kresliZem) {
@@ -2442,7 +2544,8 @@ void main() {
         /* Vybavenie (autá) dostane oblohu scény a smer slnka, aby sa lak
            a sklo odrážali v tom istom okolí a svietilo na ne to isté slnko. */
         kam.obloha = stav.prostredie && stav.prostredie.oblohaT
-          ? { tex: stav.prostredie.oblohaT, otoc: stav.prostredie.otocenie || 0, jas: stav.prostredie.jas || 1 } : null;
+          ? { tex: stav.prostredie.oblohaT, otoc: stav.prostredie.otocenie || 0, jas: stav.prostredie.jas || 1,
+              v: stav.prostredie.oblohaV || 1 } : null;
         kam.slnko = stav.slnko;
         /* Tieňová mapa pre vybavenie: auto pod strechou je v jej tieni. */
         kam.tienMapa = stav.prostredie && stav.tien && stav.tienMatica
@@ -2608,6 +2711,7 @@ void main() {
       /* --- 8 · časové vyhladzovanie -------------------------------------- */
       let vystup = c.zbierT;
       let fxaa = pohyb;
+      let ostrenie = 0;
       if (taa) {
         const platna = stav.taaPlatna && stav.taaPredVP;
         const citaj = stav.taaAktualna, pis = 1 - citaj;
@@ -2633,7 +2737,11 @@ void main() {
         vystup = c.histT[pis];
         /* FXAA len na prvom snímku, keď ešte niet histórie. */
         fxaa = pohyb && !platna;
+        if (pohyb && platna) ostrenie = stav.ostrenieVPohybe;
       }
+      /* V pokoji ostrí len reálna scéna, a jemne: obraz z dvanástich
+         snímok je ostrý sám, štúdio sa nemení vôbec. */
+      if (!pohyb && stav.prostredie) ostrenie = stav.ostrenieVPokoji;
 
       /* --- 9 · na plátno ------------------------------------------------ */
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -2645,6 +2753,7 @@ void main() {
         gl.uniform1i(stav.programy.kopia.u.uZdroj, 0);
         gl.uniform2f(stav.programy.kopia.u.uTexel, 1 / sirka, 1 / vyska);
         gl.uniform1f(stav.programy.kopia.u.uFxaa, fxaa ? 1 : 0);
+        gl.uniform1f(stav.programy.kopia.u.uOstrenie, fxaa ? 0 : ostrenie);
       });
 
       gl.bindVertexArray(null);
