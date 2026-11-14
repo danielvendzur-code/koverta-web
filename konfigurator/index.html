@@ -383,7 +383,7 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 <link rel="stylesheet" href="../assets/koverta-2026.css?v=20725f26f3">
 <link rel="stylesheet" href="./soltec-premium.css?v=90b2a19859">
 <!-- Vzhľad zhodný s webom. Iba kozmetika — logika a cenník ostávajú v súbore vyššie. -->
-<link rel="stylesheet" href="./koverta-cfg-skin.css?v=3e8540c341">
+<link rel="stylesheet" href="./koverta-cfg-skin.css?v=a05ec5a8c0">
 <style>
   /* Konfigurátor stojí na premenných zo starej témy: nadpisy v Titilliu a
      text s prestrkom 0,06 rem. Dopytová sekcia pod ním patrí zvyšku webu a
@@ -908,13 +908,13 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
 })();
 </script>
 <script src="./scene-surface.js?v=5b130edc03"></script>
-<script src="./kv-render3d.js?v=f3ca2a646c"></script>
+<script src="./kv-render3d.js?v=d03b802068"></script>
 <script src="./scene-life.js?v=3a3475f9eb"></script>
-<script charset="utf-8" src="./soltec-premium.js?v=af54b6d788"></script>
+<script charset="utf-8" src="./soltec-premium.js?v=0eb78e35a3"></script>
 
 <!-- Doplnky ku konfigurátoru: zadanie rozmeru číslom, fullscreen bez scrollovania.
      Nadstavba nad runtime, nič v ňom neprepisuje. -->
-<script src="./koverta-cfg-enhance.js?v=ca0d8b8df5"></script>
+<script src="./koverta-cfg-enhance.js?v=73cbe07f8c"></script>
 
 <!-- Rozmer z adresy. Tabuľky rozmerov na podstránkach viedli do e-shopu,
      ktorý končí. Teraz vedú sem a rovno s rozmerom: ?w= je šírka, ?l= je
@@ -1029,9 +1029,15 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     riadok.appendChild(bar);
   }
   bar.hidden = false;
+  /* `nasa` = celú obrazovku zapla táto výzva. Len vtedy ju pri zatvorení
+     pracovného režimu aj sami vypneme a naopak. */
+  var nasa = false;
   bar.querySelector('[data-kv-fs-go]').addEventListener('click', function () {
     var el = document.documentElement;
-    if (el.requestFullscreen) { el.requestFullscreen().catch(function () {}); }
+    if (el.requestFullscreen) {
+      nasa = true;
+      el.requestFullscreen().catch(function () { nasa = false; bar.hidden = false; });
+    }
     /* Fullscreen prehliadača sám osebe nič nerieši — stránka pod ním ostane
        bežnou stránkou a k prístrešku sa treba doscrollovať. Otvoríme rovno aj
        pracovný režim konfigurátora, takže sa po kliknutí ocitneš v ňom celom. */
@@ -1039,6 +1045,28 @@ h5, .h5 { font-size: calc(var(--font-heading-scale) * 1.3rem); }}
     var uzJe = document.querySelector('.sp-cfg.is-full');
     if (otvor && !uzJe) otvor.click();
     bar.hidden = true;
+  });
+  /* Výzva sa skrývala natrvalo už po prvom použití: kto celú obrazovku
+     zavrel, nemal ju ako zapnúť znova. Vráti sa vždy, keď celá obrazovka
+     skončí — trvalo zmizne len po kliknutí na krížik. */
+  document.addEventListener('fullscreenchange', function () {
+    if (document.fullscreenElement) return;
+    var bolaNasa = nasa;
+    nasa = false;
+    var zavrela = false;
+    try { zavrela = localStorage.getItem(KEY) === '1'; } catch (e) {}
+    if (!zavrela) bar.hidden = false;
+    /* Esc vypne celú obrazovku prehliadača skôr, než ho stránka dostane —
+       pracovný režim konfigurátora by inak ostal visieť nad stránkou. */
+    var zavri = document.querySelector('.sp-cfg.is-full [data-sp-cfg-close]');
+    if (bolaNasa && zavri) zavri.click();
+  });
+  /* A naopak: kto pracovný režim zavrie krížikom, chce späť na stránku —
+     nie ostať v celej obrazovke prehliadača bez konfigurátora. */
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-sp-cfg-close]') : null;
+    if (!t || !nasa || !document.fullscreenElement || !document.exitFullscreen) return;
+    document.exitFullscreen().catch(function () {});
   });
   bar.querySelector('[data-kv-fs-close]').addEventListener('click', function () {
     bar.hidden = true;

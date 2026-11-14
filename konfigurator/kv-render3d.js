@@ -180,8 +180,8 @@
     /* Izba za oknom: svetlo do nej ide len oknom, takže cez sklo pôsobí
        šero. Odrazivosť je preto zámerne nízka — nahrádza tieň fasády,
        ktorý kulisy nevrhajú. */
-    interier: { kov: 0.00, drsnost: 0.95, odraz: 0.11, bezSlnka: 1 },
-    zaclona:  { kov: 0.00, drsnost: 0.90, odraz: 0.30, bezSlnka: 1 },
+    /* Okno fasády s izbou dopočítanou v shaderi (FS_HLAVNY, príznak 512). */
+    oknoIzba: { kov: 0.00, drsnost: 0.05, odraz: 1.00, oknoIzba: 1 },
     brana:    { kov: 0.10, drsnost: 0.55, odraz: 0.80 },
     plot:     { kov: 0.00, drsnost: 0.92, odraz: 0.85, listie: 1 },
     listie:   { kov: 0.00, drsnost: 0.86, odraz: 0.85, listie: 1 },
@@ -566,6 +566,41 @@ uniform vec3 uSlnko;
 uniform vec3 uSvetloSlnka;
 uniform float uZamracene;
 uniform sampler2D uTienMapa;
+#ifdef PROSTREDIE
+/* Strecha ako obdĺžnik (spodok vo výške uStrechaZ.x) a koľko z neho je
+   naozaj plné (uStrechaZ.y: plech 1, lamely podľa medzier, sklo takmer 0).
+   Koľko oblohy bodu zakrýva, sa počíta presne Lambertovým vzorcom pre
+   mnohouholník — hladko, bez šumu a bez ďalšieho priechodu. */
+uniform vec4 uStrecha;     /* x0, y0, x1, y1 */
+uniform vec2 uStrechaZ;    /* výška spodku, krytie 0..1 */
+float zakrytieStrechou(vec3 p, vec3 n) {
+  if (uStrechaZ.y < 0.01 || p.z > uStrechaZ.x - 15.0) return 0.0;
+  vec3 v[4];
+  v[0] = vec3(uStrecha.x, uStrecha.y, uStrechaZ.x) - p;
+  v[1] = vec3(uStrecha.z, uStrecha.y, uStrechaZ.x) - p;
+  v[2] = vec3(uStrecha.z, uStrecha.w, uStrechaZ.x) - p;
+  v[3] = vec3(uStrecha.x, uStrecha.w, uStrechaZ.x) - p;
+  /* Orezanie rovinou plochy: čo je za ňou, plocha nevidí. */
+  vec3 c[5];
+  int m = 0;
+  for (int i = 0; i < 4; i++) {
+    vec3 a = v[i], b = v[(i + 1) & 3];
+    float da = dot(n, a), db = dot(n, b);
+    if (da >= 0.0) { c[m] = a; m++; }
+    if ((da >= 0.0) != (db >= 0.0) && m < 5) { c[m] = a + (b - a) * (da / (da - db)); m++; }
+  }
+  if (m < 3) return 0.0;
+  float sucet = 0.0;
+  for (int i = 0; i < 5; i++) {
+    if (i >= m) break;
+    vec3 a = normalize(c[i]), b = normalize(c[i + 1 < m ? i + 1 : 0]);
+    vec3 kr = cross(a, b);
+    float dl = length(kr);
+    if (dl > 1e-6) sucet += acos(clamp(dot(a, b), -1.0, 1.0)) * dot(kr / dl, n);
+  }
+  return clamp(abs(sucet) * 0.15915494, 0.0, 1.0) * uStrechaZ.y;
+}
+#endif
 /* Tá istá tieňová mapa, ale čítaná porovnávacím vzorkovačom s lineárnym
    filtrom: každé čítanie vráti podiel osvetlenia zo štyroch susedných
    texelov, nie tvrdé áno/nie. Okraj tieňa je preto hladký už pri ôsmich
@@ -792,6 +827,67 @@ void main() {
     vec3 dalka0 = farbaZemeDetail(smerD, stopaD);
     oFarba = vec4(uKodovat > 0.5 ? zakoduj(dalka0) : dalka0, 1.0);
     oNormHlbka = vec4(0.5, 0.5, 1.0, 0.75);
+    return;
+  }
+  /* Okno fasády: izba za sklom dopočítaná lúčom (interior mapping).
+     Lokálne osi okna: x pozdĺž fasády (svet x), y hore (svet z), z do domu
+     (svet −y). Lúč od oka cez bod skla sa pretne so škatuľou izby; čo
+     zasiahne prvé — záclonu, zadnú stenu, bok, podlahu, strop —, to je
+     farba. Na to sa podľa Fresnela položí odraz oblohy a slnka. */
+  if ((priznakyBit & 512) != 0) {
+    float sirkaO = floor(vUV.x) * 10.0;
+    float uO = clamp((fract(vUV.x) - 0.001) / 0.998, 0.0, 1.0);
+    float kodV = floor(vUV.y);
+    bool parapet = mod(kodV, 2.0) > 0.5;
+    float vyskaO = floor(kodV * 0.5) * 20.0;
+    float vO = clamp((fract(vUV.y) - 0.001) / 0.998, 0.0, 1.0);
+    vec3 dS = normalize(vPoz - uOko);
+    vec3 dO = vec3(dS.x, dS.z, max(-dS.y, 1e-3));
+    vec3 pO = vec3(uO * sirkaO, vO * vyskaO, 0.0);
+    float hlbkaIzby = 3400.0;
+    float podlaha = parapet ? -970.0 : -30.0;
+    float strop = max(vyskaO + 420.0, podlaha + 2650.0);
+    /* Každé okno má trocha inú izbu: šírka záclon a tón stien podľa
+       polohy okna (ľavý okraj skla v svete je pre okno stály). */
+    float idO = fract(sin(floor((vPoz.x - pO.x) / 10.0) * 12.9898 + vyskaO * 0.0137) * 43758.5453);
+    float tz = hlbkaIzby / dO.z;
+    float tx = dO.x > 0.0 ? (sirkaO + 1400.0 - pO.x) / max(dO.x, 1e-5) : (-1400.0 - pO.x) / min(dO.x, -1e-5);
+    float ty = dO.y > 0.0 ? (strop - pO.y) / max(dO.y, 1e-5) : (podlaha - pO.y) / min(dO.y, -1e-5);
+    float tI = min(tz, min(tx, ty));
+    vec3 hI = pO + dO * tI;
+    float vzad = clamp(hI.z / hlbkaIzby, 0.0, 1.0);
+    vec3 izba;
+    if (tI == tz) izba = mix(vec3(0.62, 0.58, 0.52), vec3(0.58, 0.60, 0.62), idO);
+    else if (tI == ty && dO.y < 0.0) {
+      /* Parkety: dosky 18 cm široké, 1,2 m dlhé, spoje posunuté; každá
+         doska o odtieň iná. */
+      float pas = floor(hI.x / 180.0);
+      float posun = fract(sin(pas * 7.13) * 4375.85) * 1200.0;
+      float doska = floor((hI.z + posun) / 1200.0);
+      float ton = 0.78 + 0.34 * fract(sin(pas * 12.97 + doska * 3.31) * 4375.85);
+      izba = vec3(0.30, 0.20, 0.12) * ton;
+    }
+    else if (tI == ty) izba = vec3(0.72, 0.71, 0.68);
+    else izba = mix(vec3(0.56, 0.53, 0.48), vec3(0.52, 0.54, 0.56), idO);
+    /* Svetlo prichádza oknom: pri okne je izba svetlejšia, vzadu šerá. */
+    izba *= mix(1.0, 0.55, vzad) * 0.20;
+    /* Záclony 14 cm za sklom po oboch krajoch, zvlnené do záhybov. */
+    vec3 hZ = pO + dO * (140.0 / dO.z);
+    float sirkaZ = min(700.0, sirkaO * (0.18 + 0.12 * idO));
+    if ((hZ.x < sirkaZ || hZ.x > sirkaO - sirkaZ) && hZ.y > 30.0 && hZ.y < vyskaO) {
+      float okraj = hZ.x < sirkaZ ? hZ.x : sirkaO - hZ.x;
+      float zahyb = 0.5 + 0.5 * sin(okraj / max(sirkaZ, 1.0) * 31.4159);
+      izba = vec3(0.92, 0.87, 0.80) * mix(0.72, 1.0, zahyb) * 0.15;
+    }
+    vec3 nO = normalize(vNorm);
+    vec3 vO3 = normalize(uOko - vPoz);
+    float fresO = 0.04 + 0.96 * pow(1.0 - max(dot(nO, vO3), 0.0), 5.0);
+    vec3 rO = reflect(-vO3, nO);
+    vec3 odrazO = farbaProstredia(rO, 0.0, 40.0);
+    float leskO = pow(max(dot(rO, uSlnko), 0.0), 900.0) * vTieni(nO);
+    vec3 cO = izba * vec3(0.90, 0.93, 0.92) * (1.0 - fresO) + odrazO * fresO + uSvetloSlnka * leskO * 1.6;
+    oFarba = vec4(uKodovat > 0.5 ? zakoduj(cO) : cO, 1.0);
+    oNormHlbka = vec4(nO * 0.5 + 0.5, 0.75);
     return;
   }
 #endif
@@ -1035,10 +1131,6 @@ void main() {
   vec3 spec = fresnel(f0, vdh) * rozdelenieGGX(ndh, a) * viditelnostSmith(ndvGeo, ndl, a);
   vec3 dif = difAlbedo / PI;
   vec3 priame = (dif + spec) * uSvetloSlnka * ndl * tien;
-  /* Izba za oknom: fasáda tieň nevrhá (je kulisa), takže by do izby
-     svietilo slnko celou plochou a záclony by svietili ako lampa. Do izby
-     sa dostane len zlomok priameho svetla. */
-  if ((priznakyBit & 256) != 0) priame *= 0.12;
   /* List prepúšťa svetlo: zo strany od slnka presvitá žltozeleno. */
   if (jeKarta && vUV.y < 0.5) priame += difAlbedo * vec3(1.0, 1.05, 0.7) * uSvetloSlnka * max(dot(-nGeo, l), 0.0) * 0.12;
 
@@ -1075,6 +1167,15 @@ void main() {
      stĺpe zrkadlí obloha aj zospodu. */
   float podHorizont = smoothstep(-0.25, 0.02, rOhnuty.z);
   specIbl *= mix(0.32, 1.0, podHorizont);
+#ifdef PROSTREDIE
+  /* Pod strechou vidí bod len časť oblohy — rozptýlené svetlo aj odraz
+     oblohy sú tam slabšie. Podklad aj výrobok, steny aj dlažba. */
+  if (uProstredie > 0.5) {
+    float vidO = 1.0 - zakrytieStrechou(vPoz, n) * 0.88;
+    difIbl *= vidO;
+    specIbl *= mix(1.0, vidO, 0.7);
+  }
+#endif
 
   vec3 farba = priame + difIbl + specIbl;
 
@@ -1872,7 +1973,7 @@ void main() {
               data[at + 11] = farba[3];
               data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
                 + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
-                + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.bezSlnka ? 256 : 0);
+                + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.oknoIzba && f.uv ? 512 : 0);
               /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
                  scény, dosah dlažby aj výrez tieňovej mapy. */
               data[at + 13] = (stupne.get(f.bias || 0) || 0) + (mat.poradie || 0);
@@ -1898,7 +1999,28 @@ void main() {
         for (const p of nepriehl) if (p.f.bg || p.f.kulisa) zapis(p);
         const deliaci = at / PLAVAKOV;
         for (const p of priehl) zapis(p);
-        return { data, at, deliaci, pocetVrhacov, hranice, hraniceVrhacov, pocetVrcholov };
+        /* Strecha pre zakrytie oblohy: nepriehľadné plochy výrobku v hornej
+           časti (do 40 cm pod vrchom). Obdĺžnik ich pôdorysu, výška spodku
+           a krytie — podiel plochy, ktorú naozaj pokrývajú plochy hľadiace
+           nahor (lamely s medzerami menej, plech celý, sklo takmer nič). */
+        let strecha = null;
+        {
+          let zMax = -Infinity;
+          for (const p of nepriehl) { const f = p.f; if (f.kulisa || f.bg || f.stena || f.houseWall) continue; for (const q of f.w) if (q[2] > zMax) zMax = q[2]; }
+          if (Number.isFinite(zMax)) {
+            const r = [Infinity, Infinity, -Infinity, -Infinity]; let zSpodok = Infinity, plocha = 0;
+            for (const p of nepriehl) {
+              const f = p.f; if (f.kulisa || f.bg || f.stena || f.houseWall) continue;
+              if (!f.w.every((q) => q[2] >= zMax - 400)) continue;
+              for (const q of f.w) { r[0] = Math.min(r[0], q[0]); r[1] = Math.min(r[1], q[1]); r[2] = Math.max(r[2], q[0]); r[3] = Math.max(r[3], q[1]); zSpodok = Math.min(zSpodok, q[2]); }
+              const nz = f.normal ? f.normal[2] : 0;
+              if (nz > 0.5) { let a2 = 0; for (let i = 0; i < f.w.length; i++) { const a = f.w[i], b = f.w[(i + 1) % f.w.length]; a2 += a[0] * b[1] - b[0] * a[1]; } plocha += Math.abs(a2) / 2; }
+            }
+            const pod = (r[2] - r[0]) * (r[3] - r[1]);
+            if (pod > 1e5) strecha = [r[0], r[1], r[2], r[3], zSpodok, Math.max(0, Math.min(1, plocha / pod))];
+          }
+        }
+        return { data, at, deliaci, pocetVrhacov, hranice, hraniceVrhacov, pocetVrcholov, strecha };
       };
       if (!stav.pamatSieti) stav.pamatSieti = new Map();
       let z = kluc ? stav.pamatSieti.get(kluc) : null;
@@ -1915,6 +2037,7 @@ void main() {
       stav.pocetVrcholovSiete = pocetVrcholov;
       if (!pocetVrcholov) { stav.siet = null; return; }
       const { data, at, deliaci, pocetVrhacov, hranice, hraniceVrhacov } = z;
+      stav.strecha = z.strecha || null;
 
       if (!stav.siet) {
         stav.siet = { vao: g.createVertexArray(), buffer: g.createBuffer(), kapacita: 0 };
@@ -2637,6 +2760,11 @@ void main() {
       gl.bindTexture(gl.TEXTURE_2D, t.t);
       gl.bindSampler(3, stav.tienVzorkovac);
       gl.uniform1i(P.u.uTienPorov, 3);
+      {
+        const st = stav.strecha;
+        gl.uniform4f(P.u.uStrecha, st ? st[0] : 0, st ? st[1] : 0, st ? st[2] : 0, st ? st[3] : 0);
+        gl.uniform2f(P.u.uStrechaZ, st ? st[4] : 0, st && stav.prostredie ? st[5] : 0);
+      }
       gl.activeTexture(gl.TEXTURE0);
 
       gl.bindVertexArray(s.vao);
