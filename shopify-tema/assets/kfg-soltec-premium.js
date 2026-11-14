@@ -7869,6 +7869,22 @@ function kvAdresa(kluc, zaloha) {
           if (next) { next.textContent = step === STEPS ? 'Chcem ponuku' : 'Ďalej'; next.dataset.spFinal = step === STEPS ? '1' : ''; }
           const steps = cfgRoot.querySelector('.sp-steps');
           if (steps) steps.scrollTop = 0;
+          /* Vo fullscreene na telefóne a tablete sa posúva celý panel, nie
+             kroky samy. Po „Ďalej" dole pod krokom by nový krok začínal mimo
+             obrazovky a bolo by vidieť len jeho koniec — panel sa preto vráti
+             tak, aby krok začínal hneď pod lištou krokov (na telefóne je
+             prilepená, na tablete sa ukáže celá). */
+          const sekcia = cfgRoot.closest('.sp-cfg');
+          const panelFull = sekcia && sekcia.classList.contains('is-full') && window.matchMedia('(max-width: 989px)').matches
+            ? cfgRoot.querySelector('.sp-panel') : null;
+          if (panelFull && steps) {
+            const rail = panelFull.querySelector('.sp-rail');
+            const lepi = rail && window.getComputedStyle(rail).position === 'sticky';
+            const kotva = lepi || !rail ? steps : rail;
+            const hore = panelFull.getBoundingClientRect().top + (lepi ? rail.offsetHeight : 0) + 8;
+            const zaciatok = kotva.getBoundingClientRect().top;
+            if (zaciatok < hore) panelFull.scrollTop -= (hore - zaciatok);
+          }
           // the visitor must see the step change even if the page scrolled away
           // Only correct the scroll position when the workspace is actually out of
           // view. Pulling the page on every step change felt like being grabbed.
