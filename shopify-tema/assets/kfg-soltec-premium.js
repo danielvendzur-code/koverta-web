@@ -1433,22 +1433,10 @@ function kvAdresa(kluc, zaloha) {
           }
           const xi = side === 'left' ? 0 : n - 1;
           const r = rez(xi);
-          /* Zadná stena Koverty (strana `left`) z lamiel stojí za zadnou
-             stranou prístrešku: celá je za stĺpmi a beží cez celú šírku od
-             vonkajšieho líca jedného rohového stĺpa po druhé. Predná a ostatné
-             výplne ostávajú medzi stĺpmi. */
-          if (side === 'left' && model().roofKit === 'koverta' && KV_MAT[state.sides.left]) {
-            const gwZa = Math.round(Math.min(r.d, r.w) * 0.42);
-            return {
-              axis: 'y',
-              out: -1,
-              vFace: xs[xi] - gwZa - 2,
-              runFrom: vsun,
-              runTo: W - vsun,
-              cuts: [],
-              guideScale: Math.min(r.d, r.w)
-            };
-          }
+          /* Lamelová stena na kratšej (zadnej) strane stojí medzi stĺpmi
+             rovnako ako na dlhých stranách – rozhodnutie majiteľa zo 16. 11.
+             2026. Predtým (pripomienka zo 6. 10.) bežala pred stĺpmi cez celú
+             šírku a lamely prekrývali rohové stĺpy. */
           const vFace = side === 'left' ? xs[xi] : xs[xi] + r.d;
           return {
             axis: 'y',

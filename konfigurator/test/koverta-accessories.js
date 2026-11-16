@@ -136,18 +136,8 @@ function expectedWallAnchor(snap, side) {
   }
 
   const i = side === 'left' ? 0 : axes.length - 1;
-  /* Zadná lamelová stena (strana left) stojí za stĺpmi cez celú šírku. */
-  if (side === 'left' && /^kv(drevo|wpc|hlinik)$/.test(String((snap.sides || {}).left))) {
-    const gw = Math.round(Math.min(sections[i].d, sections[i].w) * 0.42);
-    return {
-      axis: 'y',
-      out: -1,
-      vFace: leftEdges[i] - gw - 2,
-      runFrom: inset,
-      runTo: snap.width - inset,
-      cuts: []
-    };
-  }
+  /* Lamelová stena aj na kratšej (zadnej) strane stojí medzi stĺpmi,
+     rovnako ako na dlhých stranách (rozhodnutie majiteľa 16. 11. 2026). */
   return {
     axis: 'y',
     out: side === 'left' ? -1 : 1,
