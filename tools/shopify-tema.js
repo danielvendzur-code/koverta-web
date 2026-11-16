@@ -99,12 +99,23 @@ const posledneCommity = (() => {
     return { mapa, vzdialene };
   } catch (_) { return null; }
 })();
+/* Commity, ktoré jsDelivr nevie spoľahlivo vydať. Pri 16. 11. 2026
+ * (25 nových fotiek galérie) vracal pre väčšinu súborov 503, 404 alebo
+ * neodpovedal ani po desiatkach minút, takže fotky v galérii na Shopify
+ * boli rozbité. Súbory z takého commitu idú z GitHub Pages, keď sú už na
+ * master (Pages ich vydá hneď). Zoznam: tools/jsdelivr-nedostupne.json. */
+const jsdelivrNedostupne = (() => {
+  try {
+    return new Set(JSON.parse(fs.readFileSync(path.join(KOREN, 'tools', 'jsdelivr-nedostupne.json'), 'utf8')).commity || []);
+  } catch (_) { return new Set(); }
+})();
 const zakladPreSubor = new Map();
 function zakladPages(relCesta) {
   if (zakladPreSubor.has(relCesta)) return zakladPreSubor.get(relCesta);
   let zaklad = PAGES_ZAKLAD;
   const sha = posledneCommity && posledneCommity.mapa.get(relCesta);
-  if (sha && posledneCommity.vzdialene.has(sha)) zaklad = JSDELIVR_ZAKLAD + sha;
+  const naPages = sha && jsdelivrNedostupne.has(sha) && naMasteri && naMasteri.has(relCesta);
+  if (sha && posledneCommity.vzdialene.has(sha) && !naPages) zaklad = JSDELIVR_ZAKLAD + sha;
   else if (naMasteri && !naMasteri.has(relCesta)) {
     console.warn('Pozor: ' + relCesta + ' nie je na master ani v odoslanom commite — najprv ho commitni a pushni, potom spusti prevodník znova.');
   }
