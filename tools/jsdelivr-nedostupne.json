@@ -1,0 +1,6 @@
+{
+  "poznamka": "Commity, ktorých súbory jsDelivr nevydáva spoľahlivo (503/404/bez odpovede). Súbory z nich berie téma z GitHub Pages, keď sú na master. Číta tools/shopify-tema.js.",
+  "commity": [
+    "9a099052976d641146c746054f38f3ca10598f44"
+  ]
+}
