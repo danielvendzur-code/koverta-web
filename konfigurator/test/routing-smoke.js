@@ -111,11 +111,12 @@ module.exports = async function routingSmoke(browser) {
       } else if (kv) {
         /* Zadná, ľavá a pravá stena prístrešku pre auto majú cenu z Expivi
            a pripočíta sa k nim konštrukcia so šiestimi stĺpmi. Prednú stranu
-           (vjazd) Koverta stenou neuzatvára. */
+           (vjazd) Koverta stenou neuzatvára. Vjazd je ten kratší koniec, ku
+           ktorému vedie príjazd a kam sú otočené autá (vnútorne strana left). */
         assert(withSide.price.total !== null && withSide.price.total > cena(resized) &&
           withSide.price.lines.some(line => /Konštrukcia pre steny/.test(line.k) && line.v > 0),
           `${route}: priced wall is missing its Expivi price`);
-        assert(await page.locator('[data-sp-side="right"]').isHidden(),
+        assert(await page.locator('[data-sp-side="left"]').isHidden(),
           `${route}: front (entrance) wall must not be offered`);
       } else {
         assert(withSide.price.total !== resized.price.total, `${route}: side not priced`);
