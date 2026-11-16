@@ -615,6 +615,8 @@ uniform float uSnimok;     /* poradie vzorky doostrenia, mení šum tieňa */
 uniform float uOrezavat;
 uniform vec3 uStred;
 uniform float uDosah;
+/* Steny, za ktorými je kamera (vnútorná normála +x, -x, +y, -y): 1 = skryť. */
+uniform vec4 uSkryStenu;
 uniform int uLadenie;   /* 0 hotový obraz, 1 tieň, 2 NdotL, 3 normála, 4 albedo */
 uniform float uPodkladDetail;
 uniform float uPodkladSkryt;
@@ -775,17 +777,15 @@ void main() {
     if (blizko > 0.02 && blizko * 1.02 > prah) discard;
   }
   /* Stena, na ktorú je stavba pripevnená: keď kamera prejde za ňu,
-     rozplynie sa rastrom (časové vyhladzovanie z neho spraví plynulú
-     priehľadnosť), aby nezakryla výrobok. Vnútornú normálu steny nesie
-     uv. Sieť sa pri tom neprestavuje, takže otáčanie sa nezasekne. */
+     zmizne celá naraz, aby nezakryla výrobok. Vnútornú normálu steny nesie
+     uv. O skrytí rozhodne procesor raz na snímok, s hysterézou (pozri
+     uSkryStenu v kresli). Doteraz sa rozplývala rastrom, ktorý sa každý
+     snímok posúval — pri otáčaní stena blikala a za kamerou sa ťahala,
+     a spodný kúsok (sokel), ktorý ostal, vyzeral ako otvorené koryto. */
   if ((priznakyBit & 128) != 0) {
-    float strana = dot(normalize(uOko - uStred), vec3(vUV, 0.0));
-    /* Ako architektonický rez: spodných 32 cm (sokel) ostane, aby bolo
-       jasné, kde stena stojí a odkiaľ je tieň na dlažbe. Nad ním zmizne
-       celá — polopriehľadný raster by v pokoji ostal zrnitý. */
-    float skry = vPoz.z < 320.0 ? 0.0 : 1.0 - smoothstep(-0.31, -0.27, strana);
-    float prahS = fract(52.9829189 * fract(dot(gl_FragCoord.xy + 5.588238 * uSnimok, vec2(0.06711056, 0.00583715))));
-    if (skry > 0.0 && skry >= prahS) discard;
+    float skry = vUV.x > 0.5 ? uSkryStenu.x : (vUV.x < -0.5 ? uSkryStenu.y
+      : (vUV.y > 0.5 ? uSkryStenu.z : uSkryStenu.w));
+    if (skry > 0.5) discard;
   }
 #endif
   vec4 karta = vec4(1.0);
@@ -2788,6 +2788,20 @@ void main() {
       {
         const o = stav.obal || [0, 0, 0, 1, 1, 1];
         gl.uniform3f(P.u.uStred, (o[0] + o[3]) / 2, (o[1] + o[4]) / 2, (o[2] + o[5]) / 2);
+        /* Stena za kamerou: smer od stredu stavby k oku proti vnútornej
+           normále steny. Skryje sa pod −0,30 a ukáže až nad −0,26, takže
+           na hranici pri drobnom pohybe neprebliká sem a tam. */
+        {
+          const ex = kam.oko[0] - (o[0] + o[3]) / 2, ey = kam.oko[1] - (o[1] + o[4]) / 2, ez = kam.oko[2] - (o[2] + o[5]) / 2;
+          const d = Math.hypot(ex, ey, ez) || 1;
+          const strany = [ex / d, -ex / d, ey / d, -ey / d];
+          const sk = stav.skryStenu || (stav.skryStenu = [0, 0, 0, 0]);
+          for (let k = 0; k < 4; k++) {
+            if (sk[k]) { if (strany[k] > -0.26) sk[k] = 0; }
+            else if (strany[k] < -0.30) sk[k] = 1;
+          }
+          gl.uniform4f(P.u.uSkryStenu, sk[0], sk[1], sk[2], sk[3]);
+        }
         const ov = stav.obalVrhacov || o;
         /* Dosah, na ktorom sa podklad stratí: štvornásobok konštrukcie. Bližšie
            by sa dlažba končila v zábere, ďalej by sa švík vrátil. */

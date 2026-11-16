@@ -8146,22 +8146,59 @@ footer.kf { background: var(--k-ink); color: #fff; }
   position: relative;
   display: grid;
   gap: 12px;
-  max-width: min(1180px, 100%);
+  width: min(1180px, 100%);
   max-height: 100%;
   justify-items: center;
 }
-.kv-lupa__ram img {
-  display: block;
-  max-width: 100%;
-  max-height: calc(100vh - clamp(96px, 12vh, 150px));
-  width: auto;
-  height: auto;
-  border-radius: var(--k-r-sm);
-  background: #0c1012;
+/* Plocha lupy má stálu veľkosť bez ohľadu na pomer strán fotky: šípky,
+   krížik ani popis pri listovaní neposkočia. Fotky ležia v jednej bunke
+   mriežky nad sebou, nová sa prelnie cez starú. */
+.kv-lupa__plocha {
+  position: relative;
+  display: grid;
+  grid-template: 100% / 100%;
+  place-items: center;
+  width: 100%;
+  height: calc(100vh - clamp(96px, 12vh, 150px));
+  height: calc(100dvh - clamp(96px, 12vh, 150px));
   transform: scale(0.985);
   transition: transform 240ms var(--k-ease-out);
 }
-.kv-lupa.je-vidno .kv-lupa__ram img { transform: none; }
+.kv-lupa.je-vidno .kv-lupa__plocha { transform: none; }
+.kv-lupa__foto {
+  grid-area: 1 / 1;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border-radius: var(--k-r-sm);
+  opacity: 0;
+  transition: opacity 240ms var(--k-ease);
+}
+.kv-lupa__foto.je-aktualna { opacity: 1; }
+.kv-lupa__foto.odchadza { opacity: 0; transition-delay: 90ms; }
+.kv-lupa__plocha::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms var(--k-ease);
+  animation: kv-lupa-toc 800ms linear infinite;
+}
+.kv-lupa__plocha.je-nacitava::after { opacity: 1; }
+/* Spodná lišta s tlačidlami by pod popisom fotky presvitala — kým je
+   lupa otvorená, nie je k ničomu. */
+.je-lupa .kh-dock { visibility: hidden; }
+@keyframes kv-lupa-toc { to { transform: rotate(360deg); } }
 .kv-lupa__popis {
   margin: 0;
   font-family: var(--k-head);
@@ -8210,13 +8247,14 @@ footer.kf { background: var(--k-ink); color: #fff; }
   }
   #realGrid.kh-work__grid::-webkit-scrollbar { display:none; }
   #realGrid .kh-work__item { flex:0 0 min(86vw,420px); scroll-snap-align:center; }
-  .kv-lupa { padding:12px; }
+  .kv-lupa { padding:12px 12px max(12px, env(safe-area-inset-bottom)); }
   .kv-lupa__sipka { width:42px; height:42px; }
   .kv-lupa__sipka--pred { left:6px; }
   .kv-lupa__sipka--dalsi { right:6px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kv-lupa, .kv-lupa__ram img { transition: none; }
+  .kv-lupa, .kv-lupa__plocha, .kv-lupa__foto { transition: none; }
+  .kv-lupa__plocha::after { animation-duration: 2400ms; }
 }
 
 /* ==========================================================================

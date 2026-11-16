@@ -3255,7 +3255,6 @@ if (typeof window !== 'undefined' && !window.kvChat
     if (!spinace.length) return;
 
     let vrstva = null;
-    let obrazok = null;
     let popis = null;
     let pocitadlo = null;
     let pred = null;
@@ -3264,6 +3263,9 @@ if (typeof window !== 'undefined' && !window.kvChat
     let poradie = [];
     let pozicia = 0;
     let dotykX = null;
+    let plocha = null;
+    let ziadost = 0;
+    const vopred = new Map();
 
     const udaje = (tl) => {
       const nahlad = tl.querySelector('img');
@@ -3305,31 +3307,116 @@ if (typeof window !== 'undefined' && !window.kvChat
       if (spinac) spinac.click();
     };
 
+    /* Do lupy ide najmenšia kópia zo `srcset` náhľadu, ktorá pokryje
+       plochu lupy na tejto obrazovke — WebP má tretinu váhy pôvodného JPG,
+       takže ďalšia fotka príde rýchlejšie a nie je rozmazaná. Explicitný
+       `data-k-lupa` a značkovanie bez `srcset` ostávajú pri pôvodnom súbore. */
+    const zdrojPreLupu = (tl, zaloha) => {
+      const nahlad = tl.querySelector('img');
+      if (tl.getAttribute('data-k-lupa') || !nahlad) return zaloha;
+      const kandidati = (nahlad.getAttribute('srcset') || '').split(',')
+        .map((c) => c.trim().split(/\s+/))
+        .filter((c) => c[0] && /^\d+w$/.test(c[1] || ''))
+        .map((c) => ({ url: c[0], w: parseInt(c[1], 10) }));
+      /* Pôvodný súbor je tiež kandidát: niekde je väčší než najväčšia
+         kópia v `srcset`. Pri rovnakej šírke vyhrá kópia (je ľahšia). */
+      const sirkaSrc = parseInt(nahlad.getAttribute('width'), 10);
+      if (zaloha && sirkaSrc > 0) kandidati.push({ url: zaloha, w: sirkaSrc });
+      kandidati.sort((a, b) => a.w - b.w);
+      if (!kandidati.length) return zaloha;
+      const treba = Math.min(1180, window.innerWidth) * Math.min(2, window.devicePixelRatio || 1);
+      return (kandidati.find((c) => c.w >= treba) || kandidati[kandidati.length - 1]).url;
+    };
+    const zdrojPozicie = (i) => {
+      const tl = poradie[(i + poradie.length) % poradie.length];
+      const data = tl && udaje(tl);
+      return data && data.zdroj ? zdrojPreLupu(tl, data.zdroj) : '';
+    };
+    /* Susedné fotky sa stiahnu vopred, aby šípka prepla hneď. */
+    const nacitajVopred = (url) => {
+      if (!url || vopred.has(url)) return;
+      const im = new Image();
+      im.decoding = 'async';
+      im.src = url;
+      vopred.set(url, im);
+      if (vopred.size > 8) vopred.delete(vopred.keys().next().value);
+    };
+
+    /* Prepnutie fotky: nová sa najprv celá stiahne a dekóduje, až potom sa
+       ukáže — prelnutím cez starú, spolu s popisom a počítadlom. Doteraz sa
+       len prepísal `src`: popis a číslo sa zmenili hneď, stará fotka ostala
+       stáť a nová potom naraz naskočila (pri pomalšom pripojení aj po
+       pruhoch). Plocha lupy má stálu veľkosť, takže šípky ani popis pri
+       fotke na výšku či širokej neposkočia. */
     const ukaz = (index) => {
       if (!poradie.length) return;
       pozicia = (index + poradie.length) % poradie.length;
-      const data = udaje(poradie[pozicia]);
+      const tl = poradie[pozicia];
+      const data = udaje(tl);
       if (!data.zdroj) return;
-      if (odkial && odkial !== poradie[pozicia] && odkial.classList.contains('kh-mapa__nahlad')) {
-        zosynchronizujMapu(poradie[pozicia]);
-        odkial = poradie[pozicia];
+      if (odkial && odkial !== tl && odkial.classList.contains('kh-mapa__nahlad')) {
+        zosynchronizujMapu(tl);
+        odkial = tl;
       }
-      obrazok.alt = data.alt;
-      obrazok.src = data.zdroj;
-      popis.textContent = data.titulok;
-      const maSuseda = poradie.length > 1;
-      pred.hidden = dalsi.hidden = !maSuseda;
-      pocitadlo.hidden = !maSuseda;
-      pocitadlo.textContent = maSuseda ? `${pozicia + 1} / ${poradie.length}` : '';
+      const moja = ++ziadost;
+      const nova = document.createElement('img');
+      nova.className = 'kv-lupa__foto';
+      nova.alt = data.alt;
+      nova.decoding = 'async';
+      nova.src = zdrojPreLupu(tl, data.zdroj);
+      nova.addEventListener('error', () => { nova.style.visibility = 'hidden'; }, { once: true });
+      /* Spinner len vtedy, keď fotka nepríde hneď — inak by pri každej
+         šípke preblikol. */
+      const caka = window.setTimeout(() => { if (moja === ziadost) plocha.classList.add('je-nacitava'); }, 220);
+      let hotovo = false;
+      const vymen = () => {
+        if (hotovo) return;
+        hotovo = true;
+        window.clearTimeout(caka);
+        if (moja !== ziadost) return;
+        plocha.classList.remove('je-nacitava');
+        const stare = [].slice.call(plocha.querySelectorAll('.kv-lupa__foto'));
+        plocha.insertBefore(nova, pred);
+        popis.textContent = data.titulok;
+        const maSuseda = poradie.length > 1;
+        pred.hidden = dalsi.hidden = !maSuseda;
+        pocitadlo.hidden = !maSuseda;
+        pocitadlo.textContent = maSuseda ? `${pozicia + 1} / ${poradie.length}` : '';
+        void nova.offsetWidth;
+        nova.classList.add('je-aktualna');
+        stare.forEach((s) => {
+          s.classList.remove('je-aktualna');
+          s.classList.add('odchadza');
+          window.setTimeout(() => s.remove(), 340);
+        });
+        if (maSuseda) {
+          nacitajVopred(zdrojPozicie(pozicia + 1));
+          nacitajVopred(zdrojPozicie(pozicia - 1));
+        }
+      };
+      const poNacitani = () => {
+        if (nova.complete) vymen();
+        else {
+          nova.addEventListener('load', vymen, { once: true });
+          nova.addEventListener('error', vymen, { once: true });
+        }
+      };
+      if (nova.decode) nova.decode().then(vymen, poNacitani);
+      else poNacitani();
     };
 
     const zavri = () => {
       if (!vrstva || vrstva.hidden) return;
       vrstva.classList.remove('je-vidno');
       document.documentElement.style.overflow = '';
+      document.documentElement.classList.remove('je-lupa');
+      ziadost += 1;
       const koniec = () => {
+        /* Medzitým otvorená znova: nič nezatvárať ani nemazať. */
+        if (vrstva.classList.contains('je-vidno')) return;
         vrstva.hidden = true;
-        obrazok.removeAttribute('src');
+        plocha.classList.remove('je-nacitava');
+        plocha.querySelectorAll('.kv-lupa__foto').forEach((f) => f.remove());
       };
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) koniec();
       else window.setTimeout(koniec, 210);
@@ -3346,9 +3433,8 @@ if (typeof window !== 'undefined' && !window.kvChat
       vrstva.setAttribute('aria-label', 'Fotografia realizácie');
       const ram = document.createElement('div');
       ram.className = 'kv-lupa__ram';
-      obrazok = document.createElement('img');
-      obrazok.alt = '';
-      obrazok.decoding = 'async';
+      plocha = document.createElement('div');
+      plocha.className = 'kv-lupa__plocha';
       popis = document.createElement('p');
       popis.className = 'kv-lupa__popis';
       pocitadlo = document.createElement('span');
@@ -3370,12 +3456,12 @@ if (typeof window !== 'undefined' && !window.kvChat
       x.setAttribute('aria-label', 'Zavrieť');
       x.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>';
       x.addEventListener('click', zavri);
-      ram.appendChild(obrazok);
+      plocha.appendChild(pred);
+      plocha.appendChild(dalsi);
+      plocha.appendChild(x);
+      ram.appendChild(plocha);
       ram.appendChild(popis);
       ram.appendChild(pocitadlo);
-      ram.appendChild(pred);
-      ram.appendChild(dalsi);
-      ram.appendChild(x);
       vrstva.appendChild(ram);
       vrstva.addEventListener('click', (e) => { if (e.target === vrstva) zavri(); });
       vrstva.addEventListener('touchstart', (e) => {
@@ -3416,6 +3502,7 @@ if (typeof window !== 'undefined' && !window.kvChat
         ukaz(Math.max(0, poradie.indexOf(tl)));
         vrstva.hidden = false;
         document.documentElement.style.overflow = 'hidden';
+        document.documentElement.classList.add('je-lupa');
         window.requestAnimationFrame(() => {
           vrstva.classList.add('je-vidno');
           x.focus();
