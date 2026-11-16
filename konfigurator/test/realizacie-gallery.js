@@ -30,14 +30,38 @@ async function dismissConsent(page) {
   await all.first().click();
   const dialog = page.locator('.kv-lupa');
   await dialog.waitFor({ state: 'visible' });
+  const cakajNaPocitadlo = (text) => page.waitForFunction((t) => {
+    const el = document.querySelector('.kv-lupa__pocitadlo');
+    return el && el.textContent.trim() === t;
+  }, text, { timeout: 15000 }).catch(() => {});
+  await cakajNaPocitadlo(`1 / ${total}`);
   assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `1 / ${total}`);
-  const firstSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
+  /* Fotka sa prepne až po stiahnutí (prelnutím), preto sa na novú čaká.
+     Aktuálna je vždy práve jedna; šípka, krížik a popis pri prepnutí
+     nesmú zmeniť polohu. */
+  const aktualna = '.kv-lupa__foto.je-aktualna';
+  await page.waitForSelector(aktualna);
+  const zdrojAktualnej = () => page.locator(aktualna).getAttribute('src');
+  const cakajNaInu = (predtym) => page.waitForFunction(([sel, p]) => {
+    const a = document.querySelectorAll(sel);
+    return a.length === 1 && a[0].getAttribute('src') !== p;
+  }, [aktualna, predtym], { timeout: 15000 });
+  const polohy = () => page.evaluate(() => ['.kv-lupa__sipka--dalsi', '.kv-lupa__zavri', '.kv-lupa__pocitadlo']
+    .map((s) => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y)].join(','); }).join(' '));
+  const firstSource = await zdrojAktualnej();
+  /* Otvorenie lupy sa ešte dokresľuje (zväčšenie z 98,5 %). */
+  await page.waitForTimeout(450);
+  const polohyPred = await polohy();
   await page.locator('.kv-lupa__sipka--dalsi').click();
-  const secondSource = await page.locator('.kv-lupa__ram img').getAttribute('src');
+  await cakajNaInu(firstSource);
+  const secondSource = await zdrojAktualnej();
   assert.notEqual(secondSource, firstSource, 'Next arrow must advance to another photograph');
+  assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `2 / ${total}`);
+  assert.equal(await polohy(), polohyPred, 'Lightbox controls must not move when the photograph changes');
   await page.screenshot({ path: 'qa-artifacts/realizacie-gallery-desktop.png' });
   await page.keyboard.press('ArrowLeft');
-  assert.equal(await page.locator('.kv-lupa__ram img').getAttribute('src'), firstSource,
+  await cakajNaInu(secondSource);
+  assert.equal(await zdrojAktualnej(), firstSource,
     'Keyboard navigation must return to the previous photograph');
   await page.keyboard.press('Escape');
 
@@ -49,6 +73,7 @@ async function dismissConsent(page) {
   const shaded = page.locator('#realGrid .kh-work__item:not([hidden])');
   assert.equal(await shaded.count(), shadedTotal, 'Gallery filters must still limit the lightbox sequence');
   await shaded.first().click();
+  await cakajNaPocitadlo(`1 / ${shadedTotal}`);
   assert.equal((await page.locator('.kv-lupa__pocitadlo').textContent()).trim(), `1 / ${shadedTotal}`);
   await page.keyboard.press('Escape');
 
