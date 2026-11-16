@@ -8258,6 +8258,15 @@ function kvAdresa(kluc, zaloha) {
             const v = d.s[k];
             if (v === 'open' || (kluc(v) && SIDE_OPTS.some((o) => o.id === v))) state.sides[k] = v;
           });
+          /* Prístrešok pre auto: do 16. 11. 2026 bola „Zadná“ stena uložená
+             pod vnútornou stranou left, dnes je tam vjazd (Predná) a Zadná je
+             right. Starý odkaz so stenou vzadu sa preto presunie, aby ostala
+             tam, kde ju zákazník videl – vzadu, nie vo vjazde. */
+          if (kvStranyStien() && kvStranyStien().indexOf('left') < 0 && kvStranyStien().indexOf('right') > -1
+              && state.sides.left !== 'open' && state.sides.right === 'open') {
+            state.sides.right = state.sides.left;
+            state.sides.left = 'open';
+          }
           /* Starší odkaz mohol mať steny zo všetkých štyroch strán
              alebo prednú stenu, ktorú Koverta už neponúka. */
           ['front', 'rear', 'left', 'right'].forEach((k) => { if (!kvStenaSmie(k)) state.sides[k] = 'open'; });

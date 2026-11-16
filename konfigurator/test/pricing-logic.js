@@ -108,7 +108,8 @@ async function revealControl(page, selector) {
       const got = (table === 'side' ? catalogue.wallSideBySize : catalogue.wallBackBySize)[size][mat];
       assert(got === eur, `Expivi wall price ${size}/${table}/${mat} is ${got}, expected ${eur}`);
     }
-    assert(JSON.stringify(catalogue.wallPriced) === JSON.stringify(['rear', 'front', 'left']),
+    /* Vjazd (Predná) je kratší koniec pri príjazde – vnútorne strana left. */
+    assert(JSON.stringify(catalogue.wallPriced) === JSON.stringify(['rear', 'front', 'right']),
       'Only left, right and rear walls have Expivi prices; the front wall must stay quote-only');
     assert(allSizes.every(k => (Number(k.split('x')[0]) <= 6200) === (catalogue.stenyPriplatokBySize[k] === 600)),
       'Wall construction surcharge must be exactly the Expivi 6-post difference (600 €) on sizes up to 6.2 m');
@@ -326,7 +327,7 @@ async function revealControl(page, selector) {
     assert(wallSnap.geometry.wallMode === true && wallSnap.geometry.postCount === 6,
       'One side wall must stand on six posts, three on each side, as priced in Expivi');
     // Prednú stranu (vjazd) Koverta stenou uzavrieť neponúka.
-    assert(await page.locator('[data-sp-side="right"]').isHidden(), 'Front (entrance) wall must not be offered');
+    assert(await page.locator('[data-sp-side="left"]').isHidden(), 'Front (entrance) wall must not be offered');
     await page.locator('[data-sp-side="rear"]').click();
 
     // A dimension change keeps a compatible selected side and recomputes the base band.
