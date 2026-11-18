@@ -863,8 +863,6 @@ function kvAdresa(kluc, zaloha) {
         const SOLTEC_SIDE_OPTS = [
           { id: 'open',  label: 'Otvorená',                     note: 'bez výplne' },
           { id: 'zip',   label: 'ZIP roleta K130',              note: 'podľa šírky' },
-          { id: 'g1',    label: 'Sklenené posuvné panely G1',   note: 'podľa rozmeru' },
-          { id: 'g2',    label: 'Sklenené skladacie panely G2', note: 'podľa rozmeru' },
           { id: 'h50l',  label: 'Posuvné panely H50, drevo',   note: 'podľa rozmeru' },
           { id: 'h50a',  label: 'Posuvné panely H50, hliník',  note: 'podľa rozmeru' },
           { id: 'fi30',  label: 'Stena ISO 3, izolačný panel 30 mm', note: 'podľa plochy' },
@@ -876,7 +874,12 @@ function kvAdresa(kluc, zaloha) {
              sibírskeho smrekovca do 4 m a FI30 z ISO panela do 6 m. Na
              terasách a pergolách L44 v cenníku 2026 nie je vôbec. Ostávajú
              teda tam, kam patria — medzi prevedenia boxu. */
-          { id: 'e300',  label: 'Brisoleje E300',                    note: 'podľa plochy' }
+          { id: 'e300',  label: 'Brisoleje E300',                    note: 'podľa plochy' },
+          /* Sklenené panely zatiaľ nemontujeme (majiteľ, 18. 11. 2026). V ponuke
+             ostávajú ako „Čoskoro“: vlastná skupina na konci zoznamu, iná
+             farba, do ceny sa nerátajú a v súhrne stojí „čoskoro“. */
+          { id: 'g1',    label: 'Sklenené posuvné panely G1',   note: 'čoskoro v ponuke', coskoro: true },
+          { id: 'g2',    label: 'Sklenené skladacie panely G2', note: 'čoskoro v ponuke', coskoro: true }
         ];
         const SIDE_OPTS = (Array.isArray(BIO.sideOpts) && BIO.sideOpts.length)
           ? BIO.sideOpts : SOLTEC_SIDE_OPTS;
@@ -1809,15 +1812,11 @@ function kvAdresa(kluc, zaloha) {
             } else if (kind === 'h50l' || kind === 'h50a') {
               const r = slidePrice(kind === 'h50l' ? 'wood' : 'alu');
               if (r) { value = r.v; note = `${r.n} ${r.n === 1 ? 'krídlo' : r.n < 5 ? 'krídla' : 'krídel'}, 2 vodiace lišty`; }
-            } else if (kind === 'g1') {
-              const r = glassPrice();
-              if (r) { value = r.v; note = `${r.n} ${r.plne ? 'plné vodiace' : 'vodiace'} lišty`; }   // 2, 3 or 4 - always the plural that takes 'vodiace'
-            } else if (kind === 'g2') {
-              /* "glass folding panels ... CENA SE DOLOCI POSAMEZNO ZA VSAK
-                 PROJEKT" - the folding system has no table in the book, and
-                 pricing it off the sliding one invented a figure. */
-              value = null;
-              note = `${sideLeaves('g2', span)} krídel po max. ${G2_LEAF_MAX} mm`;
+            } else if (kind === 'g1' || kind === 'g2') {
+              /* Sklenené panely zatiaľ nemontujeme: v súhrne bez ceny a bez
+                 „na nacenenie“, aby to nevyzeralo ako ponuka. */
+              lines.push({ k: `${SIDE_LABEL[side]}: ${opt.label}`, v: null, sum: 0, coskoro: true });
+              continue;
             }
             if (value === null) open = true;
             lines.push({ k: `${SIDE_LABEL[side]}: ${opt.label}${note ? ' · ' + note : ''}`, v: value, sum: value || 0 });
@@ -6913,6 +6912,7 @@ function kvAdresa(kluc, zaloha) {
           SIDE_OPTS.filter((o) => o.id === 'open' || !povolene || povolene.indexOf(o.id) > -1)
             .forEach((o) => {
             const group = o.id === 'open' ? 'Bez výplne'
+              : o.coskoro ? 'Čoskoro'
               : SIDE_MOVES[o.id] ? 'Pohyblivé tienenie a panely' : 'Pevné výplne';
             if (group !== lastGroup) {
               const heading = document.createElement('p');
@@ -6923,7 +6923,7 @@ function kvAdresa(kluc, zaloha) {
             }
             const b = document.createElement('button');
             b.type = 'button';
-            b.className = 'sp-sideopt';
+            b.className = 'sp-sideopt' + (o.coskoro ? ' sp-sideopt--coskoro' : '');
             b.dataset.spSideOpt = o.id;
             b.setAttribute('aria-pressed', String(state.sides[side] === o.id));
             if (o.id !== 'open' && (plno || podBoxom)) b.disabled = true;
@@ -7555,7 +7555,7 @@ function kvAdresa(kluc, zaloha) {
           host.textContent = '';
           lines.forEach((ln) => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${ln.k}</span><b>${ln.vCene ? 'v cene' : ln.v === null ? 'na nacenenie' : money.format(ln.v) + ' €'}</b>`;
+            li.innerHTML = `<span>${ln.k}</span><b>${ln.vCene ? 'v cene' : ln.coskoro ? 'čoskoro' : ln.v === null ? 'na nacenenie' : money.format(ln.v) + ' €'}</b>`;
             host.appendChild(li);
           });
           if (REF) {
