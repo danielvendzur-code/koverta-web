@@ -7743,7 +7743,12 @@ function kvAdresa(kluc, zaloha) {
             const { total, open } = priceLines();
             const chosen = ['front', 'rear', 'left', 'right']
               .filter((s) => state.sides[s] !== 'open')
-              .map((s) => `${SIDE_LABEL[s]}: ${SIDE_OPTS.find((o) => o.id === state.sides[s]).label}`);
+              .map((s) => {
+                const opt = SIDE_OPTS.find((o) => o.id === state.sides[s]);
+                /* Sklenené panely zatiaľ nemontujeme: dopyt to musí povedať,
+                   inak by obchodník čítal cenu ako cenu aj za ne. */
+                return `${SIDE_LABEL[s]}: ${opt.label}${opt.coskoro ? ' (čoskoro v ponuke, nie je v cene)' : ''}`;
+              });
             const product = BIO.product || (BIO.page === 'carport' ? 'prístrešok pre auto Soltec'
               : BIO.page === 'canopy' ? 'prístrešok Soltec'
               : 'bioklimatickú pergolu Soltec');
