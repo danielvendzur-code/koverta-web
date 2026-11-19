@@ -641,9 +641,17 @@
         if (pozdlzX) kvader(push, [u0, lo, z0], [u1, hi, z1]);
         else kvader(push, [lo, u0, z0], [hi, u1, z1]);
       };
-      box(0, hr, a, b, 0, h, OMIETKA);
-      /* sokel o kúsok predsadený pred líce, ako na fasáde */
-      if (SOKEL_V > 0) box(-12, hr + 12, a, b + 12, 0, Math.min(SOKEL_V, h), SOKEL);
+      /* Sokel a stena nad ním sú dve telesá bez prekryvu. Doteraz stála
+         biela stena až po zem a sokel bol druhé teleso okolo nej, s čelom
+         len 12 mm pred čelom steny. Dve takmer súbežné plochy tak blízko
+         pri sebe si na telefóne (menšia mapa tieňa, iná presnosť hĺbky)
+         prehadzovali poradie — spodok steny sa pri pohybe rastroval
+         a menil farbu. Teraz je pod soklom len sokel a stena začína nad
+         ním; sokel je predsadený len do strán, čelá sú v jednej rovine
+         a nikde sa neprekrývajú. */
+      const zs = SOKEL_V > 0 ? Math.min(SOKEL_V, h) : 0;
+      box(0, hr, a, b, zs, h, OMIETKA);
+      if (zs > 0) box(-12, hr + 12, a, b, 0, zs, SOKEL);
       /* krycia doska koruny steny */
       box(-30, hr + 30, a, b + 30, h, h + 50, '#d6d3cc');
     }

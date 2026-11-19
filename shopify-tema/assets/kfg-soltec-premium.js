@@ -2366,7 +2366,17 @@ function kvAdresa(kluc, zaloha) {
              väčšia než stavba, by vyplnila celý záber. Nekreslí sa — ale
              ostáva v sieti, takže sa pri prechode cez horizont nemusí
              prestavovať geometria. */
-          r.kresliPodklad = camera.smer[2] > 0.01;
+          /* V reálnej scéne rozhoduje skutočná výška oka nad zemou, nie
+             smer kamery: cieľ je v polovici výšky stavby, takže kamera mierne
+             pod ním je stále nad trávnikom a zem má ostať. Pod zemou zmizne
+             aj všetko okolo (stromy, kríky, plot, dom) — zospodu by viseli
+             vo vzduchu a zakrývali by spodok strechy. */
+          if (prostredie.nastavene !== 'studio' && camera.target) {
+            const okoZ = camera.target[2] + camera.DIST * camera.smer[2];
+            r.kresliPodklad = okoZ > 60;
+          } else {
+            r.kresliPodklad = camera.smer[2] > 0.01;
+          }
           /* V pohybe ide o plynulosť, v pokoji o obraz. Prepínač je ten istý
              `motionDetail`, ktorý doteraz znižoval rozlíšenie. */
           r.nastavKvalitu(motionDetail, painter3D.stupen);
@@ -2992,7 +3002,11 @@ function kvAdresa(kluc, zaloha) {
              po dvore okolo prístrešku; za stenou domu nič nie je. Uhol sa
              zastaví plynulo na hranici, nie skokom. */
           if (prostredie.nastavene !== 'studio') {
-            if (view.el < 0.03) view.el = 0.03;
+            /* Pod strechu sa dá pozrieť aj v reálnej scéne: kamera smie
+               klesnúť tak nízko ako v štúdiu. Keď oko prejde pod zem, zem
+               aj kulisy sa nekreslia (pozri kresliPodklad pri paint3D),
+               takže je vidieť spodok strechy, nie rub trávnika. */
+            if (view.el < EL_FLOOR()) view.el = EL_FLOOR();
             if (prostredie.nastavene === 'dom') {
               const dosah = Math.max(L, W, H) * 2.9 * Math.cos(view.el);
               const minCa = Math.max(-0.95, Math.min(0.6, (1800 - W / 2) / Math.max(1, dosah)));
