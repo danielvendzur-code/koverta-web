@@ -768,6 +768,9 @@ void main() {
      keď sa kamera otočí za strom. Raster sa každý snímok posúva, takže ho
      časové vyhladzovanie zloží do plynulej priehľadnosti. Dom ani strom
      tak pri otáčaní neprebliknú a kamera nikdy neskončí v listoch. */
+  /* Kamera pod zemou (pohľad na spodok strechy): okolie aj tiene
+     kríkov na tráve (1024) sa nekreslia spolu so zemou. */
+  if ((priznakyBit & (64 | 1024)) != 0 && uPodkladSkryt > 0.5) discard;
   if ((priznakyBit & 64) != 0) {
     /* Poistka: kulisa tesne pri oku sa rozplynie, aby kamera nikdy
        neskončila v listoch alebo v stene. Rozmiestnenie scény to má
@@ -2022,7 +2025,7 @@ void main() {
               /* Príznaky: 1 = podklad, 2 = jednostranná plocha. Sčítané. */
               data[at + 11] = farba[3];
               data[at + 12] = (f.bg ? 1 : 0) + (f.cull ? 2 : 0) + (mat.sklo ? 4 : 0) + (mat.listie ? 16 : 0)
-                + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0)
+                + (mat.karta && f.uv ? 32 : 0) + (f.kulisa && !f.bg && f.mat3d !== 'tien' ? 64 : 0) + (f.kulisa && f.mat3d === 'tien' ? 1024 : 0)
                 + (mat.omietka ? 8 : 0) + (f.stenaSkry && f.uv ? 128 : 0) + (mat.oknoIzba && f.uv ? 512 : 0);
               /* Kulisa (dom reálnej scény) do hraníc nepatrí: posunula by stred
                  scény, dosah dlažby aj výrez tieňovej mapy. */
